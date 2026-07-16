@@ -6,8 +6,8 @@ import { AdminDashboard } from "@/components/admin/admin-dashboard";
 import type { Scenario } from "@/lib/types";
 import { useScenarioStore } from "@/stores/scenario-store";
 
-function scenarioFixture(): Scenario {
-  return {
+function scenarioFixture(overrides: Partial<Scenario> = {}): Scenario {
+  const scenario: Scenario = {
     id: "scenario-admin-test",
     title: "Kiểm tra Sensor A",
     description: "Kịch bản dùng để kiểm tra thao tác xóa trong dashboard.",
@@ -31,6 +31,8 @@ function scenarioFixture(): Scenario {
     targetLoginUser: "sysadmin",
     expectedActions: [],
   };
+
+  return { ...scenario, ...overrides };
 }
 
 beforeEach(() => {
@@ -51,6 +53,33 @@ afterEach(() => {
 });
 
 describe("AdminDashboard", () => {
+  it("sorts newest scenarios first and shows matching ordinal numbers", () => {
+    useScenarioStore.setState({
+      scenarios: [
+        scenarioFixture({
+          id: "scenario-older",
+          title: "Kịch bản cũ hơn",
+          createdAt: "2026-07-14T00:00:00.000Z",
+        }),
+        scenarioFixture({
+          id: "scenario-newer",
+          title: "Kịch bản mới hơn",
+          createdAt: "2026-07-13T00:00:00.000Z",
+          updatedAt: "2026-07-16T00:00:00.000Z",
+        }),
+      ],
+      isHydrated: true,
+    });
+
+    render(<AdminDashboard />);
+
+    const markers = screen.getAllByLabelText(/Kịch bản số/);
+    expect(markers[0]).toHaveTextContent("01");
+    expect(markers[0].closest("article")).toHaveTextContent("Kịch bản mới hơn");
+    expect(markers[1]).toHaveTextContent("02");
+    expect(markers[1].closest("article")).toHaveTextContent("Kịch bản cũ hơn");
+  });
+
   it("shows scenario details and deletes only after confirmation", async () => {
     const user = userEvent.setup();
     render(<AdminDashboard />);

@@ -9,6 +9,10 @@ import {
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import {
+  formatScenarioNumber,
+  sortScenariosByRecency,
+} from "@/lib/scenario-order";
 import type { Scenario, ScenarioDifficulty } from "@/lib/types";
 import { useScenarioStore } from "@/stores/scenario-store";
 import { DeleteScenarioDialog } from "./delete-scenario-dialog";
@@ -92,12 +96,7 @@ export function AdminDashboard() {
   }, [hydrate]);
 
   const sortedScenarios = useMemo(
-    () =>
-      [...scenarios].sort((left, right) => {
-        const leftDate = left.updatedAt ?? left.createdAt;
-        const rightDate = right.updatedAt ?? right.createdAt;
-        return rightDate.localeCompare(leftDate);
-      }),
+    () => sortScenariosByRecency(scenarios),
     [scenarios],
   );
 
@@ -174,13 +173,20 @@ export function AdminDashboard() {
 
         {isHydrated && sortedScenarios.length > 0 ? (
           <ul className="grid gap-3">
-            {sortedScenarios.map((scenario) => {
+            {sortedScenarios.map((scenario, index) => {
               const difficulty = difficultyDetails[scenario.difficulty];
 
               return (
                 <li key={scenario.id}>
                   <article className="rounded-lg border border-[var(--border)] bg-white p-4 shadow-[var(--shadow-card)] sm:p-5">
-                    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+                    <div className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-4 lg:grid-cols-[2.5rem_minmax(0,1fr)_auto] lg:items-center">
+                      <span
+                        aria-label={`Kịch bản số ${index + 1}`}
+                        className="inline-flex size-9 items-center justify-center self-start rounded-full border border-[var(--border-strong)] bg-[var(--surface-muted)] font-mono text-xs font-bold tabular-nums text-[var(--text-secondary)] lg:self-center"
+                      >
+                        {formatScenarioNumber(index)}
+                      </span>
+
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <h3 className="text-base font-semibold text-[var(--text-primary)] sm:text-lg">
@@ -219,7 +225,7 @@ export function AdminDashboard() {
                         </dl>
                       </div>
 
-                      <div className="flex items-center gap-2 border-t border-[var(--border)] pt-4 lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
+                      <div className="col-span-2 flex items-center gap-2 border-t border-[var(--border)] pt-4 lg:col-span-1 lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
                         <Link
                           href={`/admin/edit?id=${scenario.id}`}
                           className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded border border-[var(--border-strong)] bg-white px-3 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] lg:flex-none"

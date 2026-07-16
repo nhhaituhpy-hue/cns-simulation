@@ -6,7 +6,6 @@ import {
   GearSix,
   House,
   List,
-  SidebarSimple,
   Student,
   UserCircle,
   X,
@@ -51,11 +50,7 @@ function isItemActive(pathname: string, href: string) {
   return pathname.startsWith(href);
 }
 
-function Navigation({
-  collapsed = false,
-  onNavigate,
-}: {
-  collapsed?: boolean;
+function MobileNavigation({ onNavigate }: {
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
@@ -72,17 +67,14 @@ function Navigation({
             href={item.href}
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
-            title={collapsed ? item.label : undefined}
             className={`group relative flex min-h-11 items-center gap-3 rounded border-l-2 px-3 text-sm font-medium transition-[background-color,color,border-color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-inset motion-reduce:transition-none ${
               active
                 ? "border-[var(--accent)] bg-white text-[var(--accent)]"
                 : "border-transparent text-[var(--text-secondary)] hover:bg-white hover:text-[var(--text-primary)]"
-            } ${collapsed ? "justify-center px-2" : ""}`}
+            }`}
           >
             <ItemIcon aria-hidden size={20} weight="regular" />
-            <span className={collapsed ? "sr-only" : "truncate"}>
-              {item.label}
-            </span>
+            <span className="truncate">{item.label}</span>
           </Link>
         );
       })}
@@ -90,11 +82,51 @@ function Navigation({
   );
 }
 
-export function AppShell({ children }: AppShellProps) {
+function DesktopNavigationRail() {
   const pathname = usePathname();
+
+  return (
+    <aside
+      className="fixed left-3 top-1/2 z-20 hidden -translate-y-1/2 md:block"
+      aria-label="Thanh điều hướng"
+    >
+      <nav
+        aria-label="Điều hướng chính"
+        className="app-glass relative grid gap-2 rounded-full border border-[var(--border)] p-2 shadow-[var(--shadow-panel)]"
+      >
+        {navigationItems.map((item) => {
+          const active = isItemActive(pathname, item.href);
+          const ItemIcon = item.icon;
+
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-label={item.label}
+              aria-current={active ? "page" : undefined}
+              className={`group relative inline-flex size-11 items-center justify-center rounded-full border text-[var(--text-secondary)] transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 motion-reduce:transition-none ${
+                active
+                  ? "border-[var(--accent)] bg-[var(--accent)] text-white"
+                  : "border-transparent bg-white/80 hover:border-[var(--border-strong)] hover:bg-white hover:text-[var(--text-primary)]"
+              }`}
+            >
+              <ItemIcon aria-hidden size={21} weight={active ? "fill" : "regular"} />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded border border-[var(--border-strong)] bg-[#171717] px-2.5 py-1.5 text-xs font-semibold text-white opacity-0 shadow-[var(--shadow-card)] transition-[opacity,transform] duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 motion-reduce:transition-none md:translate-x-1"
+              >
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
+      </nav>
+    </aside>
+  );
+}
+
+export function AppShell({ children }: AppShellProps) {
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const showDesktopSidebar = pathname !== "/";
 
   return (
     <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)]">
@@ -136,47 +168,10 @@ export function AppShell({ children }: AppShellProps) {
         </div>
       </header>
 
-      <div className="flex min-h-[calc(100dvh-4rem)]">
-        <aside
-          className={`app-glass sticky top-16 hidden h-[calc(100dvh-4rem)] shrink-0 border-r border-[var(--border)] transition-[width] duration-200 md:flex-col motion-reduce:transition-none ${
-            showDesktopSidebar ? "md:flex" : "md:hidden"
-          } ${
-            sidebarCollapsed ? "w-16" : "w-60"
-          }`}
-          aria-label="Thanh điều hướng"
-        >
-          <div className="relative z-10 flex h-full flex-col p-3">
-            <button
-              type="button"
-              className={`mb-4 inline-flex size-10 items-center justify-center rounded text-[var(--text-secondary)] hover:bg-white hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
-                sidebarCollapsed ? "self-center" : "self-end"
-              }`}
-              onClick={() => setSidebarCollapsed((current) => !current)}
-              aria-label={
-                sidebarCollapsed ? "Mở rộng thanh bên" : "Thu gọn thanh bên"
-              }
-              aria-expanded={!sidebarCollapsed}
-            >
-              <SidebarSimple aria-hidden size={21} weight="regular" />
-            </button>
+      <DesktopNavigationRail />
 
-            <Navigation collapsed={sidebarCollapsed} />
-
-            <div
-              className={`mt-auto border-t border-[var(--border-strong)] pt-4 text-xs text-[var(--text-muted)] ${
-                sidebarCollapsed ? "text-center" : "px-3"
-              }`}
-            >
-              {sidebarCollapsed ? (
-                <span aria-label="Công cụ đào tạo ADS-B">ADS-B</span>
-              ) : (
-                <span>Công cụ đào tạo ADS-B</span>
-              )}
-            </div>
-          </div>
-        </aside>
-
-        <main id="main-content" tabIndex={-1} className="min-w-0 flex-1">
+      <div className="min-h-[calc(100dvh-4rem)] md:pl-20">
+        <main id="main-content" tabIndex={-1} className="min-w-0">
           {children}
         </main>
       </div>
@@ -216,7 +211,7 @@ export function AppShell({ children }: AppShellProps) {
                   <X aria-hidden size={20} weight="regular" />
                 </button>
               </div>
-              <Navigation onNavigate={() => setMobileNavigationOpen(false)} />
+              <MobileNavigation onNavigate={() => setMobileNavigationOpen(false)} />
               <p className="mt-auto border-t border-[var(--border-strong)] pt-4 text-xs text-[var(--text-muted)]">
                 Công cụ đào tạo ADS-B
               </p>

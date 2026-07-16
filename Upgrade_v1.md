@@ -1561,3 +1561,29 @@ npm run build
 ### 7.6 Không cài thêm dependency
 Sử dụng tech stack hiện có. Không cần thêm package mới.
 Module C dùng HTML/CSS grid cho diagram, không cần React Flow hay SVG library.
+
+---
+
+## 8. Cập nhật điều hướng và danh sách kịch bản (2026-07-16)
+
+### Quyết định giao diện
+
+- Desktop dùng rail cố định bên trái với 3 nút tròn: Trang chủ, Quản trị, Học viên.
+- Tên chức năng xuất hiện khi rê chuột hoặc focus bằng bàn phím.
+- Mobile tiếp tục dùng menu drawer để tránh che nội dung trên màn hình hẹp.
+- Trang Học viên dùng danh sách một cột, cùng chiều rộng và cấu trúc với trang Quản trị.
+
+### Quy tắc thứ tự
+
+- Admin và Student cùng sắp xếp kịch bản theo updatedAt, nếu không có thì dùng createdAt.
+- Kịch bản mới nhất hiển thị trước.
+- Số thứ tự hiển thị dạng 01, 02, 03.
+- Logic dùng chung đặt tại src/lib/scenario-order.ts.
+- Đây là thay đổi hiển thị, không thay đổi schema hoặc dữ liệu Supabase.
+
+### Kết quả xác minh
+
+- Lint: đạt.
+- TypeScript: đạt.
+- Unit/component tests: 123/123 đạt.
+- Next.js production build: đạt.

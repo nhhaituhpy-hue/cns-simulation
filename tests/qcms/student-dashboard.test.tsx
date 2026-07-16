@@ -61,5 +61,38 @@ describe("StudentDashboard", () => {
     expect(screen.getByText("1 cảm biến")).toBeVisible();
     expect(screen.queryByText(/mục tiêu/i)).not.toBeInTheDocument();
   });
+
+  it("uses the same newest-first order and ordinal numbers as admin", () => {
+    useScenarioStore.setState({
+      scenarios: [
+        {
+          ...scenario,
+          id: "scenario-older",
+          title: "Bài thực hành cũ hơn",
+          createdAt: "2026-07-14T00:00:00.000Z",
+        },
+        {
+          ...scenario,
+          id: "scenario-newer",
+          title: "Bài thực hành mới hơn",
+          createdAt: "2026-07-13T00:00:00.000Z",
+          updatedAt: "2026-07-16T00:00:00.000Z",
+        },
+      ],
+      isHydrated: true,
+    });
+
+    render(<StudentDashboard />);
+
+    const markers = screen.getAllByLabelText(/Bài thực hành số/);
+    expect(markers[0]).toHaveTextContent("01");
+    expect(markers[0].closest("article")).toHaveTextContent(
+      "Bài thực hành mới hơn",
+    );
+    expect(markers[1]).toHaveTextContent("02");
+    expect(markers[1].closest("article")).toHaveTextContent(
+      "Bài thực hành cũ hơn",
+    );
+  });
 });
 
