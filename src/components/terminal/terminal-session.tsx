@@ -2,7 +2,7 @@
 
 import { ArrowLeft, WarningCircle } from "@phosphor-icons/react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { GradingResult } from "@/components/grading/grading-result";
 import type { SensorState } from "@/lib/types";
@@ -37,6 +37,7 @@ function SessionSkeleton() {
 
 export function TerminalSession({ scenarioId }: { scenarioId: string }) {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const requestedSensorId = searchParams.get("sensorId");
   const scenarios = useScenarioStore((state) => state.scenarios);
   const isHydrated = useScenarioStore((state) => state.isHydrated);
@@ -70,8 +71,10 @@ export function TerminalSession({ scenarioId }: { scenarioId: string }) {
     if (initializedKey.current === key) return;
 
     recording.beginAttempt(scenario.id);
+    recording.startTerminal();
     terminal.initialize({
       targetLoginUser: scenario.targetLoginUser,
+      targetIpAddress: selectedSensor.ipAddress,
       header: { sensorName: selectedSensor.name },
       sensorDataProfile: selectedSensor.dataProfile,
       sensorMonitoring: selectedSensor.monitoring,
@@ -83,8 +86,10 @@ export function TerminalSession({ scenarioId }: { scenarioId: string }) {
     if (!scenario || !selectedSensor) return;
     recording.resetAttempt();
     recording.beginAttempt(scenario.id);
+    recording.startTerminal();
     terminal.initialize({
       targetLoginUser: scenario.targetLoginUser,
+      targetIpAddress: selectedSensor.ipAddress,
       header: { sensorName: selectedSensor.name },
       sensorDataProfile: selectedSensor.dataProfile,
       sensorMonitoring: selectedSensor.monitoring,
@@ -164,8 +169,14 @@ export function TerminalSession({ scenarioId }: { scenarioId: string }) {
             {scenario.title}. Cảm biến {selectedSensor.sensorLabel} tại {selectedSensor.ipAddress}.
           </p>
         </div>
-        <div className="font-mono text-xs text-[var(--text-muted)]">
-          Tài khoản yêu cầu: {scenario.targetLoginUser}
+        <div className="rounded border border-blue-200 bg-blue-50 px-3 py-2">
+          <p className="text-xs text-blue-700">Địa chỉ IP thiết bị</p>
+          <p className="mt-0.5 font-mono text-sm font-bold text-blue-950">
+            {selectedSensor.ipAddress}
+          </p>
+          <p className="mt-1 font-mono text-[11px] text-blue-800">
+            Định dạng: &lt;tài khoản&gt;@{selectedSensor.ipAddress}
+          </p>
         </div>
       </div>
 
@@ -192,7 +203,27 @@ export function TerminalSession({ scenarioId }: { scenarioId: string }) {
           onToggleSelected={recording.toggleSelectAction}
           onSelectAll={recording.selectAll}
           onClearSelection={recording.clearSelection}
-          onSubmit={() => recording.submitForGrading(scenario.expectedActions)}
+          submitLabel={
+            scenario.hardwareFault
+              ? "Hoàn tất Terminal và tiếp tục"
+              : "Nộp bài"
+          }
+          canSubmit={
+            recording.selectedActions.length > 0 &&
+            (!scenario.hardwareFault || recording.authenticatedCorrectly)
+          }
+          onSubmit={() => {
+            if (scenario.hardwareFault) {
+              recording.completeTerminal();
+              router.push(
+                `/student/simulation?id=${encodeURIComponent(
+                  scenario.id,
+                )}&stage=hardware`,
+              );
+              return;
+            }
+            recording.submitForGrading(scenario.expectedActions);
+          }}
         />
       </div>
     </div>

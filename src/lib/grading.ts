@@ -1,6 +1,8 @@
 import { normalizeMenuId, normalizeTerminalInput } from "./normalization";
 import type {
+  CombinedGradingResult,
   GradingResult,
+  HardwareSelectionResult,
   RecordedAction,
   StepComparison,
 } from "./types";
@@ -224,5 +226,64 @@ export function gradeHardwareDiagnosis(
     inspectedComponentCount,
     componentInspectionScore,
     score,
+  };
+}
+function roundScore(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+/**
+ * Uses Jaccard similarity so selecting every component cannot receive full
+ * hardware credit. The hardware section contributes at most 30 points.
+ */
+export function gradeHardwareSelection(
+  expectedComponentIds: readonly string[],
+  submittedComponentIds: readonly string[],
+): HardwareSelectionResult {
+  const expected = new Set(expectedComponentIds);
+  const submitted = new Set(submittedComponentIds);
+  const correctComponentIds = [...expected].filter((id) => submitted.has(id));
+  const missedComponentIds = [...expected].filter((id) => !submitted.has(id));
+  const extraComponentIds = [...submitted].filter((id) => !expected.has(id));
+  const unionSize = new Set([...expected, ...submitted]).size;
+  const similarity = unionSize === 0 ? 1 : correctComponentIds.length / unionSize;
+
+  return {
+    exactMatch: missedComponentIds.length === 0 && extraComponentIds.length === 0,
+    expectedComponentIds: [...expected],
+    submittedComponentIds: [...submitted],
+    correctComponentIds,
+    missedComponentIds,
+    extraComponentIds,
+    score: roundScore(similarity * 30),
+  };
+}
+
+export function gradeCombinedAttempt(
+  expectedActions: readonly RecordedAction[],
+  submittedActions: readonly RecordedAction[],
+  authenticatedCorrectly: boolean,
+  expectedComponentIds: readonly string[],
+  submittedComponentIds: readonly string[],
+): CombinedGradingResult {
+  const terminalResult = gradeActions(expectedActions, submittedActions);
+  const terminalScore = authenticatedCorrectly
+    ? roundScore(terminalResult.score * 0.7)
+    : 0;
+  const hardwareResult = gradeHardwareSelection(
+    expectedComponentIds,
+    submittedComponentIds,
+  );
+
+  return {
+    passed:
+      authenticatedCorrectly &&
+      terminalResult.passed &&
+      hardwareResult.exactMatch,
+    score: roundScore(terminalScore + hardwareResult.score),
+    authenticatedCorrectly,
+    terminalScore,
+    terminalResult,
+    hardwareResult,
   };
 }

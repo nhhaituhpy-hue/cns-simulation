@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { CON_SON_FAULT_SCENARIOS } from "../../src/lib/fault-scenarios";
-import { gradeHardwareDiagnosis } from "../../src/lib/grading";
+import {
+  gradeCombinedAttempt,
+  gradeHardwareDiagnosis,
+  gradeHardwareSelection,
+} from "../../src/lib/grading";
 import {
   CON_SON_HARDWARE,
   CON_SON_SIGNAL_PATHS,
@@ -122,5 +126,50 @@ describe("gradeHardwareDiagnosis", () => {
       componentInspectionScore: 20,
       score: 100,
     });
+  });
+});
+describe("combined grading pipeline", () => {
+  it("awards 70 terminal points and 30 hardware points", () => {
+    const result = gradeCombinedAttempt(
+      [],
+      [],
+      true,
+      ["preamp-1", "coax-1"],
+      ["preamp-1", "coax-1"],
+    );
+
+    expect(result).toMatchObject({
+      passed: true,
+      score: 100,
+      terminalScore: 70,
+      authenticatedCorrectly: true,
+      hardwareResult: {
+        exactMatch: true,
+        score: 30,
+      },
+    });
+  });
+
+  it("penalizes missing and extra hardware selections", () => {
+    const result = gradeHardwareSelection(
+      ["preamp-1", "coax-1"],
+      ["preamp-1", "antenna-1"],
+    );
+
+    expect(result).toMatchObject({
+      exactMatch: false,
+      correctComponentIds: ["preamp-1"],
+      missedComponentIds: ["coax-1"],
+      extraComponentIds: ["antenna-1"],
+      score: 10,
+    });
+  });
+
+  it("gives no terminal points without a correct login", () => {
+    const result = gradeCombinedAttempt([], [], false, ["coax-1"], ["coax-1"]);
+
+    expect(result.terminalScore).toBe(0);
+    expect(result.score).toBe(30);
+    expect(result.passed).toBe(false);
   });
 });

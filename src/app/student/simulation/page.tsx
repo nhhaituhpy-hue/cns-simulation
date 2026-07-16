@@ -7,7 +7,13 @@ import { Suspense } from "react";
 function SimulationContent() {
   const searchParams = useSearchParams();
   const scenarioId = searchParams.get("id") || "";
-  return <ScenarioMonitorView scenarioId={scenarioId} />;
+  const autoOpenHardware = searchParams.get("stage") === "hardware";
+  return (
+    <ScenarioMonitorView
+      scenarioId={scenarioId}
+      autoOpenHardware={autoOpenHardware}
+    />
+  );
 }
 
 export default function StudentScenarioPage() {

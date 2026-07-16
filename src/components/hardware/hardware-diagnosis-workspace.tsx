@@ -11,7 +11,7 @@ type HardwareDiagnosisWorkspaceProps = {
   hardwareFault: ScenarioHardwareFault;
   onClose: () => void;
   onSubmit: (diagnosis: {
-    componentId: string;
+    componentIds: string[];
     inspectedComponents: string[];
   }) => void;
 };
@@ -23,8 +23,9 @@ export function HardwareDiagnosisWorkspace({
 }: HardwareDiagnosisWorkspaceProps) {
   const [selectedComponent, setSelectedComponent] =
     useState<HardwareComponent | null>(null);
-  const [diagnosedComponentId, setDiagnosedComponentId] =
-    useState<string | null>(null);
+  const [diagnosedComponentIds, setDiagnosedComponentIds] = useState<string[]>(
+    [],
+  );
   const [inspectedComponentIds, setInspectedComponentIds] = useState<string[]>(
     [],
   );
@@ -33,6 +34,18 @@ export function HardwareDiagnosisWorkspace({
     setSelectedComponent(component);
     setInspectedComponentIds((current) =>
       current.includes(component.id) ? current : [...current, component.id],
+    );
+  }
+
+  function markSelected(marked: boolean) {
+    if (!selectedComponent) return;
+
+    setDiagnosedComponentIds((current) =>
+      marked
+        ? current.includes(selectedComponent.id)
+          ? current
+          : [...current, selectedComponent.id]
+        : current.filter((componentId) => componentId !== selectedComponent.id),
     );
   }
 
@@ -46,12 +59,17 @@ export function HardwareDiagnosisWorkspace({
       >
         <header className="flex items-start justify-between gap-4 border-b border-[#172033] bg-[#263746] px-4 py-3 text-white">
           <div>
-            <p className="text-xs text-[#cbd5e1]">Hardware fault isolation</p>
+            <p className="text-xs text-[#cbd5e1]">Cô lập sự cố phần cứng</p>
             <h2 id="hardware-diagnosis-title" className="text-lg font-bold">
-              Signal Path Diagnosis
+              Chẩn đoán đường tín hiệu
             </h2>
           </div>
-          <button type="button" onClick={onClose} aria-label="Close hardware diagnosis" className="inline-flex size-10 items-center justify-center rounded hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Đóng chẩn đoán phần cứng"
+            className="inline-flex size-10 items-center justify-center rounded hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          >
             <X aria-hidden size={19} />
           </button>
         </header>
@@ -66,40 +84,40 @@ export function HardwareDiagnosisWorkspace({
           <ComponentInspector
             component={selectedComponent}
             components={hardwareFault.hardwareLayout}
-            markedAsFaulty={selectedComponent?.id === diagnosedComponentId}
-            onMarkedAsFaultyChange={(marked) => {
-              if (marked && selectedComponent) {
-                setDiagnosedComponentId(selectedComponent.id);
-              } else if (selectedComponent?.id === diagnosedComponentId) {
-                setDiagnosedComponentId(null);
-              }
-            }}
+            markedAsFaulty={Boolean(
+              selectedComponent &&
+                diagnosedComponentIds.includes(selectedComponent.id),
+            )}
+            onMarkedAsFaultyChange={markSelected}
           />
         </div>
 
         <footer className="flex flex-col gap-3 border-t border-[#b8c4ce] bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-[#64748b]">
-            Inspected {inspectedComponentIds.length} component(s). Select one component as faulty before submission.
+            Đã kiểm tra {inspectedComponentIds.length} linh kiện; đã đánh dấu{" "}
+            {diagnosedComponentIds.length} linh kiện nghi ngờ sự cố.
           </p>
           <div className="flex gap-2">
-            <button type="button" onClick={onClose} className="min-h-10 rounded border border-[#94a3b8] bg-white px-4 text-sm font-bold text-[#334155]">
-              CLOSE
+            <button
+              type="button"
+              onClick={onClose}
+              className="min-h-10 rounded border border-[#94a3b8] bg-white px-4 text-sm font-bold text-[#334155]"
+            >
+              ĐÓNG
             </button>
             <button
               type="button"
-              disabled={!diagnosedComponentId}
-              onClick={() => {
-                if (diagnosedComponentId) {
-                  onSubmit({
-                    componentId: diagnosedComponentId,
-                    inspectedComponents: inspectedComponentIds,
-                  });
-                }
-              }}
+              disabled={diagnosedComponentIds.length === 0}
+              onClick={() =>
+                onSubmit({
+                  componentIds: diagnosedComponentIds,
+                  inspectedComponents: inspectedComponentIds,
+                })
+              }
               className="inline-flex min-h-10 items-center gap-2 rounded bg-[#2563eb] px-4 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-45"
             >
               <PaperPlaneTilt aria-hidden size={17} />
-              SUBMIT DIAGNOSIS
+              NỘP BÀI
             </button>
           </div>
         </footer>

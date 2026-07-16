@@ -22,19 +22,19 @@ type HardwareFaultStepProps = {
   onChange: (value: ScenarioHardwareFault | undefined) => void;
 };
 
-const FAULT_TYPES: HardwareFaultType[] = [
-  "open",
-  "short",
-  "degraded",
-  "disconnected",
-  "overheated",
+const FAULT_TYPES: Array<{ value: HardwareFaultType; label: string }> = [
+  { value: "open", label: "Hở mạch" },
+  { value: "short", label: "Ngắn mạch" },
+  { value: "degraded", label: "Suy giảm" },
+  { value: "disconnected", label: "Mất kết nối" },
+  { value: "overheated", label: "Quá nhiệt" },
 ];
 
 export function createScenarioHardwareFault(
   preset: HardwareFaultScenario,
 ): ScenarioHardwareFault {
   return {
-    faultyComponentId: preset.faultyComponentId,
+    faultyComponentIds: [preset.faultyComponentId],
     faultType: preset.faultType,
     faultDescription: preset.faultDescription,
     expectedSensorStatus: preset.expectedSensorStatus,
@@ -47,10 +47,22 @@ export function createScenarioHardwareFault(
 }
 
 function inferredStatus(component: HardwareComponent): SensorStatus {
-  if (["lan_cable", "lan_switch", "power_cable_ac", "power_cable_dc"].includes(component.type)) {
+  if (
+    ["lan_cable", "lan_switch", "power_cable_ac", "power_cable_dc"].includes(
+      component.type,
+    )
+  ) {
     return "red";
   }
-  if (["gps_receiver", "gps_cable", "site_monitor_antenna", "site_monitor_tx", "earth_cable"].includes(component.type)) {
+  if (
+    [
+      "gps_receiver",
+      "gps_cable",
+      "site_monitor_antenna",
+      "site_monitor_tx",
+      "earth_cable",
+    ].includes(component.type)
+  ) {
     return "green";
   }
   if (component.type === "sensor_unit") return "orange";
@@ -61,18 +73,31 @@ function faultForComponent(
   component: HardwareComponent,
   current: ScenarioHardwareFault,
 ): ScenarioHardwareFault {
+  const faultyComponentIds = Array.from(
+    new Set([...current.faultyComponentIds, component.id]),
+  );
   const preset = findFaultPreset(component.id);
-  if (preset) return createScenarioHardwareFault(preset);
+
+  if (preset) {
+    return {
+      ...createScenarioHardwareFault(preset),
+      faultyComponentIds,
+    };
+  }
 
   const expectedSensorStatus = inferredStatus(component);
   return {
     ...current,
-    faultyComponentId: component.id,
+    faultyComponentIds,
     faultType: "degraded",
     faultDescription: component.name + " is degraded.",
     expectedSensorStatus,
-    terminalSymptoms: ["Inspect terminal status for symptoms related to " + component.name],
-    qcmsSymptoms: ["QCMS status reflects a " + expectedSensorStatus + " sensor state"],
+    terminalSymptoms: [
+      "Inspect terminal status for symptoms related to " + component.name,
+    ],
+    qcmsSymptoms: [
+      "QCMS status reflects a " + expectedSensorStatus + " sensor state",
+    ],
     diagnosticSteps: [
       "Inspect " + component.name,
       "Measure inputs and outputs",
@@ -94,7 +119,7 @@ export function HardwareFaultStep({
   onChange,
 }: HardwareFaultStepProps) {
   const [selectedComponentId, setSelectedComponentId] = useState<string | null>(
-    value?.faultyComponentId ?? null,
+    value?.faultyComponentIds[0] ?? null,
   );
   const components = value?.hardwareLayout ?? CON_SON_HARDWARE;
   const selectedComponent =
@@ -106,36 +131,57 @@ export function HardwareFaultStep({
       setSelectedComponentId(null);
       return;
     }
+
     const defaultPreset = CON_SON_FAULT_SCENARIOS[0];
     if (defaultPreset) {
       const fault = createScenarioHardwareFault(defaultPreset);
       onChange(fault);
-      setSelectedComponentId(fault.faultyComponentId);
+      setSelectedComponentId(fault.faultyComponentIds[0] ?? null);
     }
-  }
-
-  function selectComponent(component: HardwareComponent) {
-    setSelectedComponentId(component.id);
-    if (value) onChange(faultForComponent(component, value));
   }
 
   function changeFaultType(faultType: HardwareFaultType) {
     if (!value) return;
-    const preset = findFaultPreset(value.faultyComponentId, faultType);
+    const primaryComponentId =
+      (selectedComponentId &&
+      value.faultyComponentIds.includes(selectedComponentId)
+        ? selectedComponentId
+        : value.faultyComponentIds[0]) ?? "";
+    const preset = findFaultPreset(primaryComponentId, faultType);
+
     onChange(
       preset
-        ? createScenarioHardwareFault(preset)
+        ? {
+            ...createScenarioHardwareFault(preset),
+            faultyComponentIds: value.faultyComponentIds,
+          }
         : {
             ...value,
             faultType,
             faultDescription:
               value.hardwareLayout.find(
-                (component) => component.id === value.faultyComponentId,
+                (component) => component.id === primaryComponentId,
               )?.name +
               " fault: " +
               faultType,
           },
     );
+  }
+
+  function markSelectedComponent(marked: boolean) {
+    if (!value || !selectedComponent) return;
+
+    if (marked) {
+      onChange(faultForComponent(selectedComponent, value));
+      return;
+    }
+
+    onChange({
+      ...value,
+      faultyComponentIds: value.faultyComponentIds.filter(
+        (componentId) => componentId !== selectedComponent.id,
+      ),
+    });
   }
 
   return (
@@ -147,40 +193,47 @@ export function HardwareFaultStep({
           onChange={(event) => enableFault(event.target.checked)}
           className="size-4 accent-[var(--accent)]"
         />
-        Kich ban co su co phan cung
+        Kịch bản sự cố phần cứng
       </label>
 
       {value ? (
         <>
+          <div className="rounded border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            Đã đánh dấu {value.faultyComponentIds.length} phần cứng sự cố. Chọn
+            linh kiện trên sơ đồ rồi dùng ô đánh dấu ở bảng chi tiết.
+          </div>
+
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
             <SignalPathDiagram
               components={value.hardwareLayout}
               signalPaths={value.signalPaths}
-              faultyComponentId={value.faultyComponentId}
+              faultyComponentIds={value.faultyComponentIds}
               selectedComponentId={selectedComponentId}
-              onSelectComponent={selectComponent}
+              onSelectComponent={(component) =>
+                setSelectedComponentId(component.id)
+              }
               readOnly
             />
             <ComponentInspector
               component={selectedComponent}
               components={value.hardwareLayout}
               status={
-                selectedComponent?.id === value.faultyComponentId
+                selectedComponent &&
+                value.faultyComponentIds.includes(selectedComponent.id)
                   ? "failed"
                   : selectedComponent?.status
               }
-              markedAsFaulty={
-                selectedComponent?.id === value.faultyComponentId
-              }
-              onMarkedAsFaultyChange={(marked) => {
-                if (marked && selectedComponent) selectComponent(selectedComponent);
-              }}
+              markedAsFaulty={Boolean(
+                selectedComponent &&
+                  value.faultyComponentIds.includes(selectedComponent.id),
+              )}
+              onMarkedAsFaultyChange={markSelectedComponent}
             />
           </div>
 
           <section className="grid gap-4 rounded border border-[var(--border)] bg-white p-4 lg:grid-cols-2">
             <label className="text-sm font-semibold text-[var(--text-primary)]">
-              Fault type
+              Loại sự cố
               <select
                 value={value.faultType}
                 onChange={(event) =>
@@ -189,20 +242,22 @@ export function HardwareFaultStep({
                 className="mt-1.5 block h-11 w-full rounded border border-[var(--border-strong)] bg-white px-3 font-mono text-sm"
               >
                 {FAULT_TYPES.map((faultType) => (
-                  <option key={faultType} value={faultType}>
-                    {faultType}
+                  <option key={faultType.value} value={faultType.value}>
+                    {faultType.label}
                   </option>
                 ))}
               </select>
             </label>
             <div className="rounded border border-[var(--border)] bg-[var(--surface-muted)] p-3">
-              <p className="text-xs text-[var(--text-secondary)]">Expected QCMS status</p>
+              <p className="text-xs text-[var(--text-secondary)]">
+                Trạng thái QCMS dự kiến
+              </p>
               <p className="mt-1 font-mono text-sm font-bold uppercase text-[var(--text-primary)]">
                 {value.expectedSensorStatus}
               </p>
             </div>
-            <label className="lg:col-span-2 text-sm font-semibold text-[var(--text-primary)]">
-              Fault description
+            <label className="text-sm font-semibold text-[var(--text-primary)] lg:col-span-2">
+              Mô tả sự cố
               <input
                 value={value.faultDescription}
                 onChange={(event) =>
@@ -212,18 +267,21 @@ export function HardwareFaultStep({
               />
             </label>
             <label className="text-sm font-semibold text-[var(--text-primary)]">
-              Terminal symptoms (one per line)
+              Triệu chứng trên Terminal (mỗi dòng một triệu chứng)
               <textarea
                 value={value.terminalSymptoms.join("\n")}
                 onChange={(event) =>
-                  onChange({ ...value, terminalSymptoms: lines(event.target.value) })
+                  onChange({
+                    ...value,
+                    terminalSymptoms: lines(event.target.value),
+                  })
                 }
                 rows={6}
                 className="mt-1.5 block w-full rounded border border-[var(--border-strong)] p-3 font-mono text-xs"
               />
             </label>
             <label className="text-sm font-semibold text-[var(--text-primary)]">
-              QCMS symptoms (one per line)
+              Triệu chứng trên QCMS (mỗi dòng một triệu chứng)
               <textarea
                 value={value.qcmsSymptoms.join("\n")}
                 onChange={(event) =>
@@ -237,11 +295,15 @@ export function HardwareFaultStep({
         </>
       ) : (
         <p className="rounded border border-dashed border-[var(--border-strong)] p-6 text-center text-sm text-[var(--text-secondary)]">
-          Enable hardware fault training to select a component and symptoms.
+          Bật kịch bản sự cố phần cứng để chọn linh kiện và cấu hình triệu chứng.
         </p>
       )}
 
-      {error ? <p role="alert" className="text-sm font-medium text-[#b91c1c]">{error}</p> : null}
+      {error ? (
+        <p role="alert" className="text-sm font-medium text-[#b91c1c]">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

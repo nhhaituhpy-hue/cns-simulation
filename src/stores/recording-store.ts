@@ -1,21 +1,38 @@
-import { gradeActions } from "@/lib/grading";
+import { gradeActions, gradeCombinedAttempt } from "@/lib/grading";
 import type {
+  CombinedGradingResult,
   GradingResult,
   RecordableAction,
   RecordedAction,
 } from "@/lib/types";
 import { create, type StoreApi, type UseBoundStore } from "zustand";
 
+export type AttemptPhase =
+  | "qcms"
+  | "terminal"
+  | "hardware"
+  | "completed";
+
 export interface RecordingStoreState {
   scenarioId: string | null;
+  phase: AttemptPhase;
   isRecording: boolean;
+  authenticatedCorrectly: boolean;
+  qcmsMonitoringOpened: boolean;
   allActions: RecordedAction[];
   selectedActions: RecordedAction[];
+  inspectedComponentIds: string[];
+  diagnosedComponentIds: string[];
   gradingResult: GradingResult | null;
+  combinedGradingResult: CombinedGradingResult | null;
 }
 
 export interface RecordingStoreActions {
   beginAttempt: (scenarioId: string) => void;
+  startTerminal: () => void;
+  markAuthenticatedCorrectly: () => void;
+  markQcmsMonitoringOpened: () => void;
+  completeTerminal: () => void;
   toggleRecording: () => void;
   addAction: (
     action: RecordableAction | RecordedAction,
@@ -29,6 +46,12 @@ export interface RecordingStoreActions {
   submitForGrading: (
     expectedActions: readonly RecordedAction[],
   ) => GradingResult;
+  submitCombinedAttempt: (
+    expectedActions: readonly RecordedAction[],
+    expectedComponentIds: readonly string[],
+    submittedComponentIds: readonly string[],
+    inspectedComponentIds: readonly string[],
+  ) => CombinedGradingResult;
   resetAttempt: () => void;
 }
 
@@ -40,10 +63,16 @@ export interface RecordingStoreOptions {
 
 const INITIAL_STATE: RecordingStoreState = {
   scenarioId: null,
+  phase: "qcms",
   isRecording: false,
+  authenticatedCorrectly: false,
+  qcmsMonitoringOpened: false,
   allActions: [],
   selectedActions: [],
+  inspectedComponentIds: [],
+  diagnosedComponentIds: [],
   gradingResult: null,
+  combinedGradingResult: null,
 };
 
 export function createRecordingStore(
@@ -55,13 +84,32 @@ export function createRecordingStore(
     ...INITIAL_STATE,
 
     beginAttempt: (scenarioId) => {
+      if (get().scenarioId === scenarioId) {
+        return;
+      }
+
       set({
+        ...INITIAL_STATE,
         scenarioId,
+        phase: "qcms",
         isRecording: true,
-        allActions: [],
-        selectedActions: [],
-        gradingResult: null,
       });
+    },
+
+    startTerminal: () => {
+      set({ phase: "terminal", isRecording: true });
+    },
+
+    markAuthenticatedCorrectly: () => {
+      set({ authenticatedCorrectly: true });
+    },
+
+    markQcmsMonitoringOpened: () => {
+      set({ qcmsMonitoringOpened: true });
+    },
+
+    completeTerminal: () => {
+      set({ phase: "hardware", isRecording: false });
     },
 
     toggleRecording: () => {
@@ -94,6 +142,7 @@ export function createRecordingStore(
       set({
         allActions: [...state.allActions, action],
         gradingResult: null,
+        combinedGradingResult: null,
       });
       return action;
     },
@@ -110,6 +159,7 @@ export function createRecordingStore(
             (action) => action.step !== step,
           ),
           gradingResult: null,
+          combinedGradingResult: null,
         });
         return;
       }
@@ -119,6 +169,7 @@ export function createRecordingStore(
         set({
           selectedActions: [...state.selectedActions, action],
           gradingResult: null,
+          combinedGradingResult: null,
         });
       }
     },
@@ -127,11 +178,16 @@ export function createRecordingStore(
       set((state) => ({
         selectedActions: [...state.allActions],
         gradingResult: null,
+        combinedGradingResult: null,
       }));
     },
 
     clearSelection: () => {
-      set({ selectedActions: [], gradingResult: null });
+      set({
+        selectedActions: [],
+        gradingResult: null,
+        combinedGradingResult: null,
+      });
     },
 
     reorderSelectedAction: (fromIndex, toIndex) => {
@@ -149,7 +205,11 @@ export function createRecordingStore(
 
       const [movedAction] = selectedActions.splice(fromIndex, 1);
       selectedActions.splice(toIndex, 0, movedAction);
-      set({ selectedActions, gradingResult: null });
+      set({
+        selectedActions,
+        gradingResult: null,
+        combinedGradingResult: null,
+      });
       return true;
     },
 
@@ -165,28 +225,59 @@ export function createRecordingStore(
           (action) => action.step !== step,
         ),
         gradingResult: null,
+        combinedGradingResult: null,
       });
       return true;
     },
 
     clearActions: () => {
-      set({ allActions: [], selectedActions: [], gradingResult: null });
+      set({
+        allActions: [],
+        selectedActions: [],
+        gradingResult: null,
+        combinedGradingResult: null,
+      });
     },
 
     submitForGrading: (expectedActions) => {
       const result = gradeActions(expectedActions, get().selectedActions);
-      set({ gradingResult: result, isRecording: false });
+      set({
+        gradingResult: result,
+        combinedGradingResult: null,
+        phase: "completed",
+        isRecording: false,
+      });
+      return result;
+    },
+
+    submitCombinedAttempt: (
+      expectedActions,
+      expectedComponentIds,
+      submittedComponentIds,
+      inspectedComponentIds,
+    ) => {
+      const state = get();
+      const result = gradeCombinedAttempt(
+        expectedActions,
+        state.selectedActions,
+        state.authenticatedCorrectly,
+        expectedComponentIds,
+        submittedComponentIds,
+      );
+
+      set({
+        combinedGradingResult: result,
+        gradingResult: null,
+        diagnosedComponentIds: [...new Set(submittedComponentIds)],
+        inspectedComponentIds: [...new Set(inspectedComponentIds)],
+        phase: "completed",
+        isRecording: false,
+      });
       return result;
     },
 
     resetAttempt: () => {
-      set({
-        scenarioId: null,
-        isRecording: false,
-        allActions: [],
-        selectedActions: [],
-        gradingResult: null,
-      });
+      set({ ...INITIAL_STATE });
     },
   }));
 }

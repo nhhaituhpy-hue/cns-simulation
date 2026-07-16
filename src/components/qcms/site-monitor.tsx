@@ -215,6 +215,11 @@ export function SiteMonitor({ scenario, onMonitoringOpened }: SiteMonitorProps) 
         <SensorMonitoringModal
           scenarioId={scenario.id}
           sensor={selectedSensor.sensor}
+          qcmsSymptoms={
+            selectedSensor.sensor.id === scenario.targetSensorId
+              ? scenario.hardwareFault?.qcmsSymptoms
+              : undefined
+          }
           now={selectedSensor.openedAt}
           onClose={closeSensor}
         />

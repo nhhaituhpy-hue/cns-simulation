@@ -8,6 +8,7 @@ import {
   type SensorState,
   type SiteState,
 } from "./types";
+import { normalizeScenarioList } from "./scenario-normalization";
 
 export const SCENARIO_STORAGE_KEY = "adsb-training-simulator:scenarios";
 export const SCENARIO_STORAGE_VERSION = 1 as const;
@@ -314,8 +315,10 @@ function isHardwareFault(value: unknown): boolean {
   return (
     componentsValid &&
     pathsValid &&
-    isNonEmptyString(value.faultyComponentId) &&
-    componentIds.has(value.faultyComponentId) &&
+    isStringArray(value.faultyComponentIds) &&
+    value.faultyComponentIds.length > 0 &&
+    new Set(value.faultyComponentIds).size === value.faultyComponentIds.length &&
+    value.faultyComponentIds.every((id) => componentIds.has(id)) &&
     ["open", "short", "degraded", "disconnected", "overheated"].includes(
       String(value.faultType),
     ) &&
@@ -419,13 +422,13 @@ export function deserializeScenarioStorage(
     );
   }
 
-  parsed.scenarios.forEach((scenario, index) =>
+  const normalizedScenarios = normalizeScenarioList(parsed.scenarios);
+
+  normalizedScenarios.forEach((scenario, index) =>
     assertValidScenario(scenario, `scenario at index ${index}`),
   );
 
-  const scenarioIds = parsed.scenarios.map((scenario) =>
-    String((scenario as Record<string, unknown>).id),
-  );
+  const scenarioIds = normalizedScenarios.map((scenario) => scenario.id);
   if (new Set(scenarioIds).size !== scenarioIds.length) {
     throw new ScenarioStorageError(
       "invalid-schema",
@@ -433,7 +436,10 @@ export function deserializeScenarioStorage(
     );
   }
 
-  return parsed as unknown as ScenarioStorageEnvelope;
+  return {
+    version: SCENARIO_STORAGE_VERSION,
+    scenarios: normalizedScenarios,
+  };
 }
 
 export function serializeScenarioStorage(

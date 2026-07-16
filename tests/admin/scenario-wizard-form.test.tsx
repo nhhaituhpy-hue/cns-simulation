@@ -56,7 +56,7 @@ describe("ScenarioWizardForm", () => {
     await user.click(screen.getByRole("button", { name: "Tiếp tục" }));
 
     expect(
-      screen.getByRole("heading", { name: "Hardware Fault" }),
+      screen.getByRole("heading", { name: "Kịch bản sự cố phần cứng" }),
     ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Tạo kịch bản" }));
 

@@ -14,7 +14,7 @@ type SignalPathDiagramProps = {
   title?: string;
   components?: readonly HardwareComponent[];
   signalPaths?: readonly SignalPath[];
-  faultyComponentId?: string;
+  faultyComponentIds?: readonly string[];
   selectedComponentId?: string | null;
   onSelectComponent?: (component: HardwareComponent) => void;
   readOnly?: boolean;
@@ -47,9 +47,9 @@ function typeLabel(type: HardwareComponent["type"]): string {
 
 function statusFor(
   component: HardwareComponent,
-  faultyComponentId: string | undefined,
+  faultyComponentIds: readonly string[] | undefined,
 ): ComponentStatus {
-  return component.id === faultyComponentId ? "failed" : component.status;
+  return faultyComponentIds?.includes(component.id) ? "failed" : component.status;
 }
 
 function Connector() {
@@ -76,7 +76,7 @@ export function SignalPathDiagram({
   title = "Signal Path Diagram - Con Son Sensor 1",
   components = CON_SON_HARDWARE,
   signalPaths = CON_SON_SIGNAL_PATHS,
-  faultyComponentId,
+  faultyComponentIds,
   selectedComponentId,
   onSelectComponent,
   readOnly = false,
@@ -152,10 +152,10 @@ export function SignalPathDiagram({
         {activeComponents.length > 0 ? (
           <div className="flex min-w-0 flex-col items-stretch lg:min-w-max lg:flex-row lg:items-center">
             {activeComponents.map((component, index) => {
-              const status = statusFor(component, faultyComponentId);
+              const status = statusFor(component, faultyComponentIds);
               const details = STATUS_DETAILS[status];
               const selected = selectedId === component.id;
-              const failed = component.id === faultyComponentId;
+              const failed = Boolean(faultyComponentIds?.includes(component.id));
 
               return (
                 <div

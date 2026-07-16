@@ -34,6 +34,7 @@ export type PendingInteractionType = "display" | "input" | "toggle";
 
 export interface TerminalEngineOptions {
   targetLoginUser: LoginUser;
+  targetIpAddress?: string;
   menus?: MenuTree;
   rootMenuId?: string;
   header?: Partial<MenuHeader>;
@@ -146,6 +147,29 @@ export function authenticateLoginUser(
   return username.trim().toLocaleLowerCase("en-US") === targetLoginUser;
 }
 
+export function authenticateTerminalLogin(
+  login: string,
+  targetLoginUser: LoginUser,
+  targetIpAddress?: string,
+): boolean {
+  if (!targetIpAddress) {
+    return authenticateLoginUser(login, targetLoginUser);
+  }
+
+  const separatorIndex = login.lastIndexOf("@");
+  if (separatorIndex <= 0) {
+    return false;
+  }
+
+  const username = login.slice(0, separatorIndex);
+  const ipAddress = login.slice(separatorIndex + 1).trim();
+
+  return (
+    authenticateLoginUser(username, targetLoginUser) &&
+    ipAddress === targetIpAddress
+  );
+}
+
 function assertValidMenuTree(menus: MenuTree, rootMenuId: string): void {
   if (!menus[rootMenuId]) {
     throw new Error(`Root menu "${rootMenuId}" does not exist.`);
@@ -178,6 +202,7 @@ function assertValidMenuTree(menus: MenuTree, rootMenuId: string): void {
 
 export class TerminalEngine {
   readonly targetLoginUser: LoginUser;
+  readonly targetIpAddress: string | undefined;
 
   private readonly menus: MenuTree;
   private readonly rootMenuId: string;
@@ -193,6 +218,7 @@ export class TerminalEngine {
   constructor(options: TerminalEngineOptions) {
     const builtInDefinition = getMenuDefinition(options.targetLoginUser);
     this.targetLoginUser = options.targetLoginUser;
+    this.targetIpAddress = options.targetIpAddress;
     this.menus = options.menus ?? builtInDefinition.menus;
     this.rootMenuId = options.rootMenuId ?? builtInDefinition.rootMenuId;
     this.headerOverrides = options.header ?? {};
@@ -204,7 +230,11 @@ export class TerminalEngine {
   }
 
   authenticate(username: string): boolean {
-    return authenticateLoginUser(username, this.targetLoginUser);
+    return authenticateTerminalLogin(
+      username,
+      this.targetLoginUser,
+      this.targetIpAddress,
+    );
   }
 
   getCurrentMenu(): MenuNode {

@@ -51,6 +51,7 @@ export type TerminalStore = TerminalStoreState & TerminalStoreActions;
 
 export interface TerminalStoreOptions {
   recordAction?: (action: RecordableAction) => unknown;
+  onAuthenticated?: () => unknown;
 }
 
 const EMPTY_STATE: TerminalStoreState = {
@@ -85,6 +86,9 @@ export function createTerminalStore(
     options.recordAction ??
     ((action: RecordableAction) =>
       useRecordingStore.getState().addAction(action));
+  const onAuthenticated =
+    options.onAuthenticated ??
+    (() => useRecordingStore.getState().markAuthenticatedCorrectly());
 
   return create<TerminalStore>()((set, get) => {
     const outputState = (output: string[]) => ({
@@ -126,14 +130,12 @@ export function createTerminalStore(
         engine = new TerminalEngine(resolvedOptions);
         acceptedUsername = false;
 
-        const targetUser = resolvedOptions.targetLoginUser || "sysadmin";
         const isTest = typeof process !== "undefined" && process.env?.NODE_ENV === "test";
         const output = isTest
           ? ["login:"]
           : [
               "--------------------------------------------------",
               " HỆ THỐNG MÔ PHỎNG ADS-B - TRẠM THỰC HÀNH SENSOR",
-              ` (Tên đăng nhập: ${targetUser})`,
               " (Mật khẩu: Nhập ký tự bất kỳ rồi nhấn Enter)",
               "--------------------------------------------------",
               "",
@@ -203,6 +205,7 @@ export function createTerminalStore(
             pendingPrompt: null,
             pendingSensitive: false,
           });
+          onAuthenticated();
           return null;
         }
 
@@ -236,14 +239,12 @@ export function createTerminalStore(
         }
 
         engine.reset();
-        const targetUser = engine.targetLoginUser || "sysadmin";
         const isTest = typeof process !== "undefined" && process.env?.NODE_ENV === "test";
         const output = isTest
           ? ["login:"]
           : [
               "--------------------------------------------------",
               " HỆ THỐNG MÔ PHỎNG ADS-B - TRẠM THỰC HÀNH SENSOR",
-              ` (Tên đăng nhập: ${targetUser})`,
               " (Mật khẩu: Nhập ký tự bất kỳ rồi nhấn Enter)",
               "--------------------------------------------------",
               "",

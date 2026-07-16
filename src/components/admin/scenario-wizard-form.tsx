@@ -28,7 +28,7 @@ const steps = [
   { number: 2, label: "Site và cảm biến" },
   { number: 3, label: "Vai trò đăng nhập" },
   { number: 4, label: "Thao tác chuẩn" },
-  { number: 5, label: "Hardware Fault" },
+  { number: 5, label: "Sự cố phần cứng" },
 ] as const;
 
 function findTargetSensorName(draft: ScenarioDraft): string {
@@ -120,7 +120,7 @@ export function ScenarioWizardForm({
         adjusted.receiverConfidencePercent = 72;
       }
 
-      if (hardwareFault.faultyComponentId === "gps-cable-1") {
+      if (hardwareFault.faultyComponentIds.includes("gps-cable-1")) {
         adjusted.gpsStatus = "unsynchronized";
       }
 
@@ -225,7 +225,7 @@ export function ScenarioWizardForm({
             {currentStep === 2 ? "Cấu hình trạng thái ban đầu" : null}
             {currentStep === 3 ? "Chọn vai trò đăng nhập" : null}
             {currentStep === 4 ? "Xây dựng đáp án thao tác" : null}
-            {currentStep === 5 ? "Hardware Fault" : null}
+            {currentStep === 5 ? "Kịch bản sự cố phần cứng" : null}
           </h2>
         </header>
 

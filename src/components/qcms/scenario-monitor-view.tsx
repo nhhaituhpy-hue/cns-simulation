@@ -4,13 +4,10 @@ import Link from "next/link";
 import { ArrowLeft, Warning, WarningCircle } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { HardwareDiagnosisWorkspace } from "@/components/hardware/hardware-diagnosis-workspace";
-import { GeneralSettingsDialog } from "./general-settings-dialog";
 import { HardwareGradingResult } from "@/components/grading/hardware-grading-result";
-import {
-  gradeHardwareDiagnosis,
-  type HardwareGradingResult as HardwareGradingData,
-} from "@/lib/grading";
+import { useRecordingStore } from "@/stores/recording-store";
 import { useScenarioStore } from "@/stores/scenario-store";
+import { GeneralSettingsDialog } from "./general-settings-dialog";
 import { DIFFICULTY_DETAILS } from "./qcms-utils";
 import { ElapsedTimer } from "./elapsed-timer";
 import { LogWindow } from "./log-window";
@@ -21,30 +18,32 @@ import { SiteMonitor } from "./site-monitor";
 
 type ScenarioMonitorViewProps = {
   scenarioId: string;
+  autoOpenHardware?: boolean;
 };
 
-export function ScenarioMonitorView({ scenarioId }: ScenarioMonitorViewProps) {
+export function ScenarioMonitorView({
+  scenarioId,
+  autoOpenHardware = false,
+}: ScenarioMonitorViewProps) {
   const [activePanel, setActivePanel] = useState<QcmsPanel>("sites");
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const [showHardwareDiagnosis, setShowHardwareDiagnosis] = useState(false);
-  const [hardwareResult, setHardwareResult] =
-    useState<HardwareGradingData | null>(null);
-  const [hardwareActions, setHardwareActions] = useState({
-    openedTerminal: false,
-    openedMonitoring: false,
-    inspectedComponents: [] as string[],
-  });
-  const {
-    isHydrated,
-    storageError,
-    hydrate,
-    getScenarioById,
-  } = useScenarioStore();
+  const [showHardwareDiagnosis, setShowHardwareDiagnosis] =
+    useState(autoOpenHardware);
+  const recording = useRecordingStore();
+  const { isHydrated, storageError, hydrate, getScenarioById } =
+    useScenarioStore();
   const scenario = getScenarioById(scenarioId);
 
   useEffect(() => {
     hydrate();
   }, [hydrate]);
+
+  useEffect(() => {
+    if (scenario) {
+      recording.beginAttempt(scenario.id);
+    }
+  }, [recording, scenario]);
+
 
   if (!isHydrated) {
     return <ScenarioMonitorLoading />;
@@ -67,22 +66,22 @@ export function ScenarioMonitorView({ scenarioId }: ScenarioMonitorViewProps) {
         </p>
         <Link
           href="/student"
-          className="mt-6 inline-flex min-h-11 items-center gap-2 rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+          className="mt-6 inline-flex min-h-11 items-center gap-2 rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)]"
         >
-          <ArrowLeft aria-hidden size={17} weight="regular" />
-          Về danh sách bài
+          <ArrowLeft aria-hidden size={17} />
+          Về danh sách bài thực hành
         </Link>
-
       </section>
     );
   }
 
-  const expectedHardwareComponent = scenario.hardwareFault?.hardwareLayout.find(
-    (component) =>
-      component.id === scenario.hardwareFault?.faultyComponentId,
-  );
-
+  const expectedHardwareComponents =
+    scenario.hardwareFault?.hardwareLayout.filter((component) =>
+      scenario.hardwareFault?.faultyComponentIds.includes(component.id),
+    ) ?? [];
   const difficulty = DIFFICULTY_DETAILS[scenario.difficulty];
+  const hardwareAvailable =
+    Boolean(scenario.hardwareFault) && recording.phase === "hardware";
 
   return (
     <section className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">
@@ -90,9 +89,9 @@ export function ScenarioMonitorView({ scenarioId }: ScenarioMonitorViewProps) {
         <div className="min-w-0">
           <Link
             href="/student"
-            className="inline-flex min-h-9 items-center gap-2 rounded px-1 text-sm font-semibold text-[var(--accent)] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+            className="inline-flex min-h-9 items-center gap-2 rounded px-1 text-sm font-semibold text-[var(--accent)] hover:underline"
           >
-            <ArrowLeft aria-hidden size={17} weight="regular" />
+            <ArrowLeft aria-hidden size={17} />
             Danh sách bài thực hành
           </Link>
           <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -113,31 +112,67 @@ export function ScenarioMonitorView({ scenarioId }: ScenarioMonitorViewProps) {
       </header>
 
       {scenario.hardwareFault ? (
-        <div className="mt-4 flex flex-wrap gap-2">
-          <Link
-            href={
-              "/student/terminal?id=" +
-              encodeURIComponent(scenario.id) +
-              "&sensorId=" +
-              encodeURIComponent(scenario.targetSensorId)
-            }
-            onClick={() =>
-              setHardwareActions((current) => ({
-                ...current,
-                openedTerminal: true,
-              }))
-            }
-            className="inline-flex min-h-10 items-center rounded border border-[var(--border-strong)] bg-white px-4 text-sm font-semibold text-[var(--accent)] hover:bg-[var(--surface-muted)]"
+        <div className="mt-4 rounded-lg border border-[var(--border)] bg-white p-4">
+          <ol
+            aria-label="Tiến trình bài thực hành"
+            className="grid gap-2 text-xs font-semibold sm:grid-cols-3"
           >
-            Open Terminal
-          </Link>
-          <button
-            type="button"
-            onClick={() => setShowHardwareDiagnosis(true)}
-            className="inline-flex min-h-10 items-center rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)]"
-          >
-            Hardware Diagram
-          </button>
+            {[
+              ["1", "QCMS"],
+              ["2", "Terminal"],
+              ["3", "Sơ đồ phần cứng"],
+            ].map(([number, label], index) => {
+              const phaseIndex = {
+                qcms: 0,
+                terminal: 1,
+                hardware: 2,
+                completed: 3,
+              }[recording.phase];
+              const completed = index < phaseIndex;
+              const active = index === phaseIndex;
+              return (
+                <li
+                  key={number}
+                  className={`rounded border px-3 py-2 ${
+                    active
+                      ? "border-blue-400 bg-blue-50 text-blue-900"
+                      : completed
+                        ? "border-green-300 bg-green-50 text-green-800"
+                        : "border-[var(--border)] text-[var(--text-muted)]"
+                  }`}
+                >
+                  {number}. {label}
+                </li>
+              );
+            })}
+          </ol>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              href={
+                "/student/terminal?id=" +
+                encodeURIComponent(scenario.id) +
+                "&sensorId=" +
+                encodeURIComponent(scenario.targetSensorId)
+              }
+              className="inline-flex min-h-10 items-center rounded border border-[var(--border-strong)] bg-white px-4 text-sm font-semibold text-[var(--accent)] hover:bg-[var(--surface-muted)]"
+            >
+              Mở Terminal
+            </Link>
+            <button
+              type="button"
+              disabled={!hardwareAvailable}
+              onClick={() => setShowHardwareDiagnosis(true)}
+              className="inline-flex min-h-10 items-center rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:bg-[var(--surface-muted)] disabled:text-[var(--text-muted)]"
+            >
+              Sơ đồ phần cứng
+            </button>
+          </div>
+          {!hardwareAvailable && recording.phase !== "completed" ? (
+            <p className="mt-2 text-xs text-[var(--text-muted)]">
+              Hoàn tất phần Terminal trước khi mở sơ đồ phần cứng.
+            </p>
+          ) : null}
         </div>
       ) : null}
 
@@ -164,12 +199,7 @@ export function ScenarioMonitorView({ scenarioId }: ScenarioMonitorViewProps) {
           <div className="p-4 sm:p-5">
             <SiteMonitor
               scenario={scenario}
-              onMonitoringOpened={() =>
-                setHardwareActions((current) => ({
-                  ...current,
-                  openedMonitoring: true,
-                }))
-              }
+              onMonitoringOpened={recording.markQcmsMonitoringOpened}
             />
           </div>
         ) : activePanel === "log" ? (
@@ -181,55 +211,48 @@ export function ScenarioMonitorView({ scenarioId }: ScenarioMonitorViewProps) {
         )}
       </div>
 
-      {showHardwareDiagnosis && scenario.hardwareFault ? (
+      {showHardwareDiagnosis &&
+      recording.phase === "hardware" &&
+      scenario.hardwareFault ? (
         <HardwareDiagnosisWorkspace
           hardwareFault={scenario.hardwareFault}
           onClose={() => setShowHardwareDiagnosis(false)}
           onSubmit={(diagnosis) => {
-            setHardwareActions((current) => ({
-              ...current,
-              inspectedComponents: diagnosis.inspectedComponents,
-            }));
-            const result = gradeHardwareDiagnosis(
-              { componentId: scenario.hardwareFault?.faultyComponentId ?? "" },
-              { componentId: diagnosis.componentId },
-              { ...hardwareActions, inspectedComponents: diagnosis.inspectedComponents },
+            recording.submitCombinedAttempt(
+              scenario.expectedActions,
+              scenario.hardwareFault?.faultyComponentIds ?? [],
+              diagnosis.componentIds,
+              diagnosis.inspectedComponents,
             );
-            setHardwareResult(result);
             setShowHardwareDiagnosis(false);
           }}
         />
       ) : null}
 
-
-      {hardwareResult &&
+      {recording.combinedGradingResult &&
       scenario.hardwareFault &&
-      expectedHardwareComponent ? (
+      expectedHardwareComponents.length > 0 ? (
         <div className="fixed inset-0 z-[70] grid place-items-center overflow-y-auto bg-[#172033]/60 p-4">
           <HardwareGradingResult
-            result={hardwareResult}
-            expectedComponent={expectedHardwareComponent}
+            result={recording.combinedGradingResult}
+            expectedComponents={scenario.hardwareFault.hardwareLayout}
             hardwareFault={scenario.hardwareFault}
             onRetry={() => {
-              setHardwareResult(null);
-              setShowHardwareDiagnosis(true);
-              setHardwareActions((current) => ({
-                ...current,
-                inspectedComponents: [],
-              }));
+              recording.resetAttempt();
+              recording.beginAttempt(scenario.id);
+              setShowHardwareDiagnosis(false);
             }}
           />
         </div>
       ) : null}
-      {showExitConfirm ? (
 
+      {showExitConfirm ? (
         <div
           className="fixed inset-0 z-40 flex items-center justify-center bg-[#17212b]/55 p-4"
           role="presentation"
           onMouseDown={(event) => {
             if (event.currentTarget === event.target) setShowExitConfirm(false);
           }}
-
         >
           <div
             role="alertdialog"
@@ -242,30 +265,29 @@ export function ScenarioMonitorView({ scenarioId }: ScenarioMonitorViewProps) {
               id="qcms-exit-title"
               className="text-lg font-semibold text-[var(--text-primary)]"
             >
-              {"Tho\u00e1t QCMS?"}
+              Thoát QCMS?
             </h2>
             <p
               id="qcms-exit-description"
               className="mt-2 text-sm leading-6 text-[var(--text-secondary)]"
             >
-              {
-                "\u0110\u00e2y l\u00e0 thao t\u00e1c m\u00f4 ph\u1ecfng. Phi\u00ean th\u1ef1c h\u00e0nh v\u00e0 d\u1eef li\u1ec7u hi\u1ec7n t\u1ea1i s\u1ebd \u0111\u01b0\u1ee3c gi\u1eef nguy\u00ean."
-              }
+              Đây là thao tác mô phỏng. Phiên thực hành và dữ liệu hiện tại sẽ
+              được giữ nguyên.
             </p>
             <div className="mt-5 flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setShowExitConfirm(false)}
-                className="h-10 rounded border border-[var(--border-strong)] px-4 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                className="h-10 rounded border border-[var(--border-strong)] px-4 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)]"
               >
-                {"Kh\u00f4ng"}
+                Không
               </button>
               <button
                 type="button"
                 onClick={() => setShowExitConfirm(false)}
-                className="h-10 rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+                className="h-10 rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)]"
               >
-                {"X\u00e1c nh\u1eadn m\u00f4 ph\u1ecfng"}
+                Xác nhận mô phỏng
               </button>
             </div>
           </div>

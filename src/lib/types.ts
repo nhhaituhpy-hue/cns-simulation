@@ -73,7 +73,7 @@ export interface RecordedAction {
 }
 
 export interface ScenarioHardwareFault {
-  faultyComponentId: string;
+  faultyComponentIds: string[];
   faultType: HardwareFaultType;
   faultDescription: string;
   hardwareLayout: HardwareComponent[];
@@ -121,6 +121,25 @@ export interface GradingResult {
   totalExpected: number;
   totalSubmitted: number;
   steps: StepComparison[];
+}
+
+export interface HardwareSelectionResult {
+  exactMatch: boolean;
+  expectedComponentIds: string[];
+  submittedComponentIds: string[];
+  correctComponentIds: string[];
+  missedComponentIds: string[];
+  extraComponentIds: string[];
+  score: number;
+}
+
+export interface CombinedGradingResult {
+  passed: boolean;
+  score: number;
+  authenticatedCorrectly: boolean;
+  terminalScore: number;
+  terminalResult: GradingResult;
+  hardwareResult: HardwareSelectionResult;
 }
 
 export interface NetworkConfig {

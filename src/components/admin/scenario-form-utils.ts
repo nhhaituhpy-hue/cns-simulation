@@ -179,11 +179,16 @@ export function validateScenarioStep(
   if (
     step === 5 &&
     draft.hardwareFault &&
-    !draft.hardwareFault.hardwareLayout.some(
-      (component) => component.id === draft.hardwareFault?.faultyComponentId,
-    )
+    (draft.hardwareFault.faultyComponentIds.length === 0 ||
+      draft.hardwareFault.faultyComponentIds.some(
+        (componentId) =>
+          !draft.hardwareFault?.hardwareLayout.some(
+            (component) => component.id === componentId,
+          ),
+      ))
   ) {
-    errors.hardwareFault = "Select a valid faulty component.";
+    errors.hardwareFault =
+      "Hãy đánh dấu ít nhất một phần cứng sự cố hợp lệ.";
   }
 
   return errors;

@@ -207,10 +207,10 @@ export function cloneScenarios(
           }
         : null,
     })),
-    eventLog: scenario.eventLog?.map((event) => ({
     hardwareFault: scenario.hardwareFault
       ? structuredClone(scenario.hardwareFault)
       : undefined,
+    eventLog: scenario.eventLog?.map((event) => ({
       ...event,
     })),
     expectedActions: scenario.expectedActions.map((action) => ({ ...action })),

@@ -18,6 +18,10 @@ function toRow(scenario: Scenario) {
     target_sensor_id: scenario.targetSensorId,
     target_login_user: scenario.targetLoginUser,
     expected_actions_json: JSON.stringify(scenario.expectedActions),
+    hardware_fault_json: scenario.hardwareFault
+      ? JSON.stringify(scenario.hardwareFault)
+      : null,
+    event_log_json: scenario.eventLog ? JSON.stringify(scenario.eventLog) : null,
     created_at: scenario.createdAt || new Date().toISOString(),
     updated_at: scenario.updatedAt ?? null,
   };

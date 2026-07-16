@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { RecordableAction } from "@/lib/types";
 import { createTerminalStore } from "@/stores/terminal-store";
@@ -111,4 +111,23 @@ describe("terminal store", () => {
       menuStack: [],
     });
   });
-});
+
+  it("requires the standard username@device-IP login for student sessions", () => {
+    const onAuthenticated = vi.fn();
+    const store = createTerminalStore({ onAuthenticated });
+
+    store.getState().initialize({
+      targetLoginUser: "sysadmin",
+      targetIpAddress: "192.168.201.1",
+    });
+
+    store.getState().processInput("sysadmin");
+    expect(store.getState().authPhase).toBe("username");
+
+    store.getState().processInput("sysadmin@192.168.201.1");
+    expect(store.getState().authPhase).toBe("password");
+
+    store.getState().processInput("training-password");
+    expect(store.getState().isLoggedIn).toBe(true);
+    expect(onAuthenticated).toHaveBeenCalledOnce();
+  });});

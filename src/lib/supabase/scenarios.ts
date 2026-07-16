@@ -1,4 +1,11 @@
-import type { RecordedAction, Scenario, SiteState } from "@/lib/types";
+import { normalizeScenario } from "@/lib/scenario-normalization";
+import type {
+  QcmsEvent,
+  RecordedAction,
+  Scenario,
+  ScenarioHardwareFault,
+  SiteState,
+} from "@/lib/types";
 
 function requiredString(row: Record<string, unknown>, field: string): string {
   const value = row[field];
@@ -6,6 +13,20 @@ function requiredString(row: Record<string, unknown>, field: string): string {
     throw new Error(`Database field "${field}" must be a string.`);
   }
   return value;
+}
+
+function optionalJson<T>(
+  row: Record<string, unknown>,
+  field: string,
+): T | undefined {
+  const value = row[field];
+  if (value === null || value === undefined || value === "") {
+    return undefined;
+  }
+  if (typeof value !== "string") {
+    throw new Error(`Database field "${field}" must be JSON text.`);
+  }
+  return JSON.parse(value) as T;
 }
 
 export function mapRowToScenario(row: unknown): Scenario {
@@ -29,7 +50,7 @@ export function mapRowToScenario(row: unknown): Scenario {
       ? undefined
       : requiredString(record, "updated_at");
 
-  return {
+  return normalizeScenario({
     id: requiredString(record, "id"),
     title: requiredString(record, "title"),
     description: requiredString(record, "description"),
@@ -40,7 +61,12 @@ export function mapRowToScenario(row: unknown): Scenario {
     expectedActions: JSON.parse(
       requiredString(record, "expected_actions_json"),
     ) as RecordedAction[],
+    hardwareFault: optionalJson<ScenarioHardwareFault>(
+      record,
+      "hardware_fault_json",
+    ),
+    eventLog: optionalJson<QcmsEvent[]>(record, "event_log_json"),
     createdAt: requiredString(record, "created_at"),
     updatedAt,
-  };
+  }) as Scenario;
 }

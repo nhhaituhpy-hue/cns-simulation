@@ -75,7 +75,7 @@ test("student completes the seeded CAT21 exercise and passes", async ({ page }) 
   await page.getByRole("link", { name: "Mở ứng dụng bảo trì" }).click();
 
   const terminalInput = page.locator("#terminal-command-input");
-  await terminalInput.fill("sysadmin");
+  await terminalInput.fill("sysadmin@10.10.10.3");
   await terminalInput.press("Enter");
   await expect(page.getByLabel("Nhập mật khẩu mô phỏng")).toBeVisible();
   await terminalInput.fill("training-password");

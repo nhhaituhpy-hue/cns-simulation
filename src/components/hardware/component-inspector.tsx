@@ -171,7 +171,7 @@ export function ComponentInspector({
             disabled={!onMarkedAsFaultyChange}
             className="size-4 accent-[#dc2626]"
           />
-          Mark as faulty component
+          Đánh dấu phần cứng sự cố
         </label>
       </div>
     </aside>

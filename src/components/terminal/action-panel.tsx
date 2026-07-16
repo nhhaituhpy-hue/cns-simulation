@@ -18,6 +18,8 @@ export interface ActionPanelProps {
   onSelectAll: () => void;
   onClearSelection: () => void;
   onSubmit: () => void;
+  submitLabel?: string;
+  canSubmit?: boolean;
 }
 
 export function ActionPanel({
@@ -29,6 +31,8 @@ export function ActionPanel({
   onSelectAll,
   onClearSelection,
   onSubmit,
+  submitLabel = "Nộp bài",
+  canSubmit = selectedActions.length > 0,
 }: ActionPanelProps) {
   const selectedSteps = new Set(selectedActions.map((action) => action.step));
 
@@ -77,7 +81,7 @@ export function ActionPanel({
         <button
           type="button"
           onClick={onClearSelection}
-          disabled={selectedActions.length === 0}
+          disabled={!canSubmit}
           className="ml-auto inline-flex min-h-9 items-center gap-1.5 rounded px-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-40"
         >
           <Trash aria-hidden size={16} />
@@ -150,10 +154,10 @@ export function ActionPanel({
         <button
           type="button"
           onClick={onSubmit}
-          disabled={selectedActions.length === 0}
+          disabled={!canSubmit}
           className="inline-flex min-h-12 w-full items-center justify-center rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] active:bg-[var(--accent-active)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-[var(--surface-muted)] disabled:text-[var(--text-muted)]"
         >
-          Nộp bài
+          {submitLabel}
         </button>
       </div>
     </aside>

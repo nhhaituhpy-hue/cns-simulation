@@ -10,6 +10,7 @@ import type { MenuTree } from "../../src/lib/menu-data/menu-types";
 import {
   TerminalEngine,
   authenticateLoginUser,
+  authenticateTerminalLogin,
   renderMenu,
 } from "../../src/lib/terminal-engine";
 
@@ -90,6 +91,27 @@ describe("TerminalEngine", () => {
   it("authenticates only the scenario target login user", () => {
     expect(authenticateLoginUser(" SYSADMIN ", "sysadmin")).toBe(true);
     expect(authenticateLoginUser("maintenance", "sysadmin")).toBe(false);
+    expect(
+      authenticateTerminalLogin(
+        "sysadmin@192.168.201.1",
+        "sysadmin",
+        "192.168.201.1",
+      ),
+    ).toBe(true);
+    expect(
+      authenticateTerminalLogin(
+        "maintenance@192.168.201.1",
+        "sysadmin",
+        "192.168.201.1",
+      ),
+    ).toBe(false);
+    expect(
+      authenticateTerminalLogin(
+        "sysadmin@192.168.201.2",
+        "sysadmin",
+        "192.168.201.1",
+      ),
+    ).toBe(false);
 
     const engine = new TerminalEngine({ targetLoginUser: "maintenance" });
     expect(engine.authenticate("Maintenance")).toBe(true);

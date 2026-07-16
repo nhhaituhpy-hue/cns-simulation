@@ -25,6 +25,7 @@ import { StatusBadge } from "./status-badge";
 type SensorMonitoringModalProps = {
   scenarioId: string;
   sensor: SensorState;
+  qcmsSymptoms?: readonly string[];
   onClose: () => void;
   now: number;
 };
@@ -76,6 +77,7 @@ function gpsLabel(status: SensorMonitoringData["gpsStatus"]): string {
 export function SensorMonitoringModal({
   scenarioId,
   sensor,
+  qcmsSymptoms = [],
   onClose,
   now,
 }: SensorMonitoringModalProps) {
@@ -214,6 +216,19 @@ export function SensorMonitoringModal({
                 </p>
               </div>
             </div>
+          ) : null}
+
+          {qcmsSymptoms.length > 0 ? (
+            <section className="mt-4 rounded border border-amber-300 bg-amber-50 p-3">
+              <h3 className="text-sm font-semibold text-amber-950">
+                Hiện tượng ghi nhận trên QCMS
+              </h3>
+              <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-5 text-amber-900">
+                {qcmsSymptoms.map((symptom) => (
+                  <li key={symptom}>{symptom}</li>
+                ))}
+              </ul>
+            </section>
           ) : null}
 
           <dl className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
