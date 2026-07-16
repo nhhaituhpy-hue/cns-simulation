@@ -32,7 +32,7 @@ export function VorSubmissionList() {
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-[var(--text-primary)]">Bài nộp của học viên</h1>
           <p className="mt-2 max-w-[65ch] text-sm leading-6 text-[var(--text-secondary)]">Đọc trình tự thao tác, chú thích kỹ thuật, kết luận sự cố và nhập điểm đánh giá.</p>
         </div>
-        <Link href="/admin" className="inline-flex h-10 items-center justify-center rounded border border-[var(--border-strong)] bg-white px-4 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)]">Về quản lý kịch bản</Link>
+        <Link href="/admin/vor" className="inline-flex h-10 items-center justify-center rounded border border-[var(--border-strong)] bg-white px-4 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)]">Về quản lý kịch bản</Link>
       </header>
 
       {syncError ? (

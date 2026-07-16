@@ -53,6 +53,7 @@ export interface VorPmdtStoreState {
   studentCode: string;
   overrides: VorFieldOverride[];
   expectedCheckpoints: VorExpectedCheckpoint[];
+  studentFieldStates: VorFieldOverride[];
   attemptEvents: VorAttemptEvent[];
   answer: VorStudentAnswer;
 }
@@ -72,6 +73,12 @@ export interface VorPmdtStoreActions {
   clearOverlay: () => void;
   addCurrentViewAsCheckpoint: (guidance?: string, points?: number) => void;
   removeCheckpoint: (checkpointId: string) => void;
+  interactWithSidebar: (
+    fieldId: string,
+    title: string,
+    resultValue: VorEditableValue,
+    resultStatus: VorIndicatorColor | VorParameterStatus,
+  ) => void;
   updateEventAnnotation: (eventId: string, annotation: string) => void;
   updateAnswer: (changes: Partial<VorStudentAnswer>) => void;
   reset: () => void;
@@ -103,6 +110,7 @@ function initialState(): VorPmdtStoreState {
     studentCode: "",
     overrides: [],
     expectedCheckpoints: [],
+    studentFieldStates: [],
     attemptEvents: [],
     answer: { ...emptyAnswer },
   };
@@ -146,6 +154,7 @@ export function createVorPmdtStore(
       const event: VorAttemptEvent = {
         id: generateId(),
         sequence: state.attemptEvents.length + 1,
+        eventType: "view",
         screenId,
         viewId,
         menuPath: [...menuPath],
@@ -242,6 +251,32 @@ export function createVorPmdtStore(
             .filter((item) => item.id !== checkpointId)
             .map((item, index) => ({ ...item, order: index + 1 })),
         })),
+
+      interactWithSidebar: (fieldId, title, resultValue, resultStatus) => {
+        const state = get();
+        if (state.mode !== "student") return;
+        const event: VorAttemptEvent = {
+          id: generateId(),
+          sequence: state.attemptEvents.length + 1,
+          eventType: "sidebar",
+          screenId: state.activeScreen,
+          viewId: state.activeView,
+          menuPath: ["Sidebar", title],
+          title,
+          visitedAt: now().toISOString(),
+          annotation: "",
+          fieldId,
+          resultValue,
+          resultStatus,
+        };
+        set({
+          studentFieldStates: [
+            ...state.studentFieldStates.filter((item) => item.fieldId !== fieldId),
+            { fieldId, value: resultValue, status: resultStatus },
+          ],
+          attemptEvents: [...state.attemptEvents, event],
+        });
+      },
 
       updateEventAnnotation: (eventId, annotation) =>
         set((state) => ({

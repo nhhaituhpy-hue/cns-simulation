@@ -9,6 +9,10 @@ import type {
 } from "@/lib/vor-types";
 import type { VorScenarioInput } from "@/stores/vor-scenario-store";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
+import {
+  getSidebarInteractionTargets,
+  isInteractiveSidebarField,
+} from "@/lib/vor-sidebar-fields";
 
 export interface VorSelectedField {
   fieldId: string;
@@ -42,7 +46,7 @@ export function VorAuthorPanel({
 }: VorAuthorPanelProps) {
   const activeMenuPath = useVorPmdtStore((state) => state.activeMenuPath);
   const checkpoints = useVorPmdtStore((state) => state.expectedCheckpoints);
-  const overrideCount = useVorPmdtStore((state) => state.overrides.length);
+  const overrides = useVorPmdtStore((state) => state.overrides);
   const addCheckpoint = useVorPmdtStore((state) => state.addCurrentViewAsCheckpoint);
   const removeCheckpoint = useVorPmdtStore((state) => state.removeCheckpoint);
   const [fieldValue, setFieldValue] = useState(
@@ -50,6 +54,7 @@ export function VorAuthorPanel({
   );
   const [fieldChecked, setFieldChecked] = useState(selectedField?.value === true);
   const [fieldStatus, setFieldStatus] = useState(selectedField?.status ?? "");
+  const interactionTargets = getSidebarInteractionTargets(overrides);
 
   function applyField() {
     if (!selectedField) return;
@@ -89,6 +94,11 @@ export function VorAuthorPanel({
           <div className="mt-2 grid gap-2">
             <p className="break-all font-mono text-[10px] text-[#60a5fa]">{selectedField.fieldId}</p>
             <p className="line-clamp-2 text-[10px] text-[#94a3b8]">{selectedField.label}</p>
+            {isInteractiveSidebarField(selectedField.fieldId) ? (
+              <p className="border border-[#745f17] bg-[#3a2f0f] p-2 text-[10px] leading-4 text-[#fef08a]">
+                Đây là trạng thái đích học viên phải thao tác. Trong bài làm, ô bắt đầu màu xám và chỉ đổi sang màu đã chọn sau khi học viên nhấn.
+              </p>
+            ) : null}
             {typeof selectedField.value === "boolean" ? (
               <label className="flex items-center gap-2"><input type="checkbox" checked={fieldChecked} onChange={(event) => setFieldChecked(event.target.checked)} />Bật trạng thái</label>
             ) : (
@@ -106,7 +116,21 @@ export function VorAuthorPanel({
         <ol className="mt-2 grid gap-1.5">{checkpoints.map((checkpoint) => <li key={checkpoint.id} className="flex items-start gap-2 border border-[#334155] bg-[#0f172a] p-2"><span className="font-mono text-[10px] text-[#94a3b8]">{checkpoint.order}</span><span className="min-w-0 flex-1 truncate text-[10px]">{checkpoint.menuPath.join(" > ")}</span><button type="button" onClick={() => removeCheckpoint(checkpoint.id)} aria-label={`Xóa bước ${checkpoint.order}`} className="text-[#fca5a5]"><Trash aria-hidden size={12} /></button></li>)}</ol>
       </section>
 
-      <p className="text-[10px] text-[#94a3b8]">{overrideCount} giá trị đã cấu hình</p>
+      {interactionTargets.length > 0 ? (
+        <section className="border-t border-[#334155] pt-3" aria-labelledby="vor-sidebar-actions-title">
+          <h3 id="vor-sidebar-actions-title" className="font-semibold text-[#e2e8f0]">Thao tác sidebar cần chấm</h3>
+          <ul className="mt-2 grid gap-1.5">
+            {interactionTargets.map((target) => (
+              <li key={target.fieldId} className="flex items-center justify-between border border-[#334155] bg-[#0f172a] p-2 text-[10px]">
+                <span>{target.label}</span>
+                <span className="font-mono text-[#fef08a]">{String(target.value)} · {target.status ?? "yellow"}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <p className="text-[10px] text-[#94a3b8]">{overrides.length} giá trị đã cấu hình</p>
       {error ? <p role="alert" className="border border-[#7f1d1d] bg-[#3a0f0f] p-2 text-[10px] text-[#fecaca]">{error}</p> : null}
     </div>
   );

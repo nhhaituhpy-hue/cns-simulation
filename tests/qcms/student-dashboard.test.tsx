@@ -40,7 +40,7 @@ describe("StudentDashboard", () => {
   });
 
   it("renders the empty state after hydration", () => {
-    render(<StudentDashboard />);
+    render(<StudentDashboard activeModule="ads-b" />);
 
     expect(screen.getByText("Chưa có bài thực hành")).toBeVisible();
     expect(screen.getByRole("link", { name: "Tạo kịch bản" })).toHaveAttribute(
@@ -52,7 +52,7 @@ describe("StudentDashboard", () => {
   it("renders scenario metadata without exposing the target sensor", () => {
     useScenarioStore.setState({ scenarios: [scenario], isHydrated: true });
 
-    render(<StudentDashboard />);
+    render(<StudentDashboard activeModule="ads-b" />);
 
     const card = screen.getByRole("link", { name: /Kiểm tra cảm biến/ });
     expect(card).toHaveAttribute("href", "/student/simulation?id=scenario-dashboard");
@@ -82,7 +82,7 @@ describe("StudentDashboard", () => {
       isHydrated: true,
     });
 
-    render(<StudentDashboard />);
+    render(<StudentDashboard activeModule="ads-b" />);
 
     const markers = screen.getAllByLabelText(/Bài thực hành số/);
     expect(markers[0]).toHaveTextContent("01");

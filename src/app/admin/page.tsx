@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { AdminDashboard } from "@/components/admin/admin-dashboard";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Quản lý kịch bản",
 };
 
 export default function AdminPage() {
-  return <AdminDashboard />;
+  redirect("/admin/vor");
 }

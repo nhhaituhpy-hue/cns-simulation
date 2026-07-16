@@ -94,7 +94,7 @@ export function ScenarioMonitorView({
           Kịch bản có thể đã bị xóa hoặc đường dẫn không còn hợp lệ.
         </p>
         <Link
-          href="/student"
+          href="/student/ads-b"
           className="mt-6 inline-flex min-h-11 items-center gap-2 rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)]"
         >
           <ArrowLeft aria-hidden size={17} />
@@ -117,7 +117,7 @@ export function ScenarioMonitorView({
       <header className="flex flex-col gap-4 border-b border-[var(--border)] pb-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <Link
-            href="/student"
+            href="/student/ads-b"
             className="inline-flex min-h-9 items-center gap-2 rounded px-1 text-sm font-semibold text-[var(--accent)] hover:underline"
           >
             <ArrowLeft aria-hidden size={17} />

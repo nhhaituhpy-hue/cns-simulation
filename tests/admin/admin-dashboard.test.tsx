@@ -71,7 +71,7 @@ describe("AdminDashboard", () => {
       isHydrated: true,
     });
 
-    render(<AdminDashboard />);
+    render(<AdminDashboard activeModule="ads-b" />);
 
     const markers = screen.getAllByLabelText(/Kịch bản số/);
     expect(markers[0]).toHaveTextContent("01");
@@ -82,7 +82,7 @@ describe("AdminDashboard", () => {
 
   it("shows scenario details and deletes only after confirmation", async () => {
     const user = userEvent.setup();
-    render(<AdminDashboard />);
+    render(<AdminDashboard activeModule="ads-b" />);
 
     expect(screen.getByText("Kiểm tra Sensor A")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Xóa" }));

@@ -38,7 +38,7 @@ export function VorAdminDashboard() {
               <Broadcast aria-hidden size={26} weight="duotone" />
             </span>
             <h3 className="mt-4 text-lg font-semibold text-[var(--text-primary)]">
-              PMDT Simulator — VOR DVOR 1150A
+              PMDT Simulator — DVOR 1150A
             </h3>
             <p className="mt-2 max-w-[60ch] text-sm leading-6 text-[var(--text-secondary)]">
               Cấu hình dữ liệu sự cố và xây dựng các bước kiểm tra ngay trên giao diện PMDT.

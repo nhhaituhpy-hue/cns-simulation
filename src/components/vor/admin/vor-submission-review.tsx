@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useVorScenarioStore } from "@/stores/vor-scenario-store";
 import { useVorSubmissionStore } from "@/stores/vor-submission-store";
+import { getSidebarInteractionTargets } from "@/lib/vor-sidebar-fields";
 
 interface VorSubmissionReviewProps {
   submissionId: string;
@@ -27,8 +28,16 @@ export function VorSubmissionReview({ submissionId }: VorSubmissionReviewProps) 
   }, [hydrateScenarios, hydrateSubmissions]);
 
   const visitedViews = useMemo(
-    () => new Set(submission?.events.map((event) => event.viewId) ?? []),
+    () => new Set(
+      submission?.events
+        .filter((event) => event.eventType !== "sidebar")
+        .map((event) => event.viewId) ?? [],
+    ),
     [submission?.events],
+  );
+  const sidebarTargets = useMemo(
+    () => getSidebarInteractionTargets(scenario?.overrides ?? []),
+    [scenario?.overrides],
   );
 
   if (!submissionsHydrated) {
@@ -84,6 +93,11 @@ export function VorSubmissionReview({ submissionId }: VorSubmissionReviewProps) 
                     <div className="min-w-0">
                       <p className="font-semibold text-[var(--text-primary)]">{item.title}</p>
                       <p className="mt-1 text-xs text-[var(--text-muted)]">{item.menuPath.join(" › ")}</p>
+                      {item.eventType === "sidebar" ? (
+                        <p className="mt-2 font-mono text-xs font-semibold text-[#a16207]">
+                          Kết quả: {String(item.resultValue)} · {item.resultStatus}
+                        </p>
+                      ) : null}
                       <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[var(--text-secondary)]">{item.annotation || "Không có chú thích."}</p>
                     </div>
                   </div>
@@ -119,6 +133,33 @@ export function VorSubmissionReview({ submissionId }: VorSubmissionReviewProps) 
                 })}
               </ul>
             ) : <p className="text-sm text-[var(--text-muted)]">Không còn dữ liệu checkpoint của kịch bản.</p>}
+
+            {sidebarTargets.length > 0 ? (
+              <div className="mt-5 border-t border-[var(--border)] pt-4">
+                <h3 className="text-sm font-bold text-[var(--text-primary)]">Thao tác sidebar</h3>
+                <ul className="mt-3 space-y-3">
+                  {sidebarTargets.map((target) => {
+                    const lastInteraction = submission.events
+                      .filter((event) =>
+                        event.eventType === "sidebar" && event.fieldId === target.fieldId,
+                      )
+                      .at(-1);
+                    const completed =
+                      lastInteraction?.resultValue === target.value &&
+                      lastInteraction.resultStatus === (target.status ?? "yellow");
+                    return (
+                      <li key={target.fieldId} className="flex gap-3 rounded border border-[var(--border)] p-3">
+                        {completed ? <CheckCircle aria-label="Đã thao tác" size={19} weight="fill" className="shrink-0 text-[#16a34a]" /> : <Circle aria-label="Chưa thao tác" size={19} className="shrink-0 text-[var(--text-muted)]" />}
+                        <div>
+                          <p className="text-sm font-semibold text-[var(--text-primary)]">{target.label}</p>
+                          <p className="mt-1 font-mono text-xs text-[var(--text-secondary)]">Đích: {String(target.value)} · {target.status ?? "yellow"}</p>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ) : null}
           </ReviewSection>
 
           <section className="rounded-lg border border-[var(--border)] bg-white p-5 shadow-[var(--shadow-card)]">

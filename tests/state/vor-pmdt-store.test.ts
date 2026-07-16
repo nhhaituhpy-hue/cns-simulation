@@ -103,4 +103,24 @@ describe("VOR PMDT store", () => {
       }),
     ]);
   });
+
+  it("records a student sidebar interaction and resulting color", () => {
+    const store = createVorPmdtStore({
+      now: () => new Date("2026-07-16T10:05:00.000Z"),
+      generateId: () => "sidebar-event-1",
+    });
+    store.getState().initializeSession({ mode: "student" });
+    store.getState().interactWithSidebar("local", "Local", true, "yellow");
+
+    expect(store.getState().studentFieldStates).toEqual([
+      { fieldId: "local", value: true, status: "yellow" },
+    ]);
+    expect(store.getState().attemptEvents[0]).toMatchObject({
+      eventType: "sidebar",
+      fieldId: "local",
+      resultValue: true,
+      resultStatus: "yellow",
+      visitedAt: "2026-07-16T10:05:00.000Z",
+    });
+  });
 });

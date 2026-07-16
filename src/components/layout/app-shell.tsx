@@ -25,8 +25,8 @@ type NavigationItem = {
 
 const navigationItems: NavigationItem[] = [
   { href: "/", label: "Trang chủ", icon: House },
-  { href: "/admin", label: "Quản trị", icon: GearSix },
-  { href: "/student", label: "Học viên", icon: Student },
+  { href: "/admin/vor", label: "Quản trị", icon: GearSix },
+  { href: "/student/vor", label: "Học viên", icon: Student },
 ];
 
 function BrandWordmark() {
@@ -47,7 +47,8 @@ function isItemActive(pathname: string, href: string) {
     return pathname === href;
   }
 
-  return pathname.startsWith(href);
+  const section = href.split("/")[1];
+  return pathname.startsWith(`/${section}`);
 }
 
 function MobileNavigation({ onNavigate }: {

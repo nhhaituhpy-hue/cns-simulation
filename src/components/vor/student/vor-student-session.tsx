@@ -48,7 +48,7 @@ export function VorStudentSession({ scenarioId }: VorStudentSessionProps) {
           <WarningCircle aria-hidden size={38} className="mx-auto text-[#d97706]" />
           <h1 className="mt-4 text-xl font-bold text-[var(--text-primary)]">Không tìm thấy kịch bản VOR</h1>
           <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">Kịch bản có thể đã bị xóa hoặc đường dẫn không còn hợp lệ.</p>
-          <Link href="/student" className="mt-5 inline-flex h-10 items-center rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white">Quay lại danh sách</Link>
+          <Link href="/student/vor" className="mt-5 inline-flex h-10 items-center rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white">Quay lại danh sách</Link>
         </div>
       </main>
     );
@@ -62,7 +62,7 @@ export function VorStudentSession({ scenarioId }: VorStudentSessionProps) {
           <h1 className="mt-4 text-2xl font-bold text-[var(--text-primary)]">Đã nộp bài VOR</h1>
           <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">Bài làm đã được lưu để giám khảo đọc nhật ký thao tác, nhận xét câu trả lời và chấm điểm.</p>
           <p className="mt-3 font-mono text-xs text-[var(--text-muted)]">Mã bài nộp: {submittedId}</p>
-          <Link href="/student" className="mt-6 inline-flex h-10 items-center rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white">Về danh sách bài thực hành</Link>
+          <Link href="/student/vor" className="mt-6 inline-flex h-10 items-center rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white">Về danh sách bài thực hành</Link>
         </div>
       </main>
     );

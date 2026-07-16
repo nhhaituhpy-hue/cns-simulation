@@ -266,12 +266,16 @@ export interface VorScenario {
 export interface VorAttemptEvent {
   id: string;
   sequence: number;
+  eventType?: "view" | "sidebar";
   screenId: VorScreenId;
   viewId: VorViewId;
   menuPath: string[];
   title: string;
   visitedAt: string;
   annotation: string;
+  fieldId?: string;
+  resultValue?: VorEditableValue;
+  resultStatus?: VorIndicatorColor | VorParameterStatus;
 }
 
 export interface VorStudentAnswer {

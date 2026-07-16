@@ -59,6 +59,29 @@ describe("VOR scenario authoring", () => {
     expect(
       useVorScenarioStore.getState().scenarios[0].expectedCheckpoints[0].viewId,
     ).toBe("tx-data-main");
-    expect(push).toHaveBeenCalledWith("/admin");
+    expect(push).toHaveBeenCalledWith("/admin/vor");
   }, 10_000);
+
+  it("configures Local and Bypass as yellow student interaction targets", async () => {
+    const user = userEvent.setup();
+    render(<VorScenarioAuthor />);
+
+    fireEvent.pointerDown(screen.getByRole("button", { name: "Local" }));
+    expect(screen.getByText("local")).toBeInTheDocument();
+    await user.click(screen.getByRole("checkbox", { name: "Bật trạng thái" }));
+    await user.selectOptions(screen.getByLabelText("Màu / trạng thái"), "yellow");
+    await user.click(screen.getByRole("button", { name: "Áp dụng" }));
+
+    fireEvent.pointerDown(screen.getByRole("button", { name: "Bypass" }));
+    expect(screen.getByText("monitorIntegral.bypass")).toBeInTheDocument();
+    await user.click(screen.getByRole("checkbox", { name: "Bật trạng thái" }));
+    await user.selectOptions(screen.getByLabelText("Màu / trạng thái"), "yellow");
+    await user.click(screen.getByRole("button", { name: "Áp dụng" }));
+
+    expect(useVorPmdtStore.getState().overrides).toEqual(expect.arrayContaining([
+      { fieldId: "local", value: true, status: "yellow" },
+      { fieldId: "monitorIntegral.bypass", value: true, status: "yellow" },
+    ]));
+    expect(screen.getByRole("heading", { name: "Thao tác sidebar cần chấm" })).toBeInTheDocument();
+  });
 });

@@ -11,6 +11,7 @@ import type {
   VorParameterStatus,
   VorScenario,
 } from "@/lib/vor-types";
+import { isInteractiveSidebarField } from "@/lib/vor-sidebar-fields";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
 import {
   useVorScenarioStore,
@@ -32,6 +33,15 @@ const emptyDraft: VorScenarioInput = {
 };
 
 function parseVisibleValue(element: HTMLElement): VorEditableValue {
+  const metadataValue = element.dataset.vorFieldValue;
+  if (metadataValue !== undefined) {
+    if (element.dataset.vorFieldType === "boolean") return metadataValue === "true";
+    if (element.dataset.vorFieldType === "number") {
+      const numeric = Number(metadataValue);
+      return Number.isFinite(numeric) ? numeric : metadataValue;
+    }
+    return metadataValue;
+  }
   const input = element.matches("input")
     ? element
     : element.querySelector("input");
@@ -54,7 +64,7 @@ function selectedFromElement(
   const fieldId = element.dataset.vorFieldId;
   if (!fieldId) return null;
   const override = overrides.find((item) => item.fieldId === fieldId);
-  const visibleText = element.textContent?.trim() || fieldId;
+  const visibleText = element.dataset.vorFieldLabel ?? element.textContent?.trim() ?? fieldId;
   const statusMatch = visibleText.match(/(green|yellow|red|gray|normal|warning|alarm)$/i);
   return {
     fieldId,
@@ -62,6 +72,8 @@ function selectedFromElement(
     value: override?.value ?? parseVisibleValue(element),
     ...(override?.status
       ? { status: override.status }
+      : element.dataset.vorFieldStatus
+        ? { status: element.dataset.vorFieldStatus as VorIndicatorColor | VorParameterStatus }
       : statusMatch
         ? { status: statusMatch[1].toLowerCase() as VorIndicatorColor | VorParameterStatus }
         : {}),
@@ -84,7 +96,7 @@ export function VorScenarioAuthor({ scenarioId }: { scenarioId?: string }) {
     return <div className="grid min-h-[60dvh] place-items-center text-sm text-[var(--text-secondary)]">Đang tải trình xây dựng VOR...</div>;
   }
   if (scenarioId && !scenario) {
-    return <div className="mx-auto max-w-xl p-8 text-center"><p className="text-[var(--text-secondary)]">Không tìm thấy kịch bản VOR.</p><Link href="/admin" className="mt-4 inline-flex text-[var(--accent)]">Quay về quản trị</Link></div>;
+    return <div className="mx-auto max-w-xl p-8 text-center"><p className="text-[var(--text-secondary)]">Không tìm thấy kịch bản VOR.</p><Link href="/admin/vor" className="mt-4 inline-flex text-[var(--accent)]">Quay về quản trị</Link></div>;
   }
 
   return (
@@ -169,8 +181,11 @@ function VorScenarioAuthorEditor({
       setError("Hãy cấu hình ít nhất một giá trị hoặc màu sự cố.");
       return;
     }
-    if (metadata.expectedCheckpoints.length === 0) {
-      setError("Hãy thêm ít nhất một màn hình kiểm tra chuẩn.");
+    const hasSidebarTarget = metadata.overrides.some((item) =>
+      isInteractiveSidebarField(item.fieldId),
+    );
+    if (metadata.expectedCheckpoints.length === 0 && !hasSidebarTarget) {
+      setError("Hãy thêm ít nhất một màn hình hoặc thao tác sidebar cần kiểm tra.");
       return;
     }
 
@@ -183,7 +198,7 @@ function VorScenarioAuthorEditor({
       } else {
         await createScenario(metadata);
       }
-      router.push("/admin");
+      router.push("/admin/vor");
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Không thể lưu kịch bản VOR.");
       setSaving(false);
@@ -216,7 +231,7 @@ function VorScenarioAuthorEditor({
 
   return (
     <div className="relative" onPointerDownCapture={selectField}>
-      <Link href="/admin" className="absolute left-3 top-2 z-[60] inline-flex h-7 items-center gap-1.5 border border-[#475569] bg-[#0f172a] px-2 text-[10px] font-semibold text-[#cbd5e1] hover:text-white"><ArrowLeft aria-hidden size={12} />Quản trị</Link>
+      <Link href="/admin/vor" className="absolute left-3 top-2 z-[60] inline-flex h-7 items-center gap-1.5 border border-[#475569] bg-[#0f172a] px-2 text-[10px] font-semibold text-[#cbd5e1] hover:text-white"><ArrowLeft aria-hidden size={12} />Quản trị</Link>
       <PmdtLayout mode="author" sidePanel={panel} />
     </div>
   );

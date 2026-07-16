@@ -9,7 +9,7 @@ import {
   Warning,
   WarningCircle,
 } from "@phosphor-icons/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import {
   formatScenarioNumber,
   sortScenariosByRecency,
@@ -97,9 +97,10 @@ function ScenarioRow({
   );
 }
 
-export function StudentDashboard() {
+export type StudentCnsModule = "vor" | "dme" | "ads-b";
+
+export function StudentDashboard({ activeModule = "vor" }: { activeModule?: StudentCnsModule }) {
   const { scenarios, isHydrated, storageError, hydrate } = useScenarioStore();
-  const [activeTab, setActiveTab] = useState<"vor" | "dme" | "adsb">("adsb");
   const sortedScenarios = useMemo(
     () => sortScenariosByRecency(scenarios),
     [scenarios],
@@ -126,14 +127,13 @@ export function StudentDashboard() {
 
       <div className="mt-6 border-b border-[var(--border)]">
         <nav aria-label="Phân hệ thiết bị CNS" className="flex gap-6">
-          {(["vor", "dme", "adsb"] as const).map((tabId) => {
-            const active = activeTab === tabId;
+          {(["vor", "dme", "ads-b"] as const).map((tabId) => {
+            const active = activeModule === tabId;
             const label = tabId === "vor" ? "VOR" : tabId === "dme" ? "DME" : "ADS-B";
             return (
-              <button
+              <Link
                 key={tabId}
-                type="button"
-                onClick={() => setActiveTab(tabId)}
+                href={`/student/${tabId}`}
                 aria-current={active ? "page" : undefined}
                 className={`border-b-2 pb-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 ${
                   active
@@ -142,17 +142,17 @@ export function StudentDashboard() {
                 }`}
               >
                 {label}
-              </button>
+              </Link>
             );
           })}
         </nav>
       </div>
 
-      {activeTab === "vor" ? (
+      {activeModule === "vor" ? (
         <VorStudentDashboard />
       ) : null}
 
-      {activeTab === "dme" ? (
+      {activeModule === "dme" ? (
         <div className="mt-8 rounded-lg border border-dashed border-[var(--border-strong)] bg-white px-5 py-16 text-center">
           <span className="mx-auto inline-flex size-12 items-center justify-center rounded bg-[var(--surface-muted)] text-[var(--text-muted)]">
             <WarningCircle aria-hidden size={25} weight="regular" />
@@ -166,7 +166,7 @@ export function StudentDashboard() {
         </div>
       ) : null}
 
-      {activeTab === "adsb" ? (
+      {activeModule === "ads-b" ? (
         <>
           {storageError ? (
             <div

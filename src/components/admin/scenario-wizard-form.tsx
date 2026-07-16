@@ -302,7 +302,7 @@ export function ScenarioWizardForm({
 
       <footer className="flex flex-col-reverse gap-3 rounded-lg border border-[var(--border)] bg-white p-4 shadow-[var(--shadow-card)] sm:flex-row sm:items-center sm:justify-between">
         <Link
-          href="/admin"
+          href="/admin/ads-b"
           className="inline-flex h-10 items-center justify-center rounded px-4 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         >
           Hủy

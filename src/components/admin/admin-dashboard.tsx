@@ -83,7 +83,9 @@ function EmptyScenarioState() {
   );
 }
 
-export function AdminDashboard() {
+export type CnsModule = "vor" | "dme" | "ads-b";
+
+export function AdminDashboard({ activeModule = "vor" }: { activeModule?: CnsModule }) {
   const scenarios = useScenarioStore((state) => state.scenarios);
   const isHydrated = useScenarioStore((state) => state.isHydrated);
   const storageError = useScenarioStore((state) => state.storageError);
@@ -91,7 +93,6 @@ export function AdminDashboard() {
   const deleteScenario = useScenarioStore((state) => state.deleteScenario);
   const [scenarioToDelete, setScenarioToDelete] = useState<Scenario | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"vor" | "dme" | "adsb">("adsb");
 
   useEffect(() => {
     hydrate();
@@ -125,7 +126,7 @@ export function AdminDashboard() {
             Cấu hình thiết bị, tạo tình huống sự cố và xác định chuỗi thao tác chuẩn cho phân hệ CNS (gồm VOR/DME/ADS-B).
           </p>
         </div>
-        {activeTab === "adsb" ? (
+        {activeModule === "ads-b" ? (
           <Link
             href="/admin/create"
             className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:bg-[var(--accent-active)]"
@@ -138,14 +139,13 @@ export function AdminDashboard() {
 
       <div className="mt-6 border-b border-[var(--border)]">
         <nav aria-label="Phân hệ thiết bị CNS" className="flex gap-6">
-          {(["vor", "dme", "adsb"] as const).map((tabId) => {
-            const active = activeTab === tabId;
+          {(["vor", "dme", "ads-b"] as const).map((tabId) => {
+            const active = activeModule === tabId;
             const label = tabId === "vor" ? "VOR" : tabId === "dme" ? "DME" : "ADS-B";
             return (
-              <button
+              <Link
                 key={tabId}
-                type="button"
-                onClick={() => setActiveTab(tabId)}
+                href={`/admin/${tabId}`}
                 aria-current={active ? "page" : undefined}
                 className={`border-b-2 pb-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 ${
                   active
@@ -154,17 +154,17 @@ export function AdminDashboard() {
                 }`}
               >
                 {label}
-              </button>
+              </Link>
             );
           })}
         </nav>
       </div>
 
-      {activeTab === "vor" ? (
+      {activeModule === "vor" ? (
         <VorAdminDashboard />
       ) : null}
 
-      {activeTab === "dme" ? (
+      {activeModule === "dme" ? (
         <div className="mt-8 rounded-lg border border-dashed border-[var(--border-strong)] bg-white px-5 py-16 text-center">
           <span className="mx-auto inline-flex size-12 items-center justify-center rounded bg-[var(--surface-muted)] text-[var(--text-muted)]">
             <WarningCircle aria-hidden size={25} weight="regular" />
@@ -178,7 +178,7 @@ export function AdminDashboard() {
         </div>
       ) : null}
 
-      {activeTab === "adsb" ? (
+      {activeModule === "ads-b" ? (
         <>
           {storageError ? (
             <div

@@ -80,7 +80,7 @@ export function VorStudentDashboard() {
                     <p className="mt-2 line-clamp-2 text-sm leading-6 text-[var(--text-secondary)]">{scenario.description}</p>
                   </div>
                   <Link
-                    href={`/student/vor?id=${encodeURIComponent(scenario.id)}`}
+                    href={`/student/vor/session?id=${encodeURIComponent(scenario.id)}`}
                     aria-label={`Bắt đầu bài VOR: ${scenario.title}`}
                     className="group inline-flex h-10 items-center justify-center gap-2 rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
                   >

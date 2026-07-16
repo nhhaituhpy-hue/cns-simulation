@@ -60,4 +60,16 @@ describe("PMDT shell", () => {
       screen.getByRole("menuitem", { name: "Hold Commutator..." }),
     ).toHaveAttribute("aria-disabled", "true");
   });
+
+  it("removes the misleading simulated action toolbar", async () => {
+    const user = userEvent.setup();
+    render(<PmdtLayout />);
+
+    await user.click(screen.getByRole("button", { name: "Monitors" }));
+    await user.click(screen.getByRole("menuitem", { name: "Configuration" }));
+    expect(screen.getByRole("heading", { name: "Monitor Configuration" })).toBeInTheDocument();
+    for (const label of ["Save", "Print", "Next", "Close", "Apply", "Reset"]) {
+      expect(screen.queryByRole("button", { name: label })).not.toBeInTheDocument();
+    }
+  });
 });

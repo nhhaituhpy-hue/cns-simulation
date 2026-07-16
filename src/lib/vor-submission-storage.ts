@@ -36,6 +36,15 @@ function isString(value: unknown): value is string {
   return typeof value === "string";
 }
 
+function isEditableValue(value: unknown): boolean {
+  return (
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "boolean" ||
+    (typeof value === "number" && Number.isFinite(value))
+  );
+}
+
 function isAnswer(value: unknown): value is VorStudentAnswer {
   return (
     isRecord(value) &&
@@ -46,7 +55,7 @@ function isAnswer(value: unknown): value is VorStudentAnswer {
 }
 
 function isEvent(value: unknown): value is VorAttemptEvent {
-  return (
+  const common = (
     isRecord(value) &&
     isString(value.id) && value.id.trim().length > 0 &&
     typeof value.sequence === "number" && Number.isInteger(value.sequence) && value.sequence > 0 &&
@@ -56,6 +65,16 @@ function isEvent(value: unknown): value is VorAttemptEvent {
     isString(value.title) &&
     isString(value.visitedAt) &&
     isString(value.annotation)
+  );
+  if (!common || !isRecord(value)) return false;
+  if (value.eventType === undefined || value.eventType === "view") return true;
+  return (
+    value.eventType === "sidebar" &&
+    isString(value.fieldId) && value.fieldId.trim().length > 0 &&
+    isEditableValue(value.resultValue) &&
+    isString(value.resultStatus) &&
+    (["green", "yellow", "red", "gray", "normal", "warning", "alarm"] as const)
+      .includes(value.resultStatus as "green")
   );
 }
 

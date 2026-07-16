@@ -15,7 +15,11 @@ const scenario: VorScenario = {
   difficulty: "medium",
   prompt: "Xác định vị trí sự cố và đề xuất hướng khắc phục.",
   createdAt: "2026-07-16T10:00:00.000Z",
-  overrides: [{ fieldId: "txPower.0.tx1", value: 0, status: "red" }],
+  overrides: [
+    { fieldId: "txPower.0.tx1", value: 0, status: "red" },
+    { fieldId: "local", value: true, status: "yellow" },
+    { fieldId: "monitorIntegral.bypass", value: true, status: "yellow" },
+  ],
   expectedCheckpoints: [{
     id: "checkpoint-1",
     order: 1,
@@ -50,7 +54,7 @@ describe("VOR student workflow", () => {
     expect(screen.getByRole("heading", { name: "Mất công suất phát" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Bắt đầu bài VOR: Mất công suất phát" })).toHaveAttribute(
       "href",
-      "/student/vor?id=vor-power-loss",
+      "/student/vor/session?id=vor-power-loss",
     );
   });
 
@@ -62,12 +66,21 @@ describe("VOR student workflow", () => {
     await user.type(screen.getByLabelText("Mã học viên"), "HV001");
     await user.click(screen.getByRole("button", { name: "Vào màn hình PMDT" }));
 
+    const localButton = screen.getByRole("button", { name: "Local" });
+    const bypassButton = screen.getByRole("button", { name: "Bypass" });
+    expect(localButton).toHaveAttribute("aria-pressed", "false");
+    expect(bypassButton).toHaveAttribute("aria-pressed", "false");
+    await user.click(localButton);
+    await user.click(bypassButton);
+    expect(localButton).toHaveAttribute("aria-pressed", "true");
+    expect(bypassButton).toHaveAttribute("aria-pressed", "true");
+
     await user.click(screen.getByRole("button", { name: "Transmitters" }));
     await user.click(screen.getByRole("menuitem", { name: "Data" }));
     expect(screen.getByText("Transmitter Data", { selector: "h2" })).toBeInTheDocument();
     expect(document.querySelector('[data-vor-field-id="txPower.0.tx1"]')).toHaveTextContent("0.0");
 
-    await user.type(screen.getByLabelText("Chú thích Data lần 1"), "Công suất Tx #1 bằng 0.");
+    await user.type(screen.getByLabelText("Chú thích Data lần 3"), "Công suất Tx #1 bằng 0.");
     await user.type(screen.getByLabelText("Vị trí / sự cố nghi ngờ"), "Khối PA Tx #1");
     await user.type(screen.getByLabelText("Căn cứ chẩn đoán"), "Công suất đo được bằng 0");
     await user.type(screen.getByLabelText("Hướng khắc phục"), "Kiểm tra nguồn và PA");
@@ -81,7 +94,11 @@ describe("VOR student workflow", () => {
       studentCode: "HV001",
       status: "submitted",
       answer: { suspectedFault: "Khối PA Tx #1" },
-      events: [{ viewId: "tx-data-main", annotation: "Công suất Tx #1 bằng 0." }],
+      events: expect.arrayContaining([
+        expect.objectContaining({ eventType: "sidebar", fieldId: "local", resultStatus: "yellow" }),
+        expect.objectContaining({ eventType: "sidebar", fieldId: "monitorIntegral.bypass", resultStatus: "yellow" }),
+        expect.objectContaining({ viewId: "tx-data-main", annotation: "Công suất Tx #1 bằng 0." }),
+      ]),
     });
   });
 });

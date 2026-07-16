@@ -19,7 +19,9 @@
 - [x] VOR student workflow with screen-visit journal, annotations, diagnosis, and remediation answer
 - [x] VOR examiner workflow with checkpoint comparison and manual scoring
 - [x] Separate VOR scenario/submission persistence with Supabase migration and local fallback
-- [ ] GitHub publication
+- [x] Configurable and scoreable VOR sidebar interactions for Local and Bypass
+- [x] Canonical admin/student routes for VOR, DME, and ADS-B with VOR as the section default
+- [x] Publish the current sidebar and module-routing upgrade to GitHub
 
 ## Required quality gates
 
@@ -31,18 +33,19 @@
 
 ## Latest verification
 
-Verified on 2026-07-16 with Node.js 24 after the VOR PMDT implementation:
+Verified on 2026-07-16 with Node.js 24 after the VOR sidebar and module-routing upgrade:
 
 - ESLint: passed
 - TypeScript: passed
-- Vitest: 35 files, 151 tests passed
+- Vitest: 36 files, 156 tests passed
 - Playwright: not rerun for this upgrade; 6 existing desktop/mobile Chromium flows remain in the suite
 - Production build: passed for all application routes
-- Production routes include VOR authoring, student session, submission list/review, and both VOR APIs
+- Production routes include the six canonical admin/student module routes, VOR authoring, student session, submission list/review, and both VOR APIs
 - Visual QA: existing ADS-B layouts were previously reviewed; VOR browser QA is pending because no in-app browser backend was available in this session
 
 ## VOR deployment note
 
 - The migration is ready at `supabase/migrations/202607160003_create_vor_training.sql`.
-- This workspace is not linked to a Supabase project, so the migration has not been pushed remotely.
-- Until the migration is applied, VOR scenarios and submissions continue to work in the same browser through the versioned `localStorage` fallback.
+- The workspace is linked to Supabase project `nnbzfmirxvtzhmpfyobs`.
+- Migrations `202607160001`, `202607160002`, and `202607160003` are present both locally and remotely.
+- The versioned `localStorage` fallback remains available when Supabase configuration or connectivity is unavailable.

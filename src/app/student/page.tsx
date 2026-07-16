@@ -1,6 +1,5 @@
-import { StudentDashboard } from "@/components/qcms/student-dashboard";
+import { redirect } from "next/navigation";
 
 export default function StudentPage() {
-  return <StudentDashboard />;
+  redirect("/student/vor");
 }
-

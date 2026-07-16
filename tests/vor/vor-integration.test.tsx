@@ -16,13 +16,15 @@ describe("VOR integration", () => {
     });
   });
 
-  it("opens the PMDT preview from the Admin VOR tab", async () => {
-    const user = userEvent.setup();
-    render(<AdminDashboard />);
+  it("opens the PMDT preview from the Admin VOR route", () => {
+    render(<AdminDashboard activeModule="vor" />);
 
-    await user.click(screen.getByRole("button", { name: "VOR" }));
+    expect(screen.getByRole("link", { name: "VOR" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
     expect(
-      screen.getByRole("heading", { name: "PMDT Simulator — VOR DVOR 1150A" }),
+      screen.getByRole("heading", { name: "PMDT Simulator — DVOR 1150A" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Mở PMDT Simulator" })).toHaveAttribute(
       "href",

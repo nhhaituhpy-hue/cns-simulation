@@ -44,7 +44,7 @@ export function VorStudentJournal({ scenario, isSubmitting, onSubmit }: VorStude
       <div className="flex-1 space-y-5 p-4">
         <section aria-labelledby="activity-title">
           <div className="flex items-center justify-between gap-2">
-            <h3 id="activity-title" className="text-xs font-bold uppercase tracking-wide text-[#cbd5e1]">Màn hình đã kiểm tra</h3>
+            <h3 id="activity-title" className="text-xs font-bold uppercase tracking-wide text-[#cbd5e1]">Màn hình và thao tác đã ghi nhận</h3>
             <span className="rounded bg-[#1e293b] px-2 py-0.5 font-mono text-[10px] text-[#93c5fd]">{events.length}</span>
           </div>
           {events.length === 0 ? (
@@ -60,6 +60,11 @@ export function VorStudentJournal({ scenario, isSubmitting, onSubmit }: VorStude
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-semibold text-white">{event.title}</p>
                       <p className="mt-1 truncate text-[10px] text-[#64748b]">{event.menuPath.join(" › ")}</p>
+                      {event.eventType === "sidebar" ? (
+                        <p className="mt-1 font-mono text-[10px] text-[#facc15]">
+                          Kết quả: {String(event.resultValue)} · {event.resultStatus}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                   <label className="mt-2 grid gap-1 text-[10px] font-semibold text-[#94a3b8]">
