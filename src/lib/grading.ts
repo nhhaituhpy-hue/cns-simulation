@@ -168,6 +168,7 @@ export function gradeActions(
       ? submitted.length === 0
         ? 100
         : 0
+
       : Math.round((correctSteps / expected.length) * 10_000) / 100;
   const passed = comparisons.every(
     (comparison) => comparison.status === "correct",
@@ -183,3 +184,45 @@ export function gradeActions(
   };
 }
 
+
+export interface HardwareGradingResult {
+  correctComponent: boolean;
+  terminalInspected: boolean;
+  monitoringInspected: boolean;
+  inspectedComponentCount: number;
+  componentInspectionScore: number;
+  score: number;
+}
+
+export interface HardwareStudentActions {
+  openedTerminal: boolean;
+  openedMonitoring: boolean;
+  inspectedComponents: string[];
+}
+
+export function gradeHardwareDiagnosis(
+  expected: { componentId: string },
+  submitted: { componentId: string },
+  studentActions: HardwareStudentActions,
+): HardwareGradingResult {
+  const correctComponent = expected.componentId === submitted.componentId;
+  const inspectedComponentCount = new Set(
+    studentActions.inspectedComponents,
+  ).size;
+  const componentInspectionScore =
+    inspectedComponentCount >= 3 ? 20 : inspectedComponentCount >= 1 ? 10 : 0;
+  const score =
+    (correctComponent ? 40 : 0) +
+    (studentActions.openedTerminal ? 20 : 0) +
+    (studentActions.openedMonitoring ? 20 : 0) +
+    componentInspectionScore;
+
+  return {
+    correctComponent,
+    terminalInspected: studentActions.openedTerminal,
+    monitoringInspected: studentActions.openedMonitoring,
+    inspectedComponentCount,
+    componentInspectionScore,
+    score,
+  };
+}

@@ -1,3 +1,8 @@
+import type {
+  HardwareComponent,
+  HardwareFaultType,
+  SignalPath,
+} from "./hardware-model";
 export const SENSOR_STATUSES = [
   "green",
   "orange",
@@ -36,6 +41,7 @@ export interface SensorState {
   ipAddress: string;
   name: string;
   monitoring?: SensorMonitoringData;
+  dataProfile?: SensorDataProfile;
 }
 
 export interface SiteState {
@@ -43,6 +49,12 @@ export interface SiteState {
   name: string;
   sensorA: SensorState | null;
   sensorB: SensorState | null;
+}
+
+export interface QcmsEvent {
+  timestamp: string;
+  type: "snmp" | "qcms" | "selfmon" | "error" | "line";
+  message: string;
 }
 
 export type RecordedActionKind =
@@ -60,6 +72,18 @@ export interface RecordedAction {
   timestamp: number;
 }
 
+export interface ScenarioHardwareFault {
+  faultyComponentId: string;
+  faultType: HardwareFaultType;
+  faultDescription: string;
+  hardwareLayout: HardwareComponent[];
+  signalPaths: SignalPath[];
+  expectedSensorStatus: SensorStatus;
+  terminalSymptoms: string[];
+  qcmsSymptoms: string[];
+  diagnosticSteps: string[];
+}
+
 export type RecordableAction = Omit<RecordedAction, "step" | "timestamp">;
 
 export interface Scenario {
@@ -70,8 +94,10 @@ export interface Scenario {
   createdAt: string;
   updatedAt?: string;
   sites: SiteState[];
+  eventLog?: QcmsEvent[];
   targetSensorId: string;
   targetLoginUser: LoginUser;
+  hardwareFault?: ScenarioHardwareFault;
   expectedActions: RecordedAction[];
 }
 
@@ -95,5 +121,114 @@ export interface GradingResult {
   totalExpected: number;
   totalSubmitted: number;
   steps: StepComparison[];
+}
+
+export interface NetworkConfig {
+  ip: string;
+  subnet: string;
+  gateway: string;
+  dhcp: boolean;
+  macAddress: string;
+  ntpServer: string;
+  bitRate: string;
+}
+
+export interface ReceiverStats {
+  shortSquitter: { total: number; passed: number; failed: number };
+  extendedSquitter: { total: number; passed: number; failed: number };
+  totalTargetsDetected: number;
+  currentTargets: number;
+}
+
+export interface SurveillanceClient {
+  id: number;
+  name: string;
+  ip: string;
+  port: number;
+  protocol: "UDP" | "TCP";
+  messageType: string;
+  enabled: boolean;
+  messagesSent: number;
+}
+
+export interface SnmpUserConfig {
+  name: string;
+  authType: "noAuth" | "authNoPriv" | "authPriv";
+}
+
+export interface SnmpTrapDest {
+  ip: string;
+  port: number;
+  enabled: boolean;
+}
+
+export interface GpsConfig {
+  enabled: boolean;
+  ntpEnabled: boolean;
+  ntpServer: string;
+  latitude: string;
+  longitude: string;
+  altitude: string;
+  deviation: string;
+}
+
+export interface FilterConfig {
+  altitudeEnabled: boolean;
+  altitudeMin: number;
+  altitudeMax: number;
+  addressFilterEnabled: boolean;
+  addressFilter: string;
+  positionFilterEnabled: boolean;
+  positionFilterRadius: number;
+}
+
+export interface AsterixConfig {
+  sac: number;
+  sic: number;
+  cat21Version: string;
+  cat21Enabled: boolean;
+  nonOpEnabled: boolean;
+  mlatEnabled: boolean;
+  rawEnabled: boolean;
+  dataBlockSize: number;
+  ttl: number;
+}
+
+export interface GeneralSettings {
+  crcCorrection: boolean;
+  groundTargets: boolean;
+  targetOverloadLimit: number;
+}
+
+export interface SyslogConfig {
+  localDestination: string;
+  remoteEnabled: boolean;
+  remoteServerIp: string;
+}
+
+export interface SiteMonitorConfig {
+  enabled: boolean;
+  ip: string;
+  port: number;
+  name: string;
+}
+
+export interface SensorDataProfile {
+  sensorVersion: string;
+  configVersion: string;
+  sensorName: string;
+  network: NetworkConfig;
+  receiverStats: ReceiverStats;
+  clients: SurveillanceClient[];
+  snmpUsers: SnmpUserConfig[];
+  snmpTraps: SnmpTrapDest[];
+  snmpHeartbeatPeriod: number;
+  snmpAlarmPeriod: number;
+  gps: GpsConfig;
+  filters: FilterConfig;
+  asterix: AsterixConfig;
+  general: GeneralSettings;
+  syslog: SyslogConfig;
+  siteMonitors: SiteMonitorConfig[];
 }
 

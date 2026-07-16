@@ -46,6 +46,7 @@ next-env.d.ts
 
 # PDFs and local plans
 *.pdf
+/pdf_extracts/
 ADSB_Training_Simulator_Plan.md
 ADSB_Database_Plan.md
 

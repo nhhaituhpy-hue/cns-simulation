@@ -163,7 +163,7 @@ describe("SiteMonitor", () => {
     });
     expect(maintenanceLink).toHaveAttribute(
       "href",
-      "/student/training-scenario/terminal?sensorId=site-1-a",
+      "/student/terminal?id=training-scenario&sensorId=site-1-a",
     );
 
     await user.keyboard("{Escape}");

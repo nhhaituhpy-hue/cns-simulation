@@ -24,8 +24,13 @@ function navigate(number: number, label: string, targetMenuId: string): MenuItem
   return { number, label, action: { type: "navigate", targetMenuId } };
 }
 
-function display(number: number, label: string, content: string): MenuItem {
-  return { number, label, action: { type: "display", content } };
+function display(
+  number: number,
+  label: string,
+  content: string,
+  templateId?: string,
+): MenuItem {
+  return { number, label, action: { type: "display", content, templateId } };
 }
 
 function input(
@@ -124,6 +129,7 @@ export const SA_MENUS = {
         1,
         "Display Network Configuration",
         "Interface eth0: 10.10.10.3/24\nDefault gateway: 10.10.10.1\nDHCP: disabled",
+        "sa-network-display",
       ),
       input(
         2,
@@ -171,8 +177,18 @@ export const SA_MENUS = {
     title: "Surveillance Clients",
     header: SA_HEADER,
     items: [
-      display(1, "Display Clients", "Client 1: 239.10.10.1:30001, enabled, ASTERIX CAT21"),
-      display(2, "Display Client Statistics", "Client 1 packets sent: 125430\nSend errors: 0"),
+      display(
+        1,
+        "Display Clients",
+        "Client 1: 239.10.10.1:30001, enabled, ASTERIX CAT21",
+        "sa-clients-display",
+      ),
+      display(
+        2,
+        "Display Client Statistics",
+        "Client 1 packets sent: 125430\nSend errors: 0",
+        "sa-clients-stats",
+      ),
       toggle(3, "Enable / Disable Client", "sa.client-enabled", "Select client state:"),
       input(
         4,
@@ -211,6 +227,7 @@ export const SA_MENUS = {
         1,
         "Display Syslog Configuration",
         "Local destination: /var/log/messages\nRemote server: disabled",
+        "sa-syslog-config",
       ),
       input(
         2,
@@ -240,7 +257,12 @@ export const SA_MENUS = {
     title: "SNMP Configuration",
     header: SA_HEADER,
     items: [
-      display(1, "Display Users", "SNMP user: qcms-monitor, authentication: SHA, privacy: AES"),
+      display(
+        1,
+        "Display Users",
+        "SNMP user: qcms-monitor, authentication: SHA, privacy: AES",
+        "sa-snmp-users",
+      ),
       input(
         2,
         "Create User",
@@ -255,7 +277,12 @@ export const SA_MENUS = {
         "Enter SNMP user name to delete:",
         "SNMP user deletion simulated.",
       ),
-      display(4, "Display Trap Destinations", "Trap destination 1: 10.10.20.15:162"),
+      display(
+        4,
+        "Display Trap Destinations",
+        "Trap destination 1: 10.10.20.15:162",
+        "sa-snmp-traps",
+      ),
       input(
         5,
         "Add Trap Destination",
@@ -299,7 +326,12 @@ export const SA_MENUS = {
     title: "Software",
     header: SA_HEADER,
     items: [
-      display(1, "Display Version Information", "Sensor software version: 1-8-X\nBuild: training-simulator"),
+      display(
+        1,
+        "Display Version Information",
+        "Sensor software version: 1-8-X\nBuild: training-simulator",
+        "sa-software-version",
+      ),
       display(
         2,
         "Reset System to Factory Default",

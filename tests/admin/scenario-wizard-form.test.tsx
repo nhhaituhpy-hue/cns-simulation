@@ -53,6 +53,11 @@ describe("ScenarioWizardForm", () => {
       screen.getByRole("heading", { name: "Xây dựng đáp án thao tác" }),
     ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /General Settings/ }));
+    await user.click(screen.getByRole("button", { name: "Tiếp tục" }));
+
+    expect(
+      screen.getByRole("heading", { name: "Hardware Fault" }),
+    ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Tạo kịch bản" }));
 
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());

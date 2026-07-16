@@ -8,6 +8,7 @@ import {
   createSite,
   type ValidationErrors,
 } from "./scenario-form-utils";
+import { SensorDataProfileEditor } from "./sensor-data-profile-editor";
 
 type SiteStateEditorProps = {
   sites: SiteState[];
@@ -345,6 +346,13 @@ export function SiteStateEditor({
                           </select>
                         </div>
                       </div>
+
+                      <SensorDataProfileEditor
+                        sensor={sensor}
+                        onChange={(changes) =>
+                          updateSensor(site.id, sensorKey, changes)
+                        }
+                      />
                     </div>
                   </fieldset>
                 );

@@ -1,6 +1,13 @@
+"use client";
+
+import { useCallback, useState, type MouseEvent } from "react";
 import { Crosshair, Eye, EyeSlash, Monitor } from "@phosphor-icons/react";
 import type { SensorState, SiteState } from "@/lib/types";
 import { SENSOR_STATUS_DETAILS } from "./qcms-utils";
+import {
+  SiteContextMenu,
+  type SiteContextAction,
+} from "./site-context-menu";
 import { StatusBadge } from "./status-badge";
 
 type SiteItemProps = {
@@ -11,6 +18,12 @@ type SiteItemProps = {
   onToggleVisualization: (site: SiteState, sensor: SensorState) => void;
   onToggleRangeRing: (site: SiteState) => void;
   onOpenSensor: (sensor: SensorState, trigger: HTMLButtonElement) => void;
+  onContextAction: (
+    action: SiteContextAction,
+    site: SiteState,
+    sensor: SensorState | null,
+    trigger: HTMLButtonElement,
+  ) => void;
 };
 
 type SensorPanelProps = {
@@ -102,7 +115,30 @@ export function SiteItem({
   onToggleVisualization,
   onToggleRangeRing,
   onOpenSensor,
+  onContextAction,
 }: SiteItemProps) {
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    trigger: HTMLButtonElement;
+  } | null>(null);
+  const closeContextMenu = useCallback(() => setContextMenu(null), []);
+
+  function openContextMenu(event: MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    const rect = event.currentTarget.getBoundingClientRect();
+    const requestedX = event.clientX || rect.left;
+    const requestedY = event.clientY || rect.bottom;
+    const menuWidth = 256;
+    const menuHeight = 390;
+    const margin = 8;
+
+    setContextMenu({
+      x: Math.max(margin, Math.min(requestedX, window.innerWidth - menuWidth - margin)),
+      y: Math.max(margin, Math.min(requestedY, window.innerHeight - menuHeight - margin)),
+      trigger: event.currentTarget,
+    });
+  }
   const sensorAVisualized = Boolean(
     site.sensorA && visualizedSensorIds.has(site.sensorA.id),
   );
@@ -115,14 +151,32 @@ export function SiteItem({
 
   return (
     <article className="min-w-[300px] sm:min-w-[380px] max-w-[420px] rounded-lg border border-[#b8c4ce] bg-[#eef3f6] p-4 shadow-[0_2px_6px_rgb(15_23_42/0.08)]">
-      <div className="flex items-center justify-between gap-3 border-b border-[#cbd5e1] pb-3">
-        <h3 className="truncate text-base font-bold text-[#172033]" title={site.name}>
+      <button
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={Boolean(contextMenu)}
+        onClick={openContextMenu}
+        onContextMenu={openContextMenu}
+        className="flex w-full items-center justify-between gap-3 border-b border-[#cbd5e1] pb-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+      >
+        <span className="truncate text-base font-bold text-[#172033]" title={site.name}>
           {site.name}
-        </h3>
+        </span>
         <span className="font-mono text-xs tabular-nums text-[#475569]">
           {Number(sensorAVisualized) + Number(sensorBVisualized)}/{configuredSensorCount} hiển thị
         </span>
-      </div>
+      </button>
+
+      {contextMenu ? (
+        <SiteContextMenu
+          site={site}
+          x={contextMenu.x}
+          y={contextMenu.y}
+          trigger={contextMenu.trigger}
+          onClose={closeContextMenu}
+          onSelect={onContextAction}
+        />
+      ) : null}
 
       <div className="mt-4 grid grid-cols-2 gap-3">
         <SensorPanel

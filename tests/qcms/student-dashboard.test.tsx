@@ -55,7 +55,7 @@ describe("StudentDashboard", () => {
     render(<StudentDashboard />);
 
     const card = screen.getByRole("link", { name: /Kiểm tra cảm biến/ });
-    expect(card).toHaveAttribute("href", "/student/scenario-dashboard");
+    expect(card).toHaveAttribute("href", "/student/simulation?id=scenario-dashboard");
     expect(screen.getByText("Cơ bản")).toBeVisible();
     expect(screen.getByText("1 site")).toBeVisible();
     expect(screen.getByText("1 cảm biến")).toBeVisible();

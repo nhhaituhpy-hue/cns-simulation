@@ -73,6 +73,8 @@ export function TerminalSession({ scenarioId }: { scenarioId: string }) {
     terminal.initialize({
       targetLoginUser: scenario.targetLoginUser,
       header: { sensorName: selectedSensor.name },
+      sensorDataProfile: selectedSensor.dataProfile,
+      sensorMonitoring: selectedSensor.monitoring,
     });
     initializedKey.current = key;
   }, [isTargetSensor, recording, scenario, selectedSensor, terminal]);
@@ -84,6 +86,8 @@ export function TerminalSession({ scenarioId }: { scenarioId: string }) {
     terminal.initialize({
       targetLoginUser: scenario.targetLoginUser,
       header: { sensorName: selectedSensor.name },
+      sensorDataProfile: selectedSensor.dataProfile,
+      sensorMonitoring: selectedSensor.monitoring,
     });
   }, [recording, scenario, selectedSensor, terminal]);
 

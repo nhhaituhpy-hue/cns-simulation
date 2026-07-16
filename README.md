@@ -6,11 +6,13 @@
 
 ## Chức năng chính
 
-- Quản trị kịch bản bằng wizard bốn bước: thông tin, trạng thái site/sensor, vai trò và đáp án tham chiếu.
+- Quản trị kịch bản bằng wizard năm bước: thông tin, site/sensor, vai trò, đáp án tham chiếu và sự cố phần cứng tùy chọn.
 - Tối đa 8 site trong một kịch bản, 7 trạng thái sensor QCMS và tối đa 4 sensor được hiển thị đồng thời.
-- Dashboard QCMS responsive với telemetry, tuổi dữ liệu SNMP, trạng thái VA/VB và RR đúng điều kiện.
+- Dashboard QCMS có toolbar, Event Log, Replay, General Settings, context menu và các cửa sổ Monitoring/Configuration/Status/Statistics/Site Settings.
 - Terminal SA (`sysadmin`) và MA (`maintenance`) dựa trên state machine xác định trước.
-- Menu đầy đủ cấp 1 và cấp 2; thao tác sâu hơn được mô phỏng bằng màn hình hiển thị, nhập liệu hoặc bật/tắt.
+- 17 màn hình terminal SA/MA dùng dữ liệu preset Côn Sơn thay cho nội dung tĩnh.
+- Sơ đồ phần cứng Côn Sơn gồm 16 component và 6 signal path, kèm 10 fault preset.
+- Luồng chẩn đoán kết hợp Terminal, QCMS Monitoring, Component Inspector và chấm điểm 100 điểm.
 - Ghi nhận, chọn và sắp xếp hành động học viên trước khi nộp bài.
 - Chấm điểm theo đúng ngữ cảnh menu, thứ tự và dữ liệu nhập đã chuẩn hóa.
 - Dữ liệu mẫu và kịch bản do người dùng tạo được lưu có phiên bản trong `localStorage`.
@@ -35,7 +37,7 @@ npm run dev
 
 Mở [http://localhost:3000](http://localhost:3000).
 
-Ba kịch bản mẫu sẽ được tạo khi ứng dụng khởi động lần đầu. Để đưa dữ liệu về trạng thái mẫu, dùng chức năng khôi phục trong giao diện quản trị hoặc xóa khóa `adsb-training-simulator:scenarios` trong `localStorage`.
+Bốn kịch bản mẫu sẽ được tạo khi ứng dụng khởi động lần đầu. Để đưa dữ liệu về trạng thái mẫu, dùng chức năng khôi phục trong giao diện quản trị hoặc xóa khóa `adsb-training-simulator:scenarios` trong `localStorage`.
 
 ## Kiểm tra chất lượng
 
@@ -64,7 +66,7 @@ npx playwright install chromium
 ```text
 src/
   app/                  Route cho landing, Admin và Student
-  components/           App shell, wizard, QCMS, terminal và grading
+  components/           App shell, wizard, QCMS, terminal, hardware và grading
   lib/                  Kiểu dữ liệu, menu, engine, grading và storage
   stores/               Zustand stores và kịch bản mẫu
 tests/

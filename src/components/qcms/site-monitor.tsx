@@ -1,7 +1,7 @@
 "use client";
 
 import { Info, Monitor, WarningCircle } from "@phosphor-icons/react";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { Scenario, SensorState, SiteState } from "@/lib/types";
 import {
   MAX_VISUALIZED_SENSORS,
@@ -9,15 +9,29 @@ import {
   siteHasVisualizedSensor,
   toggleSensorVisualization,
 } from "./qcms-utils";
+import { SensorConfigWindow } from "./sensor-config-window";
 import { SensorMonitoringModal } from "./sensor-monitoring-modal";
+import { SensorStatusWindow } from "./sensor-status-window";
+import type { SiteContextAction } from "./site-context-menu";
 import { SiteItem } from "./site-item";
+import { SiteStatisticsWindow } from "./site-statistics-window";
+import { SiteSettingsWindow } from "./site-settings-window";
 import { StatusBadge } from "./status-badge";
 
 type SiteMonitorProps = {
   scenario: Scenario;
+  onMonitoringOpened?: () => void;
 };
 
-export function SiteMonitor({ scenario }: SiteMonitorProps) {
+type ContextWindow = {
+  action: Exclude<SiteContextAction, "monitoring">;
+  site: SiteState;
+  sensor: SensorState | null;
+  openedAt: number;
+};
+
+
+export function SiteMonitor({ scenario, onMonitoringOpened }: SiteMonitorProps) {
   const [visualizedSensorIds, setVisualizedSensorIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -29,6 +43,10 @@ export function SiteMonitor({ scenario }: SiteMonitorProps) {
     openedAt: number;
   } | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [contextWindow, setContextWindow] =
+    useState<ContextWindow | null>(null);
+  const contextTriggerRef = useRef<HTMLButtonElement | null>(null);
+
   const visualizationLimitReached =
     visualizedSensorIds.size >= MAX_VISUALIZED_SENSORS;
 
@@ -36,6 +54,30 @@ export function SiteMonitor({ scenario }: SiteMonitorProps) {
 
   function openSensor(sensor: SensorState) {
     setSelectedSensor({ sensor, openedAt: Date.now() });
+    onMonitoringOpened?.();
+  }
+
+  function handleContextAction(
+    action: SiteContextAction,
+    site: SiteState,
+    sensor: SensorState | null,
+    trigger: HTMLButtonElement,
+  ) {
+    contextTriggerRef.current = trigger;
+
+    if (action === "monitoring" && sensor) {
+      openSensor(sensor);
+      return;
+    }
+
+    if (action !== "monitoring") {
+      setContextWindow({ action, site, sensor, openedAt: Date.now() });
+    }
+  }
+
+  function closeContextWindow() {
+    setContextWindow(null);
+    requestAnimationFrame(() => contextTriggerRef.current?.focus());
   }
 
   function handleToggleVisualization(site: SiteState, sensor: SensorState) {
@@ -155,6 +197,7 @@ export function SiteMonitor({ scenario }: SiteMonitorProps) {
                 onToggleVisualization={handleToggleVisualization}
                 onToggleRangeRing={handleToggleRangeRing}
                 onOpenSensor={openSensor}
+                onContextAction={handleContextAction}
               />
             ))}
           </div>
@@ -176,6 +219,41 @@ export function SiteMonitor({ scenario }: SiteMonitorProps) {
           onClose={closeSensor}
         />
       ) : null}
+
+      {contextWindow?.action === "configuration" && contextWindow.sensor ? (
+        <SensorConfigWindow
+          scenarioId={scenario.id}
+          sensor={contextWindow.sensor}
+          onClose={closeContextWindow}
+          now={contextWindow.openedAt}
+        />
+      ) : null}
+
+      {contextWindow?.action === "status" && contextWindow.sensor ? (
+        <SensorStatusWindow
+          sensor={contextWindow.sensor}
+          onClose={closeContextWindow}
+        />
+      ) : null}
+
+      {contextWindow?.action === "statistics" ? (
+        <SiteStatisticsWindow
+          site={contextWindow.site}
+          onClose={closeContextWindow}
+        />
+      ) : null}
+
+
+      {contextWindow?.action === "settings" ? (
+        <SiteSettingsWindow
+          site={contextWindow.site}
+          siteNumber={
+            scenario.sites.findIndex((site) => site.id === contextWindow.site.id) + 1
+          }
+          onClose={closeContextWindow}
+        />
+      ) : null}
+
     </section>
   );
 }

@@ -69,7 +69,7 @@ export function ScenarioWizard({ scenarioId }: ScenarioWizardProps) {
           {editing ? "Chỉnh sửa kịch bản" : "Tạo kịch bản mới"}
         </h1>
         <p className="mt-2 max-w-[65ch] text-sm leading-6 text-[var(--text-secondary)] sm:text-base">
-          Hoàn thành bốn phần để tạo trạng thái ban đầu và đáp án chấm điểm tự động.
+          Hoàn thành năm phần để tạo trạng thái ban đầu, đáp án và sự cố phần cứng tùy chọn.
         </p>
       </header>
 

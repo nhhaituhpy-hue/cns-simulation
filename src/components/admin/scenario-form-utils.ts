@@ -2,6 +2,7 @@ import type {
   LoginUser,
   RecordedAction,
   Scenario,
+  ScenarioHardwareFault,
   ScenarioDifficulty,
   SensorState,
   SiteState,
@@ -14,6 +15,7 @@ export type ScenarioDraft = {
   sites: SiteState[];
   targetSensorId: string;
   targetLoginUser: LoginUser;
+  hardwareFault?: ScenarioHardwareFault;
   expectedActions: RecordedAction[];
 };
 
@@ -55,6 +57,7 @@ export function createInitialScenarioDraft(): ScenarioDraft {
     targetSensorId: firstSite.sensorA?.id ?? "",
     targetLoginUser: "sysadmin",
     expectedActions: [],
+    hardwareFault: undefined,
   };
 }
 
@@ -67,6 +70,9 @@ export function scenarioToDraft(scenario: Scenario): ScenarioDraft {
     targetSensorId: scenario.targetSensorId,
     targetLoginUser: scenario.targetLoginUser,
     expectedActions: scenario.expectedActions.map((action) => ({ ...action })),
+    hardwareFault: scenario.hardwareFault
+      ? structuredClone(scenario.hardwareFault)
+      : undefined,
   };
 }
 
@@ -170,11 +176,22 @@ export function validateScenarioStep(
     errors.expectedActions = "Hãy thêm ít nhất một thao tác chuẩn.";
   }
 
+  if (
+    step === 5 &&
+    draft.hardwareFault &&
+    !draft.hardwareFault.hardwareLayout.some(
+      (component) => component.id === draft.hardwareFault?.faultyComponentId,
+    )
+  ) {
+    errors.hardwareFault = "Select a valid faulty component.";
+  }
+
   return errors;
 }
 
+
 export function validateScenarioDraft(draft: ScenarioDraft): ValidationErrors {
-  return [1, 2, 3, 4].reduce<ValidationErrors>(
+  return [1, 2, 3, 4, 5].reduce<ValidationErrors>(
     (errors, step) => ({
       ...errors,
       ...validateScenarioStep(draft, step),

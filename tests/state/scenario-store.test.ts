@@ -44,7 +44,7 @@ describe("scenario store hydration", () => {
     const state = store.getState();
     const rawValue = window.localStorage.getItem(SCENARIO_STORAGE_KEY);
     expect(state.isHydrated).toBe(true);
-    expect(state.scenarios).toHaveLength(3);
+    expect(state.scenarios).toHaveLength(DEFAULT_SCENARIOS.length);
     expect(state.scenarios[0].sites[0].sensorA?.monitoring?.lastSnmpResponseAt)
       .toBe(FIXED_NOW.toISOString());
     expect(deserializeScenarioStorage(rawValue).version).toBe(

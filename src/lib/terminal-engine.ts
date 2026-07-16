@@ -8,7 +8,13 @@ import type {
   ToggleOption,
 } from "./menu-data/menu-types";
 import { normalizeTerminalInput } from "./normalization";
-import type { LoginUser, RecordableAction } from "./types";
+import { renderTemplate } from "./terminal-templates";
+import type {
+  LoginUser,
+  RecordableAction,
+  SensorDataProfile,
+  SensorMonitoringData,
+} from "./types";
 
 const TERMINAL_WIDTH = 74;
 const INNER_WIDTH = TERMINAL_WIDTH - 2;
@@ -31,6 +37,8 @@ export interface TerminalEngineOptions {
   menus?: MenuTree;
   rootMenuId?: string;
   header?: Partial<MenuHeader>;
+  sensorDataProfile?: SensorDataProfile;
+  sensorMonitoring?: SensorMonitoringData;
 }
 
 export interface TerminalEngineState {
@@ -174,6 +182,8 @@ export class TerminalEngine {
   private readonly menus: MenuTree;
   private readonly rootMenuId: string;
   private readonly headerOverrides: Partial<MenuHeader>;
+  private readonly sensorDataProfile: SensorDataProfile | undefined;
+  private readonly sensorMonitoring: SensorMonitoringData | undefined;
   private currentMenuId: string;
   private navigationStack: string[] = [];
   private exited = false;
@@ -186,6 +196,8 @@ export class TerminalEngine {
     this.menus = options.menus ?? builtInDefinition.menus;
     this.rootMenuId = options.rootMenuId ?? builtInDefinition.rootMenuId;
     this.headerOverrides = options.header ?? {};
+    this.sensorDataProfile = options.sensorDataProfile;
+    this.sensorMonitoring = options.sensorMonitoring;
     this.currentMenuId = this.rootMenuId;
 
     assertValidMenuTree(this.menus, this.rootMenuId);
@@ -323,7 +335,14 @@ export class TerminalEngine {
           event: "display",
           normalizedInput,
           previousMenuId,
-          output: `${action.content}\n\nPress RETURN to continue:`,
+          output:
+            action.templateId && this.sensorDataProfile
+              ? renderTemplate(
+                  action.templateId,
+                  this.sensorDataProfile,
+                  this.sensorMonitoring,
+                )
+              : action.content + "\n\nPress RETURN to continue:",
           recordableAction: selectedAction,
         });
 

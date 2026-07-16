@@ -1,0 +1,201 @@
+import type { SensorDataProfile } from "./types";
+
+export const CON_SON_SENSOR_1: SensorDataProfile = {
+  sensorVersion: "1-8-3",
+  configVersion: "ConSon_V1.0",
+  sensorName: "ConSon Sensor 1",
+  network: {
+    ip: "192.168.201.1",
+    subnet: "255.255.255.0",
+    gateway: "192.168.201.7",
+    dhcp: false,
+    macAddress: "00:1A:2B:3C:4D:01",
+    ntpServer: "192.168.201.10",
+    bitRate: "100 Mbit/s full duplex",
+  },
+  receiverStats: {
+    shortSquitter: { total: 1_284_567, passed: 1_271_234, failed: 13_333 },
+    extendedSquitter: { total: 856_789, passed: 848_123, failed: 8_666 },
+    totalTargetsDetected: 45_230,
+    currentTargets: 12,
+  },
+  clients: [
+    {
+      id: 1,
+      name: "QCMS",
+      ip: "192.168.201.10",
+      port: 20550,
+      protocol: "UDP",
+      messageType: "ASTERIX CAT21 v0.26",
+      enabled: true,
+      messagesSent: 4_523_100,
+    },
+    {
+      id: 2,
+      name: "Gateway",
+      ip: "192.168.201.7",
+      port: 20550,
+      protocol: "UDP",
+      messageType: "ASTERIX CAT21 v0.26",
+      enabled: true,
+      messagesSent: 4_523_098,
+    },
+  ],
+  snmpUsers: [{ name: "qcms_user", authType: "authPriv" }],
+  snmpTraps: [{ ip: "192.168.201.10", port: 20900, enabled: true }],
+  snmpHeartbeatPeriod: 60,
+  snmpAlarmPeriod: 10,
+  gps: {
+    enabled: true,
+    ntpEnabled: false,
+    ntpServer: "192.168.201.10",
+    latitude: "8.6833",
+    longitude: "106.6000",
+    altitude: "2m",
+    deviation: "0.2m",
+  },
+  filters: {
+    altitudeEnabled: true,
+    altitudeMin: 0,
+    altitudeMax: 600,
+    addressFilterEnabled: false,
+    addressFilter: "",
+    positionFilterEnabled: false,
+    positionFilterRadius: 250,
+  },
+  asterix: {
+    sac: 120,
+    sic: 1,
+    cat21Version: "0.26",
+    cat21Enabled: true,
+    nonOpEnabled: false,
+    mlatEnabled: false,
+    rawEnabled: false,
+    dataBlockSize: 512,
+    ttl: 64,
+  },
+  general: {
+    crcCorrection: true,
+    groundTargets: false,
+    targetOverloadLimit: 500,
+  },
+  syslog: {
+    localDestination: "/var/log/sensor.log",
+    remoteEnabled: true,
+    remoteServerIp: "192.168.201.10",
+  },
+  siteMonitors: [
+    {
+      enabled: true,
+      ip: "192.168.201.2",
+      port: 20600,
+      name: "Site Monitor 1",
+    },
+  ],
+};
+
+export const CON_SON_SENSOR_3: SensorDataProfile = {
+  sensorVersion: "1-8-3",
+  configVersion: "ConSon_V1.0",
+  sensorName: "ConSon Sensor 3",
+  network: {
+    ip: "192.168.201.5",
+    subnet: "255.255.255.0",
+    gateway: "192.168.201.7",
+    dhcp: false,
+    macAddress: "00:1A:2B:3C:4D:05",
+    ntpServer: "192.168.201.10",
+    bitRate: "100 Mbit/s full duplex",
+  },
+  receiverStats: {
+    shortSquitter: { total: 1_176_932, passed: 1_165_104, failed: 11_828 },
+    extendedSquitter: { total: 798_415, passed: 790_231, failed: 8_184 },
+    totalTargetsDetected: 42_817,
+    currentTargets: 11,
+  },
+  clients: [
+    {
+      id: 1,
+      name: "QCMS",
+      ip: "192.168.201.10",
+      port: 20550,
+      protocol: "UDP",
+      messageType: "ASTERIX CAT21 v0.26",
+      enabled: true,
+      messagesSent: 4_281_700,
+    },
+    {
+      id: 2,
+      name: "Gateway",
+      ip: "192.168.201.7",
+      port: 20550,
+      protocol: "UDP",
+      messageType: "ASTERIX CAT21 v0.26",
+      enabled: true,
+      messagesSent: 4_281_697,
+    },
+  ],
+  snmpUsers: [{ name: "qcms_user", authType: "authPriv" }],
+  snmpTraps: [{ ip: "192.168.201.10", port: 20900, enabled: true }],
+  snmpHeartbeatPeriod: 60,
+  snmpAlarmPeriod: 10,
+  gps: {
+    enabled: true,
+    ntpEnabled: false,
+    ntpServer: "192.168.201.10",
+    latitude: "8.6833",
+    longitude: "106.6000",
+    altitude: "2m",
+    deviation: "0.2m",
+  },
+  filters: {
+    altitudeEnabled: true,
+    altitudeMin: 0,
+    altitudeMax: 600,
+    addressFilterEnabled: false,
+    addressFilter: "",
+    positionFilterEnabled: false,
+    positionFilterRadius: 250,
+  },
+  asterix: {
+    sac: 120,
+    sic: 3,
+    cat21Version: "0.26",
+    cat21Enabled: true,
+    nonOpEnabled: false,
+    mlatEnabled: false,
+    rawEnabled: false,
+    dataBlockSize: 512,
+    ttl: 64,
+  },
+  general: {
+    crcCorrection: true,
+    groundTargets: false,
+    targetOverloadLimit: 500,
+  },
+  syslog: {
+    localDestination: "/var/log/sensor.log",
+    remoteEnabled: true,
+    remoteServerIp: "192.168.201.10",
+  },
+  siteMonitors: [
+    {
+      enabled: true,
+      ip: "192.168.201.3",
+      port: 20600,
+      name: "Site Monitor 2",
+    },
+  ],
+};
+
+export const SENSOR_DATA_PRESETS: Record<string, SensorDataProfile> = {
+  "con-son-sensor-1": CON_SON_SENSOR_1,
+  "con-son-sensor-3": CON_SON_SENSOR_3,
+};
+
+export const PRESET_LABELS: Record<string, string> = {
+  "con-son-sensor-1":
+    "ADS-B C\u00f4n S\u01a1n \u2014 Sensor 1 (192.168.201.1)",
+  "con-son-sensor-3":
+    "ADS-B C\u00f4n S\u01a1n \u2014 Sensor 3 (192.168.201.5)",
+};

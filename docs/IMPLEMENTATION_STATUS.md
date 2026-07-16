@@ -8,6 +8,9 @@
 - [x] Admin scenario management and action builder
 - [x] Student QCMS monitor
 - [x] Student terminal, recording, and grading result
+- [x] Con Son sensor profiles and 17 data-driven SA/MA terminal screens
+- [x] Extended QCMS toolbar, event log, replay, configuration, status, and statistics
+- [x] Hardware topology, 10 fault presets, diagnosis workflow, and hardware grading
 - [x] Responsive and accessibility hardening
 - [x] Lint, typecheck, tests, production build, and browser QA
 - [x] README and repository documentation
@@ -23,11 +26,11 @@
 
 ## Latest verification
 
-Verified on 2026-07-15 with Node.js 24:
+Verified on 2026-07-16 with Node.js 24:
 
 - ESLint: passed
 - TypeScript: passed
-- Vitest: 15 files, 66 tests passed
-- Playwright: 6 desktop/mobile Chromium flows passed
-- Production build: passed for all seven application routes
+- Vitest: 18 files, 106 tests passed
+- Playwright: not rerun for this upgrade; 6 existing desktop/mobile Chromium flows remain in the suite
+- Production build: passed for all application routes
 - Visual QA: landing, Admin wizard, Student dashboard, QCMS, sensor modal, terminal, grading, and mobile layouts reviewed

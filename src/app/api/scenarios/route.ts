@@ -4,6 +4,10 @@ import type { Scenario } from "@/lib/types";
 
 export const runtime = "edge";
 
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Unknown error";
+}
+
 export async function GET() {
   try {
     const db = getDb();
@@ -15,10 +19,10 @@ export async function GET() {
 
     const scenarios = (results || []).map(mapRowToScenario);
     return NextResponse.json(scenarios);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("D1 Fetch Error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch scenarios from D1 database", details: error.message },
+      { error: "Failed to fetch scenarios from D1 database", details: errorMessage(error) },
       { status: 500 }
     );
   }
@@ -59,10 +63,10 @@ export async function POST(request: Request) {
       .run();
 
     return NextResponse.json({ success: true, scenario });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("D1 Insert Error:", error);
     return NextResponse.json(
-      { error: "Failed to save scenario to D1 database", details: error.message },
+      { error: "Failed to save scenario to D1 database", details: errorMessage(error) },
       { status: 500 }
     );
   }
@@ -81,10 +85,10 @@ export async function DELETE(request: Request) {
     await db.prepare("DELETE FROM Scenarios WHERE id = ?").bind(id).run();
 
     return NextResponse.json({ success: true, message: `Scenario ${id} deleted successfully` });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("D1 Delete Error:", error);
     return NextResponse.json(
-      { error: "Failed to delete scenario from D1 database", details: error.message },
+      { error: "Failed to delete scenario from D1 database", details: errorMessage(error) },
       { status: 500 }
     );
   }

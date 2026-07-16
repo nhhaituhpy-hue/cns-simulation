@@ -3,9 +3,10 @@
 import { CaretLeft, CaretRight, FloppyDisk } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-import type { Scenario } from "@/lib/types";
+import type { Scenario, ScenarioHardwareFault, SensorState } from "@/lib/types";
 import { ActionBuilder } from "./action-builder";
 import { LoginRoleStep } from "./login-role-step";
+import { HardwareFaultStep } from "./hardware-fault-step";
 import { ScenarioMetadataStep } from "./scenario-metadata-step";
 import {
   createInitialScenarioDraft,
@@ -27,6 +28,7 @@ const steps = [
   { number: 2, label: "Site và cảm biến" },
   { number: 3, label: "Vai trò đăng nhập" },
   { number: 4, label: "Thao tác chuẩn" },
+  { number: 5, label: "Hardware Fault" },
 ] as const;
 
 function findTargetSensorName(draft: ScenarioDraft): string {
@@ -56,6 +58,7 @@ function firstInvalidStep(errors: ValidationErrors): number {
     return 2;
   }
   if (keys.includes("targetLoginUser")) return 3;
+  if (keys.includes("hardwareFault")) return 5;
   return 4;
 }
 
@@ -81,12 +84,63 @@ export function ScenarioWizardForm({
     setSaveError(null);
   }
 
+  function updateHardwareFault(hardwareFault: ScenarioHardwareFault | undefined) {
+    const updateTargetSensor = (sensor: SensorState | null): SensorState | null => {
+      if (!sensor || sensor.id !== draft.targetSensorId) return sensor;
+      const status = hardwareFault?.expectedSensorStatus ?? "green";
+      if (!hardwareFault) return { ...sensor, status };
+
+      const now = new Date();
+      const monitoring = sensor.monitoring ?? {
+        lastSnmpResponseAt: now.toISOString(),
+        temperatureC: 43,
+        cpuLoadPercent: 20,
+        voltages: { v3_3: 3.3, v5: 5, v12: 12 },
+        receiverConfidencePercent: 96,
+        crcErrorCount: 0,
+        gpsStatus: "synchronized" as const,
+      };
+      const adjusted = {
+        ...monitoring,
+        voltages: { ...monitoring.voltages },
+      };
+
+      if (status === "red") {
+        adjusted.lastSnmpResponseAt = new Date(
+          now.getTime() - 5 * 60_000,
+        ).toISOString();
+        adjusted.receiverConfidencePercent = 0;
+        adjusted.gpsStatus = "unavailable";
+      } else if (status === "yellow") {
+        adjusted.receiverConfidencePercent = 0;
+        adjusted.crcErrorCount = 0;
+      } else if (status === "orange") {
+        adjusted.temperatureC = 62;
+        adjusted.cpuLoadPercent = 76;
+        adjusted.receiverConfidencePercent = 72;
+      }
+
+      if (hardwareFault.faultyComponentId === "gps-cable-1") {
+        adjusted.gpsStatus = "unsynchronized";
+      }
+
+      return { ...sensor, status, monitoring: adjusted };
+    };
+
+    const sites = draft.sites.map((site) => ({
+      ...site,
+      sensorA: updateTargetSensor(site.sensorA),
+      sensorB: updateTargetSensor(site.sensorB),
+    }));
+    updateDraft({ hardwareFault, sites });
+  }
+
   function goNext() {
     const nextErrors = validateScenarioStep(draft, currentStep);
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length === 0) {
-      setCurrentStep((step) => Math.min(step + 1, 4));
+      setCurrentStep((step) => Math.min(step + 1, 5));
       window.scrollTo({ top: 0 });
     }
   }
@@ -100,7 +154,7 @@ export function ScenarioWizardForm({
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (currentStep < 4) {
+    if (currentStep < 5) {
       goNext();
       return;
     }
@@ -131,7 +185,7 @@ export function ScenarioWizardForm({
   return (
     <form onSubmit={handleSubmit} className="grid gap-6">
       <nav aria-label="Các bước tạo kịch bản" className="pb-1">
-        <ol className="grid grid-cols-4 border-b border-[var(--border)]">
+        <ol className="grid grid-cols-5 border-b border-[var(--border)]">
           {steps.map((step) => {
             const active = currentStep === step.number;
             const complete = currentStep > step.number;
@@ -164,13 +218,14 @@ export function ScenarioWizardForm({
       <section className="rounded-lg border border-[var(--border)] bg-white p-4 shadow-[var(--shadow-card)] sm:p-6 lg:p-8">
         <header className="mb-7 border-b border-[var(--border)] pb-5">
           <p className="text-sm font-medium text-[var(--accent)]">
-            Bước {currentStep} trong 4
+            Bước {currentStep} trong 5
           </p>
           <h2 className="mt-1 text-xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-2xl">
             {currentStep === 1 ? "Thông tin kịch bản" : null}
             {currentStep === 2 ? "Cấu hình trạng thái ban đầu" : null}
             {currentStep === 3 ? "Chọn vai trò đăng nhập" : null}
             {currentStep === 4 ? "Xây dựng đáp án thao tác" : null}
+            {currentStep === 5 ? "Hardware Fault" : null}
           </h2>
         </header>
 
@@ -220,6 +275,14 @@ export function ScenarioWizardForm({
             onChange={(expectedActions) => updateDraft({ expectedActions })}
           />
         ) : null}
+
+        {currentStep === 5 ? (
+          <HardwareFaultStep
+            value={draft.hardwareFault}
+            error={errors.hardwareFault}
+            onChange={updateHardwareFault}
+          />
+        ) : null}
       </section>
 
       {saveError ? (
@@ -227,6 +290,7 @@ export function ScenarioWizardForm({
           role="alert"
           className="rounded border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-sm text-[#991b1b]"
         >
+
           {saveError}
         </p>
       ) : null}
@@ -252,7 +316,7 @@ export function ScenarioWizardForm({
             </button>
           ) : null}
 
-          {currentStep < 4 ? (
+          {currentStep < 5 ? (
             <button
               type="submit"
               className="inline-flex h-10 items-center justify-center gap-2 rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:bg-[var(--accent-active)] disabled:cursor-not-allowed disabled:opacity-50"

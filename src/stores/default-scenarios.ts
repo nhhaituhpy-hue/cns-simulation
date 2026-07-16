@@ -1,4 +1,5 @@
 import { TerminalEngine } from "@/lib/terminal-engine";
+import { CON_SON_SENSOR_1 } from "@/lib/sensor-data-presets";
 import type {
   LoginUser,
   RecordedAction,
@@ -134,6 +135,33 @@ export const DEFAULT_SCENARIOS: readonly Scenario[] = [
     targetLoginUser: "maintenance",
     expectedActions: buildExpectedActions("maintenance", ["7", "1", ""]),
   },
+  {
+    id: "seed-con-son-network",
+    title: "Ki\u1ec3m tra c\u1ea5u h\u00ecnh m\u1ea1ng C\u00f4n S\u01a1n",
+    description:
+      "Ki\u1ec3m tra c\u1ea5u h\u00ecnh m\u1ea1ng c\u1ee7a Sensor 1 t\u1ea1i tr\u1ea1m ADS-B C\u00f4n S\u01a1n.",
+    difficulty: "easy",
+    createdAt: "2026-01-04T00:00:00.000Z",
+    sites: [
+      {
+        id: "con-son",
+        name: "C\u00f4n S\u01a1n",
+        sensorA: {
+          id: "con-son-a",
+          sensorLabel: "A",
+          status: "green",
+          ipAddress: "192.168.201.1",
+          name: "ConSon Sensor 1",
+          monitoring: monitoring(),
+          dataProfile: CON_SON_SENSOR_1,
+        },
+        sensorB: null,
+      },
+    ],
+    targetSensorId: "con-son-a",
+    targetLoginUser: "sysadmin",
+    expectedActions: buildExpectedActions("sysadmin", ["2", "1", "", "0"]),
+  },
 ];
 
 export function cloneScenarios(
@@ -147,6 +175,9 @@ export function cloneScenarios(
       sensorA: site.sensorA
         ? {
             ...site.sensorA,
+            dataProfile: site.sensorA.dataProfile
+              ? structuredClone(site.sensorA.dataProfile)
+              : undefined,
             monitoring: site.sensorA.monitoring
               ? {
                   ...site.sensorA.monitoring,
@@ -161,6 +192,9 @@ export function cloneScenarios(
       sensorB: site.sensorB
         ? {
             ...site.sensorB,
+            dataProfile: site.sensorB.dataProfile
+              ? structuredClone(site.sensorB.dataProfile)
+              : undefined,
             monitoring: site.sensorB.monitoring
               ? {
                   ...site.sensorB.monitoring,
@@ -172,6 +206,12 @@ export function cloneScenarios(
               : undefined,
           }
         : null,
+    })),
+    eventLog: scenario.eventLog?.map((event) => ({
+    hardwareFault: scenario.hardwareFault
+      ? structuredClone(scenario.hardwareFault)
+      : undefined,
+      ...event,
     })),
     expectedActions: scenario.expectedActions.map((action) => ({ ...action })),
   }));

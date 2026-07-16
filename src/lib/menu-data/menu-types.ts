@@ -16,7 +16,7 @@ export interface ToggleOption {
 
 export type MenuAction =
   | { type: "navigate"; targetMenuId: string }
-  | { type: "display"; content: string }
+  | { type: "display"; content: string; templateId?: string }
   | {
       type: "toggle";
       settingId: string;

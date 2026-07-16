@@ -24,8 +24,13 @@ function navigate(number: number, label: string, targetMenuId: string): MenuItem
   return { number, label, action: { type: "navigate", targetMenuId } };
 }
 
-function display(number: number, label: string, content: string): MenuItem {
-  return { number, label, action: { type: "display", content } };
+function display(
+  number: number,
+  label: string,
+  content: string,
+  templateId?: string,
+): MenuItem {
+  return { number, label, action: { type: "display", content, templateId } };
 }
 
 function input(
@@ -124,9 +129,20 @@ export const MA_MENUS = {
         1,
         "Display Network Configuration",
         "Interface eth0: 10.10.10.3/24\nDefault gateway: 10.10.10.1",
+        "ma-network-display",
       ),
-      display(2, "Display NTP Configuration", "NTP server: 10.10.10.1\nState: synchronized"),
-      display(3, "Display Maximum Bit Rate", "Maximum bit rate: 100 Mbps"),
+      display(
+        2,
+        "Display NTP Configuration",
+        "NTP server: 10.10.10.1\nState: synchronized",
+        "ma-network-ntp",
+      ),
+      display(
+        3,
+        "Display Maximum Bit Rate",
+        "Maximum bit rate: 100 Mbps",
+        "ma-network-bitrate",
+      ),
     ],
   },
 
@@ -135,7 +151,12 @@ export const MA_MENUS = {
     title: "Surveillance Clients",
     header: MA_HEADER,
     items: [
-      display(1, "Display Client Configuration", "Client 1: 239.10.10.1:30001, enabled, ASTERIX CAT21"),
+      display(
+        1,
+        "Display Client Configuration",
+        "Client 1: 239.10.10.1:30001, enabled, ASTERIX CAT21",
+        "ma-clients-display",
+      ),
       display(2, "Display Client Statistics", "Client 1 packets sent: 125430\nSend errors: 0"),
       toggle(3, "Enable / Disable Client", "ma.client-enabled", "Select client state:"),
     ],
@@ -179,7 +200,12 @@ export const MA_MENUS = {
     title: "Filter Configuration",
     header: MA_HEADER,
     items: [
-      display(1, "Display Filters", "Filter training-zone: enabled\nFilter maintenance-test: disabled"),
+      display(
+        1,
+        "Display Filters",
+        "Filter training-zone: enabled\nFilter maintenance-test: disabled",
+        "ma-filter-display",
+      ),
       toggle(2, "Enable / Disable Filters", "ma.filters-enabled", "Select filter state:"),
       input(
         3,
@@ -197,7 +223,12 @@ export const MA_MENUS = {
     title: "GPS / NTP Configuration",
     header: MA_HEADER,
     items: [
-      display(1, "Display Status", "GPS: synchronized\nNTP: synchronized\nOffset: 0.4 ms"),
+      display(
+        1,
+        "Display Status",
+        "GPS: synchronized\nNTP: synchronized\nOffset: 0.4 ms",
+        "ma-gps-status",
+      ),
       toggle(2, "Enable / Disable GPS", "ma.gps-enabled", "Select GPS state:"),
       toggle(3, "Enable / Disable NTP", "ma.ntp-enabled", "Select NTP state:"),
       display(4, "Reset GPS Averaging", "GPS averaging reset completed in the simulator."),
@@ -220,9 +251,24 @@ export const MA_MENUS = {
     title: "Display System Stats",
     header: MA_HEADER,
     items: [
-      display(1, "System Configuration", "CPU: simulated ARM platform\nMemory: 2048 MB\nStorage: healthy"),
-      display(2, "System Status", "Uptime: 12 days\nCPU load: 23%\nTemperature: 45 C"),
-      display(3, "Extended DSP Statistics", "DSP frames: 2485030\nRejected frames: 17\nOverloads: 0"),
+      display(
+        1,
+        "System Configuration",
+        "CPU: simulated ARM platform\nMemory: 2048 MB\nStorage: healthy",
+        "ma-system-config",
+      ),
+      display(
+        2,
+        "System Status",
+        "Uptime: 12 days\nCPU load: 23%\nTemperature: 45 C",
+        "ma-system-status",
+      ),
+      display(
+        3,
+        "Extended DSP Statistics",
+        "DSP frames: 2485030\nRejected frames: 17\nOverloads: 0",
+        "ma-dsp-stats",
+      ),
       display(4, "Reset DSP Statistics", "DSP statistics reset completed in the simulator."),
     ],
   },
@@ -286,7 +332,12 @@ export const MA_MENUS = {
     title: "Monitoring Devices",
     header: MA_HEADER,
     items: [
-      display(1, "Display Configuration", "Monitoring device 1: QCMS 10.10.20.15, enabled"),
+      display(
+        1,
+        "Display Configuration",
+        "Monitoring device 1: QCMS 10.10.20.15, enabled",
+        "ma-monitoring-display",
+      ),
       toggle(
         2,
         "Enable / Disable Monitoring Device",

@@ -1,4 +1,3 @@
-import type { MenuHeader } from "@/lib/menu-data/menu-types";
 import {
   TerminalEngine,
   type PendingInteractionType,
@@ -24,10 +23,7 @@ export type TerminalPendingPrompt =
 
 export type TerminalInitialization =
   | LoginUser
-  | {
-      targetLoginUser: LoginUser;
-      header?: Partial<MenuHeader>;
-    };
+  | Omit<TerminalEngineOptions, "menus" | "rootMenuId">;
 
 export interface TerminalStoreState {
   targetLoginUser: LoginUser | null;
