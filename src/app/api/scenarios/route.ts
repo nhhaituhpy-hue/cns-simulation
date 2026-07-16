@@ -1,95 +1,94 @@
 import { NextResponse } from "next/server";
-import { getDb, mapRowToScenario } from "@/lib/db";
-import type { Scenario } from "@/lib/types";
 
-export const runtime = "edge";
+import { createClient } from "@/lib/supabase/server";
+import { mapRowToScenario } from "@/lib/supabase/scenarios";
+import type { Scenario } from "@/lib/types";
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unknown error";
 }
 
+function toRow(scenario: Scenario) {
+  return {
+    id: scenario.id,
+    title: scenario.title,
+    description: scenario.description,
+    difficulty: scenario.difficulty,
+    sites_json: JSON.stringify(scenario.sites),
+    target_sensor_id: scenario.targetSensorId,
+    target_login_user: scenario.targetLoginUser,
+    expected_actions_json: JSON.stringify(scenario.expectedActions),
+    created_at: scenario.createdAt || new Date().toISOString(),
+    updated_at: scenario.updatedAt ?? null,
+  };
+}
+
 export async function GET() {
   try {
-    const db = getDb();
-    // Thực thi câu lệnh SQL lấy toàn bộ kịch bản
-    const { results } = await db
-      .prepare("SELECT * FROM Scenarios ORDER BY created_at DESC")
-      .bind()
-      .all();
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("scenarios")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-    const scenarios = (results || []).map(mapRowToScenario);
-    return NextResponse.json(scenarios);
+    if (error) throw error;
+
+    return NextResponse.json((data ?? []).map(mapRowToScenario));
   } catch (error: unknown) {
-    console.error("D1 Fetch Error:", error);
+    console.error("Supabase scenario fetch error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch scenarios from D1 database", details: errorMessage(error) },
-      { status: 500 }
+      { error: "Failed to fetch scenarios from Supabase", details: errorMessage(error) },
+      { status: 500 },
     );
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const scenario: Scenario = await request.json();
+    const scenario = (await request.json()) as Scenario;
 
     if (!scenario.id || !scenario.title) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const db = getDb();
-    
-    // Lưu các trường phức tạp dưới dạng JSON string trong D1
-    const sitesJson = JSON.stringify(scenario.sites);
-    const expectedActionsJson = JSON.stringify(scenario.expectedActions);
-    const createdAt = scenario.createdAt || new Date().toISOString();
-    const updatedAt = scenario.updatedAt || null;
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("scenarios")
+      .upsert(toRow(scenario), { onConflict: "id" })
+      .select()
+      .single();
 
-    await db
-      .prepare(
-        "INSERT INTO Scenarios (id, title, description, difficulty, sites_json, target_sensor_id, target_login_user, expected_actions_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-      )
-      .bind(
-        scenario.id,
-        scenario.title,
-        scenario.description,
-        scenario.difficulty,
-        sitesJson,
-        scenario.targetSensorId,
-        scenario.targetLoginUser,
-        expectedActionsJson,
-        createdAt,
-        updatedAt
-      )
-      .run();
+    if (error) throw error;
 
-    return NextResponse.json({ success: true, scenario });
+    return NextResponse.json({ success: true, scenario: mapRowToScenario(data) });
   } catch (error: unknown) {
-    console.error("D1 Insert Error:", error);
+    console.error("Supabase scenario write error:", error);
     return NextResponse.json(
-      { error: "Failed to save scenario to D1 database", details: errorMessage(error) },
-      { status: 500 }
+      { error: "Failed to save scenario to Supabase", details: errorMessage(error) },
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
+    const id = new URL(request.url).searchParams.get("id");
 
     if (!id) {
       return NextResponse.json({ error: "Missing scenario ID" }, { status: 400 });
     }
 
-    const db = getDb();
-    await db.prepare("DELETE FROM Scenarios WHERE id = ?").bind(id).run();
+    const supabase = createClient();
+    const { error } = await supabase.from("scenarios").delete().eq("id", id);
 
-    return NextResponse.json({ success: true, message: `Scenario ${id} deleted successfully` });
+    if (error) throw error;
+
+    return NextResponse.json({ success: true });
   } catch (error: unknown) {
-    console.error("D1 Delete Error:", error);
+    console.error("Supabase scenario delete error:", error);
     return NextResponse.json(
-      { error: "Failed to delete scenario from D1 database", details: errorMessage(error) },
-      { status: 500 }
+      { error: "Failed to delete scenario from Supabase", details: errorMessage(error) },
+      { status: 500 },
     );
   }
 }

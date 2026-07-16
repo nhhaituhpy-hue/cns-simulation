@@ -143,7 +143,7 @@ export function createScenarioStore(
           return;
         }
 
-        // Đồng bộ bất đồng bộ từ API D1 trước ở môi trường thật
+        // Ưu tiên dữ liệu Supabase; localStorage là lớp fallback ngoại tuyến
         fetch("/api/scenarios")
           .then((res) => {
             if (res.ok) {
@@ -163,6 +163,7 @@ export function createScenarioStore(
             }
           })
           .catch((err) => {
+            const shouldSeedRemote = err instanceof Error && err.message === "DB is empty";
             console.warn("Using localStorage fallback for scenarios:", err.message);
             if (!storage) {
               return;
@@ -186,11 +187,18 @@ export function createScenarioStore(
                 return;
               }
 
-              set({
-                scenarios: cloneScenarios(loadScenarios(storage)),
-                isHydrated: true,
-                storageError: null,
-              });
+              const localScenarios = cloneScenarios(loadScenarios(storage));
+              set({ scenarios: localScenarios, isHydrated: true, storageError: null });
+
+              if (shouldSeedRemote) {
+                localScenarios.forEach((scenario) => {
+                  fetch("/api/scenarios", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(scenario),
+                  }).catch(() => {});
+                });
+              }
             } catch (error) {
               set({
                 scenarios: cloneScenarios(defaults, now().toISOString()),
@@ -216,12 +224,12 @@ export function createScenarioStore(
 
         const isTest = typeof process !== "undefined" && process.env?.NODE_ENV === "test";
         if (!isTest) {
-          // Đồng bộ lên Cloudflare D1
+          // Đồng bộ lên Supabase
           fetch("/api/scenarios", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(scenario),
-          }).catch((err) => console.error("Failed to sync scenario with D1:", err));
+          }).catch((err) => console.error("Failed to sync scenario with Supabase:", err));
         }
 
         return scenario;
@@ -250,12 +258,12 @@ export function createScenarioStore(
 
         const isTest = typeof process !== "undefined" && process.env?.NODE_ENV === "test";
         if (!isTest) {
-          // Đồng bộ lên Cloudflare D1
+          // Đồng bộ lên Supabase
           fetch("/api/scenarios", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(updated),
-          }).catch((err) => console.error("Failed to sync updated scenario with D1:", err));
+          }).catch((err) => console.error("Failed to sync updated scenario with Supabase:", err));
         }
 
         return updated;
@@ -273,10 +281,10 @@ export function createScenarioStore(
 
         const isTest = typeof process !== "undefined" && process.env?.NODE_ENV === "test";
         if (!isTest) {
-          // Đồng bộ lên Cloudflare D1
+          // Đồng bộ lên Supabase
           fetch(`/api/scenarios?id=${encodeURIComponent(scenarioId)}`, {
             method: "DELETE",
-          }).catch((err) => console.error("Failed to sync delete scenario with D1:", err));
+          }).catch((err) => console.error("Failed to sync delete scenario with Supabase:", err));
         }
 
         return true;
@@ -301,7 +309,7 @@ export function createScenarioStore(
 
         const isTest = typeof process !== "undefined" && process.env?.NODE_ENV === "test";
         if (!isTest) {
-          // Xoá và chèn lại defaults trên D1
+          // Xoá và chèn lại defaults trên Supabase
           currentScenarios.forEach((s) => {
             fetch(`/api/scenarios?id=${encodeURIComponent(s.id)}`, { method: "DELETE" })
               .catch(() => {});
