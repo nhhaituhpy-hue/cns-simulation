@@ -37,3 +37,13 @@ This file records the choices made while implementing the MVP from `ADSB_Trainin
 ## Repository content
 
 The three vendor manuals are reference inputs and are not copied into the repository. This avoids publishing potentially restricted source documents. The README identifies the expected manual titles and versions.
+
+## VOR PMDT training module
+
+1. VOR is a separate bounded module rather than an extension of the ADS-B scenario model. DME can follow the same pattern later without coupling its equipment data to VOR or ADS-B.
+2. The admin configures fault values and indicator colors directly on the shared PMDT simulator, then marks expected views as checkpoints.
+3. Author, student, and preview modes share the same PMDT screens and field identifiers. This prevents the training display from drifting away from the scenario-building display.
+4. A student attempt records each enabled PMDT screen/tab visit in sequence. The student may add a free-text annotation to every visit, then submits suspected fault, diagnostic reasoning, and remediation.
+5. Expected checkpoints are examiner aids only. The application shows whether a view was visited but does not automatically decide the final grade; the examiner reads the evidence and enters a score from 0 to 100 with comments.
+6. VOR scenarios and submissions have independent versioned local storage, API routes, Supabase tables, and Zustand stores.
+7. Authentication is intentionally deferred for this experimental phase. Students identify themselves with name and code. The included Supabase RLS policies are temporary permissive MVP policies and must be replaced when the future two-account admin/user login is introduced.
