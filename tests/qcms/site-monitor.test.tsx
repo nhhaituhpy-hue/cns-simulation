@@ -70,6 +70,19 @@ describe("StatusBadge", () => {
 });
 
 describe("SiteMonitor", () => {
+  it("renders the QCMS Ground Stations window with 64 slots", () => {
+    render(
+      <SiteMonitor
+        scenario={scenarioWithSites([twoSensorSite(1), twoSensorSite(2)])}
+      />,
+    );
+
+    expect(screen.getByText("GROUND STATIONS")).toBeVisible();
+    expect(screen.getByText("PROCESSING SYSTEM SITES 01-04")).toBeVisible();
+    expect(screen.getByText("REDUNDANT AND PASSIVE SITES 05-64")).toBeVisible();
+    expect(screen.getByLabelText("Site slot 64 chưa cấu hình")).toBeInTheDocument();
+  });
+
   it("enforces four visualized sensors and enables RR per site", async () => {
     const user = userEvent.setup();
     render(
@@ -99,7 +112,7 @@ describe("SiteMonitor", () => {
     await user.click(showButtons[2]);
     await user.click(showButtons[3]);
 
-    expect(screen.getByText("4/4 cảm biến hiển thị")).toBeVisible();
+    expect(screen.getByText("DISPLAY 4/4")).toBeVisible();
     const remainingShowButtons = screen.getAllByRole("button", {
       name: /^Hiển thị Sensor/,
     });

@@ -5,6 +5,8 @@ import type {
 } from "@/lib/types";
 
 export const MAX_VISUALIZED_SENSORS = 4;
+export const GROUND_STATION_SLOT_COUNT = 64;
+export const PROCESSING_SITE_SLOT_COUNT = 4;
 export const SNMP_STALE_AFTER_SECONDS = 60;
 
 export type SensorStatusDetails = {
@@ -13,6 +15,7 @@ export type SensorStatusDetails = {
   textColor: string;
   borderColor: string;
   backgroundColor: string;
+  signalColor: string;
 };
 
 export const SENSOR_STATUS_DETAILS: Record<
@@ -25,6 +28,7 @@ export const SENSOR_STATUS_DETAILS: Record<
     textColor: "#166534",
     borderColor: "#86efac",
     backgroundColor: "#f0fdf4",
+    signalColor: "#22e33f",
   },
   orange: {
     label: "Suy giảm",
@@ -32,6 +36,7 @@ export const SENSOR_STATUS_DETAILS: Record<
     textColor: "#9a3412",
     borderColor: "#fdba74",
     backgroundColor: "#fff7ed",
+    signalColor: "#f29b24",
   },
   yellow: {
     label: "Một phần",
@@ -39,6 +44,7 @@ export const SENSOR_STATUS_DETAILS: Record<
     textColor: "#854d0e",
     borderColor: "#fde047",
     backgroundColor: "#fefce8",
+    signalColor: "#f2df22",
   },
   red: {
     label: "Lỗi",
@@ -46,6 +52,7 @@ export const SENSOR_STATUS_DETAILS: Record<
     textColor: "#991b1b",
     borderColor: "#fca5a5",
     backgroundColor: "#fef2f2",
+    signalColor: "#ef3340",
   },
   turquoise: {
     label: "Dự phòng tốt",
@@ -53,6 +60,7 @@ export const SENSOR_STATUS_DETAILS: Record<
     textColor: "#155e75",
     borderColor: "#67e8f9",
     backgroundColor: "#ecfeff",
+    signalColor: "#24d7cf",
   },
   magenta: {
     label: "Dự phòng lỗi",
@@ -60,6 +68,7 @@ export const SENSOR_STATUS_DETAILS: Record<
     textColor: "#86198f",
     borderColor: "#f0abfc",
     backgroundColor: "#fdf4ff",
+    signalColor: "#e82bd5",
   },
   grey: {
     label: "Đã tắt",
@@ -67,8 +76,26 @@ export const SENSOR_STATUS_DETAILS: Record<
     textColor: "#3f3f46",
     borderColor: "#d4d4d8",
     backgroundColor: "#f4f4f5",
+    signalColor: "#9da1a3",
   },
 };
+
+export type GroundStationSlot = {
+  slotNumber: number;
+  group: "processing" | "redundant";
+  site: SiteState | null;
+};
+
+export function createGroundStationSlots(
+  sites: readonly SiteState[],
+): GroundStationSlot[] {
+  return Array.from({ length: GROUND_STATION_SLOT_COUNT }, (_, index) => ({
+    slotNumber: index + 1,
+    group:
+      index < PROCESSING_SITE_SLOT_COUNT ? "processing" : "redundant",
+    site: sites[index] ?? null,
+  }));
+}
 
 export const DIFFICULTY_DETAILS: Record<
   ScenarioDifficulty,
@@ -190,4 +217,3 @@ export function formatElapsedTime(totalSeconds: number): string {
     .map((value) => String(value).padStart(2, "0"))
     .join(":");
 }
-

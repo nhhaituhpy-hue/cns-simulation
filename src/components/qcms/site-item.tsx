@@ -1,20 +1,21 @@
 "use client";
 
 import { useCallback, useState, type MouseEvent } from "react";
-import { Crosshair, Eye, EyeSlash, Monitor } from "@phosphor-icons/react";
 import type { SensorState, SiteState } from "@/lib/types";
 import { SENSOR_STATUS_DETAILS } from "./qcms-utils";
 import {
   SiteContextMenu,
   type SiteContextAction,
 } from "./site-context-menu";
-import { StatusBadge } from "./status-badge";
 
 type SiteItemProps = {
   site: SiteState;
+  siteNumber: number;
+  selected: boolean;
   visualizedSensorIds: ReadonlySet<string>;
   visualizationLimitReached: boolean;
   rangeRingEnabled: boolean;
+  onSelectSite: (site: SiteState) => void;
   onToggleVisualization: (site: SiteState, sensor: SensorState) => void;
   onToggleRangeRing: (site: SiteState) => void;
   onOpenSensor: (sensor: SensorState, trigger: HTMLButtonElement) => void;
@@ -26,7 +27,7 @@ type SiteItemProps = {
   ) => void;
 };
 
-type SensorPanelProps = {
+type SensorRowProps = {
   site: SiteState;
   label: "A" | "B";
   sensor: SensorState | null;
@@ -36,7 +37,7 @@ type SensorPanelProps = {
   onOpenSensor: SiteItemProps["onOpenSensor"];
 };
 
-function SensorPanel({
+function SensorRow({
   site,
   label,
   sensor,
@@ -44,39 +45,50 @@ function SensorPanel({
   visualizationLimitReached,
   onToggleVisualization,
   onOpenSensor,
-}: SensorPanelProps) {
+}: SensorRowProps) {
   if (!sensor) {
     return (
-      <div className="rounded border border-dashed border-[#cbd5e1] bg-[#f8fafc] p-4 text-center">
-        <p className="text-sm font-semibold text-[#475569]">Sensor {label}</p>
-        <p className="mt-2 text-xs text-[#64748b]">Không cấu hình</p>
+      <div
+        aria-label={`Sensor ${label} tại ${site.name} chưa cấu hình`}
+        className="grid grid-cols-[minmax(0,1fr)_2.35rem] gap-0.5"
+      >
+        <div className="flex h-7 items-center border border-[#85898c] bg-[#b7b9ba] text-[9px] text-[#5c6062]">
+          <span className="grid h-full w-6 place-items-center border-r border-[#85898c] bg-[#9da1a3] font-bold text-[#303234]">
+            {label}
+          </span>
+          <span className="truncate px-1.5">N/C</span>
+        </div>
+        <button
+          type="button"
+          disabled
+          className="h-7 cursor-not-allowed border border-[#85898c] bg-[#b0b2b3] text-[8px] font-bold text-[#666a6c]"
+        >
+          V{label}
+        </button>
       </div>
     );
   }
 
   const toggleDisabled = visualizationLimitReached && !isVisualized;
-  const statusLabel = SENSOR_STATUS_DETAILS[sensor.status].label;
+  const status = SENSOR_STATUS_DETAILS[sensor.status];
 
   return (
-    <div className="min-w-0 rounded border border-[#cbd5e1] bg-white p-4 shadow-[0_1px_2px_rgb(15_23_42/0.04)]">
+    <div className="grid grid-cols-[minmax(0,1fr)_2.35rem] gap-0.5">
       <button
         type="button"
         onClick={(event) => onOpenSensor(sensor, event.currentTarget)}
-        className="group w-full rounded text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
-        aria-label={`Mở giám sát Sensor ${label} tại ${site.name}, trạng thái ${statusLabel}`}
+        aria-label={`Mở giám sát Sensor ${label} tại ${site.name}, trạng thái ${status.label}`}
+        title={status.description}
+        className="flex h-7 min-w-0 items-center border border-b-[#55595b] border-l-[#eceeef] border-r-[#55595b] border-t-[#eceeef] bg-[#c8cacc] text-left text-[9px] text-[#202325] focus-visible:relative focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#172c9d]"
       >
-        <div className="flex flex-col gap-1.5">
-          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#172033]">
-            <Monitor aria-hidden size={18} weight="regular" />
-            Sensor {label}
-          </span>
-          <span className="text-xs font-bold text-[var(--accent)] group-hover:underline">
-            Terminal SSH &rarr;
-          </span>
-        </div>
-        <span className="mt-2.5 block">
-          <StatusBadge status={sensor.status} compact={false} />
+        <span
+          aria-hidden="true"
+          className="grid h-full w-6 shrink-0 place-items-center border-r border-[#6f7375] font-bold text-[#111]"
+          style={{ backgroundColor: status.signalColor }}
+        >
+          {label}
         </span>
+        <span className="truncate px-1.5 font-semibold">{status.label}</span>
       </button>
 
       <button
@@ -90,18 +102,13 @@ function SensorPanel({
             ? "Đã đạt giới hạn 4 cảm biến đang hiển thị"
             : undefined
         }
-        className={`mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded border px-2 text-sm font-semibold transition-[background-color,border-color,color] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none ${
+        className={`h-7 border text-[8px] font-bold focus-visible:relative focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#172c9d] disabled:cursor-not-allowed disabled:text-[#74787a] ${
           isVisualized
-            ? "border-[var(--accent)] bg-[var(--accent-muted)] text-[var(--accent-active)]"
-            : "border-[#cbd5e1] bg-white text-[#334155] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            ? "border-b-[#eceeef] border-l-[#55595b] border-r-[#eceeef] border-t-[#55595b] bg-[#f1e765] shadow-[inset_1px_1px_2px_rgb(0_0_0/0.3)]"
+            : "border-b-[#55595b] border-l-[#eceeef] border-r-[#55595b] border-t-[#eceeef] bg-[#c8cacc] enabled:hover:bg-[#d8dadb]"
         }`}
       >
-        {isVisualized ? (
-          <Eye aria-hidden size={16} weight="fill" />
-        ) : (
-          <EyeSlash aria-hidden size={16} weight="regular" />
-        )}
-        {label === "A" ? "VA" : "VB"}
+        V{label}
       </button>
     </div>
   );
@@ -109,9 +116,12 @@ function SensorPanel({
 
 export function SiteItem({
   site,
+  siteNumber,
+  selected,
   visualizedSensorIds,
   visualizationLimitReached,
   rangeRingEnabled,
+  onSelectSite,
   onToggleVisualization,
   onToggleRangeRing,
   onOpenSensor,
@@ -126,6 +136,7 @@ export function SiteItem({
 
   function openContextMenu(event: MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
+    onSelectSite(site);
     const rect = event.currentTarget.getBoundingClientRect();
     const requestedX = event.clientX || rect.left;
     const requestedY = event.clientY || rect.bottom;
@@ -134,11 +145,18 @@ export function SiteItem({
     const margin = 8;
 
     setContextMenu({
-      x: Math.max(margin, Math.min(requestedX, window.innerWidth - menuWidth - margin)),
-      y: Math.max(margin, Math.min(requestedY, window.innerHeight - menuHeight - margin)),
+      x: Math.max(
+        margin,
+        Math.min(requestedX, window.innerWidth - menuWidth - margin),
+      ),
+      y: Math.max(
+        margin,
+        Math.min(requestedY, window.innerHeight - menuHeight - margin),
+      ),
       trigger: event.currentTarget,
     });
   }
+
   const sensorAVisualized = Boolean(
     site.sensorA && visualizedSensorIds.has(site.sensorA.id),
   );
@@ -150,20 +168,30 @@ export function SiteItem({
     Number(site.sensorA !== null) + Number(site.sensorB !== null);
 
   return (
-    <article className="min-w-[300px] sm:min-w-[380px] max-w-[420px] rounded-lg border border-[#b8c4ce] bg-[#eef3f6] p-4 shadow-[0_2px_6px_rgb(15_23_42/0.08)]">
+    <article
+      className={`min-w-0 border bg-[#bfc2c3] p-0.5 ${
+        selected
+          ? "border-[#172c9d] shadow-[0_0_0_1px_#172c9d]"
+          : "border-[#777b7d]"
+      }`}
+    >
       <button
         type="button"
         aria-haspopup="menu"
         aria-expanded={Boolean(contextMenu)}
         onClick={openContextMenu}
         onContextMenu={openContextMenu}
-        className="flex w-full items-center justify-between gap-3 border-b border-[#cbd5e1] pb-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+        className="flex h-6 w-full min-w-0 items-center border border-b-[#55595b] border-l-[#e8eaeb] border-r-[#55595b] border-t-[#e8eaeb] bg-[#aeb6c2] px-1.5 text-left font-mono text-[9px] text-[#202325] focus-visible:relative focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#172c9d]"
       >
-        <span className="truncate text-base font-bold text-[#172033]" title={site.name}>
+        <span className="mr-1 shrink-0 tabular-nums">
+          {String(siteNumber).padStart(2, "0")}
+        </span>
+        <span className="min-w-0 flex-1 truncate font-bold" title={site.name}>
           {site.name}
         </span>
-        <span className="font-mono text-xs tabular-nums text-[#475569]">
-          {Number(sensorAVisualized) + Number(sensorBVisualized)}/{configuredSensorCount} hiển thị
+        <span className="ml-1 shrink-0 tabular-nums">
+          {Number(sensorAVisualized) + Number(sensorBVisualized)}/
+          {configuredSensorCount}
         </span>
       </button>
 
@@ -178,8 +206,8 @@ export function SiteItem({
         />
       ) : null}
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <SensorPanel
+      <div className="mt-0.5 grid gap-0.5">
+        <SensorRow
           site={site}
           label="A"
           sensor={site.sensorA}
@@ -188,7 +216,7 @@ export function SiteItem({
           onToggleVisualization={onToggleVisualization}
           onOpenSensor={onOpenSensor}
         />
-        <SensorPanel
+        <SensorRow
           site={site}
           label="B"
           sensor={site.sensorB}
@@ -205,13 +233,12 @@ export function SiteItem({
         disabled={!hasVisualizedSensor}
         aria-pressed={rangeRingEnabled}
         aria-label={`${rangeRingEnabled ? "Tắt" : "Bật"} vòng cự ly cho ${site.name}`}
-        className={`mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded border px-3 text-sm font-semibold transition-[background-color,border-color,color] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:border-[#d4d4d8] disabled:bg-[#f4f4f5] disabled:text-[#71717a] motion-reduce:transition-none ${
+        className={`mt-0.5 h-6 w-full border text-[8px] font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#172c9d] disabled:cursor-not-allowed disabled:text-[#74787a] ${
           rangeRingEnabled
-            ? "border-[var(--accent)] bg-[var(--accent-muted)] text-[var(--accent-active)]"
-            : "border-[#cbd5e1] bg-white text-[#334155] hover:border-[var(--accent)] hover:text-[var(--accent)]"
+            ? "border-b-[#eceeef] border-l-[#55595b] border-r-[#eceeef] border-t-[#55595b] bg-[#f1e765] shadow-[inset_1px_1px_2px_rgb(0_0_0/0.3)]"
+            : "border-b-[#55595b] border-l-[#eceeef] border-r-[#55595b] border-t-[#eceeef] bg-[#c8cacc] enabled:hover:bg-[#d8dadb]"
         }`}
       >
-        <Crosshair aria-hidden size={16} weight={rangeRingEnabled ? "bold" : "regular"} />
         RR
       </button>
     </article>

@@ -59,7 +59,7 @@ function makeScenario(
 }
 
 describe("QcmsToolbar", () => {
-  it("renders all nine controls and selects an enabled panel", async () => {
+  it("renders the eight legacy controls and selects an enabled panel", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
 
@@ -78,16 +78,17 @@ describe("QcmsToolbar", () => {
       "LOG",
       "REPLAY",
       "EXPORT",
-      "CONF",
       "GEN",
       "EXIT",
     ];
-    expect(screen.getAllByRole("button")).toHaveLength(9);
+    expect(screen.getAllByRole("button")).toHaveLength(8);
     for (const name of names) {
       expect(screen.getByRole("button", { name })).toBeInTheDocument();
     }
 
     expect(screen.getByRole("button", { name: "MAPS" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "CONF" })).not.toBeInTheDocument();
+    expect(screen.getByText("QCMS Quadrant Control and Monitoring System")).toBeVisible();
     await user.click(screen.getByRole("button", { name: "LOG" }));
     expect(onSelect).toHaveBeenCalledWith("log");
   });

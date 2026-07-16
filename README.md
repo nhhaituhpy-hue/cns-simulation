@@ -108,6 +108,17 @@ Việc mô phỏng dựa trên các tài liệu tham chiếu cục bộ sau; cá
 
 Khi bản kế hoạch và hình menu trong manual khác nhau, manual là nguồn quyết định. Chi tiết được ghi tại [docs/DECISIONS.md](docs/DECISIONS.md).
 
+## Tiến trình nâng cấp v1.0
+
+| Phase | Mô tả | Trạng thái |
+|-------|-------|------------|
+| 1     | Module A: Cấu hình dữ liệu Côn Sơn và Terminal template | ✅ Hoàn thành |
+| 2     | Module B: Khung Toolbar legacy và 64 slot Ground Stations | ✅ Hoàn thành |
+| 3     | Module C: Sơ đồ phần cứng interactive & cô lập sự cố | ✅ Hoàn thành |
+
+## Session Log
+- 2026-07-16: Hoàn thành Module A, B, C. Đã kết nối tất cả các hành động/thao tác (Monitoring, VA/VB, RR, context menu, Site Settings, Sensor Statistics) vào từng ô compact 64 slot và sửa toàn bộ lỗi kiểm thử (Unit, E2E) đảm bảo không có regression.
+
 ## Hướng phát triển tiếp theo
 
 1. Thay `localStorage` bằng repository adapter cho Cloudflare D1 hoặc Supabase.

@@ -41,7 +41,7 @@ function MenuActionButton({
       role="menuitem"
       disabled={disabled}
       onClick={onClick}
-      className="flex min-h-9 w-full items-center rounded px-3 text-left text-sm text-[#172033] hover:bg-[#e8f2fb] focus-visible:bg-[#e8f2fb] focus-visible:outline-none disabled:cursor-not-allowed disabled:text-[#94a3b8] disabled:hover:bg-transparent"
+      className="flex min-h-7 w-full items-center px-2 text-left font-mono text-[10px] text-[#202325] hover:bg-[#304a86] hover:text-white focus-visible:bg-[#304a86] focus-visible:text-white focus-visible:outline-none disabled:cursor-not-allowed disabled:text-[#777b7d] disabled:hover:bg-transparent disabled:hover:text-[#777b7d]"
     >
       {label}
     </button>
@@ -107,7 +107,7 @@ export function SiteContextMenu({
       ref={menuRef}
       role="menu"
       aria-label={"T\u00e1c v\u1ee5 " + site.name}
-      className="fixed z-50 w-64 rounded-md border border-[#b8c4ce] bg-white p-1.5 shadow-[0_14px_38px_rgb(15_23_42/0.22)]"
+      className="fixed z-50 w-64 border-2 border-[#202a64] bg-[#c8cacc] p-1 shadow-[6px_8px_0_rgb(28_31_34/0.3)]"
       style={{ left: x, top: y }}
     >
       <MenuActionButton
@@ -126,7 +126,7 @@ export function SiteContextMenu({
         onClick={() => select("status", site.sensorA)}
       />
 
-      <div role="separator" className="my-1 border-t border-[#d7e0e7]" />
+      <div role="separator" className="my-1 border-t border-[#777b7d] shadow-[0_1px_0_#eceeef]" />
 
       <MenuActionButton
         label="Sensor B Monitoring"
@@ -144,7 +144,7 @@ export function SiteContextMenu({
         onClick={() => select("status", site.sensorB)}
       />
 
-      <div role="separator" className="my-1 border-t border-[#d7e0e7]" />
+      <div role="separator" className="my-1 border-t border-[#777b7d] shadow-[0_1px_0_#eceeef]" />
 
       <MenuActionButton
         label="Site Statistics"

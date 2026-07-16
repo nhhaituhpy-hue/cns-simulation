@@ -51,9 +51,13 @@ test("admin can create a scenario with a recorded reference path", async ({
   await page.getByRole("button", { name: /Enabled/ }).click();
   await expect(page.getByText("3 thao tác")).toBeVisible();
 
+  // Go from Step 4 to Step 5
+  await page.getByRole("button", { name: "Tiếp tục" }).click();
+
+  // Click Create on Step 5
   await page.getByRole("button", { name: "Tạo kịch bản" }).click();
   await expect(page).toHaveURL(/\/admin$/);
-  await expect(page.getByText("Kiểm tra CAT21 ca trực")).toBeVisible();
+  await expect(page.getByText("Kiểm tra CAT21 ca trực").first()).toBeVisible();
 });
 
 test("student completes the seeded CAT21 exercise and passes", async ({ page }) => {
@@ -63,7 +67,7 @@ test("student completes the seeded CAT21 exercise and passes", async ({ page }) 
     .getByRole("link", { name: /Khôi phục đầu ra ADS-B CAT21/ })
     .click();
   await expect(
-    page.getByRole("heading", { name: "Trạng thái các site ADS-B" }),
+    page.getByRole("heading", { name: "GROUND STATIONS" }),
   ).toBeVisible();
 
   await page

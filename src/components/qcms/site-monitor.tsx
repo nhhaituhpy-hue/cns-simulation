@@ -1,11 +1,10 @@
 "use client";
 
-import { Info, Monitor, WarningCircle } from "@phosphor-icons/react";
 import { useCallback, useRef, useState } from "react";
 import type { Scenario, SensorState, SiteState } from "@/lib/types";
+import { GroundStationsWindow } from "./ground-stations-window";
 import {
   MAX_VISUALIZED_SENSORS,
-  SENSOR_STATUS_DETAILS,
   siteHasVisualizedSensor,
   toggleSensorVisualization,
 } from "./qcms-utils";
@@ -13,13 +12,13 @@ import { SensorConfigWindow } from "./sensor-config-window";
 import { SensorMonitoringModal } from "./sensor-monitoring-modal";
 import { SensorStatusWindow } from "./sensor-status-window";
 import type { SiteContextAction } from "./site-context-menu";
-import { SiteItem } from "./site-item";
 import { SiteStatisticsWindow } from "./site-statistics-window";
 import { SiteSettingsWindow } from "./site-settings-window";
-import { StatusBadge } from "./status-badge";
 
 type SiteMonitorProps = {
   scenario: Scenario;
+  groundStationsOpen?: boolean;
+  onCloseGroundStations?: () => void;
   onMonitoringOpened?: () => void;
 };
 
@@ -30,13 +29,20 @@ type ContextWindow = {
   openedAt: number;
 };
 
-
-export function SiteMonitor({ scenario, onMonitoringOpened }: SiteMonitorProps) {
+export function SiteMonitor({
+  scenario,
+  groundStationsOpen = true,
+  onCloseGroundStations,
+  onMonitoringOpened,
+}: SiteMonitorProps) {
   const [visualizedSensorIds, setVisualizedSensorIds] = useState<Set<string>>(
     () => new Set(),
   );
   const [rangeRingSiteIds, setRangeRingSiteIds] = useState<Set<string>>(
     () => new Set(),
+  );
+  const [selectedSiteId, setSelectedSiteId] = useState<string | null>(
+    () => scenario.sites[0]?.id ?? null,
   );
   const [selectedSensor, setSelectedSensor] = useState<{
     sensor: SensorState;
@@ -63,6 +69,7 @@ export function SiteMonitor({ scenario, onMonitoringOpened }: SiteMonitorProps) 
     sensor: SensorState | null,
     trigger: HTMLButtonElement,
   ) {
+    setSelectedSiteId(site.id);
     contextTriggerRef.current = trigger;
 
     if (action === "monitoring" && sensor) {
@@ -81,6 +88,7 @@ export function SiteMonitor({ scenario, onMonitoringOpened }: SiteMonitorProps) 
   }
 
   function handleToggleVisualization(site: SiteState, sensor: SensorState) {
+    setSelectedSiteId(site.id);
     const result = toggleSensorVisualization(
       visualizedSensorIds,
       sensor.id,
@@ -108,6 +116,7 @@ export function SiteMonitor({ scenario, onMonitoringOpened }: SiteMonitorProps) 
   }
 
   function handleToggleRangeRing(site: SiteState) {
+    setSelectedSiteId(site.id);
     if (!siteHasVisualizedSensor(site, visualizedSensorIds)) {
       return;
     }
@@ -129,85 +138,82 @@ export function SiteMonitor({ scenario, onMonitoringOpened }: SiteMonitorProps) 
     );
   }
 
+  function showSelectedSiteStatistics() {
+    const selectedSite =
+      scenario.sites.find((site) => site.id === selectedSiteId) ??
+      scenario.sites[0];
+
+    if (selectedSite) {
+      setContextWindow({
+        action: "statistics",
+        site: selectedSite,
+        sensor: null,
+        openedAt: Date.now(),
+      });
+    }
+  }
+
   return (
     <section
       aria-labelledby="qcms-monitor-title"
-      className="overflow-hidden rounded-lg border border-[#94a3b8] bg-[#dce5eb] shadow-[0_8px_24px_rgb(15_23_42/0.12)]"
+      className="relative min-h-[48rem] overflow-hidden bg-[#8e9192] font-mono"
     >
-      <header className="border-b border-[#172033] bg-[#263746] px-4 py-4 text-white sm:px-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-xs font-medium text-[#cbd5e1]">
-              QCMS Site Monitor and Control
-            </p>
-            <h2 id="qcms-monitor-title" className="mt-1 text-lg font-bold">
-              Trạng thái các site ADS-B
-            </h2>
-          </div>
-          <div className="flex shrink-0 items-center gap-2 rounded border border-[#64748b] bg-[#172033] px-3 py-2 font-mono text-xs tabular-nums text-[#e2e8f0]">
-            <Monitor aria-hidden size={16} weight="regular" />
-            {visualizedSensorIds.size}/{MAX_VISUALIZED_SENSORS} cảm biến hiển thị
-          </div>
-        </div>
-      </header>
+      <h2 id="qcms-monitor-title" className="sr-only">
+        QCMS Site Monitor and Control
+      </h2>
 
-      <div className="border-b border-[#b8c4ce] bg-[#edf2f5] px-4 py-3 sm:px-5">
-        <div className="flex items-start gap-2 text-xs leading-5 text-[#334155]">
-          <Info aria-hidden className="mt-0.5 shrink-0" size={16} weight="fill" />
-          <p>
-            Chọn VA hoặc VB để hiển thị cảm biến. RR chỉ khả dụng khi site có ít nhất một cảm biến đang hiển thị.
-          </p>
-        </div>
-        <div
-          aria-label="Chú giải trạng thái cảm biến"
-          className="mt-3 flex gap-2 overflow-x-auto pb-1"
-        >
-          {Object.keys(SENSOR_STATUS_DETAILS).map((status) => (
-            <StatusBadge
-              key={status}
-              status={status as keyof typeof SENSOR_STATUS_DETAILS}
-              compact
-            />
-          ))}
-        </div>
-      </div>
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 opacity-80"
+        style={{
+          backgroundImage:
+            "repeating-radial-gradient(circle at 50% 48%, transparent 0 57px, rgb(58 61 62 / 0.5) 58px 59px), linear-gradient(90deg, transparent 49.9%, rgb(54 57 58 / 0.35) 50%, transparent 50.1%), linear-gradient(transparent 49.9%, rgb(54 57 58 / 0.35) 50%, transparent 50.1%)",
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="absolute left-1/2 top-[48%] size-2 -translate-x-1/2 -translate-y-1/2 bg-[#242728]"
+      />
+      <p
+        aria-hidden="true"
+        className="absolute bottom-3 left-3 text-[9px] font-bold text-[#303334]"
+      >
+        SURVEILLANCE DISPLAY
+      </p>
+      <p
+        aria-hidden="true"
+        className="absolute right-3 top-3 text-[9px] text-[#303334]"
+      >
+        RANGE 325 NM
+      </p>
 
-      <div className="p-3 sm:p-4 lg:p-5">
-        {scenario.sites.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-[#94a3b8] bg-white px-4 py-10 text-center">
-            <WarningCircle
-              aria-hidden
-              size={28}
-              weight="regular"
-              className="mx-auto text-[#64748b]"
-            />
-            <p className="mt-3 text-sm font-semibold text-[#172033]">
-              Kịch bản chưa có site
-            </p>
-          </div>
+      <div className="relative p-2 sm:p-4 lg:p-6">
+        {groundStationsOpen ? (
+          <GroundStationsWindow
+            sites={scenario.sites}
+            selectedSiteId={selectedSiteId}
+            visualizedSensorIds={visualizedSensorIds}
+            visualizationLimitReached={visualizationLimitReached}
+            rangeRingSiteIds={rangeRingSiteIds}
+            onSelectSite={(site) => setSelectedSiteId(site.id)}
+            onToggleVisualization={handleToggleVisualization}
+            onToggleRangeRing={handleToggleRangeRing}
+            onOpenSensor={openSensor}
+            onContextAction={handleContextAction}
+            onShowStatistics={showSelectedSiteStatistics}
+            onClose={() => onCloseGroundStations?.()}
+          />
         ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {scenario.sites.slice(0, 8).map((site) => (
-              <SiteItem
-                key={site.id}
-                site={site}
-                visualizedSensorIds={visualizedSensorIds}
-                visualizationLimitReached={visualizationLimitReached}
-                rangeRingEnabled={rangeRingSiteIds.has(site.id)}
-                onToggleVisualization={handleToggleVisualization}
-                onToggleRangeRing={handleToggleRangeRing}
-                onOpenSensor={openSensor}
-                onContextAction={handleContextAction}
-              />
-            ))}
+          <div className="mx-auto mt-24 max-w-md border-2 border-[#202a64] bg-[#b9bbbc] p-4 text-center text-[10px] text-[#292c2e] shadow-[6px_8px_0_rgb(28_31_34/0.25)]">
+            CỬA SỔ GROUND STATIONS ĐÃ ĐÓNG. NHẤN SITES ĐỂ MỞ LẠI.
           </div>
         )}
 
         <p
           aria-live="polite"
-          className="mt-3 min-h-5 text-xs font-medium text-[#334155]"
+          className="mx-auto mt-2 min-h-5 max-w-[1080px] border border-[#696d6f] bg-[#c6c8c9]/95 px-2 py-1 text-[9px] font-bold text-[#292c2e]"
         >
-          {notice}
+          {notice ?? "READY"}
         </p>
       </div>
 
@@ -248,17 +254,17 @@ export function SiteMonitor({ scenario, onMonitoringOpened }: SiteMonitorProps) 
         />
       ) : null}
 
-
       {contextWindow?.action === "settings" ? (
         <SiteSettingsWindow
           site={contextWindow.site}
           siteNumber={
-            scenario.sites.findIndex((site) => site.id === contextWindow.site.id) + 1
+            scenario.sites.findIndex(
+              (site) => site.id === contextWindow.site.id,
+            ) + 1
           }
           onClose={closeContextWindow}
         />
       ) : null}
-
     </section>
   );
 }

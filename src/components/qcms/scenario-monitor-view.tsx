@@ -27,6 +27,7 @@ export function ScenarioMonitorView({
 }: ScenarioMonitorViewProps) {
   const recording = useRecordingStore();
   const [activePanel, setActivePanel] = useState<QcmsPanel>("sites");
+  const [groundStationsOpen, setGroundStationsOpen] = useState(true);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [hardwareDiagnosisRequested, setHardwareDiagnosisRequested] =
     useState(false);
@@ -58,6 +59,18 @@ export function ScenarioMonitorView({
   function closeHardwareDiagnosis() {
     setHardwareDiagnosisRequested(false);
     setHardwareDiagnosisClosed(true);
+  }
+
+  function selectQcmsPanel(panel: QcmsPanel) {
+    setActivePanel(panel);
+    if (panel === "sites") {
+      setGroundStationsOpen(true);
+    }
+  }
+
+  function showSitesPanel() {
+    setActivePanel("sites");
+    setGroundStationsOpen(true);
   }
 
 
@@ -204,26 +217,26 @@ export function ScenarioMonitorView({
         </div>
       ) : null}
 
-      <div className="mt-6 overflow-hidden rounded-lg border border-[#40566b] bg-white shadow-[var(--shadow-card)]">
+      <div className="mt-6 overflow-hidden border-2 border-[#202a64] bg-[#8e9192] shadow-[var(--shadow-card)]">
         <QcmsToolbar
           activePanel={activePanel}
-          onSelect={setActivePanel}
+          onSelect={selectQcmsPanel}
           onExit={() => setShowExitConfirm(true)}
         />
 
         {activePanel === "sites" ? (
-          <div className="p-4 sm:p-5">
-            <SiteMonitor
-              scenario={scenario}
-              onMonitoringOpened={recording.markQcmsMonitoringOpened}
-            />
-          </div>
+          <SiteMonitor
+            scenario={scenario}
+            groundStationsOpen={groundStationsOpen}
+            onCloseGroundStations={() => setGroundStationsOpen(false)}
+            onMonitoringOpened={recording.markQcmsMonitoringOpened}
+          />
         ) : activePanel === "log" ? (
-          <LogWindow scenario={scenario} onClose={() => setActivePanel("sites")} />
+          <LogWindow scenario={scenario} onClose={showSitesPanel} />
         ) : activePanel === "replay" ? (
-          <ReplayDialog onClose={() => setActivePanel("sites")} />
+          <ReplayDialog onClose={showSitesPanel} />
         ) : (
-          <GeneralSettingsDialog onClose={() => setActivePanel("sites")} />
+          <GeneralSettingsDialog onClose={showSitesPanel} />
         )}
       </div>
 

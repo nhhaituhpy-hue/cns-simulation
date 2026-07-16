@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import type { SiteState } from "../../src/lib/types";
 import {
+  createGroundStationSlots,
+  GROUND_STATION_SLOT_COUNT,
   MAX_VISUALIZED_SENSORS,
+  PROCESSING_SITE_SLOT_COUNT,
   SENSOR_STATUS_DETAILS,
   formatElapsedTime,
   formatSnmpAge,
@@ -47,7 +50,31 @@ describe("QCMS status mapping", () => {
       expect(details.label).not.toBe("");
       expect(details.description).not.toBe("");
       expect(details.textColor).toMatch(/^#[0-9a-f]{6}$/i);
+      expect(details.signalColor).toMatch(/^#[0-9a-f]{6}$/i);
     }
+  });
+});
+
+describe("Ground Station slots", () => {
+  it("maps scenario sites into 64 slots with four processing positions", () => {
+    const slots = createGroundStationSlots([site]);
+
+    expect(slots).toHaveLength(GROUND_STATION_SLOT_COUNT);
+    expect(slots[0]).toEqual({
+      slotNumber: 1,
+      group: "processing",
+      site,
+    });
+    expect(slots[PROCESSING_SITE_SLOT_COUNT]).toMatchObject({
+      slotNumber: 5,
+      group: "redundant",
+      site: null,
+    });
+    expect(slots[63]).toMatchObject({
+      slotNumber: 64,
+      group: "redundant",
+      site: null,
+    });
   });
 });
 
@@ -106,4 +133,3 @@ describe("elapsed time", () => {
     expect(formatElapsedTime(3_661)).toBe("01:01:01");
   });
 });
-
