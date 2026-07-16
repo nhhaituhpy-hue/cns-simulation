@@ -25,14 +25,9 @@ const STATUS_DETAILS: Record<
   { label: string; dot: string; card: string }
 > = {
   ok: {
-    label: "OK",
+    label: "NORMAL",
     dot: "bg-green-500",
     card: "border-green-300 bg-green-50/60",
-  },
-  degraded: {
-    label: "DEGRADED",
-    dot: "bg-orange-500",
-    card: "border-orange-300 bg-orange-50/70",
   },
   failed: {
     label: "FAILED",
@@ -208,7 +203,7 @@ export function SignalPathDiagram({
       </div>
 
       <footer className="flex flex-wrap gap-x-5 gap-y-2 border-t border-[#b8c4ce] bg-white px-4 py-2.5 text-xs text-[#475569]">
-        {(["ok", "degraded", "failed"] as const).map((status) => (
+        {(["ok", "failed"] as const).map((status) => (
           <span key={status} className="inline-flex items-center gap-2">
             <span className={"size-2.5 rounded-full " + STATUS_DETAILS[status].dot} />
             {STATUS_DETAILS[status].label}

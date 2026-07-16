@@ -18,7 +18,7 @@ export type HardwareComponentType =
   | "qcms_workstation"
   | "earth_cable";
 
-export type ComponentStatus = "ok" | "degraded" | "failed";
+export type ComponentStatus = "ok" | "failed";
 export type HardwareFaultType =
   | "open"
   | "short"

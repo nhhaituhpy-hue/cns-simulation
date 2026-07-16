@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDown, ArrowUp, CheckCircle, Warning, XCircle } from "@phosphor-icons/react";
+import { ArrowDown, ArrowUp, CheckCircle, XCircle } from "@phosphor-icons/react";
 import {
   CON_SON_HARDWARE,
   type ComponentStatus,
@@ -17,14 +17,9 @@ type ComponentInspectorProps = {
 
 const STATUS_DETAILS = {
   ok: {
-    label: "OK",
+    label: "NORMAL",
     icon: CheckCircle,
     className: "border-green-200 bg-green-50 text-green-700",
-  },
-  degraded: {
-    label: "DEGRADED",
-    icon: Warning,
-    className: "border-orange-200 bg-orange-50 text-orange-700",
   },
   failed: {
     label: "FAILED",

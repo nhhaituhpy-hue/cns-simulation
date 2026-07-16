@@ -39,6 +39,13 @@ Mở [http://localhost:3000](http://localhost:3000).
 
 Bốn kịch bản mẫu sẽ được tạo khi ứng dụng khởi động lần đầu. Để đưa dữ liệu về trạng thái mẫu, dùng chức năng khôi phục trong giao diện quản trị hoặc xóa khóa `adsb-training-simulator:scenarios` trong `localStorage`.
 
+## Triển khai trên Vercel
+
+- Repository được liên kết với Vercel để tự động triển khai khi nhánh `main` được cập nhật.
+- `vercel.json` đặt vùng chạy Vercel Functions/SSR tại Singapore (`sin1`) để giảm độ trễ truy cập cơ sở dữ liệu trong khu vực.
+- CDN và tài nguyên tĩnh của Vercel vẫn được phân phối trên mạng toàn cầu; người dùng nhận nội dung từ điểm hiện diện gần nhất. Thiết lập `sin1` không giới hạn CDN chỉ chạy tại Singapore.
+- Sau khi triển khai, có thể kiểm tra tại **Project → Settings → Functions → Function Regions**. Cấu hình trong `vercel.json` sẽ được áp dụng cho deployment mới.
+
 ## Kiểm tra chất lượng
 
 ```bash

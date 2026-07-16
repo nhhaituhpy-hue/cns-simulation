@@ -23,7 +23,12 @@ describe("HardwareFaultStep", () => {
 
     expect(screen.getByText(/Đã đánh dấu 1 phần cứng sự cố/)).toBeInTheDocument();
     expect(screen.getByLabelText("Loại sự cố")).toBeInTheDocument();
+    const qcmsStatus = screen.getByLabelText("Trạng thái QCMS dự kiến");
+    expect(qcmsStatus).toBeInTheDocument();
     expect(screen.getByLabelText("Mô tả sự cố")).toBeInTheDocument();
+
+    await user.selectOptions(qcmsStatus, "red");
+    expect(qcmsStatus).toHaveValue("red");
 
     await user.click(
       screen.getByRole("button", { name: /1090 MHz Omni Antenna/ }),

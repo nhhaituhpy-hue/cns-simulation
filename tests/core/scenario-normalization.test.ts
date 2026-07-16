@@ -31,4 +31,24 @@ describe("scenario normalization", () => {
 
     expect(normalizeScenario(current)).toBe(current);
   });
+
+  it("maps legacy degraded component status to failed", () => {
+    const normalized = normalizeScenario({
+      id: "legacy-status",
+      hardwareFault: {
+        faultyComponentIds: ["coax-1"],
+        hardwareLayout: [
+          { id: "antenna-1", status: "ok" },
+          { id: "coax-1", status: "degraded" },
+        ],
+      },
+    }) as {
+      hardwareFault: { hardwareLayout: Array<{ status: string }> };
+    };
+
+    expect(normalized.hardwareFault.hardwareLayout).toEqual([
+      { id: "antenna-1", status: "ok" },
+      { id: "coax-1", status: "failed" },
+    ]);
+  });
 });

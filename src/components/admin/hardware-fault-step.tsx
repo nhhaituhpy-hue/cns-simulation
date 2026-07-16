@@ -14,7 +14,12 @@ import {
   type HardwareFaultScenario,
   type HardwareFaultType,
 } from "@/lib/hardware-model";
-import type { ScenarioHardwareFault, SensorStatus } from "@/lib/types";
+import {
+  SENSOR_STATUSES,
+  type ScenarioHardwareFault,
+  type SensorStatus,
+} from "@/lib/types";
+import { SENSOR_STATUS_DETAILS } from "@/components/qcms/qcms-utils";
 
 type HardwareFaultStepProps = {
   value: ScenarioHardwareFault | undefined;
@@ -248,14 +253,25 @@ export function HardwareFaultStep({
                 ))}
               </select>
             </label>
-            <div className="rounded border border-[var(--border)] bg-[var(--surface-muted)] p-3">
-              <p className="text-xs text-[var(--text-secondary)]">
-                Trạng thái QCMS dự kiến
-              </p>
-              <p className="mt-1 font-mono text-sm font-bold uppercase text-[var(--text-primary)]">
-                {value.expectedSensorStatus}
-              </p>
-            </div>
+            <label className="text-sm font-semibold text-[var(--text-primary)]">
+              Trạng thái QCMS dự kiến
+              <select
+                value={value.expectedSensorStatus}
+                onChange={(event) =>
+                  onChange({
+                    ...value,
+                    expectedSensorStatus: event.target.value as SensorStatus,
+                  })
+                }
+                className="mt-1.5 block h-11 w-full rounded border border-[var(--border-strong)] bg-white px-3 text-sm"
+              >
+                {SENSOR_STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {SENSOR_STATUS_DETAILS[status].label} ({status.toUpperCase()})
+                  </option>
+                ))}
+              </select>
+            </label>
             <label className="text-sm font-semibold text-[var(--text-primary)] lg:col-span-2">
               Mô tả sự cố
               <input

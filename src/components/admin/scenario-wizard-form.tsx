@@ -3,7 +3,12 @@
 import { CaretLeft, CaretRight, FloppyDisk } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
-import type { Scenario, ScenarioHardwareFault, SensorState } from "@/lib/types";
+import type {
+  Scenario,
+  ScenarioHardwareFault,
+  SensorMonitoringData,
+  SensorState,
+} from "@/lib/types";
 import { ActionBuilder } from "./action-builder";
 import { LoginRoleStep } from "./login-role-step";
 import { HardwareFaultStep } from "./hardware-fault-step";
@@ -91,21 +96,21 @@ export function ScenarioWizardForm({
       if (!hardwareFault) return { ...sensor, status };
 
       const now = new Date();
-      const monitoring = sensor.monitoring ?? {
+      const monitoring: SensorMonitoringData = {
         lastSnmpResponseAt: now.toISOString(),
         temperatureC: 43,
         cpuLoadPercent: 20,
         voltages: { v3_3: 3.3, v5: 5, v12: 12 },
         receiverConfidencePercent: 96,
         crcErrorCount: 0,
-        gpsStatus: "synchronized" as const,
+        gpsStatus: "synchronized",
       };
       const adjusted = {
         ...monitoring,
         voltages: { ...monitoring.voltages },
       };
 
-      if (status === "red") {
+      if (["red", "magenta", "grey"].includes(status)) {
         adjusted.lastSnmpResponseAt = new Date(
           now.getTime() - 5 * 60_000,
         ).toISOString();

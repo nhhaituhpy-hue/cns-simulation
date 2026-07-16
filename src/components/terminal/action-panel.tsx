@@ -89,6 +89,17 @@ export function ActionPanel({
         </button>
       </div>
 
+      <div className="border-b border-[var(--border)] p-4">
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={!canSubmit}
+          className="inline-flex min-h-12 w-full items-center justify-center rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] active:bg-[var(--accent-active)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-[var(--surface-muted)] disabled:text-[var(--text-muted)]"
+        >
+          {submitLabel}
+        </button>
+      </div>
+
       <div className="min-h-0 flex-1 overflow-y-auto">
         {actions.length === 0 ? (
           <div className="flex min-h-52 flex-col items-center justify-center px-6 text-center">
@@ -150,16 +161,6 @@ export function ActionPanel({
         )}
       </div>
 
-      <div className="border-t border-[var(--border)] p-4">
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={!canSubmit}
-          className="inline-flex min-h-12 w-full items-center justify-center rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] active:bg-[var(--accent-active)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-[var(--surface-muted)] disabled:text-[var(--text-muted)]"
-        >
-          {submitLabel}
-        </button>
-      </div>
     </aside>
   );
 }

@@ -25,11 +25,12 @@ export function ScenarioMonitorView({
   scenarioId,
   autoOpenHardware = false,
 }: ScenarioMonitorViewProps) {
+  const recording = useRecordingStore();
   const [activePanel, setActivePanel] = useState<QcmsPanel>("sites");
   const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const [showHardwareDiagnosis, setShowHardwareDiagnosis] =
-    useState(autoOpenHardware);
-  const recording = useRecordingStore();
+  const [hardwareDiagnosisRequested, setHardwareDiagnosisRequested] =
+    useState(false);
+  const [hardwareDiagnosisClosed, setHardwareDiagnosisClosed] = useState(false);
   const { isHydrated, storageError, hydrate, getScenarioById } =
     useScenarioStore();
   const scenario = getScenarioById(scenarioId);
@@ -43,6 +44,21 @@ export function ScenarioMonitorView({
       recording.beginAttempt(scenario.id);
     }
   }, [recording, scenario]);
+
+  const showHardwareDiagnosis =
+    hardwareDiagnosisRequested ||
+    (!hardwareDiagnosisClosed &&
+      (autoOpenHardware || recording.phase === "hardware"));
+
+  function openHardwareDiagnosis() {
+    setHardwareDiagnosisClosed(false);
+    setHardwareDiagnosisRequested(true);
+  }
+
+  function closeHardwareDiagnosis() {
+    setHardwareDiagnosisRequested(false);
+    setHardwareDiagnosisClosed(true);
+  }
 
 
   if (!isHydrated) {
@@ -162,7 +178,7 @@ export function ScenarioMonitorView({
             <button
               type="button"
               disabled={!hardwareAvailable}
-              onClick={() => setShowHardwareDiagnosis(true)}
+              onClick={openHardwareDiagnosis}
               className="inline-flex min-h-10 items-center rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:bg-[var(--surface-muted)] disabled:text-[var(--text-muted)]"
             >
               Sơ đồ phần cứng
@@ -216,7 +232,7 @@ export function ScenarioMonitorView({
       scenario.hardwareFault ? (
         <HardwareDiagnosisWorkspace
           hardwareFault={scenario.hardwareFault}
-          onClose={() => setShowHardwareDiagnosis(false)}
+          onClose={closeHardwareDiagnosis}
           onSubmit={(diagnosis) => {
             recording.submitCombinedAttempt(
               scenario.expectedActions,
@@ -224,7 +240,7 @@ export function ScenarioMonitorView({
               diagnosis.componentIds,
               diagnosis.inspectedComponents,
             );
-            setShowHardwareDiagnosis(false);
+            closeHardwareDiagnosis();
           }}
         />
       ) : null}
@@ -240,7 +256,7 @@ export function ScenarioMonitorView({
             onRetry={() => {
               recording.resetAttempt();
               recording.beginAttempt(scenario.id);
-              setShowHardwareDiagnosis(false);
+              closeHardwareDiagnosis();
             }}
           />
         </div>

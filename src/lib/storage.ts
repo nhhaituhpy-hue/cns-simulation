@@ -293,7 +293,7 @@ function isHardwareFault(value: unknown): boolean {
       isFiniteNumber(component.position.x) &&
       isFiniteNumber(component.position.y) &&
       isStringArray(component.connectedTo) &&
-      ["ok", "degraded", "failed"].includes(String(component.status)) &&
+      ["ok", "failed"].includes(String(component.status)) &&
       (component.installationNotes === undefined ||
         isStringArray(component.installationNotes)),
   );
@@ -508,4 +508,3 @@ export function removeScenario(
 ): Scenario[] {
   return scenarios.filter((scenario) => scenario.id !== scenarioId);
 }
-

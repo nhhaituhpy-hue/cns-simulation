@@ -1,7 +1,7 @@
 "use client";
 
 import { PaperPlaneTilt, X } from "@phosphor-icons/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ComponentInspector } from "./component-inspector";
 import { SignalPathDiagram } from "./signal-path-diagram";
 import type { HardwareComponent } from "@/lib/hardware-model";
@@ -28,6 +28,14 @@ export function HardwareDiagnosisWorkspace({
   );
   const [inspectedComponentIds, setInspectedComponentIds] = useState<string[]>(
     [],
+  );
+  const studentHardwareLayout = useMemo(
+    () =>
+      hardwareFault.hardwareLayout.map((component) => ({
+        ...component,
+        status: "ok" as const,
+      })),
+    [hardwareFault.hardwareLayout],
   );
 
   function inspect(component: HardwareComponent) {
@@ -76,14 +84,21 @@ export function HardwareDiagnosisWorkspace({
 
         <div className="grid gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_23rem]">
           <SignalPathDiagram
-            components={hardwareFault.hardwareLayout}
+            components={studentHardwareLayout}
             signalPaths={hardwareFault.signalPaths}
+            faultyComponentIds={diagnosedComponentIds}
             selectedComponentId={selectedComponent?.id}
             onSelectComponent={inspect}
           />
           <ComponentInspector
             component={selectedComponent}
-            components={hardwareFault.hardwareLayout}
+            components={studentHardwareLayout}
+            status={
+              selectedComponent &&
+              diagnosedComponentIds.includes(selectedComponent.id)
+                ? "failed"
+                : "ok"
+            }
             markedAsFaulty={Boolean(
               selectedComponent &&
                 diagnosedComponentIds.includes(selectedComponent.id),

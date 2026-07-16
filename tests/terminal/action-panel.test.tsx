@@ -54,4 +54,29 @@ describe("ActionPanel", () => {
     await user.click(screen.getByText("General Settings"));
     expect(callbacks.onToggleSelected).toHaveBeenCalledWith(1);
   });
+
+  it("keeps the completion control directly below the selection controls", async () => {
+    const user = userEvent.setup();
+    const callbacks = handlers();
+    render(
+      <ActionPanel
+        actions={[action]}
+        selectedActions={[action]}
+        isRecording={false}
+        submitLabel="Hoàn tất Terminal và tiếp tục"
+        {...callbacks}
+      />,
+    );
+
+    const selectAll = screen.getByRole("button", { name: "Chọn tất cả" });
+    const submit = screen.getByRole("button", {
+      name: "Hoàn tất Terminal và tiếp tục",
+    });
+
+    expect(submit.parentElement?.previousElementSibling).toContainElement(
+      selectAll,
+    );
+    await user.click(submit);
+    expect(callbacks.onSubmit).toHaveBeenCalledOnce();
+  });
 });
