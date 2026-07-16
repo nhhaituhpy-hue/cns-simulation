@@ -1,7 +1,7 @@
 import { GearSix, Student } from "@phosphor-icons/react/ssr";
 import { RoleCard } from "@/components/ui/role-card";
 
-// Trang chủ Hệ thống kiểm tra mô phỏng ADS-B
+// Trang chủ Hệ thống kiểm tra mô phỏng CNS
 export default function Home() {
   return (
     <section className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-5xl flex-col justify-center px-4 py-10 sm:px-6 lg:px-10">
@@ -10,7 +10,7 @@ export default function Home() {
           Chọn không gian làm việc
         </h1>
         <p className="mt-3 max-w-[60ch] text-base leading-7 text-[var(--text-secondary)]">
-          Quản lý kịch bản hoặc bắt đầu bài thực hành mô phỏng ADS-B.
+          Quản lý kịch bản hoặc bắt đầu bài thực hành mô phỏng CNS.
         </p>
       </div>
 
@@ -18,14 +18,14 @@ export default function Home() {
         <RoleCard
           href="/admin"
           title="Khu vực quản trị"
-          description="Xây dựng kịch bản, đặt trạng thái cảm biến và định nghĩa chuỗi thao tác chuẩn."
+          description="Xây dựng kịch bản, cấu hình thiết bị và định nghĩa chuỗi thao tác chuẩn cho hệ thống CNS (bao gồm VOR/DME/ADS-B)."
           action="Mở khu vực quản trị"
           icon={<GearSix aria-hidden size={27} weight="regular" />}
         />
         <RoleCard
           href="/student"
           title="Khu vực học viên"
-          description="Chọn bài thực hành, theo dõi QCMS và hoàn thành thao tác terminal mô phỏng."
+          description="Chọn bài thực hành, theo dõi trạng thái giám sát và thực hiện quy trình xử lý sự cố thiết bị CNS (bao gồm VOR/DME/ADS-B)."
           action="Bắt đầu thực hành"
           icon={<Student aria-hidden size={27} weight="regular" />}
         />

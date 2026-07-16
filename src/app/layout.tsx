@@ -6,11 +6,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Hệ thống kiểm tra mô phỏng ADS-B",
-    template: "%s | ADS-B Training",
+    default: "Hệ thống kiểm tra mô phỏng CNS",
+    template: "%s | CNS Simulation",
   },
   description:
-    "Công cụ xây dựng kịch bản và thực hành vận hành hệ thống ADS-B.",
+    "Công cụ xây dựng kịch bản và thực hành vận hành hệ thống CNS.",
 };
 
 export default function RootLayout({

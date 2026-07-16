@@ -7,8 +7,9 @@ import {
   MapPin,
   Monitor,
   Warning,
+  WarningCircle,
 } from "@phosphor-icons/react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   formatScenarioNumber,
   sortScenariosByRecency,
@@ -97,6 +98,7 @@ function ScenarioRow({
 
 export function StudentDashboard() {
   const { scenarios, isHydrated, storageError, hydrate } = useScenarioStore();
+  const [activeTab, setActiveTab] = useState<"vor" | "dme" | "adsb">("adsb");
   const sortedScenarios = useMemo(
     () => sortScenariosByRecency(scenarios),
     [scenarios],
@@ -114,74 +116,130 @@ export function StudentDashboard() {
     <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
       <header className="border-b border-[var(--border)] pb-6">
         <h1 className="text-3xl font-bold tracking-tight text-[var(--text-primary)]">
-          Bài thực hành ADS-B
+          Bài thực hành mô phỏng CNS
         </h1>
         <p className="mt-2 max-w-[65ch] text-sm leading-6 text-[var(--text-secondary)] sm:text-base">
-          Chọn một kịch bản để quan sát trạng thái QCMS và thực hiện quy trình xử lý sự cố.
+          Chọn một kịch bản để quan sát trạng thái thiết bị và thực hiện quy trình xử lý sự cố.
         </p>
       </header>
 
-      {storageError ? (
-        <div
-          role="status"
-          className="mt-5 flex items-start gap-3 rounded border border-[#f59e0b] bg-[#fffbeb] p-4 text-[#78350f]"
-        >
-          <Warning aria-hidden className="mt-0.5 shrink-0" size={19} weight="fill" />
-          <div>
-            <p className="text-sm font-semibold">Không thể đọc dữ liệu đã lưu</p>
-            <p className="mt-1 text-xs leading-5">
-              Hệ thống đang dùng bộ kịch bản mẫu để bạn có thể tiếp tục.
-            </p>
-          </div>
+      <div className="mt-6 border-b border-[var(--border)]">
+        <nav aria-label="Phân hệ thiết bị CNS" className="flex gap-6">
+          {(["vor", "dme", "adsb"] as const).map((tabId) => {
+            const active = activeTab === tabId;
+            const label = tabId === "vor" ? "VOR" : tabId === "dme" ? "DME" : "ADS-B";
+            return (
+              <button
+                key={tabId}
+                type="button"
+                onClick={() => setActiveTab(tabId)}
+                aria-current={active ? "page" : undefined}
+                className={`border-b-2 pb-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 ${
+                  active
+                    ? "border-[var(--accent)] text-[var(--accent)]"
+                    : "border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      {activeTab === "vor" ? (
+        <div className="mt-8 rounded-lg border border-dashed border-[var(--border-strong)] bg-white px-5 py-16 text-center">
+          <span className="mx-auto inline-flex size-12 items-center justify-center rounded bg-[var(--surface-muted)] text-[var(--text-muted)]">
+            <WarningCircle aria-hidden size={25} weight="regular" />
+          </span>
+          <h3 className="mt-4 text-lg font-semibold text-[var(--text-primary)]">
+            Phân hệ mô phỏng VOR
+          </h3>
+          <p className="mx-auto mt-2 max-w-[48ch] text-sm leading-6 text-[var(--text-secondary)]">
+            Hệ thống mô phỏng thiết bị đài dẫn đường vô hướng sóng cực ngắn (VOR) đang trong quá trình phát triển và sẽ sớm ra mắt.
+          </p>
         </div>
       ) : null}
 
-      <section aria-labelledby="practice-list-title" className="mt-7">
-        <div className="mb-4 flex items-center justify-between gap-4">
-          <h2
-            id="practice-list-title"
-            className="text-lg font-semibold text-[var(--text-primary)]"
-          >
-            Danh sách bài thực hành
-          </h2>
-          <span className="font-mono text-xs tabular-nums text-[var(--text-muted)]">
-            {sortedScenarios.length} bài
+      {activeTab === "dme" ? (
+        <div className="mt-8 rounded-lg border border-dashed border-[var(--border-strong)] bg-white px-5 py-16 text-center">
+          <span className="mx-auto inline-flex size-12 items-center justify-center rounded bg-[var(--surface-muted)] text-[var(--text-muted)]">
+            <WarningCircle aria-hidden size={25} weight="regular" />
           </span>
+          <h3 className="mt-4 text-lg font-semibold text-[var(--text-primary)]">
+            Phân hệ mô phỏng DME
+          </h3>
+          <p className="mx-auto mt-2 max-w-[48ch] text-sm leading-6 text-[var(--text-secondary)]">
+            Hệ thống mô phỏng thiết bị đo cự ly hàng không (DME) đang trong quá trình phát triển và sẽ sớm ra mắt.
+          </p>
         </div>
+      ) : null}
 
-        {sortedScenarios.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-[var(--border-strong)] bg-white px-5 py-14 text-center">
-            <FolderOpen
-              aria-hidden
-              size={34}
-              weight="regular"
-              className="mx-auto text-[var(--text-muted)]"
-            />
-            <h3 className="mt-4 text-lg font-semibold text-[var(--text-primary)]">
-              Chưa có bài thực hành
-            </h3>
-            <p className="mx-auto mt-2 max-w-[52ch] text-sm leading-6 text-[var(--text-secondary)]">
-              Quản trị viên cần tạo ít nhất một kịch bản trước khi học viên bắt đầu.
-            </p>
-            <Link
-              href="/admin/create"
-              className="mt-5 inline-flex min-h-11 items-center justify-center rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+      {activeTab === "adsb" ? (
+        <>
+          {storageError ? (
+            <div
+              role="status"
+              className="mt-5 flex items-start gap-3 rounded border border-[#f59e0b] bg-[#fffbeb] p-4 text-[#78350f]"
             >
-              Tạo kịch bản
-            </Link>
-          </div>
-        ) : (
-          <ul className="grid gap-3">
-            {sortedScenarios.map((scenario, index) => (
-              <ScenarioRow
-                key={scenario.id}
-                scenario={scenario}
-                index={index}
-              />
-            ))}
-          </ul>
-        )}
-      </section>
+              <Warning aria-hidden className="mt-0.5 shrink-0" size={19} weight="fill" />
+              <div>
+                <p className="text-sm font-semibold">Không thể đọc dữ liệu đã lưu</p>
+                <p className="mt-1 text-xs leading-5">
+                  Hệ thống đang dùng bộ kịch bản mẫu để bạn có thể tiếp tục.
+                </p>
+              </div>
+            </div>
+          ) : null}
+
+          <section aria-labelledby="practice-list-title" className="mt-7">
+            <div className="mb-4 flex items-center justify-between gap-4">
+              <h2
+                id="practice-list-title"
+                className="text-lg font-semibold text-[var(--text-primary)]"
+              >
+                Danh sách bài thực hành
+              </h2>
+              <span className="font-mono text-xs tabular-nums text-[var(--text-muted)]">
+                {sortedScenarios.length} bài
+              </span>
+            </div>
+
+            {sortedScenarios.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-[var(--border-strong)] bg-white px-5 py-14 text-center">
+                <FolderOpen
+                  aria-hidden
+                  size={34}
+                  weight="regular"
+                  className="mx-auto text-[var(--text-muted)]"
+                />
+                <h3 className="mt-4 text-lg font-semibold text-[var(--text-primary)]">
+                  Chưa có bài thực hành
+                </h3>
+                <p className="mx-auto mt-2 max-w-[52ch] text-sm leading-6 text-[var(--text-secondary)]">
+                  Quản trị viên cần tạo ít nhất một kịch bản trước khi học viên bắt đầu.
+                </p>
+                <Link
+                  href="/admin/create"
+                  className="mt-5 inline-flex min-h-11 items-center justify-center rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+                >
+                  Tạo kịch bản
+                </Link>
+              </div>
+            ) : (
+              <ul className="grid gap-3">
+                {sortedScenarios.map((scenario, index) => (
+                  <ScenarioRow
+                    key={scenario.id}
+                    scenario={scenario}
+                    index={index}
+                  />
+                ))}
+              </ul>
+            )}
+          </section>
+        </>
+      ) : null}
     </div>
   );
 }

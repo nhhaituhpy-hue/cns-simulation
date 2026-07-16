@@ -1,4 +1,4 @@
-# ADS-B Training Simulator
+# CNS Training Simulator (Hệ thống kiểm tra mô phỏng CNS)
 
 Ứng dụng web mô phỏng quy trình xử lý sự cố ADS-B dành cho đào tạo kỹ thuật viên. Người quản trị tạo kịch bản và ghi lại đường thao tác chuẩn; học viên quan sát trạng thái QCMS, mở ứng dụng bảo trì giả lập, thao tác trên terminal rồi nhận kết quả chấm điểm tự động.
 
@@ -118,6 +118,7 @@ Khi bản kế hoạch và hình menu trong manual khác nhau, manual là nguồ
 
 ## Session Log
 - 2026-07-16: Hoàn thành Module A, B, C. Đã kết nối tất cả các hành động/thao tác (Monitoring, VA/VB, RR, context menu, Site Settings, Sensor Statistics) vào từng ô compact 64 slot và sửa toàn bộ lỗi kiểm thử (Unit, E2E) đảm bảo không có regression.
+- 2026-07-16: Đổi tên thương hiệu hệ thống sang Hệ thống kiểm tra mô phỏng CNS. Bổ sung các tab VOR, DME, ADS-B vào trang quản lý kịch bản của quản trị viên và trang bài thực hành của học viên.
 
 ## Hướng phát triển tiếp theo
 

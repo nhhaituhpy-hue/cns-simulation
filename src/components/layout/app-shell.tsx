@@ -157,7 +157,7 @@ export function AppShell({ children }: AppShellProps) {
               Trung tâm Bảo đảm kỹ thuật
             </p>
             <p className="truncate text-sm font-semibold text-[var(--accent)] sm:text-base">
-              Hệ thống kiểm tra mô phỏng ADS-B
+              Hệ thống kiểm tra mô phỏng CNS
             </p>
           </div>
 
@@ -213,7 +213,7 @@ export function AppShell({ children }: AppShellProps) {
               </div>
               <MobileNavigation onNavigate={() => setMobileNavigationOpen(false)} />
               <p className="mt-auto border-t border-[var(--border-strong)] pt-4 text-xs text-[var(--text-muted)]">
-                Công cụ đào tạo ADS-B
+                Công cụ đào tạo CNS
               </p>
             </div>
           </aside>
