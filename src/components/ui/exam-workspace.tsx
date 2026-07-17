@@ -4,17 +4,10 @@ import {
   Student,
   type Icon,
 } from "@phosphor-icons/react";
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 export type CnsModule = "vor" | "dme" | "ads-b";
 export type WorkspaceRole = "admin" | "student";
-
-const moduleLabels: Record<CnsModule, string> = {
-  vor: "VOR",
-  dme: "DME",
-  "ads-b": "ADS-B",
-};
 
 const roleDetails: Record<
   WorkspaceRole,
@@ -47,13 +40,13 @@ export function WorkspaceHeader({
   return (
     <header className="grid gap-5 border-b border-[var(--border)] pb-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
       <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--accent)]">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
           {details.eyebrow}
         </p>
-        <h1 className="mt-2 text-3xl font-bold tracking-[-0.035em] text-[var(--text-primary)] sm:text-4xl">
+        <h1 className="mt-2 text-2xl font-bold tracking-[-0.025em] text-[var(--text-primary)] sm:text-[1.75rem]">
           {title}
         </h1>
-        <p className="mt-3 max-w-[68ch] text-sm leading-6 text-[var(--text-secondary)] sm:text-base">
+        <p className="mt-2.5 max-w-[72ch] text-sm leading-6 text-[var(--text-secondary)]">
           {description}
         </p>
       </div>
@@ -75,40 +68,6 @@ export function WorkspaceHeader({
   );
 }
 
-export function ModuleNavigation({
-  role,
-  activeModule,
-}: {
-  role: WorkspaceRole;
-  activeModule: CnsModule;
-}) {
-  return (
-    <nav
-      aria-label="Phân hệ thiết bị CNS"
-      className="mt-6 flex w-full gap-1 overflow-x-auto rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-1 sm:w-fit"
-    >
-      {(Object.keys(moduleLabels) as CnsModule[]).map((moduleId) => {
-        const active = activeModule === moduleId;
-
-        return (
-          <Link
-            key={moduleId}
-            href={`/${role}/${moduleId}`}
-            aria-current={active ? "page" : undefined}
-            className={`inline-flex min-h-10 min-w-24 flex-1 items-center justify-center rounded-md px-4 text-sm font-semibold transition-[background-color,color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-inset motion-reduce:transition-none sm:flex-none ${
-              active
-                ? "bg-[var(--surface)] text-[var(--accent)] shadow-[var(--shadow-sm)]"
-                : "text-[var(--text-secondary)] hover:bg-white/70 hover:text-[var(--text-primary)]"
-            }`}
-          >
-            {moduleLabels[moduleId]}
-          </Link>
-        );
-      })}
-    </nav>
-  );
-}
-
 export function ModuleSummary({
   title,
   description,
@@ -121,14 +80,14 @@ export function ModuleSummary({
   actions?: ReactNode;
 }) {
   return (
-    <section className="mt-7 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
+    <section className="mt-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
       <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
         <div className="flex min-w-0 items-start gap-4">
           <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-muted)] text-[var(--accent)]">
             <SummaryIcon aria-hidden size={23} weight="duotone" />
           </span>
           <div className="min-w-0">
-            <h2 className="text-lg font-semibold tracking-tight text-[var(--text-primary)]">
+            <h2 className="text-base font-semibold tracking-tight text-[var(--text-primary)]">
               {title}
             </h2>
             <p className="mt-1.5 max-w-[64ch] text-sm leading-6 text-[var(--text-secondary)]">
@@ -162,7 +121,7 @@ export function ScenarioSectionHeader({
   return (
     <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
       <div>
-        <h2 id={id} className="text-lg font-semibold tracking-tight text-[var(--text-primary)]">
+        <h2 id={id} className="text-base font-semibold tracking-tight text-[var(--text-primary)]">
           {title}
         </h2>
         {description ? (
@@ -227,10 +186,10 @@ export function EmptyState({
       <span className="mx-auto inline-flex size-11 items-center justify-center rounded-lg bg-[var(--accent-muted)] text-[var(--accent)]">
         {icon}
       </span>
-      <h3 className="mt-4 text-base font-semibold text-[var(--text-primary)]">
+      <h3 className="mt-4 text-[15px] font-semibold text-[var(--text-primary)]">
         {title}
       </h3>
-      <p className="mx-auto mt-2 max-w-[52ch] text-sm leading-6 text-[var(--text-secondary)]">
+      <p className="mx-auto mt-2 max-w-[52ch] text-[13px] leading-5 text-[var(--text-secondary)]">
         {description}
       </p>
       {action ? <div className="mt-5">{action}</div> : null}

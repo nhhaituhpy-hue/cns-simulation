@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ClipboardText,
-  Exam,
   House,
   List,
+  Student,
   UserCircle,
   X,
   type Icon,
@@ -23,10 +23,19 @@ type NavigationItem = {
   icon: Icon;
 };
 
+type WorkspaceSection = "admin" | "student";
+type CnsModule = "vor" | "dme" | "ads-b";
+
+const moduleItems: { id: CnsModule; label: string }[] = [
+  { id: "vor", label: "VOR" },
+  { id: "dme", label: "DME" },
+  { id: "ads-b", label: "ADS-B" },
+];
+
 const navigationItems: NavigationItem[] = [
   { href: "/", label: "Trang chủ", icon: House },
   { href: "/admin/vor", label: "Giám khảo", icon: ClipboardText },
-  { href: "/student/vor", label: "Thí sinh", icon: Exam },
+  { href: "/student/vor", label: "Thí sinh", icon: Student },
 ];
 
 function BrandWordmark() {
@@ -51,6 +60,76 @@ function isItemActive(pathname: string, href: string) {
   return pathname.startsWith(`/${section}`);
 }
 
+function getWorkspaceSection(href: string): WorkspaceSection | null {
+  if (href.startsWith("/admin")) return "admin";
+  if (href.startsWith("/student")) return "student";
+  return null;
+}
+
+function getActiveModule(pathname: string): CnsModule | null {
+  if (!pathname.startsWith("/admin") && !pathname.startsWith("/student")) {
+    return null;
+  }
+
+  if (pathname.startsWith("/admin/vor") || pathname.startsWith("/student/vor")) {
+    return "vor";
+  }
+
+  if (pathname.startsWith("/admin/dme") || pathname.startsWith("/student/dme")) {
+    return "dme";
+  }
+
+  return "ads-b";
+}
+
+function ModuleSubTabs({
+  section,
+  pathname,
+  mobile = false,
+  onNavigate,
+}: {
+  section: WorkspaceSection;
+  pathname: string;
+  mobile?: boolean;
+  onNavigate?: () => void;
+}) {
+  const activeModule = getActiveModule(pathname);
+
+  return (
+    <div
+      role="group"
+      aria-label={`Phân hệ ${section === "admin" ? "Giám khảo" : "Thí sinh"}`}
+      className={
+        mobile
+          ? "ml-4 grid grid-cols-3 gap-1 border-l border-[var(--border-strong)] pl-3"
+          : "ml-2 grid gap-1 border-l border-[var(--border-strong)] pl-1.5"
+      }
+    >
+      {moduleItems.map((module) => {
+        const active = activeModule === module.id;
+
+        return (
+          <Link
+            key={module.id}
+            href={`/${section}/${module.id}`}
+            onClick={onNavigate}
+            aria-current={active ? "page" : undefined}
+            className={`inline-flex items-center justify-center rounded-md border text-[10px] font-semibold transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-inset motion-reduce:transition-none ${
+              mobile ? "min-h-9 px-2" : "h-7 px-1"
+            } ${
+              active
+                ? "border-[var(--accent-border)] bg-[var(--accent-muted)] text-[var(--accent)]"
+                : "border-transparent text-[var(--text-muted)] hover:bg-white/70 hover:text-[var(--text-primary)]"
+            }`}
+          >
+            {module.label}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
 function MobileNavigation({ onNavigate }: {
   onNavigate?: () => void;
 }) {
@@ -61,22 +140,32 @@ function MobileNavigation({ onNavigate }: {
       {navigationItems.map((item) => {
         const active = isItemActive(pathname, item.href);
         const ItemIcon = item.icon;
+        const workspaceSection = getWorkspaceSection(item.href);
 
         return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={onNavigate}
-            aria-current={active ? "page" : undefined}
-            className={`group relative flex min-h-11 items-center gap-3 rounded border-l-2 px-3 text-sm font-medium transition-[background-color,color,border-color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-inset motion-reduce:transition-none ${
-              active
-                ? "border-[var(--accent)] bg-white text-[var(--accent)]"
-                : "border-transparent text-[var(--text-secondary)] hover:bg-white hover:text-[var(--text-primary)]"
-            }`}
-          >
-            <ItemIcon aria-hidden size={20} weight="regular" />
-            <span className="truncate">{item.label}</span>
-          </Link>
+          <div key={item.href} className="grid gap-1">
+            <Link
+              href={item.href}
+              onClick={onNavigate}
+              aria-current={active ? "page" : undefined}
+              className={`group relative flex min-h-11 items-center gap-3 rounded border-l-2 px-3 text-sm font-medium transition-[background-color,color,border-color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-inset motion-reduce:transition-none ${
+                active
+                  ? "border-[var(--accent)] bg-white text-[var(--accent)]"
+                  : "border-transparent text-[var(--text-secondary)] hover:bg-white hover:text-[var(--text-primary)]"
+              }`}
+            >
+              <ItemIcon aria-hidden size={20} weight="regular" />
+              <span className="truncate">{item.label}</span>
+            </Link>
+            {active && workspaceSection ? (
+              <ModuleSubTabs
+                section={workspaceSection}
+                pathname={pathname}
+                mobile
+                onNavigate={onNavigate}
+              />
+            ) : null}
+          </div>
         );
       })}
     </nav>
@@ -88,7 +177,7 @@ function DesktopNavigationRail() {
 
   return (
     <aside
-      className="app-glass app-sidebar sticky top-[4.25rem] z-20 col-start-1 row-start-2 hidden h-[calc(100dvh-4.25rem)] w-20 self-start border-r border-[var(--border)] md:block"
+      className="app-glass app-sidebar sticky top-0 z-20 col-start-1 row-start-2 hidden h-[100dvh] w-20 self-start border-r border-[var(--border)] md:block"
       aria-label="Thanh điều hướng"
     >
       <nav
@@ -98,24 +187,29 @@ function DesktopNavigationRail() {
         {navigationItems.map((item) => {
           const active = isItemActive(pathname, item.href);
           const ItemIcon = item.icon;
+          const workspaceSection = getWorkspaceSection(item.href);
 
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-label={item.label}
-              aria-current={active ? "page" : undefined}
-              className={`group relative flex min-h-16 flex-col items-center justify-center gap-1 rounded-lg border px-1 text-[var(--text-secondary)] transition-[background-color,border-color,color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-inset motion-reduce:transition-none ${
-                active
-                  ? "border-[var(--accent-border)] bg-[var(--surface)] text-[var(--accent)] shadow-[var(--shadow-sm)]"
-                  : "border-transparent hover:bg-white/70 hover:text-[var(--text-primary)]"
-              }`}
-            >
-              <ItemIcon aria-hidden size={21} weight={active ? "duotone" : "regular"} />
-              <span aria-hidden="true" className="max-w-full truncate text-[10px] font-semibold leading-none">
-                {item.label}
-              </span>
-            </Link>
+            <div key={item.href} className="grid gap-1">
+              <Link
+                href={item.href}
+                aria-label={item.label}
+                aria-current={active ? "page" : undefined}
+                className={`group relative flex min-h-16 flex-col items-center justify-center gap-1 rounded-lg border px-1 text-[var(--text-secondary)] transition-[background-color,border-color,color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-inset motion-reduce:transition-none ${
+                  active
+                    ? "border-[var(--accent-border)] bg-[var(--surface)] text-[var(--accent)] shadow-[var(--shadow-sm)]"
+                    : "border-transparent hover:bg-white/70 hover:text-[var(--text-primary)]"
+                }`}
+              >
+                <ItemIcon aria-hidden size={21} weight="regular" />
+                <span aria-hidden="true" className="max-w-full truncate text-[10px] font-semibold leading-none">
+                  {item.label}
+                </span>
+              </Link>
+              {active && workspaceSection ? (
+                <ModuleSubTabs section={workspaceSection} pathname={pathname} />
+              ) : null}
+            </div>
           );
         })}
       </nav>
@@ -141,7 +235,7 @@ export function AppShell({ children }: AppShellProps) {
         Chuyển đến nội dung chính
       </a>
 
-      <header className="app-glass sticky top-0 z-30 col-start-1 row-start-1 h-[4.25rem] border-b border-[var(--border)] md:col-span-2">
+      <header className="app-glass relative overflow-hidden col-span-full z-30 h-[4.25rem] border-b border-[var(--border)]">
         <div className="relative z-10 flex h-full items-center gap-3 px-4 sm:px-5 md:pl-0">
           <button
             type="button"

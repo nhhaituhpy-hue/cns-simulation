@@ -3,7 +3,7 @@ export function StudentDashboardLoading() {
     <section
       aria-label="Đang tải danh sách bài thực hành"
       aria-busy="true"
-      className="mx-auto w-full max-w-[1320px] px-4 py-7 sm:px-6 lg:px-10 lg:py-9"
+      className="w-full max-w-none px-4 py-7 sm:px-6 lg:px-8 lg:py-9 xl:px-10 2xl:px-12"
     >
       <div className="border-b border-[var(--border)] pb-6">
         <div className="h-3 w-40 animate-pulse rounded bg-[var(--surface-muted)] motion-reduce:animate-none" />

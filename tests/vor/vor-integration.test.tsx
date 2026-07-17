@@ -19,10 +19,6 @@ describe("VOR integration", () => {
   it("opens the PMDT preview from the Admin VOR route", () => {
     render(<AdminDashboard activeModule="vor" />);
 
-    expect(screen.getByRole("link", { name: "VOR" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
     expect(
       screen.getByRole("heading", { name: "PMDT Simulator - DVOR 1150A" }),
     ).toBeInTheDocument();

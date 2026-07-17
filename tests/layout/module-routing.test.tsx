@@ -32,23 +32,35 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe("CNS module routing", () => {
-  it("uses persistent admin module links", () => {
+  it("renders the selected admin module without an in-content tab bar", () => {
     render(<AdminDashboard activeModule="dme" />);
 
-    expect(screen.getByRole("link", { name: "VOR" })).toHaveAttribute("href", "/admin/vor");
-    expect(screen.getByRole("link", { name: "DME" })).toHaveAttribute("href", "/admin/dme");
-    expect(screen.getByRole("link", { name: "ADS-B" })).toHaveAttribute("href", "/admin/ads-b");
-    expect(screen.getByRole("link", { name: "DME" })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByRole("heading", { name: "PMDT Simulator - DME 1118A/1119A" })).toBeInTheDocument();
+    const workspace = screen.getByRole("banner").parentElement;
+
+    expect(screen.queryByRole("navigation", { name: "Phân hệ thiết bị CNS" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "PMDT Simulator - DME 1118A/1119A" })).toHaveClass("text-base");
+    expect(screen.getByRole("heading", { name: "Quản lý kịch bản kiểm tra" })).toHaveClass(
+      "text-2xl",
+      "sm:text-[1.75rem]",
+    );
+    expect(workspace).toHaveClass("max-w-none");
+    expect(workspace).not.toHaveClass("max-w-[1320px]");
+    expect(workspace).toHaveClass("lg:px-8", "xl:px-10", "2xl:px-12");
   });
 
-  it("uses persistent student module links", () => {
+  it("renders the selected student module without an in-content tab bar", () => {
     render(<StudentDashboard activeModule="vor" />);
 
-    expect(screen.getByRole("link", { name: "VOR" })).toHaveAttribute("href", "/student/vor");
-    expect(screen.getByRole("link", { name: "DME" })).toHaveAttribute("href", "/student/dme");
-    expect(screen.getByRole("link", { name: "ADS-B" })).toHaveAttribute("href", "/student/ads-b");
-    expect(screen.getByRole("link", { name: "VOR" })).toHaveAttribute("aria-current", "page");
+    const workspace = screen.getByRole("banner").parentElement;
+
+    expect(screen.queryByRole("navigation", { name: "Phân hệ thiết bị CNS" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Bài thực hành mô phỏng CNS" })).toHaveClass(
+      "text-2xl",
+      "sm:text-[1.75rem]",
+    );
+    expect(workspace).toHaveClass("max-w-none");
+    expect(workspace).not.toHaveClass("max-w-[1320px]");
+    expect(workspace).toHaveClass("lg:px-8", "xl:px-10", "2xl:px-12");
   });
 
   it("shows the DME student workflow instead of a placeholder", () => {

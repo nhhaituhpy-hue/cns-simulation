@@ -86,11 +86,11 @@ describe("StudentDashboard", () => {
 
     const markers = screen.getAllByLabelText(/Bài thực hành số/);
     expect(markers[0]).toHaveTextContent("01");
-    expect(markers[0].closest("article")).toHaveTextContent(
+    expect(markers[0].closest("tr")).toHaveTextContent(
       "Bài thực hành mới hơn",
     );
     expect(markers[1]).toHaveTextContent("02");
-    expect(markers[1].closest("article")).toHaveTextContent(
+    expect(markers[1].closest("tr")).toHaveTextContent(
       "Bài thực hành cũ hơn",
     );
   });

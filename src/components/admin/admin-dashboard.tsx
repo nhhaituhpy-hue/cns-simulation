@@ -14,13 +14,12 @@ import { DmeAdminDashboard } from "@/components/dme/admin/dme-admin-dashboard";
 import {
   EmptyState,
   LoadingRows,
-  ModuleNavigation,
   ModuleSummary,
   ScenarioListFrame,
   ScenarioSectionHeader,
-  WorkspaceHeader,
   type CnsModule,
 } from "@/components/ui/exam-workspace";
+import { ScenarioDataTable } from "@/components/ui/scenario-data-table";
 import { VorAdminDashboard } from "@/components/vor/admin/vor-admin-dashboard";
 import {
   formatScenarioNumber,
@@ -54,6 +53,14 @@ const dateFormatter = new Intl.DateTimeFormat("vi-VN", {
   year: "numeric",
   timeZone: "UTC",
 });
+
+const scenarioColumns = [
+  { id: "number", label: "STT", className: "w-16" },
+  { id: "title", label: "Tiêu đề" },
+  { id: "difficulty", label: "Mức độ", className: "w-28" },
+  { id: "configuration", label: "Quy mô", className: "w-48" },
+  { id: "actions", label: "Thao tác", className: "w-28 text-right" },
+];
 
 export { type CnsModule };
 
@@ -92,14 +99,7 @@ export function AdminDashboard({
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1320px] px-4 py-7 sm:px-6 lg:px-10 lg:py-9">
-      <WorkspaceHeader
-        role="admin"
-        title="Quản lý kịch bản kiểm tra"
-        description="Xây dựng tình huống sự cố, xác định quy trình chuẩn và quản lý kết quả cho các phân hệ VOR, DME và ADS-B."
-      />
-
-      <ModuleNavigation role="admin" activeModule={activeModule} />
+    <div className="w-full max-w-none px-4 py-3 sm:px-6 lg:px-8 lg:py-4 xl:px-10 2xl:px-12">
 
       {activeModule === "vor" ? <VorAdminDashboard /> : null}
       {activeModule === "dme" ? <DmeAdminDashboard /> : null}
@@ -177,76 +177,65 @@ export function AdminDashboard({
               ) : null}
 
               {isHydrated && sortedScenarios.length > 0 ? (
-                <ul className="divide-y divide-[var(--border)]">
-                  {sortedScenarios.map((scenario, index) => {
+                <ScenarioDataTable
+                  items={sortedScenarios}
+                  caption="Danh sách kịch bản ADS-B dành cho giám khảo"
+                  columns={scenarioColumns}
+                  renderCells={(scenario, rowIndex) => {
                     const difficulty = difficultyDetails[scenario.difficulty];
-
                     return (
-                      <li key={scenario.id}>
-                        <article className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-4 p-4 transition-colors hover:bg-[var(--surface-subtle)] sm:p-5 lg:grid-cols-[2.5rem_minmax(0,1fr)_auto] lg:items-center">
+                      <>
+                        <td className="px-4 py-4 align-top">
                           <span
-                            aria-label={`Kịch bản số ${index + 1}`}
-                            className="inline-flex size-9 items-center justify-center self-start rounded-md border border-[var(--border-strong)] bg-[var(--surface-muted)] font-mono text-xs font-bold tabular-nums text-[var(--text-secondary)] lg:self-center"
+                            aria-label={`Kịch bản số ${rowIndex + 1}`}
+                            className="inline-flex size-8 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--surface-muted)] text-xs font-bold tabular-nums text-[var(--text-secondary)]"
                           >
-                            {formatScenarioNumber(index)}
+                            {formatScenarioNumber(rowIndex)}
                           </span>
-
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="text-base font-semibold text-[var(--text-primary)] sm:text-[17px]">
-                                {scenario.title}
-                              </h3>
-                              <span className={`rounded-md border px-2 py-0.5 text-xs font-semibold ${difficulty.className}`}>
-                                {difficulty.label}
-                              </span>
-                            </div>
-                            <p className="mt-1.5 line-clamp-2 max-w-[78ch] text-sm leading-6 text-[var(--text-secondary)]">
-                              {scenario.description}
-                            </p>
-                            <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-[var(--text-muted)]">
-                              <div className="flex gap-1.5">
-                                <dt>Site</dt>
-                                <dd className="font-mono font-semibold tabular-nums text-[var(--text-secondary)]">
-                                  {scenario.sites.length}
-                                </dd>
-                              </div>
-                              <div className="flex gap-1.5">
-                                <dt>Thao tác</dt>
-                                <dd className="font-mono font-semibold tabular-nums text-[var(--text-secondary)]">
-                                  {scenario.expectedActions.length}
-                                </dd>
-                              </div>
-                              <div className="flex gap-1.5">
-                                <dt>{scenario.updatedAt ? "Cập nhật" : "Ngày tạo"}</dt>
-                                <dd className="font-medium text-[var(--text-secondary)]">
-                                  {dateFormatter.format(new Date(scenario.updatedAt ?? scenario.createdAt))}
-                                </dd>
-                              </div>
-                            </dl>
-                          </div>
-
-                          <div className="col-span-2 flex items-center gap-2 border-t border-[var(--border)] pt-4 lg:col-span-1 lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
+                        </td>
+                        <td className="px-4 py-4 align-top">
+                          <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">
+                            {scenario.title}
+                          </h3>
+                          <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[var(--text-secondary)]">
+                            {scenario.description}
+                          </p>
+                        </td>
+                        <td className="px-4 py-4 align-top">
+                          <span className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-semibold ${difficulty.className}`}>
+                            {difficulty.label}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 align-top text-xs leading-5 text-[var(--text-secondary)]">
+                          <p><span className="font-mono font-semibold">{scenario.sites.length}</span> site</p>
+                          <p><span className="font-mono font-semibold">{scenario.expectedActions.length}</span> thao tác</p>
+                          <p>{scenario.updatedAt ? "Cập nhật" : "Ngày tạo"}: {dateFormatter.format(new Date(scenario.updatedAt ?? scenario.createdAt))}</p>
+                        </td>
+                        <td className="px-4 py-4 align-top">
+                          <div className="flex justify-end gap-2">
                             <Link
                               href={`/admin/edit?id=${scenario.id}`}
-                              className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-md border border-[var(--border-strong)] bg-white px-3 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] lg:flex-none"
+                              aria-label={`Sửa kịch bản: ${scenario.title}`}
+                              title="Sửa kịch bản"
+                              className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-white text-[var(--text-secondary)] transition-[background-color,border-color,color,transform] duration-150 hover:border-[var(--accent-border)] hover:bg-[var(--accent-muted)] hover:text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none"
                             >
-                              <PencilSimple aria-hidden size={17} weight="regular" />
-                              Sửa
+                              <PencilSimple aria-hidden size={18} weight="regular" />
                             </Link>
                             <button
                               type="button"
                               onClick={() => setScenarioToDelete(scenario)}
-                              className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-md px-3 text-sm font-semibold text-[var(--danger)] hover:bg-[var(--danger-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger)] lg:flex-none"
+                              aria-label={`Xóa kịch bản: ${scenario.title}`}
+                              title="Xóa kịch bản"
+                              className="inline-flex size-9 items-center justify-center rounded-md border border-transparent text-[var(--danger)] transition-[background-color,border-color,transform] duration-150 hover:border-[#fecaca] hover:bg-[var(--danger-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger)] active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none"
                             >
-                              <Trash aria-hidden size={17} weight="regular" />
-                              Xóa
+                              <Trash aria-hidden size={18} weight="regular" />
                             </button>
                           </div>
-                        </article>
-                      </li>
+                        </td>
+                      </>
                     );
-                  })}
-                </ul>
+                  }}
+                />
               ) : null}
             </ScenarioListFrame>
           </section>

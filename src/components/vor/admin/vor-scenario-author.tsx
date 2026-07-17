@@ -242,7 +242,34 @@ function VorScenarioAuthorEditor({
 
   return (
     <div className="relative" onPointerDownCapture={selectField}>
-      <Link href="/admin/vor" className="absolute left-3 top-2 z-[60] inline-flex h-7 items-center gap-1.5 border border-[#475569] bg-[#0f172a] px-2 text-[10px] font-semibold text-[#cbd5e1] hover:text-white"><ArrowLeft aria-hidden size={12} />Quản trị</Link>
+      <div className="flex h-8 items-center border-b border-[#334155] bg-[#0f172a] px-4">
+        <a
+          href="/admin/vor"
+          onClick={(e) => {
+            e.preventDefault();
+            const pmdtState = useVorPmdtStore.getState();
+            const hasContent =
+              draft.title.trim() !== "" ||
+              draft.description.trim() !== "" ||
+              draft.prompt.trim() !== "" ||
+              pmdtState.overrides.length > 0 ||
+              pmdtState.expectedCheckpoints.length > 0 ||
+              draft.hardwareTask != null;
+            if (
+              !hasContent ||
+              window.confirm(
+                "Bạn có nội dung chưa lưu. Bạn có chắc muốn rời trang?"
+              )
+            ) {
+              router.push("/admin/vor");
+            }
+          }}
+          className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#cbd5e1] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60a5fa]"
+        >
+          <ArrowLeft aria-hidden size={13} />
+          Quay về khu vực quản trị
+        </a>
+      </div>
       <PmdtLayout mode="author" sidePanel={panel} />
       {hardwareEditorOpen ? (
         <HardwareTaskEditor

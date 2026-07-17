@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, FolderOpen, Warning } from "@phosphor-icons/react";
+import { FolderOpen, NotePencil, Warning } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useEffect } from "react";
 import {
@@ -9,6 +9,7 @@ import {
   ScenarioListFrame,
   ScenarioSectionHeader,
 } from "@/components/ui/exam-workspace";
+import { ScenarioDataTable } from "@/components/ui/scenario-data-table";
 import type { DmeScenario } from "@/lib/dme-types";
 import { useDmeScenarioStore } from "@/stores/dme-scenario-store";
 
@@ -30,6 +31,13 @@ const difficultyDetails: Record<
   },
 };
 
+const scenarioColumns = [
+  { id: "number", label: "STT", className: "w-16" },
+  { id: "title", label: "Tiêu đề" },
+  { id: "difficulty", label: "Mức độ", className: "w-28" },
+  { id: "actions", label: "Thao tác", className: "w-24 text-right" },
+];
+
 export function DmeStudentDashboard() {
   const { scenarios, isHydrated, isLoading, syncError, hydrate } = useDmeScenarioStore();
 
@@ -38,7 +46,7 @@ export function DmeStudentDashboard() {
   }, [hydrate]);
 
   return (
-    <section aria-labelledby="dme-practice-title" className="mt-7">
+    <section aria-labelledby="dme-practice-title" className="mt-0">
       {syncError ? (
         <div role="status" className="mb-5 flex gap-3 rounded-lg border border-[#f59e0b] bg-[#fffbeb] p-4 text-[#78350f]">
           <Warning aria-hidden className="mt-0.5 shrink-0" size={19} weight="duotone" />
@@ -73,44 +81,46 @@ export function DmeStudentDashboard() {
         ) : null}
 
         {isHydrated && !isLoading && scenarios.length > 0 ? (
-          <ul className="divide-y divide-[var(--border)]">
-            {scenarios.map((scenario, index) => {
+          <ScenarioDataTable
+            items={scenarios}
+            caption="Danh sách kịch bản DME dành cho thí sinh"
+            columns={scenarioColumns}
+            renderCells={(scenario, rowIndex) => {
               const difficulty = difficultyDetails[scenario.difficulty];
-
               return (
-                <li key={scenario.id}>
-                  <article className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-4 p-4 transition-colors hover:bg-[var(--surface-subtle)] sm:p-5 lg:grid-cols-[2.5rem_minmax(0,1fr)_auto] lg:items-center">
-                    <span className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--surface-muted)] font-mono text-xs font-bold tabular-nums text-[var(--text-secondary)]">
-                      {String(index + 1).padStart(2, "0")}
+                <>
+                  <td className="px-4 py-4 align-top">
+                    <span className="inline-flex size-8 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--surface-muted)] text-xs font-bold tabular-nums text-[var(--text-secondary)]">
+                      {String(rowIndex + 1).padStart(2, "0")}
                     </span>
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="text-base font-semibold text-[var(--text-primary)] sm:text-[17px]">
-                          {scenario.title}
-                        </h3>
-                        <span className={`rounded-md border px-2 py-0.5 text-xs font-semibold ${difficulty.className}`}>
-                          {difficulty.label}
-                        </span>
-                      </div>
-                      <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-[var(--text-secondary)]">
-                        {scenario.description}
-                      </p>
-                    </div>
-                    <div className="col-span-2 border-t border-[var(--border)] pt-4 lg:col-span-1 lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
-                      <Link
-                        href={`/student/dme/session?id=${encodeURIComponent(scenario.id)}`}
-                        aria-label={`Bắt đầu bài DME: ${scenario.title}`}
-                        className="group inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98] motion-reduce:transform-none lg:w-auto"
-                      >
-                        Bắt đầu
-                        <ArrowRight aria-hidden size={17} className="transition-transform group-hover:translate-x-1 motion-reduce:transition-none" />
-                      </Link>
-                    </div>
-                  </article>
-                </li>
+                  </td>
+                  <td className="px-4 py-4 align-top">
+                    <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">
+                      {scenario.title}
+                    </h3>
+                    <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[var(--text-secondary)]">
+                      {scenario.description}
+                    </p>
+                  </td>
+                  <td className="px-4 py-4 align-top">
+                    <span className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-semibold ${difficulty.className}`}>
+                      {difficulty.label}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4 text-right align-top">
+                    <Link
+                      href={`/student/dme/session?id=${encodeURIComponent(scenario.id)}`}
+                      aria-label={`Bắt đầu bài DME: ${scenario.title}`}
+                      title="Bắt đầu bài thực hành"
+                      className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--accent-border)] bg-[var(--surface)] text-[var(--accent)] transition-[background-color,border-color,transform] duration-150 hover:bg-[var(--accent-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none"
+                    >
+                      <NotePencil aria-hidden size={19} weight="regular" />
+                    </Link>
+                  </td>
+                </>
               );
-            })}
-          </ul>
+            }}
+          />
         ) : null}
       </ScenarioListFrame>
     </section>

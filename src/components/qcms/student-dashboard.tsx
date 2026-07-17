@@ -1,10 +1,10 @@
 "use client";
 
 import {
-  ArrowRight,
   FolderOpen,
   MapPin,
   Monitor,
+  NotePencil,
   Warning,
 } from "@phosphor-icons/react";
 import Link from "next/link";
@@ -12,12 +12,11 @@ import { useEffect, useMemo } from "react";
 import { DmeStudentDashboard } from "@/components/dme/student/dme-student-dashboard";
 import {
   EmptyState,
-  ModuleNavigation,
   ScenarioListFrame,
   ScenarioSectionHeader,
-  WorkspaceHeader,
   type CnsModule,
 } from "@/components/ui/exam-workspace";
+import { ScenarioDataTable } from "@/components/ui/scenario-data-table";
 import { VorStudentDashboard } from "@/components/vor/student/vor-student-dashboard";
 import {
   formatScenarioNumber,
@@ -28,7 +27,15 @@ import { useScenarioStore } from "@/stores/scenario-store";
 import { countScenarioSensors, DIFFICULTY_DETAILS } from "./qcms-utils";
 import { StudentDashboardLoading } from "./student-loading";
 
-function ScenarioRow({
+const scenarioColumns = [
+  { id: "number", label: "STT", className: "w-16" },
+  { id: "title", label: "Tiêu đề" },
+  { id: "difficulty", label: "Mức độ", className: "w-28" },
+  { id: "scope", label: "Phạm vi", className: "w-40" },
+  { id: "actions", label: "Thao tác", className: "w-24 text-right" },
+];
+
+function ScenarioCells({
   scenario,
   index,
 }: {
@@ -39,58 +46,53 @@ function ScenarioRow({
   const sensorCount = countScenarioSensors(scenario.sites);
 
   return (
-    <li>
-      <article className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-4 p-4 transition-colors hover:bg-[var(--surface-subtle)] sm:p-5 lg:grid-cols-[2.5rem_minmax(0,1fr)_auto] lg:items-center">
+    <>
+      <td className="px-4 py-4 align-top">
         <span
           aria-label={`Bài thực hành số ${index + 1}`}
-          className="inline-flex size-9 items-center justify-center self-start rounded-md border border-[var(--border-strong)] bg-[var(--surface-muted)] font-mono text-xs font-bold tabular-nums text-[var(--text-secondary)] lg:self-center"
+          className="inline-flex size-8 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--surface-muted)] text-xs font-bold tabular-nums text-[var(--text-secondary)]"
         >
           {formatScenarioNumber(index)}
         </span>
+      </td>
 
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-base font-semibold text-[var(--text-primary)] sm:text-[17px]">
-              {scenario.title}
-            </h3>
-            <span className={`rounded-md border px-2 py-0.5 text-xs font-semibold ${difficulty.className}`}>
-              {difficulty.label}
-            </span>
-          </div>
+      <td className="px-4 py-4 align-top">
+        <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">
+          {scenario.title}
+        </h3>
+        <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[var(--text-secondary)]">
+          {scenario.description}
+        </p>
+      </td>
 
-          <p className="mt-1.5 line-clamp-2 max-w-[78ch] text-sm leading-6 text-[var(--text-secondary)]">
-            {scenario.description}
-          </p>
+      <td className="px-4 py-4 align-top">
+        <span className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-semibold ${difficulty.className}`}>
+          {difficulty.label}
+        </span>
+      </td>
 
-          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium text-[var(--text-secondary)]">
-            <span className="inline-flex items-center gap-1.5">
-              <MapPin aria-hidden size={15} weight="regular" />
-              <span className="font-mono tabular-nums">{scenario.sites.length} site</span>
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <Monitor aria-hidden size={15} weight="regular" />
-              <span className="font-mono tabular-nums">{sensorCount} cảm biến</span>
-            </span>
-          </div>
-        </div>
+      <td className="px-4 py-4 align-top text-xs text-[var(--text-secondary)]">
+        <span className="flex items-center gap-1.5">
+          <MapPin aria-hidden size={15} weight="regular" />
+          <span className="font-mono tabular-nums">{scenario.sites.length} site</span>
+        </span>
+        <span className="mt-1.5 flex items-center gap-1.5">
+          <Monitor aria-hidden size={15} weight="regular" />
+          <span className="font-mono tabular-nums">{sensorCount} cảm biến</span>
+        </span>
+      </td>
 
-        <div className="col-span-2 border-t border-[var(--border)] pt-4 lg:col-span-1 lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
-          <Link
-            href={`/student/simulation?id=${encodeURIComponent(scenario.id)}`}
-            aria-label={`Mở bài thực hành: ${scenario.title}`}
-            className="group inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98] active:bg-[var(--accent-active)] motion-reduce:transform-none lg:w-auto"
-          >
-            Mở bài thực hành
-            <ArrowRight
-              aria-hidden
-              size={17}
-              weight="regular"
-              className="transition-transform duration-150 group-hover:translate-x-1 motion-reduce:transition-none"
-            />
-          </Link>
-        </div>
-      </article>
-    </li>
+      <td className="px-4 py-4 text-right align-top">
+        <Link
+          href={`/student/simulation?id=${encodeURIComponent(scenario.id)}`}
+          aria-label={`Mở bài thực hành: ${scenario.title}`}
+          title="Mở bài thực hành"
+          className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--accent-border)] bg-[var(--surface)] text-[var(--accent)] transition-[background-color,border-color,transform] duration-150 hover:bg-[var(--accent-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none"
+        >
+          <NotePencil aria-hidden size={19} weight="regular" />
+        </Link>
+      </td>
+    </>
   );
 }
 
@@ -116,14 +118,7 @@ export function StudentDashboard({
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1320px] px-4 py-7 sm:px-6 lg:px-10 lg:py-9">
-      <WorkspaceHeader
-        role="student"
-        title="Bài thực hành mô phỏng CNS"
-        description="Chọn kịch bản được giao, thực hiện quy trình chẩn đoán và nộp kết luận theo yêu cầu của giám khảo."
-      />
-
-      <ModuleNavigation role="student" activeModule={activeModule} />
+    <div className="w-full max-w-none px-4 py-3 sm:px-6 lg:px-8 lg:py-4 xl:px-10 2xl:px-12">
 
       {activeModule === "vor" ? <VorStudentDashboard /> : null}
       {activeModule === "dme" ? <DmeStudentDashboard /> : null}
@@ -145,7 +140,7 @@ export function StudentDashboard({
             </div>
           ) : null}
 
-          <section aria-labelledby="practice-list-title" className="mt-7">
+          <section aria-labelledby="practice-list-title" className="mt-0">
             <ScenarioSectionHeader
               id="practice-list-title"
               title="Thực hành xử lý sự cố ADS-B"
@@ -170,11 +165,14 @@ export function StudentDashboard({
                   }
                 />
               ) : (
-                <ul className="divide-y divide-[var(--border)]">
-                  {sortedScenarios.map((scenario, index) => (
-                    <ScenarioRow key={scenario.id} scenario={scenario} index={index} />
-                  ))}
-                </ul>
+                <ScenarioDataTable
+                  items={sortedScenarios}
+                  caption="Danh sách kịch bản ADS-B dành cho thí sinh"
+                  columns={scenarioColumns}
+                  renderCells={(scenario, rowIndex) => (
+                    <ScenarioCells scenario={scenario} index={rowIndex} />
+                  )}
+                />
               )}
             </ScenarioListFrame>
           </section>

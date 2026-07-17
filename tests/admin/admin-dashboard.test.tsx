@@ -75,9 +75,9 @@ describe("AdminDashboard", () => {
 
     const markers = screen.getAllByLabelText(/Kịch bản số/);
     expect(markers[0]).toHaveTextContent("01");
-    expect(markers[0].closest("article")).toHaveTextContent("Kịch bản mới hơn");
+    expect(markers[0].closest("tr")).toHaveTextContent("Kịch bản mới hơn");
     expect(markers[1]).toHaveTextContent("02");
-    expect(markers[1].closest("article")).toHaveTextContent("Kịch bản cũ hơn");
+    expect(markers[1].closest("tr")).toHaveTextContent("Kịch bản cũ hơn");
   });
 
   it("shows scenario details and deletes only after confirmation", async () => {
@@ -85,7 +85,11 @@ describe("AdminDashboard", () => {
     render(<AdminDashboard activeModule="ads-b" />);
 
     expect(screen.getByText("Kiểm tra Sensor A")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Xóa" }));
+    await user.click(
+      screen.getByRole("button", {
+        name: "Xóa kịch bản: Kiểm tra Sensor A",
+      }),
+    );
 
     expect(
       screen.getByRole("heading", { name: "Xóa kịch bản này?" }),
