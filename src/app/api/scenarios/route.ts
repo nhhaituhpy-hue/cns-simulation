@@ -8,6 +8,10 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unknown error";
 }
 
+function isE2eTestMode(): boolean {
+  return process.env.E2E_TEST_MODE === "1";
+}
+
 function toRow(scenario: Scenario) {
   return {
     id: scenario.id,
@@ -28,6 +32,10 @@ function toRow(scenario: Scenario) {
 }
 
 export async function GET() {
+  if (isE2eTestMode()) {
+    return NextResponse.json([]);
+  }
+
   try {
     const supabase = createClient();
     const { data, error } = await supabase
@@ -55,6 +63,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    if (isE2eTestMode()) {
+      return NextResponse.json({ success: true, scenario, testMode: true });
+    }
+
     const supabase = createClient();
     const { data, error } = await supabase
       .from("scenarios")
@@ -80,6 +92,10 @@ export async function DELETE(request: Request) {
 
     if (!id) {
       return NextResponse.json({ error: "Missing scenario ID" }, { status: 400 });
+    }
+
+    if (isE2eTestMode()) {
+      return NextResponse.json({ success: true, testMode: true });
     }
 
     const supabase = createClient();

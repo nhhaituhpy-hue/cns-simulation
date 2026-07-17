@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   SCENARIO_STORAGE_KEY,
@@ -87,6 +87,38 @@ describe("scenario store hydration", () => {
     expect(() => store.getState().hydrate()).not.toThrow();
     expect(store.getState().isHydrated).toBe(false);
     expect(store.getState().scenarios).toHaveLength(DEFAULT_SCENARIOS.length);
+  });
+
+  it("does not upload local scenarios when the remote database is empty", async () => {
+    const localScenario = {
+      ...DEFAULT_SCENARIOS[0],
+      id: "local-only-scenario",
+      title: "Local fallback must stay local",
+    };
+    window.localStorage.setItem(
+      SCENARIO_STORAGE_KEY,
+      serializeScenarioStorage([localScenario]),
+    );
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    const store = createScenarioStore({
+      storage: window.localStorage,
+      fetcher,
+      testMode: false,
+    });
+
+    store.getState().hydrate();
+
+    await vi.waitFor(() => {
+      expect(store.getState().isHydrated).toBe(true);
+    });
+    expect(store.getState().scenarios).toEqual([localScenario]);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(fetcher).toHaveBeenCalledWith("/api/scenarios");
   });
 });
 

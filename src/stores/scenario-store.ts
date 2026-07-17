@@ -48,6 +48,8 @@ export interface ScenarioStoreOptions {
   defaultScenarios?: readonly Scenario[];
   now?: () => Date;
   generateId?: () => string;
+  fetcher?: typeof fetch;
+  testMode?: boolean;
 }
 
 function getBrowserStorage(): StorageLike | null {
@@ -76,6 +78,10 @@ export function createScenarioStore(
   const defaults = options.defaultScenarios ?? DEFAULT_SCENARIOS;
   const now = options.now ?? (() => new Date());
   const generateId = options.generateId ?? defaultId;
+  const fetcher = options.fetcher ?? globalThis.fetch;
+  const isTest =
+    options.testMode ??
+    (typeof process !== "undefined" && process.env?.NODE_ENV === "test");
   const resolveStorage = (): StorageLike | null =>
     Object.prototype.hasOwnProperty.call(options, "storage")
       ? (options.storage ?? null)
@@ -114,8 +120,6 @@ export function createScenarioStore(
         }
 
         const storage = resolveStorage();
-        const isTest = typeof process !== "undefined" && process.env?.NODE_ENV === "test";
-
         if (isTest) {
           if (!storage) {
             return;
@@ -144,7 +148,7 @@ export function createScenarioStore(
         }
 
         // Ưu tiên dữ liệu Supabase; localStorage là lớp fallback ngoại tuyến
-        fetch("/api/scenarios")
+        fetcher("/api/scenarios")
           .then((res) => {
             if (res.ok) {
               return res.json();
@@ -163,7 +167,6 @@ export function createScenarioStore(
             }
           })
           .catch((err) => {
-            const shouldSeedRemote = err instanceof Error && err.message === "DB is empty";
             console.warn("Using localStorage fallback for scenarios:", err.message);
             if (!storage) {
               return;
@@ -176,29 +179,11 @@ export function createScenarioStore(
                 const scenarios = cloneScenarios(defaults, now().toISOString());
                 saveScenarios(storage, scenarios);
                 set({ scenarios, isHydrated: true, storageError: null });
-                // Đẩy các scenarios mặc định lên database khi lần đầu tạo
-                scenarios.forEach((s) => {
-                  fetch("/api/scenarios", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(s),
-                  }).catch(() => {});
-                });
                 return;
               }
 
               const localScenarios = cloneScenarios(loadScenarios(storage));
               set({ scenarios: localScenarios, isHydrated: true, storageError: null });
-
-              if (shouldSeedRemote) {
-                localScenarios.forEach((scenario) => {
-                  fetch("/api/scenarios", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(scenario),
-                  }).catch(() => {});
-                });
-              }
             } catch (error) {
               set({
                 scenarios: cloneScenarios(defaults, now().toISOString()),
@@ -222,10 +207,9 @@ export function createScenarioStore(
 
         set({ scenarios, storageError: persist(scenarios) });
 
-        const isTest = typeof process !== "undefined" && process.env?.NODE_ENV === "test";
         if (!isTest) {
           // Đồng bộ lên Supabase
-          fetch("/api/scenarios", {
+          fetcher("/api/scenarios", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(scenario),
@@ -256,10 +240,9 @@ export function createScenarioStore(
 
         set({ scenarios, storageError: persist(scenarios) });
 
-        const isTest = typeof process !== "undefined" && process.env?.NODE_ENV === "test";
         if (!isTest) {
           // Đồng bộ lên Supabase
-          fetch("/api/scenarios", {
+          fetcher("/api/scenarios", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(updated),
@@ -279,10 +262,9 @@ export function createScenarioStore(
         const scenarios = removeScenario(get().scenarios, scenarioId);
         set({ scenarios, storageError: persist(scenarios) });
 
-        const isTest = typeof process !== "undefined" && process.env?.NODE_ENV === "test";
         if (!isTest) {
           // Đồng bộ lên Supabase
-          fetch(`/api/scenarios?id=${encodeURIComponent(scenarioId)}`, {
+          fetcher(`/api/scenarios?id=${encodeURIComponent(scenarioId)}`, {
             method: "DELETE",
           }).catch((err) => console.error("Failed to sync delete scenario with Supabase:", err));
         }
@@ -307,15 +289,14 @@ export function createScenarioStore(
           storageError,
         });
 
-        const isTest = typeof process !== "undefined" && process.env?.NODE_ENV === "test";
         if (!isTest) {
           // Xoá và chèn lại defaults trên Supabase
           currentScenarios.forEach((s) => {
-            fetch(`/api/scenarios?id=${encodeURIComponent(s.id)}`, { method: "DELETE" })
+            fetcher(`/api/scenarios?id=${encodeURIComponent(s.id)}`, { method: "DELETE" })
               .catch(() => {});
           });
           scenarios.forEach((s) => {
-            fetch("/api/scenarios", {
+            fetcher("/api/scenarios", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(s),
