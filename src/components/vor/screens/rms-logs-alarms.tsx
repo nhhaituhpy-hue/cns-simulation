@@ -1,9 +1,10 @@
 "use client";
 
-import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
+import { resolveVorField, useVorPmdtStore } from "@/stores/vor-pmdt-store";
 
 export function RmsLogsAlarms() {
   const logs = useVorPmdtStore((state) => state.data.alarmLogs).slice(0, 100);
+  const overrides = useVorPmdtStore((state) => state.overrides);
 
   return (
     <div className="max-h-[calc(100dvh-15rem)] overflow-auto p-3">
@@ -17,7 +18,7 @@ export function RmsLogsAlarms() {
             <tr key={`${log.timeTag}-${log.type}-${index}`} className="border-t border-[#273449] bg-[#111827] text-[#cbd5e1] even:bg-[#0f172a]">
               <td className="px-3 py-2 font-mono tabular-nums text-[#94a3b8]">{log.timeTag}</td>
               <td className="px-3 py-2">{log.type}</td>
-              <td className="px-3 py-2">{log.alarm}</td>
+              <td data-vor-field-id={`alarmLogs.${index}.alarm`} data-vor-field-label={`Nội dung Alarm dòng ${index + 1}`} data-vor-field-value={String(resolveVorField(log.alarm, `alarmLogs.${index}.alarm`, overrides))} data-vor-field-type="string" className="px-3 py-2">{resolveVorField(log.alarm, `alarmLogs.${index}.alarm`, overrides)}</td>
               <td className={`px-3 py-2 font-semibold ${log.state === "Alarm" ? "text-[#ef4444]" : "text-[#22c55e]"}`}>{log.state}</td>
             </tr>
           ))}

@@ -1,10 +1,11 @@
 ﻿"use client";
 
-import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
-import { DmeValueCell } from "./screen-primitives";
+import { resolveDmeField, useDmePmdtStore } from "@/stores/dme-pmdt-store";
+import { dmeFieldMetadata, DmeValueCell } from "./screen-primitives";
 
 export function RmsLogsMaintenance() {
   const logs = useDmePmdtStore((state) => state.data.maintenanceLogs).slice(0, 100);
+  const overrides = useDmePmdtStore((state) => state.overrides);
 
   return (
     <div className="max-h-[calc(100dvh-15rem)] overflow-auto p-3">
@@ -18,7 +19,7 @@ export function RmsLogsMaintenance() {
             <tr key={`${log.timeTag}-${log.type}-${index}`} className="border-t border-[#273449] bg-[#111827] text-[#cbd5e1] even:bg-[#0f172a]">
               <td className="px-3 py-2 font-mono tabular-nums text-[#94a3b8]">{log.timeTag}</td>
               <td className="px-3 py-2">{log.type}</td>
-              <td className="px-3 py-2">{log.alert}</td>
+              <td {...dmeFieldMetadata(`maintenanceLogs.${index}.alert`, `Nội dung Maintenance Alert dòng ${index + 1}`, resolveDmeField(log.alert, `maintenanceLogs.${index}.alert`, overrides))} className="px-3 py-2">{resolveDmeField(log.alert, `maintenanceLogs.${index}.alert`, overrides)}</td>
               <td className="p-1"><DmeValueCell fieldId={`maintenanceLogs.${index}.state`} label={`${log.alert} state`} value={log.state} status={log.state === "Normal" ? "normal" : "warning"} className="w-full" /></td>
             </tr>
           ))}

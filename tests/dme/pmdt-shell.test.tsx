@@ -35,6 +35,15 @@ describe("DME PMDT shell", () => {
     expect(useDmePmdtStore.getState().activeScreen).toBe("rms-status");
   });
 
+  it("shows scenario-specific alarm text in RMS Logs", async () => {
+    const user = userEvent.setup();
+    useDmePmdtStore.getState().setOverride("alarmLogs.0.alarm", "Custom DME alarm");
+    render(<PmdtLayout />);
+    await user.click(screen.getByRole("button", { name: "RMS" }));
+    await user.click(screen.getByRole("menuitem", { name: "Logs" }));
+    expect(screen.getByText("Custom DME alarm")).toHaveAttribute("data-dme-field-id", "alarmLogs.0.alarm");
+  });
+
   it("switches through referenced monitor and transmitter tabs", async () => {
     const user = userEvent.setup();
     render(<PmdtLayout />);

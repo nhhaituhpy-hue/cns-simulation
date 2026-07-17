@@ -38,12 +38,14 @@ describe("RMS screens", () => {
 
   it("switches between alarm and maintenance logs", async () => {
     const user = userEvent.setup();
+    useVorPmdtStore.getState().setOverride("alarmLogs.0.alarm", "Custom VOR alarm");
+    useVorPmdtStore.getState().setOverride("maintenanceLogs.0.alert", "Custom VOR maintenance alert");
     useVorPmdtStore.getState().openScreen("rms-logs", ["RMS", "Logs"], "Logs");
     render(<RmsLogsLayout />);
 
-    expect(screen.getAllByText("Tx Frequency Error").length).toBeGreaterThan(0);
+    expect(screen.getByText("Custom VOR alarm")).toHaveAttribute("data-vor-field-id", "alarmLogs.0.alarm");
     await user.click(screen.getByRole("tab", { name: "Maintenance Alerts" }));
-    expect(screen.getAllByText("Battery Fault").length).toBeGreaterThan(0);
+    expect(screen.getByText("Custom VOR maintenance alert")).toHaveAttribute("data-vor-field-id", "maintenanceLogs.0.alert");
     expect(screen.getAllByText("Alert").length).toBeGreaterThan(0);
   });
 });

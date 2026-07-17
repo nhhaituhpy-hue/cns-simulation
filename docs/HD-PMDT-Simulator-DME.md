@@ -148,3 +148,10 @@ Ngày 17/07/2026:
 - DME E2E kiểm tra dashboard, preview route, title/model, không có F5-F8 và điều hướng tới Standby data.
 
 Khi thêm view mới, phải cập nhật đồng thời `DmeViewId`, default view mapping, menu/layout, scenario validator, submission validator, tests và file này.
+
+
+## 6.1 Tùy chỉnh nội dung RMS Logs theo kịch bản
+
+Trong author mode, admin có thể chọn trực tiếp cột `Alarm` hoặc `Alert` tại `RMS > Logs`, nhập nội dung tình huống giả định và nhấn `Áp dụng`. Nội dung được lưu trong scenario overrides với field ID như `alarmLogs.0.alarm` và `maintenanceLogs.0.alert`.
+
+Admin chỉ sửa nội dung trên các dòng có sẵn, không thêm hoặc xóa dòng. Khi student mở kịch bản và truy cập đúng màn hình RMS Logs, PMDT hiển thị nội dung đã lưu tại đúng dòng. Nếu màn hình log là bằng chứng bắt buộc, admin cần thêm view đó vào checkpoint trước khi lưu.

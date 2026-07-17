@@ -544,3 +544,18 @@ Khi bổ sung ảnh mới, thêm từng dòng theo mẫu:
 - Baseline kiểm thử gần nhất trước tài liệu này: 36 file, 156 test Vitest đạt; TypeScript, ESLint và production build đạt.
 
 Khi baseline thay đổi, cập nhật con số tại đây nhưng không xóa lịch sử quyết định quan trọng ở `docs/DECISIONS.md`.
+
+
+### 8.1 Tùy chỉnh nội dung RMS Logs theo kịch bản
+
+Trong author mode, admin có thể chọn trực tiếp nội dung ở cột `Alarm` hoặc `Alert` của các màn hình `RMS > Logs > Alarms` và `RMS > Logs > Maintenance Alerts`. Nội dung mới được lưu dưới dạng override, ví dụ `alarmLogs.0.alarm` hoặc `maintenanceLogs.0.alert`.
+
+Quy trình sử dụng:
+
+1. Mở màn hình RMS Logs cần đưa vào tình huống.
+2. Chọn nội dung Alarm/Alert trên một dòng log có sẵn.
+3. Nhập nội dung giả định trong panel tạo kịch bản và nhấn `Áp dụng`.
+4. Thêm màn hình hiện tại làm checkpoint nếu đây là bước học viên cần kiểm tra.
+5. Lưu kịch bản. Khi student làm bài, cùng override được nạp vào PMDT và nội dung tùy chỉnh xuất hiện tại đúng dòng log.
+
+Không thêm, xóa hoặc đổi thứ tự các dòng log mặc định vì index dòng là một phần của field ID đã lưu.
