@@ -156,6 +156,7 @@ Khi bản kế hoạch và hình menu trong manual khác nhau, manual là nguồ
 - 2026-07-17: Đồng bộ thành công 4 video, 4 poster (webp) và 2 file âm thanh thuyết minh (.mp3) lên Supabase Storage qua SDK với chế độ upsert; frontend tự động sử dụng đường dẫn CDN từ Supabase Storage thông qua cấu hình URL động.
 - 2026-07-17: Sửa lỗi video 15s bị lệch pha so với âm thanh lồng tiếng bằng cách chạy script Python để vẽ lại toàn bộ 4 video hướng dẫn dài 30s và đồng bộ ghi đè lên Supabase Storage qua SDK Node.js.
 - 2026-07-17: Cải tiến HomeMediaCarousel: Khi video kết thúc tự động ở slide cuối, âm thanh lồng tiếng (.mp3) vẫn tiếp tục phát cho tới khi kết thúc chứ không bị dừng đột ngột.
+- 2026-07-17: Sửa dòng đầu tiên bên sidebar bên trái của VOR simulator, bỏ nhãn Connection dư thừa và căn chỉnh lại cấu trúc hiển thị Alert/Local tương tự DME simulator.
 
 ## Hướng phát triển tiếp theo
 
@@ -164,3 +165,4 @@ Khi bản kế hoạch và hình menu trong manual khác nhau, manual là nguồ
 3. Mở rộng luồng menu cấp sâu theo các manual.
 4. Lưu lịch sử phiên học, tiến độ và báo cáo thống kê.
 5. Thêm import/export kịch bản và triển khai nhiều lớp học.
+

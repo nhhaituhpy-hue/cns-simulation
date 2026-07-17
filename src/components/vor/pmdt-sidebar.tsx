@@ -131,18 +131,21 @@ export function PmdtSidebar() {
 
   return (
     <aside className="min-h-0 overflow-y-auto border-r border-[#334155] bg-[#0f172a] p-2 text-xs text-[#cbd5e1]">
-      <section aria-labelledby="connection-heading" className="border border-[#334155] bg-[#111827] p-2">
-        <h2 id="connection-heading" className="sr-only">Kết nối</h2>
-        <div className="flex items-center justify-between gap-2">
-          <span className="font-semibold text-[#e2e8f0]">Connection</span>
-          <span {...fieldMetadata("connected", "Connection", connected, connectedColor)} className="inline-flex items-center gap-1.5 border border-[#166534] bg-[#0f3a1f] px-2 py-1 text-[10px] font-semibold text-[#bbf7d0]">
-            <Indicator color={connectedColor} />
-            {connected ? "Connected" : "Disconnected"}
-          </span>
-        </div>
-        <div className="mt-2 flex gap-2">
-          <span {...fieldMetadata("alert", "Alert", alert, alertColor)} className="inline-flex min-h-7 items-center gap-1.5 rounded px-1.5 text-[11px]">
-            <span aria-hidden className={`size-3 rounded-sm border border-black/30 ${indicatorClasses[alertColor]}`} />Alert
+      <section aria-label="Connection" className="border border-[#334155] bg-[#111827] p-2">
+        <span
+          {...fieldMetadata("connected", "Connection", connected, connectedColor)}
+          className="flex items-center justify-center gap-2 border border-[#166534] bg-[#0f3a1f] px-2 py-1.5 text-[10px] font-semibold text-[#bbf7d0]"
+        >
+          <Indicator color={connectedColor} />
+          {connected ? "Connected" : "Disconnected"}
+        </span>
+        <div className="mt-2 grid grid-cols-2 gap-1">
+          <span
+            {...fieldMetadata("alert", "Alert", alert, alertColor)}
+            className="inline-flex min-h-7 items-center justify-center gap-1.5 rounded px-1 text-[11px]"
+          >
+            <span aria-hidden className={`size-3 rounded-sm border border-black/30 ${indicatorClasses[alertColor]}`} />
+            Alert
           </span>
           <button
             type="button"
@@ -150,9 +153,14 @@ export function PmdtSidebar() {
             onClick={() => toggleInteractiveField("local", "Local", localState.value, localState.status, "yellow")}
             aria-pressed={localState.value}
             title={mode === "student" ? "Ghi nhận thao tác Local" : undefined}
-            className={`inline-flex min-h-7 items-center gap-1.5 rounded px-1.5 text-[11px] ${mode === "student" ? "cursor-pointer hover:bg-[#1e293b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60a5fa]" : "cursor-default"}`}
+            className={`inline-flex min-h-7 items-center justify-center gap-1.5 rounded px-1 text-[11px] ${
+              mode === "student"
+                ? "cursor-pointer hover:bg-[#1e293b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60a5fa]"
+                : "cursor-default"
+            }`}
           >
-            <span aria-hidden className={`size-3 rounded-sm border border-black/30 ${indicatorClasses[localState.status]}`} />Local
+            <span aria-hidden className={`size-3 rounded-sm border border-black/30 ${indicatorClasses[localState.status]}`} />
+            Local
           </button>
         </div>
       </section>
