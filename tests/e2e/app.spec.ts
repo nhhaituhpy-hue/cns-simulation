@@ -9,7 +9,9 @@ test("landing and primary navigation are accessible", async ({ page }) => {
   await page.goto("/");
 
   await expect(
-    page.getByRole("heading", { name: "Kiểm tra năng lực vận hành hệ thống CNS" }),
+    page.getByRole("heading", {
+      name: "Kiểm tra đánh giá năng lực dựa trên thực tế vận hành hệ thống CNS",
+    }),
   ).toBeVisible();
   await expect(page.getByRole("link", { name: /Quản lý kỳ kiểm tra/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /Vào khu vực thực hành/ })).toBeVisible();

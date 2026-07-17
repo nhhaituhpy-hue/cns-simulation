@@ -71,7 +71,6 @@ button {
 }
 
 .app-glass {
-  position: relative;
   background: rgb(244 247 249 / 0.92);
   backdrop-filter: blur(18px) saturate(135%);
   -webkit-backdrop-filter: blur(18px) saturate(135%);
@@ -83,6 +82,16 @@ button {
   content: "";
   pointer-events: none;
   background: linear-gradient(180deg, rgb(255 255 255 / 0.34), transparent 70%);
+}
+
+.app-sidebar::after {
+  position: absolute;
+  inset-block: 0;
+  right: 0;
+  width: 1px;
+  content: "";
+  pointer-events: none;
+  background: var(--border);
 }
 
 .terminal-surface {

@@ -21,12 +21,12 @@ const roleDetails: Record<
   { label: string; eyebrow: string; icon: Icon }
 > = {
   admin: {
-    label: "Không gian giám khảo",
+    label: "Giám khảo",
     eyebrow: "Quản trị kỳ kiểm tra",
     icon: GearSix,
   },
   student: {
-    label: "Không gian học viên",
+    label: "Thí sinh",
     eyebrow: "Thực hành và đánh giá",
     icon: Student,
   },

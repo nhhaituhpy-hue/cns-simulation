@@ -16,12 +16,19 @@
 /test-results
 /artifacts
 
+# Python utility scripts
+__pycache__/
+*.py[cod]
+
 # next.js
 /.next/
 /out/
 
 # production
 /build
+
+# Generated guidance media is published to Supabase Storage
+/public/media/
 
 # misc
 .DS_Store

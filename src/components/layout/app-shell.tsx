@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  GearSix,
+  ClipboardText,
+  Exam,
   House,
   List,
-  Student,
   UserCircle,
   X,
   type Icon,
@@ -25,8 +25,8 @@ type NavigationItem = {
 
 const navigationItems: NavigationItem[] = [
   { href: "/", label: "Trang chủ", icon: House },
-  { href: "/admin/vor", label: "Quản trị", icon: GearSix },
-  { href: "/student/vor", label: "Học viên", icon: Student },
+  { href: "/admin/vor", label: "Giám khảo", icon: ClipboardText },
+  { href: "/student/vor", label: "Thí sinh", icon: Exam },
 ];
 
 function BrandWordmark() {
@@ -88,12 +88,12 @@ function DesktopNavigationRail() {
 
   return (
     <aside
-      className="app-glass fixed bottom-0 left-0 top-[4.25rem] z-20 hidden w-20 border-r border-[var(--border)] md:block"
+      className="app-glass app-sidebar sticky top-[4.25rem] z-20 col-start-1 row-start-2 hidden h-[calc(100dvh-4.25rem)] w-20 self-start border-r border-[var(--border)] md:block"
       aria-label="Thanh điều hướng"
     >
       <nav
         aria-label="Điều hướng chính"
-        className="relative z-10 grid gap-1.5 p-2"
+        className="relative z-10 grid gap-1.5 px-2 pb-2 pt-10"
       >
         {navigationItems.map((item) => {
           const active = isItemActive(pathname, item.href);
@@ -127,13 +127,13 @@ export function AppShell({ children }: AppShellProps) {
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
   const pathname = usePathname();
   const workspaceLabel = pathname.startsWith("/admin")
-    ? "Không gian giám khảo"
+    ? "Giám khảo"
     : pathname.startsWith("/student")
-      ? "Không gian học viên"
+      ? "Thí sinh"
       : "Cổng hệ thống";
 
   return (
-    <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)]">
+    <div className="grid min-h-[100dvh] grid-cols-1 grid-rows-[4.25rem_minmax(0,1fr)] bg-[var(--background)] text-[var(--foreground)] md:grid-cols-[5rem_minmax(0,1fr)]">
       <a
         href="#main-content"
         className="fixed left-3 top-3 z-50 -translate-y-20 rounded bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-white transition-transform focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 motion-reduce:transition-none"
@@ -141,7 +141,7 @@ export function AppShell({ children }: AppShellProps) {
         Chuyển đến nội dung chính
       </a>
 
-      <header className="app-glass sticky top-0 z-30 h-[4.25rem] border-b border-[var(--border)]">
+      <header className="app-glass sticky top-0 z-30 col-start-1 row-start-1 h-[4.25rem] border-b border-[var(--border)] md:col-span-2">
         <div className="relative z-10 flex h-full items-center gap-3 px-4 sm:px-5 md:pl-0">
           <button
             type="button"
@@ -176,7 +176,7 @@ export function AppShell({ children }: AppShellProps) {
 
       <DesktopNavigationRail />
 
-      <div className="min-h-[calc(100dvh-4.25rem)] md:pl-20">
+      <div className="row-start-2 min-h-[calc(100dvh-4.25rem)] min-w-0 md:col-start-2">
         <main id="main-content" tabIndex={-1} className="min-w-0">
           {children}
         </main>
