@@ -6,7 +6,7 @@ import { RoleCard } from "@/components/ui/role-card";
 export default function Home() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
   const mediaBaseUrl = supabaseUrl
-    ? `${supabaseUrl}/storage/v1/object/public/training-media/home-guides/v1`
+    ? `${supabaseUrl}/storage/v1/object/public/training-media/home-guides/v2`
     : "/media";
 
   return (

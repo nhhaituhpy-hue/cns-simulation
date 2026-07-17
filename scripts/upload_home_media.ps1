@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 $mediaRoot = (Resolve-Path -LiteralPath "public\media").Path
-$storageRoot = "ss:///training-media/home-guides/v1"
+$storageRoot = "ss:///training-media/home-guides/v2"
 $cacheControl = "public, max-age=31536000, immutable"
 $clips = @(
   "huong-dan-giam-khao-vor",

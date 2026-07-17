@@ -120,6 +120,8 @@ Khi bản kế hoạch và hình menu trong manual khác nhau, manual là nguồ
 - 2026-07-16: Hoàn thành Module A, B, C. Đã kết nối tất cả các hành động/thao tác (Monitoring, VA/VB, RR, context menu, Site Settings, Sensor Statistics) vào từng ô compact 64 slot và sửa toàn bộ lỗi kiểm thử (Unit, E2E) đảm bảo không có regression.
 - 2026-07-16: Đổi tên thương hiệu hệ thống sang Hệ thống kiểm tra mô phỏng CNS. Bổ sung các tab VOR, DME, ADS-B vào trang quản lý kịch bản của quản trị viên và trang bài thực hành của học viên.
 - 2026-07-17: Gỡ bỏ cns-image.webp khỏi Carousel trang chủ, tích hợp tính năng phát âm thanh thuyết minh (lồng tiếng) tiếng Việt song song đồng bộ cho các video clip và sửa lỗi kiểm thử định tuyến.
+- 2026-07-17: Đồng bộ thành công 4 video, 4 poster (webp) và 2 file âm thanh thuyết minh (.mp3) lên Supabase Storage qua SDK với chế độ upsert; frontend tự động sử dụng đường dẫn CDN từ Supabase Storage thông qua cấu hình URL động.
+- 2026-07-17: Sửa lỗi video 15s bị lệch pha so với âm thanh lồng tiếng bằng cách chạy script Python để vẽ lại toàn bộ 4 video hướng dẫn dài 30s và đồng bộ ghi đè lên Supabase Storage qua SDK Node.js.
 
 ## Hướng phát triển tiếp theo
 

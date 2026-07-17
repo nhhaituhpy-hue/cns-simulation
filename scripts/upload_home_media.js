@@ -3,7 +3,7 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 
 const mediaRoot = 'public/media';
-const storageRoot = 'ss:///training-media/home-guides/v1';
+const storageRoot = 'ss:///training-media/home-guides/v2';
 const cacheControl = 'public, max-age=31536000, immutable';
 
 const filesToUpload = [
