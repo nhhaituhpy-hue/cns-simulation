@@ -90,6 +90,8 @@ describe("equipment block diagrams", () => {
     );
 
     const block = screen.getByRole("button", { name: /High Power Amplifier TX1, TX1/ });
+    expect(block).toHaveTextContent("HPA 1");
+    expect(block).not.toHaveTextContent("TX1 High Power");
     await user.click(block);
     expect(onInspect).toHaveBeenCalledWith(expect.objectContaining({ id: "dme-hpa-1" }));
     expect(onToggle).toHaveBeenCalledWith(expect.objectContaining({ id: "dme-hpa-1" }));
