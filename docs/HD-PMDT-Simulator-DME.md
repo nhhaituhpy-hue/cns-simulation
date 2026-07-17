@@ -150,8 +150,10 @@ Ngày 17/07/2026:
 Khi thêm view mới, phải cập nhật đồng thời `DmeViewId`, default view mapping, menu/layout, scenario validator, submission validator, tests và file này.
 
 
-## 6.1 Tùy chỉnh nội dung RMS Logs theo kịch bản
+## 9. Tùy chỉnh các trường RMS Logs theo kịch bản
 
-Trong author mode, admin có thể chọn trực tiếp cột `Alarm` hoặc `Alert` tại `RMS > Logs`, nhập nội dung tình huống giả định và nhấn `Áp dụng`. Nội dung được lưu trong scenario overrides với field ID như `alarmLogs.0.alarm` và `maintenanceLogs.0.alert`.
+Trong author mode, admin có thể chọn trực tiếp `Time Tag`, `Type`, `Alarm`/`Alert` và `State` tại `RMS > Logs`, nhập giá trị tình huống giả định và nhấn `Áp dụng`. Giá trị được lưu trong scenario overrides với field ID như `alarmLogs.0.timeTag`, `alarmLogs.0.type`, `alarmLogs.0.alarm`, `alarmLogs.0.state` và các field tương ứng trong `maintenanceLogs`.
 
-Admin chỉ sửa nội dung trên các dòng có sẵn, không thêm hoặc xóa dòng. Khi student mở kịch bản và truy cập đúng màn hình RMS Logs, PMDT hiển thị nội dung đã lưu tại đúng dòng. Nếu màn hình log là bằng chứng bắt buộc, admin cần thêm view đó vào checkpoint trước khi lưu.
+`Time Tag` nhập theo định dạng `DD/MM/YYYY HH:mm:ss`. State của Alarms được giới hạn ở `Normal`, `Pre-Alarm`, `Primary Alarm Low`, `Alarm`; State của Maintenance Alerts được giới hạn ở `Normal`, `Pre-Alert`, `Alert`. Màu State được đồng bộ tự động.
+
+Admin chỉ sửa các trường trên dòng có sẵn, không thêm hoặc xóa dòng. Khi student mở kịch bản và truy cập đúng màn hình RMS Logs, PMDT hiển thị toàn bộ giá trị đã lưu tại đúng dòng. Nếu màn hình log là bằng chứng bắt buộc, admin cần thêm view đó vào checkpoint trước khi lưu.

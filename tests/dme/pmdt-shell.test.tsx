@@ -37,11 +37,17 @@ describe("DME PMDT shell", () => {
 
   it("shows scenario-specific alarm text in RMS Logs", async () => {
     const user = userEvent.setup();
+    useDmePmdtStore.getState().setOverride("alarmLogs.0.timeTag", "18/07/2026 09:10:11");
+    useDmePmdtStore.getState().setOverride("alarmLogs.0.type", "Monitor 1 + 2");
     useDmePmdtStore.getState().setOverride("alarmLogs.0.alarm", "Custom DME alarm");
+    useDmePmdtStore.getState().setOverride("alarmLogs.0.state", "Alarm", "alarm");
     render(<PmdtLayout />);
     await user.click(screen.getByRole("button", { name: "RMS" }));
     await user.click(screen.getByRole("menuitem", { name: "Logs" }));
+    expect(screen.getByText("18/07/2026 09:10:11")).toHaveAttribute("data-dme-field-id", "alarmLogs.0.timeTag");
+    expect(screen.getByText("Monitor 1 + 2")).toHaveAttribute("data-dme-field-id", "alarmLogs.0.type");
     expect(screen.getByText("Custom DME alarm")).toHaveAttribute("data-dme-field-id", "alarmLogs.0.alarm");
+    expect(screen.getByText("Alarm", { selector: '[data-dme-field-id="alarmLogs.0.state"]' })).toBeInTheDocument();
   });
 
   it("switches through referenced monitor and transmitter tabs", async () => {

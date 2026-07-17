@@ -84,4 +84,26 @@ describe("VOR scenario authoring", () => {
     ]));
     expect(screen.getByRole("heading", { name: "Thao tác sidebar cần chấm" })).toBeInTheDocument();
   });
+
+  it("edits an RMS alarm state using the allowed State values", async () => {
+    const user = userEvent.setup();
+    render(<VorScenarioAuthor />);
+
+    await user.click(screen.getByRole("button", { name: "RMS" }));
+    await user.click(screen.getByRole("menuitem", { name: "Logs" }));
+    fireEvent.pointerDown(
+      screen.getByText("Normal", {
+        selector: '[data-vor-field-id="alarmLogs.0.state"]',
+      }),
+    );
+
+    await user.selectOptions(screen.getByLabelText("Giá trị State"), "Alarm");
+    await user.click(screen.getByRole("button", { name: "Áp dụng" }));
+
+    expect(useVorPmdtStore.getState().overrides).toContainEqual({
+      fieldId: "alarmLogs.0.state",
+      value: "Alarm",
+      status: "alarm",
+    });
+  });
 });

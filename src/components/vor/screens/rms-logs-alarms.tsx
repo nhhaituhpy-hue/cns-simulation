@@ -1,6 +1,10 @@
 "use client";
 
-import { resolveVorField, useVorPmdtStore } from "@/stores/vor-pmdt-store";
+import {
+  resolveVorField,
+  resolveVorStatus,
+  useVorPmdtStore,
+} from "@/stores/vor-pmdt-store";
 
 export function RmsLogsAlarms() {
   const logs = useVorPmdtStore((state) => state.data.alarmLogs).slice(0, 100);
@@ -14,14 +18,26 @@ export function RmsLogsAlarms() {
           <tr><th className="w-44 px-3 py-2">Time Tag</th><th className="w-36 px-3 py-2">Type</th><th className="px-3 py-2">Alarm</th><th className="w-24 px-3 py-2">State</th></tr>
         </thead>
         <tbody>
-          {logs.map((log, index) => (
-            <tr key={`${log.timeTag}-${log.type}-${index}`} className="border-t border-[#273449] bg-[#111827] text-[#cbd5e1] even:bg-[#0f172a]">
-              <td className="px-3 py-2 font-mono tabular-nums text-[#94a3b8]">{log.timeTag}</td>
-              <td className="px-3 py-2">{log.type}</td>
-              <td data-vor-field-id={`alarmLogs.${index}.alarm`} data-vor-field-label={`Nội dung Alarm dòng ${index + 1}`} data-vor-field-value={String(resolveVorField(log.alarm, `alarmLogs.${index}.alarm`, overrides))} data-vor-field-type="string" className="px-3 py-2">{resolveVorField(log.alarm, `alarmLogs.${index}.alarm`, overrides)}</td>
-              <td className={`px-3 py-2 font-semibold ${log.state === "Alarm" ? "text-[#ef4444]" : "text-[#22c55e]"}`}>{log.state}</td>
-            </tr>
-          ))}
+          {logs.map((log, index) => {
+            const prefix = `alarmLogs.${index}`;
+            const timeTag = resolveVorField(log.timeTag, `${prefix}.timeTag`, overrides);
+            const type = resolveVorField(log.type, `${prefix}.type`, overrides);
+            const alarm = resolveVorField(log.alarm, `${prefix}.alarm`, overrides);
+            const state = resolveVorField(log.state, `${prefix}.state`, overrides);
+            const stateStatus = resolveVorStatus(
+              state === "Normal" ? "normal" : "alarm",
+              `${prefix}.state`,
+              overrides,
+            );
+            return (
+              <tr key={`${log.timeTag}-${log.type}-${index}`} className="border-t border-[#273449] bg-[#111827] text-[#cbd5e1] even:bg-[#0f172a]">
+                <td data-vor-field-id={`${prefix}.timeTag`} data-vor-field-label={`Time Tag dòng ${index + 1}`} data-vor-field-value={String(timeTag)} data-vor-field-type="string" className="px-3 py-2 font-mono tabular-nums text-[#94a3b8]">{timeTag}</td>
+                <td data-vor-field-id={`${prefix}.type`} data-vor-field-label={`Type dòng ${index + 1}`} data-vor-field-value={String(type)} data-vor-field-type="string" className="px-3 py-2">{type}</td>
+                <td data-vor-field-id={`${prefix}.alarm`} data-vor-field-label={`Nội dung Alarm dòng ${index + 1}`} data-vor-field-value={String(alarm)} data-vor-field-type="string" className="px-3 py-2">{alarm}</td>
+                <td data-vor-field-id={`${prefix}.state`} data-vor-field-label={`State Alarm dòng ${index + 1}`} data-vor-field-value={String(state)} data-vor-field-type="string" data-vor-field-status={stateStatus} className={`px-3 py-2 font-semibold ${stateStatus === "alarm" ? "text-[#ef4444]" : "text-[#22c55e]"}`}>{state}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

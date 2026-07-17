@@ -15,14 +15,22 @@ export function RmsLogsMaintenance() {
           <tr><th className="w-44 px-3 py-2">Time Tag</th><th className="w-36 px-3 py-2">Type</th><th className="px-3 py-2">Alert</th><th className="w-24 px-3 py-2">State</th></tr>
         </thead>
         <tbody>
-          {logs.map((log, index) => (
-            <tr key={`${log.timeTag}-${log.type}-${index}`} className="border-t border-[#273449] bg-[#111827] text-[#cbd5e1] even:bg-[#0f172a]">
-              <td className="px-3 py-2 font-mono tabular-nums text-[#94a3b8]">{log.timeTag}</td>
-              <td className="px-3 py-2">{log.type}</td>
-              <td {...dmeFieldMetadata(`maintenanceLogs.${index}.alert`, `Nội dung Maintenance Alert dòng ${index + 1}`, resolveDmeField(log.alert, `maintenanceLogs.${index}.alert`, overrides))} className="px-3 py-2">{resolveDmeField(log.alert, `maintenanceLogs.${index}.alert`, overrides)}</td>
-              <td className="p-1"><DmeValueCell fieldId={`maintenanceLogs.${index}.state`} label={`${log.alert} state`} value={log.state} status={log.state === "Normal" ? "normal" : "warning"} className="w-full" /></td>
-            </tr>
-          ))}
+          {logs.map((log, index) => {
+            const prefix = `maintenanceLogs.${index}`;
+            const timeTag = resolveDmeField(log.timeTag, `${prefix}.timeTag`, overrides);
+            const type = resolveDmeField(log.type, `${prefix}.type`, overrides);
+            const alert = resolveDmeField(log.alert, `${prefix}.alert`, overrides);
+            const state = resolveDmeField(log.state, `${prefix}.state`, overrides);
+            const stateStatus = state === "Normal" ? "normal" : "warning";
+            return (
+              <tr key={`${log.timeTag}-${log.type}-${index}`} className="border-t border-[#273449] bg-[#111827] text-[#cbd5e1] even:bg-[#0f172a]">
+                <td {...dmeFieldMetadata(`${prefix}.timeTag`, `Time Tag dòng ${index + 1}`, timeTag)} className="px-3 py-2 font-mono tabular-nums text-[#94a3b8]">{timeTag}</td>
+                <td {...dmeFieldMetadata(`${prefix}.type`, `Type dòng ${index + 1}`, type)} className="px-3 py-2">{type}</td>
+                <td {...dmeFieldMetadata(`${prefix}.alert`, `Nội dung Maintenance Alert dòng ${index + 1}`, alert)} className="px-3 py-2">{alert}</td>
+                <td className="p-1"><DmeValueCell fieldId={`${prefix}.state`} label={`State Maintenance Alert dòng ${index + 1}`} value={state} status={stateStatus} className="w-full" /></td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

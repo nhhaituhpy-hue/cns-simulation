@@ -546,16 +546,16 @@ Khi bổ sung ảnh mới, thêm từng dòng theo mẫu:
 Khi baseline thay đổi, cập nhật con số tại đây nhưng không xóa lịch sử quyết định quan trọng ở `docs/DECISIONS.md`.
 
 
-### 8.1 Tùy chỉnh nội dung RMS Logs theo kịch bản
+## 19. Tùy chỉnh các trường RMS Logs theo kịch bản
 
-Trong author mode, admin có thể chọn trực tiếp nội dung ở cột `Alarm` hoặc `Alert` của các màn hình `RMS > Logs > Alarms` và `RMS > Logs > Maintenance Alerts`. Nội dung mới được lưu dưới dạng override, ví dụ `alarmLogs.0.alarm` hoặc `maintenanceLogs.0.alert`.
+Trong author mode, admin có thể chọn trực tiếp `Time Tag`, `Type`, `Alarm`/`Alert` và `State` của các màn hình `RMS > Logs > Alarms` và `RMS > Logs > Maintenance Alerts`. Giá trị mới được lưu dưới dạng override, ví dụ `alarmLogs.0.timeTag`, `alarmLogs.0.type`, `alarmLogs.0.alarm`, `alarmLogs.0.state` hoặc các field tương ứng trong `maintenanceLogs`.
 
 Quy trình sử dụng:
 
 1. Mở màn hình RMS Logs cần đưa vào tình huống.
-2. Chọn nội dung Alarm/Alert trên một dòng log có sẵn.
-3. Nhập nội dung giả định trong panel tạo kịch bản và nhấn `Áp dụng`.
+2. Chọn trường cần thay đổi trên một dòng log có sẵn.
+3. Nhập giá trị giả định trong panel tạo kịch bản và nhấn `Áp dụng`. `Time Tag` dùng định dạng `DD/MM/YYYY HH:mm:ss`; `State` được chọn từ danh sách hợp lệ và màu được đồng bộ tự động.
 4. Thêm màn hình hiện tại làm checkpoint nếu đây là bước học viên cần kiểm tra.
 5. Lưu kịch bản. Khi student làm bài, cùng override được nạp vào PMDT và nội dung tùy chỉnh xuất hiện tại đúng dòng log.
 
-Không thêm, xóa hoặc đổi thứ tự các dòng log mặc định vì index dòng là một phần của field ID đã lưu.
+State hợp lệ của VOR là `Normal`/`Alarm` cho Alarms và `Normal`/`Alert` cho Maintenance Alerts. Không thêm, xóa hoặc đổi thứ tự các dòng log mặc định vì index dòng là một phần của field ID đã lưu.

@@ -33,6 +33,23 @@ interface DmeAuthorPanelProps {
 }
 
 const statusOptions = ["green", "yellow", "red", "gray", "normal", "warning", "alarm"] as const;
+const logTimeTagPattern = /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$/;
+
+function getLogStateOptions(fieldId: string): readonly string[] | null {
+  if (/^alarmLogs\.\d+\.state$/.test(fieldId)) {
+    return ["Normal", "Pre-Alarm", "Primary Alarm Low", "Alarm"];
+  }
+  if (/^maintenanceLogs\.\d+\.state$/.test(fieldId)) {
+    return ["Normal", "Pre-Alert", "Alert"];
+  }
+  return null;
+}
+
+function getLogStateStatus(value: string): DmeParameterStatus {
+  if (value === "Normal") return "normal";
+  if (value === "Pre-Alarm" || value === "Pre-Alert") return "warning";
+  return "alarm";
+}
 
 export function DmeAuthorPanel({
   draft,
@@ -54,10 +71,17 @@ export function DmeAuthorPanel({
   );
   const [fieldChecked, setFieldChecked] = useState(selectedField?.value === true);
   const [fieldStatus, setFieldStatus] = useState(selectedField?.status ?? "");
+  const [fieldError, setFieldError] = useState<string | null>(null);
   const interactionTargets = getSidebarInteractionTargets(overrides);
+  const logStateOptions = selectedField ? getLogStateOptions(selectedField.fieldId) : null;
+  const isLogTimeTag = selectedField ? /^(alarmLogs|maintenanceLogs)\.\d+\.timeTag$/.test(selectedField.fieldId) : false;
 
   function applyField() {
     if (!selectedField) return;
+    if (isLogTimeTag && !logTimeTagPattern.test(fieldValue.trim())) {
+      setFieldError("Time Tag phải có định dạng DD/MM/YYYY HH:mm:ss.");
+      return;
+    }
     let value: DmeEditableValue = fieldValue;
     if (typeof selectedField.value === "boolean") value = fieldChecked;
     if (typeof selectedField.value === "number") {
@@ -65,12 +89,13 @@ export function DmeAuthorPanel({
       if (!Number.isFinite(parsed)) return;
       value = parsed;
     }
-    onApplyField(
-      value,
-      fieldStatus
+    setFieldError(null);
+    const status = logStateOptions
+      ? getLogStateStatus(String(value))
+      : fieldStatus
         ? (fieldStatus as DmeIndicatorColor | DmeParameterStatus)
-        : undefined,
-    );
+        : undefined;
+    onApplyField(value, status);
   }
 
   return (
@@ -99,12 +124,15 @@ export function DmeAuthorPanel({
                 Đây là trạng thái đích học viên phải thao tác. Trong bài làm, ô bắt đầu màu xám và chỉ đổi sang màu đã chọn sau khi học viên nhấn.
               </p>
             ) : null}
-            {typeof selectedField.value === "boolean" ? (
+            {logStateOptions ? (
+              <label className="grid gap-1 text-[10px] text-[#94a3b8]">Giá trị State<select value={fieldValue} onChange={(event) => setFieldValue(event.target.value)} className="h-8 border border-[#475569] bg-[#0f172a] px-2 text-xs text-white">{logStateOptions.map((state) => <option key={state} value={state}>{state}</option>)}</select></label>
+            ) : typeof selectedField.value === "boolean" ? (
               <label className="flex items-center gap-2"><input type="checkbox" checked={fieldChecked} onChange={(event) => setFieldChecked(event.target.checked)} />Bật trạng thái</label>
             ) : (
-              <label className="grid gap-1 text-[10px] text-[#94a3b8]">Giá trị<input type={typeof selectedField.value === "number" ? "number" : "text"} step="any" value={fieldValue} onChange={(event) => setFieldValue(event.target.value)} className="h-8 border border-[#475569] bg-[#0f172a] px-2 font-mono text-xs text-white" /></label>
+              <label className="grid gap-1 text-[10px] text-[#94a3b8]">{isLogTimeTag ? "Time Tag (DD/MM/YYYY HH:mm:ss)" : "Giá trị"}<input type={typeof selectedField.value === "number" ? "number" : "text"} step="any" value={fieldValue} onChange={(event) => setFieldValue(event.target.value)} className="h-8 border border-[#475569] bg-[#0f172a] px-2 font-mono text-xs text-white" /></label>
             )}
-            <label className="grid gap-1 text-[10px] text-[#94a3b8]">Màu / trạng thái<select value={fieldStatus} onChange={(event) => setFieldStatus(event.target.value)} className="h-8 border border-[#475569] bg-[#0f172a] px-2 text-xs text-white"><option value="">Giữ nguyên</option>{statusOptions.map((status) => <option key={status} value={status}>{status}</option>)}</select></label>
+            {logStateOptions ? null : <label className="grid gap-1 text-[10px] text-[#94a3b8]">Màu / trạng thái<select value={fieldStatus} onChange={(event) => setFieldStatus(event.target.value)} className="h-8 border border-[#475569] bg-[#0f172a] px-2 text-xs text-white"><option value="">Giữ nguyên</option>{statusOptions.map((status) => <option key={status} value={status}>{status}</option>)}</select></label>}
+            {fieldError ? <p role="alert" className="text-[10px] text-[#fca5a5]">{fieldError}</p> : null}
             <div className="flex gap-2"><button type="button" onClick={applyField} className="h-8 flex-1 bg-[#1e40af] px-3 font-semibold text-white">Áp dụng</button><button type="button" onClick={onRemoveField} title="Xóa giá trị ghi đè" className="grid size-8 place-items-center border border-[#7f1d1d] text-[#fca5a5]"><Trash aria-hidden size={14} /></button></div>
           </div>
         ) : <p className="mt-2 text-[10px] leading-5 text-[#94a3b8]">Chọn một ô giá trị hoặc trạng thái trên màn hình PMDT.</p>}
