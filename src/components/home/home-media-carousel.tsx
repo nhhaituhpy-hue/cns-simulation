@@ -1,7 +1,6 @@
 "use client";
 
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
-import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 type HomeMediaCarouselProps = {
@@ -9,12 +8,6 @@ type HomeMediaCarouselProps = {
 };
 
 const mediaItems = [
-  {
-    id: "cns-cover",
-    kind: "image",
-    label: "Trạm dẫn đường vô tuyến và giám sát hàng không tại khu vực ven biển",
-    imageUrl: "/images/cns-image.webp",
-  },
   { id: "examiner-vor", kind: "video", label: "Hướng dẫn Giám khảo VOR", file: "huong-dan-giam-khao-vor" },
   { id: "examiner-dme", kind: "video", label: "Hướng dẫn Giám khảo DME", file: "huong-dan-giam-khao-dme" },
   { id: "examiner-ads-b", kind: "video", label: "Hướng dẫn Giám khảo ADS-B", file: "huong-dan-giam-khao-ads-b" },
@@ -30,13 +23,11 @@ function joinAssetUrl(baseUrl: string, fileName: string) {
 export function HomeMediaCarousel({ baseUrl }: HomeMediaCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const items = useMemo(
-    () => mediaItems.map((item) => item.kind === "image"
-      ? item
-      : {
-          ...item,
-          videoUrl: joinAssetUrl(baseUrl, `${item.file}.mp4`),
-          posterUrl: joinAssetUrl(baseUrl, `${item.file}.webp`),
-        }),
+    () => mediaItems.map((item) => ({
+      ...item,
+      videoUrl: joinAssetUrl(baseUrl, `${item.file}.mp4`),
+      posterUrl: joinAssetUrl(baseUrl, `${item.file}.webp`),
+    })),
     [baseUrl],
   );
   const activeItem = items[activeIndex];
@@ -53,7 +44,7 @@ export function HomeMediaCarousel({ baseUrl }: HomeMediaCarouselProps) {
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => {
       void Promise.allSettled(
-        items.flatMap((item) => item.kind === "video" ? [item.posterUrl, item.videoUrl] : []).map(async (url) => {
+        items.flatMap((item) => [item.posterUrl, item.videoUrl]).map(async (url) => {
           const response = await fetch(url, {
             cache: "force-cache",
             mode: "cors",
@@ -75,29 +66,18 @@ export function HomeMediaCarousel({ baseUrl }: HomeMediaCarouselProps) {
       className="relative h-full min-h-0 overflow-hidden rounded-xl bg-[#07111b]"
       data-cache-strategy="supabase-immutable"
     >
-      {activeItem.kind === "image" ? (
-        <Image
-          src={activeItem.imageUrl}
-          alt={activeItem.label}
-          fill
-          preload
-          sizes="(max-width: 1023px) 100vw, 52vw"
-          className="object-cover object-[64%_center]"
-        />
-      ) : (
-        <video
-          key={activeItem.id}
-          aria-label={activeItem.label}
-          className="h-full w-full object-contain"
-          poster={activeItem.posterUrl}
-          playsInline
-          controls
-          preload="metadata"
-        >
-          <source src={activeItem.videoUrl} type="video/mp4" />
-          Trình duyệt không hỗ trợ phát video MP4.
-        </video>
-      )}
+      <video
+        key={activeItem.id}
+        aria-label={activeItem.label}
+        className="h-full w-full object-contain"
+        poster={activeItem.posterUrl}
+        playsInline
+        controls
+        preload="metadata"
+      >
+        <source src={activeItem.videoUrl} type="video/mp4" />
+        Trình duyệt không hỗ trợ phát video MP4.
+      </video>
 
       <button
         type="button"
