@@ -1,4 +1,4 @@
-﻿import { cloneDefaultDmePmdtData } from "@/lib/dme-pmdt-defaults";
+import { cloneDefaultDmePmdtData } from "@/lib/dme-pmdt-defaults";
 import type {
   DmeAttemptEvent,
   DmeEditableValue,
@@ -82,6 +82,7 @@ export interface DmePmdtStoreActions {
     resultStatus: DmeIndicatorColor | DmeParameterStatus,
   ) => void;
   updateEventAnnotation: (eventId: string, annotation: string) => void;
+  removeEvent: (eventId: string) => void;
   updateAnswer: (changes: Partial<DmeStudentAnswer>) => void;
   reset: () => void;
 }
@@ -286,6 +287,17 @@ export function createDmePmdtStore(
             event.id === eventId ? { ...event, annotation } : event,
           ),
         })),
+      
+      removeEvent: (eventId) =>
+        set((state) => {
+          const filtered = state.attemptEvents.filter((event) => event.id !== eventId);
+          return {
+            attemptEvents: filtered.map((event, index) => ({
+              ...event,
+              sequence: index + 1,
+            })),
+          };
+        }),
 
       updateAnswer: (changes) =>
         set((state) => ({ answer: { ...state.answer, ...changes } })),

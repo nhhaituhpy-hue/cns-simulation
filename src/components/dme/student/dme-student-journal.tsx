@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { CheckCircle, ClipboardText } from "@phosphor-icons/react";
+import { CheckCircle, ClipboardText, X } from "@phosphor-icons/react";
 import { useState } from "react";
 import type { DmeScenario } from "@/lib/dme-types";
 import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
@@ -16,6 +16,7 @@ export function DmeStudentJournal({ scenario, isSubmitting, onSubmit, onContinue
   const events = useDmePmdtStore((state) => state.attemptEvents);
   const answer = useDmePmdtStore((state) => state.answer);
   const updateEventAnnotation = useDmePmdtStore((state) => state.updateEventAnnotation);
+  const removeEvent = useDmePmdtStore((state) => state.removeEvent);
   const updateAnswer = useDmePmdtStore((state) => state.updateAnswer);
   const [error, setError] = useState("");
 
@@ -59,8 +60,16 @@ export function DmeStudentJournal({ scenario, isSubmitting, onSubmit, onContinue
           ) : (
             <ol className="mt-3 space-y-3">
               {events.map((event) => (
-                <li key={event.id} className="rounded border border-[#334155] bg-[#0f172a] p-3">
-                  <div className="flex gap-2">
+                <li key={event.id} className="relative rounded border border-[#334155] bg-[#0f172a] p-3">
+                  <button
+                    type="button"
+                    onClick={() => removeEvent(event.id)}
+                    className="absolute right-2 top-2 p-1 text-[#64748b] hover:text-[#ef4444] rounded hover:bg-[#1e293b] transition-colors"
+                    title="Xóa thao tác này"
+                  >
+                    <X size={14} />
+                  </button>
+                  <div className="flex gap-2 pr-6">
                     <span className="font-mono text-[10px] text-[#60a5fa]">{String(event.sequence).padStart(2, "0")}</span>
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-semibold text-white">{event.title}</p>

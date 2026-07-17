@@ -80,6 +80,7 @@ export interface VorPmdtStoreActions {
     resultStatus: VorIndicatorColor | VorParameterStatus,
   ) => void;
   updateEventAnnotation: (eventId: string, annotation: string) => void;
+  removeEvent: (eventId: string) => void;
   updateAnswer: (changes: Partial<VorStudentAnswer>) => void;
   reset: () => void;
 }
@@ -284,6 +285,17 @@ export function createVorPmdtStore(
             event.id === eventId ? { ...event, annotation } : event,
           ),
         })),
+      
+      removeEvent: (eventId) =>
+        set((state) => {
+          const filtered = state.attemptEvents.filter((event) => event.id !== eventId);
+          return {
+            attemptEvents: filtered.map((event, index) => ({
+              ...event,
+              sequence: index + 1,
+            })),
+          };
+        }),
 
       updateAnswer: (changes) =>
         set((state) => ({ answer: { ...state.answer, ...changes } })),
