@@ -9,9 +9,10 @@ interface VorStudentJournalProps {
   scenario: VorScenario;
   isSubmitting: boolean;
   onSubmit: () => Promise<void>;
+  onContinue?: () => void;
 }
 
-export function VorStudentJournal({ scenario, isSubmitting, onSubmit }: VorStudentJournalProps) {
+export function VorStudentJournal({ scenario, isSubmitting, onSubmit, onContinue }: VorStudentJournalProps) {
   const events = useVorPmdtStore((state) => state.attemptEvents);
   const answer = useVorPmdtStore((state) => state.answer);
   const updateEventAnnotation = useVorPmdtStore((state) => state.updateEventAnnotation);
@@ -28,6 +29,10 @@ export function VorStudentJournal({ scenario, isSubmitting, onSubmit }: VorStude
       return;
     }
     setError("");
+    if (onContinue) {
+      onContinue();
+      return;
+    }
     await onSubmit();
   }
 
@@ -100,7 +105,7 @@ export function VorStudentJournal({ scenario, isSubmitting, onSubmit }: VorStude
           className="inline-flex h-10 w-full items-center justify-center gap-2 rounded bg-[#2563eb] px-4 text-xs font-bold text-white hover:bg-[#1d4ed8] disabled:cursor-wait disabled:opacity-60"
         >
           <CheckCircle aria-hidden size={17} />
-          {isSubmitting ? "Đang nộp…" : "Nộp bài cho giám khảo"}
+          {isSubmitting ? "Đang nộp…" : onContinue ? "Tiếp tục: Xác định phần cứng" : "Nộp bài cho giám khảo"}
         </button>
       </footer>
     </div>

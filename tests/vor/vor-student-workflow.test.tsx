@@ -30,6 +30,11 @@ const scenario: VorScenario = {
     required: true,
     points: 20,
   }],
+  hardwareTask: {
+    expectedComponentIds: ["vor-carrier-amp-1"],
+    faultType: "Mất tín hiệu",
+    adminNote: "Đối chiếu công suất TX1.",
+  },
 };
 
 describe("VOR student workflow", () => {
@@ -84,6 +89,11 @@ describe("VOR student workflow", () => {
     await user.type(screen.getByLabelText("Vị trí / sự cố nghi ngờ"), "Khối PA Tx #1");
     await user.type(screen.getByLabelText("Căn cứ chẩn đoán"), "Công suất đo được bằng 0");
     await user.type(screen.getByLabelText("Hướng khắc phục"), "Kiểm tra nguồn và PA");
+    await user.click(screen.getByRole("button", { name: "Tiếp tục: Xác định phần cứng" }));
+    expect(screen.getByRole("heading", { name: "Sơ đồ khối VOR" })).toBeInTheDocument();
+    await user.click(screen.getByRole("tab", { name: "Transmitter / RF Path" }));
+    await user.click(screen.getByRole("button", { name: /Carrier Amplifier TX1, TX1/ }));
+    await user.type(screen.getByLabelText("Căn cứ lựa chọn"), "Đường carrier TX1 không có công suất ra.");
     await user.click(screen.getByRole("button", { name: "Nộp bài cho giám khảo" }));
 
     await waitFor(() => expect(screen.getByRole("heading", { name: "Đã nộp bài VOR" })).toBeInTheDocument());
@@ -94,6 +104,10 @@ describe("VOR student workflow", () => {
       studentCode: "HV001",
       status: "submitted",
       answer: { suspectedFault: "Khối PA Tx #1" },
+      hardwareAnswer: {
+        selectedComponentIds: ["vor-carrier-amp-1"],
+        reasoning: "Đường carrier TX1 không có công suất ra.",
+      },
       events: expect.arrayContaining([
         expect.objectContaining({ eventType: "sidebar", fieldId: "local", resultStatus: "yellow" }),
         expect.objectContaining({ eventType: "sidebar", fieldId: "monitorIntegral.bypass", resultStatus: "yellow" }),

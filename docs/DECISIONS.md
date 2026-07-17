@@ -59,3 +59,11 @@ The three vendor manuals are reference inputs and are not copied into the reposi
 4. Local, Integral Bypass, and Standby Bypass are explicit student interactions. They start from the normal state and record their resulting value/status as evidence.
 5. The shared PMDT function-key toolbar is omitted. RMS Logs keeps its own Update and Reset controls because these belong to the log screen rather than F5-F8 navigation.
 6. DME persistence uses `dme_scenarios` and `dme_submissions`. Migration `202607170001` was applied to the linked Supabase project on 2026-07-17.
+
+## VOR/DME hardware diagnosis step
+
+1. Hardware diagnosis is an optional second step so existing scenarios and submissions remain valid.
+2. VOR and DME share only the diagram schema, renderer, task editor, student workspace, and review primitive. Their component inventories and stable IDs remain separate.
+3. A scenario may expect multiple components. Examiner comparison reports matches, omissions, and extra selections but never changes the manual 0-100 score automatically.
+4. Vendor block-diagram images are reference inputs only and are not copied into the repository; the application renders an original interactive topology.
+5. Scenario `hardware_task` and submission `hardware_answer` use separate JSONB columns rather than overloading PMDT overrides or written answers.

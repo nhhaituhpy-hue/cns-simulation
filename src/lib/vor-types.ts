@@ -1,3 +1,5 @@
+import type { HardwareDiagnosisAnswer, HardwareDiagnosisTask } from "./equipment-diagram-types";
+
 export const VOR_INDICATOR_COLORS = ["green", "yellow", "red", "gray"] as const;
 export type VorIndicatorColor = (typeof VOR_INDICATOR_COLORS)[number];
 
@@ -261,6 +263,7 @@ export interface VorScenario {
   updatedAt?: string;
   overrides: VorFieldOverride[];
   expectedCheckpoints: VorExpectedCheckpoint[];
+  hardwareTask?: HardwareDiagnosisTask;
 }
 
 export interface VorAttemptEvent {
@@ -295,6 +298,7 @@ export interface VorSubmission {
   reviewedAt?: string;
   events: VorAttemptEvent[];
   answer: VorStudentAnswer;
+  hardwareAnswer?: HardwareDiagnosisAnswer;
   score?: number;
   examinerComment?: string;
 }

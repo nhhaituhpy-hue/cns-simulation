@@ -26,6 +26,8 @@
 - [x] DME scenario authoring, student journal, sidebar interactions, and examiner review
 - [x] Separate DME local/API/Supabase persistence and applied database migration
 - [x] Desktop and mobile Chromium coverage for DME simulator navigation and function-key removal
+- [x] Independent scrolling for the complete VOR/DME scenario-authoring panel
+- [x] Optional VOR/DME hardware diagnosis step for admin, student, persistence, and examiner review
 
 ## Required quality gates
 
@@ -37,6 +39,17 @@
 
 ## Latest verification
 
+Verified on 2026-07-17 after the VOR/DME hardware-diagnosis implementation:
+
+- ESLint: passed
+- TypeScript: passed
+- Vitest: 42 files, 179 tests passed
+- Production build: passed with 31 routes
+- Browser visual QA: pending because no browser backend was available in this session
+- Supabase migration `202607170002_add_vor_dme_hardware_diagnosis.sql`: applied to the linked project on 2026-07-17
+
+Previous baseline:
+
 Verified on 2026-07-17 after the DME PMDT implementation:
 
 - ESLint: passed
@@ -47,7 +60,7 @@ Verified on 2026-07-17 after the DME PMDT implementation:
 - Supabase migration `202607170001_create_dme_training.sql`: applied to the linked project
 - DME source and maintenance notes: `docs/HD-PMDT-Simulator-DME.md`
 
-Previous baseline:
+Earlier baseline:
 
 Verified on 2026-07-16 with Node.js 24 after the VOR sidebar and module-routing upgrade:
 

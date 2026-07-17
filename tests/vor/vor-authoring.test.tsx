@@ -27,6 +27,14 @@ describe("VOR scenario authoring", () => {
     const user = userEvent.setup();
     render(<VorScenarioAuthor />);
 
+    expect(screen.getByRole("complementary", { name: "Bảng xây dựng kịch bản" })).toHaveClass(
+      "overflow-y-auto",
+      "overscroll-contain",
+    );
+    expect(screen.getByRole("region", { name: "VOR PMDT Simulator" })).toHaveClass(
+      "h-[calc(100dvh-4rem)]",
+    );
+
     await user.click(screen.getByRole("button", { name: "Transmitters" }));
     await user.click(screen.getByRole("menuitem", { name: "Data" }));
     fireEvent.pointerDown(screen.getByText("98.8"));
@@ -105,5 +113,19 @@ describe("VOR scenario authoring", () => {
       value: "Alarm",
       status: "alarm",
     });
+  });
+
+  it("configures an expected faulty block for the optional second step", async () => {
+    const user = userEvent.setup();
+    render(<VorScenarioAuthor />);
+
+    await user.click(screen.getByRole("button", { name: "Cấu hình" }));
+    await user.click(screen.getByRole("checkbox", { name: "Bật bước xác định phần cứng cho kịch bản này" }));
+    await user.click(screen.getByRole("tab", { name: "Transmitter / RF Path" }));
+    await user.click(screen.getByRole("button", { name: /Carrier Amplifier TX1, TX1/ }));
+    await user.click(screen.getByRole("button", { name: "Hoàn tất cấu hình" }));
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByText("1 block đã chọn · Suy giảm")).toBeInTheDocument();
   });
 });

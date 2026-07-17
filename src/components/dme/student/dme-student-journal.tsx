@@ -9,9 +9,10 @@ interface DmeStudentJournalProps {
   scenario: DmeScenario;
   isSubmitting: boolean;
   onSubmit: () => Promise<void>;
+  onContinue?: () => void;
 }
 
-export function DmeStudentJournal({ scenario, isSubmitting, onSubmit }: DmeStudentJournalProps) {
+export function DmeStudentJournal({ scenario, isSubmitting, onSubmit, onContinue }: DmeStudentJournalProps) {
   const events = useDmePmdtStore((state) => state.attemptEvents);
   const answer = useDmePmdtStore((state) => state.answer);
   const updateEventAnnotation = useDmePmdtStore((state) => state.updateEventAnnotation);
@@ -28,6 +29,10 @@ export function DmeStudentJournal({ scenario, isSubmitting, onSubmit }: DmeStude
       return;
     }
     setError("");
+    if (onContinue) {
+      onContinue();
+      return;
+    }
     await onSubmit();
   }
 
@@ -100,7 +105,7 @@ export function DmeStudentJournal({ scenario, isSubmitting, onSubmit }: DmeStude
           className="inline-flex h-10 w-full items-center justify-center gap-2 rounded bg-[#2563eb] px-4 text-xs font-bold text-white hover:bg-[#1d4ed8] disabled:cursor-wait disabled:opacity-60"
         >
           <CheckCircle aria-hidden size={17} />
-          {isSubmitting ? "Đang nộp…" : "Nộp bài cho giám khảo"}
+          {isSubmitting ? "Đang nộp…" : onContinue ? "Tiếp tục: Xác định phần cứng" : "Nộp bài cho giám khảo"}
         </button>
       </footer>
     </div>

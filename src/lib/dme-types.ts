@@ -1,3 +1,5 @@
+import type { HardwareDiagnosisAnswer, HardwareDiagnosisTask } from "./equipment-diagram-types";
+
 export const DME_INDICATOR_COLORS = ["green", "yellow", "red", "gray"] as const;
 export type DmeIndicatorColor = (typeof DME_INDICATOR_COLORS)[number];
 
@@ -276,6 +278,7 @@ export interface DmeScenario {
   updatedAt?: string;
   overrides: DmeFieldOverride[];
   expectedCheckpoints: DmeExpectedCheckpoint[];
+  hardwareTask?: HardwareDiagnosisTask;
 }
 
 export interface DmeAttemptEvent {
@@ -310,6 +313,7 @@ export interface DmeSubmission {
   reviewedAt?: string;
   events: DmeAttemptEvent[];
   answer: DmeStudentAnswer;
+  hardwareAnswer?: HardwareDiagnosisAnswer;
   score?: number;
   examinerComment?: string;
 }

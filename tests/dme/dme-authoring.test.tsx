@@ -25,6 +25,14 @@ describe("DME scenario authoring", () => {
     const user = userEvent.setup();
     render(<DmeScenarioAuthor />);
 
+    expect(screen.getByRole("complementary", { name: "Bảng xây dựng kịch bản" })).toHaveClass(
+      "overflow-y-auto",
+      "overscroll-contain",
+    );
+    expect(screen.getByRole("region", { name: "DME PMDT Simulator" })).toHaveClass(
+      "h-[calc(100dvh-4rem)]",
+    );
+
     await user.click(screen.getByRole("button", { name: "RMS" }));
     await user.click(screen.getByRole("menuitem", { name: "Logs" }));
     fireEvent.pointerDown(
@@ -41,5 +49,16 @@ describe("DME scenario authoring", () => {
       value: "Primary Alarm Low",
       status: "alarm",
     });
+  });
+
+  it("opens the DME hardware diagnosis configuration", async () => {
+    const user = userEvent.setup();
+    render(<DmeScenarioAuthor />);
+
+    await user.click(screen.getByRole("button", { name: "Cấu hình" }));
+    await user.click(screen.getByRole("checkbox", { name: "Bật bước xác định phần cứng cho kịch bản này" }));
+    await user.click(screen.getByRole("button", { name: /High Power Amplifier TX1, TX1/ }));
+
+    expect(screen.getByText("Đã chọn 1 block phần cứng.")).toBeInTheDocument();
   });
 });

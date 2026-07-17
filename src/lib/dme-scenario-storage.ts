@@ -6,6 +6,7 @@
   type DmeScenario,
   type DmeViewId,
 } from "./dme-types";
+import { isHardwareDiagnosisTask, type HardwareDiagnosisTask } from "./equipment-diagram-types";
 
 export const DME_SCENARIO_STORAGE_KEY = "cns-training:dme-scenarios";
 export const DME_SCENARIO_STORAGE_VERSION = 1 as const;
@@ -93,7 +94,8 @@ export function isDmeScenario(value: unknown): value is DmeScenario {
     (value.updatedAt === undefined || isString(value.updatedAt)) &&
     Array.isArray(value.overrides) && value.overrides.every(isOverride) &&
     Array.isArray(value.expectedCheckpoints) &&
-    value.expectedCheckpoints.every(isCheckpoint)
+    value.expectedCheckpoints.every(isCheckpoint) &&
+    (value.hardwareTask === undefined || isHardwareDiagnosisTask(value.hardwareTask))
   );
 }
 
@@ -151,6 +153,7 @@ export function mapRowToDmeScenario(row: unknown): DmeScenario {
     prompt: requiredString(row, "prompt"),
     overrides: jsonField(row, "overrides") as DmeFieldOverride[],
     expectedCheckpoints: jsonField(row, "expected_checkpoints") as DmeExpectedCheckpoint[],
+    ...(row.hardware_task ? { hardwareTask: jsonField(row, "hardware_task") as HardwareDiagnosisTask } : {}),
     createdAt: requiredString(row, "created_at"),
     ...(row.updated_at ? { updatedAt: requiredString(row, "updated_at") } : {}),
   };
@@ -168,6 +171,7 @@ export function dmeScenarioToRow(scenario: DmeScenario) {
     prompt: scenario.prompt,
     overrides: scenario.overrides,
     expected_checkpoints: scenario.expectedCheckpoints,
+    hardware_task: scenario.hardwareTask ?? null,
     created_at: scenario.createdAt,
     updated_at: scenario.updatedAt ?? null,
   };

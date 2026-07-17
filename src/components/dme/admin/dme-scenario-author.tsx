@@ -4,6 +4,8 @@ import { ArrowLeft } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type PointerEvent } from "react";
+import { HardwareTaskEditor } from "@/components/hardware/hardware-task-editor";
+import { DME_EQUIPMENT_DIAGRAMS } from "@/lib/dme-hardware-model";
 import type {
   DmeEditableValue,
   DmeFieldOverride,
@@ -133,12 +135,16 @@ function DmeScenarioAuthorEditor({
             ...item,
             menuPath: [...item.menuPath],
           })),
+          ...(initialScenario.hardwareTask
+            ? { hardwareTask: structuredClone(initialScenario.hardwareTask) }
+            : {}),
         }
       : { ...emptyDraft, overrides: [], expectedCheckpoints: [] },
   );
   const [selectedField, setSelectedField] = useState<DmeSelectedField | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hardwareEditorOpen, setHardwareEditorOpen] = useState(false);
   useEffect(() => {
     initializeSession({
       mode: "author",
@@ -188,6 +194,10 @@ function DmeScenarioAuthorEditor({
       setError("Hãy thêm ít nhất một màn hình hoặc thao tác sidebar cần kiểm tra.");
       return;
     }
+    if (metadata.hardwareTask && metadata.hardwareTask.expectedComponentIds.length === 0) {
+      setError("Hãy chọn ít nhất một block phần cứng cho bước 2.");
+      return;
+    }
 
     setSaving(true);
     setError(null);
@@ -225,6 +235,7 @@ function DmeScenarioAuthorEditor({
         if (!selectedField) return;
         removeOverride(selectedField.fieldId);
       }}
+      onOpenHardware={() => setHardwareEditorOpen(true)}
       onSave={() => void save()}
     />
   );
@@ -233,6 +244,23 @@ function DmeScenarioAuthorEditor({
     <div className="relative" onPointerDownCapture={selectField}>
       <Link href="/admin/dme" className="absolute left-3 top-2 z-[60] inline-flex h-7 items-center gap-1.5 border border-[#475569] bg-[#0f172a] px-2 text-[10px] font-semibold text-[#cbd5e1] hover:text-white"><ArrowLeft aria-hidden size={12} />Quản trị</Link>
       <PmdtLayout mode="author" sidePanel={panel} />
+      {hardwareEditorOpen ? (
+        <HardwareTaskEditor
+          title="DME"
+          diagrams={DME_EQUIPMENT_DIAGRAMS}
+          value={draft.hardwareTask}
+          onChange={(hardwareTask) => {
+            setDraft((current) => {
+              const next = { ...current };
+              if (hardwareTask) next.hardwareTask = hardwareTask;
+              else delete next.hardwareTask;
+              return next;
+            });
+            setError(null);
+          }}
+          onClose={() => setHardwareEditorOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }

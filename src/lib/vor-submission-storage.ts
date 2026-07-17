@@ -6,6 +6,7 @@ import type {
   VorSubmissionStatus,
   VorViewId,
 } from "./vor-types";
+import { isHardwareDiagnosisAnswer, type HardwareDiagnosisAnswer } from "./equipment-diagram-types";
 import type { VorStorageLike } from "./vor-scenario-storage";
 
 export const VOR_SUBMISSION_STORAGE_KEY = "cns-training:vor-submissions";
@@ -98,6 +99,7 @@ export function isVorSubmission(value: unknown): value is VorSubmission {
     validOptionalStrings &&
     Array.isArray(value.events) && value.events.every(isEvent) &&
     isAnswer(value.answer) &&
+    (value.hardwareAnswer === undefined || isHardwareDiagnosisAnswer(value.hardwareAnswer)) &&
     validScore &&
     (value.status === "draft" || isString(value.submittedAt)) &&
     (value.status !== "reviewed" || (isString(value.reviewedAt) && typeof value.score === "number"))
@@ -155,6 +157,7 @@ export function mapRowToVorSubmission(row: unknown): VorSubmission {
     startedAt: requiredString(row, "started_at"),
     events: jsonField(row, "events") as VorAttemptEvent[],
     answer: jsonField(row, "answer") as VorStudentAnswer,
+    ...(row.hardware_answer ? { hardwareAnswer: jsonField(row, "hardware_answer") as HardwareDiagnosisAnswer } : {}),
     ...(row.submitted_at ? { submittedAt: requiredString(row, "submitted_at") } : {}),
     ...(row.reviewed_at ? { reviewedAt: requiredString(row, "reviewed_at") } : {}),
     ...(typeof row.score === "number" ? { score: row.score } : {}),
@@ -177,6 +180,7 @@ export function vorSubmissionToRow(submission: VorSubmission) {
     reviewed_at: submission.reviewedAt ?? null,
     events: submission.events,
     answer: submission.answer,
+    hardware_answer: submission.hardwareAnswer ?? null,
     score: submission.score ?? null,
     examiner_comment: submission.examinerComment ?? null,
   };

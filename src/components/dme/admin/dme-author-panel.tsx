@@ -30,6 +30,7 @@ interface DmeAuthorPanelProps {
   onApplyField: (value: DmeEditableValue, status?: DmeIndicatorColor | DmeParameterStatus) => void;
   onRemoveField: () => void;
   onSave: () => void;
+  onOpenHardware: () => void;
 }
 
 const statusOptions = ["green", "yellow", "red", "gray", "normal", "warning", "alarm"] as const;
@@ -60,6 +61,7 @@ export function DmeAuthorPanel({
   onApplyField,
   onRemoveField,
   onSave,
+  onOpenHardware,
 }: DmeAuthorPanelProps) {
   const activeMenuPath = useDmePmdtStore((state) => state.activeMenuPath);
   const checkpoints = useDmePmdtStore((state) => state.expectedCheckpoints);
@@ -136,6 +138,11 @@ export function DmeAuthorPanel({
             <div className="flex gap-2"><button type="button" onClick={applyField} className="h-8 flex-1 bg-[#1e40af] px-3 font-semibold text-white">Áp dụng</button><button type="button" onClick={onRemoveField} title="Xóa giá trị ghi đè" className="grid size-8 place-items-center border border-[#7f1d1d] text-[#fca5a5]"><Trash aria-hidden size={14} /></button></div>
           </div>
         ) : <p className="mt-2 text-[10px] leading-5 text-[#94a3b8]">Chọn một ô giá trị hoặc trạng thái trên màn hình PMDT.</p>}
+      </section>
+
+      <section className="border-t border-[#334155] pt-3" aria-labelledby="dme-hardware-title">
+        <div className="flex items-center justify-between gap-2"><h3 id="dme-hardware-title" className="font-semibold text-[#e2e8f0]">Bước 2 - Phần cứng sự cố</h3><button type="button" onClick={onOpenHardware} className="h-7 border border-[#475569] px-2 text-[10px] hover:border-[#60a5fa]">Cấu hình</button></div>
+        <p className="mt-2 text-[10px] text-[#94a3b8]">{draft.hardwareTask ? `${draft.hardwareTask.expectedComponentIds.length} block đã chọn · ${draft.hardwareTask.faultType}` : "Chưa bật cho kịch bản này."}</p>
       </section>
 
       <section className="border-t border-[#334155] pt-3" aria-labelledby="dme-checkpoints-title">

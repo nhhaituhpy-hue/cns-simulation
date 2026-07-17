@@ -3,6 +3,9 @@
 import { CheckCircle, WarningCircle } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { HardwareDiagnosisStep } from "@/components/hardware/hardware-diagnosis-step";
+import type { HardwareDiagnosisAnswer } from "@/lib/equipment-diagram-types";
+import { VOR_EQUIPMENT_DIAGRAMS } from "@/lib/vor-hardware-model";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
 import { useVorScenarioStore } from "@/stores/vor-scenario-store";
 import { useVorSubmissionStore } from "@/stores/vor-submission-store";
@@ -30,6 +33,7 @@ export function VorStudentSession({ scenarioId }: VorStudentSessionProps) {
   const [identity, setIdentity] = useState<ActiveIdentity | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedId, setSubmittedId] = useState<string | null>(null);
+  const [stage, setStage] = useState<"pmdt" | "hardware">("pmdt");
   const scenario = scenarios.find((item) => item.id === scenarioId);
 
   useEffect(() => {
@@ -88,7 +92,7 @@ export function VorStudentSession({ scenarioId }: VorStudentSessionProps) {
     );
   }
 
-  async function submit() {
+  async function submit(hardwareAnswer?: HardwareDiagnosisAnswer) {
     if (!identity || !scenario) return;
     setIsSubmitting(true);
     const state = useVorPmdtStore.getState();
@@ -101,9 +105,23 @@ export function VorStudentSession({ scenarioId }: VorStudentSessionProps) {
       submittedAt: new Date().toISOString(),
       events: state.attemptEvents,
       answer: state.answer,
+      ...(hardwareAnswer ? { hardwareAnswer } : {}),
     });
     setSubmittedId(submission.id);
     setIsSubmitting(false);
+  }
+
+  if (stage === "hardware" && scenario.hardwareTask) {
+    return (
+      <HardwareDiagnosisStep
+        equipmentName="VOR"
+        scenarioTitle={scenario.title}
+        diagrams={VOR_EQUIPMENT_DIAGRAMS}
+        isSubmitting={isSubmitting}
+        onBack={() => setStage("pmdt")}
+        onSubmit={submit}
+      />
+    );
   }
 
   return (
@@ -115,7 +133,7 @@ export function VorStudentSession({ scenarioId }: VorStudentSessionProps) {
       </div>
       <PmdtLayout
         mode="student"
-        sidePanel={<VorStudentJournal scenario={scenario} isSubmitting={isSubmitting} onSubmit={submit} />}
+        sidePanel={<VorStudentJournal scenario={scenario} isSubmitting={isSubmitting} onSubmit={submit} onContinue={scenario.hardwareTask ? () => setStage("hardware") : undefined} />}
       />
     </div>
   );

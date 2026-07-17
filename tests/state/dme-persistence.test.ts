@@ -24,6 +24,11 @@ const scenario: DmeScenario = {
     menuPath: ["Transmitters", "Data", "RTC Data"], title: "RTC Data",
     guidance: "Kiểm tra delay control.", required: true, points: 20,
   }],
+  hardwareTask: {
+    expectedComponentIds: ["dme-rtc-1"],
+    faultType: "Sai lệch tham số",
+    adminNote: "Đối chiếu delay RTC1.",
+  },
 };
 
 const submission: DmeSubmission = {
@@ -40,6 +45,12 @@ const submission: DmeSubmission = {
     visitedAt: "2026-07-17T03:07:00.000Z", annotation: "Delay vượt giới hạn cao.",
   }],
   answer: { suspectedFault: "RTC 1 delay", reasoning: "Propagation delay cao.", remediation: "Kiểm tra và hiệu chỉnh RTC 1." },
+  hardwareAnswer: {
+    selectedComponentIds: ["dme-rtc-1"],
+    reasoning: "Delay sai lệch nằm trên nhánh RTC1.",
+    inspectedComponentIds: ["dme-monitor-1", "dme-rtc-1"],
+    completedAt: "2026-07-17T03:14:00.000Z",
+  },
 };
 
 describe("DME persistence", () => {
@@ -49,6 +60,7 @@ describe("DME persistence", () => {
       id: scenario.id, title: scenario.title, description: scenario.description,
       difficulty: scenario.difficulty, prompt: scenario.prompt, overrides: scenario.overrides,
       expected_checkpoints: scenario.expectedCheckpoints, created_at: scenario.createdAt, updated_at: null,
+      hardware_task: scenario.hardwareTask,
     })).toEqual(scenario);
   });
 
@@ -59,6 +71,7 @@ describe("DME persistence", () => {
       student_code: submission.studentCode, status: submission.status, started_at: submission.startedAt,
       submitted_at: submission.submittedAt, reviewed_at: null, events: submission.events,
       answer: submission.answer, score: null, examiner_comment: null,
+      hardware_answer: submission.hardwareAnswer,
     })).toEqual(submission);
   });
 });

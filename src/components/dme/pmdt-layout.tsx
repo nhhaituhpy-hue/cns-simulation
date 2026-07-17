@@ -56,7 +56,7 @@ export function PmdtLayout({
     <div className="min-h-[calc(100dvh-4rem)] overflow-auto bg-[#070a12]">
       <section
         aria-label="DME PMDT Simulator"
-        className={`grid min-h-[720px] min-w-[1024px] grid-rows-[2rem_2.25rem_minmax(0,1fr)_1.75rem] bg-[#0a0e1a] text-[#e2e8f0] ${
+        className={`grid h-[calc(100dvh-4rem)] min-h-[720px] min-w-[1024px] grid-rows-[2rem_2.25rem_minmax(0,1fr)_1.75rem] bg-[#0a0e1a] text-[#e2e8f0] ${
           sidePanel
             ? "grid-cols-[11rem_minmax(0,1fr)_20rem]"
             : "grid-cols-[11rem_minmax(0,1fr)]"
@@ -73,7 +73,7 @@ export function PmdtLayout({
           {children ?? <PmdtScreenRouter />}
         </main>
         {sidePanel ? (
-          <aside className="min-h-0 overflow-y-auto border-l border-[#334155] bg-[#111827]">
+          <aside aria-label={mode === "author" ? "Bảng xây dựng kịch bản" : "Nhật ký học viên"} className="min-h-0 overflow-y-auto overscroll-contain border-l border-[#334155] bg-[#111827]">
             {sidePanel}
           </aside>
         ) : null}

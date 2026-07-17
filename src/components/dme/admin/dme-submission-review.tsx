@@ -3,6 +3,8 @@
 import { CheckCircle, Circle, WarningCircle } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { HardwareReview } from "@/components/hardware/hardware-review";
+import { DME_EQUIPMENT_DIAGRAMS } from "@/lib/dme-hardware-model";
 import { useDmeScenarioStore } from "@/stores/dme-scenario-store";
 import { useDmeSubmissionStore } from "@/stores/dme-submission-store";
 import { getSidebarInteractionTargets } from "@/lib/dme-sidebar-fields";
@@ -111,6 +113,11 @@ export function DmeSubmissionReview({ submissionId }: DmeSubmissionReviewProps) 
             <Answer title="Căn cứ chẩn đoán" value={submission.answer.reasoning} />
             <Answer title="Hướng khắc phục" value={submission.answer.remediation} />
           </ReviewSection>
+          {scenario?.hardwareTask ? (
+            <ReviewSection title="Bước 2 · Đối chiếu phần cứng">
+              <HardwareReview diagrams={DME_EQUIPMENT_DIAGRAMS} task={scenario.hardwareTask} answer={submission.hardwareAnswer} />
+            </ReviewSection>
+          ) : null}
         </div>
 
         <div className="space-y-6">

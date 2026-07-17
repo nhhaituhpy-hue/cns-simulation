@@ -446,6 +446,7 @@ Không ghi key thật vào repository. RLS hiện là chính sách MVP tạm th�
 - Tiêu đề card admin hiện là `PMDT Simulator — DVOR 1150A`.
 - Title bar mô phỏng vẫn thể hiện thiết bị Dual DVOR/SELEX theo giao diện tham chiếu.
 - Sidebar nằm ngoài screen content và phải nhất quán ở mọi tab.
+- Trong author mode, toàn bộ panel xây dựng kịch bản bên phải có vùng cuộn dọc riêng; danh sách checkpoint dài không được làm tăng chiều cao hoặc kéo theo nội dung simulator.
 - Không khôi phục nhóm nút Save/Print/Next/Close/Apply/Reset ở toolbar chung; nhóm này đã bỏ để tránh nhầm với thao tác tạo kịch bản.
 - Nút Update/Reset riêng trong RMS Logs vẫn được giữ vì thuộc đúng màn hình log và hiện chỉ mang tính mô phỏng.
 - Disabled item phải có dấu hiệu ngoài màu sắc: `aria-disabled`, tooltip và cursor.
@@ -559,3 +560,13 @@ Quy trình sử dụng:
 5. Lưu kịch bản. Khi student làm bài, cùng override được nạp vào PMDT và nội dung tùy chỉnh xuất hiện tại đúng dòng log.
 
 State hợp lệ của VOR là `Normal`/`Alarm` cho Alarms và `Normal`/`Alert` cho Maintenance Alerts. Không thêm, xóa hoặc đổi thứ tự các dòng log mặc định vì index dòng là một phần của field ID đã lưu.
+
+## 20. Bước 2 - Xác định phần cứng sự cố
+
+- Trong panel tạo kịch bản, admin chọn `Cấu hình` tại mục `Bước 2 - Phần cứng sự cố`, bật bước này và chọn một hoặc nhiều block đáp án.
+- VOR dùng hai lớp sơ đồ: `System Overview` và `Transmitter / RF Path`. Component ID có tiền tố `vor-` và không được đổi sau khi đã có kịch bản lưu.
+- Sau khi hoàn thành nhật ký và kết luận PMDT, student chọn `Tiếp tục: Xác định phần cứng`, đọc chức năng từng block, chọn block nghi ngờ và nhập căn cứ.
+- Student có thể quay lại PMDT trước khi nộp. Bài nộp lưu block đã xem, block đã chọn, căn cứ và thời điểm hoàn thành.
+- Examiner xem block đáp án, lựa chọn của student, phần khớp/bỏ sót/chọn thêm cùng toàn bộ bằng chứng PMDT. Kết quả chỉ hỗ trợ chấm; điểm 0-100 vẫn do examiner quyết định.
+- Scenario cũ không có `hardwareTask` tiếp tục nộp trực tiếp từ PMDT như trước.
+- Dữ liệu Supabase dùng `hardware_task` và `hardware_answer` JSONB theo migration `202607170002_add_vor_dme_hardware_diagnosis.sql`.

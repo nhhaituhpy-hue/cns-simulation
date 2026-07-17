@@ -3,6 +3,8 @@
 import { CheckCircle, Circle, WarningCircle } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { HardwareReview } from "@/components/hardware/hardware-review";
+import { VOR_EQUIPMENT_DIAGRAMS } from "@/lib/vor-hardware-model";
 import { useVorScenarioStore } from "@/stores/vor-scenario-store";
 import { useVorSubmissionStore } from "@/stores/vor-submission-store";
 import { getSidebarInteractionTargets } from "@/lib/vor-sidebar-fields";
@@ -111,6 +113,11 @@ export function VorSubmissionReview({ submissionId }: VorSubmissionReviewProps) 
             <Answer title="Căn cứ chẩn đoán" value={submission.answer.reasoning} />
             <Answer title="Hướng khắc phục" value={submission.answer.remediation} />
           </ReviewSection>
+          {scenario?.hardwareTask ? (
+            <ReviewSection title="Bước 2 · Đối chiếu phần cứng">
+              <HardwareReview diagrams={VOR_EQUIPMENT_DIAGRAMS} task={scenario.hardwareTask} answer={submission.hardwareAnswer} />
+            </ReviewSection>
+          ) : null}
         </div>
 
         <div className="space-y-6">

@@ -3,6 +3,9 @@
 import { CheckCircle, WarningCircle } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { HardwareDiagnosisStep } from "@/components/hardware/hardware-diagnosis-step";
+import type { HardwareDiagnosisAnswer } from "@/lib/equipment-diagram-types";
+import { DME_EQUIPMENT_DIAGRAMS } from "@/lib/dme-hardware-model";
 import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
 import { useDmeScenarioStore } from "@/stores/dme-scenario-store";
 import { useDmeSubmissionStore } from "@/stores/dme-submission-store";
@@ -30,6 +33,7 @@ export function DmeStudentSession({ scenarioId }: DmeStudentSessionProps) {
   const [identity, setIdentity] = useState<ActiveIdentity | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedId, setSubmittedId] = useState<string | null>(null);
+  const [stage, setStage] = useState<"pmdt" | "hardware">("pmdt");
   const scenario = scenarios.find((item) => item.id === scenarioId);
 
   useEffect(() => {
@@ -88,7 +92,7 @@ export function DmeStudentSession({ scenarioId }: DmeStudentSessionProps) {
     );
   }
 
-  async function submit() {
+  async function submit(hardwareAnswer?: HardwareDiagnosisAnswer) {
     if (!identity || !scenario) return;
     setIsSubmitting(true);
     const state = useDmePmdtStore.getState();
@@ -101,9 +105,23 @@ export function DmeStudentSession({ scenarioId }: DmeStudentSessionProps) {
       submittedAt: new Date().toISOString(),
       events: state.attemptEvents,
       answer: state.answer,
+      ...(hardwareAnswer ? { hardwareAnswer } : {}),
     });
     setSubmittedId(submission.id);
     setIsSubmitting(false);
+  }
+
+  if (stage === "hardware" && scenario.hardwareTask) {
+    return (
+      <HardwareDiagnosisStep
+        equipmentName="DME"
+        scenarioTitle={scenario.title}
+        diagrams={DME_EQUIPMENT_DIAGRAMS}
+        isSubmitting={isSubmitting}
+        onBack={() => setStage("pmdt")}
+        onSubmit={submit}
+      />
+    );
   }
 
   return (
@@ -115,7 +133,7 @@ export function DmeStudentSession({ scenarioId }: DmeStudentSessionProps) {
       </div>
       <PmdtLayout
         mode="student"
-        sidePanel={<DmeStudentJournal scenario={scenario} isSubmitting={isSubmitting} onSubmit={submit} />}
+        sidePanel={<DmeStudentJournal scenario={scenario} isSubmitting={isSubmitting} onSubmit={submit} onContinue={scenario.hardwareTask ? () => setStage("hardware") : undefined} />}
       />
     </div>
   );

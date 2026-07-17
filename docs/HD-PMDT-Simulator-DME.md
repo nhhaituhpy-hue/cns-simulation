@@ -83,6 +83,7 @@ Các menu chưa có ảnh tham chiếu đủ rõ vẫn hiển thị disabled v�
 ## 4. Quy tắc giao diện
 
 - Shell dùng cùng mật độ và cấu trúc dark PMDT của VOR, tối thiểu 1024 x 720 px.
+- Trong author mode, toàn bộ panel xây dựng kịch bản bên phải có vùng cuộn dọc riêng; danh sách checkpoint dài không được làm tăng chiều cao hoặc kéo theo nội dung simulator.
 - Sidebar DME có hai transmitter, Integral/Standby monitor, và sáu tham số Delay, Spacing, Tx Power, ERP, Efficiency, PRF.
 - Local, Integral Bypass và Standby Bypass là thao tác học viên có ghi event.
 - Không hiển thị nhóm điều khiển Next (F5), Close (F6), Apply (F7), Reset (F8), Save hoặc Print trên toolbar chung.
@@ -157,3 +158,12 @@ Trong author mode, admin có thể chọn trực tiếp `Time Tag`, `Type`, `Ala
 `Time Tag` nhập theo định dạng `DD/MM/YYYY HH:mm:ss`. State của Alarms được giới hạn ở `Normal`, `Pre-Alarm`, `Primary Alarm Low`, `Alarm`; State của Maintenance Alerts được giới hạn ở `Normal`, `Pre-Alert`, `Alert`. Màu State được đồng bộ tự động.
 
 Admin chỉ sửa các trường trên dòng có sẵn, không thêm hoặc xóa dòng. Khi student mở kịch bản và truy cập đúng màn hình RMS Logs, PMDT hiển thị toàn bộ giá trị đã lưu tại đúng dòng. Nếu màn hình log là bằng chứng bắt buộc, admin cần thêm view đó vào checkpoint trước khi lưu.
+
+## 10. Bước 2 - Xác định phần cứng sự cố
+
+- Admin chọn `Cấu hình` trong mục `Bước 2 - Phần cứng sự cố`, bật bước và đánh dấu một hoặc nhiều block đáp án trên sơ đồ `Dual High Power Overview`.
+- Component ID DME có tiền tố `dme-`; không đổi ID khi đã có kịch bản lưu nếu chưa có migration tương thích.
+- Student hoàn thành nhật ký/kết luận PMDT rồi chuyển sang workspace sơ đồ khối, đọc chức năng, chọn phần cứng nghi ngờ và ghi căn cứ. Có thể quay lại PMDT trước khi nộp.
+- Examiner được đối chiếu đáp án kịch bản với lựa chọn student theo ba nhóm khớp, bỏ sót và chọn thêm; điểm cuối cùng vẫn chấm thủ công.
+- Bước 2 là optional để giữ tương thích với scenario cũ. Nếu không có `hardwareTask`, workflow nộp bài không thay đổi.
+- Migration `202607170002_add_vor_dme_hardware_diagnosis.sql` bổ sung `hardware_task` cho scenario và `hardware_answer` cho submission VOR/DME; migration đã được áp dụng lên Supabase project liên kết ngày 17/07/2026.

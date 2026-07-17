@@ -27,6 +27,11 @@ const fixedScenario: VorScenario = {
       points: 20,
     },
   ],
+  hardwareTask: {
+    expectedComponentIds: ["vor-carrier-amp-1"],
+    faultType: "Mất tín hiệu",
+    adminNote: "Kiểm tra PA TX1.",
+  },
 };
 
 describe("VOR scenario persistence", () => {
@@ -43,6 +48,7 @@ describe("VOR scenario persistence", () => {
         prompt: fixedScenario.prompt,
         overrides: fixedScenario.overrides,
         expected_checkpoints: fixedScenario.expectedCheckpoints,
+        hardware_task: fixedScenario.hardwareTask,
         created_at: fixedScenario.createdAt,
         updated_at: null,
       }),
@@ -64,6 +70,7 @@ describe("VOR scenario persistence", () => {
       prompt: fixedScenario.prompt,
       overrides: fixedScenario.overrides,
       expectedCheckpoints: fixedScenario.expectedCheckpoints,
+      hardwareTask: fixedScenario.hardwareTask,
     });
     expect(created.id).toBe("vor-generated");
     expect(store.getState().getScenarioById(created.id)).toEqual(created);
