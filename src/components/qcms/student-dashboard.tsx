@@ -7,7 +7,6 @@ import {
   MapPin,
   Monitor,
   Warning,
-  WarningCircle,
 } from "@phosphor-icons/react";
 import { useEffect, useMemo } from "react";
 import {
@@ -22,6 +21,7 @@ import {
 } from "./qcms-utils";
 import { StudentDashboardLoading } from "./student-loading";
 import { VorStudentDashboard } from "@/components/vor/student/vor-student-dashboard";
+import { DmeStudentDashboard } from "@/components/dme/student/dme-student-dashboard";
 
 function ScenarioRow({
   scenario,
@@ -153,17 +153,7 @@ export function StudentDashboard({ activeModule = "vor" }: { activeModule?: Stud
       ) : null}
 
       {activeModule === "dme" ? (
-        <div className="mt-8 rounded-lg border border-dashed border-[var(--border-strong)] bg-white px-5 py-16 text-center">
-          <span className="mx-auto inline-flex size-12 items-center justify-center rounded bg-[var(--surface-muted)] text-[var(--text-muted)]">
-            <WarningCircle aria-hidden size={25} weight="regular" />
-          </span>
-          <h3 className="mt-4 text-lg font-semibold text-[var(--text-primary)]">
-            Phân hệ mô phỏng DME
-          </h3>
-          <p className="mx-auto mt-2 max-w-[48ch] text-sm leading-6 text-[var(--text-secondary)]">
-            Hệ thống mô phỏng thiết bị đo cự ly hàng không (DME) đang trong quá trình phát triển và sẽ sớm ra mắt.
-          </p>
-        </div>
+        <DmeStudentDashboard />
       ) : null}
 
       {activeModule === "ads-b" ? (

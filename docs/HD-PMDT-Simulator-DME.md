@@ -1,0 +1,150 @@
+# Hướng dẫn duy trì PMDT Simulator DME
+
+> Cập nhật: 17/07/2026  
+> Thiết bị tham chiếu: SELEX Model 1118A/1119A DME, Rev. M, July 2014  
+> Phạm vi: simulator, authoring, student workflow, examiner review và persistence riêng cho DME.
+
+## 1. Nguồn tham chiếu
+
+Nguồn chính là `DME.pdf` gồm 64 trang trích từ phần 3.5-3.7 của tài liệu thiết bị. Nội dung được đọc bằng text extraction và render toàn bộ trang để kiểm tra bố cục. Mười lăm ảnh người dùng cung cấp được dùng làm ưu tiên cho phạm vi màn hình đầu tiên:
+
+1. Sidebar Status Panel.
+2. Initial PMDT Screen.
+3. RMS Status.
+4. Monitor/Transmitter Status.
+5. Alarms Log.
+6. Maintenance Alerts Log.
+7. Integral All Monitor Data.
+8. Standby All Monitor Data.
+9. Monitor Alarm Limits Configuration.
+10. Decoder Test Results.
+11. Monitor Offsets and Scale Factors.
+12. Transmitter Data.
+13. RTC Data.
+14. Transmitter Nominal Configuration.
+15. Transmitter Offsets and Scale Factors.
+
+Tài liệu vendor không được sao chép vào source control. Giá trị mặc định đã được chuyển thành dữ liệu có kiểu trong `src/lib/dme-pmdt-defaults.ts`.
+
+## 2. Nguyên tắc kiến trúc
+
+DME là bounded module riêng. Không import types, defaults, store hoặc persistence của VOR/ADS-B.
+
+```text
+dme-pmdt-defaults.ts
+        |
+        v
+dme-pmdt-store.ts -> overrides -> DME shell + screens
+        |                              |
+        +-> author -> scenario --------+
+        +-> student -> events/answer --+
+        +-> preview                    |
+                                       v
+                 localStorage + DME API + Supabase
+                                       |
+                                       v
+                             examiner manual review
+```
+
+Các namespace chính:
+
+- `src/lib/dme-*.ts`
+- `src/stores/dme-*.ts`
+- `src/components/dme/`
+- `src/app/api/dme/`
+- `public.dme_scenarios`
+- `public.dme_submissions`
+
+Không trích generic training engine cho tới khi hành vi VOR và DME được so sánh qua sử dụng thực tế.
+
+## 3. Screen và view đang hoạt động
+
+| Menu path | View |
+|---|---|
+| Home | `home` |
+| RMS > Status > RMS Status | `rms-status-main` |
+| RMS > Status > Monitor/Transmitter Status | `rms-status-monitor-tx` |
+| RMS > Logs > Alarms | `rms-logs-alarms` |
+| RMS > Logs > Maintenance Alerts | `rms-logs-maintenance` |
+| Monitors > Data > Integral | `monitor-integral` |
+| Monitors > Data > Standby | `monitor-standby` |
+| Monitors > Configuration > Alarm Limits | `monitor-alarm-limits` |
+| Monitor 1 > Test Results > Decoder | `monitor-1-decoder-results` |
+| Monitor 2 > Test Results > Decoder | `monitor-2-decoder-results` |
+| Monitor 1 > Offsets & Scale Factors | `monitor-1-offsets` |
+| Monitor 2 > Offsets & Scale Factors | `monitor-2-offsets` |
+| Transmitters > Data > Transmitter Data | `tx-data-main` |
+| Transmitters > Data > RTC Data | `tx-rtc-data` |
+| Transmitters > Configuration > Nominal | `tx-config-nominal` |
+| Transmitters > Configuration > Offsets & Scale Factors | `tx-config-offsets` |
+
+Các menu chưa có ảnh tham chiếu đủ rõ vẫn hiển thị disabled với `aria-disabled`, tooltip `Chưa khả dụng`, opacity và cursor phù hợp.
+
+## 4. Quy tắc giao diện
+
+- Shell dùng cùng mật độ và cấu trúc dark PMDT của VOR, tối thiểu 1024 x 720 px.
+- Sidebar DME có hai transmitter, Integral/Standby monitor, và sáu tham số Delay, Spacing, Tx Power, ERP, Efficiency, PRF.
+- Local, Integral Bypass và Standby Bypass là thao tác học viên có ghi event.
+- Không hiển thị nhóm điều khiển Next (F5), Close (F6), Apply (F7), Reset (F8), Save hoặc Print trên toolbar chung.
+- Update và Reset trong RMS Logs được giữ vì thuộc đúng màn hình log, không phải toolbar function-key.
+- Mọi ô có thể inject sự cố phải có `data-dme-field-id`; nên kèm label, value, type và status.
+- Indicator luôn có accessible text, không dùng màu làm tín hiệu duy nhất.
+
+## 5. Field ID và override
+
+Field ID là hợp đồng lưu trữ lâu dài. Ví dụ:
+
+- `local`
+- `monitors.integral.bypass`
+- `sidebarParams.delay.value`
+- `integralData.2.mon1Value`
+- `alarmLimits.0.alarmHigh`
+- `delayControl.rtc1.propagationDelay`
+- `txConfigNominal.rtcParameters.powerOutput`
+
+Không đổi ID hoặc thứ tự array đang lưu nếu chưa có migration/normalizer tương thích.
+
+Các trạng thái:
+
+- Indicator: `green`, `yellow`, `red`, `gray`.
+- Parameter: `normal`, `warning`, `alarm`.
+
+## 6. Workflow đào tạo
+
+- Author chọn field trực tiếp trên PMDT, đặt value/status và đánh dấu checkpoint.
+- Student mở view, thao tác sidebar, ghi chú từng event và nộp ba phần kết luận.
+- Examiner xem thứ tự event, checkpoint, sidebar target, câu trả lời và nhập điểm 0-100 thủ công.
+- Checkpoint hỗ trợ đọc bằng chứng, không tự quyết định điểm cuối cùng.
+
+Routes:
+
+- Admin dashboard: `/admin/dme`
+- Preview: `/admin/dme-pmdt`
+- Create/edit: `/admin/dme/create`, `/admin/dme/edit`
+- Submissions: `/admin/dme/submissions`
+- Student dashboard/session: `/student/dme`, `/student/dme/session`
+- APIs: `/api/dme/scenarios`, `/api/dme/submissions`
+
+## 7. Persistence
+
+Local fallback:
+
+- `cns-training:dme-scenarios`
+- `cns-training:dme-submissions`
+
+Supabase migration: `supabase/migrations/202607170001_create_dme_training.sql`.
+
+Migration này tạo `dme_scenarios`, `dme_submissions`, indexes, RLS và temporary MVP policies. Migration đã được push vào Supabase project liên kết ngày 17/07/2026. Policies vẫn là cấu hình nội bộ tạm thời và phải thay khi triển khai authentication theo vai trò.
+
+## 8. Verification baseline
+
+Ngày 17/07/2026:
+
+- ESLint: pass.
+- TypeScript: pass.
+- Vitest: 39 files, 167 tests pass.
+- Next.js production build: pass, 31 routes.
+- Playwright: 8/8 desktop/mobile Chromium flows pass.
+- DME E2E kiểm tra dashboard, preview route, title/model, không có F5-F8 và điều hướng tới Standby data.
+
+Khi thêm view mới, phải cập nhật đồng thời `DmeViewId`, default view mapping, menu/layout, scenario validator, submission validator, tests và file này.

@@ -50,3 +50,12 @@ The three vendor manuals are reference inputs and are not copied into the reposi
 8. Admin and student module selection is encoded in canonical URLs (`/admin|student/vor`, `/dme`, and `/ads-b`) instead of transient component state. The section roots redirect to VOR, while direct navigation and refresh preserve the selected module.
 9. Interactive sidebar fields use the same scenario override model as PMDT screen fields. Local and Bypass are explicit training targets: students start from the normal gray state, their clicks change the displayed state, and each result is stored as submission evidence for examiner review.
 10. The decorative Save, Print, Next, Close, Apply, and Reset toolbar is omitted from the simulator because those controls are not part of the training workflow and can be mistaken for scenario-authoring actions.
+
+## DME PMDT training module
+
+1. DME follows the VOR training workflow but owns independent types, defaults, stores, components, APIs, localStorage keys, Supabase tables, and validators.
+2. The initial implemented view set is limited to the 15 user-selected reference figures from the Model 1118A/1119A manual. Manual-only screens without a selected, readable reference remain disabled.
+3. Monitor 1 and Monitor 2 decoder/offset screens share DME-only components while retaining separate stable view IDs and field prefixes.
+4. Local, Integral Bypass, and Standby Bypass are explicit student interactions. They start from the normal state and record their resulting value/status as evidence.
+5. The shared PMDT function-key toolbar is omitted. RMS Logs keeps its own Update and Reset controls because these belong to the log screen rather than F5-F8 navigation.
+6. DME persistence uses `dme_scenarios` and `dme_submissions`. Migration `202607170001` was applied to the linked Supabase project on 2026-07-17.

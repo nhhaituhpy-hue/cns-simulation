@@ -539,7 +539,7 @@ Khi bổ sung ảnh mới, thêm từng dòng theo mẫu:
 - Local và Bypass đã hỗ trợ thao tác học viên và đối chiếu giám khảo.
 - Workflow học viên viết chú thích, chẩn đoán và hướng khắc phục đã có.
 - Workflow chấm điểm thủ công đã có.
-- Route riêng VOR/DME/ADS-B đã có; DME hiện là placeholder.
+- Route riêng VOR/DME/ADS-B đã có; DME PMDT đã được triển khai độc lập. Xem `docs/HD-PMDT-Simulator-DME.md`.
 - Supabase migration VOR đã được áp dụng, local fallback vẫn được giữ.
 - Baseline kiểm thử gần nhất trước tài liệu này: 36 file, 156 test Vitest đạt; TypeScript, ESLint và production build đạt.
 

@@ -56,12 +56,12 @@ test("admin can create a scenario with a recorded reference path", async ({
 
   // Click Create on Step 5
   await page.getByRole("button", { name: "Tạo kịch bản" }).click();
-  await expect(page).toHaveURL(/\/admin$/);
+  await expect(page).toHaveURL(/\/admin\/ads-b$/);
   await expect(page.getByText("Kiểm tra CAT21 ca trực").first()).toBeVisible();
 });
 
 test("student completes the seeded CAT21 exercise and passes", async ({ page }) => {
-  await page.goto("/student");
+  await page.goto("/student/ads-b");
 
   await page
     .getByRole("link", { name: /Khôi phục đầu ra ADS-B CAT21/ })
@@ -99,4 +99,31 @@ test("student completes the seeded CAT21 exercise and passes", async ({ page }) 
     page.getByRole("heading", { name: "Đạt yêu cầu" }),
   ).toBeVisible();
   await expect(page.getByText(/Điểm số: 100%/)).toBeVisible();
+});
+
+test("DME dashboard opens the PMDT simulator without function-key controls", async ({
+  page,
+}) => {
+  await page.goto("/admin/dme");
+  await expect(
+    page.getByRole("heading", { name: "PMDT Simulator - DME 1118A/1119A" }),
+  ).toBeVisible();
+
+  await page.getByRole("link", { name: "Mở PMDT Simulator" }).click();
+  await expect(page).toHaveURL(/\/admin\/dme-pmdt$/);
+  await expect(
+    page.getByRole("heading", {
+      name: /Dual DME - SELEX Systems Integration Inc. PMDT/i,
+    }),
+  ).toBeVisible();
+  await expect(page.getByText("Dual DME Model 1118A/1119A")).toBeVisible();
+
+  for (const key of ["F5", "F6", "F7", "F8"]) {
+    await expect(page.getByText(key, { exact: true })).toHaveCount(0);
+  }
+
+  await page.getByRole("button", { name: "Monitors" }).click();
+  await page.getByRole("menuitem", { name: "Data" }).click();
+  await page.getByRole("tab", { name: "Standby" }).click();
+  await expect(page.getByRole("cell", { name: /49.99/ })).toBeVisible();
 });

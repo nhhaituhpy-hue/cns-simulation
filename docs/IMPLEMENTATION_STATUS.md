@@ -22,6 +22,10 @@
 - [x] Configurable and scoreable VOR sidebar interactions for Local and Bypass
 - [x] Canonical admin/student routes for VOR, DME, and ADS-B with VOR as the section default
 - [x] Publish the current sidebar and module-routing upgrade to GitHub
+- [x] DME PMDT simulator for Model 1118A/1119A with 16 enabled reference-backed views
+- [x] DME scenario authoring, student journal, sidebar interactions, and examiner review
+- [x] Separate DME local/API/Supabase persistence and applied database migration
+- [x] Desktop and mobile Chromium coverage for DME simulator navigation and function-key removal
 
 ## Required quality gates
 
@@ -32,6 +36,18 @@
 - `npm run test:e2e`
 
 ## Latest verification
+
+Verified on 2026-07-17 after the DME PMDT implementation:
+
+- ESLint: passed
+- TypeScript: passed
+- Vitest: 39 files, 167 tests passed
+- Playwright: 8/8 desktop and mobile Chromium flows passed
+- Production build: passed with 31 routes, including all DME authoring, student, review, and API routes
+- Supabase migration `202607170001_create_dme_training.sql`: applied to the linked project
+- DME source and maintenance notes: `docs/HD-PMDT-Simulator-DME.md`
+
+Previous baseline:
 
 Verified on 2026-07-16 with Node.js 24 after the VOR sidebar and module-routing upgrade:
 
