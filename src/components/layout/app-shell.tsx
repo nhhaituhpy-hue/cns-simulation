@@ -9,9 +9,13 @@ import {
   Student,
   UserCircle,
   X,
+  Compass,
+  Ruler,
+  Broadcast,
   type Icon,
 } from "@phosphor-icons/react";
 import { useState, type ReactNode } from "react";
+import { motion, AnimatePresence } from "motion/react";
 
 type AppShellProps = {
   children: ReactNode;
@@ -26,10 +30,10 @@ type NavigationItem = {
 type WorkspaceSection = "admin" | "student";
 type CnsModule = "vor" | "dme" | "ads-b";
 
-const moduleItems: { id: CnsModule; label: string }[] = [
-  { id: "vor", label: "VOR" },
-  { id: "dme", label: "DME" },
-  { id: "ads-b", label: "ADS-B" },
+const moduleItems: { id: CnsModule; label: string; icon: Icon }[] = [
+  { id: "vor", label: "VOR", icon: Compass },
+  { id: "dme", label: "DME", icon: Ruler },
+  { id: "ads-b", label: "ADS-B", icon: Broadcast },
 ];
 
 const navigationItems: NavigationItem[] = [
@@ -42,11 +46,15 @@ function BrandWordmark() {
   return (
     <Link
       href="/"
-      className="inline-flex shrink-0 items-baseline rounded-md px-1 py-1 text-[15px] font-bold tracking-[-0.045em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+      className="flex flex-col items-center justify-center text-center rounded-md px-1 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
       aria-label="ATTECH, về trang chủ"
     >
-      <span className="text-[var(--danger)]">A</span>
-      <span className="text-[var(--accent)]">TTECH</span>
+      <span className="text-[17px] font-bold tracking-[0.16em] mr-[-0.16em] uppercase text-[var(--accent)] select-none leading-none">
+        <span className="text-[var(--danger)]">A</span>TTECH
+      </span>
+      <span className="mt-1 text-[8.5px] font-medium tracking-[-0.02em] text-[#94a3b8] select-none leading-none">
+        Creative & Adaptive
+      </span>
     </Link>
   );
 }
@@ -95,15 +103,43 @@ function ModuleSubTabs({
 }) {
   const activeModule = getActiveModule(pathname);
 
+  if (!mobile) {
+    return (
+      <div
+        role="group"
+        aria-label={`Phân hệ ${section === "admin" ? "Giám khảo" : "Thí sinh"}`}
+        className="mt-1 flex flex-col gap-1 pl-8"
+      >
+        {moduleItems.map((module) => {
+          const active = activeModule === module.id;
+          const ModuleIcon = module.icon;
+
+          return (
+            <Link
+              key={module.id}
+              href={`/${section}/${module.id}`}
+              onClick={onNavigate}
+              aria-current={active ? "page" : undefined}
+              className={`flex h-9 items-center rounded-md px-4 text-xs font-bold tracking-wide transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] motion-reduce:transition-none ${
+                active
+                  ? "text-[#0369a1] font-extrabold"
+                  : "text-[#64748b] hover:text-[#0f172a]"
+              }`}
+            >
+              <ModuleIcon size={14} weight="regular" className="mr-2 shrink-0 opacity-70" />
+              {module.label}
+            </Link>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div
       role="group"
       aria-label={`Phân hệ ${section === "admin" ? "Giám khảo" : "Thí sinh"}`}
-      className={
-        mobile
-          ? "ml-4 grid grid-cols-3 gap-1 border-l border-[var(--border-strong)] pl-3"
-          : "ml-2 grid gap-1 border-l border-[var(--border-strong)] pl-1.5"
-      }
+      className="ml-4 grid grid-cols-3 gap-1 border-l border-[var(--border-strong)] pl-3"
     >
       {moduleItems.map((module) => {
         const active = activeModule === module.id;
@@ -114,9 +150,7 @@ function ModuleSubTabs({
             href={`/${section}/${module.id}`}
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
-            className={`inline-flex items-center justify-center rounded-md border text-[10px] font-semibold transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-inset motion-reduce:transition-none ${
-              mobile ? "min-h-9 px-2" : "h-7 px-1"
-            } ${
+            className={`inline-flex items-center justify-center rounded-md border text-[10px] font-semibold transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-inset motion-reduce:transition-none min-h-9 px-2 ${
               active
                 ? "border-[var(--accent-border)] bg-[var(--accent-muted)] text-[var(--accent)]"
                 : "border-transparent text-[var(--text-muted)] hover:bg-white/70 hover:text-[var(--text-primary)]"
@@ -177,17 +211,20 @@ function DesktopNavigationRail() {
 
   return (
     <aside
-      className="app-glass app-sidebar sticky top-0 z-20 col-start-1 row-start-2 hidden h-[100dvh] w-20 self-start border-r border-[var(--border)] md:block"
+      className="app-glass app-sidebar app-sidebar-custom sticky top-0 z-20 col-start-1 row-start-2 hidden h-[100dvh] w-20 self-start border-r border-[var(--border)] md:block"
       aria-label="Thanh điều hướng"
     >
+      <div className="flex h-[4.25rem] items-center justify-center px-4 border-b border-[var(--border)]">
+        <BrandWordmark />
+      </div>
       <nav
         aria-label="Điều hướng chính"
-        className="relative z-10 grid gap-1.5 px-2 pb-2 pt-10"
+        className="relative z-10 grid gap-1 px-3 pb-2 pt-10"
       >
         {navigationItems.map((item) => {
           const active = isItemActive(pathname, item.href);
-          const ItemIcon = item.icon;
           const workspaceSection = getWorkspaceSection(item.href);
+          const ItemIcon = item.icon;
 
           return (
             <div key={item.href} className="grid gap-1">
@@ -195,16 +232,14 @@ function DesktopNavigationRail() {
                 href={item.href}
                 aria-label={item.label}
                 aria-current={active ? "page" : undefined}
-                className={`group relative flex min-h-16 flex-col items-center justify-center gap-1 rounded-lg border px-1 text-[var(--text-secondary)] transition-[background-color,border-color,color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-inset motion-reduce:transition-none ${
+                className={`group relative flex h-10 items-center rounded-lg px-4 text-[14px] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-inset motion-reduce:transition-none ${
                   active
-                    ? "border-[var(--accent-border)] bg-[var(--surface)] text-[var(--accent)] shadow-[var(--shadow-sm)]"
-                    : "border-transparent hover:bg-white/70 hover:text-[var(--text-primary)]"
+                    ? "text-[#0369a1] font-bold"
+                    : "text-[#64748b] hover:text-[#0f172a] font-medium"
                 }`}
               >
-                <ItemIcon aria-hidden size={21} weight="regular" />
-                <span aria-hidden="true" className="max-w-full truncate text-[10px] font-semibold leading-none">
-                  {item.label}
-                </span>
+                <ItemIcon size={18} weight="regular" className="mr-2.5 shrink-0 opacity-80" />
+                <span className="truncate">{item.label}</span>
               </Link>
               {active && workspaceSection ? (
                 <ModuleSubTabs section={workspaceSection} pathname={pathname} />
@@ -214,6 +249,25 @@ function DesktopNavigationRail() {
         })}
       </nav>
     </aside>
+  );
+}
+
+function PageTransition({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={pathname}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.15, ease: "easeInOut" }}
+        className="h-full w-full"
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
@@ -227,7 +281,28 @@ export function AppShell({ children }: AppShellProps) {
       : "Cổng hệ thống";
 
   return (
-    <div className="grid min-h-[100dvh] grid-cols-1 grid-rows-[4.25rem_minmax(0,1fr)] bg-[var(--background)] text-[var(--foreground)] md:grid-cols-[5rem_minmax(0,1fr)]">
+    <div className="grid min-h-[100dvh] grid-cols-1 grid-rows-[4.25rem_minmax(0,1fr)] bg-[var(--background)] text-[var(--foreground)] md:grid-cols-[5rem_minmax(0,1fr)] app-layout-grid-custom">
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (min-width: 768px) {
+          .app-layout-grid-custom {
+            grid-template-columns: 11rem minmax(0, 1fr) !important;
+            grid-template-rows: calc(4.25rem + 1cm) minmax(0, 1fr) !important;
+          }
+          .app-header-custom {
+            grid-column: 2 / -1 !important;
+            grid-row: 1 !important;
+            margin-top: 1cm !important;
+          }
+          .app-sidebar-custom {
+            grid-row: 1 / -1 !important;
+            height: 100dvh !important;
+            width: 11rem !important;
+          }
+          .app-content-custom {
+            padding-top: 1cm !important;
+          }
+        }
+      `}} />
       <a
         href="#main-content"
         className="fixed left-3 top-3 z-50 -translate-y-20 rounded bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-white transition-transform focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:ring-offset-2 motion-reduce:transition-none"
@@ -235,33 +310,33 @@ export function AppShell({ children }: AppShellProps) {
         Chuyển đến nội dung chính
       </a>
 
-      <header className="app-glass relative overflow-hidden col-span-full z-30 h-[4.25rem] border-b border-[var(--border)]">
-        <div className="relative z-10 flex h-full items-center gap-3 px-4 sm:px-5 md:pl-0">
-          <button
-            type="button"
-            className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-[var(--text-primary)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] md:hidden"
-            aria-label="Mở điều hướng"
-            aria-controls="mobile-navigation"
-            aria-expanded={mobileNavigationOpen}
-            onClick={() => setMobileNavigationOpen(true)}
-          >
-            <List aria-hidden size={21} weight="regular" />
-          </button>
-
-          <div className="flex shrink-0 items-center md:h-full md:w-20 md:justify-center md:border-r md:border-[var(--border)]">
+      <header className="app-glass relative overflow-hidden col-span-full z-30 h-[4.25rem] app-header-custom">
+        <div className="relative z-10 flex h-full items-center justify-center px-4 sm:px-5">
+          <div className="absolute left-4 flex items-center gap-3 md:hidden">
+            <button
+              type="button"
+              className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-[var(--text-primary)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+              aria-label="Mở điều hướng"
+              aria-controls="mobile-navigation"
+              aria-expanded={mobileNavigationOpen}
+              onClick={() => setMobileNavigationOpen(true)}
+            >
+              <List aria-hidden size={21} weight="regular" />
+            </button>
             <BrandWordmark />
           </div>
 
-          <div className="min-w-0 md:pl-1">
-            <p className="hidden truncate text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--text-muted)] sm:block">
+          <div className="min-w-0 text-center flex flex-col items-center justify-center">
+            <p className="hidden truncate text-[13px] sm:text-[14px] font-medium uppercase tracking-[0.08em] text-[var(--text-muted)] sm:block leading-tight">
               Trung tâm Bảo đảm kỹ thuật
             </p>
-            <p className="truncate text-sm font-semibold tracking-tight text-[var(--text-primary)] sm:text-[15px]">
+            <p className="truncate text-[16px] sm:text-[18px] font-bold tracking-tight text-[var(--text-primary)] leading-tight mt-0.5">
               Hệ thống kiểm tra mô phỏng CNS
             </p>
+            <div className="mt-2 h-[2px] w-12 rounded-full bg-sky-500/30" />
           </div>
 
-          <div className="ml-auto hidden shrink-0 items-center gap-2 rounded-lg border border-[var(--border)] bg-white/70 px-3 py-2 text-sm text-[var(--text-secondary)] shadow-[var(--shadow-sm)] sm:flex">
+          <div className="absolute right-4 sm:right-6 lg:right-8 xl:right-10 2xl:right-12 hidden shrink-0 items-center gap-2 rounded-lg border border-[var(--border)] bg-white/70 px-3 py-2 text-sm text-[var(--text-secondary)] shadow-[var(--shadow-sm)] sm:flex">
             <UserCircle aria-hidden size={19} weight="duotone" className="text-[var(--accent)]" />
             <span className="font-medium">{workspaceLabel}</span>
           </div>
@@ -270,9 +345,9 @@ export function AppShell({ children }: AppShellProps) {
 
       <DesktopNavigationRail />
 
-      <div className="row-start-2 min-h-[calc(100dvh-4.25rem)] min-w-0 md:col-start-2">
+      <div className="row-start-2 min-h-[calc(100dvh-4.25rem)] min-w-0 md:col-start-2 app-content-custom">
         <main id="main-content" tabIndex={-1} className="min-w-0">
-          {children}
+          <PageTransition>{children}</PageTransition>
         </main>
       </div>
 

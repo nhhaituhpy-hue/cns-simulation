@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  Broadcast,
+  Compass,
   ClipboardText,
   FilePlus,
   PencilSimple,
@@ -57,7 +57,7 @@ export function VorAdminDashboard() {
       <ModuleSummary
         title="PMDT Simulator - DVOR 1150A"
         description="Cấu hình dữ liệu sự cố và xây dựng các bước kiểm tra trực tiếp trên giao diện PMDT mô phỏng."
-        icon={Broadcast}
+        icon={Compass}
         actions={
           <>
             <Link
@@ -151,7 +151,7 @@ export function VorAdminDashboard() {
                     </span>
                   </td>
                   <td className="px-4 py-4 align-top text-xs leading-5 text-[var(--text-secondary)]">
-                    <p><span className="font-mono font-semibold">{scenario.overrides.length}</span> giá trị sự cố</p>
+                    <p><span className="font-mono font-semibold">{scenario.overrides.length}</span> cảnh báo PMDT</p>
                     <p><span className="font-mono font-semibold">{scenario.expectedCheckpoints.length}</span> bước kiểm tra</p>
                   </td>
                   <td className="px-4 py-4 align-top">

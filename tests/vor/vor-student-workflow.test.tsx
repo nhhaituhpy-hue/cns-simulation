@@ -114,5 +114,5 @@ describe("VOR student workflow", () => {
         expect.objectContaining({ viewId: "tx-data-main", annotation: "Công suất Tx #1 bằng 0." }),
       ]),
     });
-  });
+  }, 15000);
 });

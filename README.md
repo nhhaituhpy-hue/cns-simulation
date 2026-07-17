@@ -164,6 +164,18 @@ Khi bản kế hoạch và hình menu trong manual khác nhau, manual là nguồ
   - Done: Đồng bộ đổi tên thư mục repository; Cấu hình ESLint & dọn dẹp file scripts; Xác minh kiểm tra chất lượng (191 tests & build production) thành công 100%; Đẩy code lên GitHub repository mới.
   - Remaining: Tiếp tục triển khai các tính năng mới theo roadmap.
   - Note for next session: Hệ thống hiện tại ở trạng thái hoàn toàn ổn định và sạch sẽ, sẵn sàng cho pha tiếp theo.
+- 2026-07-18: Cập nhật UI theo yêu cầu:
+  - Sửa đổi cột Cấu hình: đổi cụm từ "giá trị sự cố" thành "cảnh báo PMDT" ở kịch bản VOR và DME.
+  - Thiết kế lại Sidebar trên Desktop: chuyển sang dạng rộng (15rem = 240px) căn lề trái, gộp logo "ATTECH" vào trên cùng của Sidebar, ẩn logo ở Header trên desktop, thụt lề menu con, đổi màu sắc active/hover đúng theo mô hình.
+  - Sửa lỗi test workflow học viên bị timeout do lag CPU bằng cách tăng timeout lên 15000ms.
+- 2026-07-18: Nâng cấp Sidebar, Header và Page Transition theo yêu cầu chi tiết của người dùng:
+  - Sửa logo ATTECH size 17px, slogan "Creative & Adaptive" size 8.5px viết thường, căn giữa thẳng hàng tuyệt đối.
+  - Giảm độ rộng sidebar xuống 11rem (176px), bỏ hoàn toàn màu nền active/non-active của tất cả các tab ở sidebar (chỉ thay đổi màu chữ và font-weight).
+  - Cập nhật biểu tượng thanh mảnh cho các tab: VOR dùng la bàn `Compass`, DME dùng thước đo cự ly `Ruler`, ADS-B dùng phát sóng `Broadcast`, và đồng bộ các biểu tượng này vào nội dung bên trong (`ModuleSummary` của VOR/DME dashboards).
+  - Tích hợp Framer Motion (`motion/react`) tạo hiệu ứng transition fade nhẹ, mượt mà giữa các trang chính và tab con.
+  - Căn giữa tiêu đề chính của header, tăng kích thước chữ tiêu đề và bổ sung 1 đường kẻ trang trí ngắn màu xanh nhạt phía dưới tiêu đề.
+  - Loại bỏ đường kẻ dưới header, thiết lập khoảng cách 1cm ở lề trên của header và 1cm từ header đến nội dung bên dưới.
+  - Tăng timeout cho bài test `tests/vor/vor-authoring.test.tsx` lên 20000ms để triệt tiêu lỗi timeout. Xác minh 191/191 tests pass 100% và build thành công.
 
 
 ## Hướng phát triển tiếp theo

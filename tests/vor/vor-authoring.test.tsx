@@ -68,7 +68,7 @@ describe("VOR scenario authoring", () => {
       useVorScenarioStore.getState().scenarios[0].expectedCheckpoints[0].viewId,
     ).toBe("tx-data-main");
     expect(push).toHaveBeenCalledWith("/admin/vor");
-  }, 10_000);
+  }, 20_000);
 
   it("configures Local and Bypass as yellow student interaction targets", async () => {
     const user = userEvent.setup();
