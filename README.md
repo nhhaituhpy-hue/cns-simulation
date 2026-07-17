@@ -119,6 +119,7 @@ Khi bản kế hoạch và hình menu trong manual khác nhau, manual là nguồ
 ## Session Log
 - 2026-07-16: Hoàn thành Module A, B, C. Đã kết nối tất cả các hành động/thao tác (Monitoring, VA/VB, RR, context menu, Site Settings, Sensor Statistics) vào từng ô compact 64 slot và sửa toàn bộ lỗi kiểm thử (Unit, E2E) đảm bảo không có regression.
 - 2026-07-16: Đổi tên thương hiệu hệ thống sang Hệ thống kiểm tra mô phỏng CNS. Bổ sung các tab VOR, DME, ADS-B vào trang quản lý kịch bản của quản trị viên và trang bài thực hành của học viên.
+- 2026-07-17: Gỡ bỏ cns-image.webp khỏi Carousel trang chủ, tích hợp tính năng phát âm thanh thuyết minh (lồng tiếng) tiếng Việt song song đồng bộ cho các video clip và sửa lỗi kiểm thử định tuyến.
 
 ## Hướng phát triển tiếp theo
 

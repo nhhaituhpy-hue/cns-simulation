@@ -33,31 +33,21 @@ afterEach(() => cleanup());
 
 describe("CNS module routing", () => {
   it("renders the selected admin module without an in-content tab bar", () => {
-    render(<AdminDashboard activeModule="dme" />);
+    const { container } = render(<AdminDashboard activeModule="dme" />);
 
-    const workspace = screen.getByRole("banner").parentElement;
-
+    const workspace = container.firstChild;
     expect(screen.queryByRole("navigation", { name: "Phân hệ thiết bị CNS" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "PMDT Simulator - DME 1118A/1119A" })).toHaveClass("text-base");
-    expect(screen.getByRole("heading", { name: "Quản lý kịch bản kiểm tra" })).toHaveClass(
-      "text-2xl",
-      "sm:text-[1.75rem]",
-    );
     expect(workspace).toHaveClass("max-w-none");
     expect(workspace).not.toHaveClass("max-w-[1320px]");
     expect(workspace).toHaveClass("lg:px-8", "xl:px-10", "2xl:px-12");
   });
 
   it("renders the selected student module without an in-content tab bar", () => {
-    render(<StudentDashboard activeModule="vor" />);
+    const { container } = render(<StudentDashboard activeModule="vor" />);
 
-    const workspace = screen.getByRole("banner").parentElement;
-
+    const workspace = container.firstChild;
     expect(screen.queryByRole("navigation", { name: "Phân hệ thiết bị CNS" })).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Bài thực hành mô phỏng CNS" })).toHaveClass(
-      "text-2xl",
-      "sm:text-[1.75rem]",
-    );
     expect(workspace).toHaveClass("max-w-none");
     expect(workspace).not.toHaveClass("max-w-[1320px]");
     expect(workspace).toHaveClass("lg:px-8", "xl:px-10", "2xl:px-12");

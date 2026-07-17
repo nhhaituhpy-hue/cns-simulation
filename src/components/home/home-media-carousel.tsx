@@ -1,19 +1,19 @@
 "use client";
 
-import { CaretLeft, CaretRight } from "@phosphor-icons/react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { CaretLeft, CaretRight, SpeakerHigh, SpeakerSlash } from "@phosphor-icons/react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type HomeMediaCarouselProps = {
   baseUrl: string;
 };
 
 const mediaItems = [
-  { id: "examiner-vor", kind: "video", label: "Hướng dẫn Giám khảo VOR", file: "huong-dan-giam-khao-vor" },
-  { id: "examiner-dme", kind: "video", label: "Hướng dẫn Giám khảo DME", file: "huong-dan-giam-khao-dme" },
-  { id: "examiner-ads-b", kind: "video", label: "Hướng dẫn Giám khảo ADS-B", file: "huong-dan-giam-khao-ads-b" },
-  { id: "candidate-vor", kind: "video", label: "Hướng dẫn Thí sinh VOR", file: "huong-dan-thi-sinh-vor" },
-  { id: "candidate-dme", kind: "video", label: "Hướng dẫn Thí sinh DME", file: "huong-dan-thi-sinh-dme" },
-  { id: "candidate-ads-b", kind: "video", label: "Hướng dẫn Thí sinh ADS-B", file: "huong-dan-thi-sinh-ads-b" },
+  { id: "examiner-vor", kind: "video", label: "Hướng dẫn Giám khảo VOR", file: "huong-dan-giam-khao-vor", voice: true },
+  { id: "examiner-dme", kind: "video", label: "Hướng dẫn Giám khảo DME", file: "huong-dan-giam-khao-dme", voice: false },
+  { id: "examiner-ads-b", kind: "video", label: "Hướng dẫn Giám khảo ADS-B", file: "huong-dan-giam-khao-ads-b", voice: false },
+  { id: "candidate-vor", kind: "video", label: "Hướng dẫn Thí sinh VOR", file: "huong-dan-thi-sinh-vor", voice: false },
+  { id: "candidate-dme", kind: "video", label: "Hướng dẫn Thí sinh DME", file: "huong-dan-thi-sinh-dme", voice: false },
+  { id: "candidate-ads-b", kind: "video", label: "Hướng dẫn Thí sinh ADS-B", file: "huong-dan-thi-sinh-ads-b", voice: false },
 ] as const;
 
 function joinAssetUrl(baseUrl: string, fileName: string) {
@@ -22,11 +22,15 @@ function joinAssetUrl(baseUrl: string, fileName: string) {
 
 export function HomeMediaCarousel({ baseUrl }: HomeMediaCarouselProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isVoiceOverEnabled, setIsVoiceOverEnabled] = useState(true);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const items = useMemo(
     () => mediaItems.map((item) => ({
       ...item,
       videoUrl: joinAssetUrl(baseUrl, `${item.file}.mp4`),
       posterUrl: joinAssetUrl(baseUrl, `${item.file}.webp`),
+      voiceUrl: item.voice ? joinAssetUrl(baseUrl, `${item.file}.mp3`) : undefined,
     })),
     [baseUrl],
   );
@@ -44,7 +48,11 @@ export function HomeMediaCarousel({ baseUrl }: HomeMediaCarouselProps) {
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => {
       void Promise.allSettled(
-        items.flatMap((item) => [item.posterUrl, item.videoUrl]).map(async (url) => {
+        items.flatMap((item) => [
+          item.posterUrl,
+          item.videoUrl,
+          ...(item.voiceUrl ? [item.voiceUrl] : []),
+        ]).map(async (url) => {
           const response = await fetch(url, {
             cache: "force-cache",
             mode: "cors",
@@ -61,6 +69,50 @@ export function HomeMediaCarousel({ baseUrl }: HomeMediaCarouselProps) {
     };
   }, [items]);
 
+  useEffect(() => {
+    if (videoRef.current) {
+      // Tắt tiếng video gốc khi có lồng tiếng
+      videoRef.current.muted = isVoiceOverEnabled && !!activeItem.voice;
+      if (!isVoiceOverEnabled) {
+        audioRef.current?.pause();
+      } else if (isVoiceOverEnabled && !videoRef.current.paused && audioRef.current) {
+        audioRef.current.currentTime = videoRef.current.currentTime;
+        audioRef.current.play().catch((err) => console.log("Audio play blocked", err));
+      }
+    }
+  }, [isVoiceOverEnabled, activeItem]);
+
+  const handlePlay = () => {
+    if (isVoiceOverEnabled && audioRef.current) {
+      audioRef.current.play().catch((err) => console.log("Audio play blocked", err));
+    }
+  };
+
+  const handlePause = () => {
+    audioRef.current?.pause();
+  };
+
+  const handleSeeking = () => {
+    if (audioRef.current && videoRef.current) {
+      audioRef.current.currentTime = videoRef.current.currentTime;
+    }
+  };
+
+  const handleSeeked = () => {
+    if (audioRef.current && videoRef.current) {
+      audioRef.current.currentTime = videoRef.current.currentTime;
+      if (isVoiceOverEnabled && !videoRef.current.paused) {
+        audioRef.current.play().catch((err) => console.log("Audio play blocked", err));
+      }
+    }
+  };
+
+  const handleRateChange = () => {
+    if (audioRef.current && videoRef.current) {
+      audioRef.current.playbackRate = videoRef.current.playbackRate;
+    }
+  };
+
   return (
     <div
       className="relative h-full min-h-0 overflow-hidden rounded-xl bg-[#07111b]"
@@ -68,16 +120,51 @@ export function HomeMediaCarousel({ baseUrl }: HomeMediaCarouselProps) {
     >
       <video
         key={activeItem.id}
+        ref={videoRef}
         aria-label={activeItem.label}
         className="h-full w-full object-contain"
         poster={activeItem.posterUrl}
         playsInline
         controls
         preload="metadata"
+        onPlay={handlePlay}
+        onPause={handlePause}
+        onSeeking={handleSeeking}
+        onSeeked={handleSeeked}
+        onRateChange={handleRateChange}
       >
         <source src={activeItem.videoUrl} type="video/mp4" />
         Trình duyệt không hỗ trợ phát video MP4.
       </video>
+
+      {activeItem.voiceUrl && isVoiceOverEnabled && (
+        <audio
+          key={`${activeItem.id}-voice`}
+          ref={audioRef}
+          src={activeItem.voiceUrl}
+          preload="auto"
+        />
+      )}
+
+      {activeItem.voice && (
+        <button
+          type="button"
+          onClick={() => setIsVoiceOverEnabled(!isVoiceOverEnabled)}
+          className="absolute right-3 top-3 z-10 flex items-center gap-1.5 rounded-lg border border-white/20 bg-[#07111b]/80 px-2.5 py-1.5 text-[11px] font-medium text-white shadow-lg backdrop-blur-sm transition-all hover:bg-[#07111b]/95 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+        >
+          {isVoiceOverEnabled ? (
+            <>
+              <SpeakerHigh size={14} weight="bold" />
+              <span>Lồng tiếng Việt: Bật</span>
+            </>
+          ) : (
+            <>
+              <SpeakerSlash size={14} weight="bold" />
+              <span>Lồng tiếng Việt: Tắt</span>
+            </>
+          )}
+        </button>
+      )}
 
       <button
         type="button"
