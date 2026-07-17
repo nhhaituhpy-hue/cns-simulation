@@ -39,6 +39,39 @@ Mở [http://localhost:3000](http://localhost:3000).
 
 Bốn kịch bản mẫu sẽ được tạo khi ứng dụng khởi động lần đầu. Để đưa dữ liệu về trạng thái mẫu, dùng chức năng khôi phục trong giao diện quản trị hoặc xóa khóa `adsb-training-simulator:scenarios` trong `localStorage`.
 
+## Quy trình cập nhật video & thuyết minh lồng tiếng
+
+Do các tệp media (video, âm thanh, poster) trên Supabase Storage được cấu hình cache immutable lâu dài, khi có sự thay đổi hoặc cập nhật các video clip mới, bắt buộc phải tăng phiên bản thư mục lưu trữ (ví dụ từ `v2` lên `v3`) để bust cache trên CDN (Cloudflare) và trình duyệt người dùng.
+
+### Các bước thực hiện:
+
+1. **Chuẩn bị và tạo file media mới ở local:**
+   - Thay thế các file `.mp4`, `.webp` (poster), `.mp3` mới vào thư mục `public/media` (giữ nguyên tên file).
+   - Nếu sinh lại video tự động bằng Python:
+     ```powershell
+     $env:PYTHONPATH = "C:\tmp\adsb-video-tools"; python scripts/generate_home_media_clips.py
+     ```
+
+2. **Tăng phiên bản thư mục (Bust Cache):**
+   Thay đổi ký hiệu phiên bản thư mục lưu trữ (ví dụ đổi `v2` thành `v3`) trong 4 file:
+   - `src/app/page.tsx`
+   - `tests/layout/home-media-carousel.test.tsx` (2 vị trí)
+   - `scripts/upload_home_media.js`
+   - `scripts/upload_home_media.ps1`
+
+3. **Đồng bộ lên Supabase Storage:**
+   Chạy script đồng bộ của dự án để đẩy các tệp mới lên folder phiên bản mới trên Supabase:
+   - Node.js: `node scripts/upload_home_media.js`
+   - PowerShell: `.\scripts\upload_home_media.ps1`
+
+4. **Triển khai lên bản Live:**
+   Commit các file thay đổi đường dẫn ở local và push lên Github để Vercel tự động build và deploy lại:
+   ```bash
+   git add .
+   git commit -m "feat(ui): upgrade media folder version to v3 for new clips"
+   git push origin main
+   ```
+
 ## Triển khai trên Vercel
 
 - Repository được liên kết với Vercel để tự động triển khai khi nhánh `main` được cập nhật.
