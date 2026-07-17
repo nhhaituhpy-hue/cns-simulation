@@ -87,6 +87,9 @@ export function HomeMediaCarousel({ baseUrl }: HomeMediaCarouselProps) {
   };
 
   const handlePause = () => {
+    if (videoRef.current?.ended && audioRef.current && !audioRef.current.ended) {
+      return;
+    }
     audioRef.current?.pause();
   };
 

@@ -155,6 +155,7 @@ Khi bản kế hoạch và hình menu trong manual khác nhau, manual là nguồ
 - 2026-07-17: Gỡ bỏ cns-image.webp khỏi Carousel trang chủ, tích hợp tính năng phát âm thanh thuyết minh (lồng tiếng) tiếng Việt song song đồng bộ cho các video clip và sửa lỗi kiểm thử định tuyến.
 - 2026-07-17: Đồng bộ thành công 4 video, 4 poster (webp) và 2 file âm thanh thuyết minh (.mp3) lên Supabase Storage qua SDK với chế độ upsert; frontend tự động sử dụng đường dẫn CDN từ Supabase Storage thông qua cấu hình URL động.
 - 2026-07-17: Sửa lỗi video 15s bị lệch pha so với âm thanh lồng tiếng bằng cách chạy script Python để vẽ lại toàn bộ 4 video hướng dẫn dài 30s và đồng bộ ghi đè lên Supabase Storage qua SDK Node.js.
+- 2026-07-17: Cải tiến HomeMediaCarousel: Khi video kết thúc tự động ở slide cuối, âm thanh lồng tiếng (.mp3) vẫn tiếp tục phát cho tới khi kết thúc chứ không bị dừng đột ngột.
 
 ## Hướng phát triển tiếp theo
 
