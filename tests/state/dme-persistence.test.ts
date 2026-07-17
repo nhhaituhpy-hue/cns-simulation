@@ -74,4 +74,32 @@ describe("DME persistence", () => {
       hardware_answer: submission.hardwareAnswer,
     })).toEqual(submission);
   });
+
+  it("normalizes legacy aggregate BCPS IDs in scenario and submission evidence", () => {
+    const legacyScenario: DmeScenario = {
+      ...scenario,
+      hardwareTask: {
+        ...scenario.hardwareTask!,
+        expectedComponentIds: ["dme-bcps"],
+      },
+    };
+    const legacySubmission: DmeSubmission = {
+      ...submission,
+      hardwareAnswer: {
+        ...submission.hardwareAnswer!,
+        selectedComponentIds: ["dme-bcps"],
+        inspectedComponentIds: ["dme-bcps"],
+      },
+    };
+
+    expect(deserializeDmeScenarios(serializeDmeScenarios([legacyScenario]))[0].hardwareTask)
+      .toEqual(expect.objectContaining({
+        expectedComponentIds: ["dme-bcps-1", "dme-bcps-2"],
+      }));
+    expect(deserializeDmeSubmissions(serializeDmeSubmissions([legacySubmission]))[0].hardwareAnswer)
+      .toEqual(expect.objectContaining({
+        selectedComponentIds: ["dme-bcps-1", "dme-bcps-2"],
+        inspectedComponentIds: ["dme-bcps-1", "dme-bcps-2"],
+      }));
+  });
 });

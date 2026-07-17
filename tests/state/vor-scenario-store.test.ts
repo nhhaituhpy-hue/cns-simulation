@@ -55,6 +55,30 @@ describe("VOR scenario persistence", () => {
     ).toEqual(fixedScenario);
   });
 
+  it("normalizes legacy aggregate hardware IDs while loading saved scenarios", () => {
+    const legacyScenario: VorScenario = {
+      ...fixedScenario,
+      hardwareTask: {
+        ...fixedScenario.hardwareTask!,
+        expectedComponentIds: ["vor-sideband-amp-1", "vor-sideband-switch"],
+      },
+    };
+
+    expect(deserializeVorScenarios(serializeVorScenarios([legacyScenario]))[0].hardwareTask)
+      .toEqual(expect.objectContaining({
+        expectedComponentIds: [
+          "vor-tx1-sideband-1",
+          "vor-tx1-sideband-2",
+          "vor-tx1-sideband-3",
+          "vor-tx1-sideband-4",
+          "vor-sideband-switch-1",
+          "vor-sideband-switch-2",
+          "vor-sideband-switch-3",
+          "vor-sideband-switch-4",
+        ],
+      }));
+  });
+
   it("creates, updates, and deletes VOR scenarios independently", async () => {
     const store = createVorScenarioStore({
       storage: window.localStorage,

@@ -67,3 +67,7 @@ The three vendor manuals are reference inputs and are not copied into the reposi
 3. A scenario may expect multiple components. Examiner comparison reports matches, omissions, and extra selections but never changes the manual 0-100 score automatically.
 4. Vendor block-diagram images are reference inputs only and are not copied into the repository; the application renders an original interactive topology.
 5. Scenario `hardware_task` and submission `hardware_answer` use separate JSONB columns rather than overloading PMDT overrides or written answers.
+6. The shared renderer supports routed polylines, directed/bidirectional arrows, route labels, subsystem groups, and a scrollable canvas; selecting a component highlights only its incident routes.
+7. The DVOR transmitter diagram represents separate SB1-SB4 paths, four RF switches and antenna banks, carrier sampling, RF monitoring, commutator control, modulation, and RMS serial data instead of aggregate sideband blocks.
+8. The DME simulator is fixed to the 1118A/1119A Dual High Power topology. Both transmitter branches must pass through an HPA between LPA/Synth and the common RF switch, with cross-monitoring from both monitor chains.
+9. Legacy aggregate component IDs are expanded by storage normalizers so saved scenarios and submissions remain usable after the diagram became more detailed.

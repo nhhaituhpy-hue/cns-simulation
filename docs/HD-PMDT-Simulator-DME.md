@@ -162,8 +162,13 @@ Admin chỉ sửa các trường trên dòng có sẵn, không thêm hoặc xóa
 ## 10. Bước 2 - Xác định phần cứng sự cố
 
 - Admin chọn `Cấu hình` trong mục `Bước 2 - Phần cứng sự cố`, bật bước và đánh dấu một hoặc nhiều block đáp án trên sơ đồ `Dual High Power Overview`.
+- Simulator cố định ở cấu hình **Dual High Power** của Model 1118A/1119A. Mỗi nhánh phát bắt buộc đi theo `Low Power Amplifier / Synthesizer -> High Power Amplifier -> RF Switch`; không mô hình hóa đường tắt của cấu hình low power.
+- Antenna, directional coupler 30 dB, circulator, RF Switch, Load/Attenuator và Low-noise Amplifier là phần RF dùng chung. Hai bộ Monitor/Interrogator/Synthesizer theo dõi cả hai HPA để thể hiện giám sát chéo TX1/TX2.
+- Tuyến hỏi đi từ Antenna qua Circulator/LNA tới RTC; tuyến trả lời đi từ RTC tới LPA/Synth, HPA, RF Switch, Circulator và Antenna. Mẫu coupler và đường tải giả được đưa về các monitor để phân tích công suất và kiểm tra máy dự phòng.
+- Các khối RMS, LCU, PMDT, BCPS1/2, nguồn máy phát, battery, interface card, co-located ILS/VOR và RCSU được nối bằng các tuyến control/data/power riêng.
 - Component ID DME có tiền tố `dme-`; không đổi ID khi đã có kịch bản lưu nếu chưa có migration tương thích.
 - Student hoàn thành nhật ký/kết luận PMDT rồi chuyển sang workspace sơ đồ khối, đọc chức năng, chọn phần cứng nghi ngờ và ghi căn cứ. Có thể quay lại PMDT trước khi nộp.
 - Examiner được đối chiếu đáp án kịch bản với lựa chọn student theo ba nhóm khớp, bỏ sót và chọn thêm; điểm cuối cùng vẫn chấm thủ công.
 - Bước 2 là optional để giữ tương thích với scenario cũ. Nếu không có `hardwareTask`, workflow nộp bài không thay đổi.
+- Dữ liệu cũ dùng ID tổng hợp `dme-bcps` được normalizer mở rộng thành `dme-bcps-1` và `dme-bcps-2` khi đọc scenario/submission.
 - Migration `202607170002_add_vor_dme_hardware_diagnosis.sql` bổ sung `hardware_task` cho scenario và `hardware_answer` cho submission VOR/DME; migration đã được áp dụng lên Supabase project liên kết ngày 17/07/2026.

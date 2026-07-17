@@ -1,4 +1,9 @@
-export type EquipmentLinkKind = "rf" | "control" | "monitor" | "power" | "data";
+export type EquipmentLinkKind = "rf" | "modulation" | "control" | "monitor" | "power" | "data";
+
+export interface EquipmentPoint {
+  x: number;
+  y: number;
+}
 
 export interface EquipmentComponent {
   id: string;
@@ -7,14 +12,25 @@ export interface EquipmentComponent {
   name: string;
   shortName: string;
   functionDescription: string;
-  position: { x: number; y: number };
+  position: EquipmentPoint;
+  size?: { width: number; height: number };
 }
+
+export interface EquipmentGroup {
+  id: string;
+  label: string;
+  bounds: EquipmentPoint & { width: number; height: number };
+}
+
 export interface EquipmentLink {
   id: string;
   fromComponentId: string;
   toComponentId: string;
   kind: EquipmentLinkKind;
   label?: string;
+  labelPosition?: EquipmentPoint;
+  route?: EquipmentPoint[];
+  direction?: "forward" | "reverse" | "bidirectional" | "none";
 }
 
 export interface EquipmentDiagram {
@@ -22,6 +38,9 @@ export interface EquipmentDiagram {
   title: string;
   components: EquipmentComponent[];
   links: EquipmentLink[];
+  groups?: EquipmentGroup[];
+  canvas?: { widthRem: number; heightRem: number };
+  description?: string;
 }
 
 export interface HardwareDiagnosisTask {
@@ -68,11 +87,31 @@ export function isHardwareDiagnosisAnswer(value: unknown): value is HardwareDiag
 export function validateEquipmentDiagrams(diagrams: readonly EquipmentDiagram[]): boolean {
   const allComponents = diagrams.flatMap((diagram) => diagram.components);
   const ids = new Set(allComponents.map((component) => component.id));
+  const linkIds = diagrams.flatMap((diagram) => diagram.links.map((link) => link.id));
+  const validPoint = (point: EquipmentPoint) =>
+    Number.isFinite(point.x) && Number.isFinite(point.y) &&
+    point.x >= 0 && point.x <= 100 && point.y >= 0 && point.y <= 100;
   return (
     ids.size === allComponents.length &&
-    diagrams.every((diagram) =>
-      diagram.components.every((component) => component.diagramId === diagram.id) &&
-      diagram.links.every((link) => ids.has(link.fromComponentId) && ids.has(link.toComponentId)),
-    )
+    new Set(linkIds).size === linkIds.length &&
+    diagrams.every((diagram) => {
+      const diagramComponentIds = new Set(diagram.components.map((component) => component.id));
+      return (
+        diagram.components.every((component) =>
+          component.diagramId === diagram.id &&
+          validPoint(component.position) &&
+          (!component.size || (
+            component.size.width > 0 && component.size.height > 0 &&
+            component.size.width <= 100 && component.size.height <= 100
+          )),
+        ) &&
+        diagram.links.every((link) =>
+          diagramComponentIds.has(link.fromComponentId) &&
+          diagramComponentIds.has(link.toComponentId) &&
+          (!link.route || (link.route.length >= 2 && link.route.every(validPoint))) &&
+          (!link.labelPosition || validPoint(link.labelPosition)),
+        )
+      );
+    })
   );
 }

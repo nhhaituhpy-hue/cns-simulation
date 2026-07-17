@@ -1,7 +1,7 @@
 # Kế hoạch bổ sung bước xác định phần cứng VOR/DME
 
 > Ngày lập: 17/07/2026
-> Trạng thái: đã duyệt và triển khai H0-H5 ngày 17/07/2026
+> Trạng thái: đã duyệt, triển khai H0-H5 và cập nhật topology chi tiết ngày 17/07/2026
 > Phạm vi: VOR Dual DVOR 1150A và DME Model 1118A/1119A
 
 ## 1. Mục tiêu nghiệp vụ
@@ -27,7 +27,7 @@ Admin phải cấu hình được phần cứng đích của tình huống. Giá
 
 ### 3.1 VOR
 
-VOR nên có hai lớp sơ đồ để tránh nhồi quá nhiều khối vào một màn hình:
+VOR có hai lớp sơ đồ để tách phần điều khiển/nguồn khỏi tuyến phát RF chi tiết:
 
 1. `System Overview`
    - PMDT
@@ -44,15 +44,16 @@ VOR nên có hai lớp sơ đồ để tránh nhồi quá nhiều khối vào m�
    - Audio Generator TX1/TX2
    - Synthesizer TX1/TX2
    - Carrier Amplifier TX1/TX2
-   - Sideband Amplifier 1-4 của từng transmitter
-   - Carrier RF Switch và các Sideband RF Switch
-   - RF Monitor
-   - Commutator Controller
-   - Carrier Antenna và các bank Sideband Antenna
+   - Sideband 1-4 của từng transmitter; SB1/SB2 mang LSB `f0 - 9960 Hz`, SB3/SB4 mang USB `f0 + 9960 Hz`
+   - Bốn Sideband RF Switch độc lập, bốn Antenna Bank và mảng 48 Sideband Antenna
+   - Carrier RF Switch, directional coupler 30 dB và Carrier Antenna
+   - RF Monitor nhận mẫu carrier/sideband và mẫu thuận/phản xạ
+   - Commutator Controller CCA nhận dữ liệu chuyển mạch từ Audio Generator và điều khiển các Antenna Bank
+   - Các tuyến modulation SIN/COS/Biphase, RS422 control và serial data tới RMS
 
 ### 3.2 DME
 
-Phase đầu dùng một sơ đồ `Dual High Power Overview`, có thể tách chi tiết RF ở phase sau:
+DME dùng một sơ đồ `Dual High Power Overview` đúng cấu hình mục tiêu 1118A/1119A. Đây là topology cố định của simulator, không phải lựa chọn low/high power:
 
 - DME Antenna, directional coupler/circulator và filter
 - RF Switch
@@ -68,7 +69,7 @@ Phase đầu dùng một sơ đồ `Dual High Power Overview`, có thể tách c
 - Co-located ILS/VOR
 - RCSU
 
-Danh sách cuối cùng và quan hệ kết nối phải được duyệt trước khi khóa component ID.
+Hai tuyến phát bắt buộc đi theo chuỗi `LPA/Synth -> HPA -> RF Switch`; không có tuyến tắt trực tiếp từ LPA/Synth đến RF Switch. Hai Monitor/Interrogator/Synthesizer cùng giám sát chéo TX1/TX2, còn coupler 30 dB, circulator, LNA và load/attenuator là phần dùng chung.
 
 ## 4. Mô hình dữ liệu đề xuất
 
@@ -219,11 +220,11 @@ Cần migration Supabase mới, cập nhật API row mapper, validators và loca
 
 ## 8. Dependency và blocker
 
-1. Cần duyệt inventory/topology trước khi code H1; đổi ID sau khi có scenario thật sẽ cần migration.
-2. Cần quyết định admin chọn một hay nhiều component. Khuyến nghị nhiều component, tối thiểu một.
-3. Cần quyết định bước 2 bắt buộc cho mọi scenario mới hay chỉ scenario bật `hardwareTask`. Khuyến nghị optional trong rollout đầu.
-4. Cần xác nhận có yêu cầu chấm tự động hay vẫn hoàn toàn thủ công. Khuyến nghị chỉ đối chiếu hỗ trợ giám khảo.
-5. Cần quyết định mức chi tiết VOR transmitter; khuyến nghị hai sơ đồ thay vì một sơ đồ rất cao và khó thao tác.
+1. Inventory/topology đã được duyệt; đổi ID sau khi có scenario thật phải có mapping tương thích hoặc migration.
+2. Admin được chọn nhiều component, tối thiểu một component khi bật bước 2.
+3. Bước 2 tiếp tục là optional để scenario cũ không thay đổi workflow.
+4. Kết quả đối chiếu chỉ hỗ trợ giám khảo; điểm cuối vẫn chấm thủ công.
+5. VOR giữ hai sơ đồ `System Overview` và `Transmitter / RF Path`; DME giữ một sơ đồ Dual High Power chi tiết.
 
 ## 9. Rủi ro và phương án giảm thiểu
 
@@ -248,6 +249,10 @@ Kết quả sau H0-H5:
 ## 11. Kết quả triển khai
 
 - Renderer dùng chung được đặt tại `src/components/hardware/`; inventory VOR và DME vẫn nằm ở hai module riêng.
+- Renderer hỗ trợ polyline nhiều đoạn, mũi tên một/hai chiều, nhãn tuyến, nhóm subsystem, canvas cuộn và làm nổi các tuyến liên quan khi chọn block.
+- VOR `Transmitter / RF Path` đã tách SB1-SB4, RF Switch 1-4, Antenna Bank 1-4, carrier coupler 30 dB, RF Monitor và các tuyến modulation/control/monitor/data.
+- DME đã khóa ở cấu hình `Dual High Power`; cả TX1 và TX2 đều đi qua HPA trước RF Switch và có tuyến giám sát chéo.
+- Normalizer tự mở rộng các component ID tổng hợp đã lưu trước đây sang các block chi tiết mới để scenario/submission cũ tiếp tục đọc được.
 - Admin có thể bật/tắt bước 2, chọn nhiều block, đặt loại sự cố và ghi chú cho giám khảo.
 - Student chỉ chuyển sang bước 2 sau khi nhật ký và ba phần kết luận PMDT hợp lệ; có thể quay lại PMDT trước khi nộp.
 - Examiner thấy đáp án kịch bản, lựa chọn của học viên, block khớp/bỏ sót/chọn thêm và căn cứ lựa chọn; điểm vẫn nhập thủ công.

@@ -7,6 +7,7 @@
   DmeViewId,
 } from "./dme-types";
 import { isHardwareDiagnosisAnswer, type HardwareDiagnosisAnswer } from "./equipment-diagram-types";
+import { normalizeHardwareDiagnosisAnswer } from "./equipment-diagram-compatibility";
 import type { DmeStorageLike } from "./dme-scenario-storage";
 
 export const DME_SUBMISSION_STORAGE_KEY = "cns-training:dme-submissions";
@@ -109,7 +110,11 @@ export function isDmeSubmission(value: unknown): value is DmeSubmission {
 }
 
 export function cloneDmeSubmission(submission: DmeSubmission): DmeSubmission {
-  return structuredClone(submission);
+  const clone = structuredClone(submission);
+  if (clone.hardwareAnswer) {
+    clone.hardwareAnswer = normalizeHardwareDiagnosisAnswer("dme", clone.hardwareAnswer);
+  }
+  return clone;
 }
 
 export function serializeDmeSubmissions(submissions: readonly DmeSubmission[]): string {
@@ -159,7 +164,7 @@ export function mapRowToDmeSubmission(row: unknown): DmeSubmission {
     startedAt: requiredString(row, "started_at"),
     events: jsonField(row, "events") as DmeAttemptEvent[],
     answer: jsonField(row, "answer") as DmeStudentAnswer,
-    ...(row.hardware_answer ? { hardwareAnswer: jsonField(row, "hardware_answer") as HardwareDiagnosisAnswer } : {}),
+    ...(row.hardware_answer ? { hardwareAnswer: normalizeHardwareDiagnosisAnswer("dme", jsonField(row, "hardware_answer") as HardwareDiagnosisAnswer) } : {}),
     ...(row.submitted_at ? { submittedAt: requiredString(row, "submitted_at") } : {}),
     ...(row.reviewed_at ? { reviewedAt: requiredString(row, "reviewed_at") } : {}),
     ...(typeof row.score === "number" ? { score: row.score } : {}),

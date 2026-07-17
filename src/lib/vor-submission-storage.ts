@@ -7,6 +7,7 @@ import type {
   VorViewId,
 } from "./vor-types";
 import { isHardwareDiagnosisAnswer, type HardwareDiagnosisAnswer } from "./equipment-diagram-types";
+import { normalizeHardwareDiagnosisAnswer } from "./equipment-diagram-compatibility";
 import type { VorStorageLike } from "./vor-scenario-storage";
 
 export const VOR_SUBMISSION_STORAGE_KEY = "cns-training:vor-submissions";
@@ -107,7 +108,11 @@ export function isVorSubmission(value: unknown): value is VorSubmission {
 }
 
 export function cloneVorSubmission(submission: VorSubmission): VorSubmission {
-  return structuredClone(submission);
+  const clone = structuredClone(submission);
+  if (clone.hardwareAnswer) {
+    clone.hardwareAnswer = normalizeHardwareDiagnosisAnswer("vor", clone.hardwareAnswer);
+  }
+  return clone;
 }
 
 export function serializeVorSubmissions(submissions: readonly VorSubmission[]): string {
@@ -157,7 +162,7 @@ export function mapRowToVorSubmission(row: unknown): VorSubmission {
     startedAt: requiredString(row, "started_at"),
     events: jsonField(row, "events") as VorAttemptEvent[],
     answer: jsonField(row, "answer") as VorStudentAnswer,
-    ...(row.hardware_answer ? { hardwareAnswer: jsonField(row, "hardware_answer") as HardwareDiagnosisAnswer } : {}),
+    ...(row.hardware_answer ? { hardwareAnswer: normalizeHardwareDiagnosisAnswer("vor", jsonField(row, "hardware_answer") as HardwareDiagnosisAnswer) } : {}),
     ...(row.submitted_at ? { submittedAt: requiredString(row, "submitted_at") } : {}),
     ...(row.reviewed_at ? { reviewedAt: requiredString(row, "reviewed_at") } : {}),
     ...(typeof row.score === "number" ? { score: row.score } : {}),

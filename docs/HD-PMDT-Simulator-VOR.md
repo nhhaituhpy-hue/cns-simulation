@@ -565,8 +565,13 @@ State hợp lệ của VOR là `Normal`/`Alarm` cho Alarms và `Normal`/`Alert` 
 
 - Trong panel tạo kịch bản, admin chọn `Cấu hình` tại mục `Bước 2 - Phần cứng sự cố`, bật bước này và chọn một hoặc nhiều block đáp án.
 - VOR dùng hai lớp sơ đồ: `System Overview` và `Transmitter / RF Path`. Component ID có tiền tố `vor-` và không được đổi sau khi đã có kịch bản lưu.
+- `Transmitter / RF Path` mô phỏng hai nhánh TX đối xứng. Mỗi nhánh có Audio Generator, Synthesizer, Carrier Amplifier và bốn Sideband; SB1/SB2 tạo LSB `f0 - 9960 Hz`, SB3/SB4 tạo USB `f0 + 9960 Hz` từ các tín hiệu SIN/COS/Biphase.
+- Bốn Sideband đi qua bốn RF Switch tương ứng, bốn Antenna Bank rồi tới mảng 48 Sideband Antenna. Commutator Controller CCA nhận tín hiệu chuyển mạch từ Audio Generator và phân phối lệnh tới từng bank.
+- Nhánh carrier đi qua Carrier RF Switch, directional coupler 30 dB và Carrier Antenna. RF Monitor nhận mẫu carrier, sideband và mẫu thuận/phản xạ; Audio Generator gửi serial data về RMS.
+- Sơ đồ dùng màu và nhãn tuyến để phân biệt RF, điều chế, điều khiển, giám sát/mẫu, nguồn và dữ liệu. Khi chọn một block, các tuyến liên quan được làm nổi để admin/student lần theo đường tín hiệu.
 - Sau khi hoàn thành nhật ký và kết luận PMDT, student chọn `Tiếp tục: Xác định phần cứng`, đọc chức năng từng block, chọn block nghi ngờ và nhập căn cứ.
 - Student có thể quay lại PMDT trước khi nộp. Bài nộp lưu block đã xem, block đã chọn, căn cứ và thời điểm hoàn thành.
 - Examiner xem block đáp án, lựa chọn của student, phần khớp/bỏ sót/chọn thêm cùng toàn bộ bằng chứng PMDT. Kết quả chỉ hỗ trợ chấm; điểm 0-100 vẫn do examiner quyết định.
 - Scenario cũ không có `hardwareTask` tiếp tục nộp trực tiếp từ PMDT như trước.
+- Scenario/submission cũ dùng các ID tổng hợp `vor-sideband-amp-1`, `vor-sideband-amp-2` hoặc `vor-sideband-switch` được normalizer mở rộng sang các block chi tiết tương ứng khi đọc dữ liệu.
 - Dữ liệu Supabase dùng `hardware_task` và `hardware_answer` JSONB theo migration `202607170002_add_vor_dme_hardware_diagnosis.sql`.

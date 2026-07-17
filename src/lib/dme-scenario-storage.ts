@@ -7,6 +7,7 @@
   type DmeViewId,
 } from "./dme-types";
 import { isHardwareDiagnosisTask, type HardwareDiagnosisTask } from "./equipment-diagram-types";
+import { normalizeHardwareDiagnosisTask } from "./equipment-diagram-compatibility";
 
 export const DME_SCENARIO_STORAGE_KEY = "cns-training:dme-scenarios";
 export const DME_SCENARIO_STORAGE_VERSION = 1 as const;
@@ -100,7 +101,11 @@ export function isDmeScenario(value: unknown): value is DmeScenario {
 }
 
 export function cloneDmeScenario(scenario: DmeScenario): DmeScenario {
-  return structuredClone(scenario);
+  const clone = structuredClone(scenario);
+  if (clone.hardwareTask) {
+    clone.hardwareTask = normalizeHardwareDiagnosisTask("dme", clone.hardwareTask);
+  }
+  return clone;
 }
 
 export function serializeDmeScenarios(
@@ -153,7 +158,7 @@ export function mapRowToDmeScenario(row: unknown): DmeScenario {
     prompt: requiredString(row, "prompt"),
     overrides: jsonField(row, "overrides") as DmeFieldOverride[],
     expectedCheckpoints: jsonField(row, "expected_checkpoints") as DmeExpectedCheckpoint[],
-    ...(row.hardware_task ? { hardwareTask: jsonField(row, "hardware_task") as HardwareDiagnosisTask } : {}),
+    ...(row.hardware_task ? { hardwareTask: normalizeHardwareDiagnosisTask("dme", jsonField(row, "hardware_task") as HardwareDiagnosisTask) } : {}),
     createdAt: requiredString(row, "created_at"),
     ...(row.updated_at ? { updatedAt: requiredString(row, "updated_at") } : {}),
   };

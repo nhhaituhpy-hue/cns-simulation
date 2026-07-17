@@ -28,6 +28,7 @@
 - [x] Desktop and mobile Chromium coverage for DME simulator navigation and function-key removal
 - [x] Independent scrolling for the complete VOR/DME scenario-authoring panel
 - [x] Optional VOR/DME hardware diagnosis step for admin, student, persistence, and examiner review
+- [x] Detailed DVOR 1150A transmitter signal topology and DME 1118A/1119A Dual High Power topology
 
 ## Required quality gates
 
@@ -39,14 +40,16 @@
 
 ## Latest verification
 
-Verified on 2026-07-17 after the VOR/DME hardware-diagnosis implementation:
+Verified on 2026-07-17 after the detailed DVOR/DME topology update:
 
 - ESLint: passed
 - TypeScript: passed
-- Vitest: 42 files, 179 tests passed
+- Vitest: 42 files, 184 tests passed
 - Production build: passed with 31 routes
 - Browser visual QA: pending because no browser backend was available in this session
 - Supabase migration `202607170002_add_vor_dme_hardware_diagnosis.sql`: applied to the linked project on 2026-07-17
+
+Topology verification includes separate DVOR SB1-SB4/RF-switch/antenna-bank paths, carrier sampling and commutator control; DME verifies both `LPA/Synth -> HPA -> RF Switch` chains, cross-monitoring, and legacy component-ID normalization.
 
 Previous baseline:
 

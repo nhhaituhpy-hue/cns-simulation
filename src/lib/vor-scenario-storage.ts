@@ -7,6 +7,7 @@ import {
   type VorViewId,
 } from "./vor-types";
 import { isHardwareDiagnosisTask, type HardwareDiagnosisTask } from "./equipment-diagram-types";
+import { normalizeHardwareDiagnosisTask } from "./equipment-diagram-compatibility";
 
 export const VOR_SCENARIO_STORAGE_KEY = "cns-training:vor-scenarios";
 export const VOR_SCENARIO_STORAGE_VERSION = 1 as const;
@@ -99,7 +100,11 @@ export function isVorScenario(value: unknown): value is VorScenario {
 }
 
 export function cloneVorScenario(scenario: VorScenario): VorScenario {
-  return structuredClone(scenario);
+  const clone = structuredClone(scenario);
+  if (clone.hardwareTask) {
+    clone.hardwareTask = normalizeHardwareDiagnosisTask("vor", clone.hardwareTask);
+  }
+  return clone;
 }
 
 export function serializeVorScenarios(
@@ -152,7 +157,7 @@ export function mapRowToVorScenario(row: unknown): VorScenario {
     prompt: requiredString(row, "prompt"),
     overrides: jsonField(row, "overrides") as VorFieldOverride[],
     expectedCheckpoints: jsonField(row, "expected_checkpoints") as VorExpectedCheckpoint[],
-    ...(row.hardware_task ? { hardwareTask: jsonField(row, "hardware_task") as HardwareDiagnosisTask } : {}),
+    ...(row.hardware_task ? { hardwareTask: normalizeHardwareDiagnosisTask("vor", jsonField(row, "hardware_task") as HardwareDiagnosisTask) } : {}),
     createdAt: requiredString(row, "created_at"),
     ...(row.updated_at ? { updatedAt: requiredString(row, "updated_at") } : {}),
   };
