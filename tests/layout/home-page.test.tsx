@@ -13,10 +13,8 @@ describe("Home page layout", () => {
     const section = heading.closest("section");
     const contentColumn = heading.parentElement?.parentElement;
     const roleCards = screen.getByRole("link", { name: /Quản lý kỳ kiểm tra/ }).parentElement;
-    const cover = screen.getByRole("img", {
-      name: "Trạm dẫn đường vô tuyến và giám sát hàng không tại khu vực ven biển",
-    });
-    const carousel = cover.parentElement;
+    const video = screen.getByLabelText("Hướng dẫn Giám khảo VOR");
+    const carousel = video.parentElement;
     const mediaCard = carousel?.parentElement;
 
     expect(section).toHaveClass("items-start");

@@ -13,10 +13,14 @@ $clips = @(
 )
 
 foreach ($clip in $clips) {
-  foreach ($extension in @("mp4", "webp")) {
+  foreach ($extension in @("mp4", "webp", "mp3")) {
     $fileName = "$clip.$extension"
     $source = Join-Path $mediaRoot $fileName
     if (-not (Test-Path -LiteralPath $source)) {
+      if ($extension -eq "mp3") {
+        # File lồng tiếng mp3 là tùy chọn, bỏ qua nếu chưa có
+        continue
+      }
       throw "Missing generated media file: $source"
     }
 
