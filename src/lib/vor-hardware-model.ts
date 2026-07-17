@@ -176,7 +176,7 @@ export const VOR_EQUIPMENT_DIAGRAMS: EquipmentDiagram[] = [
     title: "Transmitter / RF Path",
     components: txComponents,
     links: txLinks,
-    canvas: { widthRem: 96, heightRem: 62 },
+    canvas: { widthRem: 64, heightRem: 40 },
     description: "Cấu trúc transmitter kép: carrier/CSB, bốn nhánh sideband LSB/USB, RF switching, commutator banks và các tuyến lấy mẫu RF.",
     groups: [
       { id: "vor-tx1-group", label: "Transmitter 1", bounds: { x: 1, y: 18, width: 34, height: 78 } },

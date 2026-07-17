@@ -56,8 +56,16 @@ export function EquipmentBlockDiagram({ diagrams, selectedComponentIds, inspecte
     <section aria-label="Sơ đồ khối thiết bị" className="min-w-0">
       {diagrams.length > 1 ? <div role="tablist" className="mb-3 flex flex-wrap gap-2">{diagrams.map((item) => <button key={item.id} type="button" role="tab" aria-selected={item.id === diagram.id} onClick={() => setActiveDiagramId(item.id)} className={`h-9 border px-3 text-xs font-semibold ${item.id === diagram.id ? "border-[#2563eb] bg-[#1e3a8a] text-white" : "border-[#475569] bg-[#111827] text-[#cbd5e1]"}`}>{item.title}</button>)}</div> : null}
       {diagram.description ? <p className="mb-3 text-xs leading-5 text-[#94a3b8]">{diagram.description}</p> : null}
-      <div className="relative min-h-[34rem] overflow-auto border border-[#475569] bg-[#07101f]">
-        <div className="relative" style={{ height: `${diagram.canvas?.heightRem ?? 42}rem`, minWidth: `${diagram.canvas?.widthRem ?? 60}rem` }}>
+      <div className="relative min-h-[28rem] overflow-auto border border-[#475569] bg-[#07101f]">
+        <div
+          className="relative mx-auto"
+          style={{
+            height: `${diagram.canvas?.heightRem ?? 34}rem`,
+            width: "100%",
+            minWidth: "48rem",
+            maxWidth: `${diagram.canvas?.widthRem ?? 52}rem`,
+          }}
+        >
           {diagram.groups?.map((group) => <div key={group.id} aria-hidden className="pointer-events-none absolute z-0 border border-dashed border-[#334155] bg-[#0f172a]/35" style={{ left: `${group.bounds.x}%`, top: `${group.bounds.y}%`, width: `${group.bounds.width}%`, height: `${group.bounds.height}%` }}><span className="absolute left-2 top-1 text-[9px] font-bold uppercase tracking-widest text-[#64748b]">{group.label}</span></div>)}
           <svg aria-hidden className="absolute inset-0 z-10 size-full" viewBox="0 0 100 100" preserveAspectRatio="none">
             <defs>
@@ -81,7 +89,7 @@ export function EquipmentBlockDiagram({ diagrams, selectedComponentIds, inspecte
           })}
           {diagram.components.map((component) => {
             const isSelected = selected.has(component.id); const isInspected = inspected.has(component.id);
-            return <button key={component.id} type="button" aria-pressed={isSelected} aria-label={`${component.name}, ${component.subsystem}${isSelected ? ", đã chọn" : ""}`} onClick={() => { setFocusedId(component.id); onInspectComponent?.(component); if (!readOnly) onToggleComponent?.(component); }} style={{ left: `${component.position.x}%`, top: `${component.position.y}%`, width: component.size ? `${component.size.width}%` : undefined, minHeight: component.size ? `${component.size.height}%` : undefined }} className={`absolute z-30 w-32 -translate-x-1/2 -translate-y-1/2 border px-2 py-2 text-center text-[10px] font-bold leading-4 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#93c5fd] ${isSelected ? "border-[#f59e0b] bg-[#78350f] text-[#fef3c7]" : isInspected ? "border-[#2563eb] bg-[#172554] text-[#dbeafe]" : focusedId === component.id ? "border-[#60a5fa] bg-[#1e3a5f] text-white" : "border-[#64748b] bg-[#1e293b] text-[#e2e8f0]"}`}><span className="block">{component.shortName}</span><span className="mt-0.5 block font-normal text-[#94a3b8]">{component.subsystem}</span></button>;
+            return <button key={component.id} type="button" aria-pressed={isSelected} aria-label={`${component.name}, ${component.subsystem}${isSelected ? ", đã chọn" : ""}`} onClick={() => { setFocusedId(component.id); onInspectComponent?.(component); if (!readOnly) onToggleComponent?.(component); }} style={{ left: `${component.position.x}%`, top: `${component.position.y}%`, width: component.size ? `${component.size.width}%` : undefined, minHeight: component.size ? `${component.size.height}%` : undefined }} className={`absolute z-30 w-24 -translate-x-1/2 -translate-y-1/2 border px-1.5 py-1.5 text-center text-[9px] font-bold leading-3 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#93c5fd] ${isSelected ? "border-[#f59e0b] bg-[#78350f] text-[#fef3c7]" : isInspected ? "border-[#2563eb] bg-[#172554] text-[#dbeafe]" : focusedId === component.id ? "border-[#60a5fa] bg-[#1e3a5f] text-white" : "border-[#64748b] bg-[#1e293b] text-[#e2e8f0]"}`}><span className="block">{component.shortName}</span><span className="mt-0.5 block font-normal text-[#94a3b8]">{component.subsystem}</span></button>;
           })}
         </div>
       </div>

@@ -29,6 +29,7 @@
 - [x] Independent scrolling for the complete VOR/DME scenario-authoring panel
 - [x] Optional VOR/DME hardware diagnosis step for admin, student, persistence, and examiner review
 - [x] Detailed DVOR 1150A transmitter signal topology and DME 1118A/1119A Dual High Power topology
+- [x] Compact hardware-diagram canvas and blocks sized for the desktop author/student workspace
 
 ## Required quality gates
 

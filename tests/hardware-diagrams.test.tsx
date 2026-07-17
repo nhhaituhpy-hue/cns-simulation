@@ -14,6 +14,18 @@ describe("equipment block diagrams", () => {
     expect(validateEquipmentDiagrams(DME_EQUIPMENT_DIAGRAMS)).toBe(true);
   });
 
+  it("keeps detailed diagram canvases compact enough for a desktop workspace", () => {
+    const detailedDiagrams = [
+      VOR_EQUIPMENT_DIAGRAMS.find((diagram) => diagram.id === "vor-transmitter-rf"),
+      DME_EQUIPMENT_DIAGRAMS[0],
+    ];
+
+    for (const diagram of detailedDiagrams) {
+      expect(diagram?.canvas?.widthRem).toBeLessThanOrEqual(64);
+      expect(diagram?.canvas?.heightRem).toBeLessThanOrEqual(42);
+    }
+  });
+
   it("models the detailed DVOR sideband and antenna distribution paths", () => {
     const transmitter = VOR_EQUIPMENT_DIAGRAMS.find((diagram) => diagram.id === "vor-transmitter-rf");
     expect(transmitter).toBeDefined();

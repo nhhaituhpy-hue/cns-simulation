@@ -147,7 +147,7 @@ export const DME_EQUIPMENT_DIAGRAMS: EquipmentDiagram[] = [
     title: "Dual High Power Overview",
     components,
     links,
-    canvas: { widthRem: 96, heightRem: 64 },
+    canvas: { widthRem: 64, heightRem: 42 },
     description: "Cấu hình Model 1118A/1119A Dual High Power cố định: mỗi nhánh có HPA đặt giữa LPA/Synth và RF Switch; hai monitor giám sát chéo cả hai transmitter.",
     groups: [
       { id: "dme-tx1-group", label: "Transmitter / Monitor 1", bounds: { x: 1, y: 21, width: 35, height: 47 } },
