@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   Broadcast,
@@ -10,8 +10,22 @@ import {
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useEffect } from "react";
+import {
+  EmptyState,
+  LoadingRows,
+  ModuleSummary,
+  ScenarioListFrame,
+  ScenarioSectionHeader,
+} from "@/components/ui/exam-workspace";
+import type { DmeScenario } from "@/lib/dme-types";
 import { useDmeScenarioStore } from "@/stores/dme-scenario-store";
 import { useDmeSubmissionStore } from "@/stores/dme-submission-store";
+
+const difficultyLabels: Record<DmeScenario["difficulty"], string> = {
+  easy: "Cơ bản",
+  medium: "Trung bình",
+  hard: "Nâng cao",
+};
 
 export function DmeAdminDashboard() {
   const scenarios = useDmeScenarioStore((state) => state.scenarios);
@@ -30,77 +44,137 @@ export function DmeAdminDashboard() {
   const waitingCount = submissions.filter((item) => item.status === "submitted").length;
 
   return (
-    <div className="mt-8 grid gap-6">
-      <section className="rounded-lg border border-[var(--border)] bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <span className="inline-flex size-12 items-center justify-center rounded bg-[var(--accent-muted)] text-[var(--accent)]">
-              <Broadcast aria-hidden size={26} weight="duotone" />
-            </span>
-            <h3 className="mt-4 text-lg font-semibold text-[var(--text-primary)]">
-              PMDT Simulator - DME 1118A/1119A
-            </h3>
-            <p className="mt-2 max-w-[60ch] text-sm leading-6 text-[var(--text-secondary)]">
-              Cấu hình dữ liệu sự cố và xây dựng các bước kiểm tra ngay trên giao diện PMDT.
-            </p>
-          </div>
-          <div className="flex shrink-0 flex-wrap gap-2">
-            <Link href="/admin/dme/submissions" className="inline-flex h-10 items-center gap-2 rounded border border-[var(--border-strong)] bg-white px-4 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)]">
-              <ClipboardText aria-hidden size={18} />Bài nộp{waitingCount > 0 ? ` (${waitingCount})` : ""}
+    <>
+      <ModuleSummary
+        title="PMDT Simulator - DME 1118A/1119A"
+        description="Cấu hình dữ liệu sự cố và xây dựng các bước kiểm tra trực tiếp trên giao diện PMDT mô phỏng."
+        icon={Broadcast}
+        actions={
+          <>
+            <Link
+              href="/admin/dme/submissions"
+              className="inline-flex min-h-10 items-center gap-2 rounded-md border border-[var(--border-strong)] bg-white px-3.5 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+            >
+              <ClipboardText aria-hidden size={18} weight="regular" />
+              Bài nộp
+              {waitingCount > 0 ? (
+                <span className="rounded-md bg-[var(--surface-muted)] px-1.5 py-0.5 font-mono text-[11px] text-[var(--accent)]">
+                  {waitingCount}
+                </span>
+              ) : null}
             </Link>
-            <Link href="/admin/dme-pmdt" className="inline-flex h-10 items-center rounded border border-[var(--border-strong)] bg-white px-4 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)]">
+            <Link
+              href="/admin/dme-pmdt"
+              className="inline-flex min-h-10 items-center rounded-md border border-[var(--border-strong)] bg-white px-3.5 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+            >
               Mở PMDT Simulator
             </Link>
-            <Link href="/admin/dme/create" className="inline-flex h-10 items-center gap-2 rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)]">
-              <FilePlus aria-hidden size={18} />Tạo kịch bản DME
+            <Link
+              href="/admin/dme/create"
+              className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98] motion-reduce:transform-none"
+            >
+              <FilePlus aria-hidden size={18} weight="bold" />
+              Tạo kịch bản DME
             </Link>
-          </div>
-        </div>
-      </section>
+          </>
+        }
+      />
 
       {syncError ? (
-        <div role="status" className="flex items-start gap-2 rounded border border-[#fde68a] bg-[#fffbeb] p-3 text-sm text-[#78350f]">
-          <WarningCircle aria-hidden className="mt-0.5 shrink-0" size={18} />
+        <div role="status" className="mt-5 flex items-start gap-3 rounded-lg border border-[#fde68a] bg-[#fffbeb] p-4 text-sm text-[#78350f]">
+          <WarningCircle aria-hidden className="mt-0.5 shrink-0" size={19} weight="duotone" />
           <span>Đang dùng dữ liệu DME cục bộ. Supabase chưa đồng bộ: {syncError}</span>
         </div>
       ) : null}
 
-      <section aria-labelledby="dme-scenario-list-title">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <h3 id="dme-scenario-list-title" className="text-lg font-semibold text-[var(--text-primary)]">Kịch bản DME</h3>
-          {isHydrated ? <span className="font-mono text-xs text-[var(--text-muted)]">{scenarios.length} kịch bản</span> : null}
-        </div>
+      <section aria-labelledby="dme-scenario-list-title" className="mt-7">
+        <ScenarioSectionHeader
+          id="dme-scenario-list-title"
+          title="Danh sách kịch bản DME"
+          description="Quản lý dữ liệu sự cố, các điểm kiểm tra và thứ tự thao tác dự kiến."
+          count={isHydrated ? scenarios.length : undefined}
+          countLabel="kịch bản"
+        />
 
-        {!isHydrated ? (
-          <div aria-busy="true" className="h-28 animate-pulse rounded-lg bg-[var(--surface-muted)] motion-reduce:animate-none" />
-        ) : scenarios.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-[var(--border-strong)] bg-white px-5 py-10 text-center">
-            <p className="text-sm font-semibold text-[var(--text-primary)]">Chưa có kịch bản DME</p>
-            <p className="mt-2 text-sm text-[var(--text-secondary)]">Mở PMDT authoring mode để cấu hình tình huống đầu tiên.</p>
-          </div>
-        ) : (
-          <ul className="grid gap-3">
-            {scenarios.map((scenario) => (
-              <li key={scenario.id} className="rounded-lg border border-[var(--border)] bg-white p-4 shadow-[var(--shadow-card)]">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2"><h4 className="font-semibold text-[var(--text-primary)]">{scenario.title}</h4><span className="rounded border border-[var(--border)] bg-[var(--surface-muted)] px-2 py-0.5 text-xs text-[var(--text-secondary)]">{scenario.difficulty}</span></div>
-                    <p className="mt-1 line-clamp-2 text-sm text-[var(--text-secondary)]">{scenario.description}</p>
-                    <p className="mt-2 text-xs text-[var(--text-muted)]">{scenario.overrides.length} giá trị sự cố · {scenario.expectedCheckpoints.length} bước kiểm tra</p>
-                  </div>
-                  <div className="flex shrink-0 gap-2">
-                    <Link href={`/admin/dme/edit?id=${encodeURIComponent(scenario.id)}`} className="inline-flex h-9 items-center gap-1.5 rounded border border-[var(--border-strong)] px-3 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)]"><PencilSimple aria-hidden size={16} />Sửa</Link>
-                    <button type="button" onClick={() => {
-                      if (window.confirm(`Xóa kịch bản “${scenario.title}”?`)) void deleteScenario(scenario.id);
-                    }} className="inline-flex h-9 items-center gap-1.5 rounded px-3 text-sm font-semibold text-[#b91c1c] hover:bg-[#fef2f2]"><Trash aria-hidden size={16} />Xóa</button>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+        <ScenarioListFrame>
+          {!isHydrated ? <LoadingRows label="Đang tải danh sách kịch bản DME" /> : null}
+
+          {isHydrated && scenarios.length === 0 ? (
+            <EmptyState
+              icon={<FilePlus aria-hidden size={23} weight="duotone" />}
+              title="Chưa có kịch bản DME"
+              description="Mở chế độ biên soạn PMDT để cấu hình tình huống kiểm tra đầu tiên."
+              action={
+                <Link
+                  href="/admin/dme/create"
+                  className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+                >
+                  <FilePlus aria-hidden size={18} weight="bold" />
+                  Tạo kịch bản DME
+                </Link>
+              }
+            />
+          ) : null}
+
+          {isHydrated && scenarios.length > 0 ? (
+            <ul className="divide-y divide-[var(--border)]">
+              {scenarios.map((scenario, index) => (
+                <li key={scenario.id}>
+                  <article className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-4 p-4 transition-colors hover:bg-[var(--surface-subtle)] sm:p-5 lg:grid-cols-[2.5rem_minmax(0,1fr)_auto] lg:items-center">
+                    <span className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--surface-muted)] font-mono text-xs font-bold tabular-nums text-[var(--text-secondary)]">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-base font-semibold text-[var(--text-primary)] sm:text-[17px]">
+                          {scenario.title}
+                        </h3>
+                        <span className="rounded-md border border-[var(--border)] bg-[var(--surface-muted)] px-2 py-0.5 text-xs font-semibold text-[var(--text-secondary)]">
+                          {difficultyLabels[scenario.difficulty]}
+                        </span>
+                      </div>
+                      <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-[var(--text-secondary)]">
+                        {scenario.description}
+                      </p>
+                      <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-xs text-[var(--text-muted)]">
+                        <div className="flex gap-1.5">
+                          <dt>Giá trị sự cố</dt>
+                          <dd className="font-mono font-semibold text-[var(--text-secondary)]">{scenario.overrides.length}</dd>
+                        </div>
+                        <div className="flex gap-1.5">
+                          <dt>Bước kiểm tra</dt>
+                          <dd className="font-mono font-semibold text-[var(--text-secondary)]">{scenario.expectedCheckpoints.length}</dd>
+                        </div>
+                      </dl>
+                    </div>
+                    <div className="col-span-2 flex shrink-0 gap-2 border-t border-[var(--border)] pt-4 lg:col-span-1 lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
+                      <Link
+                        href={`/admin/dme/edit?id=${encodeURIComponent(scenario.id)}`}
+                        className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-md border border-[var(--border-strong)] px-3 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] lg:flex-none"
+                      >
+                        <PencilSimple aria-hidden size={16} />
+                        Sửa
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm(`Xóa kịch bản “${scenario.title}”?`)) {
+                            void deleteScenario(scenario.id);
+                          }
+                        }}
+                        className="inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-md px-3 text-sm font-semibold text-[var(--danger)] hover:bg-[var(--danger-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger)] lg:flex-none"
+                      >
+                        <Trash aria-hidden size={16} />
+                        Xóa
+                      </button>
+                    </div>
+                  </article>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </ScenarioListFrame>
       </section>
-    </div>
+    </>
   );
 }
-

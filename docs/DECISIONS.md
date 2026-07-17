@@ -34,6 +34,18 @@ This file records the choices made while implementing the MVP from `ADSB_Trainin
 3. Status is always conveyed by text and icon in addition to color.
 4. Motion is limited to state feedback and is disabled when reduced motion is requested.
 
+## Examination interface redesign
+
+1. The July 2026 redesign is a targeted visual evolution. Routes, store hydration, scenario ordering, authoring, editing, deletion, PMDT access, submission review, student sessions, and grading behavior remain unchanged.
+2. The interface is Windows 11 and Fluent-inspired rather than an implementation of the official Fluent UI component package. Keeping Tailwind v4, Geist, Motion, and Phosphor avoids a component-system migration and preserves the existing simulator surfaces.
+3. Homepage composition uses lower information density and one aviation-specific image. Admin and student workspaces use high-density rows, sparse dividers, compact module navigation, and restrained elevation.
+4. The desktop navigation is a fixed 80-pixel operational rail with visible labels. Mobile continues to use the existing drawer behavior.
+5. Role context is explicit in both the shell and page header so examiners and students can confirm their current workspace before acting.
+6. VOR, DME, and ADS-B dashboards share page headers, module navigation, list frames, loading rows, and empty-state primitives. Domain data and actions remain owned by their existing module components.
+7. Scenario lists use one bordered frame with divided rows instead of a separate elevated card for every item. This improves scanning without turning the page into a dense data table.
+8. The homepage image is stored at `public/images/cns-image.webp` and rendered through Next.js `Image` with responsive sizing and preload enabled.
+9. Playwright accessibility coverage includes the homepage plus the ADS-B admin and student dashboards at desktop and mobile viewports.
+
 ## Repository content
 
 The three vendor manuals are reference inputs and are not copied into the repository. This avoids publishing potentially restricted source documents. The README identifies the expected manual titles and versions.

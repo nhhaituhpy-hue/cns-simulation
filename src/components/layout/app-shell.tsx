@@ -33,10 +33,10 @@ function BrandWordmark() {
   return (
     <Link
       href="/"
-      className="inline-flex shrink-0 items-baseline rounded px-1 py-1 font-semibold tracking-[-0.04em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+      className="inline-flex shrink-0 items-baseline rounded-md px-1 py-1 text-[15px] font-bold tracking-[-0.045em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
       aria-label="ATTECH, về trang chủ"
     >
-      <span className="text-[#b91c1c]">A</span>
+      <span className="text-[var(--danger)]">A</span>
       <span className="text-[var(--accent)]">TTECH</span>
     </Link>
   );
@@ -88,12 +88,12 @@ function DesktopNavigationRail() {
 
   return (
     <aside
-      className="fixed left-3 top-1/2 z-20 hidden -translate-y-1/2 md:block"
+      className="app-glass fixed bottom-0 left-0 top-[4.25rem] z-20 hidden w-20 border-r border-[var(--border)] md:block"
       aria-label="Thanh điều hướng"
     >
       <nav
         aria-label="Điều hướng chính"
-        className="app-glass relative grid gap-2 rounded-full border border-[var(--border)] p-2 shadow-[var(--shadow-panel)]"
+        className="relative z-10 grid gap-1.5 p-2"
       >
         {navigationItems.map((item) => {
           const active = isItemActive(pathname, item.href);
@@ -105,17 +105,14 @@ function DesktopNavigationRail() {
               href={item.href}
               aria-label={item.label}
               aria-current={active ? "page" : undefined}
-              className={`group relative inline-flex size-11 items-center justify-center rounded-full border text-[var(--text-secondary)] transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 motion-reduce:transition-none ${
+              className={`group relative flex min-h-16 flex-col items-center justify-center gap-1 rounded-lg border px-1 text-[var(--text-secondary)] transition-[background-color,border-color,color,box-shadow] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-inset motion-reduce:transition-none ${
                 active
-                  ? "border-[var(--accent)] bg-[var(--accent)] text-white"
-                  : "border-transparent bg-white/80 hover:border-[var(--border-strong)] hover:bg-white hover:text-[var(--text-primary)]"
+                  ? "border-[var(--accent-border)] bg-[var(--surface)] text-[var(--accent)] shadow-[var(--shadow-sm)]"
+                  : "border-transparent hover:bg-white/70 hover:text-[var(--text-primary)]"
               }`}
             >
-              <ItemIcon aria-hidden size={21} weight={active ? "fill" : "regular"} />
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute left-full ml-3 whitespace-nowrap rounded border border-[var(--border-strong)] bg-[#171717] px-2.5 py-1.5 text-xs font-semibold text-white opacity-0 shadow-[var(--shadow-card)] transition-[opacity,transform] duration-150 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 motion-reduce:transition-none md:translate-x-1"
-              >
+              <ItemIcon aria-hidden size={21} weight={active ? "duotone" : "regular"} />
+              <span aria-hidden="true" className="max-w-full truncate text-[10px] font-semibold leading-none">
                 {item.label}
               </span>
             </Link>
@@ -128,6 +125,12 @@ function DesktopNavigationRail() {
 
 export function AppShell({ children }: AppShellProps) {
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
+  const pathname = usePathname();
+  const workspaceLabel = pathname.startsWith("/admin")
+    ? "Không gian giám khảo"
+    : pathname.startsWith("/student")
+      ? "Không gian học viên"
+      : "Cổng hệ thống";
 
   return (
     <div className="min-h-[100dvh] bg-[var(--background)] text-[var(--foreground)]">
@@ -138,11 +141,11 @@ export function AppShell({ children }: AppShellProps) {
         Chuyển đến nội dung chính
       </a>
 
-      <header className="app-glass sticky top-0 z-30 h-16 border-b border-[var(--border)]">
-        <div className="relative z-10 flex h-full items-center gap-3 px-4 sm:px-5">
+      <header className="app-glass sticky top-0 z-30 h-[4.25rem] border-b border-[var(--border)]">
+        <div className="relative z-10 flex h-full items-center gap-3 px-4 sm:px-5 md:pl-0">
           <button
             type="button"
-            className="inline-flex size-9 shrink-0 items-center justify-center rounded text-[var(--text-primary)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] md:hidden"
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-[var(--text-primary)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] md:hidden"
             aria-label="Mở điều hướng"
             aria-controls="mobile-navigation"
             aria-expanded={mobileNavigationOpen}
@@ -151,27 +154,29 @@ export function AppShell({ children }: AppShellProps) {
             <List aria-hidden size={21} weight="regular" />
           </button>
 
-          <BrandWordmark />
+          <div className="flex shrink-0 items-center md:h-full md:w-20 md:justify-center md:border-r md:border-[var(--border)]">
+            <BrandWordmark />
+          </div>
 
-          <div className="min-w-0 border-l border-[var(--border-strong)] pl-3">
-            <p className="hidden truncate text-xs font-medium text-[var(--text-secondary)] sm:block">
+          <div className="min-w-0 md:pl-1">
+            <p className="hidden truncate text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--text-muted)] sm:block">
               Trung tâm Bảo đảm kỹ thuật
             </p>
-            <p className="truncate text-sm font-semibold text-[var(--accent)] sm:text-base">
+            <p className="truncate text-sm font-semibold tracking-tight text-[var(--text-primary)] sm:text-[15px]">
               Hệ thống kiểm tra mô phỏng CNS
             </p>
           </div>
 
-          <div className="ml-auto hidden shrink-0 items-center gap-2 text-sm text-[var(--text-secondary)] sm:flex">
-            <UserCircle aria-hidden size={20} weight="regular" />
-            <span>Không gian đào tạo</span>
+          <div className="ml-auto hidden shrink-0 items-center gap-2 rounded-lg border border-[var(--border)] bg-white/70 px-3 py-2 text-sm text-[var(--text-secondary)] shadow-[var(--shadow-sm)] sm:flex">
+            <UserCircle aria-hidden size={19} weight="duotone" className="text-[var(--accent)]" />
+            <span className="font-medium">{workspaceLabel}</span>
           </div>
         </div>
       </header>
 
       <DesktopNavigationRail />
 
-      <div className="min-h-[calc(100dvh-4rem)] md:pl-20">
+      <div className="min-h-[calc(100dvh-4.25rem)] md:pl-20">
         <main id="main-content" tabIndex={-1} className="min-w-0">
           {children}
         </main>
@@ -179,7 +184,7 @@ export function AppShell({ children }: AppShellProps) {
 
       {mobileNavigationOpen ? (
         <div
-          className="fixed inset-0 top-16 z-40 md:hidden"
+          className="fixed inset-0 top-[4.25rem] z-40 md:hidden"
           onKeyDown={(event) => {
             if (event.key === "Escape") {
               setMobileNavigationOpen(false);
@@ -188,7 +193,7 @@ export function AppShell({ children }: AppShellProps) {
         >
           <button
             type="button"
-            className="absolute inset-0 bg-[#171717]/20"
+            className="absolute inset-0 bg-[#16242f]/25 backdrop-blur-[2px]"
             aria-hidden="true"
             tabIndex={-1}
             onClick={() => setMobileNavigationOpen(false)}
@@ -205,7 +210,7 @@ export function AppShell({ children }: AppShellProps) {
                 </span>
                 <button
                   type="button"
-                  className="inline-flex size-9 items-center justify-center rounded text-[var(--text-secondary)] hover:bg-white hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                  className="inline-flex size-9 items-center justify-center rounded-md text-[var(--text-secondary)] hover:bg-white hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                   aria-label="Đóng điều hướng"
                   onClick={() => setMobileNavigationOpen(false)}
                 >

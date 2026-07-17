@@ -30,6 +30,7 @@
 - [x] Optional VOR/DME hardware diagnosis step for admin, student, persistence, and examiner review
 - [x] Detailed DVOR 1150A transmitter signal topology and DME 1118A/1119A Dual High Power topology
 - [x] Compact hardware-diagram canvas and blocks sized for the desktop author/student workspace
+- [x] Professional examination UI redesign for homepage, shared shell, and VOR/DME/ADS-B admin and student dashboards
 
 ## Required quality gates
 
@@ -40,6 +41,17 @@
 - `npm run test:e2e`
 
 ## Latest verification
+
+Verified on 2026-07-17 after the professional examination interface redesign:
+
+- ESLint: passed
+- TypeScript: passed
+- Vitest: 42 files, 185 tests passed
+- Production build: passed with 31 routes
+- Playwright: 10/10 desktop and mobile Chromium flows passed
+- Axe coverage: no serious or critical violations on the homepage, ADS-B admin dashboard, or ADS-B student dashboard
+- In-app browser visual inspection: unavailable in this session; Playwright desktop/mobile rendering and interaction checks passed
+- No application routes, persistence schemas, or scenario workflow handlers were changed
 
 Verified on 2026-07-17 after the detailed DVOR/DME topology update:
 

@@ -9,10 +9,10 @@ test("landing and primary navigation are accessible", async ({ page }) => {
   await page.goto("/");
 
   await expect(
-    page.getByRole("heading", { name: "Chọn không gian làm việc" }),
+    page.getByRole("heading", { name: "Kiểm tra năng lực vận hành hệ thống CNS" }),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: /Mở khu vực quản trị/ })).toBeVisible();
-  await expect(page.getByRole("link", { name: /Bắt đầu thực hành/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Quản lý kỳ kiểm tra/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Vào khu vực thực hành/ })).toBeVisible();
 
   const accessibility = await new AxeBuilder({ page }).analyze();
   expect(
@@ -21,6 +21,30 @@ test("landing and primary navigation are accessible", async ({ page }) => {
         violation.impact === "critical" || violation.impact === "serious",
     ),
   ).toEqual([]);
+});
+
+test("admin and student dashboards have no serious accessibility violations", async ({
+  page,
+}) => {
+  const dashboards = [
+    { path: "/admin/ads-b", heading: "Quản lý kịch bản kiểm tra" },
+    { path: "/student/ads-b", heading: "Bài thực hành mô phỏng CNS" },
+  ];
+
+  for (const dashboard of dashboards) {
+    await page.goto(dashboard.path);
+    await expect(
+      page.getByRole("heading", { name: dashboard.heading }),
+    ).toBeVisible();
+
+    const accessibility = await new AxeBuilder({ page }).analyze();
+    expect(
+      accessibility.violations.filter(
+        (violation) =>
+          violation.impact === "critical" || violation.impact === "serious",
+      ),
+    ).toEqual([]);
+  }
 });
 
 test("admin can create a scenario with a recorded reference path", async ({

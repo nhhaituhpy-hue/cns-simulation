@@ -2,26 +2,32 @@
 
 :root {
   color-scheme: light;
-  --background: #fafafa;
-  --foreground: #171717;
+  --background: #f4f7f9;
+  --foreground: #16242f;
   --surface: #ffffff;
-  --surface-muted: #f0f0f0;
-  --border: #e5e5e5;
-  --border-strong: #d4d4d4;
-  --text-primary: #171717;
-  --text-secondary: #525252;
-  --text-muted: #666666;
+  --surface-muted: #edf2f5;
+  --surface-subtle: #f8fafb;
+  --surface-selected: #e8f3f8;
+  --border: #dce4e9;
+  --border-strong: #c5d1d9;
+  --text-primary: #16242f;
+  --text-secondary: #50616f;
+  --text-muted: #60717e;
   --accent: #0369a1;
   --accent-hover: #075985;
   --accent-active: #0c4a6e;
-  --accent-muted: #e0f2fe;
+  --accent-muted: #e3f1f8;
+  --accent-border: #b9dbe9;
+  --danger: #b42318;
+  --danger-muted: #fef3f2;
   --terminal-bg: #000000;
   --terminal-text: #e4e4e7;
   --terminal-green: #00ff41;
   --terminal-error: #ef4444;
-  --shadow-card: 0 2px 8px rgb(3 105 161 / 0.05);
-  --shadow-card-hover: 0 8px 24px rgb(3 105 161 / 0.12);
-  --shadow-panel: 0 16px 40px rgb(23 23 23 / 0.12);
+  --shadow-sm: 0 1px 2px rgb(22 36 47 / 0.06);
+  --shadow-card: 0 1px 2px rgb(22 36 47 / 0.04), 0 8px 24px rgb(22 36 47 / 0.035);
+  --shadow-card-hover: 0 2px 4px rgb(3 105 161 / 0.06), 0 16px 36px rgb(3 105 161 / 0.1);
+  --shadow-panel: 0 20px 50px rgb(22 36 47 / 0.14);
 }
 
 @theme inline {
@@ -66,9 +72,9 @@ button {
 
 .app-glass {
   position: relative;
-  background: rgb(240 240 240 / 0.88);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgb(244 247 249 / 0.92);
+  backdrop-filter: blur(18px) saturate(135%);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
 }
 
 .app-glass::before {
@@ -76,7 +82,7 @@ button {
   inset: 0;
   content: "";
   pointer-events: none;
-  background: rgb(255 255 255 / 0.18);
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.34), transparent 70%);
 }
 
 .terminal-surface {

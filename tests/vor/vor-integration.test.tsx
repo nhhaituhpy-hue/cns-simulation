@@ -24,7 +24,7 @@ describe("VOR integration", () => {
       "page",
     );
     expect(
-      screen.getByRole("heading", { name: "PMDT Simulator — DVOR 1150A" }),
+      screen.getByRole("heading", { name: "PMDT Simulator - DVOR 1150A" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Mở PMDT Simulator" })).toHaveAttribute(
       "href",

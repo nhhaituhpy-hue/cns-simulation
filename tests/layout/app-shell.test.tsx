@@ -8,7 +8,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("AppShell", () => {
-  it("shows three circular desktop destinations and marks the current route", () => {
+  it("shows three compact desktop destinations and marks the current route", () => {
     render(
       <AppShell>
         <p>Nội dung kiểm thử</p>
@@ -31,6 +31,7 @@ describe("AppShell", () => {
       "page",
     );
     expect(navigation.closest("aside")).toHaveClass("fixed");
-    links.forEach((link) => expect(link).toHaveClass("rounded-full"));
+    expect(navigation.closest("aside")).toHaveClass("w-20");
+    links.forEach((link) => expect(link).toHaveClass("rounded-lg"));
   });
 });
