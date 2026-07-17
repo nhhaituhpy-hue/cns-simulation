@@ -976,10 +976,8 @@ def main() -> None:
     ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
     outputs = (
         ("examiner", "vor", "huong-dan-giam-khao-vor.mp4"),
-        ("examiner", "dme", "huong-dan-giam-khao-dme.mp4"),
         ("examiner", "ads-b", "huong-dan-giam-khao-ads-b.mp4"),
         ("candidate", "vor", "huong-dan-thi-sinh-vor.mp4"),
-        ("candidate", "dme", "huong-dan-thi-sinh-dme.mp4"),
         ("candidate", "ads-b", "huong-dan-thi-sinh-ads-b.mp4"),
     )
     for role, module, filename in outputs:

@@ -5,41 +5,51 @@ const fs = require('fs');
 const mediaRoot = 'public/media';
 const storageRoot = 'ss:///training-media/home-guides/v1';
 const cacheControl = 'public, max-age=31536000, immutable';
-const clips = [
-  'huong-dan-giam-khao-vor',
-  'huong-dan-giam-khao-dme',
-  'huong-dan-giam-khao-ads-b',
-  'huong-dan-thi-sinh-vor',
-  'huong-dan-thi-sinh-dme',
-  'huong-dan-thi-sinh-ads-b'
+
+const filesToUpload = [
+  // Hướng dẫn Giám khảo VOR
+  { source: `${mediaRoot}/huong-dan-giam-khao-vor.mp4`, dest: `${storageRoot}/huong-dan-giam-khao-vor.mp4`, required: true },
+  { source: `${mediaRoot}/huong-dan-giam-khao-vor.webp`, dest: `${storageRoot}/huong-dan-giam-khao-vor.webp`, required: true },
+  { source: `${mediaRoot}/huong-dan-giam-khao-vor-dme.mp3`, dest: `${storageRoot}/huong-dan-giam-khao-vor-dme.mp3`, required: false },
+
+  // Hướng dẫn Giám khảo ADS-B
+  { source: `${mediaRoot}/huong-dan-giam-khao-ads-b.mp4`, dest: `${storageRoot}/huong-dan-giam-khao-ads-b.mp4`, required: true },
+  { source: `${mediaRoot}/huong-dan-giam-khao-ads-b.webp`, dest: `${storageRoot}/huong-dan-giam-khao-ads-b.webp`, required: true },
+  { source: `${mediaRoot}/huong-dan-giam-khao-adsb.mp3`, dest: `${storageRoot}/huong-dan-giam-khao-adsb.mp3`, required: false },
+
+  // Hướng dẫn Thí sinh VOR
+  { source: `${mediaRoot}/huong-dan-thi-sinh-vor.mp4`, dest: `${storageRoot}/huong-dan-thi-sinh-vor.mp4`, required: true },
+  { source: `${mediaRoot}/huong-dan-thi-sinh-vor.webp`, dest: `${storageRoot}/huong-dan-thi-sinh-vor.webp`, required: true },
+
+  // Hướng dẫn Thí sinh ADS-B
+  { source: `${mediaRoot}/huong-dan-thi-sinh-ads-b.mp4`, dest: `${storageRoot}/huong-dan-thi-sinh-ads-b.mp4`, required: true },
+  { source: `${mediaRoot}/huong-dan-thi-sinh-ads-b.webp`, dest: `${storageRoot}/huong-dan-thi-sinh-ads-b.webp`, required: true }
 ];
 
-clips.forEach((clip) => {
-  ['mp4', 'webp', 'mp3'].forEach((ext) => {
-    const fileName = `${clip}.${ext}`;
-    const source = `${mediaRoot}/${fileName}`;
-    if (!fs.existsSync(source)) {
-      if (ext === 'mp3') return; // mp3 là tùy chọn
+filesToUpload.forEach(({ source, dest, required }) => {
+  const fileName = source.split('/').pop();
+  if (!fs.existsSync(source)) {
+    if (required) {
       console.error(`Không tìm thấy file bắt buộc: ${source}`);
       process.exit(1);
     }
+    return; // mp3 tùy chọn, bỏ qua nếu chưa có
+  }
 
-    const dest = `${storageRoot}/${fileName}`;
-    console.log(`Đang tải lên ${fileName} -> ${dest}...`);
+  console.log(`Đang tải lên ${fileName} -> ${dest}...`);
+  try {
     try {
-      try {
-        // Xóa file cũ trước để ghi đè thành công
-        execSync(`npx supabase storage rm "${dest}" --linked --experimental`, { stdio: 'ignore' });
-      } catch {
-        // Bỏ qua nếu file chưa tồn tại trên storage
-      }
-      execSync(`npx supabase storage cp "${source}" "${dest}" --linked --experimental --cache-control "${cacheControl}"`, { stdio: 'inherit' });
+      // Xóa file cũ trước để ghi đè thành công
+      execSync(`npx supabase storage rm "${dest}" --linked --experimental`, { stdio: 'ignore' });
     } catch {
-      console.warn(`Lưu ý: Tải lên thất bại: ${fileName}`);
-      if (ext === 'mp3') {
-        console.warn(`Lưu ý thêm: File mp3 thất bại có thể do Supabase Storage chưa cấu hình cho phép loại MIME type audio/mpeg.`);
-      }
+      // Bỏ qua nếu file chưa tồn tại trên storage
     }
-  });
+    execSync(`npx supabase storage cp "${source}" "${dest}" --linked --experimental --cache-control "${cacheControl}"`, { stdio: 'inherit' });
+  } catch {
+    console.warn(`Lưu ý: Tải lên thất bại: ${fileName}`);
+    if (source.endsWith('.mp3')) {
+      console.warn(`Lưu ý thêm: File mp3 thất bại có thể do Supabase Storage chưa cấu hình cho phép loại MIME type audio/mpeg.`);
+    }
+  }
 });
 console.log('Hoàn thành quá trình đồng bộ!');

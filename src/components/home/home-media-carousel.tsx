@@ -8,12 +8,10 @@ type HomeMediaCarouselProps = {
 };
 
 const mediaItems = [
-  { id: "examiner-vor", kind: "video", label: "Hướng dẫn Giám khảo VOR", file: "huong-dan-giam-khao-vor", voice: true },
-  { id: "examiner-dme", kind: "video", label: "Hướng dẫn Giám khảo DME", file: "huong-dan-giam-khao-dme", voice: false },
-  { id: "examiner-ads-b", kind: "video", label: "Hướng dẫn Giám khảo ADS-B", file: "huong-dan-giam-khao-ads-b", voice: false },
-  { id: "candidate-vor", kind: "video", label: "Hướng dẫn Thí sinh VOR", file: "huong-dan-thi-sinh-vor", voice: false },
-  { id: "candidate-dme", kind: "video", label: "Hướng dẫn Thí sinh DME", file: "huong-dan-thi-sinh-dme", voice: false },
-  { id: "candidate-ads-b", kind: "video", label: "Hướng dẫn Thí sinh ADS-B", file: "huong-dan-thi-sinh-ads-b", voice: false },
+  { id: "examiner-vor", kind: "video", label: "Hướng dẫn Giám khảo VOR", file: "huong-dan-giam-khao-vor", voiceFile: "huong-dan-giam-khao-vor-dme.mp3" },
+  { id: "examiner-ads-b", kind: "video", label: "Hướng dẫn Giám khảo ADS-B", file: "huong-dan-giam-khao-ads-b", voiceFile: "huong-dan-giam-khao-adsb.mp3" },
+  { id: "candidate-vor", kind: "video", label: "Hướng dẫn Thí sinh VOR", file: "huong-dan-thi-sinh-vor" },
+  { id: "candidate-ads-b", kind: "video", label: "Hướng dẫn Thí sinh ADS-B", file: "huong-dan-thi-sinh-ads-b" },
 ] as const;
 
 function joinAssetUrl(baseUrl: string, fileName: string) {
@@ -30,7 +28,7 @@ export function HomeMediaCarousel({ baseUrl }: HomeMediaCarouselProps) {
       ...item,
       videoUrl: joinAssetUrl(baseUrl, `${item.file}.mp4`),
       posterUrl: joinAssetUrl(baseUrl, `${item.file}.webp`),
-      voiceUrl: item.voice ? joinAssetUrl(baseUrl, `${item.file}.mp3`) : undefined,
+      voiceUrl: "voiceFile" in item && item.voiceFile ? joinAssetUrl(baseUrl, item.voiceFile) : undefined,
     })),
     [baseUrl],
   );
@@ -72,7 +70,7 @@ export function HomeMediaCarousel({ baseUrl }: HomeMediaCarouselProps) {
   useEffect(() => {
     if (videoRef.current) {
       // Tắt tiếng video gốc khi có lồng tiếng
-      videoRef.current.muted = isVoiceOverEnabled && !!activeItem.voice;
+      videoRef.current.muted = isVoiceOverEnabled && !!activeItem.voiceUrl;
       if (!isVoiceOverEnabled) {
         audioRef.current?.pause();
       } else if (isVoiceOverEnabled && !videoRef.current.paused && audioRef.current) {
@@ -146,7 +144,7 @@ export function HomeMediaCarousel({ baseUrl }: HomeMediaCarouselProps) {
         />
       )}
 
-      {activeItem.voice && (
+      {activeItem.voiceUrl && (
         <button
           type="button"
           onClick={() => setIsVoiceOverEnabled(!isVoiceOverEnabled)}

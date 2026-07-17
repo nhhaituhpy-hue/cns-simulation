@@ -13,12 +13,12 @@ describe("HomeMediaCarousel", () => {
       "src",
       "https://example.supabase.co/storage/v1/object/public/training-media/home-guides/v1/huong-dan-giam-khao-vor.mp4",
     );
-    expect(screen.getByText("1/6")).toBeInTheDocument();
+    expect(screen.getByText("1/4")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Xem clip tiếp theo" }));
 
-    expect(screen.getByLabelText("Hướng dẫn Giám khảo DME")).toBeInTheDocument();
-    expect(screen.getByText("2/6")).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: /^Mở / })).toHaveLength(6);
+    expect(screen.getByLabelText("Hướng dẫn Giám khảo ADS-B")).toBeInTheDocument();
+    expect(screen.getByText("2/4")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /^Mở / })).toHaveLength(4);
   });
 });
