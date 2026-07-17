@@ -159,11 +159,11 @@ Khi bản kế hoạch và hình menu trong manual khác nhau, manual là nguồ
 - 2026-07-17: Đồng bộ thành công 3 kịch bản sự cố giả lập DVOR 1150A và 3 kịch bản sự cố DME 1119A lên cơ sở dữ liệu Cloud Supabase, đi kèm đầy đủ cấu trúc overrides, checkpoints và Hardware Diagnosis Task.
 - 2026-07-17: Bổ sung tính năng Xóa thao tác PMDT đã ghi nhận ở cả giao diện học viên VOR và DME, tự động sắp xếp lại chỉ số sequence liền mạch. Đã git push lên GitHub.
 - 2026-07-17: Lên kế hoạch đổi tên thư mục repository gốc từ `ADS-B test` sang `cns-simulator` (Khuyến nghị Phương án A: Người dùng tự đóng IDE và đổi tên thủ công ngoài Windows Explorer).
-- 2026-07-17: Hoàn tất đổi tên repo sang `cns-simulator`. Cập nhật cấu hình ESLint (`eslint.config.mjs`) để bỏ qua thư mục `scripts/` giúp kiểm tra chất lượng (lint, typecheck, test, build Next.js) vượt qua 100% không có lỗi.
-- 2026-07-17: Session ended at Phase N (Seed Scenarios & Event Deletion Feature)
-  - Done: Đổi tên repo thành công; Sửa cấu hình ESLint bỏ qua thư mục scripts; Xác minh hệ thống chạy ổn định 100% với 191 bài test và build Next.js thành công.
+- 2026-07-17: Hoàn tất đổi tên repo sang `cns-simulator`. Cập nhật cấu hình ESLint (`eslint.config.mjs`) để bỏ qua thư mục `scripts/`, dọn dẹp các script cũ không còn sử dụng và push thành công lên GitHub.
+- 2026-07-17: Session ended at Phase N (Verification & Cleanup)
+  - Done: Đồng bộ đổi tên thư mục repository; Cấu hình ESLint & dọn dẹp file scripts; Xác minh kiểm tra chất lượng (191 tests & build production) thành công 100%; Đẩy code lên GitHub repository mới.
   - Remaining: Tiếp tục triển khai các tính năng mới theo roadmap.
-  - Note for next session: Hệ thống hiện tại đã cực kỳ ổn định, sẵn sàng cho các pha phát triển tiếp theo.
+  - Note for next session: Hệ thống hiện tại ở trạng thái hoàn toàn ổn định và sạch sẽ, sẵn sàng cho pha tiếp theo.
 
 
 ## Hướng phát triển tiếp theo
