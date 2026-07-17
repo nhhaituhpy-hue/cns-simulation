@@ -4,8 +4,9 @@ export function HomeScreen() {
   return (
     <section className="grid min-h-full place-items-center p-8 text-center" aria-labelledby="dme-home-title">
       <div>
-        <div id="dme-home-title" className="text-5xl font-black tracking-[-0.06em] text-[#cbd5e1]" aria-label="SELEX">
-          SELE<span className="text-[#ef4444]">X</span>
+        <div id="dme-home-title" className="inline-flex items-baseline text-5xl font-black tracking-[-0.07em]" aria-label="ATTECH">
+          <span className="text-[#ef4444]">A</span>
+          <span className="text-[#1e40af]">TTECH</span>
         </div>
         <p className="mt-6 text-lg font-semibold text-[#e2e8f0]">
           Phần mềm mô phỏng khai thác thiết bị DME

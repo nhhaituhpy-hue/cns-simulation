@@ -12,6 +12,9 @@ describe("DME PMDT shell", () => {
   it("renders the DME identity and documented sidebar data", () => {
     render(<PmdtLayout />);
     expect(screen.getByRole("heading", { name: /Dual DME - SELEX Systems Integration Inc. PMDT/i })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "ATTECH" })).toBeInTheDocument();
+    expect(screen.getByText("TTECH")).toBeInTheDocument();
+    expect(screen.queryByLabelText("SELEX")).not.toBeInTheDocument();
     expect(screen.getByText("Dual DME Model 1118A/1119A")).toBeInTheDocument();
     expect(screen.getByText("Connected")).toBeInTheDocument();
     expect(screen.getByText("12.02")).toBeInTheDocument();
