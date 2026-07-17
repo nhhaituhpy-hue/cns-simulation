@@ -156,11 +156,14 @@ Khi bản kế hoạch và hình menu trong manual khác nhau, manual là nguồ
 - 2026-07-17: Đồng bộ thành công 4 video, 4 poster (webp) và 2 file âm thanh thuyết minh (.mp3) lên Supabase Storage qua SDK với chế độ upsert; frontend tự động sử dụng đường dẫn CDN từ Supabase Storage thông qua cấu hình URL động.
 - 2026-07-17: Sửa lỗi video 15s bị lệch pha so với âm thanh lồng tiếng bằng cách chạy script Python để vẽ lại toàn bộ 4 video hướng dẫn dài 30s và đồng bộ ghi đè lên Supabase Storage qua SDK Node.js.
 - 2026-07-17: Cải tiến HomeMediaCarousel: Khi video kết thúc tự động ở slide cuối, âm thanh lồng tiếng (.mp3) vẫn tiếp tục phát cho tới khi kết thúc chứ không bị dừng đột ngột.
-- 2026-07-17: Sửa dòng đầu tiên bên sidebar bên trái của VOR simulator, bỏ nhãn Connection dư thừa và căn chỉnh lại cấu trúc hiển thị Alert/Local tương tự DME simulator.
-- 2026-07-17: Session ended at Phase N (Cải tiến giao diện VOR Simulator)
-  - Done: Sửa phần hiển thị sidebar của VOR simulator, bỏ nhãn Connection dư thừa và đồng bộ giao diện Alert/Local giống DME simulator. Đã chạy test, typecheck, build thành công và push lên GitHub.
-  - Remaining: Thay localStorage bằng Cloudflare D1/Supabase, mở rộng menu sâu và chức năng đăng nhập/phân quyền thực tế.
-  - Note for next session: Giao diện sidebar của VOR và DME hiện đã hoàn toàn thống nhất.
+- 2026-07-17: Đồng bộ thành công 3 kịch bản sự cố giả lập DVOR 1150A và 3 kịch bản sự cố DME 1119A lên cơ sở dữ liệu Cloud Supabase, đi kèm đầy đủ cấu trúc overrides, checkpoints và Hardware Diagnosis Task.
+- 2026-07-17: Bổ sung tính năng Xóa thao tác PMDT đã ghi nhận ở cả giao diện học viên VOR và DME, tự động sắp xếp lại chỉ số sequence liền mạch. Đã git push lên GitHub.
+- 2026-07-17: Lên kế hoạch đổi tên thư mục repository gốc từ `ADS-B test` sang `cns-simulator` (Khuyến nghị Phương án A: Người dùng tự đóng IDE và đổi tên thủ công ngoài Windows Explorer).
+- 2026-07-17: Session ended at Phase N (Seed Scenarios & Event Deletion Feature)
+  - Done: Triển khai 6 kịch bản lỗi (3 VOR, 3 DME) lên database; Bổ sung tính năng xóa thao tác PMDT thừa; Git commit và push lên GitHub.
+  - Remaining: Tiến hành đổi tên thư mục gốc của repository sang `cns-simulator` thủ công.
+  - Note for next session: Sau khi đổi tên thư mục gốc, mở lại IDE tại thư mục mới để tiếp tục.
+
 
 ## Hướng phát triển tiếp theo
 
