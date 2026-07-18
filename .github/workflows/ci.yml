@@ -37,6 +37,11 @@ jobs:
 
       - name: Production build
         run: npm run build
+        env:
+          # The build prerenders client pages that initialize Supabase. These
+          # placeholders validate configuration without granting CI data access.
+          NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-key
 
       - name: Audit high-severity production dependencies
         run: npm audit --omit=dev --audit-level=high
