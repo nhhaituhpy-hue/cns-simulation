@@ -305,8 +305,9 @@ export interface DmeStudentAnswer {
 export interface DmeSubmission {
   id: string;
   scenarioId: string;
+  userId: string;
   studentName: string;
-  studentCode: string;
+  workUnit: string;
   status: DmeSubmissionStatus;
   startedAt: string;
   submittedAt?: string;

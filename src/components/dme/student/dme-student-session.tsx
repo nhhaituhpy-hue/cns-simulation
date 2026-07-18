@@ -10,36 +10,62 @@ import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
 import { useDmeScenarioStore } from "@/stores/dme-scenario-store";
 import { useDmeSubmissionStore } from "@/stores/dme-submission-store";
 import { PmdtLayout } from "../pmdt-layout";
-import { DmeStudentIdentity } from "./dme-student-identity";
 import { DmeStudentJournal } from "./dme-student-journal";
 
 interface DmeStudentSessionProps {
   scenarioId: string;
+  identity: {
+    userId: string;
+    studentName: string;
+    workUnit: string;
+  };
 }
 
 interface ActiveIdentity {
+  userId: string;
   studentName: string;
-  studentCode: string;
+  workUnit: string;
   startedAt: string;
 }
 
-export function DmeStudentSession({ scenarioId }: DmeStudentSessionProps) {
+export function DmeStudentSession({ scenarioId, identity: authIdentity }: DmeStudentSessionProps) {
   const scenarios = useDmeScenarioStore((state) => state.scenarios);
   const isHydrated = useDmeScenarioStore((state) => state.isHydrated);
   const hydrateScenarios = useDmeScenarioStore((state) => state.hydrate);
   const hydrateSubmissions = useDmeSubmissionStore((state) => state.hydrate);
   const createSubmission = useDmeSubmissionStore((state) => state.createSubmission);
   const initializeSession = useDmePmdtStore((state) => state.initializeSession);
-  const [identity, setIdentity] = useState<ActiveIdentity | null>(null);
+  const activeSessionMode = useDmePmdtStore((state) => state.mode);
+  const activeScenarioId = useDmePmdtStore((state) => state.scenarioId);
+  const activeUserId = useDmePmdtStore((state) => state.userId);
+  const [startedAt] = useState(() => new Date().toISOString());
+  const identity: ActiveIdentity = { ...authIdentity, startedAt };
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedId, setSubmittedId] = useState<string | null>(null);
   const [stage, setStage] = useState<"pmdt" | "hardware">("pmdt");
   const scenario = scenarios.find((item) => item.id === scenarioId);
+  const sessionInitialized =
+    activeSessionMode === "student" &&
+    activeScenarioId === scenarioId &&
+    activeUserId === authIdentity.userId;
 
   useEffect(() => {
     void hydrateScenarios();
     void hydrateSubmissions();
   }, [hydrateScenarios, hydrateSubmissions]);
+
+  useEffect(() => {
+    if (!scenario || sessionInitialized) return;
+    initializeSession({
+      mode: "student",
+      scenarioId: scenario.id,
+      userId: identity.userId,
+      studentName: identity.studentName,
+      workUnit: identity.workUnit,
+      overrides: scenario.overrides,
+      expectedCheckpoints: scenario.expectedCheckpoints,
+    });
+  }, [identity.studentName, identity.userId, identity.workUnit, initializeSession, scenario, sessionInitialized]);
 
   if (!isHydrated) {
     return <div role="status" className="grid min-h-[calc(100dvh-4rem)] place-items-center bg-[var(--surface-muted)] text-sm text-[var(--text-secondary)]">Đang tải kịch bản DME…</div>;
@@ -72,34 +98,19 @@ export function DmeStudentSession({ scenarioId }: DmeStudentSessionProps) {
     );
   }
 
-  if (!identity) {
-    return (
-      <DmeStudentIdentity
-        scenario={scenario}
-        onStart={(studentName, studentCode) => {
-          const nextIdentity = { studentName, studentCode, startedAt: new Date().toISOString() };
-          initializeSession({
-            mode: "student",
-            scenarioId: scenario.id,
-            studentName,
-            studentCode,
-            overrides: scenario.overrides,
-            expectedCheckpoints: scenario.expectedCheckpoints,
-          });
-          setIdentity(nextIdentity);
-        }}
-      />
-    );
+  if (!sessionInitialized) {
+    return <div role="status" className="grid min-h-[calc(100dvh-4rem)] place-items-center bg-[var(--surface-muted)] text-sm text-[var(--text-secondary)]">Đang chuẩn bị phiên thực hành DME…</div>;
   }
 
   async function submit(hardwareAnswer?: HardwareDiagnosisAnswer) {
-    if (!identity || !scenario) return;
+    if (!scenario) return;
     setIsSubmitting(true);
     const state = useDmePmdtStore.getState();
     const submission = await createSubmission({
       scenarioId: scenario.id,
+      userId: identity.userId,
       studentName: identity.studentName,
-      studentCode: identity.studentCode,
+      workUnit: identity.workUnit,
       status: "submitted",
       startedAt: identity.startedAt,
       submittedAt: new Date().toISOString(),
@@ -129,7 +140,7 @@ export function DmeStudentSession({ scenarioId }: DmeStudentSessionProps) {
       <div className="min-w-[1024px] border-b border-[#334155] bg-[#111827] px-4 py-2 text-xs text-[#cbd5e1]">
         <span className="font-bold text-white">{scenario.title}</span>
         <span className="mx-2 text-[#475569]">|</span>
-        <span>{identity.studentName} · {identity.studentCode}</span>
+        <span>{identity.studentName} | {identity.workUnit}</span>
       </div>
       <PmdtLayout
         mode="student"

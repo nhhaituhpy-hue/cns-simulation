@@ -1,83 +1,175 @@
-# CNS Training Simulator (Hệ thống kiểm tra mô phỏng CNS)
+# Hệ thống kiểm tra mô phỏng CNS
 
-Ứng dụng web mô phỏng quy trình xử lý sự cố ADS-B dành cho đào tạo kỹ thuật viên. Người quản trị tạo kịch bản và ghi lại đường thao tác chuẩn; học viên quan sát trạng thái QCMS, mở ứng dụng bảo trì giả lập, thao tác trên terminal rồi nhận kết quả chấm điểm tự động.
+Ứng dụng web phục vụ xây dựng kịch bản, thực hành chẩn đoán và đánh giá kỹ thuật viên trên ba nhóm thiết bị CNS: **VOR**, **DME** và **ADS-B**.
 
-> Đây là môi trường đào tạo xác định trước, không kết nối cảm biến thật, không mở SSH thật và không cung cấp cơ chế xác thực sản xuất.
+Hệ thống mô phỏng giao diện PMDT, QCMS, terminal bảo trì và sơ đồ phần cứng trong một môi trường đào tạo xác định trước. Giám khảo có thể cấu hình tình trạng thiết bị và đáp án tham chiếu; học viên thực hiện quy trình kiểm tra, ghi lại bằng chứng và nộp kết quả để chấm điểm.
+
+> Đây là hệ thống đào tạo, không kết nối thiết bị thật và không mở phiên SSH thật. Tài khoản ứng dụng sử dụng Supabase Auth; tài khoản terminal bên trong bài mô phỏng vẫn chỉ là dữ liệu của kịch bản đào tạo.
+
+## Trạng thái hiện tại
+
+Dự án đang ở giai đoạn **MVP hoạt động đầy đủ cho đào tạo nội bộ**. Ba module đã có route riêng cho giám khảo và học viên, xác thực email công vụ qua Supabase, dữ liệu cloud trên Supabase và lớp fallback cục bộ khi không thể đồng bộ.
+
+| Module | Phạm vi đã triển khai | Cách đánh giá |
+| --- | --- | --- |
+| VOR | PMDT DVOR 1150A, cấu hình kịch bản, checkpoint, nhật ký màn hình, tương tác Local/Bypass và chẩn đoán phần cứng | Giám khảo xem bằng chứng, đối chiếu checkpoint và nhập điểm thủ công |
+| DME | PMDT Model 1118A/1119A, cấu hình kịch bản, nhật ký, Local/Integral Bypass/Standby Bypass và sơ đồ Dual High Power | Giám khảo xem bằng chứng, đối chiếu checkpoint và nhập điểm thủ công |
+| ADS-B | QCMS, terminal SA/MA, trạng thái site/sensor, sự cố phần cứng, ghi nhận và sắp xếp thao tác | Chấm tự động theo ngữ cảnh menu, thứ tự thao tác và dữ liệu nhập |
+
+Mốc xác minh gần nhất được ghi nhận ngày **18/07/2026**: 191 bài kiểm thử Vitest vượt qua và production build thành công. README không thay thế kết quả kiểm tra hiện tại; hãy chạy các quality gate trước khi phát hành thay đổi mới.
 
 ## Chức năng chính
 
-- Quản trị kịch bản bằng wizard năm bước: thông tin, site/sensor, vai trò, đáp án tham chiếu và sự cố phần cứng tùy chọn.
-- Tối đa 8 site trong một kịch bản, 7 trạng thái sensor QCMS và tối đa 4 sensor được hiển thị đồng thời.
-- Dashboard QCMS có toolbar, Event Log, Replay, General Settings, context menu và các cửa sổ Monitoring/Configuration/Status/Statistics/Site Settings.
-- Terminal SA (`sysadmin`) và MA (`maintenance`) dựa trên state machine xác định trước.
-- 17 màn hình terminal SA/MA dùng dữ liệu preset Côn Sơn thay cho nội dung tĩnh.
-- Sơ đồ phần cứng Côn Sơn gồm 16 component và 6 signal path, kèm 10 fault preset.
-- Luồng chẩn đoán kết hợp Terminal, QCMS Monitoring, Component Inspector và chấm điểm 100 điểm.
-- Ghi nhận, chọn và sắp xếp hành động học viên trước khi nộp bài.
-- Chấm điểm theo đúng ngữ cảnh menu, thứ tự và dữ liệu nhập đã chuẩn hóa.
-- Dữ liệu mẫu và kịch bản do người dùng tạo được lưu có phiên bản trong `localStorage`.
-- Giao diện tiếng Việt, hỗ trợ desktop/mobile, bàn phím, reduced motion và tương phản WCAG AA.
+### Dành cho giám khảo
+
+- Quản lý kịch bản độc lập cho VOR, DME và ADS-B.
+- Cấu hình giá trị, trạng thái cảnh báo và checkpoint trực tiếp trên giao diện PMDT VOR/DME.
+- Tạo quy trình thao tác tham chiếu cho terminal ADS-B.
+- Bổ sung bài chẩn đoán phần cứng tùy chọn bằng sơ đồ tín hiệu tương tác.
+- Theo dõi bài nộp VOR/DME, so sánh bằng chứng và ghi điểm nhận xét.
+- Tạo, sửa, xóa và đồng bộ kịch bản với Supabase khi môi trường cloud khả dụng.
+
+### Dành cho học viên
+
+- Chọn bài thực hành theo từng module thiết bị.
+- Thao tác trên PMDT VOR/DME hoặc QCMS và terminal ADS-B mô phỏng.
+- Ghi nhật ký màn hình, trạng thái và thao tác đã thực hiện.
+- Chọn component nghi ngờ trên sơ đồ phần cứng và trình bày phương án xử lý.
+- Nộp kết quả để giám khảo đánh giá hoặc nhận điểm tự động tùy module.
+- Tên thí sinh và đơn vị công tác được lấy từ hồ sơ đã xác thực, không nhập lại khi bắt đầu bài VOR/DME.
+
+### Tài khoản và phân quyền
+
+- Đăng ký bằng email đúng miền `@attech.com.vn`, mật khẩu tối thiểu 8 ký tự có chữ và số.
+- Xác thực đăng ký và quên mật khẩu bằng mã OTP 6 số gửi qua Supabase Auth/Resend SMTP.
+- Tài khoản mới luôn có vai trò ứng dụng `student`; vai trò được lưu trong `public.profiles`, không chỉnh trường hệ thống `auth.users.role`.
+- Route `/student/*`, `/admin/*` và các API kịch bản/bài nộp được kiểm tra phiên và vai trò ở phía server; RLS tiếp tục là lớp bảo vệ dữ liệu cuối cùng.
+- Sau 5 lần nhập sai thông tin đăng nhập qua ứng dụng, email bị khóa 5 phút. Khi hết thời gian, bộ đếm bắt đầu lại và có thể khóa tiếp sau 5 lần sai mới.
+
+### Giao diện và khả năng sử dụng
+
+- Giao diện tiếng Việt theo hướng Windows 11/Fluent, tối ưu cho dashboard nghiệp vụ mật độ cao.
+- Điều hướng riêng cho vai trò giám khảo và học viên, với các section VOR, DME và ADS-B.
+- Hỗ trợ desktop, mobile, điều hướng bàn phím, reduced motion và độ tương phản hướng tới WCAG AA.
+- Video và thuyết minh trên trang chủ được phân phối qua Supabase Storage/CDN.
+
+## Kiến trúc dữ liệu
+
+```text
+Trình duyệt
+  ├─ Zustand stores
+  ├─ localStorage (cache/fallback)
+  └─ Next.js API routes
+       └─ Supabase
+            ├─ Auth + profiles (student/admin)
+            ├─ scenarios / vor_scenarios / dme_scenarios
+            ├─ vor_submissions / dme_submissions
+            ├─ auth_login_attempts
+            └─ training media storage
+```
+
+- Supabase Auth quản lý thông tin đăng nhập; `public.profiles` quản lý họ tên, đơn vị và vai trò ứng dụng.
+- Supabase Database lưu kịch bản ADS-B, VOR, DME và bài nộp VOR/DME.
+- `localStorage` giữ bản dữ liệu cục bộ có phiên bản và đóng vai trò fallback khi API hoặc Supabase không khả dụng.
+- Các migration và seed data được quản lý trong `supabase/migrations/`.
+- Media phát hành không được commit trong `public/media/`; frontend sử dụng URL Supabase Storage.
+
+### Giới hạn bảo mật cần lưu ý
+
+- Supabase Free không cung cấp Password Verification Hook. Cơ chế khóa 5 phút hiện nằm trong Server Action của ứng dụng nên ngăn đăng nhập qua giao diện này, nhưng không thể khóa tuyệt đối một người gọi trực tiếp Supabase Auth endpoint bằng publishable key.
+- `SUPABASE_SECRET_KEY` chỉ được dùng ở server để ghi bộ đếm đăng nhập sai. Tuyệt đối không thêm tiền tố `NEXT_PUBLIC_`, log giá trị hoặc commit vào Git.
+- Quota/rate limit email của Supabase và Resend vẫn áp dụng. Giao diện có cooldown gửi lại nhưng production nên tiếp tục theo dõi abuse và cân nhắc CAPTCHA.
+- Tài khoản terminal mô phỏng không phải tài khoản Supabase và không được dùng làm thông tin xác thực thật.
+- Chưa có màn hình quản trị người dùng và audit log thay đổi vai trò; lần cấp quyền admin đầu tiên cần thực hiện trong SQL Editor.
 
 ## Công nghệ
 
 - Next.js 16 App Router, React 19 và TypeScript
-- Tailwind CSS 4 và Phosphor Icons
+- Tailwind CSS 4, Geist, Motion và Phosphor Icons
 - Zustand cho trạng thái phía client
+- Supabase Database và Storage
 - Vitest, Testing Library, Playwright và axe-core
-- GitHub Actions cho lint, typecheck, unit/component test, build và dependency audit
+- Vercel cho hosting và GitHub Actions cho quality gate
 
 ## Chạy trên máy cục bộ
 
-Yêu cầu Node.js 20.9 trở lên và npm. Dự án được xác minh với Node.js 24.
+### Yêu cầu
+
+- Node.js 20.9 trở lên; dự án gần nhất được xác minh với Node.js 24.
+- npm.
+- Một Supabase project nếu cần đồng bộ dữ liệu cloud. Có thể chạy giao diện bằng fallback cục bộ khi chưa cấu hình Supabase.
+
+### Cài đặt
 
 ```bash
 npm ci
+```
+
+Sao chép `.env.example` thành `.env.local` và điền hai khóa public/client cùng một khóa server-only của Supabase:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key
+SUPABASE_SECRET_KEY=sb_secret_your_key
+```
+
+Lấy secret key tại **Supabase Dashboard → Project Settings → API Keys → Secret keys**. Không đưa database password, secret key hoặc secret khác vào biến môi trường public có tiền tố `NEXT_PUBLIC_`. Resend API key đã được cấu hình trong Supabase Custom SMTP thì không cần và không nên lưu thêm trong frontend.
+
+### Thiết lập Supabase Auth
+
+1. Áp dụng migration `supabase/migrations/202607180001_add_auth_profiles_and_security.sql` bằng Supabase CLI hoặc SQL Editor. Migration này chủ động xóa toàn bộ bài nộp thử nghiệm cũ trong `vor_submissions` và `dme_submissions`; cache bài nộp định dạng cũ trong trình duyệt cũng bị loại ở lần tải tiếp theo.
+2. Trong **Authentication → Providers → Email**, bật Email/Password và yêu cầu xác nhận email.
+3. Trong **Authentication → Email Templates → Confirm signup**, thay liên kết xác nhận bằng mã OTP, ví dụ:
+
+   ```html
+   <h2>Mã xác thực đăng ký</h2>
+   <p>Nhập mã sau vào THỰC HÀNH MÔ PHỎNG CNS:</p>
+   <p style="font-size: 28px; font-weight: 700; letter-spacing: 8px;">{{ .Token }}</p>
+   <p>Nếu bạn không đăng ký, hãy bỏ qua email này.</p>
+   ```
+
+4. Trong **Authentication → Email Templates → Reset password**, cũng dùng `{{ .Token }}` thay cho `{{ .ConfirmationURL }}`:
+
+   ```html
+   <h2>Mã đặt lại mật khẩu</h2>
+   <p>Nhập mã sau vào màn hình Quên mật khẩu:</p>
+   <p style="font-size: 28px; font-weight: 700; letter-spacing: 8px;">{{ .Token }}</p>
+   <p>Nếu bạn không yêu cầu đổi mật khẩu, hãy bỏ qua email này.</p>
+   ```
+
+5. Trong **Authentication → Hooks → Before User Created**, chọn Postgres function `public.hook_restrict_attech_signup`. Hook này chặn đăng ký ngoài miền `@attech.com.vn` ở phía server và có trên Supabase Free.
+6. Kiểm tra **Authentication → URL Configuration**: đặt Site URL cho production và thêm `http://localhost:3000/**` vào Redirect URLs khi phát triển.
+
+Frontend đã dùng `verifyOtp` với loại `signup` cho đăng ký và `recovery` cho quên mật khẩu. Không giữ `{{ .ConfirmationURL }}` trong hai template trên nếu muốn người dùng luôn nhập mã 6 số thay vì bấm liên kết.
+
+### Cấp tài khoản quản trị đầu tiên
+
+Mọi tài khoản mới mặc định là `student`. Sau khi tài khoản đã đăng ký và xác thực OTP, chạy trong Supabase SQL Editor:
+
+```sql
+update public.profiles
+set role = 'admin', updated_at = now()
+where email = 'ten-quan-tri@attech.com.vn';
+```
+
+Đăng xuất rồi đăng nhập lại để giao diện nhận quyền mới. Chỉ đổi `public.profiles.role`; không đổi `auth.users.role` và không gán `service_role` cho người dùng.
+
+Khởi động môi trường phát triển:
+
+```bash
 npm run dev
 ```
 
 Mở [http://localhost:3000](http://localhost:3000).
 
-Bốn kịch bản mẫu sẽ được tạo khi ứng dụng khởi động lần đầu. Để đưa dữ liệu về trạng thái mẫu, dùng chức năng khôi phục trong giao diện quản trị hoặc xóa khóa `adsb-training-simulator:scenarios` trong `localStorage`.
+## Các route chính
 
-## Quy trình cập nhật video & thuyết minh lồng tiếng
+| Vai trò | VOR | DME | ADS-B |
+| --- | --- | --- | --- |
+| Giám khảo | `/admin/vor` | `/admin/dme` | `/admin/ads-b` |
+| Học viên | `/student/vor` | `/student/dme` | `/student/ads-b` |
 
-Do các tệp media (video, âm thanh, poster) trên Supabase Storage được cấu hình cache immutable lâu dài, khi có sự thay đổi hoặc cập nhật các video clip mới, bắt buộc phải tăng phiên bản thư mục lưu trữ (ví dụ từ `v2` lên `v3`) để bust cache trên CDN (Cloudflare) và trình duyệt người dùng.
-
-### Các bước thực hiện:
-
-1. **Chuẩn bị và tạo file media mới ở local:**
-   - Thay thế các file `.mp4`, `.webp` (poster), `.mp3` mới vào thư mục `public/media` (giữ nguyên tên file).
-   - Nếu sinh lại video tự động bằng Python:
-     ```powershell
-     $env:PYTHONPATH = "C:\tmp\adsb-video-tools"; python scripts/generate_home_media_clips.py
-     ```
-
-2. **Tăng phiên bản thư mục (Bust Cache):**
-   Thay đổi ký hiệu phiên bản thư mục lưu trữ (ví dụ đổi `v2` thành `v3`) trong 4 file:
-   - `src/app/page.tsx`
-   - `tests/layout/home-media-carousel.test.tsx` (2 vị trí)
-   - `scripts/upload_home_media.js`
-   - `scripts/upload_home_media.ps1`
-
-3. **Đồng bộ lên Supabase Storage:**
-   Chạy script đồng bộ của dự án để đẩy các tệp mới lên folder phiên bản mới trên Supabase:
-   - Node.js: `node scripts/upload_home_media.js`
-   - PowerShell: `.\scripts\upload_home_media.ps1`
-
-4. **Triển khai lên bản Live:**
-   Commit các file thay đổi đường dẫn ở local và push lên Github để Vercel tự động build và deploy lại:
-   ```bash
-   git add .
-   git commit -m "feat(ui): upgrade media folder version to v3 for new clips"
-   git push origin main
-   ```
-
-## Triển khai trên Vercel
-
-- Repository được liên kết với Vercel để tự động triển khai khi nhánh `main` được cập nhật.
-- `vercel.json` đặt vùng chạy Vercel Functions/SSR tại Singapore (`sin1`) để giảm độ trễ truy cập cơ sở dữ liệu trong khu vực.
-- CDN và tài nguyên tĩnh của Vercel vẫn được phân phối trên mạng toàn cầu; người dùng nhận nội dung từ điểm hiện diện gần nhất. Thiết lập `sin1` không giới hạn CDN chỉ chạy tại Singapore.
-- Sau khi triển khai, có thể kiểm tra tại **Project → Settings → Functions → Function Regions**. Cấu hình trong `vercel.json` sẽ được áp dụng cho deployment mới.
+Các route con xử lý tạo/sửa kịch bản, phiên thực hành, danh sách bài nộp và đánh giá kết quả.
 
 ## Kiểm tra chất lượng
 
@@ -89,105 +181,107 @@ npm run build
 npm run test:e2e
 ```
 
-Hoặc chạy các kiểm tra chính bằng:
+Chạy bốn quality gate chính:
 
 ```bash
 npm run check
 ```
 
-Playwright cần Chromium ở lần đầu thiết lập:
+Playwright cần Chromium trong lần thiết lập đầu tiên:
 
 ```bash
 npx playwright install chromium
 ```
 
-## Cấu trúc chính
+Theo workflow của dự án, sau khi sửa giao diện hoặc logic hãy kiểm tra trực tiếp trên môi trường dev trước. Chỉ chạy test/build khi thay đổi đã được xác nhận.
+
+## Triển khai
+
+Repository được liên kết với Vercel và tự động triển khai khi nhánh `main` được cập nhật. `vercel.json` đặt vùng chạy Functions/SSR tại Singapore (`sin1`); tài nguyên tĩnh vẫn được phân phối qua CDN toàn cầu.
+
+Trước khi triển khai:
+
+1. Xác nhận các biến môi trường Supabase trên Vercel.
+2. Áp dụng migration cần thiết trong `supabase/migrations/`.
+3. Chạy các quality gate của dự án.
+4. Kiểm tra policy RLS nếu schema hoặc quyền truy cập dữ liệu thay đổi.
+
+### Cập nhật media
+
+Media trang chủ được lưu trên Supabase Storage với đường dẫn có phiên bản. Khi thay video, poster hoặc thuyết minh, hãy phát hành vào một thư mục phiên bản mới và cập nhật URL trong frontend để tránh trình duyệt/CDN tiếp tục dùng nội dung cache cũ.
+
+## Cấu trúc dự án
 
 ```text
 src/
-  app/                  Route cho landing, Admin và Student
-  components/           App shell, wizard, QCMS, terminal, hardware và grading
-  lib/                  Kiểu dữ liệu, menu, engine, grading và storage
-  stores/               Zustand stores và kịch bản mẫu
-tests/
-  admin/                Kiểm thử portal quản trị
-  core/                 Kiểm thử engine và grading
-  e2e/                  Luồng người dùng trên Chromium
-  qcms/                 Kiểm thử QCMS và accessibility behavior
-  state/                Kiểm thử persistence và Zustand
-  terminal/             Kiểm thử terminal và bảo vệ dữ liệu nhạy cảm
-docs/
-  DECISIONS.md           Quyết định kỹ thuật và sai khác đã đối chiếu
-  IMPLEMENTATION_STATUS.md
+  app/                  Route, layout và API của Next.js
+    admin/              Không gian giám khảo
+    student/            Không gian học viên
+    api/                API cho kịch bản và bài nộp
+  components/
+    vor/                PMDT và workflow VOR
+    dme/                PMDT và workflow DME
+    qcms/               Dashboard QCMS ADS-B
+    terminal/           Terminal SA/MA mô phỏng
+    hardware/           Sơ đồ và bài chẩn đoán phần cứng
+    grading/            So sánh thao tác và kết quả chấm điểm
+  lib/                  Domain model, engine, storage và Supabase mapping
+  stores/               Zustand stores theo từng module
+supabase/
+  migrations/           Schema, policy, migration và seed data
+tests/                  Unit, component, integration và E2E tests
+public/                 Tài nguyên tĩnh được commit
+doc/                    Manual, kế hoạch và tài liệu kỹ thuật cục bộ (gitignored)
 ```
 
-## Quy tắc mô phỏng và bảo mật
+## Quy tắc mô phỏng
 
-- Username phải đúng vai trò của kịch bản; mọi password không rỗng đều được chấp nhận.
-- Password không được hiển thị, lưu vào store, `localStorage`, lịch sử terminal hay dữ liệu chấm điểm.
-- Đăng nhập không phải một phần của đáp án chấm điểm.
-- `RETURN`, phím Enter rỗng và `0` được chuẩn hóa thành cùng một hành động; `x`/`X` thoát khỏi menu.
-- Điểm số là số bước đúng chia cho tổng số bước kỳ vọng. Bài chỉ đạt khi đủ bước, đúng thứ tự và không có thao tác thừa.
-- `localStorage` phù hợp với MVP một người dùng trên một trình duyệt. Để dùng nhiều người, phân quyền hoặc đồng bộ thiết bị, cần thay data adapter bằng Cloudflare D1 hoặc Supabase và bổ sung xác thực thật.
+- VOR và DME ghi lại các màn hình/checkpoint học viên đã truy cập nhưng không tự quyết định điểm cuối cùng.
+- ADS-B chấm điểm theo số bước đúng, đúng thứ tự và không có thao tác thừa.
+- Username terminal phải khớp vai trò của kịch bản; mọi password không rỗng đều được chấp nhận trong môi trường mô phỏng.
+- Đăng nhập không phải là một phần của đáp án chấm điểm.
+- `RETURN`, phím Enter rỗng và `0` được chuẩn hóa thành cùng một hành động; `x`/`X` thoát menu.
+- Các sơ đồ phần cứng là mô hình tương tác do dự án xây dựng từ tài liệu tham chiếu, không phải ảnh sao chép từ manual nhà sản xuất.
 
-## Tài liệu nghiệp vụ đã đối chiếu
+## Tài liệu tham chiếu
 
-Việc mô phỏng dựa trên các tài liệu tham chiếu cục bộ sau; các PDF không được đưa vào repository:
+Manual nhà sản xuất, sơ đồ hệ thống và tài liệu triển khai nội bộ nằm trong thư mục `doc/`. Thư mục này được Git bỏ qua để tránh đưa tài liệu có thể bị giới hạn bản quyền hoặc dữ liệu nội bộ lên repository.
 
-- `QCMS_UserManual_V1.13.pdf`
-- `Sensor_SA_UserManual_V3.4.pdf`
-- `Sensor_MA_UserManual_V3.2.pdf`
-- `ADSB_Training_Simulator_Plan.md`
+Các tài liệu chính gồm:
 
-Khi bản kế hoạch và hình menu trong manual khác nhau, manual là nguồn quyết định. Chi tiết được ghi tại [docs/DECISIONS.md](docs/DECISIONS.md).
+- QCMS User Manual.
+- Sensor SA/MA User Manual.
+- VOR và DME PMDT User Manual.
+- Sơ đồ hệ thống, sơ đồ khối và kế hoạch triển khai mô phỏng.
 
-## Tiến trình nâng cấp v1.0
+Khi kế hoạch nội bộ và manual nhà sản xuất khác nhau, manual là nguồn tham chiếu ưu tiên.
 
-| Phase | Mô tả | Trạng thái |
-|-------|-------|------------|
-| 1     | Module A: Cấu hình dữ liệu Côn Sơn và Terminal template | ✅ Hoàn thành |
-| 2     | Module B: Khung Toolbar legacy và 64 slot Ground Stations | ✅ Hoàn thành |
-| 3     | Module C: Sơ đồ phần cứng interactive & cô lập sự cố | ✅ Hoàn thành |
+## Roadmap
 
-## Session Log
-- 2026-07-16: Hoàn thành Module A, B, C. Đã kết nối tất cả các hành động/thao tác (Monitoring, VA/VB, RR, context menu, Site Settings, Sensor Statistics) vào từng ô compact 64 slot và sửa toàn bộ lỗi kiểm thử (Unit, E2E) đảm bảo không có regression.
-- 2026-07-16: Đổi tên thương hiệu hệ thống sang Hệ thống kiểm tra mô phỏng CNS. Bổ sung các tab VOR, DME, ADS-B vào trang quản lý kịch bản của quản trị viên và trang bài thực hành của học viên.
-- 2026-07-17: Gỡ bỏ cns-image.webp khỏi Carousel trang chủ, tích hợp tính năng phát âm thanh thuyết minh (lồng tiếng) tiếng Việt song song đồng bộ cho các video clip và sửa lỗi kiểm thử định tuyến.
-- 2026-07-17: Đồng bộ thành công 4 video, 4 poster (webp) và 2 file âm thanh thuyết minh (.mp3) lên Supabase Storage qua SDK với chế độ upsert; frontend tự động sử dụng đường dẫn CDN từ Supabase Storage thông qua cấu hình URL động.
-- 2026-07-17: Sửa lỗi video 15s bị lệch pha so với âm thanh lồng tiếng bằng cách chạy script Python để vẽ lại toàn bộ 4 video hướng dẫn dài 30s và đồng bộ ghi đè lên Supabase Storage qua SDK Node.js.
-- 2026-07-17: Cải tiến HomeMediaCarousel: Khi video kết thúc tự động ở slide cuối, âm thanh lồng tiếng (.mp3) vẫn tiếp tục phát cho tới khi kết thúc chứ không bị dừng đột ngột.
-- 2026-07-17: Đồng bộ thành công 3 kịch bản sự cố giả lập DVOR 1150A và 3 kịch bản sự cố DME 1119A lên cơ sở dữ liệu Cloud Supabase, đi kèm đầy đủ cấu trúc overrides, checkpoints và Hardware Diagnosis Task.
-- 2026-07-17: Bổ sung tính năng Xóa thao tác PMDT đã ghi nhận ở cả giao diện học viên VOR và DME, tự động sắp xếp lại chỉ số sequence liền mạch. Đã git push lên GitHub.
-- 2026-07-17: Lên kế hoạch đổi tên thư mục repository gốc từ `ADS-B test` sang `cns-simulator` (Khuyến nghị Phương án A: Người dùng tự đóng IDE và đổi tên thủ công ngoài Windows Explorer).
-- 2026-07-17: Hoàn tất đổi tên repo sang `cns-simulator`. Cập nhật cấu hình ESLint (`eslint.config.mjs`) để bỏ qua thư mục `scripts/`, dọn dẹp các script cũ không còn sử dụng và push thành công lên GitHub.
-- 2026-07-17: Session ended at Phase N (Verification & Cleanup)
-  - Done: Đồng bộ đổi tên thư mục repository; Cấu hình ESLint & dọn dẹp file scripts; Xác minh kiểm tra chất lượng (191 tests & build production) thành công 100%; Đẩy code lên GitHub repository mới.
-  - Remaining: Tiếp tục triển khai các tính năng mới theo roadmap.
-  - Note for next session: Hệ thống hiện tại ở trạng thái hoàn toàn ổn định và sạch sẽ, sẵn sàng cho pha tiếp theo.
-- 2026-07-18: Cập nhật UI theo yêu cầu:
-  - Sửa đổi cột Cấu hình: đổi cụm từ "giá trị sự cố" thành "cảnh báo PMDT" ở kịch bản VOR và DME.
-  - Thiết kế lại Sidebar trên Desktop: chuyển sang dạng rộng (15rem = 240px) căn lề trái, gộp logo "ATTECH" vào trên cùng của Sidebar, ẩn logo ở Header trên desktop, thụt lề menu con, đổi màu sắc active/hover đúng theo mô hình.
-  - Sửa lỗi test workflow học viên bị timeout do lag CPU bằng cách tăng timeout lên 15000ms.
-- 2026-07-18: Nâng cấp Sidebar, Header và Page Transition theo yêu cầu chi tiết của người dùng:
-  - Sửa logo ATTECH size 17px, slogan "Creative & Adaptive" size 8.5px viết thường, căn giữa thẳng hàng tuyệt đối.
-  - Giảm độ rộng sidebar xuống 11rem (176px), bỏ hoàn toàn màu nền active/non-active của tất cả các tab ở sidebar (chỉ thay đổi màu chữ và font-weight).
-  - Cập nhật biểu tượng thanh mảnh cho các tab: VOR dùng la bàn `Compass`, DME dùng thước đo cự ly `Ruler`, ADS-B dùng phát sóng `Broadcast`, và đồng bộ các biểu tượng này vào nội dung bên trong (`ModuleSummary` của VOR/DME dashboards).
-  - Tích hợp Framer Motion (`motion/react`) tạo hiệu ứng transition fade nhẹ, mượt mà giữa các trang chính và tab con.
-  - Căn giữa tiêu đề chính của header, tăng kích thước chữ tiêu đề và bổ sung 1 đường kẻ trang trí ngắn màu xanh nhạt phía dưới tiêu đề.
-  - Loại bỏ đường kẻ dưới header, thiết lập khoảng cách 1cm ở lề trên của header và 1cm từ header đến nội dung bên dưới.
-  - Tăng timeout cho bài test `tests/vor/vor-authoring.test.tsx` lên 20000ms để triệt tiêu lỗi timeout. Xác minh 191/191 tests pass 100% và build thành công.
-- 2026-07-18: Khắc phục lỗi "Rendered more hooks than during the previous render" xảy ra khi chuyển tab giám khảo/thí sinh bằng cách loại bỏ AnimatePresence khỏi PageTransition, giữ lại key={pathname} trên motion.div để kích hoạt hiệu ứng fade-in khi trang mới được mount mà không giữ lại component cũ.
-- 2026-07-18: Tăng độ tương phản của slogan dưới logo (từ #94a3b8 sang #475569) đạt chuẩn WCAG AA và bổ sung lớp `relative z-10` cho thẻ bọc logo trên desktop sidebar để ngăn lớp phủ kính mờ (`.app-glass::before`) đè lên gây mờ chữ.
-- 2026-07-18: Giảm độ cao khoảng trống phía trên header từ 1cm xuống 0.5cm trong layout (file app-shell.tsx). Kiểm tra các bài test (191 tests) và build production thành công 100%.
-- 2026-07-18: Tinh chỉnh giao diện theo feedback: Loại bỏ div vai trò ở góc phải header; căn giữa và đổi kích thước slogan (17px) & tiêu đề trang chủ (15px); viết hoa tiêu đề Hệ thống CNS; bổ sung đường gạch chân dày 1px dài 50% căn giữa cho các active tab & sub-tab ở sidebar; và sửa lỗi dư thanh cuộn dọc trên desktop (min-height).
+### Ưu tiên 1 — Hoàn thiện quản trị và bảo mật
 
+- Bổ sung màn hình quản trị hồ sơ, cấp/thu hồi vai trò và vô hiệu hóa tài khoản.
+- Thêm audit log cho đăng nhập, đổi vai trò, thay đổi kịch bản và chấm điểm.
+- Bổ sung CAPTCHA/rate limiting theo IP cho đăng ký, đăng nhập và quên mật khẩu.
+- Đánh giá nâng cấp Supabase để dùng Password Verification Hook nếu cần khóa đăng nhập ở cấp Auth thay vì chỉ tại ứng dụng.
 
+### Ưu tiên 2 — Quản lý đào tạo và báo cáo
 
-## Hướng phát triển tiếp theo
+- Lưu lịch sử phiên học và trạng thái tiến độ thống nhất cho cả ba module.
+- Bổ sung dashboard thống kê theo học viên, thiết bị, kịch bản và thời gian.
+- Xuất báo cáo kết quả và lưu vết thao tác của giám khảo.
+- Quản lý lớp học, nhóm học viên và lịch tổ chức bài kiểm tra.
 
-1. Thay `localStorage` bằng repository adapter cho Cloudflare D1 hoặc Supabase.
-2. Bổ sung đăng nhập thật và phân quyền Admin/Student.
-3. Mở rộng luồng menu cấp sâu theo các manual.
-4. Lưu lịch sử phiên học, tiến độ và báo cáo thống kê.
-5. Thêm import/export kịch bản và triển khai nhiều lớp học.
+### Ưu tiên 3 — Độ tin cậy dữ liệu
 
+- Chuẩn hóa cơ chế đồng bộ Supabase/`localStorage` giữa các module.
+- Xử lý xung đột, retry, trạng thái offline và thông báo lỗi đồng bộ rõ ràng.
+- Thêm versioning, import/export và sao lưu/khôi phục kịch bản.
+- Bổ sung audit log cho các thay đổi quan trọng.
+
+### Ưu tiên 4 — Mở rộng mô phỏng
+
+- Mở rộng các màn hình và luồng menu VOR, DME, ADS-B theo manual đã đối chiếu.
+- Bổ sung fault preset, topology và tiêu chí chẩn đoán cho nhiều cấu hình thiết bị/site.
+- Chuẩn hóa tiêu chí chấm điểm giữa phần thao tác PMDT, phần cứng và câu trả lời kỹ thuật.
+- Mở rộng kiểm thử E2E, accessibility, hiệu năng và quan sát lỗi production.

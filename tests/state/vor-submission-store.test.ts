@@ -10,8 +10,9 @@ import { createVorSubmissionStore } from "@/stores/vor-submission-store";
 const fixedSubmission: VorSubmission = {
   id: "submission-1",
   scenarioId: "scenario-1",
+  userId: "student-user",
   studentName: "Nguyễn Văn A",
-  studentCode: "HV001",
+  workUnit: "Đội TSS",
   status: "submitted",
   startedAt: "2026-07-16T10:00:00.000Z",
   submittedAt: "2026-07-16T10:10:00.000Z",
@@ -40,8 +41,9 @@ describe("VOR submission persistence", () => {
     expect(mapRowToVorSubmission({
       id: fixedSubmission.id,
       scenario_id: fixedSubmission.scenarioId,
+      user_id: fixedSubmission.userId,
       student_name: fixedSubmission.studentName,
-      student_code: fixedSubmission.studentCode,
+      work_unit: fixedSubmission.workUnit,
       status: fixedSubmission.status,
       started_at: fixedSubmission.startedAt,
       submitted_at: fixedSubmission.submittedAt,

@@ -290,8 +290,9 @@ export interface VorStudentAnswer {
 export interface VorSubmission {
   id: string;
   scenarioId: string;
+  userId: string;
   studentName: string;
-  studentCode: string;
+  workUnit: string;
   status: VorSubmissionStatus;
   startedAt: string;
   submittedAt?: string;

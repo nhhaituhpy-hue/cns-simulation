@@ -1,5 +1,8 @@
 ﻿import { DmeStudentSession } from "@/components/dme/student/dme-student-session";
 
+import { getCurrentProfile } from "@/lib/auth/profile";
+import { redirect } from "next/navigation";
+
 interface DmeStudentSessionPageProps {
   searchParams: Promise<{ id?: string | string[] }>;
 }
@@ -7,6 +10,8 @@ interface DmeStudentSessionPageProps {
 export default async function DmeStudentSessionPage({ searchParams }: DmeStudentSessionPageProps) {
   const params = await searchParams;
   const scenarioId = Array.isArray(params.id) ? params.id[0] ?? "" : params.id ?? "";
-  return <DmeStudentSession scenarioId={scenarioId} />;
+  const profile = await getCurrentProfile();
+  if (!profile) redirect("/login");
+  return <DmeStudentSession scenarioId={scenarioId} identity={{ userId: profile.id, studentName: profile.fullName, workUnit: profile.workUnit }} />;
 }
 

@@ -34,8 +34,9 @@ const scenario: DmeScenario = {
 const submission: DmeSubmission = {
   id: "submission-1",
   scenarioId: scenario.id,
+  userId: "student-user",
   studentName: "Nguyen Van A",
-  studentCode: "HV001",
+  workUnit: "Doi TSS",
   status: "submitted",
   startedAt: "2026-07-17T03:05:00.000Z",
   submittedAt: "2026-07-17T03:15:00.000Z",
@@ -68,7 +69,8 @@ describe("DME persistence", () => {
     expect(deserializeDmeSubmissions(serializeDmeSubmissions([submission]))).toEqual([submission]);
     expect(mapRowToDmeSubmission({
       id: submission.id, scenario_id: submission.scenarioId, student_name: submission.studentName,
-      student_code: submission.studentCode, status: submission.status, started_at: submission.startedAt,
+      user_id: submission.userId, work_unit: submission.workUnit,
+      status: submission.status, started_at: submission.startedAt,
       submitted_at: submission.submittedAt, reviewed_at: null, events: submission.events,
       answer: submission.answer, score: null, examiner_comment: null,
       hardware_answer: submission.hardwareAnswer,

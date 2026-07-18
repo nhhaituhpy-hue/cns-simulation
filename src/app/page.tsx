@@ -34,6 +34,7 @@ export default function Home() {
             description="Tạo và hiệu chỉnh kịch bản, cấu hình thiết bị, quản lý bài nộp và chấm kết quả thực hành."
             action="Quản lý kỳ kiểm tra"
             icon={<ClipboardText aria-hidden size={24} weight="duotone" />}
+            requiredRole="admin"
           />
           <RoleCard
             href="/student"

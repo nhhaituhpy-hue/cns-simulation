@@ -68,7 +68,7 @@ export function DmeSubmissionList() {
                       <div>
                         <div className="flex flex-wrap items-center gap-2">
                           <h3 className="font-semibold text-[var(--text-primary)]">{submission.studentName}</h3>
-                          <span className="rounded border border-[var(--border)] bg-[var(--surface-muted)] px-2 py-0.5 font-mono text-xs text-[var(--text-secondary)]">{submission.studentCode}</span>
+                          <span className="rounded border border-[var(--border)] bg-[var(--surface-muted)] px-2 py-0.5 text-xs text-[var(--text-secondary)]">{submission.workUnit}</span>
                           <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${reviewed ? "bg-[#dcfce7] text-[#166534]" : "bg-[#fef3c7] text-[#92400e]"}`}>{reviewed ? `Đã chấm · ${submission.score}/100` : "Chờ chấm"}</span>
                         </div>
                         <p className="mt-2 text-sm font-medium text-[var(--text-secondary)]">{scenario?.title ?? "Kịch bản DME không còn tồn tại"}</p>

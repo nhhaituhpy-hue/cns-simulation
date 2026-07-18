@@ -34,8 +34,9 @@ const scenario: VorScenario = {
 const submission: VorSubmission = {
   id: "submission-1",
   scenarioId: scenario.id,
+  userId: "student-user",
   studentName: "Nguyễn Văn A",
-  studentCode: "HV001",
+  workUnit: "Đội TSS",
   status: "submitted",
   startedAt: "2026-07-16T10:00:00.000Z",
   submittedAt: "2026-07-16T10:10:00.000Z",

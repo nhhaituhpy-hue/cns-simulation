@@ -5,14 +5,18 @@ import {
   vorScenarioToRow,
 } from "@/lib/vor-scenario-storage";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentProfile } from "@/lib/auth/profile";
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unknown VOR scenario error";
 }
 
 export async function GET() {
+  const profile = await getCurrentProfile();
+  if (!profile) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
+
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("vor_scenarios")
       .select("*")
@@ -30,6 +34,10 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const profile = await getCurrentProfile();
+  if (!profile) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
+  if (profile.role !== "admin") return NextResponse.json({ error: "Không có quyền quản lý kịch bản." }, { status: 403 });
+
   try {
     const payload = (await request.json()) as unknown;
     if (!isVorScenario(payload)) {
@@ -39,7 +47,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("vor_scenarios")
       .upsert(vorScenarioToRow(payload), { onConflict: "id" })
@@ -58,13 +66,17 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const profile = await getCurrentProfile();
+  if (!profile) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
+  if (profile.role !== "admin") return NextResponse.json({ error: "Không có quyền quản lý kịch bản." }, { status: 403 });
+
   try {
     const scenarioId = new URL(request.url).searchParams.get("id")?.trim();
     if (!scenarioId) {
       return NextResponse.json({ error: "Thiếu mã kịch bản VOR." }, { status: 400 });
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
     const { error } = await supabase
       .from("vor_scenarios")
       .delete()

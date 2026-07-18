@@ -6,12 +6,16 @@ import {
 } from "@/lib/vor-submission-storage";
 import type { VorSubmissionStatus } from "@/lib/vor-types";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentProfile } from "@/lib/auth/profile";
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unknown VOR submission error";
 }
 
 export async function GET(request: Request) {
+  const profile = await getCurrentProfile();
+  if (!profile) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
+
   try {
     const searchParams = new URL(request.url).searchParams;
     const scenarioId = searchParams.get("scenarioId")?.trim();
@@ -20,7 +24,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Trạng thái bài nộp không hợp lệ." }, { status: 400 });
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
     let query = supabase.from("vor_submissions").select("*");
     if (scenarioId) query = query.eq("scenario_id", scenarioId);
     if (status) query = query.eq("status", status);
@@ -41,16 +45,31 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const profile = await getCurrentProfile();
+  if (!profile) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
+
   try {
     const payload = (await request.json()) as unknown;
     if (!isVorSubmission(payload)) {
       return NextResponse.json({ error: "Dữ liệu bài nộp VOR không hợp lệ." }, { status: 400 });
     }
 
-    const supabase = createClient();
+    const securedPayload = profile.role === "admin"
+      ? payload
+      : {
+          ...payload,
+          userId: profile.id,
+          studentName: profile.fullName,
+          workUnit: profile.workUnit,
+          status: "submitted" as const,
+          reviewedAt: undefined,
+          score: undefined,
+          examinerComment: undefined,
+        };
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("vor_submissions")
-      .upsert(vorSubmissionToRow(payload), { onConflict: "id" })
+      .upsert(vorSubmissionToRow(securedPayload), { onConflict: "id" })
       .select()
       .single();
     if (error) throw error;

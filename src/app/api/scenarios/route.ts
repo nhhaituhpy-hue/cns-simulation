@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentProfile } from "@/lib/auth/profile";
 import { mapRowToScenario } from "@/lib/supabase/scenarios";
 import type { Scenario } from "@/lib/types";
 
@@ -32,12 +33,15 @@ function toRow(scenario: Scenario) {
 }
 
 export async function GET() {
+  const profile = await getCurrentProfile();
+  if (!profile) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
+
   if (isE2eTestMode()) {
     return NextResponse.json([]);
   }
 
   try {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("scenarios")
       .select("*")
@@ -56,6 +60,10 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const profile = await getCurrentProfile();
+  if (!profile) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
+  if (profile.role !== "admin") return NextResponse.json({ error: "Không có quyền quản lý kịch bản." }, { status: 403 });
+
   try {
     const scenario = (await request.json()) as Scenario;
 
@@ -67,7 +75,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, scenario, testMode: true });
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("scenarios")
       .upsert(toRow(scenario), { onConflict: "id" })
@@ -87,6 +95,10 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const profile = await getCurrentProfile();
+  if (!profile) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
+  if (profile.role !== "admin") return NextResponse.json({ error: "Không có quyền quản lý kịch bản." }, { status: 403 });
+
   try {
     const id = new URL(request.url).searchParams.get("id");
 
@@ -98,7 +110,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: true, testMode: true });
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
     const { error } = await supabase.from("scenarios").delete().eq("id", id);
 
     if (error) throw error;

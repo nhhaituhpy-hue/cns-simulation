@@ -1,7 +1,26 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import Home from "@/app/page";
+
+const { mockHasRequiredRole, mockPush } = vi.hoisted(() => ({
+  mockHasRequiredRole: vi.fn(),
+  mockPush: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
+
+vi.mock("@/app/access-actions", () => ({
+  hasRequiredRoleAction: mockHasRequiredRole,
+}));
+
+beforeEach(() => {
+  mockHasRequiredRole.mockReset();
+  mockPush.mockReset();
+});
 
 describe("Home page layout", () => {
   it("uses a full-width 4/6 grid and aligns the media card bottom", () => {
@@ -42,5 +61,20 @@ describe("Home page layout", () => {
     expect(mediaCard).not.toHaveClass("lg:aspect-auto", "lg:h-full");
     expect(carousel).toHaveAttribute("data-cache-strategy", "supabase-immutable");
     expect(screen.queryByText("Môi trường mô phỏng thiết bị CNS")).not.toBeInTheDocument();
+  });
+
+  it("denies a student who selects the examiner card", async () => {
+    const user = userEvent.setup();
+    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => undefined);
+    mockHasRequiredRole.mockResolvedValue(false);
+
+    render(<Home />);
+    await user.click(screen.getByRole("link", { name: /Quản lý kỳ kiểm tra/ }));
+
+    await waitFor(() => {
+      expect(alertSpy).toHaveBeenCalledWith("Bạn không có quyền truy cập trang này");
+    });
+    expect(mockPush).not.toHaveBeenCalled();
+    alertSpy.mockRestore();
   });
 });

@@ -65,11 +65,12 @@ describe("VOR student workflow", () => {
 
   it("records PMDT visits, annotations, written diagnosis, and submits for review", async () => {
     const user = userEvent.setup();
-    render(<VorStudentSession scenarioId={scenario.id} />);
-
-    await user.type(screen.getByLabelText("Họ và tên học viên"), "Nguyễn Văn A");
-    await user.type(screen.getByLabelText("Mã học viên"), "HV001");
-    await user.click(screen.getByRole("button", { name: "Vào màn hình PMDT" }));
+    render(
+      <VorStudentSession
+        scenarioId={scenario.id}
+        identity={{ userId: "student-user", studentName: "Nguyễn Văn A", workUnit: "Đội TSS" }}
+      />,
+    );
 
     const localButton = screen.getByRole("button", { name: "Local" });
     const bypassButton = screen.getByRole("button", { name: "Bypass" });
@@ -100,8 +101,9 @@ describe("VOR student workflow", () => {
     expect(useVorSubmissionStore.getState().submissions).toHaveLength(1);
     expect(useVorSubmissionStore.getState().submissions[0]).toMatchObject({
       scenarioId: scenario.id,
+      userId: "student-user",
       studentName: "Nguyễn Văn A",
-      studentCode: "HV001",
+      workUnit: "Đội TSS",
       status: "submitted",
       answer: { suspectedFault: "Khối PA Tx #1" },
       hardwareAnswer: {

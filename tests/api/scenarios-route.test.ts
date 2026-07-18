@@ -1,4 +1,14 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/lib/auth/profile", () => ({
+  getCurrentProfile: vi.fn(async () => ({
+    id: "e2e-admin",
+    email: "admin@attech.com.vn",
+    fullName: "Quản trị kiểm thử",
+    workUnit: "Đơn vị kiểm thử",
+    role: "admin",
+  })),
+}));
 
 import { DELETE, GET, POST } from "@/app/api/scenarios/route";
 import { DEFAULT_SCENARIOS } from "@/stores/default-scenarios";

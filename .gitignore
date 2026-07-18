@@ -51,11 +51,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# PDFs and local plans
-*.pdf
+# Local documentation
+/doc/
 /pdf_extracts/
-ADSB_Training_Simulator_Plan.md
-ADSB_Database_Plan.md
 
 # Wrangler & local database mocks
 .wrangler/

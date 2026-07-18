@@ -10,36 +10,62 @@ import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
 import { useVorScenarioStore } from "@/stores/vor-scenario-store";
 import { useVorSubmissionStore } from "@/stores/vor-submission-store";
 import { PmdtLayout } from "../pmdt-layout";
-import { VorStudentIdentity } from "./vor-student-identity";
 import { VorStudentJournal } from "./vor-student-journal";
 
 interface VorStudentSessionProps {
   scenarioId: string;
+  identity: {
+    userId: string;
+    studentName: string;
+    workUnit: string;
+  };
 }
 
 interface ActiveIdentity {
+  userId: string;
   studentName: string;
-  studentCode: string;
+  workUnit: string;
   startedAt: string;
 }
 
-export function VorStudentSession({ scenarioId }: VorStudentSessionProps) {
+export function VorStudentSession({ scenarioId, identity: authIdentity }: VorStudentSessionProps) {
   const scenarios = useVorScenarioStore((state) => state.scenarios);
   const isHydrated = useVorScenarioStore((state) => state.isHydrated);
   const hydrateScenarios = useVorScenarioStore((state) => state.hydrate);
   const hydrateSubmissions = useVorSubmissionStore((state) => state.hydrate);
   const createSubmission = useVorSubmissionStore((state) => state.createSubmission);
   const initializeSession = useVorPmdtStore((state) => state.initializeSession);
-  const [identity, setIdentity] = useState<ActiveIdentity | null>(null);
+  const activeSessionMode = useVorPmdtStore((state) => state.mode);
+  const activeScenarioId = useVorPmdtStore((state) => state.scenarioId);
+  const activeUserId = useVorPmdtStore((state) => state.userId);
+  const [startedAt] = useState(() => new Date().toISOString());
+  const identity: ActiveIdentity = { ...authIdentity, startedAt };
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedId, setSubmittedId] = useState<string | null>(null);
   const [stage, setStage] = useState<"pmdt" | "hardware">("pmdt");
   const scenario = scenarios.find((item) => item.id === scenarioId);
+  const sessionInitialized =
+    activeSessionMode === "student" &&
+    activeScenarioId === scenarioId &&
+    activeUserId === authIdentity.userId;
 
   useEffect(() => {
     void hydrateScenarios();
     void hydrateSubmissions();
   }, [hydrateScenarios, hydrateSubmissions]);
+
+  useEffect(() => {
+    if (!scenario || sessionInitialized) return;
+    initializeSession({
+      mode: "student",
+      scenarioId: scenario.id,
+      userId: identity.userId,
+      studentName: identity.studentName,
+      workUnit: identity.workUnit,
+      overrides: scenario.overrides,
+      expectedCheckpoints: scenario.expectedCheckpoints,
+    });
+  }, [identity.studentName, identity.userId, identity.workUnit, initializeSession, scenario, sessionInitialized]);
 
   if (!isHydrated) {
     return <div role="status" className="grid min-h-[calc(100dvh-4rem)] place-items-center bg-[var(--surface-muted)] text-sm text-[var(--text-secondary)]">Đang tải kịch bản VOR…</div>;
@@ -72,34 +98,19 @@ export function VorStudentSession({ scenarioId }: VorStudentSessionProps) {
     );
   }
 
-  if (!identity) {
-    return (
-      <VorStudentIdentity
-        scenario={scenario}
-        onStart={(studentName, studentCode) => {
-          const nextIdentity = { studentName, studentCode, startedAt: new Date().toISOString() };
-          initializeSession({
-            mode: "student",
-            scenarioId: scenario.id,
-            studentName,
-            studentCode,
-            overrides: scenario.overrides,
-            expectedCheckpoints: scenario.expectedCheckpoints,
-          });
-          setIdentity(nextIdentity);
-        }}
-      />
-    );
+  if (!sessionInitialized) {
+    return <div role="status" className="grid min-h-[calc(100dvh-4rem)] place-items-center bg-[var(--surface-muted)] text-sm text-[var(--text-secondary)]">Đang chuẩn bị phiên thực hành VOR…</div>;
   }
 
   async function submit(hardwareAnswer?: HardwareDiagnosisAnswer) {
-    if (!identity || !scenario) return;
+    if (!scenario) return;
     setIsSubmitting(true);
     const state = useVorPmdtStore.getState();
     const submission = await createSubmission({
       scenarioId: scenario.id,
+      userId: identity.userId,
       studentName: identity.studentName,
-      studentCode: identity.studentCode,
+      workUnit: identity.workUnit,
       status: "submitted",
       startedAt: identity.startedAt,
       submittedAt: new Date().toISOString(),
@@ -129,7 +140,7 @@ export function VorStudentSession({ scenarioId }: VorStudentSessionProps) {
       <div className="min-w-[1024px] border-b border-[#334155] bg-[#111827] px-4 py-2 text-xs text-[#cbd5e1]">
         <span className="font-bold text-white">{scenario.title}</span>
         <span className="mx-2 text-[#475569]">|</span>
-        <span>{identity.studentName} · {identity.studentCode}</span>
+        <span>{identity.studentName} | {identity.workUnit}</span>
       </div>
       <PmdtLayout
         mode="student"

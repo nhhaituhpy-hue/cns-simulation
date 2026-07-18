@@ -38,8 +38,9 @@ const defaultViews: Record<DmeScreenId, DmeViewId> = {
 export interface DmeSessionInitialization {
   mode: DmePmdtMode;
   scenarioId?: string;
+  userId?: string;
   studentName?: string;
-  studentCode?: string;
+  workUnit?: string;
   overrides?: readonly DmeFieldOverride[];
   expectedCheckpoints?: readonly DmeExpectedCheckpoint[];
 }
@@ -51,8 +52,9 @@ export interface DmePmdtStoreState {
   activeView: DmeViewId;
   activeMenuPath: string[];
   scenarioId: string | null;
+  userId: string;
   studentName: string;
-  studentCode: string;
+  workUnit: string;
   overrides: DmeFieldOverride[];
   expectedCheckpoints: DmeExpectedCheckpoint[];
   studentFieldStates: DmeFieldOverride[];
@@ -109,8 +111,9 @@ function initialState(): DmePmdtStoreState {
     activeView: "home",
     activeMenuPath: ["Home"],
     scenarioId: null,
+    userId: "",
     studentName: "",
-    studentCode: "",
+    workUnit: "",
     overrides: [],
     expectedCheckpoints: [],
     studentFieldStates: [],
@@ -176,8 +179,9 @@ export function createDmePmdtStore(
           ...initialState(),
           mode: initialization.mode,
           scenarioId: initialization.scenarioId ?? null,
+          userId: initialization.userId?.trim() ?? "",
           studentName: initialization.studentName?.trim() ?? "",
-          studentCode: initialization.studentCode?.trim() ?? "",
+          workUnit: initialization.workUnit?.trim() ?? "",
           overrides: initialization.overrides?.map((item) => ({ ...item })) ?? [],
           expectedCheckpoints:
             initialization.expectedCheckpoints?.map((item) => ({

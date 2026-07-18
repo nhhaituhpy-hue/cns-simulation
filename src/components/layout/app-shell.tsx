@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ClipboardText,
   House,
@@ -11,13 +11,18 @@ import {
   Compass,
   Ruler,
   Broadcast,
+  SignOut,
+  UserCircle,
   type Icon,
 } from "@phosphor-icons/react";
 import { useState, type ReactNode } from "react";
 import { motion } from "motion/react";
+import { logoutAction } from "@/app/login/actions";
+import type { AuthProfile } from "@/lib/auth/profile";
 
 type AppShellProps = {
   children: ReactNode;
+  currentUser: AuthProfile | null;
 };
 
 type NavigationItem = {
@@ -40,6 +45,14 @@ const navigationItems: NavigationItem[] = [
   { href: "/admin/vor", label: "Giám khảo", icon: ClipboardText },
   { href: "/student/vor", label: "Thí sinh", icon: Student },
 ];
+
+function visibleNavigationItems(role?: AuthProfile["role"]) {
+  return navigationItems.filter((item) => {
+    if (item.href.startsWith("/admin")) return role === "admin";
+    if (item.href.startsWith("/student")) return Boolean(role);
+    return true;
+  });
+}
 
 function BrandWordmark() {
   return (
@@ -168,14 +181,15 @@ function ModuleSubTabs({
   );
 }
 
-function MobileNavigation({ onNavigate }: {
+function MobileNavigation({ onNavigate, role }: {
   onNavigate?: () => void;
+  role?: AuthProfile["role"];
 }) {
   const pathname = usePathname();
 
   return (
     <nav aria-label="Điều hướng chính" className="grid gap-1">
-      {navigationItems.map((item) => {
+      {visibleNavigationItems(role).map((item) => {
         const active = isItemActive(pathname, item.href);
         const ItemIcon = item.icon;
         const workspaceSection = getWorkspaceSection(item.href);
@@ -210,7 +224,7 @@ function MobileNavigation({ onNavigate }: {
   );
 }
 
-function DesktopNavigationRail() {
+function DesktopNavigationRail({ role }: { role?: AuthProfile["role"] }) {
   const pathname = usePathname();
 
   return (
@@ -225,7 +239,7 @@ function DesktopNavigationRail() {
         aria-label="Điều hướng chính"
         className="relative z-10 grid gap-1 px-3 pb-2 pt-10"
       >
-        {navigationItems.map((item) => {
+        {visibleNavigationItems(role).map((item) => {
           const active = isItemActive(pathname, item.href);
           const workspaceSection = getWorkspaceSection(item.href);
           const ItemIcon = item.icon;
@@ -277,8 +291,22 @@ function PageTransition({ children }: { children: ReactNode }) {
   );
 }
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children, currentUser }: AppShellProps) {
+  const pathname = usePathname();
+  const router = useRouter();
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+
+  if (pathname === "/login") {
+    return <>{children}</>;
+  }
+
+  async function signOut() {
+    setSigningOut(true);
+    await logoutAction();
+    router.replace("/login");
+    router.refresh();
+  }
 
   return (
     <div className="grid min-h-[100dvh] grid-cols-1 grid-rows-[4.25rem_minmax(0,1fr)] bg-[var(--background)] text-[var(--foreground)] md:grid-cols-[5rem_minmax(0,1fr)] app-layout-grid-custom">
@@ -333,15 +361,39 @@ export function AppShell({ children }: AppShellProps) {
               Trung tâm Bảo đảm kỹ thuật
             </p>
             <p className="truncate text-[16px] sm:text-[18px] font-bold tracking-tight text-[var(--text-primary)] leading-tight mt-0.5">
-              HỆ THỐNG KIỂM TRA MÔ PHỎNG CNS
+              THỰC HÀNH MÔ PHỎNG CNS
             </p>
             <div className="mt-2 h-[1px] w-36 rounded-full bg-sky-700" />
           </div>
 
+          <div className="absolute right-4 hidden items-center gap-2 sm:flex">
+            {currentUser ? (
+              <>
+                <div className="hidden max-w-48 text-right lg:block">
+                  <p className="truncate text-xs font-semibold text-[var(--text-primary)]">{currentUser.fullName}</p>
+                  <p className="truncate text-[10px] text-[var(--text-muted)]">{currentUser.workUnit}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={signOut}
+                  disabled={signingOut}
+                  className="inline-flex size-9 items-center justify-center rounded-lg text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--danger)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-50"
+                  aria-label="Đăng xuất"
+                  title="Đăng xuất"
+                >
+                  <SignOut aria-hidden size={20} />
+                </button>
+              </>
+            ) : (
+              <Link href="/login" className="inline-flex h-9 items-center gap-2 rounded-lg bg-[var(--accent)] px-3 text-xs font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2">
+                <UserCircle aria-hidden size={18} /> Đăng nhập
+              </Link>
+            )}
+          </div>
         </div>
       </header>
 
-      <DesktopNavigationRail />
+      <DesktopNavigationRail role={currentUser?.role} />
 
       <div className="row-start-2 min-h-[calc(100dvh-4.25rem)] min-w-0 md:col-start-2 app-content-custom">
         <main id="main-content" tabIndex={-1} className="min-w-0">
@@ -384,7 +436,17 @@ export function AppShell({ children }: AppShellProps) {
                   <X aria-hidden size={20} weight="regular" />
                 </button>
               </div>
-              <MobileNavigation onNavigate={() => setMobileNavigationOpen(false)} />
+              <MobileNavigation role={currentUser?.role} onNavigate={() => setMobileNavigationOpen(false)} />
+              {currentUser ? (
+                <button
+                  type="button"
+                  onClick={signOut}
+                  disabled={signingOut}
+                  className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-white text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--danger)] disabled:opacity-50"
+                >
+                  <SignOut aria-hidden size={18} /> {signingOut ? "Đang đăng xuất..." : "Đăng xuất"}
+                </button>
+              ) : null}
               <p className="mt-auto border-t border-[var(--border-strong)] pt-4 text-xs text-[var(--text-muted)]">
                 Công cụ đào tạo CNS
               </p>

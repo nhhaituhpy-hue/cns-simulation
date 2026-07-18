@@ -11,7 +11,7 @@ import { normalizeHardwareDiagnosisAnswer } from "./equipment-diagram-compatibil
 import type { VorStorageLike } from "./vor-scenario-storage";
 
 export const VOR_SUBMISSION_STORAGE_KEY = "cns-training:vor-submissions";
-export const VOR_SUBMISSION_STORAGE_VERSION = 1 as const;
+export const VOR_SUBMISSION_STORAGE_VERSION = 2 as const;
 
 interface VorSubmissionEnvelope {
   version: typeof VOR_SUBMISSION_STORAGE_VERSION;
@@ -93,8 +93,9 @@ export function isVorSubmission(value: unknown): value is VorSubmission {
   return (
     isString(value.id) && value.id.trim().length > 0 &&
     isString(value.scenarioId) && value.scenarioId.trim().length > 0 &&
+    isString(value.userId) && value.userId.trim().length > 0 &&
     isString(value.studentName) && value.studentName.trim().length > 0 &&
-    isString(value.studentCode) && value.studentCode.trim().length > 0 &&
+    isString(value.workUnit) && value.workUnit.trim().length > 0 &&
     isString(value.status) && validStatuses.includes(value.status as VorSubmissionStatus) &&
     isString(value.startedAt) &&
     validOptionalStrings &&
@@ -137,7 +138,7 @@ export function deserializeVorSubmissions(rawValue: string | null): VorSubmissio
   ) {
     throw new Error("Stored VOR submissions use an unsupported or invalid format.");
   }
-  return parsed.submissions.map(cloneVorSubmission);
+  return parsed.submissions.map((submission) => cloneVorSubmission(submission as VorSubmission));
 }
 
 function requiredString(row: Record<string, unknown>, field: string): string {
@@ -156,8 +157,9 @@ export function mapRowToVorSubmission(row: unknown): VorSubmission {
   const candidate: VorSubmission = {
     id: requiredString(row, "id"),
     scenarioId: requiredString(row, "scenario_id"),
+    userId: requiredString(row, "user_id"),
     studentName: requiredString(row, "student_name"),
-    studentCode: requiredString(row, "student_code"),
+    workUnit: requiredString(row, "work_unit"),
     status: requiredString(row, "status") as VorSubmissionStatus,
     startedAt: requiredString(row, "started_at"),
     events: jsonField(row, "events") as VorAttemptEvent[],
@@ -177,8 +179,9 @@ export function vorSubmissionToRow(submission: VorSubmission) {
   return {
     id: submission.id,
     scenario_id: submission.scenarioId,
+    user_id: submission.userId,
     student_name: submission.studentName,
-    student_code: submission.studentCode,
+    work_unit: submission.workUnit,
     status: submission.status,
     started_at: submission.startedAt,
     submitted_at: submission.submittedAt ?? null,
@@ -199,5 +202,16 @@ export function saveVorSubmissions(
 }
 
 export function loadVorSubmissions(storage: VorStorageLike): VorSubmission[] {
-  return deserializeVorSubmissions(storage.getItem(VOR_SUBMISSION_STORAGE_KEY));
+  const rawValue = storage.getItem(VOR_SUBMISSION_STORAGE_KEY);
+  if (!rawValue) return [];
+  try {
+    const parsed = JSON.parse(rawValue) as unknown;
+    if (isRecord(parsed) && parsed.version === 1) {
+      storage.removeItem(VOR_SUBMISSION_STORAGE_KEY);
+      return [];
+    }
+  } catch {
+    // Let the normal deserializer report malformed current-version data.
+  }
+  return deserializeVorSubmissions(rawValue);
 }

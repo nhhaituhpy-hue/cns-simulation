@@ -4,8 +4,20 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppShell } from "@/components/layout/app-shell";
 
 const mockUsePathname = vi.hoisted(() => vi.fn());
+const mockRouter = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
 
-vi.mock("next/navigation", () => ({ usePathname: mockUsePathname }));
+vi.mock("next/navigation", () => ({
+  usePathname: mockUsePathname,
+  useRouter: () => mockRouter,
+}));
+
+const adminUser = {
+  id: "admin-user",
+  email: "admin@attech.com.vn",
+  fullName: "Quản trị viên",
+  workUnit: "Trung tâm Bảo đảm kỹ thuật",
+  role: "admin" as const,
+};
 
 beforeEach(() => {
   mockUsePathname.mockReturnValue("/admin/dme");
@@ -14,7 +26,7 @@ beforeEach(() => {
 describe("AppShell", () => {
   it("shows three compact desktop destinations and marks the current route", () => {
     render(
-      <AppShell>
+      <AppShell currentUser={adminUser}>
         <p>Nội dung kiểm thử</p>
       </AppShell>,
     );
@@ -75,7 +87,7 @@ describe("AppShell", () => {
     mockUsePathname.mockReturnValue("/student/ads-b");
 
     render(
-      <AppShell>
+      <AppShell currentUser={adminUser}>
         <p>Nội dung kiểm thử</p>
       </AppShell>,
     );

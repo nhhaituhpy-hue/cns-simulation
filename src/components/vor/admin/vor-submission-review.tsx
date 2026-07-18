@@ -77,7 +77,7 @@ export function VorSubmissionReview({ submissionId }: VorSubmissionReviewProps) 
         <Link href="/admin/vor/submissions" className="text-sm font-semibold text-[var(--accent)] hover:underline">← Danh sách bài nộp VOR</Link>
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-[var(--text-primary)]">{submission.studentName} · {submission.studentCode}</h1>
+            <h1 className="text-2xl font-bold text-[var(--text-primary)]">{submission.studentName} | {submission.workUnit}</h1>
             <p className="mt-2 text-sm text-[var(--text-secondary)]">{scenario?.title ?? "Kịch bản VOR không còn tồn tại"}</p>
           </div>
           <span className={`w-fit rounded-full px-3 py-1 text-xs font-bold ${submission.status === "reviewed" ? "bg-[#dcfce7] text-[#166534]" : "bg-[#fef3c7] text-[#92400e]"}`}>{submission.status === "reviewed" ? "Đã chấm" : "Chờ chấm"}</span>
