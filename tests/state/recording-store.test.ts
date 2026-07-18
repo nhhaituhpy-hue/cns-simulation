@@ -101,4 +101,19 @@ describe("recording store", () => {
       gradingResult: null,
     });
   });
+
+  it("resets state when the same scenario starts under a different exam item", () => {
+    const store = createRecordingStore();
+    store.getState().beginAttempt("scenario-a", "attempt-item-1");
+    store.getState().addAction(recordable("sa.root", "1"));
+    expect(store.getState().allActions).toHaveLength(1);
+
+    store.getState().beginAttempt("scenario-a", "attempt-item-2");
+    expect(store.getState()).toMatchObject({
+      scenarioId: "scenario-a",
+      sessionKey: "attempt-item-2",
+      allActions: [],
+      selectedActions: [],
+    });
+  });
 });

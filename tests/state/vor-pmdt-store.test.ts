@@ -63,6 +63,7 @@ describe("VOR PMDT store", () => {
     store.getState().initializeSession({
       mode: "student",
       scenarioId: "vor-loss-of-power",
+      sessionKey: "exam-item-vor-1",
       userId: "student-user",
       studentName: "Nguyen Van A",
       workUnit: "Doi TSS",

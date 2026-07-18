@@ -49,7 +49,13 @@ describe("AppShell", () => {
       "page",
     );
     const moduleTabs = screen.getByRole("group", { name: "Phân hệ Giám khảo" });
-    expect(within(moduleTabs).getAllByRole("link")).toHaveLength(3);
+    expect(
+      within(moduleTabs).getAllByRole("link").map((link) => link.textContent),
+    ).toEqual(["Kỳ thi", "VOR", "DME", "ADS-B", "Tạo đề thi"]);
+    expect(within(moduleTabs).getByRole("link", { name: "Kỳ thi" })).toHaveAttribute(
+      "href",
+      "/admin/exams",
+    );
     expect(within(moduleTabs).getByRole("link", { name: "VOR" })).toHaveAttribute(
       "href",
       "/admin/vor",
@@ -61,6 +67,10 @@ describe("AppShell", () => {
     expect(within(moduleTabs).getByRole("link", { name: "ADS-B" })).toHaveAttribute(
       "href",
       "/admin/ads-b",
+    );
+    expect(within(moduleTabs).getByRole("link", { name: "Tạo đề thi" })).toHaveAttribute(
+      "href",
+      "/admin/exam-sets",
     );
     const sidebar = navigation.closest("aside");
     const header = screen.getByRole("banner");
@@ -93,6 +103,13 @@ describe("AppShell", () => {
     );
 
     const moduleTabs = screen.getByRole("group", { name: "Phân hệ Thí sinh" });
+    expect(
+      within(moduleTabs).getAllByRole("link").map((link) => link.textContent),
+    ).toEqual(["Vào thi", "VOR", "DME", "ADS-B"]);
+    expect(within(moduleTabs).getByRole("link", { name: "Vào thi" })).toHaveAttribute(
+      "href",
+      "/student/exams",
+    );
     expect(within(moduleTabs).getByRole("link", { name: "VOR" })).toHaveAttribute(
       "href",
       "/student/vor",
@@ -104,6 +121,28 @@ describe("AppShell", () => {
     expect(within(moduleTabs).getByRole("link", { name: "ADS-B" })).toHaveAttribute(
       "aria-current",
       "page",
+    );
+  });
+
+  it("marks nested non-module routes without activating a neighboring tab", () => {
+    mockUsePathname.mockReturnValue("/admin/exams/exam-123");
+
+    render(
+      <AppShell currentUser={adminUser}>
+        <p>Nội dung kiểm thử</p>
+      </AppShell>,
+    );
+
+    const moduleTabs = screen.getByRole("group", { name: "Phân hệ Giám khảo" });
+    expect(within(moduleTabs).getByRole("link", { name: "Kỳ thi" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(within(moduleTabs).getByRole("link", { name: "Tạo đề thi" })).not.toHaveAttribute(
+      "aria-current",
+    );
+    expect(within(moduleTabs).getByRole("link", { name: "ADS-B" })).not.toHaveAttribute(
+      "aria-current",
     );
   });
 });

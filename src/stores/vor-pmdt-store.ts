@@ -36,6 +36,7 @@ const defaultViews: Record<VorScreenId, VorViewId> = {
 export interface VorSessionInitialization {
   mode: VorPmdtMode;
   scenarioId?: string;
+  sessionKey?: string;
   userId?: string;
   studentName?: string;
   workUnit?: string;
@@ -50,6 +51,7 @@ export interface VorPmdtStoreState {
   activeView: VorViewId;
   activeMenuPath: string[];
   scenarioId: string | null;
+  sessionKey: string | null;
   userId: string;
   studentName: string;
   workUnit: string;
@@ -109,6 +111,7 @@ function initialState(): VorPmdtStoreState {
     activeView: "home",
     activeMenuPath: ["Home"],
     scenarioId: null,
+    sessionKey: null,
     userId: "",
     studentName: "",
     workUnit: "",
@@ -177,6 +180,7 @@ export function createVorPmdtStore(
           ...initialState(),
           mode: initialization.mode,
           scenarioId: initialization.scenarioId ?? null,
+          sessionKey: initialization.sessionKey ?? initialization.scenarioId ?? null,
           userId: initialization.userId?.trim() ?? "",
           studentName: initialization.studentName?.trim() ?? "",
           workUnit: initialization.workUnit?.trim() ?? "",

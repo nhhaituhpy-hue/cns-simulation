@@ -59,4 +59,20 @@ describe("DME PMDT store", () => {
     ]);
     expect(store.getState().attemptEvents[0]).toMatchObject({ eventType: "sidebar", resultValue: true, resultStatus: "yellow" });
   });
+
+  it("keeps an official exam attempt separate from practice on the same scenario", () => {
+    const store = createDmePmdtStore();
+    store.getState().initializeSession({
+      mode: "student",
+      scenarioId: "dme-low-power",
+      sessionKey: "exam-item-dme-1",
+      userId: "student-user",
+    });
+
+    expect(store.getState()).toMatchObject({
+      scenarioId: "dme-low-power",
+      sessionKey: "exam-item-dme-1",
+      userId: "student-user",
+    });
+  });
 });

@@ -38,6 +38,7 @@ const defaultViews: Record<DmeScreenId, DmeViewId> = {
 export interface DmeSessionInitialization {
   mode: DmePmdtMode;
   scenarioId?: string;
+  sessionKey?: string;
   userId?: string;
   studentName?: string;
   workUnit?: string;
@@ -52,6 +53,7 @@ export interface DmePmdtStoreState {
   activeView: DmeViewId;
   activeMenuPath: string[];
   scenarioId: string | null;
+  sessionKey: string | null;
   userId: string;
   studentName: string;
   workUnit: string;
@@ -111,6 +113,7 @@ function initialState(): DmePmdtStoreState {
     activeView: "home",
     activeMenuPath: ["Home"],
     scenarioId: null,
+    sessionKey: null,
     userId: "",
     studentName: "",
     workUnit: "",
@@ -179,6 +182,7 @@ export function createDmePmdtStore(
           ...initialState(),
           mode: initialization.mode,
           scenarioId: initialization.scenarioId ?? null,
+          sessionKey: initialization.sessionKey ?? initialization.scenarioId ?? null,
           userId: initialization.userId?.trim() ?? "",
           studentName: initialization.studentName?.trim() ?? "",
           workUnit: initialization.workUnit?.trim() ?? "",

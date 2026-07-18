@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ClipboardText } from "@phosphor-icons/react/dist/csr/ClipboardText";
+import { CalendarCheck } from "@phosphor-icons/react/dist/csr/CalendarCheck";
 import { House } from "@phosphor-icons/react/dist/csr/House";
 import { List } from "@phosphor-icons/react/dist/csr/List";
 import { Student } from "@phosphor-icons/react/dist/csr/Student";
@@ -10,6 +11,8 @@ import { X } from "@phosphor-icons/react/dist/csr/X";
 import { Compass } from "@phosphor-icons/react/dist/csr/Compass";
 import { Ruler } from "@phosphor-icons/react/dist/csr/Ruler";
 import { Broadcast } from "@phosphor-icons/react/dist/csr/Broadcast";
+import { Exam } from "@phosphor-icons/react/dist/csr/Exam";
+import { SignIn } from "@phosphor-icons/react/dist/csr/SignIn";
 import { SignOut } from "@phosphor-icons/react/dist/csr/SignOut";
 import { UserCircle } from "@phosphor-icons/react/dist/csr/UserCircle";
 import type { Icon } from "@phosphor-icons/react/dist/lib/types";
@@ -30,18 +33,27 @@ type NavigationItem = {
 };
 
 type WorkspaceSection = "admin" | "student";
-type CnsModule = "vor" | "dme" | "ads-b";
 
-const moduleItems: { id: CnsModule; label: string; icon: Icon }[] = [
-  { id: "vor", label: "VOR", icon: Compass },
-  { id: "dme", label: "DME", icon: Ruler },
-  { id: "ads-b", label: "ADS-B", icon: Broadcast },
-];
+const workspaceItems: Record<WorkspaceSection, NavigationItem[]> = {
+  admin: [
+    { href: "/admin/exams", label: "Kỳ thi", icon: CalendarCheck },
+    { href: "/admin/vor", label: "VOR", icon: Compass },
+    { href: "/admin/dme", label: "DME", icon: Ruler },
+    { href: "/admin/ads-b", label: "ADS-B", icon: Broadcast },
+    { href: "/admin/exam-sets", label: "Tạo đề thi", icon: Exam },
+  ],
+  student: [
+    { href: "/student/exams", label: "Vào thi", icon: SignIn },
+    { href: "/student/vor", label: "VOR", icon: Compass },
+    { href: "/student/dme", label: "DME", icon: Ruler },
+    { href: "/student/ads-b", label: "ADS-B", icon: Broadcast },
+  ],
+};
 
 const navigationItems: NavigationItem[] = [
   { href: "/", label: "Trang chủ", icon: House },
-  { href: "/admin/vor", label: "Giám khảo", icon: ClipboardText },
-  { href: "/student/vor", label: "Thí sinh", icon: Student },
+  { href: "/admin/exams", label: "Giám khảo", icon: ClipboardText },
+  { href: "/student/exams", label: "Thí sinh", icon: Student },
 ];
 
 function visibleNavigationItems(role?: AuthProfile["role"]) {
@@ -84,20 +96,8 @@ function getWorkspaceSection(href: string): WorkspaceSection | null {
   return null;
 }
 
-function getActiveModule(pathname: string): CnsModule | null {
-  if (!pathname.startsWith("/admin") && !pathname.startsWith("/student")) {
-    return null;
-  }
-
-  if (pathname.startsWith("/admin/vor") || pathname.startsWith("/student/vor")) {
-    return "vor";
-  }
-
-  if (pathname.startsWith("/admin/dme") || pathname.startsWith("/student/dme")) {
-    return "dme";
-  }
-
-  return "ads-b";
+function isPathWithin(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 function ModuleSubTabs({
@@ -111,7 +111,7 @@ function ModuleSubTabs({
   mobile?: boolean;
   onNavigate?: () => void;
 }) {
-  const activeModule = getActiveModule(pathname);
+  const items = workspaceItems[section];
 
   if (!mobile) {
     return (
@@ -120,14 +120,14 @@ function ModuleSubTabs({
         aria-label={`Phân hệ ${section === "admin" ? "Giám khảo" : "Thí sinh"}`}
         className="mt-1 flex flex-col gap-1 pl-8"
       >
-        {moduleItems.map((module) => {
-          const active = activeModule === module.id;
-          const ModuleIcon = module.icon;
+        {items.map((item) => {
+          const active = isPathWithin(pathname, item.href);
+          const ItemIcon = item.icon;
 
           return (
             <Link
-              key={module.id}
-              href={`/${section}/${module.id}`}
+              key={item.href}
+              href={item.href}
               onClick={onNavigate}
               aria-current={active ? "page" : undefined}
               className={`flex h-9 items-center rounded-md px-4 text-xs font-bold tracking-wide transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] motion-reduce:transition-none ${
@@ -136,9 +136,9 @@ function ModuleSubTabs({
                   : "text-[#64748b] hover:text-[#0f172a]"
               }`}
             >
-              <ModuleIcon size={14} weight="regular" className="mr-2 shrink-0 opacity-70" />
+              <ItemIcon size={14} weight="regular" className="mr-2 shrink-0 opacity-70" />
               <span className="relative">
-                {module.label}
+                {item.label}
                 {active && (
                   <span className="absolute bottom-[-3px] left-1/2 h-[1px] w-1/2 -translate-x-1/2 bg-[#0369a1] rounded-full" />
                 )}
@@ -154,15 +154,15 @@ function ModuleSubTabs({
     <div
       role="group"
       aria-label={`Phân hệ ${section === "admin" ? "Giám khảo" : "Thí sinh"}`}
-      className="ml-4 grid grid-cols-3 gap-1 border-l border-[var(--border-strong)] pl-3"
+      className="ml-4 grid grid-cols-2 gap-1 border-l border-[var(--border-strong)] pl-3"
     >
-      {moduleItems.map((module) => {
-        const active = activeModule === module.id;
+      {items.map((item) => {
+        const active = isPathWithin(pathname, item.href);
 
         return (
           <Link
-            key={module.id}
-            href={`/${section}/${module.id}`}
+            key={item.href}
+            href={item.href}
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
             className={`inline-flex items-center justify-center rounded-md border text-[10px] font-semibold transition-[background-color,border-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-inset motion-reduce:transition-none min-h-9 px-2 ${
@@ -171,7 +171,7 @@ function ModuleSubTabs({
                 : "border-transparent text-[var(--text-muted)] hover:bg-white/70 hover:text-[var(--text-primary)]"
             }`}
           >
-            {module.label}
+            {item.label}
           </Link>
         );
       })}

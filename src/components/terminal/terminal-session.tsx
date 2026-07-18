@@ -4,9 +4,11 @@ import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GradingResult } from "@/components/grading/grading-result";
-import type { SensorState } from "@/lib/types";
+import { completeExamAttemptItemAction } from "@/lib/exams/actions";
+import type { OfficialExamScenarioContext } from "@/lib/exams/client-types";
+import type { Scenario, SensorState } from "@/lib/types";
 import { useRecordingStore } from "@/stores/recording-store";
 import { useScenarioStore } from "@/stores/scenario-store";
 import { useTerminalStore } from "@/stores/terminal-store";
@@ -36,10 +38,20 @@ function SessionSkeleton() {
   );
 }
 
-export function TerminalSession({ scenarioId }: { scenarioId: string }) {
+export function TerminalSession({
+  scenarioId,
+  sensorId,
+  officialExam,
+  officialScenario,
+}: {
+  scenarioId: string;
+  sensorId?: string;
+  officialExam?: OfficialExamScenarioContext;
+  officialScenario?: Scenario;
+}) {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const requestedSensorId = searchParams.get("sensorId");
+  const requestedSensorId = sensorId ?? searchParams.get("sensorId");
   const scenarios = useScenarioStore((state) => state.scenarios);
   const isHydrated = useScenarioStore((state) => state.isHydrated);
   const storageError = useScenarioStore((state) => state.storageError);
@@ -48,10 +60,13 @@ export function TerminalSession({ scenarioId }: { scenarioId: string }) {
   const terminal = useTerminalStore();
   const recording = useRecordingStore();
   const initializedKey = useRef<string | null>(null);
+  const [officialSubmitted, setOfficialSubmitted] = useState(false);
+  const [officialSaving, setOfficialSaving] = useState(false);
+  const [officialError, setOfficialError] = useState<string | null>(null);
 
   const scenario = useMemo(
-    () => scenarios.find((item) => item.id === scenarioId),
-    [scenarioId, scenarios],
+    () => officialScenario ?? scenarios.find((item) => item.id === scenarioId),
+    [officialScenario, scenarioId, scenarios],
   );
   const selectedSensor = useMemo(() => {
     if (!scenario) return undefined;
@@ -63,15 +78,15 @@ export function TerminalSession({ scenarioId }: { scenarioId: string }) {
   const isTargetSensor = selectedSensor?.id === scenario?.targetSensorId;
 
   useEffect(() => {
-    hydrate();
-  }, [hydrate]);
+    if (!officialScenario) hydrate();
+  }, [hydrate, officialScenario]);
 
   useEffect(() => {
     if (!scenario || !selectedSensor || !isTargetSensor) return;
-    const key = `${scenario.id}:${selectedSensor.id}`;
+    const key = `${officialExam?.sessionKey ?? scenario.id}:${selectedSensor.id}`;
     if (initializedKey.current === key) return;
 
-    recording.beginAttempt(scenario.id);
+    recording.beginAttempt(scenario.id, officialExam?.sessionKey ?? scenario.id);
     recording.startTerminal();
     terminal.initialize({
       targetLoginUser: scenario.targetLoginUser,
@@ -81,12 +96,12 @@ export function TerminalSession({ scenarioId }: { scenarioId: string }) {
       sensorMonitoring: selectedSensor.monitoring,
     });
     initializedKey.current = key;
-  }, [isTargetSensor, recording, scenario, selectedSensor, terminal]);
+  }, [isTargetSensor, officialExam?.sessionKey, recording, scenario, selectedSensor, terminal]);
 
   const retry = useCallback(() => {
     if (!scenario || !selectedSensor) return;
     recording.resetAttempt();
-    recording.beginAttempt(scenario.id);
+    recording.beginAttempt(scenario.id, officialExam?.sessionKey ?? scenario.id);
     recording.startTerminal();
     terminal.initialize({
       targetLoginUser: scenario.targetLoginUser,
@@ -95,9 +110,9 @@ export function TerminalSession({ scenarioId }: { scenarioId: string }) {
       sensorDataProfile: selectedSensor.dataProfile,
       sensorMonitoring: selectedSensor.monitoring,
     });
-  }, [recording, scenario, selectedSensor, terminal]);
+  }, [officialExam?.sessionKey, recording, scenario, selectedSensor, terminal]);
 
-  if (!isHydrated) return <SessionSkeleton />;
+  if (!officialScenario && !isHydrated) return <SessionSkeleton />;
 
   if (!scenario) {
     return (
@@ -110,7 +125,7 @@ export function TerminalSession({ scenarioId }: { scenarioId: string }) {
           Kịch bản có thể đã bị xóa hoặc địa chỉ không còn hợp lệ.
         </p>
         <Link
-          href="/student"
+          href={officialExam?.returnHref ?? "/student"}
           className="mt-6 inline-flex min-h-11 items-center justify-center rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
         >
           Về danh sách bài thực hành
@@ -130,7 +145,7 @@ export function TerminalSession({ scenarioId }: { scenarioId: string }) {
           Cảm biến vừa mở không phải thiết bị cần xử lý trong kịch bản này. Hãy quay lại QCMS và kiểm tra dấu hiệu cảnh báo.
         </p>
         <Link
-          href={`/student/simulation?id=${scenario.id}`}
+          href={officialExam?.scenarioHref ?? `/student/simulation?id=${scenario.id}`}
           className="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
         >
           <ArrowLeft aria-hidden size={18} />
@@ -140,7 +155,17 @@ export function TerminalSession({ scenarioId }: { scenarioId: string }) {
     );
   }
 
-  if (recording.gradingResult) {
+  if (officialSubmitted && officialExam) {
+    return (
+      <section className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6">
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Đã nộp kịch bản ADS-B</h1>
+        <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">Dữ liệu thao tác đã được lưu. Điểm chính thức sẽ do giám khảo nhập.</p>
+        <Link href={officialExam.returnHref} className="mt-6 inline-flex min-h-11 items-center rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white">Về tiến độ môn thi</Link>
+      </section>
+    );
+  }
+
+  if (!officialExam && recording.gradingResult) {
     return (
       <div className="mx-auto w-full max-w-[1200px] px-4 py-6 sm:px-6 lg:px-8">
         <GradingResult
@@ -157,7 +182,7 @@ export function TerminalSession({ scenarioId }: { scenarioId: string }) {
       <div className="mb-5 flex flex-col gap-3 border-b border-[var(--border)] pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <Link
-            href={`/student/simulation?id=${scenario.id}`}
+            href={officialExam?.scenarioHref ?? `/student/simulation?id=${scenario.id}`}
             className="inline-flex min-h-9 items-center gap-2 rounded text-sm font-semibold text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
           >
             <ArrowLeft aria-hidden size={17} />
@@ -181,11 +206,12 @@ export function TerminalSession({ scenarioId }: { scenarioId: string }) {
         </div>
       </div>
 
-      {storageError ? (
+      {!officialScenario && storageError ? (
         <div className="mb-4 rounded border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           Dữ liệu cục bộ có lỗi. Phiên này đang dùng kịch bản mặc định.
         </div>
       ) : null}
+      {officialError ? <div role="alert" className="mb-4 rounded border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-sm text-[#991b1b]">{officialError}</div> : null}
 
       <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,7fr)_minmax(20rem,3fr)]">
         <TerminalWindow
@@ -216,17 +242,41 @@ export function TerminalSession({ scenarioId }: { scenarioId: string }) {
           onSubmit={() => {
             if (scenario.hardwareFault) {
               recording.completeTerminal();
-              router.push(
-                `/student/simulation?id=${encodeURIComponent(
-                  scenario.id,
-                )}&stage=hardware`,
-              );
+              router.push(officialExam?.scenarioHref
+                ? `${officialExam.scenarioHref}?stage=hardware`
+                : `/student/simulation?id=${encodeURIComponent(scenario.id)}&stage=hardware`);
+              return;
+            }
+            if (officialExam) {
+              setOfficialSaving(true);
+              setOfficialError(null);
+              void completeExamAttemptItemAction(officialExam.attemptItemId, {
+                result: {
+                  moduleCode: "ads-b",
+                  startedAt: officialExam.startedAt,
+                  submittedAt: new Date().toISOString(),
+                  selectedActions: recording.selectedActions,
+                  allActions: recording.allActions,
+                  authenticatedCorrectly: recording.authenticatedCorrectly,
+                  qcmsMonitoringOpened: recording.qcmsMonitoringOpened,
+                  diagnosedComponentIds: [],
+                  inspectedComponentIds: [],
+                },
+              }).then((result) => {
+                setOfficialSaving(false);
+                if (!result.ok) {
+                  setOfficialError(result.message);
+                  return;
+                }
+                setOfficialSubmitted(true);
+              });
               return;
             }
             recording.submitForGrading(scenario.expectedActions);
           }}
         />
       </div>
+      {officialSaving ? <div role="status" aria-live="polite" className="fixed inset-x-0 bottom-4 z-[80] mx-auto w-fit rounded-md bg-[#172033] px-4 py-2 text-sm font-semibold text-white shadow-lg">Đang lưu bài thi...</div> : null}
     </div>
   );
 }

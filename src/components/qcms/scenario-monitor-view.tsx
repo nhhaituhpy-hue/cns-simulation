@@ -5,6 +5,9 @@ import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { Warning } from "@phosphor-icons/react/dist/csr/Warning";
 import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { useEffect, useState } from "react";
+import { completeExamAttemptItemAction } from "@/lib/exams/actions";
+import type { OfficialExamScenarioContext } from "@/lib/exams/client-types";
+import type { Scenario } from "@/lib/types";
 import { HardwareDiagnosisWorkspace } from "@/components/hardware/hardware-diagnosis-workspace";
 import { HardwareGradingResult } from "@/components/grading/hardware-grading-result";
 import { useRecordingStore } from "@/stores/recording-store";
@@ -21,32 +24,39 @@ import { SiteMonitor } from "./site-monitor";
 type ScenarioMonitorViewProps = {
   scenarioId: string;
   autoOpenHardware?: boolean;
+  officialExam?: OfficialExamScenarioContext;
+  officialScenario?: Scenario;
 };
 
 export function ScenarioMonitorView({
   scenarioId,
   autoOpenHardware = false,
+  officialExam,
+  officialScenario,
 }: ScenarioMonitorViewProps) {
   const recording = useRecordingStore();
   const [activePanel, setActivePanel] = useState<QcmsPanel>("sites");
   const [groundStationsOpen, setGroundStationsOpen] = useState(true);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [officialSubmitted, setOfficialSubmitted] = useState(false);
+  const [officialSaving, setOfficialSaving] = useState(false);
+  const [officialError, setOfficialError] = useState<string | null>(null);
   const [hardwareDiagnosisRequested, setHardwareDiagnosisRequested] =
     useState(false);
   const [hardwareDiagnosisClosed, setHardwareDiagnosisClosed] = useState(false);
   const { isHydrated, storageError, hydrate, getScenarioById } =
     useScenarioStore();
-  const scenario = getScenarioById(scenarioId);
+  const scenario = officialScenario ?? getScenarioById(scenarioId);
 
   useEffect(() => {
-    hydrate();
-  }, [hydrate]);
+    if (!officialScenario) hydrate();
+  }, [hydrate, officialScenario]);
 
   useEffect(() => {
     if (scenario) {
-      recording.beginAttempt(scenario.id);
+      recording.beginAttempt(scenario.id, officialExam?.sessionKey ?? scenario.id);
     }
-  }, [recording, scenario]);
+  }, [officialExam?.sessionKey, recording, scenario]);
 
   const showHardwareDiagnosis =
     hardwareDiagnosisRequested ||
@@ -76,7 +86,7 @@ export function ScenarioMonitorView({
   }
 
 
-  if (!isHydrated) {
+  if (!officialScenario && !isHydrated) {
     return <ScenarioMonitorLoading />;
   }
 
@@ -96,12 +106,22 @@ export function ScenarioMonitorView({
           Kịch bản có thể đã bị xóa hoặc đường dẫn không còn hợp lệ.
         </p>
         <Link
-          href="/student/ads-b"
+          href={officialExam?.returnHref ?? "/student/ads-b"}
           className="mt-6 inline-flex min-h-11 items-center gap-2 rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)]"
         >
           <ArrowLeft aria-hidden size={17} />
           Về danh sách bài thực hành
         </Link>
+      </section>
+    );
+  }
+
+  if (officialSubmitted && officialExam) {
+    return (
+      <section className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-2xl flex-col items-center justify-center px-4 py-12 text-center sm:px-6">
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Đã nộp kịch bản ADS-B</h1>
+        <p className="mt-3 max-w-[58ch] text-sm leading-6 text-[var(--text-secondary)]">Dữ liệu thao tác đã được lưu. Điểm chính thức sẽ do giám khảo nhập sau khi xem bài làm.</p>
+        <Link href={officialExam.returnHref} className="mt-6 inline-flex min-h-11 items-center rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)]">Về tiến độ môn thi</Link>
       </section>
     );
   }
@@ -119,7 +139,7 @@ export function ScenarioMonitorView({
       <header className="flex flex-col gap-4 border-b border-[var(--border)] pb-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <Link
-            href="/student/ads-b"
+            href={officialExam?.returnHref ?? "/student/ads-b"}
             className="inline-flex min-h-9 items-center gap-2 rounded px-1 text-sm font-semibold text-[var(--accent)] hover:underline"
           >
             <ArrowLeft aria-hidden size={17} />
@@ -180,12 +200,9 @@ export function ScenarioMonitorView({
 
           <div className="mt-3 flex flex-wrap gap-2">
             <Link
-              href={
-                "/student/terminal?id=" +
-                encodeURIComponent(scenario.id) +
-                "&sensorId=" +
-                encodeURIComponent(scenario.targetSensorId)
-              }
+              href={officialExam?.terminalHref
+                ? `${officialExam.terminalHref}?sensorId=${encodeURIComponent(scenario.targetSensorId)}`
+                : "/student/terminal?id=" + encodeURIComponent(scenario.id) + "&sensorId=" + encodeURIComponent(scenario.targetSensorId)}
               className="inline-flex min-h-10 items-center rounded border border-[var(--border-strong)] bg-white px-4 text-sm font-semibold text-[var(--accent)] hover:bg-[var(--surface-muted)]"
             >
               Mở Terminal
@@ -207,7 +224,7 @@ export function ScenarioMonitorView({
         </div>
       ) : null}
 
-      {storageError ? (
+      {!officialScenario && storageError ? (
         <div
           role="status"
           className="mt-5 flex items-start gap-3 rounded border border-[#f59e0b] bg-[#fffbeb] p-3 text-[#78350f]"
@@ -217,6 +234,10 @@ export function ScenarioMonitorView({
             Dữ liệu lưu cục bộ có lỗi. Màn hình đang dùng kịch bản mẫu.
           </p>
         </div>
+      ) : null}
+
+      {officialError ? (
+        <div role="alert" className="mt-5 rounded border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-sm text-[#991b1b]">{officialError}</div>
       ) : null}
 
       <div className="mt-6 overflow-hidden border-2 border-[#202a64] bg-[#8e9192] shadow-[var(--shadow-card)]">
@@ -249,6 +270,33 @@ export function ScenarioMonitorView({
           hardwareFault={scenario.hardwareFault}
           onClose={closeHardwareDiagnosis}
           onSubmit={(diagnosis) => {
+            if (officialExam) {
+              const state = useRecordingStore.getState();
+              setOfficialSaving(true);
+              setOfficialError(null);
+              void completeExamAttemptItemAction(officialExam.attemptItemId, {
+                result: {
+                  moduleCode: "ads-b",
+                  startedAt: officialExam.startedAt,
+                  submittedAt: new Date().toISOString(),
+                  selectedActions: state.selectedActions,
+                  allActions: state.allActions,
+                  authenticatedCorrectly: state.authenticatedCorrectly,
+                  qcmsMonitoringOpened: state.qcmsMonitoringOpened,
+                  diagnosedComponentIds: diagnosis.componentIds,
+                  inspectedComponentIds: diagnosis.inspectedComponents,
+                },
+              }).then((result) => {
+                setOfficialSaving(false);
+                if (!result.ok) {
+                  setOfficialError(result.message);
+                  return;
+                }
+                closeHardwareDiagnosis();
+                setOfficialSubmitted(true);
+              });
+              return;
+            }
             recording.submitCombinedAttempt(
               scenario.expectedActions,
               scenario.hardwareFault?.faultyComponentIds ?? [],
@@ -260,7 +308,7 @@ export function ScenarioMonitorView({
         />
       ) : null}
 
-      {recording.combinedGradingResult &&
+      {!officialExam && recording.combinedGradingResult &&
       scenario.hardwareFault &&
       expectedHardwareComponents.length > 0 ? (
         <div className="fixed inset-0 z-[70] grid place-items-center overflow-y-auto bg-[#172033]/60 p-4">
@@ -324,6 +372,7 @@ export function ScenarioMonitorView({
           </div>
         </div>
       ) : null}
+      {officialSaving ? <div role="status" aria-live="polite" className="fixed inset-x-0 bottom-4 z-[80] mx-auto w-fit rounded-md bg-[#172033] px-4 py-2 text-sm font-semibold text-white shadow-lg">Đang lưu bài thi...</div> : null}
     </section>
   );
 }

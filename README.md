@@ -16,13 +16,16 @@ Dự án đang ở giai đoạn **MVP hoạt động đầy đủ cho đào tạ
 | DME | PMDT Model 1118A/1119A, cấu hình kịch bản, nhật ký, Local/Integral Bypass/Standby Bypass và sơ đồ Dual High Power | Giám khảo xem bằng chứng, đối chiếu checkpoint và nhập điểm thủ công |
 | ADS-B | QCMS, terminal SA/MA, trạng thái site/sensor, sự cố phần cứng, ghi nhận và sắp xếp thao tác | Chấm tự động theo ngữ cảnh menu, thứ tự thao tác và dữ liệu nhập |
 
-Mốc xác minh gần nhất được ghi nhận ngày **18/07/2026**: 191 bài kiểm thử Vitest vượt qua và production build thành công. README không thay thế kết quả kiểm tra hiện tại; hãy chạy các quality gate trước khi phát hành thay đổi mới.
+Mốc xác minh gần nhất được ghi nhận ngày **18/07/2026**: 206 bài kiểm thử Vitest vượt qua và production build thành công. README không thay thế kết quả kiểm tra hiện tại; hãy chạy các quality gate trước khi phát hành thay đổi mới.
 
 ## Chức năng chính
 
 ### Dành cho giám khảo
 
 - Quản lý kịch bản độc lập cho VOR, DME và ADS-B.
+- Tạo bộ đề theo môn, trong đó mỗi đề có thể chứa nhiều kịch bản; môn VOR-DME có thể kết hợp kịch bản của cả hai module.
+- Tạo, khóa và lưu trữ kỳ thi; quản lý giám khảo, danh sách thí sinh, phân môn, phân đề và kết quả chính thức.
+- Mở bài thi chính thức theo từng môn để đối chiếu nhật ký PMDT, câu trả lời, checkpoint, chuỗi terminal và chẩn đoán phần cứng trước khi nhập điểm.
 - Cấu hình giá trị, trạng thái cảnh báo và checkpoint trực tiếp trên giao diện PMDT VOR/DME.
 - Tạo quy trình thao tác tham chiếu cho terminal ADS-B.
 - Bổ sung bài chẩn đoán phần cứng tùy chọn bằng sơ đồ tín hiệu tương tác.
@@ -37,6 +40,7 @@ Mốc xác minh gần nhất được ghi nhận ngày **18/07/2026**: 191 bài 
 - Chọn component nghi ngờ trên sơ đồ phần cứng và trình bày phương án xử lý.
 - Nộp kết quả để giám khảo đánh giá hoặc nhận điểm tự động tùy module.
 - Tên thí sinh và đơn vị công tác được lấy từ hồ sơ đã xác thực, không nhập lại khi bắt đầu bài VOR/DME.
+- Vào kỳ thi đang mở bằng email công vụ đã đăng ký, chọn môn được phân và thực hiện lần lượt các kịch bản trong đề thi.
 
 ### Tài khoản và phân quyền
 
@@ -64,6 +68,9 @@ Trình duyệt
             ├─ Auth + profiles (student/admin)
             ├─ scenarios / vor_scenarios / dme_scenarios
             ├─ vor_submissions / dme_submissions
+            ├─ exam_sets / exam_papers / exam_paper_scenarios
+            ├─ exams / exam_examiners / exam_candidates
+            ├─ exam_candidate_subjects / exam_attempts / exam_attempt_items
             ├─ auth_login_attempts
             └─ training media storage
 ```
@@ -71,6 +78,7 @@ Trình duyệt
 - Supabase Auth quản lý thông tin đăng nhập; `public.profiles` quản lý họ tên, đơn vị và vai trò ứng dụng.
 - Supabase Database lưu kịch bản ADS-B, VOR, DME và bài nộp VOR/DME.
 - `localStorage` giữ bản dữ liệu cục bộ có phiên bản và đóng vai trò fallback khi API hoặc Supabase không khả dụng.
+- Luồng **thi chính thức** là ngoại lệ: kỳ thi, phân đề, tiến độ và kịch bản đang thi luôn được đọc/ghi trực tiếp từ Supabase; hệ thống không dùng dữ liệu `localStorage` thay thế khi Supabase lỗi. Điểm chính thức chỉ được giám khảo nhập sau khi thí sinh nộp môn thi.
 - Các migration và seed data được quản lý trong `supabase/migrations/`.
 - Media phát hành không được commit trong `public/media/`; frontend sử dụng URL Supabase Storage.
 
@@ -118,8 +126,9 @@ Lấy secret key tại **Supabase Dashboard → Project Settings → API Keys �
 ### Thiết lập Supabase Auth
 
 1. Áp dụng migration `supabase/migrations/202607180001_add_auth_profiles_and_security.sql` bằng Supabase CLI hoặc SQL Editor. Migration này chủ động xóa toàn bộ bài nộp thử nghiệm cũ trong `vor_submissions` và `dme_submissions`; cache bài nộp định dạng cũ trong trình duyệt cũng bị loại ở lần tải tiếp theo.
-2. Trong **Authentication → Providers → Email**, bật Email/Password và yêu cầu xác nhận email.
-3. Trong **Authentication → Email Templates → Confirm signup**, thay liên kết xác nhận bằng mã OTP, ví dụ:
+2. Áp dụng migration `supabase/migrations/202607180002_create_exam_management.sql` để tạo danh mục môn, bộ đề, kỳ thi, phân công thí sinh, lượt thi và toàn bộ policy RLS/RPC liên quan.
+3. Trong **Authentication → Providers → Email**, bật Email/Password và yêu cầu xác nhận email.
+4. Trong **Authentication → Email Templates → Confirm signup**, thay liên kết xác nhận bằng mã OTP, ví dụ:
 
    ```html
    <h2>Mã xác thực đăng ký</h2>
@@ -128,7 +137,7 @@ Lấy secret key tại **Supabase Dashboard → Project Settings → API Keys �
    <p>Nếu bạn không đăng ký, hãy bỏ qua email này.</p>
    ```
 
-4. Trong **Authentication → Email Templates → Reset password**, cũng dùng `{{ .Token }}` thay cho `{{ .ConfirmationURL }}`:
+5. Trong **Authentication → Email Templates → Reset password**, cũng dùng `{{ .Token }}` thay cho `{{ .ConfirmationURL }}`:
 
    ```html
    <h2>Mã đặt lại mật khẩu</h2>
@@ -137,8 +146,8 @@ Lấy secret key tại **Supabase Dashboard → Project Settings → API Keys �
    <p>Nếu bạn không yêu cầu đổi mật khẩu, hãy bỏ qua email này.</p>
    ```
 
-5. Trong **Authentication → Hooks → Before User Created**, chọn Postgres function `public.hook_restrict_attech_signup`. Hook này chặn đăng ký ngoài miền `@attech.com.vn` ở phía server và có trên Supabase Free.
-6. Kiểm tra **Authentication → URL Configuration**: đặt Site URL cho production và thêm `http://localhost:3000/**` vào Redirect URLs khi phát triển.
+6. Trong **Authentication → Hooks → Before User Created**, chọn Postgres function `public.hook_restrict_attech_signup`. Hook này chặn đăng ký ngoài miền `@attech.com.vn` ở phía server và có trên Supabase Free.
+7. Kiểm tra **Authentication → URL Configuration**: đặt Site URL cho production và thêm `http://localhost:3000/**` vào Redirect URLs khi phát triển.
 
 Frontend đã dùng `verifyOtp` với loại `signup` cho đăng ký và `recovery` cho quên mật khẩu. Không giữ `{{ .ConfirmationURL }}` trong hai template trên nếu muốn người dùng luôn nhập mã 6 số thay vì bấm liên kết.
 
@@ -182,6 +191,16 @@ npm run clean:cache
 | Học viên | `/student/vor` | `/student/dme` | `/student/ads-b` |
 
 Các route con xử lý tạo/sửa kịch bản, phiên thực hành, danh sách bài nộp và đánh giá kết quả.
+
+Các route quản lý và vào thi chính thức:
+
+| Chức năng | Route |
+| --- | --- |
+| Admin quản lý kỳ thi | `/admin/exams` |
+| Admin quản lý bộ đề | `/admin/exam-sets` |
+| Thí sinh vào thi | `/student/exams` |
+
+Route thi chính thức kiểm tra lại email, phân công môn, đề và thứ tự kịch bản ở phía server. Route luyện tập VOR, DME và ADS-B vẫn hoạt động độc lập như trước.
 
 ## Kiểm tra chất lượng
 

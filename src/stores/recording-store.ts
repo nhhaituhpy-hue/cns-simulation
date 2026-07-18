@@ -15,6 +15,7 @@ export type AttemptPhase =
 
 export interface RecordingStoreState {
   scenarioId: string | null;
+  sessionKey: string | null;
   phase: AttemptPhase;
   isRecording: boolean;
   authenticatedCorrectly: boolean;
@@ -28,7 +29,7 @@ export interface RecordingStoreState {
 }
 
 export interface RecordingStoreActions {
-  beginAttempt: (scenarioId: string) => void;
+  beginAttempt: (scenarioId: string, sessionKey?: string) => void;
   startTerminal: () => void;
   markAuthenticatedCorrectly: () => void;
   markQcmsMonitoringOpened: () => void;
@@ -63,6 +64,7 @@ export interface RecordingStoreOptions {
 
 const INITIAL_STATE: RecordingStoreState = {
   scenarioId: null,
+  sessionKey: null,
   phase: "qcms",
   isRecording: false,
   authenticatedCorrectly: false,
@@ -83,14 +85,15 @@ export function createRecordingStore(
   return create<RecordingStore>()((set, get) => ({
     ...INITIAL_STATE,
 
-    beginAttempt: (scenarioId) => {
-      if (get().scenarioId === scenarioId) {
+    beginAttempt: (scenarioId, sessionKey = scenarioId) => {
+      if (get().scenarioId === scenarioId && get().sessionKey === sessionKey) {
         return;
       }
 
       set({
         ...INITIAL_STATE,
         scenarioId,
+        sessionKey,
         phase: "qcms",
         isRecording: true,
       });
