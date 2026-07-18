@@ -41,6 +41,42 @@ type AuthView =
   | "new-password";
 
 const EMPTY_OTP = ["", "", "", "", "", ""];
+const LOGIN_SUCCESS_MESSAGE = "Đăng nhập thành công...";
+
+function LoginSuccessOverlay({ reduceMotion }: { reduceMotion: boolean }) {
+  return (
+    <motion.div
+      role="status"
+      aria-live="polite"
+      initial={reduceMotion ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: reduceMotion ? 0 : 0.16 }}
+      className="fixed inset-0 z-50 grid place-items-center bg-white/75 px-5 backdrop-blur-md"
+    >
+      <p className="text-center text-base font-bold tracking-tight text-[var(--text-primary)] sm:text-lg">
+        <span className="sr-only">{LOGIN_SUCCESS_MESSAGE}</span>
+        <span aria-hidden className="inline-flex whitespace-nowrap">
+          {Array.from(LOGIN_SUCCESS_MESSAGE).map((character, index) => (
+            <motion.span
+              key={`${character}-${index}`}
+              className="inline-block"
+              initial={false}
+              animate={reduceMotion ? undefined : { y: [0, -10, 0] }}
+              transition={{
+                duration: 0.36,
+                delay: index * 0.035,
+                times: [0, 0.45, 1],
+                ease: ["easeOut", "easeIn"],
+              }}
+            >
+              {character === " " ? "\u00A0" : character}
+            </motion.span>
+          ))}
+        </span>
+      </p>
+    </motion.div>
+  );
+}
 
 function Brand() {
   return (
@@ -191,6 +227,7 @@ export function AuthPage({ nextPath }: { nextPath?: string }) {
   const flippingRef = useRef(false);
   const [view, setView] = useState<AuthView>("login");
   const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [workUnit, setWorkUnit] = useState("");
@@ -201,6 +238,7 @@ export function AuthPage({ nextPath }: { nextPath?: string }) {
   const [pending, setPending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [flipping, setFlipping] = useState(false);
+  const [loginSucceeded, setLoginSucceeded] = useState(false);
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -259,13 +297,17 @@ export function AuthPage({ nextPath }: { nextPath?: string }) {
 
   async function submitLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const response = await run(() => loginAction({ email, password }));
-    setResult(response);
-    if (response.ok) {
-      const destination = nextPath ?? (response.role === "admin" ? "/admin/vor" : "/student/vor");
-      router.replace(destination);
-      router.refresh();
+    const response = await run(() => loginAction({ username, password }));
+    if (!response.ok) {
+      setResult(response);
+      return;
     }
+
+    setLoginSucceeded(true);
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 1500));
+    const destination = nextPath ?? "/";
+    router.replace(destination);
+    router.refresh();
   }
 
   async function submitSignup(event: FormEvent<HTMLFormElement>) {
@@ -356,6 +398,7 @@ export function AuthPage({ nextPath }: { nextPath?: string }) {
 
   return (
     <main className="grid h-[100dvh] overflow-hidden bg-[var(--background)] lg:grid-cols-[minmax(20rem,35%)_minmax(0,1fr)]">
+      {loginSucceeded ? <LoginSuccessOverlay reduceMotion={Boolean(reduceMotion)} /> : null}
       <section
         className="hidden h-[100dvh] border-r border-[var(--border)] bg-[#e8f3f8] bg-cover bg-center bg-no-repeat px-10 py-12 lg:flex lg:flex-col lg:justify-between xl:px-16"
         style={{
@@ -406,7 +449,7 @@ export function AuthPage({ nextPath }: { nextPath?: string }) {
               >
             <h2 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">{heading}</h2>
             <p className="mt-2 min-h-12 text-sm leading-6 text-[var(--text-secondary)]">
-              {view === "login" && "Sử dụng email và mật khẩu của bạn."}
+              {view === "login" && "Sử dụng tên đăng nhập và mật khẩu của bạn."}
               {view === "signup" && "Tài khoản mới được cấp quyền thí sinh mặc định."}
               {view === "verify-signup" && <>Nhập mã 6 số đã gửi đến <strong>{email}</strong>.</>}
               {view === "forgot-password" && "Nhập email đã đăng ký để nhận mã đặt lại mật khẩu."}
@@ -441,11 +484,12 @@ export function AuthPage({ nextPath }: { nextPath?: string }) {
 
             {view === "login" ? (
               <form onSubmit={submitLogin} className="mt-5 grid gap-5">
-                <label htmlFor="login-email" className="grid gap-2 text-sm font-semibold text-[var(--text-secondary)]">
-                  Email
+                <label htmlFor="login-username" className="grid gap-2 text-sm font-semibold text-[var(--text-secondary)]">
+                  Tên đăng nhập
                   <span className="relative block">
-                    <EnvelopeSimple aria-hidden size={20} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-                    <input id="login-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="user@attech.com.vn" required className="h-12 w-full rounded-xl border border-[var(--border-strong)] bg-white pl-11 pr-4 font-normal text-[var(--text-primary)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20" />
+                    <User aria-hidden size={20} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                    <input id="login-username" type="text" value={username} onChange={(event) => setUsername(event.target.value.replace(/@attech\.com\.vn$/i, ""))} autoComplete="username" placeholder="user" required className="h-12 w-full rounded-xl border border-[var(--border-strong)] bg-white pl-11 pr-[8.75rem] font-normal text-[var(--text-primary)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20" />
+                    <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm font-normal text-[var(--text-muted)]">@attech.com.vn</span>
                   </span>
                 </label>
                 <PasswordField id="login-password" label="Mật khẩu" value={password} onChange={setPassword} autoComplete="current-password" />

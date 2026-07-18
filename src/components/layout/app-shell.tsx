@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { ClipboardText } from "@phosphor-icons/react/dist/csr/ClipboardText";
 import { House } from "@phosphor-icons/react/dist/csr/House";
 import { List } from "@phosphor-icons/react/dist/csr/List";
@@ -291,7 +291,6 @@ function PageTransition({ children }: { children: ReactNode }) {
 
 export function AppShell({ children, currentUser }: AppShellProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
@@ -301,9 +300,12 @@ export function AppShell({ children, currentUser }: AppShellProps) {
 
   async function signOut() {
     setSigningOut(true);
-    await logoutAction();
-    router.replace("/login");
-    router.refresh();
+    try {
+      await logoutAction();
+    } catch (error) {
+      console.error("Logout action failed", error);
+      setSigningOut(false);
+    }
   }
 
   return (

@@ -2,6 +2,7 @@
 
 import { clearFailedLogins, getLoginLockStatus, recordFailedLogin, attemptsRemaining } from "@/lib/auth/login-lockout";
 import { createClient } from "@/lib/supabase/server";
+import { redirect, RedirectType } from "next/navigation";
 
 export type AuthActionCode =
   | "INVALID_INPUT"
@@ -20,6 +21,7 @@ export interface AuthActionResult {
 }
 
 const ATTECH_EMAIL = /^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@attech\.com\.vn$/i;
+const ATTECH_EMAIL_DOMAIN = "@attech.com.vn";
 
 function normalizeEmail(value: string) {
   return value.trim().toLowerCase();
@@ -43,12 +45,15 @@ function serverFailure(context: string, error: unknown): AuthActionResult {
 }
 
 export async function loginAction(input: {
-  email: string;
+  username: string;
   password: string;
 }): Promise<AuthActionResult> {
-  const email = normalizeEmail(input.email);
+  const username = input.username.trim().toLowerCase();
+  const email = username.endsWith(ATTECH_EMAIL_DOMAIN)
+    ? username
+    : `${username}${ATTECH_EMAIL_DOMAIN}`;
   if (!validEmail(email) || !input.password) {
-    return { ok: false, code: "INVALID_INPUT", message: "Vui lòng nhập email ATTECH và mật khẩu." };
+    return { ok: false, code: "INVALID_INPUT", message: "Vui lòng nhập tên đăng nhập và mật khẩu." };
   }
 
   try {
@@ -96,7 +101,7 @@ export async function loginAction(input: {
       return {
         ok: false,
         code: "INVALID_CREDENTIALS",
-        message: `Email hoặc mật khẩu không đúng. Còn ${attemptsRemaining(nextStatus)} lần thử.`,
+        message: `Tên đăng nhập hoặc mật khẩu không đúng. Còn ${attemptsRemaining(nextStatus)} lần thử.`,
       };
     }
 
@@ -286,5 +291,11 @@ export async function updateRecoveredPasswordAction(input: {
 
 export async function logoutAction(): Promise<void> {
   const supabase = await createClient();
-  await supabase.auth.signOut({ scope: "local" });
+  const { error } = await supabase.auth.signOut({ scope: "local" });
+  if (error) {
+    console.error("Logout failed", error);
+    throw new Error("Không thể đăng xuất. Vui lòng thử lại.");
+  }
+
+  redirect("/login", RedirectType.replace);
 }
