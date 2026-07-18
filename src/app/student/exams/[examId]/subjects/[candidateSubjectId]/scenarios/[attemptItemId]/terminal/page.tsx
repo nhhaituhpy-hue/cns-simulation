@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { TerminalSession } from "@/components/terminal/terminal-session";
 import { getOfficialExamScenario, getStudentAttemptItem } from "@/lib/exams/queries";
 
@@ -14,7 +14,8 @@ export default async function OfficialExamTerminalPage({
 }) {
   const [{ examId, candidateSubjectId, attemptItemId }, query] = await Promise.all([params, searchParams]);
   const item = await getStudentAttemptItem(attemptItemId);
-  if (!item || item.examId !== examId || item.candidateSubjectId !== candidateSubjectId || item.moduleCode !== "ads-b" || item.status === "submitted") notFound();
+  if (!item || item.examId !== examId || item.candidateSubjectId !== candidateSubjectId || item.moduleCode !== "ads-b") notFound();
+  if (item.status === "submitted") redirect(item.returnHref);
   const officialScenario = await getOfficialExamScenario(item.moduleCode, item.scenarioId);
   if (!officialScenario || officialScenario.moduleCode !== "ads-b") notFound();
   const sensorId = Array.isArray(query.sensorId) ? query.sensorId[0] : query.sensorId;

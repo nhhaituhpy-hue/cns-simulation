@@ -22,7 +22,8 @@ export default async function OfficialExamScenarioPage({
   ]);
   if (!profile) redirect("/login");
   const item = await getStudentAttemptItem(attemptItemId);
-  if (!item || item.examId !== examId || item.candidateSubjectId !== candidateSubjectId || item.status === "submitted") notFound();
+  if (!item || item.examId !== examId || item.candidateSubjectId !== candidateSubjectId) notFound();
+  if (item.status === "submitted") redirect(item.returnHref);
   const officialScenario = await getOfficialExamScenario(item.moduleCode, item.scenarioId);
   if (!officialScenario) notFound();
 

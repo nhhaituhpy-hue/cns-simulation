@@ -578,7 +578,7 @@ export async function getStudentAttemptItem(id: string): Promise<StudentAttemptI
     .eq("id", id)
     .maybeSingle();
   if (error) fail("Get student attempt item failed", error);
-  if (!data || data.status !== "in_progress") return null;
+  if (!data || (data.status !== "in_progress" && data.status !== "submitted")) return null;
   const item = row(data);
   const candidateSubjectId = string(relation(item.exam_attempts).candidate_subject_id);
   const subject = await getStudentCandidateSubject(candidateSubjectId);
