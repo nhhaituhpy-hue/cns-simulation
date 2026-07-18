@@ -68,7 +68,10 @@ export async function loginAction(input: {
     }
 
     const supabase = await createClient();
-    const { error } = await supabase.auth.signInWithPassword({ email, password: input.password });
+    const { data: authData, error } = await supabase.auth.signInWithPassword({
+      email,
+      password: input.password,
+    });
     if (error) {
       if (error.code === "email_not_confirmed") {
         return {
@@ -109,6 +112,7 @@ export async function loginAction(input: {
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role")
+      .eq("id", authData.user.id)
       .single();
 
     if (profileError || (profile?.role !== "student" && profile?.role !== "admin")) {
