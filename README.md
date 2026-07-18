@@ -177,6 +177,7 @@ Khi bản kế hoạch và hình menu trong manual khác nhau, manual là nguồ
   - Loại bỏ đường kẻ dưới header, thiết lập khoảng cách 1cm ở lề trên của header và 1cm từ header đến nội dung bên dưới.
   - Tăng timeout cho bài test `tests/vor/vor-authoring.test.tsx` lên 20000ms để triệt tiêu lỗi timeout. Xác minh 191/191 tests pass 100% và build thành công.
 - 2026-07-18: Khắc phục lỗi "Rendered more hooks than during the previous render" xảy ra khi chuyển tab giám khảo/thí sinh bằng cách loại bỏ AnimatePresence khỏi PageTransition, giữ lại key={pathname} trên motion.div để kích hoạt hiệu ứng fade-in khi trang mới được mount mà không giữ lại component cũ.
+- 2026-07-18: Tăng độ tương phản của slogan dưới logo (từ #94a3b8 sang #475569) đạt chuẩn WCAG AA và bổ sung lớp `relative z-10` cho thẻ bọc logo trên desktop sidebar để ngăn lớp phủ kính mờ (`.app-glass::before`) đè lên gây mờ chữ.
 
 
 
