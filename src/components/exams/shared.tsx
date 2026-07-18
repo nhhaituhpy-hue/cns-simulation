@@ -53,7 +53,7 @@ export function ExamPageHeader({
 export function ExamStatusBadge({ status }: { status: ExamStatus }) {
   const details = STATUS_STYLES[status];
   return (
-    <span className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-semibold ${details.className}`}>
+    <span className={`inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-semibold leading-none ${details.className}`}>
       {details.label}
     </span>
   );

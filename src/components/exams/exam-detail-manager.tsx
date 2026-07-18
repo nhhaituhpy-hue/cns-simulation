@@ -1,6 +1,5 @@
 "use client";
 
-import { CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { CaretLeft } from "@phosphor-icons/react/dist/csr/CaretLeft";
 import { CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { FloppyDisk } from "@phosphor-icons/react/dist/csr/FloppyDisk";
@@ -370,21 +369,22 @@ export function ExamDetailManager({
         ) : null}
 
         <div className="mt-4 overflow-x-auto rounded-md border border-[var(--border)]">
-          <table className="w-full min-w-[1040px] border-collapse text-left">
+          <table className="w-full min-w-[1120px] border-collapse text-left">
             <caption className="sr-only">Danh sách thí sinh kỳ thi, phân trang 20 người</caption>
-            <thead className="bg-[var(--surface-muted)] text-[11px] font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]"><tr><th className="w-16 border-b border-[var(--border)] px-3 py-3">STT</th><th className="border-b border-[var(--border)] px-3 py-3">Thí sinh</th><th className="w-48 border-b border-[var(--border)] px-3 py-3">Đơn vị</th><th className="w-56 border-b border-[var(--border)] px-3 py-3">Email</th><th className="w-72 border-b border-[var(--border)] px-3 py-3">Môn và đề thi</th><th className="w-36 border-b border-[var(--border)] px-3 py-3 text-right">Thao tác</th></tr></thead>
+            <thead className="bg-[var(--surface-muted)] text-[11px] font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]"><tr><th className="w-16 border-b border-[var(--border)] px-3 py-3">STT</th><th className="border-b border-[var(--border)] px-3 py-3">Thí sinh</th><th className="w-48 border-b border-[var(--border)] px-3 py-3">Đơn vị</th><th className="w-56 border-b border-[var(--border)] px-3 py-3">Email</th><th className="w-72 border-b border-[var(--border)] px-3 py-3">Môn và đề thi</th><th className="w-24 border-b border-[var(--border)] px-3 py-3">Điểm</th><th className="w-24 border-b border-[var(--border)] px-3 py-3 text-right">Thao tác</th></tr></thead>
             <tbody className="divide-y divide-[var(--border)]">
               {candidates.map((candidate, index) => (
                 <tr key={candidate.id} className="align-top hover:bg-[var(--surface-subtle)]">
-                  <td className="px-3 py-3 font-mono text-xs text-[var(--text-muted)]">{(currentPage - 1) * 20 + index + 1}</td>
-                  <td className="px-3 py-3"><p className="font-semibold text-[var(--text-primary)]">{candidate.fullName}</p></td>
-                  <td className="px-3 py-3 text-sm text-[var(--text-secondary)]">{candidate.workUnit}</td>
-                  <td className="px-3 py-3 font-mono text-xs text-[var(--text-secondary)]">{candidate.email}</td>
-                  <td className="px-3 py-3"><div className="grid gap-1.5">{candidate.subjects.map((subject) => <div key={subject.id} className="flex items-center justify-between gap-2 text-xs"><span><strong className="text-[var(--text-primary)]">{subject.subjectName}</strong> - {subject.paperTitle}</span><span className="shrink-0 text-[var(--text-muted)]">{subject.officialScore === null ? statusLabel(subject.status) : `${subject.officialScore}/100`}</span></div>)}</div></td>
-                  <td className="px-3 py-3 text-right"><div className="inline-flex gap-1"><button type="button" onClick={() => setExpandedCandidateId((current) => current === candidate.id ? null : candidate.id)} aria-expanded={expandedCandidateId === candidate.id} aria-controls={`candidate-result-${candidate.id}`} className="inline-flex min-h-9 items-center gap-1 rounded-md px-2 text-xs font-semibold text-[var(--accent)] hover:bg-[var(--accent-muted)]">Kết quả <CaretDown aria-hidden size={14} /></button>{!rosterReadOnly ? <><button type="button" onClick={() => setCandidateEditing(candidate)} className="inline-flex size-9 items-center justify-center rounded-md text-[var(--accent)] hover:bg-[var(--accent-muted)]" aria-label={`Sửa ${candidate.fullName}`}><NotePencil aria-hidden size={17} /></button><button type="button" onClick={() => deleteCandidate(candidate)} disabled={isPending} className="inline-flex size-9 items-center justify-center rounded-md text-[var(--danger)] hover:bg-[var(--danger-muted)]" aria-label={`Xóa ${candidate.fullName}`}><Trash aria-hidden size={17} /></button></> : null}</div></td>
+                  <td className="px-3 py-3 text-sm leading-5 text-[var(--text-muted)]">{(currentPage - 1) * 20 + index + 1}</td>
+                  <td className="px-3 py-3"><p className="text-sm font-semibold leading-5 text-[var(--text-primary)]">{candidate.fullName}</p></td>
+                  <td className="px-3 py-3 text-sm leading-5 text-[var(--text-secondary)]">{candidate.workUnit}</td>
+                  <td className="px-3 py-3 text-sm leading-5 text-[var(--text-secondary)]">{candidate.email}</td>
+                  <td className="px-3 py-3"><div className="grid gap-1.5">{candidate.subjects.map((subject) => <p key={subject.id} className="text-sm leading-5 text-[var(--text-secondary)]">{subject.subjectName} - {subject.paperTitle}</p>)}</div></td>
+                  <td className="px-3 py-3 text-sm leading-5"><div className="grid gap-1.5">{candidate.subjects.map((subject) => <button key={subject.id} type="button" onClick={() => setExpandedCandidateId((current) => current === candidate.id ? null : candidate.id)} aria-expanded={expandedCandidateId === candidate.id} aria-controls={`candidate-result-${candidate.id}`} aria-label={`Mở kết quả ${subject.subjectName} của ${candidate.fullName}`} className="candidate-result-trigger m-0 block w-fit appearance-none border-0 bg-transparent p-0 text-left">{subject.officialScore === null ? statusLabel(subject.status) : `${subject.officialScore}/100`}</button>)}</div></td>
+                  <td className="px-3 py-3 text-right"><div className="inline-flex align-top gap-1">{!rosterReadOnly ? <><button type="button" onClick={() => setCandidateEditing(candidate)} className="inline-flex size-5 items-center justify-center rounded text-[var(--accent)] hover:bg-[var(--accent-muted)]" aria-label={`Sửa ${candidate.fullName}`}><NotePencil aria-hidden size={16} /></button><button type="button" onClick={() => deleteCandidate(candidate)} disabled={isPending} className="inline-flex size-5 items-center justify-center rounded text-[var(--danger)] hover:bg-[var(--danger-muted)]" aria-label={`Xóa ${candidate.fullName}`}><Trash aria-hidden size={16} /></button></> : null}</div></td>
                 </tr>
               ))}
-              {candidates.length === 0 ? <tr><td colSpan={6} className="px-5 py-12 text-center text-sm text-[var(--text-secondary)]">Chưa có thí sinh trong kỳ thi.</td></tr> : null}
+              {candidates.length === 0 ? <tr><td colSpan={7} className="px-5 py-12 text-center text-sm text-[var(--text-secondary)]">Chưa có thí sinh trong kỳ thi.</td></tr> : null}
             </tbody>
           </table>
         </div>
