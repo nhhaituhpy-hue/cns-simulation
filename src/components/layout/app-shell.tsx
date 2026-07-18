@@ -287,6 +287,7 @@ export function AppShell({ children }: AppShellProps) {
           .app-layout-grid-custom {
             grid-template-columns: 11rem minmax(0, 1fr) !important;
             grid-template-rows: calc(4.25rem + 1cm) minmax(0, 1fr) !important;
+            background-color: #ffffff !important;
           }
           .app-header-custom {
             grid-column: 2 / -1 !important;
@@ -310,7 +311,7 @@ export function AppShell({ children }: AppShellProps) {
         Chuyển đến nội dung chính
       </a>
 
-      <header className="app-glass relative overflow-hidden col-span-full z-30 h-[4.25rem] app-header-custom">
+      <header className="bg-white relative overflow-hidden col-span-full z-30 h-[4.25rem] app-header-custom">
         <div className="relative z-10 flex h-full items-center justify-center px-4 sm:px-5">
           <div className="absolute left-4 flex items-center gap-3 md:hidden">
             <button
