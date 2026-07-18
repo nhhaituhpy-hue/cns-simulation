@@ -35,7 +35,7 @@ export function HardwareTaskEditor({ title, diagrams, value, onChange, onClose }
       <div className="mx-auto max-w-7xl border border-[#475569] bg-[#0a0e1a] text-[#e2e8f0] shadow-2xl">
         <header className="flex items-center justify-between border-b border-[#334155] px-5 py-4">
           <div><h2 id="hardware-editor-title" className="text-lg font-bold text-white">Bước 2 - Phần cứng sự cố {title}</h2><p className="mt-1 text-xs text-[#94a3b8]">Chọn một hoặc nhiều block làm đáp án dành cho giám khảo.</p></div>
-          <button type="button" onClick={onClose} aria-label="Đóng cấu hình phần cứng" className="grid size-9 place-items-center border border-[#475569] text-[#cbd5e1]"><X aria-hidden size={18} /></button>
+          <button type="button" onClick={onClose} aria-label="Đóng cấu hình phần cứng" title="Đóng cấu hình phần cứng" className="grid size-9 place-items-center border border-[#475569] text-[#cbd5e1]"><X aria-hidden size={18} /></button>
         </header>
         <div className="grid gap-5 p-5">
           <label className="flex items-center gap-3 border border-[#334155] bg-[#111827] p-3 text-sm font-semibold"><input type="checkbox" checked={enabled} onChange={(event) => enable(event.target.checked)} className="size-4 accent-[#2563eb]" />Bật bước xác định phần cứng cho kịch bản này</label>

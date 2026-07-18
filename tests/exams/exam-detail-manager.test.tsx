@@ -54,6 +54,18 @@ function renderManager(officialScore: number | null) {
 }
 
 describe("ExamDetailManager candidate score column", () => {
+  it("starts with two examiner rows instead of recreating four rows", () => {
+    renderManager(80);
+
+    expect(screen.getByLabelText("Tên giám khảo 1")).toBeInTheDocument();
+    expect(screen.getByLabelText("Tên giám khảo 2")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Tên giám khảo 3")).not.toBeInTheDocument();
+    expect(screen.getAllByTitle("Xóa giám khảo")).toHaveLength(2);
+    expect(screen.getByTitle("Sửa thí sinh")).toBeInTheDocument();
+    expect(screen.getByTitle("Xóa thí sinh")).toBeInTheDocument();
+    expect(screen.getByText("Hai dòng được tạo sẵn. Có thể bổ sung hoặc xóa theo thực tế hội đồng.")).toBeInTheDocument();
+  });
+
   it("opens the result editor from the scored value without a separate result button", async () => {
     const user = userEvent.setup();
     renderManager(80);

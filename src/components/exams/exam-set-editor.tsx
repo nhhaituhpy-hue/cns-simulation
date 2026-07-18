@@ -396,6 +396,7 @@ export function ExamSetEditor({
                         disabled={Boolean(dirtyPaperKey && dirtyPaperKey !== paper.key)}
                         className="inline-flex size-9 items-center justify-center self-end rounded-md text-[var(--danger)] hover:bg-[var(--danger-muted)] sm:self-auto"
                         aria-label={`Xóa ${paper.title}`}
+                        title="Xóa đề thi"
                       >
                         <Trash aria-hidden size={17} />
                       </button>
@@ -465,6 +466,7 @@ export function ExamSetEditor({
                                   disabled={Boolean(dirtyPaperKey && dirtyPaperKey !== paper.key)}
                                   className="inline-flex size-8 items-center justify-center rounded-md text-[var(--danger)] hover:bg-[var(--danger-muted)]"
                                   aria-label={`Xóa kịch bản thứ ${scenarioIndex + 1}`}
+                                  title="Xóa kịch bản"
                                 >
                                   <Trash aria-hidden size={16} />
                                 </button>

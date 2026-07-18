@@ -155,6 +155,7 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
             onClick={() => setRequestedPage(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
             aria-label="Trang trước"
+            title="Trang trước"
             className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-white text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-45"
           >
             <CaretLeft aria-hidden size={16} weight="bold" />
@@ -186,6 +187,7 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
             }
             disabled={currentPage === totalPages}
             aria-label="Trang sau"
+            title="Trang sau"
             className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-white text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-45"
           >
             <CaretRight aria-hidden size={16} weight="bold" />

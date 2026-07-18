@@ -175,6 +175,7 @@ export function SiteStateEditor({
                 disabled={sites.length === 1}
                 className="mt-7 inline-flex size-10 shrink-0 items-center justify-center rounded text-[#b91c1c] hover:bg-[#fef2f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label={`Xóa ${site.name || `site ${siteIndex + 1}`}`}
+                title="Xóa site"
               >
                 <Trash aria-hidden size={19} weight="regular" />
               </button>

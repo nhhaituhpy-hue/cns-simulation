@@ -77,6 +77,7 @@ export function HardwareDiagnosisWorkspace({
             type="button"
             onClick={onClose}
             aria-label="Đóng chẩn đoán phần cứng"
+            title="Đóng chẩn đoán phần cứng"
             className="inline-flex size-10 items-center justify-center rounded hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
           >
             <X aria-hidden size={19} />

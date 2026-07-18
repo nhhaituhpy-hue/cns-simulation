@@ -113,14 +113,14 @@ export function ExamList({ items }: { items: ExamListItem[] }) {
                 <td className="px-4 py-3"><ExamStatusBadge status={item.status} /></td>
                 <td className="px-4 py-3 text-right">
                   <div className="inline-flex items-center gap-1">
-                    {item.status !== "archived" ? <Link href={`/admin/exams/${item.id}/edit`} className="inline-flex size-9 items-center justify-center rounded-md text-[var(--accent)] hover:bg-[var(--accent-muted)]" aria-label={`Sửa ${item.name}`}><NotePencil aria-hidden size={18} /></Link> : null}
+                    {item.status !== "archived" ? <Link href={`/admin/exams/${item.id}/edit`} title="Sửa kỳ thi" className="inline-flex size-9 items-center justify-center rounded-md text-[var(--accent)] hover:bg-[var(--accent-muted)]" aria-label={`Sửa ${item.name}`}><NotePencil aria-hidden size={18} /></Link> : null}
                     {item.status !== "archived" ? (
-                      <button type="button" onClick={() => changeStatus(item)} disabled={isPending} className="inline-flex size-9 items-center justify-center rounded-md text-[#92400e] hover:bg-[#fffbeb] disabled:opacity-50" aria-label={item.status === "open" ? `Khóa ${item.name}` : `Mở ${item.name}`}>
+                      <button type="button" onClick={() => changeStatus(item)} disabled={isPending} title={item.status === "open" ? "Tạm khóa" : "Mở lại kỳ thi"} className="inline-flex size-9 items-center justify-center rounded-md text-[#92400e] hover:bg-[#fffbeb] disabled:opacity-50" aria-label={item.status === "open" ? `Khóa ${item.name}` : `Mở ${item.name}`}>
                         {item.status === "open" ? <Lock aria-hidden size={18} /> : <LockOpen aria-hidden size={18} />}
                       </button>
                     ) : null}
                     {item.status !== "archived" ? (
-                      <button type="button" onClick={() => archive(item)} disabled={isPending} className="inline-flex size-9 items-center justify-center rounded-md text-[var(--danger)] hover:bg-[var(--danger-muted)] disabled:opacity-50" aria-label={`Lưu trữ ${item.name}`}><Archive aria-hidden size={18} /></button>
+                      <button type="button" onClick={() => archive(item)} disabled={isPending} title="Đóng kỳ thi" className="inline-flex size-9 items-center justify-center rounded-md text-[var(--danger)] hover:bg-[var(--danger-muted)] disabled:opacity-50" aria-label={`Lưu trữ ${item.name}`}><Archive aria-hidden size={18} /></button>
                     ) : null}
                   </div>
                 </td>

@@ -40,6 +40,8 @@ describe("ScenarioDataTable", () => {
 
     expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(10);
     expect(screen.getByText("Hiển thị 1-10 trong 12 kịch bản")).toBeInTheDocument();
+    expect(screen.getByTitle("Trang trước")).toBeInTheDocument();
+    expect(screen.getByTitle("Trang sau")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Mở trang 2" }));
 

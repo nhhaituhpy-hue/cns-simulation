@@ -17,9 +17,8 @@ describe("StudentExamList", () => {
 
     expect(screen.getByText("Kỳ thi đã khóa")).toBeInTheDocument();
     expect(screen.getByText("Tiếp tục lượt đã bắt đầu")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Mở Kỳ thi CNS 2026" })).toHaveAttribute(
-      "href",
-      "/student/exams/30000000-0000-4000-8000-000000000001",
-    );
+    expect(screen.getByRole("link", { name: "Mở Kỳ thi CNS 2026" }))
+      .toHaveAttribute("href", "/student/exams/30000000-0000-4000-8000-000000000001");
+    expect(screen.getByTitle("Mở kỳ thi")).toBeInTheDocument();
   });
 });

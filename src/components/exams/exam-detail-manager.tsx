@@ -253,7 +253,7 @@ function CandidateForm({
                     </select>
                   </td>
                   <td className="px-3 py-2.5 text-right">
-                    <button type="button" onClick={() => setDraft((current) => ({ ...current, subjects: current.subjects.filter((row) => row.key !== item.key) }))} className="inline-flex size-8 items-center justify-center rounded-md text-[var(--danger)] hover:bg-[var(--danger-muted)]" aria-label="Xóa môn thi"><Trash aria-hidden size={16} /></button>
+                    <button type="button" onClick={() => setDraft((current) => ({ ...current, subjects: current.subjects.filter((row) => row.key !== item.key) }))} title="Xóa môn thi" className="inline-flex size-8 items-center justify-center rounded-md text-[var(--danger)] hover:bg-[var(--danger-muted)]" aria-label="Xóa môn thi"><Trash aria-hidden size={16} /></button>
                   </td>
                 </tr>
               );
@@ -294,7 +294,7 @@ export function ExamDetailManager({
 }) {
   const router = useRouter();
   const [examiners, setExaminers] = useState<ExamExaminerView[]>(() => {
-    const rowCount = Math.max(4, initialExaminers.length);
+    const rowCount = Math.max(2, initialExaminers.length);
     return Array.from({ length: rowCount }, (_, index) => initialExaminers[index] ?? ({
       fullName: "",
       subjectId: subjects[0]?.id ?? "",
@@ -334,7 +334,7 @@ export function ExamDetailManager({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-base font-semibold text-[var(--text-primary)]">Danh sách giám khảo</h2>
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">{rosterReadOnly ? "Kỳ thi đã lưu trữ; danh sách hội đồng được giữ ở chế độ chỉ đọc." : "Bốn dòng được tạo sẵn. Có thể bổ sung hoặc xóa theo thực tế hội đồng."}</p>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">{rosterReadOnly ? "Kỳ thi đã lưu trữ; danh sách hội đồng được giữ ở chế độ chỉ đọc." : "Hai dòng được tạo sẵn. Có thể bổ sung hoặc xóa theo thực tế hội đồng."}</p>
           </div>
           {!rosterReadOnly ? <button type="button" onClick={() => setExaminers((current) => [...current, { fullName: "", subjectId: subjects[0]?.id ?? "", position: current.length + 1 }])} className={secondaryButtonClassName}><Plus aria-hidden size={17} /> Thêm giám khảo</button> : null}
         </div>
@@ -348,7 +348,7 @@ export function ExamDetailManager({
                   <td className="px-3 py-2.5 font-mono text-xs text-[var(--text-muted)]">{index + 1}</td>
                   <td className="px-3 py-2.5"><input aria-label={`Tên giám khảo ${index + 1}`} value={examiner.fullName} onChange={(event) => setExaminers((current) => current.map((item, rowIndex) => rowIndex === index ? { ...item, fullName: event.target.value } : item))} className={inputClassName} disabled={rosterReadOnly} /></td>
                   <td className="px-3 py-2.5"><select aria-label={`Môn chấm thi của giám khảo ${index + 1}`} value={examiner.subjectId} onChange={(event) => setExaminers((current) => current.map((item, rowIndex) => rowIndex === index ? { ...item, subjectId: event.target.value } : item))} className={selectClassName} disabled={rosterReadOnly}>{subjects.map((subject) => <option key={subject.id} value={subject.id}>{subject.name}</option>)}</select></td>
-                  <td className="px-3 py-2.5 text-right">{!rosterReadOnly ? <button type="button" onClick={() => setExaminers((current) => current.filter((_, rowIndex) => rowIndex !== index))} className="inline-flex size-8 items-center justify-center rounded-md text-[var(--danger)] hover:bg-[var(--danger-muted)]" aria-label={`Xóa giám khảo ${index + 1}`}><Trash aria-hidden size={16} /></button> : null}</td>
+                  <td className="px-3 py-2.5 text-right">{!rosterReadOnly ? <button type="button" onClick={() => setExaminers((current) => current.filter((_, rowIndex) => rowIndex !== index))} title="Xóa giám khảo" className="inline-flex size-8 items-center justify-center rounded-md text-[var(--danger)] hover:bg-[var(--danger-muted)]" aria-label={`Xóa giám khảo ${index + 1}`}><Trash aria-hidden size={16} /></button> : null}</td>
                 </tr>
               ))}
             </tbody>
@@ -381,7 +381,7 @@ export function ExamDetailManager({
                   <td className="px-3 py-3 text-sm leading-5 text-[var(--text-secondary)]">{candidate.email}</td>
                   <td className="px-3 py-3"><div className="grid gap-1.5">{candidate.subjects.map((subject) => <p key={subject.id} className="text-sm leading-5 text-[var(--text-secondary)]">{subject.subjectName} - {subject.paperTitle}</p>)}</div></td>
                   <td className="px-3 py-3 text-sm leading-5"><div className="grid gap-1.5">{candidate.subjects.map((subject) => <button key={subject.id} type="button" onClick={() => setExpandedCandidateId((current) => current === candidate.id ? null : candidate.id)} aria-expanded={expandedCandidateId === candidate.id} aria-controls={`candidate-result-${candidate.id}`} aria-label={`Mở kết quả ${subject.subjectName} của ${candidate.fullName}`} className="candidate-result-trigger m-0 block w-fit appearance-none border-0 bg-transparent p-0 text-left">{subject.officialScore === null ? statusLabel(subject.status) : `${subject.officialScore}/100`}</button>)}</div></td>
-                  <td className="px-3 py-3 text-right"><div className="inline-flex align-top gap-1">{!rosterReadOnly ? <><button type="button" onClick={() => setCandidateEditing(candidate)} className="inline-flex size-5 items-center justify-center rounded text-[var(--accent)] hover:bg-[var(--accent-muted)]" aria-label={`Sửa ${candidate.fullName}`}><NotePencil aria-hidden size={16} /></button><button type="button" onClick={() => deleteCandidate(candidate)} disabled={isPending} className="inline-flex size-5 items-center justify-center rounded text-[var(--danger)] hover:bg-[var(--danger-muted)]" aria-label={`Xóa ${candidate.fullName}`}><Trash aria-hidden size={16} /></button></> : null}</div></td>
+                  <td className="px-3 py-3 text-right"><div className="inline-flex align-top gap-1">{!rosterReadOnly ? <><button type="button" onClick={() => setCandidateEditing(candidate)} title="Sửa thí sinh" className="inline-flex size-5 items-center justify-center rounded text-[var(--accent)] hover:bg-[var(--accent-muted)]" aria-label={`Sửa ${candidate.fullName}`}><NotePencil aria-hidden size={16} /></button><button type="button" onClick={() => deleteCandidate(candidate)} disabled={isPending} title="Xóa thí sinh" className="inline-flex size-5 items-center justify-center rounded text-[var(--danger)] hover:bg-[var(--danger-muted)]" aria-label={`Xóa ${candidate.fullName}`}><Trash aria-hidden size={16} /></button></> : null}</div></td>
                 </tr>
               ))}
               {candidates.length === 0 ? <tr><td colSpan={7} className="px-5 py-12 text-center text-sm text-[var(--text-secondary)]">Chưa có thí sinh trong kỳ thi.</td></tr> : null}
@@ -416,11 +416,11 @@ export function ExamDetailManager({
           <nav aria-label="Phân trang danh sách thí sinh" className="flex items-center gap-1">
             {currentPage <= 1
               ? <span aria-hidden className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-white opacity-40"><CaretLeft aria-hidden size={16} /></span>
-              : <Link href={`/admin/exams/${examId}?page=${currentPage - 1}`} aria-label="Trang trước" className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-white text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]"><CaretLeft aria-hidden size={16} /></Link>}
+              : <Link href={`/admin/exams/${examId}?page=${currentPage - 1}`} aria-label="Trang trước" title="Trang trước" className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-white text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]"><CaretLeft aria-hidden size={16} /></Link>}
             {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => <Link key={page} href={`/admin/exams/${examId}?page=${page}`} aria-current={page === currentPage ? "page" : undefined} className={`inline-flex size-9 items-center justify-center rounded-md border font-mono text-xs font-semibold ${page === currentPage ? "border-[var(--accent)] bg-[var(--accent)] text-white" : "border-[var(--border-strong)] bg-white text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]"}`}>{page}</Link>)}
             {currentPage >= totalPages
               ? <span aria-hidden className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-white opacity-40"><CaretRight aria-hidden size={16} /></span>
-              : <Link href={`/admin/exams/${examId}?page=${currentPage + 1}`} aria-label="Trang sau" className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-white text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]"><CaretRight aria-hidden size={16} /></Link>}
+              : <Link href={`/admin/exams/${examId}?page=${currentPage + 1}`} aria-label="Trang sau" title="Trang sau" className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-white text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]"><CaretRight aria-hidden size={16} /></Link>}
           </nav>
         </div>
       </section>

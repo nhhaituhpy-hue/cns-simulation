@@ -56,6 +56,9 @@ describe("ActionBuilder", () => {
       screen.getByRole("heading", { name: "General Settings" }),
     ).toBeInTheDocument();
     expect(screen.getByText("1 thao tác")).toBeInTheDocument();
+    expect(screen.getByTitle("Đưa thao tác lên")).toBeInTheDocument();
+    expect(screen.getByTitle("Đưa thao tác xuống")).toBeInTheDocument();
+    expect(screen.getByTitle("Xóa thao tác")).toBeInTheDocument();
 
     await user.click(
       screen.getByRole("button", { name: /Enable \/ Disable ADS-B Cat21/ }),

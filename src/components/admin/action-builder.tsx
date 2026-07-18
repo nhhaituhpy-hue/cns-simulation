@@ -420,6 +420,7 @@ export function ActionBuilder({
                     disabled={index === 0}
                     className="inline-flex size-9 items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-35"
                     aria-label={`Đưa thao tác ${index + 1} lên`}
+                    title="Đưa thao tác lên"
                   >
                     <ArrowUp aria-hidden size={17} weight="regular" />
                   </button>
@@ -429,6 +430,7 @@ export function ActionBuilder({
                     disabled={index === actions.length - 1}
                     className="inline-flex size-9 items-center justify-center rounded text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-35"
                     aria-label={`Đưa thao tác ${index + 1} xuống`}
+                    title="Đưa thao tác xuống"
                   >
                     <ArrowDown aria-hidden size={17} weight="regular" />
                   </button>
@@ -437,6 +439,7 @@ export function ActionBuilder({
                     onClick={() => removeAction(index)}
                     className="inline-flex size-9 items-center justify-center rounded text-[#b91c1c] hover:bg-[#fef2f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91c1c]"
                     aria-label={`Xóa thao tác ${index + 1}`}
+                    title="Xóa thao tác"
                   >
                     <Trash aria-hidden size={17} weight="regular" />
                   </button>

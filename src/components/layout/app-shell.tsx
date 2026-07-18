@@ -347,6 +347,7 @@ export function AppShell({ children, currentUser }: AppShellProps) {
               type="button"
               className="inline-flex size-9 shrink-0 items-center justify-center rounded-md text-[var(--text-primary)] hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
               aria-label="Mở điều hướng"
+              title="Mở điều hướng"
               aria-controls="mobile-navigation"
               aria-expanded={mobileNavigationOpen}
               onClick={() => setMobileNavigationOpen(true)}
@@ -431,6 +432,7 @@ export function AppShell({ children, currentUser }: AppShellProps) {
                   type="button"
                   className="inline-flex size-9 items-center justify-center rounded-md text-[var(--text-secondary)] hover:bg-white hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                   aria-label="Đóng điều hướng"
+                  title="Đóng điều hướng"
                   onClick={() => setMobileNavigationOpen(false)}
                 >
                   <X aria-hidden size={20} weight="regular" />
