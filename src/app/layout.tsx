@@ -6,7 +6,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "Hệ thống kiểm tra mô phỏng CNS",
+    default: "HỆ THỐNG KIỂM TRA MÔ PHỎNG CNS",
     template: "%s | CNS Simulation",
   },
   description:

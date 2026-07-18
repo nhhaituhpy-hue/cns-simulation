@@ -178,6 +178,8 @@ Khi bản kế hoạch và hình menu trong manual khác nhau, manual là nguồ
   - Tăng timeout cho bài test `tests/vor/vor-authoring.test.tsx` lên 20000ms để triệt tiêu lỗi timeout. Xác minh 191/191 tests pass 100% và build thành công.
 - 2026-07-18: Khắc phục lỗi "Rendered more hooks than during the previous render" xảy ra khi chuyển tab giám khảo/thí sinh bằng cách loại bỏ AnimatePresence khỏi PageTransition, giữ lại key={pathname} trên motion.div để kích hoạt hiệu ứng fade-in khi trang mới được mount mà không giữ lại component cũ.
 - 2026-07-18: Tăng độ tương phản của slogan dưới logo (từ #94a3b8 sang #475569) đạt chuẩn WCAG AA và bổ sung lớp `relative z-10` cho thẻ bọc logo trên desktop sidebar để ngăn lớp phủ kính mờ (`.app-glass::before`) đè lên gây mờ chữ.
+- 2026-07-18: Giảm độ cao khoảng trống phía trên header từ 1cm xuống 0.5cm trong layout (file app-shell.tsx). Kiểm tra các bài test (191 tests) và build production thành công 100%.
+- 2026-07-18: Tinh chỉnh giao diện theo feedback: Loại bỏ div vai trò ở góc phải header; căn giữa và đổi kích thước slogan (17px) & tiêu đề trang chủ (15px); viết hoa tiêu đề Hệ thống CNS; bổ sung đường gạch chân dày 1px dài 50% căn giữa cho các active tab & sub-tab ở sidebar; và sửa lỗi dư thanh cuộn dọc trên desktop (min-height).
 
 
 

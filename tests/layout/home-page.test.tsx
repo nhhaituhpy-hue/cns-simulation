@@ -11,8 +11,8 @@ describe("Home page layout", () => {
       name: "Kiểm tra đánh giá năng lực dựa trên thực tế vận hành hệ thống CNS",
     });
     const section = heading.closest("section");
-    const contentColumn = heading.parentElement?.parentElement;
     const roleCards = screen.getByRole("link", { name: /Quản lý kỳ kiểm tra/ }).parentElement;
+    const contentColumn = roleCards?.parentElement;
     const video = screen.getByLabelText("Hướng dẫn Giám khảo VOR");
     const carousel = video.parentElement;
     const mediaCard = carousel?.parentElement;
@@ -27,7 +27,7 @@ describe("Home page layout", () => {
     expect(contentColumn).toHaveClass("flex", "min-w-0", "flex-col");
     expect(contentColumn).toHaveClass("lg:h-full");
     expect(contentColumn).not.toHaveClass("max-w-2xl");
-    expect(heading).toHaveClass("text-2xl", "sm:text-[1.75rem]");
+    expect(heading).toHaveClass("text-[15px]");
     expect(heading).toHaveClass("max-w-none");
     expect(heading).not.toHaveClass("text-4xl", "xl:text-4xl");
     expect(screen.getByRole("heading", { name: "Giám khảo" })).toHaveClass("text-[15px]");

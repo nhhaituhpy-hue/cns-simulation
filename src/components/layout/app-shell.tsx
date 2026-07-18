@@ -7,7 +7,6 @@ import {
   House,
   List,
   Student,
-  UserCircle,
   X,
   Compass,
   Ruler,
@@ -127,7 +126,12 @@ function ModuleSubTabs({
               }`}
             >
               <ModuleIcon size={14} weight="regular" className="mr-2 shrink-0 opacity-70" />
-              {module.label}
+              <span className="relative">
+                {module.label}
+                {active && (
+                  <span className="absolute bottom-[-3px] left-1/2 h-[1px] w-1/2 -translate-x-1/2 bg-[#0369a1] rounded-full" />
+                )}
+              </span>
             </Link>
           );
         })}
@@ -239,7 +243,12 @@ function DesktopNavigationRail() {
                 }`}
               >
                 <ItemIcon size={18} weight="regular" className="mr-2.5 shrink-0 opacity-80" />
-                <span className="truncate">{item.label}</span>
+                <span className="relative">
+                  <span className="truncate block max-w-full">{item.label}</span>
+                  {active && (
+                    <span className="absolute bottom-[-3px] left-1/2 h-[1px] w-1/2 -translate-x-1/2 bg-[#0369a1] rounded-full" />
+                  )}
+                </span>
               </Link>
               {active && workspaceSection ? (
                 <ModuleSubTabs section={workspaceSection} pathname={pathname} />
@@ -270,12 +279,6 @@ function PageTransition({ children }: { children: ReactNode }) {
 
 export function AppShell({ children }: AppShellProps) {
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
-  const pathname = usePathname();
-  const workspaceLabel = pathname.startsWith("/admin")
-    ? "Giám khảo"
-    : pathname.startsWith("/student")
-      ? "Thí sinh"
-      : "Cổng hệ thống";
 
   return (
     <div className="grid min-h-[100dvh] grid-cols-1 grid-rows-[4.25rem_minmax(0,1fr)] bg-[var(--background)] text-[var(--foreground)] md:grid-cols-[5rem_minmax(0,1fr)] app-layout-grid-custom">
@@ -283,13 +286,13 @@ export function AppShell({ children }: AppShellProps) {
         @media (min-width: 768px) {
           .app-layout-grid-custom {
             grid-template-columns: 11rem minmax(0, 1fr) !important;
-            grid-template-rows: calc(4.25rem + 1cm) minmax(0, 1fr) !important;
+            grid-template-rows: calc(4.25rem + 0.5cm) minmax(0, 1fr) !important;
             background-color: #ffffff !important;
           }
           .app-header-custom {
             grid-column: 2 / -1 !important;
             grid-row: 1 !important;
-            margin-top: 1cm !important;
+            margin-top: 0.5cm !important;
           }
           .app-sidebar-custom {
             grid-row: 1 / -1 !important;
@@ -298,6 +301,7 @@ export function AppShell({ children }: AppShellProps) {
           }
           .app-content-custom {
             padding-top: 1cm !important;
+            min-height: calc(100dvh - 4.25rem - 0.5cm) !important;
           }
         }
       `}} />
@@ -329,15 +333,11 @@ export function AppShell({ children }: AppShellProps) {
               Trung tâm Bảo đảm kỹ thuật
             </p>
             <p className="truncate text-[16px] sm:text-[18px] font-bold tracking-tight text-[var(--text-primary)] leading-tight mt-0.5">
-              Hệ thống kiểm tra mô phỏng CNS
+              HỆ THỐNG KIỂM TRA MÔ PHỎNG CNS
             </p>
-            <div className="mt-2 h-[2px] w-12 rounded-full bg-sky-500/30" />
+            <div className="mt-2 h-[1px] w-36 rounded-full bg-sky-700" />
           </div>
 
-          <div className="absolute right-4 sm:right-6 lg:right-8 xl:right-10 2xl:right-12 hidden shrink-0 items-center gap-2 rounded-lg border border-[var(--border)] bg-white/70 px-3 py-2 text-sm text-[var(--text-secondary)] shadow-[var(--shadow-sm)] sm:flex">
-            <UserCircle aria-hidden size={19} weight="duotone" className="text-[var(--accent)]" />
-            <span className="font-medium">{workspaceLabel}</span>
-          </div>
         </div>
       </header>
 
