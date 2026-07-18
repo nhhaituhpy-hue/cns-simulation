@@ -176,6 +176,8 @@ Khi bản kế hoạch và hình menu trong manual khác nhau, manual là nguồ
   - Căn giữa tiêu đề chính của header, tăng kích thước chữ tiêu đề và bổ sung 1 đường kẻ trang trí ngắn màu xanh nhạt phía dưới tiêu đề.
   - Loại bỏ đường kẻ dưới header, thiết lập khoảng cách 1cm ở lề trên của header và 1cm từ header đến nội dung bên dưới.
   - Tăng timeout cho bài test `tests/vor/vor-authoring.test.tsx` lên 20000ms để triệt tiêu lỗi timeout. Xác minh 191/191 tests pass 100% và build thành công.
+- 2026-07-18: Khắc phục lỗi "Rendered more hooks than during the previous render" xảy ra khi chuyển tab giám khảo/thí sinh bằng cách loại bỏ AnimatePresence khỏi PageTransition, giữ lại key={pathname} trên motion.div để kích hoạt hiệu ứng fade-in khi trang mới được mount mà không giữ lại component cũ.
+
 
 
 ## Hướng phát triển tiếp theo
