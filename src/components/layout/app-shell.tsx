@@ -52,7 +52,7 @@ function BrandWordmark() {
       <span className="text-[17px] font-bold tracking-[0.16em] mr-[-0.16em] uppercase text-[var(--accent)] select-none leading-none">
         <span className="text-[var(--danger)]">A</span>TTECH
       </span>
-      <span className="mt-1 text-[8.5px] font-medium tracking-[-0.02em] text-[#94a3b8] select-none leading-none">
+      <span className="mt-1 text-[8.5px] font-medium tracking-[-0.02em] text-[#475569] select-none leading-none">
         Creative & Adaptive
       </span>
     </Link>
@@ -214,7 +214,7 @@ function DesktopNavigationRail() {
       className="app-glass app-sidebar app-sidebar-custom sticky top-0 z-20 col-start-1 row-start-2 hidden h-[100dvh] w-20 self-start border-r border-[var(--border)] md:block"
       aria-label="Thanh điều hướng"
     >
-      <div className="flex h-[4.25rem] items-center justify-center px-4 border-b border-[var(--border)]">
+      <div className="relative z-10 flex h-[4.25rem] items-center justify-center px-4 border-b border-[var(--border)]">
         <BrandWordmark />
       </div>
       <nav
