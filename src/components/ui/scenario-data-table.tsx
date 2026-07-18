@@ -1,10 +1,8 @@
 "use client";
 
-import {
-  CaretLeft,
-  CaretRight,
-  MagnifyingGlass,
-} from "@phosphor-icons/react";
+import { CaretLeft } from "@phosphor-icons/react/dist/csr/CaretLeft";
+import { CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { MagnifyingGlass } from "@phosphor-icons/react/dist/csr/MagnifyingGlass";
 import { useId, useMemo, useState, type ReactNode } from "react";
 
 export const SCENARIOS_PER_PAGE = 10;

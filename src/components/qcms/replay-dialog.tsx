@@ -1,12 +1,10 @@
 "use client";
 
-import {
-  ArrowBendDownRight,
-  Pause,
-  Play,
-  Stop,
-  X,
-} from "@phosphor-icons/react";
+import { ArrowBendDownRight } from "@phosphor-icons/react/dist/csr/ArrowBendDownRight";
+import { Pause } from "@phosphor-icons/react/dist/csr/Pause";
+import { Play } from "@phosphor-icons/react/dist/csr/Play";
+import { Stop } from "@phosphor-icons/react/dist/csr/Stop";
+import { X } from "@phosphor-icons/react/dist/csr/X";
 import { useEffect, useState } from "react";
 
 type ReplayDialogProps = {

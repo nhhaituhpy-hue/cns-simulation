@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Warning, WarningCircle } from "@phosphor-icons/react";
+import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
+import { Warning } from "@phosphor-icons/react/dist/csr/Warning";
+import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { useEffect, useState } from "react";
 import { HardwareDiagnosisWorkspace } from "@/components/hardware/hardware-diagnosis-workspace";
 import { HardwareGradingResult } from "@/components/grading/hardware-grading-result";

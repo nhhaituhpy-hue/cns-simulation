@@ -1,6 +1,8 @@
 "use client";
 
-import { CaretLeft, CaretRight, FloppyDisk } from "@phosphor-icons/react";
+import { CaretLeft } from "@phosphor-icons/react/dist/csr/CaretLeft";
+import { CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { FloppyDisk } from "@phosphor-icons/react/dist/csr/FloppyDisk";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import type {

@@ -1,6 +1,7 @@
 "use client";
 
-import { Clock, WifiHigh } from "@phosphor-icons/react";
+import { Clock } from "@phosphor-icons/react/dist/csr/Clock";
+import { WifiHigh } from "@phosphor-icons/react/dist/csr/WifiHigh";
 import type { VorPmdtMode } from "@/lib/vor-types";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
 

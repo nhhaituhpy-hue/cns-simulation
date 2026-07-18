@@ -1,6 +1,9 @@
 "use client";
 
-import { ArrowDown, ArrowUp, CheckCircle, XCircle } from "@phosphor-icons/react";
+import { ArrowDown } from "@phosphor-icons/react/dist/csr/ArrowDown";
+import { ArrowUp } from "@phosphor-icons/react/dist/csr/ArrowUp";
+import { CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { XCircle } from "@phosphor-icons/react/dist/csr/XCircle";
 import {
   CON_SON_HARDWARE,
   type ComponentStatus,

@@ -1,4 +1,4 @@
-import { ArrowLeft } from "@phosphor-icons/react/ssr";
+import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PmdtLayout } from "@/components/vor/pmdt-layout";

@@ -1,6 +1,6 @@
 "use client";
 
-import { LockSimple } from "@phosphor-icons/react";
+import { LockSimple } from "@phosphor-icons/react/dist/csr/LockSimple";
 
 export function DisabledScreen() {
   return (

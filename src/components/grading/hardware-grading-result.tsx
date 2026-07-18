@@ -1,10 +1,8 @@
 import Link from "next/link";
-import {
-  ArrowLeft,
-  CheckCircle,
-  Warning,
-  XCircle,
-} from "@phosphor-icons/react";
+import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
+import { CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { Warning } from "@phosphor-icons/react/dist/csr/Warning";
+import { XCircle } from "@phosphor-icons/react/dist/csr/XCircle";
 import type { HardwareComponent } from "@/lib/hardware-model";
 import type {
   CombinedGradingResult as CombinedResult,

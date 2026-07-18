@@ -1,13 +1,11 @@
 "use client";
 
-import {
-  Ruler,
-  ClipboardText,
-  FilePlus,
-  PencilSimple,
-  Trash,
-  WarningCircle,
-} from "@phosphor-icons/react";
+import { Ruler } from "@phosphor-icons/react/dist/csr/Ruler";
+import { ClipboardText } from "@phosphor-icons/react/dist/csr/ClipboardText";
+import { FilePlus } from "@phosphor-icons/react/dist/csr/FilePlus";
+import { PencilSimple } from "@phosphor-icons/react/dist/csr/PencilSimple";
+import { Trash } from "@phosphor-icons/react/dist/csr/Trash";
+import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import Link from "next/link";
 import { useEffect } from "react";
 import {

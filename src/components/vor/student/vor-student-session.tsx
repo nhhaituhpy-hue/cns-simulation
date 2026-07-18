@@ -1,6 +1,7 @@
 "use client";
 
-import { CheckCircle, WarningCircle } from "@phosphor-icons/react";
+import { CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { HardwareDiagnosisStep } from "@/components/hardware/hardware-diagnosis-step";

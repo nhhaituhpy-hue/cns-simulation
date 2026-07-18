@@ -1,18 +1,16 @@
 "use client";
 
-import {
-  ArrowLeft,
-  Buildings,
-  CheckCircle,
-  EnvelopeSimple,
-  Eye,
-  EyeSlash,
-  IdentificationCard,
-  LockKey,
-  SignIn,
-  User,
-  WarningCircle,
-} from "@phosphor-icons/react";
+import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
+import { Buildings } from "@phosphor-icons/react/dist/csr/Buildings";
+import { CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { EnvelopeSimple } from "@phosphor-icons/react/dist/csr/EnvelopeSimple";
+import { Eye } from "@phosphor-icons/react/dist/csr/Eye";
+import { EyeSlash } from "@phosphor-icons/react/dist/csr/EyeSlash";
+import { IdentificationCard } from "@phosphor-icons/react/dist/csr/IdentificationCard";
+import { LockKey } from "@phosphor-icons/react/dist/csr/LockKey";
+import { SignIn } from "@phosphor-icons/react/dist/csr/SignIn";
+import { User } from "@phosphor-icons/react/dist/csr/User";
+import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { useRouter } from "next/navigation";
 import {
   useEffect,

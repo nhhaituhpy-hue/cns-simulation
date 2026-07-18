@@ -162,6 +162,18 @@ npm run dev
 
 Mở [http://localhost:3000](http://localhost:3000).
 
+Nếu cache Turbopack tăng bất thường, dừng dev server rồi khởi động lại với cache sạch:
+
+```bash
+npm run dev:clean
+```
+
+Chỉ dọn cache mà không khởi động dev server:
+
+```bash
+npm run clean:cache
+```
+
 ## Các route chính
 
 | Vai trò | VOR | DME | ADS-B |

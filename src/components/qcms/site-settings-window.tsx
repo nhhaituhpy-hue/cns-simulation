@@ -1,6 +1,7 @@
 "use client";
 
-import { Prohibit, X } from "@phosphor-icons/react";
+import { Prohibit } from "@phosphor-icons/react/dist/csr/Prohibit";
+import { X } from "@phosphor-icons/react/dist/csr/X";
 import { useEffect, type ReactNode } from "react";
 import type { SensorState, SiteState } from "@/lib/types";
 

@@ -1,6 +1,8 @@
-﻿"use client";
+"use client";
 
-import { FloppyDisk, Plus, Trash } from "@phosphor-icons/react";
+import { FloppyDisk } from "@phosphor-icons/react/dist/csr/FloppyDisk";
+import { Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { useState } from "react";
 import type {
   DmeEditableValue,

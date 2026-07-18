@@ -1,6 +1,8 @@
-﻿"use client";
+"use client";
 
-import { ArrowRight, ClipboardText, WarningCircle } from "@phosphor-icons/react";
+import { ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
+import { ClipboardText } from "@phosphor-icons/react/dist/csr/ClipboardText";
+import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import Link from "next/link";
 import { useEffect } from "react";
 import { useDmeScenarioStore } from "@/stores/dme-scenario-store";

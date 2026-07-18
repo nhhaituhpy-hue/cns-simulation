@@ -1,10 +1,8 @@
-import {
-  CheckCircle,
-  Info,
-  WarningCircle,
-  XCircle,
-  type Icon,
-} from "@phosphor-icons/react";
+import { CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { Info } from "@phosphor-icons/react/dist/csr/Info";
+import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { XCircle } from "@phosphor-icons/react/dist/csr/XCircle";
+import type { Icon } from "@phosphor-icons/react/dist/lib/types";
 import type { StepComparison, StepComparisonStatus } from "@/lib/types";
 
 const STATUS_META: Record<

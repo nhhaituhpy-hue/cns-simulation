@@ -1,6 +1,9 @@
 "use client";
 
-import { CaretLeft, CaretRight, SpeakerHigh, SpeakerSlash } from "@phosphor-icons/react";
+import { CaretLeft } from "@phosphor-icons/react/dist/csr/CaretLeft";
+import { CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
+import { SpeakerHigh } from "@phosphor-icons/react/dist/csr/SpeakerHigh";
+import { SpeakerSlash } from "@phosphor-icons/react/dist/csr/SpeakerSlash";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type HomeMediaCarouselProps = {

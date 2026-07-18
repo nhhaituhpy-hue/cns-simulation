@@ -1,6 +1,6 @@
 "use client";
 
-import { Warning } from "@phosphor-icons/react";
+import { Warning } from "@phosphor-icons/react/dist/csr/Warning";
 import { useEffect, useRef } from "react";
 
 type DeleteScenarioDialogProps = {

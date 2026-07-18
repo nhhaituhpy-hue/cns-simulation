@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "@phosphor-icons/react";
+import { X } from "@phosphor-icons/react/dist/csr/X";
 import type { SensorState, SiteState } from "@/lib/types";
 import {
   createGroundStationSlots,

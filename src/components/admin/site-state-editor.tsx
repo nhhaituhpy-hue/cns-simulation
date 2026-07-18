@@ -1,4 +1,6 @@
-import { Circle, Plus, Trash } from "@phosphor-icons/react";
+import { Circle } from "@phosphor-icons/react/dist/csr/Circle";
+import { Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import {
   SENSOR_STATUSES,
   type SensorState,

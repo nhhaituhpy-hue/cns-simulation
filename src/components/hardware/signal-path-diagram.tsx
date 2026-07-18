@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowDown, ArrowRight } from "@phosphor-icons/react";
+import { ArrowDown } from "@phosphor-icons/react/dist/csr/ArrowDown";
+import { ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import { useMemo, useState } from "react";
 import {
   CON_SON_HARDWARE,

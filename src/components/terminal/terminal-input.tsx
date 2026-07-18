@@ -1,6 +1,6 @@
 "use client";
 
-import { PaperPlaneTilt } from "@phosphor-icons/react";
+import { PaperPlaneTilt } from "@phosphor-icons/react/dist/csr/PaperPlaneTilt";
 import { useEffect, useRef, useState } from "react";
 import type { TerminalPendingPrompt } from "@/stores/terminal-store";
 

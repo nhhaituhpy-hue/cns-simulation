@@ -1,12 +1,10 @@
-import {
-  ArrowCounterClockwise,
-  ArrowDown,
-  ArrowUp,
-  CaretLeft,
-  Check,
-  SignOut,
-  Trash,
-} from "@phosphor-icons/react";
+import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/csr/ArrowCounterClockwise";
+import { ArrowDown } from "@phosphor-icons/react/dist/csr/ArrowDown";
+import { ArrowUp } from "@phosphor-icons/react/dist/csr/ArrowUp";
+import { CaretLeft } from "@phosphor-icons/react/dist/csr/CaretLeft";
+import { Check } from "@phosphor-icons/react/dist/csr/Check";
+import { SignOut } from "@phosphor-icons/react/dist/csr/SignOut";
+import { Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { useState } from "react";
 import { TerminalEngine, type TerminalProcessResult } from "@/lib/terminal-engine";
 import type { MenuItem } from "@/lib/menu-data";

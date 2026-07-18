@@ -1,6 +1,8 @@
 "use client";
 
-import { ArrowCounterClockwise, CheckCircle, XCircle } from "@phosphor-icons/react";
+import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/csr/ArrowCounterClockwise";
+import { CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { XCircle } from "@phosphor-icons/react/dist/csr/XCircle";
 import Link from "next/link";
 import type { GradingResult as GradingResultData } from "@/lib/types";
 import { StepDiff } from "./step-diff";

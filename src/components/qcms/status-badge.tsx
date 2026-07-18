@@ -1,11 +1,9 @@
-import {
-  CheckCircle,
-  MinusCircle,
-  Warning,
-  WarningCircle,
-  XCircle,
-  type Icon,
-} from "@phosphor-icons/react";
+import { CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { MinusCircle } from "@phosphor-icons/react/dist/csr/MinusCircle";
+import { Warning } from "@phosphor-icons/react/dist/csr/Warning";
+import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { XCircle } from "@phosphor-icons/react/dist/csr/XCircle";
+import type { Icon } from "@phosphor-icons/react/dist/lib/types";
 import type { SensorStatus } from "@/lib/types";
 import { SENSOR_STATUS_DETAILS } from "./qcms-utils";
 

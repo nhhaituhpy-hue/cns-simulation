@@ -1,4 +1,5 @@
-import { ClipboardText, Student } from "@phosphor-icons/react/ssr";
+import { ClipboardText } from "@phosphor-icons/react/dist/ssr/ClipboardText";
+import { Student } from "@phosphor-icons/react/dist/ssr/Student";
 import { HomeMediaCarousel } from "@/components/home/home-media-carousel";
 import { RoleCard } from "@/components/ui/role-card";
 

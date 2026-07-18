@@ -1,6 +1,9 @@
 "use client";
 
-import { Pause, Play, Stop, X } from "@phosphor-icons/react";
+import { Pause } from "@phosphor-icons/react/dist/csr/Pause";
+import { Play } from "@phosphor-icons/react/dist/csr/Play";
+import { Stop } from "@phosphor-icons/react/dist/csr/Stop";
+import { X } from "@phosphor-icons/react/dist/csr/X";
 import { useEffect, useRef, useState } from "react";
 import type { SensorState } from "@/lib/types";
 

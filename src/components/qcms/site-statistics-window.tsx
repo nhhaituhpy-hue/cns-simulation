@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowCounterClockwise, X } from "@phosphor-icons/react";
+import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/csr/ArrowCounterClockwise";
+import { X } from "@phosphor-icons/react/dist/csr/X";
 import { useEffect, useMemo, useState } from "react";
 import type { SiteState } from "@/lib/types";
 

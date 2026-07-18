@@ -1,6 +1,8 @@
-﻿"use client";
+"use client";
 
-import { Minus, Square, X } from "@phosphor-icons/react";
+import { Minus } from "@phosphor-icons/react/dist/csr/Minus";
+import { Square } from "@phosphor-icons/react/dist/csr/Square";
+import { X } from "@phosphor-icons/react/dist/csr/X";
 
 const windowButtons = [
   { label: "Thu nhỏ cửa sổ mô phỏng", icon: Minus },

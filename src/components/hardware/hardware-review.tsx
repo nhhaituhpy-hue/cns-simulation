@@ -1,4 +1,6 @@
-import { CheckCircle, Circle, XCircle } from "@phosphor-icons/react";
+import { CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { Circle } from "@phosphor-icons/react/dist/csr/Circle";
+import { XCircle } from "@phosphor-icons/react/dist/csr/XCircle";
 import type {
   EquipmentDiagram,
   HardwareDiagnosisAnswer,

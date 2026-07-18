@@ -1,18 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Broadcast,
-  ClockCounterClockwise,
-  Cpu,
-  Gauge,
-  Lightning,
-  NavigationArrow,
-  Thermometer,
-  Warning,
-  X,
-  type Icon,
-} from "@phosphor-icons/react";
+import { Broadcast } from "@phosphor-icons/react/dist/csr/Broadcast";
+import { ClockCounterClockwise } from "@phosphor-icons/react/dist/csr/ClockCounterClockwise";
+import { Cpu } from "@phosphor-icons/react/dist/csr/Cpu";
+import { Gauge } from "@phosphor-icons/react/dist/csr/Gauge";
+import { Lightning } from "@phosphor-icons/react/dist/csr/Lightning";
+import { NavigationArrow } from "@phosphor-icons/react/dist/csr/NavigationArrow";
+import { Thermometer } from "@phosphor-icons/react/dist/csr/Thermometer";
+import { Warning } from "@phosphor-icons/react/dist/csr/Warning";
+import { X } from "@phosphor-icons/react/dist/csr/X";
+import type { Icon } from "@phosphor-icons/react/dist/lib/types";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import type { SensorMonitoringData, SensorState } from "@/lib/types";
 import {

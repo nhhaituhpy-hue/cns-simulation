@@ -1,4 +1,5 @@
-import { ShieldCheck, Wrench } from "@phosphor-icons/react";
+import { ShieldCheck } from "@phosphor-icons/react/dist/csr/ShieldCheck";
+import { Wrench } from "@phosphor-icons/react/dist/csr/Wrench";
 import type { LoginUser } from "@/lib/types";
 import type { ValidationErrors } from "./scenario-form-utils";
 

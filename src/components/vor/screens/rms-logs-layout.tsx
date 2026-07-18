@@ -1,10 +1,8 @@
 "use client";
 
-import {
-  ArrowClockwise,
-  ArrowCounterClockwise,
-  type Icon,
-} from "@phosphor-icons/react";
+import { ArrowClockwise } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
+import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/csr/ArrowCounterClockwise";
+import type { Icon } from "@phosphor-icons/react/dist/lib/types";
 import type { VorViewId } from "@/lib/vor-types";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
 import { RmsLogsAlarms } from "./rms-logs-alarms";

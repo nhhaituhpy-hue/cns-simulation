@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock } from "@phosphor-icons/react";
+import { Clock } from "@phosphor-icons/react/dist/csr/Clock";
 import { useEffect, useRef, useState } from "react";
 import { formatElapsedTime } from "./qcms-utils";
 

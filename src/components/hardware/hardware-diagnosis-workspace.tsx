@@ -1,6 +1,7 @@
 "use client";
 
-import { PaperPlaneTilt, X } from "@phosphor-icons/react";
+import { PaperPlaneTilt } from "@phosphor-icons/react/dist/csr/PaperPlaneTilt";
+import { X } from "@phosphor-icons/react/dist/csr/X";
 import { useMemo, useState } from "react";
 import { ComponentInspector } from "./component-inspector";
 import { SignalPathDiagram } from "./signal-path-diagram";

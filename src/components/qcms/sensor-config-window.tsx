@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowClockwise, Broadcast, X } from "@phosphor-icons/react";
+import { ArrowClockwise } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
+import { Broadcast } from "@phosphor-icons/react/dist/csr/Broadcast";
+import { X } from "@phosphor-icons/react/dist/csr/X";
 import { useEffect, useState, type ReactNode } from "react";
 import type { SensorDataProfile, SensorState } from "@/lib/types";
 

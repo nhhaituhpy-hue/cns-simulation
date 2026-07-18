@@ -1,12 +1,10 @@
 "use client";
 
-import {
-  CheckSquare,
-  Pause,
-  Record,
-  Square,
-  Trash,
-} from "@phosphor-icons/react";
+import { CheckSquare } from "@phosphor-icons/react/dist/csr/CheckSquare";
+import { Pause } from "@phosphor-icons/react/dist/csr/Pause";
+import { Record } from "@phosphor-icons/react/dist/csr/Record";
+import { Square } from "@phosphor-icons/react/dist/csr/Square";
+import { Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import type { RecordedAction } from "@/lib/types";
 
 export interface ActionPanelProps {

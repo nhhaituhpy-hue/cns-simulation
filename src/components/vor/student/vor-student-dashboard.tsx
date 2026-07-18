@@ -1,6 +1,8 @@
 "use client";
 
-import { FolderOpen, NotePencil, Warning } from "@phosphor-icons/react";
+import { FolderOpen } from "@phosphor-icons/react/dist/csr/FolderOpen";
+import { NotePencil } from "@phosphor-icons/react/dist/csr/NotePencil";
+import { Warning } from "@phosphor-icons/react/dist/csr/Warning";
 import Link from "next/link";
 import { useEffect } from "react";
 import {

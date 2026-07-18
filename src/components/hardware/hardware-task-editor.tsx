@@ -1,6 +1,7 @@
 "use client";
 
-import { CheckCircle, X } from "@phosphor-icons/react";
+import { CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { X } from "@phosphor-icons/react/dist/csr/X";
 import { useState } from "react";
 import type { EquipmentComponent, EquipmentDiagram, HardwareDiagnosisTask } from "@/lib/equipment-diagram-types";
 import { EquipmentBlockDiagram } from "./equipment-block-diagram";

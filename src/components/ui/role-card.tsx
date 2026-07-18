@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "@phosphor-icons/react";
+import { ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import { useRouter } from "next/navigation";
 import { useState, type MouseEvent, type ReactNode } from "react";
 import { hasRequiredRoleAction } from "@/app/access-actions";

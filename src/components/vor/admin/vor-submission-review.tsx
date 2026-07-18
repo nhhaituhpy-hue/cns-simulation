@@ -1,6 +1,8 @@
 "use client";
 
-import { CheckCircle, Circle, WarningCircle } from "@phosphor-icons/react";
+import { CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { Circle } from "@phosphor-icons/react/dist/csr/Circle";
+import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import Link from "next/link";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { HardwareReview } from "@/components/hardware/hardware-review";

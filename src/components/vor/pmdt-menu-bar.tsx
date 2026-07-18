@@ -1,6 +1,7 @@
 "use client";
 
-import { CaretDown, CaretRight } from "@phosphor-icons/react";
+import { CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
+import { CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { useEffect, useRef, useState } from "react";
 import {
   disabledMenuTooltip,

@@ -1,6 +1,6 @@
 "use client";
 
-import { Terminal } from "@phosphor-icons/react";
+import { Terminal } from "@phosphor-icons/react/dist/csr/Terminal";
 import type { TerminalPendingPrompt } from "@/stores/terminal-store";
 import { TerminalInput } from "./terminal-input";
 import { TerminalOutput } from "./terminal-output";

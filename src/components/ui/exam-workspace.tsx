@@ -1,9 +1,7 @@
-import {
-  Broadcast,
-  GearSix,
-  Student,
-  type Icon,
-} from "@phosphor-icons/react";
+import { Broadcast } from "@phosphor-icons/react/dist/csr/Broadcast";
+import { GearSix } from "@phosphor-icons/react/dist/csr/GearSix";
+import { Student } from "@phosphor-icons/react/dist/csr/Student";
+import type { Icon } from "@phosphor-icons/react/dist/lib/types";
 import type { ReactNode } from "react";
 
 export type CnsModule = "vor" | "dme" | "ads-b";

@@ -2,19 +2,17 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  ClipboardText,
-  House,
-  List,
-  Student,
-  X,
-  Compass,
-  Ruler,
-  Broadcast,
-  SignOut,
-  UserCircle,
-  type Icon,
-} from "@phosphor-icons/react";
+import { ClipboardText } from "@phosphor-icons/react/dist/csr/ClipboardText";
+import { House } from "@phosphor-icons/react/dist/csr/House";
+import { List } from "@phosphor-icons/react/dist/csr/List";
+import { Student } from "@phosphor-icons/react/dist/csr/Student";
+import { X } from "@phosphor-icons/react/dist/csr/X";
+import { Compass } from "@phosphor-icons/react/dist/csr/Compass";
+import { Ruler } from "@phosphor-icons/react/dist/csr/Ruler";
+import { Broadcast } from "@phosphor-icons/react/dist/csr/Broadcast";
+import { SignOut } from "@phosphor-icons/react/dist/csr/SignOut";
+import { UserCircle } from "@phosphor-icons/react/dist/csr/UserCircle";
+import type { Icon } from "@phosphor-icons/react/dist/lib/types";
 import { useState, type ReactNode } from "react";
 import { motion } from "motion/react";
 import { logoutAction } from "@/app/login/actions";

@@ -1,6 +1,8 @@
 "use client";
 
-import { Funnel, ListBullets, X } from "@phosphor-icons/react";
+import { Funnel } from "@phosphor-icons/react/dist/csr/Funnel";
+import { ListBullets } from "@phosphor-icons/react/dist/csr/ListBullets";
+import { X } from "@phosphor-icons/react/dist/csr/X";
 import { useMemo, useState } from "react";
 import type { QcmsEvent, Scenario, SensorState, SiteState } from "@/lib/types";
 

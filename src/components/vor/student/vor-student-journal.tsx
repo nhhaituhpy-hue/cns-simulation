@@ -1,6 +1,8 @@
 "use client";
 
-import { CheckCircle, ClipboardText, X } from "@phosphor-icons/react";
+import { CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { ClipboardText } from "@phosphor-icons/react/dist/csr/ClipboardText";
+import { X } from "@phosphor-icons/react/dist/csr/X";
 import { useState } from "react";
 import type { VorScenario } from "@/lib/vor-types";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";

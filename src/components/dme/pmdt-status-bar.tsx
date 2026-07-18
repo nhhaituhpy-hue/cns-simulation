@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
-import { Clock, WifiHigh } from "@phosphor-icons/react";
+import { Clock } from "@phosphor-icons/react/dist/csr/Clock";
+import { WifiHigh } from "@phosphor-icons/react/dist/csr/WifiHigh";
 import type { DmePmdtMode } from "@/lib/dme-types";
 import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
 

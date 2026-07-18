@@ -1,12 +1,10 @@
 "use client";
 
-import {
-  FolderOpen,
-  MapPin,
-  Monitor,
-  NotePencil,
-  Warning,
-} from "@phosphor-icons/react";
+import { FolderOpen } from "@phosphor-icons/react/dist/csr/FolderOpen";
+import { MapPin } from "@phosphor-icons/react/dist/csr/MapPin";
+import { Monitor } from "@phosphor-icons/react/dist/csr/Monitor";
+import { NotePencil } from "@phosphor-icons/react/dist/csr/NotePencil";
+import { Warning } from "@phosphor-icons/react/dist/csr/Warning";
 import Link from "next/link";
 import { useEffect, useMemo } from "react";
 import { DmeStudentDashboard } from "@/components/dme/student/dme-student-dashboard";

@@ -1,13 +1,11 @@
 "use client";
 
-import {
-  Broadcast,
-  FilePlus,
-  PencilSimple,
-  Plus,
-  Trash,
-  WarningCircle,
-} from "@phosphor-icons/react";
+import { Broadcast } from "@phosphor-icons/react/dist/csr/Broadcast";
+import { FilePlus } from "@phosphor-icons/react/dist/csr/FilePlus";
+import { PencilSimple } from "@phosphor-icons/react/dist/csr/PencilSimple";
+import { Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { Trash } from "@phosphor-icons/react/dist/csr/Trash";
+import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { DmeAdminDashboard } from "@/components/dme/admin/dme-admin-dashboard";

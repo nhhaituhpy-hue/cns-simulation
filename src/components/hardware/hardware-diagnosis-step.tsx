@@ -1,6 +1,8 @@
 "use client";
 
-import { ArrowLeft, CheckCircle, Circuitry } from "@phosphor-icons/react";
+import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
+import { CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
+import { Circuitry } from "@phosphor-icons/react/dist/csr/Circuitry";
 import { useState } from "react";
 import type {
   EquipmentComponent,
