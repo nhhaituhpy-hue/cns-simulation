@@ -11,10 +11,12 @@ type HomeMediaCarouselProps = {
 };
 
 const mediaItems = [
-  { id: "examiner-vor", kind: "video", label: "Hướng dẫn Giám khảo VOR", file: "huong-dan-giam-khao-vor", voiceFile: "huong-dan-giam-khao-vor-dme.mp3" },
-  { id: "examiner-ads-b", kind: "video", label: "Hướng dẫn Giám khảo ADS-B", file: "huong-dan-giam-khao-ads-b", voiceFile: "huong-dan-giam-khao-adsb.mp3" },
-  { id: "candidate-vor", kind: "video", label: "Hướng dẫn Thí sinh VOR", file: "huong-dan-thi-sinh-vor" },
-  { id: "candidate-ads-b", kind: "video", label: "Hướng dẫn Thí sinh ADS-B", file: "huong-dan-thi-sinh-ads-b" },
+  { id: "examiner-exam-set", kind: "video", label: "Hướng dẫn Giám khảo tạo Đề thi", file: "huong-dan-giam-khao-tao-de-thi", voiceFile: "huong-dan-giam-khao-tao-de-thi.mp3" },
+  { id: "examiner-exam", kind: "video", label: "Hướng dẫn Giám khảo tạo Kỳ thi", file: "huong-dan-giam-khao-tao-ky-thi", voiceFile: "huong-dan-giam-khao-tao-ky-thi.mp3" },
+  { id: "examiner-vor-dme", kind: "video", label: "Hướng dẫn Giám khảo tạo Kịch bản VOR/DME", file: "huong-dan-giam-khao-kich-ban-vor-dme", voiceFile: "huong-dan-giam-khao-kich-ban-vor-dme.mp3" },
+  { id: "examiner-ads-b", kind: "video", label: "Hướng dẫn Giám khảo tạo Kịch bản ADS-B", file: "huong-dan-giam-khao-kich-ban-ads-b", voiceFile: "huong-dan-giam-khao-kich-ban-ads-b.mp3" },
+  { id: "candidate-practice", kind: "video", label: "Hướng dẫn Thí sinh vào Luyện tập", file: "huong-dan-thi-sinh-luyen-tap", voiceFile: "huong-dan-thi-sinh-luyen-tap.mp3" },
+  { id: "candidate-exam", kind: "video", label: "Hướng dẫn Thí sinh vào Thi", file: "huong-dan-thi-sinh-vao-thi", voiceFile: "huong-dan-thi-sinh-vao-thi.mp3" },
 ] as const;
 
 function joinAssetUrl(baseUrl: string, fileName: string) {

@@ -8,6 +8,10 @@ function responseWithRefreshedCookies(target: URL, source: NextResponse) {
 }
 
 export async function proxy(request: NextRequest) {
+  if (process.env.MEDIA_CAPTURE_MODE === "1") {
+    return NextResponse.next({ request });
+  }
+
   const { response, claims } = await refreshAuthSession(request);
   const pathname = request.nextUrl.pathname;
   const isPublicPage = pathname === "/login";

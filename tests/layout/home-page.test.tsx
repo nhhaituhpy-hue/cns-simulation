@@ -32,7 +32,7 @@ describe("Home page layout", () => {
     const section = heading.closest("section");
     const roleCards = screen.getByRole("link", { name: /Quản lý kỳ kiểm tra/ }).parentElement;
     const contentColumn = roleCards?.parentElement;
-    const video = screen.getByLabelText("Hướng dẫn Giám khảo VOR");
+    const video = screen.getByLabelText("Hướng dẫn Giám khảo tạo Đề thi");
     const carousel = video.parentElement;
     const mediaCard = carousel?.parentElement;
 

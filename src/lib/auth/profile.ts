@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 
 export type AppRole = "student" | "admin";
@@ -14,6 +15,18 @@ export interface AuthProfile {
 }
 
 export const getCurrentProfile = cache(async (): Promise<AuthProfile | null> => {
+  if (process.env.MEDIA_CAPTURE_MODE === "1") {
+    const cookieStore = await cookies();
+    const role = cookieStore.get("media-capture-role")?.value === "student" ? "student" : "admin";
+    return {
+      id: `media-capture-${role}`,
+      email: role === "admin" ? "giamkhao@attech.com.vn" : "thisinh@attech.com.vn",
+      fullName: role === "admin" ? "Giám khảo CNS" : "Nguyễn Văn An",
+      workUnit: role === "admin" ? "Hội đồng kiểm tra" : "Đài DVOR/DME Đà Nẵng",
+      role,
+    };
+  }
+
   const supabase = await createClient();
   const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
   const userId = claimsData?.claims?.sub;
