@@ -149,8 +149,9 @@ export function DmeAdminDashboard() {
                     </span>
                   </td>
                   <td className="px-4 py-4 align-top text-xs leading-5 text-[var(--text-secondary)]">
-                    <p><span className="font-mono font-semibold">{scenario.overrides.length}</span> cảnh báo PMDT</p>
-                    <p><span className="font-mono font-semibold">{scenario.expectedCheckpoints.length}</span> bước kiểm tra</p>
+                    <p><span className="font-mono font-semibold">{scenario.expectedCheckpoints.length}</span> bước kiểm tra PMDT</p>
+                    <p><span className="font-mono font-semibold">{scenario.hardwareTask?.expectedComponentIds.length ?? 0}</span> khối sự cố</p>
+                    <p>Ngày tạo: <span className="font-mono font-semibold">{scenario.createdAt ? new Date(scenario.createdAt).toLocaleDateString("vi-VN") : "-"}</span></p>
                   </td>
                   <td className="px-4 py-4 align-top">
                     <div className="flex justify-end gap-2">
