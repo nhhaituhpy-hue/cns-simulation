@@ -36,9 +36,16 @@ export function MonitorSidebandVswr() {
               const value = resolveVorField(baseValue, fieldId, overrides);
               const status = resolveVorStatus("green", fieldId, overrides);
               return (
-                <div key={index} data-vor-field-id={fieldId} className={`grid grid-cols-[4.5rem_1fr] items-center border ${statusClasses[status]}`}>
+                <div
+                  key={index}
+                  data-vor-field-id={fieldId}
+                  data-vor-field-value={baseValue}
+                  data-vor-field-type="number"
+                  data-vor-field-label={`Antenna ${index + 1} VSWR`}
+                  className={`grid grid-cols-[4.5rem_1fr] items-center border ${statusClasses[status]}`}
+                >
                   <span className="border-r border-current/20 px-2 py-1 text-[10px]">Antenna {index + 1}</span>
-                  <span className="px-2 py-1 text-right font-mono text-[11px] font-semibold tabular-nums">{value.toFixed(2)}</span>
+                  <span className="px-2 py-1 text-right font-mono text-[11px] font-semibold tabular-nums">{Number(value).toFixed(2)}</span>
                 </div>
               );
             })}

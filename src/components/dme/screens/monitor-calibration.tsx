@@ -40,16 +40,40 @@ export function MonitorCalibration({ monitorNumber }: { monitorNumber: 1 | 2 }) 
                 return (
                   <tr key={row.parameter} className="border-t border-[#273449] text-[#cbd5e1] hover:bg-[#1e293b]/50">
                     <th scope="row" className="px-3 py-1.5 font-medium">{row.parameter}</th>
-                    <td data-dme-field-id={`${prefix}.baseline`} className="px-2 py-1.5 text-right font-mono text-gray-400">
+                    <td
+                      data-dme-field-id={`${prefix}.baseline`}
+                      data-dme-field-value={row.baseline}
+                      data-dme-field-type="number"
+                      data-dme-field-label={`${row.parameter} Baseline`}
+                      className="px-2 py-1.5 text-right font-mono text-gray-400"
+                    >
                       {typeof resolvedBaseline === "number" ? resolvedBaseline.toFixed(2) : resolvedBaseline}
                     </td>
-                    <td data-dme-field-id={`${prefix}.actual`} className="px-3 py-1.5 text-right font-mono text-emerald-400 bg-emerald-950/10">
+                    <td
+                      data-dme-field-id={`${prefix}.actual`}
+                      data-dme-field-value={row.actual}
+                      data-dme-field-type="number"
+                      data-dme-field-label={`${row.parameter} Actual`}
+                      className="px-3 py-1.5 text-right font-mono text-emerald-400 bg-emerald-950/10"
+                    >
                       {typeof resolvedActual === "number" ? resolvedActual.toFixed(2) : resolvedActual}
                     </td>
-                    <td data-dme-field-id={`${prefix}.offset`} className="px-3 py-1.5 text-right font-mono text-emerald-400 bg-emerald-950/10">
+                    <td
+                      data-dme-field-id={`${prefix}.offset`}
+                      data-dme-field-value={row.offset}
+                      data-dme-field-type="number"
+                      data-dme-field-label={`${row.parameter} Offset`}
+                      className="px-3 py-1.5 text-right font-mono text-emerald-400 bg-emerald-950/10"
+                    >
                       {typeof resolvedOffset === "number" ? resolvedOffset.toFixed(2) : resolvedOffset}
                     </td>
-                    <td data-dme-field-id={`${prefix}.scale`} className="px-3 py-1.5 text-right font-mono text-sky-400 bg-sky-950/10">
+                    <td
+                      data-dme-field-id={`${prefix}.scale`}
+                      data-dme-field-value={row.scale}
+                      data-dme-field-type="number"
+                      data-dme-field-label={`${row.parameter} Scale`}
+                      className="px-3 py-1.5 text-right font-mono text-sky-400 bg-sky-950/10"
+                    >
                       {typeof resolvedScale === "number" ? resolvedScale.toFixed(3) : resolvedScale}
                     </td>
                     <td className="px-2 py-1.5 text-center text-gray-400">{row.unit}</td>

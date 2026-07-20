@@ -28,7 +28,18 @@ export function TxDataMain() {
             const fieldId = `txPower.${index}.${tx}`;
             const value = resolveVorField(row[tx], fieldId, overrides);
             const status = resolveVorStatus("green", fieldId, overrides);
-            return <td key={tx} data-vor-field-id={fieldId} className={`px-3 py-2 text-right font-mono tabular-nums ${statusClasses[status]}`}>{value.toFixed(index === 0 ? 1 : 3)}</td>;
+            return (
+              <td
+                key={tx}
+                data-vor-field-id={fieldId}
+                data-vor-field-value={row[tx]}
+                data-vor-field-type="number"
+                data-vor-field-label={`${row.parameter} Tx ${tx === "tx1" ? "1" : "2"}`}
+                className={`px-3 py-2 text-right font-mono tabular-nums ${statusClasses[status]}`}
+              >
+                {Number(value).toFixed(index === 0 ? 1 : 3)}
+              </td>
+            );
           })}<td className="px-3 py-2 text-[#94a3b8]">{row.unit}</td></tr>)}</tbody>
         </table>
       </Panel>
@@ -39,7 +50,20 @@ export function TxDataMain() {
             const fieldId = `txVswr.${index}.value`;
             const value = resolveVorField(row.value, fieldId, overrides);
             const status = resolveVorStatus("green", fieldId, overrides);
-            return <tr key={row.parameter} className="border-t border-[#273449]"><th scope="row" className="px-3 py-2 font-medium text-[#cbd5e1]">{row.parameter}</th><td data-vor-field-id={fieldId} className={`px-3 py-2 text-right font-mono tabular-nums ${statusClasses[status]}`}>{value.toFixed(2)}</td></tr>;
+            return (
+              <tr key={row.parameter} className="border-t border-[#273449]">
+                <th scope="row" className="px-3 py-2 font-medium text-[#cbd5e1]">{row.parameter}</th>
+                <td
+                  data-vor-field-id={fieldId}
+                  data-vor-field-value={row.value}
+                  data-vor-field-type="number"
+                  data-vor-field-label={`${row.parameter} VSWR`}
+                  className={`px-3 py-2 text-right font-mono tabular-nums ${statusClasses[status]}`}
+                >
+                  {Number(value).toFixed(2)}
+                </td>
+              </tr>
+            );
           })}</tbody>
         </table>
       </Panel>
@@ -51,7 +75,18 @@ export function TxDataMain() {
             const value = resolveVorField(row[key], fieldId, overrides);
             const status = resolveVorStatus("green", fieldId, overrides);
             const digits = index < 3 ? 4 : index < 5 ? 2 : 0;
-            return <td key={key} data-vor-field-id={fieldId} className={`px-3 py-2 text-right font-mono tabular-nums ${statusClasses[status]}`}>{value === null ? "-" : value.toFixed(digits)}</td>;
+            return (
+              <td
+                key={key}
+                data-vor-field-id={fieldId}
+                data-vor-field-value={row[key] ?? ""}
+                data-vor-field-type="number"
+                data-vor-field-label={`${row.parameter} ${key === "value1" ? "Value 1" : "Value 2"}`}
+                className={`px-3 py-2 text-right font-mono tabular-nums ${statusClasses[status]}`}
+              >
+                {value === null ? "-" : Number(value).toFixed(digits)}
+              </td>
+            );
           })}<td className="px-3 py-2 text-[#94a3b8]">{row.unit}</td></tr>)}</tbody>
         </table>
       </Panel>

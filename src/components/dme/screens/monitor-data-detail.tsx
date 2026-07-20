@@ -98,10 +98,22 @@ export function MonitorDetailData({ monitorNumber }: { monitorNumber: 1 | 2 }) {
                 return (
                   <tr key={row.label} className="border-t border-[#273449] text-[#cbd5e1] hover:bg-[#1e293b]/50">
                     <th scope="row" className="px-3 py-1.5 font-medium">{row.label}</th>
-                    <td data-dme-field-id={`${prefix}.mon1Value`} className="px-3 py-1.5 text-right font-mono text-emerald-400 bg-emerald-950/10">
+                    <td
+                      data-dme-field-id={`${prefix}.mon1Value`}
+                      data-dme-field-value={row.mon1Value}
+                      data-dme-field-type="number"
+                      data-dme-field-label={`${row.label} Mon 1`}
+                      className="px-3 py-1.5 text-right font-mono text-emerald-400 bg-emerald-950/10"
+                    >
                       {typeof val1 === "number" ? val1 : parseFloat(String(val1)).toFixed(2)}
                     </td>
-                    <td data-dme-field-id={`${prefix}.mon2Value`} className="px-3 py-1.5 text-right font-mono text-emerald-400 bg-emerald-950/10">
+                    <td
+                      data-dme-field-id={`${prefix}.mon2Value`}
+                      data-dme-field-value={row.mon2Value}
+                      data-dme-field-type="number"
+                      data-dme-field-label={`${row.label} Mon 2`}
+                      className="px-3 py-1.5 text-right font-mono text-emerald-400 bg-emerald-950/10"
+                    >
                       {typeof val2 === "number" ? val2 : parseFloat(String(val2)).toFixed(2)}
                     </td>
                     <td className="px-3 py-1.5 text-center text-gray-400">{row.unit}</td>

@@ -39,14 +39,32 @@ export function MonitorNotch() {
                 return (
                   <tr key={row.antenna} className="border-t border-[#273449] text-[#cbd5e1] hover:bg-[#1e293b]/50">
                     <td className="px-2 py-1.5 text-center font-medium text-gray-400 bg-[#0f172a]/40">{row.antenna}</td>
-                    <td data-vor-field-id={`${prefix}.baseline`} className="px-2 py-1.5 text-right font-mono text-gray-400">
-                      {resolvedBaseline}
+                    <td
+                      data-vor-field-id={`${prefix}.baseline`}
+                      data-vor-field-value={row.baseline}
+                      data-vor-field-type="number"
+                      data-vor-field-label={`Antenna ${row.antenna} Baseline`}
+                      className="px-2 py-1.5 text-right font-mono text-gray-400"
+                    >
+                      {Number(resolvedBaseline).toFixed(2)}
                     </td>
-                    <td data-vor-field-id={`${prefix}.mon1`} className="px-2 py-1.5 text-right font-mono text-emerald-400 bg-emerald-950/10">
-                      {resolvedMon1}
+                    <td
+                      data-vor-field-id={`${prefix}.mon1`}
+                      data-vor-field-value={row.mon1}
+                      data-vor-field-type="number"
+                      data-vor-field-label={`Antenna ${row.antenna} Mon 1`}
+                      className="px-2 py-1.5 text-right font-mono text-emerald-400 bg-emerald-950/10"
+                    >
+                      {Number(resolvedMon1).toFixed(2)}
                     </td>
-                    <td data-vor-field-id={`${prefix}.mon2`} className="px-2 py-1.5 text-right font-mono text-emerald-400 bg-emerald-950/10">
-                      {resolvedMon2}
+                    <td
+                      data-vor-field-id={`${prefix}.mon2`}
+                      data-vor-field-value={row.mon2}
+                      data-vor-field-type="number"
+                      data-vor-field-label={`Antenna ${row.antenna} Mon 2`}
+                      className="px-2 py-1.5 text-right font-mono text-emerald-400 bg-emerald-950/10"
+                    >
+                      {Number(resolvedMon2).toFixed(2)}
                     </td>
                   </tr>
                 );
