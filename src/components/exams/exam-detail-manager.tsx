@@ -479,7 +479,7 @@ export function ExamDetailManager({
       </div>
 
       {printData ? (
-        <div className="hidden print:block print:w-[210mm] print:min-h-[297mm] print:bg-white print:text-black print:text-xs print:p-12 print:leading-relaxed mx-auto">
+        <div className="hidden print:block print:bg-white print:text-black print:text-xs print:leading-relaxed max-w-[190mm] mx-auto print:p-0">
           {/* Header */}
           <div className="grid grid-cols-2 gap-4 border-b-2 border-black pb-4 text-center font-semibold">
             <div>

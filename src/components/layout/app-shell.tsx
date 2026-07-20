@@ -332,6 +332,32 @@ export function AppShell({ children, currentUser }: AppShellProps) {
             min-height: calc(100dvh - 4.25rem - 0.5cm) !important;
           }
         }
+        @media print {
+          body, html {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+          }
+          .app-layout-grid-custom {
+            display: block !important;
+            grid-template-columns: none !important;
+            grid-template-rows: none !important;
+            background-color: #ffffff !important;
+          }
+          .app-header-custom {
+            display: none !important;
+          }
+          .app-sidebar-custom {
+            display: none !important;
+          }
+          .app-content-custom {
+            padding: 0 !important;
+            margin: 0 !important;
+            min-height: auto !important;
+          }
+          .print\:hidden {
+            display: none !important;
+          }
+        }
       `}} />
       <a
         href="#main-content"

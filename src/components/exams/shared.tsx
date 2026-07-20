@@ -20,7 +20,7 @@ const STATUS_STYLES: Record<ExamStatus, { label: string; className: string }> = 
 
 export function ExamPageFrame({ children }: { children: ReactNode }) {
   return (
-    <div className="w-full max-w-none px-4 py-3 sm:px-6 lg:px-8 lg:py-4 xl:px-10 2xl:px-12">
+    <div className="w-full max-w-none px-4 py-3 sm:px-6 lg:px-8 lg:py-4 xl:px-10 2xl:px-12 print:p-0">
       {children}
     </div>
   );
@@ -36,7 +36,7 @@ export function ExamPageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="flex flex-col gap-4 border-b border-[var(--border)] pb-5 lg:flex-row lg:items-end lg:justify-between">
+    <header className="flex flex-col gap-4 border-b border-[var(--border)] pb-5 lg:flex-row lg:items-end lg:justify-between print:hidden">
       <div className="min-w-0">
         <h1 className="text-2xl font-bold tracking-[-0.025em] text-[var(--text-primary)] sm:text-[1.75rem]">
           {title}
