@@ -16,6 +16,24 @@ import {
   isInteractiveSidebarField,
 } from "@/lib/dme-sidebar-fields";
 
+const logTimeTagPattern = /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$/;
+
+function getLogStateOptions(fieldId: string): readonly string[] | null {
+  if (/^alarmLogs\.\d+\.state$/.test(fieldId)) {
+    return ["Normal", "Pre-Alarm", "Primary Alarm Low", "Alarm"];
+  }
+  if (/^maintenanceLogs\.\d+\.state$/.test(fieldId)) {
+    return ["Normal", "Pre-Alert", "Alert"];
+  }
+  return null;
+}
+
+function getLogStateStatus(value: string): DmeParameterStatus {
+  if (value === "Normal") return "normal";
+  if (value === "Pre-Alarm" || value === "Pre-Alert") return "warning";
+  return "alarm";
+}
+
 export interface DmeSelectedField {
   fieldId: string;
   label: string;
@@ -33,25 +51,6 @@ interface DmeAuthorPanelProps {
   onRemoveField: () => void;
   onSave: () => void;
   onOpenHardware: () => void;
-}
-
-const statusOptions = ["green", "yellow", "red", "gray", "normal", "warning", "alarm"] as const;
-const logTimeTagPattern = /^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}:\d{2}$/;
-
-function getLogStateOptions(fieldId: string): readonly string[] | null {
-  if (/^alarmLogs\.\d+\.state$/.test(fieldId)) {
-    return ["Normal", "Pre-Alarm", "Primary Alarm Low", "Alarm"];
-  }
-  if (/^maintenanceLogs\.\d+\.state$/.test(fieldId)) {
-    return ["Normal", "Pre-Alert", "Alert"];
-  }
-  return null;
-}
-
-function getLogStateStatus(value: string): DmeParameterStatus {
-  if (value === "Normal") return "normal";
-  if (value === "Pre-Alarm" || value === "Pre-Alert") return "warning";
-  return "alarm";
 }
 
 export function DmeAuthorPanel({
@@ -74,7 +73,13 @@ export function DmeAuthorPanel({
     selectedField?.value === null ? "" : String(selectedField?.value ?? ""),
   );
   const [fieldChecked, setFieldChecked] = useState(selectedField?.value === true);
-  const [fieldStatus, setFieldStatus] = useState(selectedField?.status ?? "");
+  const [fieldStatus, setFieldStatus] = useState(() => {
+    const raw = selectedField?.status ?? "";
+    if (raw === "normal") return "green";
+    if (raw === "warning") return "yellow";
+    if (raw === "alarm") return "red";
+    return raw;
+  });
   const [fieldError, setFieldError] = useState<string | null>(null);
   const interactionTargets = getSidebarInteractionTargets(overrides);
   const logStateOptions = selectedField ? getLogStateOptions(selectedField.fieldId) : null;
@@ -135,7 +140,22 @@ export function DmeAuthorPanel({
             ) : (
               <label className="grid gap-1 text-[10px] text-[#94a3b8]">{isLogTimeTag ? "Time Tag (DD/MM/YYYY HH:mm:ss)" : "Giá trị"}<input type={typeof selectedField.value === "number" ? "number" : "text"} step="any" value={fieldValue} onChange={(event) => setFieldValue(event.target.value)} className="h-8 border border-[#475569] bg-[#0f172a] px-2 font-mono text-xs text-white" /></label>
             )}
-            {logStateOptions ? null : <label className="grid gap-1 text-[10px] text-[#94a3b8]">Màu / trạng thái<select value={fieldStatus} onChange={(event) => setFieldStatus(event.target.value)} className="h-8 border border-[#475569] bg-[#0f172a] px-2 text-xs text-white"><option value="">Giữ nguyên</option>{statusOptions.map((status) => <option key={status} value={status}>{status}</option>)}</select></label>}
+            {logStateOptions ? null : (
+              <label className="grid gap-1 text-[10px] text-[#94a3b8]">
+                Màu / trạng thái
+                <select
+                  value={fieldStatus}
+                  onChange={(event) => setFieldStatus(event.target.value)}
+                  className="h-8 border border-[#475569] bg-[#0f172a] px-2 text-xs text-white"
+                >
+                  <option value="">Giữ nguyên</option>
+                  <option value="green">Màu xanh (Green)</option>
+                  <option value="yellow">Màu vàng (Yellow)</option>
+                  <option value="red">Màu đỏ (Red)</option>
+                  <option value="gray">Màu xám (Gray)</option>
+                </select>
+              </label>
+            )}
             {fieldError ? <p role="alert" className="text-[10px] text-[#fca5a5]">{fieldError}</p> : null}
             <div className="flex gap-2"><button type="button" onClick={applyField} className="h-8 flex-1 bg-[#1e40af] px-3 font-semibold text-white">Áp dụng</button><button type="button" onClick={onRemoveField} title="Xóa giá trị ghi đè" className="grid size-8 place-items-center border border-[#7f1d1d] text-[#fca5a5]"><Trash aria-hidden size={14} /></button></div>
           </div>

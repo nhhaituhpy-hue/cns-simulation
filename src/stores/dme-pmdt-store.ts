@@ -146,7 +146,24 @@ export function resolveDmeStatus<T extends DmeIndicatorColor | DmeParameterStatu
   overrides: readonly DmeFieldOverride[],
 ): T {
   const override = overrides.find((item) => item.fieldId === fieldId);
-  return (override?.status ?? baseStatus) as T;
+  const status = override?.status ?? baseStatus;
+
+  // Map green/yellow/red to normal/warning/alarm when context requires parameter status
+  if (baseStatus === "normal" || baseStatus === "warning" || baseStatus === "alarm") {
+    if (status === "green") return "normal" as T;
+    if (status === "yellow") return "warning" as T;
+    if (status === "red") return "alarm" as T;
+    if (status === "gray") return "normal" as T;
+  }
+
+  // Map normal/warning/alarm to green/yellow/red when context requires indicator color
+  if (baseStatus === "green" || baseStatus === "yellow" || baseStatus === "red" || baseStatus === "gray") {
+    if (status === "normal") return "green" as T;
+    if (status === "warning") return "yellow" as T;
+    if (status === "alarm") return "red" as T;
+  }
+
+  return status as T;
 }
 
 export function createDmePmdtStore(
