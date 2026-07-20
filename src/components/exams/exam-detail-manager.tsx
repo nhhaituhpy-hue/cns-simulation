@@ -616,7 +616,10 @@ export function ExamDetailManager({
           </div>
 
           {/* Signatures */}
-          <div className="mt-12 grid grid-cols-3 gap-4 text-center font-semibold text-[12pt] pt-8">
+          <div 
+            className="mt-12 grid grid-cols-3 gap-4 text-center font-semibold text-[12pt] pt-8"
+            style={{ breakInside: "avoid", pageBreakInside: "avoid" }}
+          >
             <div>
               <p className="uppercase">GIÁM KHẢO 1</p>
               <p className="font-normal italic text-[10pt] mt-0.5">(Ký và ghi rõ họ tên)</p>
