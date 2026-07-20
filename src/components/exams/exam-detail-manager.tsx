@@ -486,16 +486,16 @@ export function ExamDetailManager({
           {/* Header */}
           <div className="grid grid-cols-2 gap-4 text-center font-semibold pb-4">
             <div>
-              <p className="uppercase text-[13pt] font-bold">CÔNG TY TNHH KỸ THUẬT QUẢN LÝ BAY</p>
-              <p className="uppercase text-[13pt] font-bold mt-1">HỘI ĐỒNG THI ĐÁNH GIÁ NĂNG LỰC</p>
+              <p className="uppercase text-[11pt] font-bold whitespace-nowrap">CÔNG TY TNHH KỸ THUẬT QUẢN LÝ BAY</p>
+              <p className="uppercase text-[11pt] font-bold mt-1 whitespace-nowrap">HỘI ĐỒNG THI ĐÁNH GIÁ NĂNG LỰC</p>
               {printData.decisionBasis && (
                 <p className="text-[11pt] font-normal italic mt-1">(QĐ số {printData.decisionBasis})</p>
               )}
-              <p className="mt-2 text-[13pt]">Số: ...../..............</p>
+              <p className="mt-2 text-[12pt]">Số: ...../..............</p>
             </div>
             <div>
-              <p className="uppercase text-[13pt] font-bold">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
-              <p className="text-[13pt] font-bold mt-0.5">Độc lập - Tự do - Hạnh phúc</p>
+              <p className="uppercase text-[11.5pt] font-bold whitespace-nowrap">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
+              <p className="text-[12pt] font-bold mt-0.5 whitespace-nowrap">Độc lập - Tự do - Hạnh phúc</p>
               <p className="border-t border-black w-24 mx-auto mt-[2px] mb-1.5"></p>
               <p className="italic text-[12pt] font-normal mt-2">
                 {locationLabels[printData.location as keyof typeof locationLabels] || printData.location}, ngày ...... tháng ...... năm .........
