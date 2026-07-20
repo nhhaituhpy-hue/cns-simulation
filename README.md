@@ -321,4 +321,5 @@ Khi kế hoạch nội bộ và manual nhà sản xuất khác nhau, manual là 
 - [2026-07-20] Hoàn thành tích hợp toàn bộ các màn hình PMDT của VOR và DME còn thiếu theo tài liệu `PMDT Capture.docx`.
 - [2026-07-20] Khắc phục lỗi crash runtime trên trình duyệt khi giám khảo nhấn "Áp dụng" (Apply) ghi đè trị đo lường bằng cách bổ sung metadata data attributes và lập trình phòng thủ `Number(value).toFixed(...)`.
 - [2026-07-20] Tinh gọn lựa chọn màu/trạng thái sự cố trong Author Panel của VOR và DME chỉ còn: Giữ nguyên, Màu xanh, Màu vàng, Màu đỏ, Màu xám. Tích hợp bộ map tự động thông minh trong Store giúp tương thích ngược hoàn toàn và loại bỏ khả năng lỗi crash.
+- [2026-07-20] Xử lý triệt để lỗi hiển thị checkbox bị mờ xám đè màu (General Alerts, Config Layout...) bằng cách dùng `readOnly` + `pointer-events-none` thay thế cho `disabled` và áp dụng CSS dynamic accent color / text color đồng bộ theo trạng thái sự cố.
 - [2026-07-20] Mọi kiểm tra TypeScript, Linting, 215 bài test Vitest và Production Build đều vượt qua thành công 100%. Đã commit và push code lên repository.
