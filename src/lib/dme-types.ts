@@ -13,13 +13,19 @@ export type DmeSubmissionStatus = "draft" | "submitted" | "reviewed";
 export type DmeScreenId =
   | "home"
   | "rms-status"
+  | "rms-data"
   | "rms-logs"
+  | "rms-config"
   | "monitor-data"
   | "monitor-config"
   | "monitor-1-test-results"
   | "monitor-2-test-results"
   | "monitor-1-offsets"
   | "monitor-2-offsets"
+  | "monitor-1-data"
+  | "monitor-2-data"
+  | "monitor-1-calibration"
+  | "monitor-2-calibration"
   | "tx-data"
   | "tx-config"
   | "disabled";
@@ -28,15 +34,29 @@ export type DmeViewId =
   | "home"
   | "rms-status-main"
   | "rms-status-monitor-tx"
+  | "rms-power-supply"
+  | "rms-ad-data"
+  | "rms-digital-io"
   | "rms-logs-alarms"
   | "rms-logs-maintenance"
+  | "rms-config-general"
+  | "rms-config-station"
+  | "rms-config-power-limits"
+  | "rms-config-ad-limits"
   | "monitor-integral"
   | "monitor-standby"
+  | "monitor-config-general"
   | "monitor-alarm-limits"
   | "monitor-1-decoder-results"
   | "monitor-2-decoder-results"
   | "monitor-1-offsets"
   | "monitor-2-offsets"
+  | "monitor-1-data-detail-integral"
+  | "monitor-1-data-detail-standby"
+  | "monitor-2-data-detail-integral"
+  | "monitor-2-data-detail-standby"
+  | "monitor-1-calibration"
+  | "monitor-2-calibration"
   | "tx-data-main"
   | "tx-rtc-data"
   | "tx-config-nominal"
@@ -184,6 +204,109 @@ export interface DmeTxConfigNominal {
   };
 }
 
+export interface DmeDigitalInput {
+  name: string;
+  configuration: string;
+  status: string;
+}
+
+export interface DmeDigitalOutput {
+  name: string;
+  status: string;
+  altStatus?: string;
+}
+
+export interface DmeDualIndicatorRow {
+  name: string;
+  tx1: DmeIndicatorColor;
+  tx2: DmeIndicatorColor;
+}
+
+export interface DmeRmsVoltageRow {
+  parameter: string;
+  low: number;
+  preLow: number;
+  volts: number;
+  preHigh: number;
+  high: number;
+}
+
+export interface DmeRmsCurrentRow {
+  parameter: string;
+  low: number;
+  preLow: number;
+  amps: number;
+  preHigh: number;
+  high: number;
+}
+
+export interface DmeRmsTemperatureRow {
+  parameter: string;
+  low: number | null;
+  preLow: number | null;
+  value: number;
+  preHigh: number;
+  high: number;
+}
+
+export interface DmeRmsAdDataRow {
+  parameter: string;
+  low: number;
+  preLow: number;
+  volts: number;
+  preHigh: number;
+  high: number;
+}
+
+export interface DmeRmsConfigGeneral {
+  monitorIntegrityTestsEnabled: boolean;
+  votingLogic: "OR" | "AND";
+  transfer: string;
+  automaticRestartsEnabled: boolean;
+  firstRestartDelay: number;
+  numberOfAutomaticRestarts: number;
+  rcsuPresent: boolean;
+  rcsuConnectionType: string;
+  spiFilterType: string;
+  smokeAlarmInstalled: boolean;
+  intrusionAlarmInstalled: boolean;
+  exitDelay: number;
+  entryDelay: number;
+  remoteResetEnabledSmoke: boolean;
+  remoteResetEnabledIntrusion: boolean;
+  spareInputs: string[];
+  rmmConnectionType: string;
+  dialInRings: number;
+  dialOutOnStatusChange: string;
+  dialOutPhoneNumber: string;
+  toneDialOut: boolean;
+}
+
+export interface DmeRmsConfigStation {
+  stationType: "CVOR" | "DVOR" | "DME";
+  transmitterConfig: "Dual Transmitters" | "Single Transmitter";
+  monitorConfig: "Dual Monitors" | "Single Monitor";
+  stationDescription: string;
+  transmitterFrequency: string;
+}
+
+export interface DmeMonitorConfigGeneralRow {
+  parameter: string;
+  primary: boolean;
+  secondary: boolean;
+  isCheckbox?: boolean;
+  checked?: boolean;
+}
+
+export interface DmeMonitorCalibrationRow {
+  parameter: string;
+  baseline: number;
+  actual: number;
+  offset: number;
+  scale: number;
+  unit: string;
+}
+
 export interface DmePmdtData {
   connected: boolean;
   alert: boolean;
@@ -249,6 +372,22 @@ export interface DmePmdtData {
   };
   txConfigNominal: DmeTxConfigNominal;
   txOffsets: Array<{ parameter: string; tx1: number; tx2: number; unit: string }>;
+
+  // Missing PMDT Screens Data
+  rmsVoltageData: DmeRmsVoltageRow[];
+  rmsCurrentData: DmeRmsCurrentRow[];
+  bcpsCommFaults: { bcps1: boolean; bcps2: boolean };
+  rmsTemperatureData: DmeRmsTemperatureRow[];
+  rmsAdData: DmeRmsAdDataRow[];
+  rmsConfigGeneral: DmeRmsConfigGeneral;
+  rmsConfigStation: DmeRmsConfigStation;
+  monitorConfigGeneral: DmeMonitorConfigGeneralRow[];
+  monitorCalibrationData: { monitor1: DmeMonitorCalibrationRow[]; monitor2: DmeMonitorCalibrationRow[] };
+  monitorDetailData: { monitor1: DmeDualValueRow[]; monitor2: DmeDualValueRow[] };
+  digitalInputs: DmeDigitalInput[];
+  digitalOutputs: DmeDigitalOutput[];
+  systemPowerStatus: DmeDualIndicatorRow[];
+  txAlerts: DmeDualIndicatorRow[];
 }
 
 export interface DmeFieldOverride {

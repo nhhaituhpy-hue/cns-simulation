@@ -6,13 +6,26 @@ import { DmeValueCell, ScreenTabs } from "./screen-primitives";
 
 export function MonitorOffsets({ monitorNumber }: { monitorNumber: 1 | 2 }) {
   const rows = useDmePmdtStore((state) => state.data.monitorOffsets[monitorNumber === 1 ? "monitor1" : "monitor2"]);
+  const openView = useDmePmdtStore((state) => state.openView);
+
   const prefix = `monitorOffsets.monitor${monitorNumber}`;
+
   return (
     <section className="flex min-h-full flex-col" aria-label={`Monitor ${monitorNumber} Offsets and Scale Factors`}>
       <PmdtToolbar title={`Monitor ${monitorNumber} Offsets and Scale Factors`} />
       <ScreenTabs tabs={[
         { id: "offsets", label: "Offsets and Scale Factors", active: true },
-        { id: "calibration", label: "Calibration", active: false, disabled: true },
+        {
+          id: "calibration",
+          label: "Calibration",
+          active: false,
+          onSelect: () => openView(
+            `monitor-${monitorNumber}-calibration`,
+            `monitor-${monitorNumber}-calibration`,
+            [`Monitor ${monitorNumber}`, "Calibration"],
+            "Calibration"
+          )
+        },
       ]} />
       <div className="min-h-0 flex-1 overflow-auto p-4">
         <table className="w-full min-w-[42rem] border-separate border-spacing-1 text-left text-[11px]">

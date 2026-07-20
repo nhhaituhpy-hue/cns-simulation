@@ -19,7 +19,7 @@ describe("Transmitter screens", () => {
     expect(screen.getByText("Sideband 1 Phase").closest("li")).toHaveTextContent(
       "red",
     );
-    expect(screen.getByRole("tab", { name: "Status Tx #2" })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: "Status Tx #2" })).not.toHaveAttribute(
       "aria-disabled",
       "true",
     );

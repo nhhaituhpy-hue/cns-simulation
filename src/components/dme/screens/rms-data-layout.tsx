@@ -1,31 +1,29 @@
 "use client";
 
-import type { VorViewId } from "@/lib/vor-types";
-import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
+import type { DmeViewId } from "@/lib/dme-types";
+import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
 import { PmdtToolbar } from "../pmdt-toolbar";
 import { RmsDigitalIo } from "./rms-digital-io";
 import { RmsMaintenanceAlerts } from "./rms-maintenance-alerts";
 import { RmsPowerSupply } from "./rms-power-supply";
-import { RmsTemperature } from "./rms-temperature";
 import { RmsAdData } from "./rms-ad-data";
 
 const tabs: readonly {
   id: string;
   label: string;
   enabled: boolean;
-  viewId?: VorViewId;
+  viewId?: DmeViewId;
 }[] = [
-  { id: "maintenance", label: "Maintenance Alerts/Alarms", enabled: true, viewId: "rms-maintenance-alerts" },
+  { id: "maintenance", label: "Maintenance Alerts", enabled: true, viewId: "rms-status-monitor-tx" }, // Map to existing status monitor view
   { id: "power", label: "Power Supply Data", enabled: true, viewId: "rms-power-supply" },
   { id: "digital", label: "Digital I/O", enabled: true, viewId: "rms-digital-io" },
-  { id: "temperature", label: "Temperature Data", enabled: true, viewId: "rms-temperature" },
   { id: "ad", label: "A/D Data", enabled: true, viewId: "rms-ad-data" },
 ];
 
 export function RmsDataLayout() {
-  const activeView = useVorPmdtStore((state) => state.activeView);
-  const timestamp = useVorPmdtStore((state) => state.data.timestamp);
-  const openView = useVorPmdtStore((state) => state.openView);
+  const activeView = useDmePmdtStore((state) => state.activeView);
+  const timestamp = useDmePmdtStore((state) => state.data.timestamp);
+  const openView = useDmePmdtStore((state) => state.openView);
 
   return (
     <section className="flex min-h-full flex-col" aria-label="RMS Data">
@@ -61,13 +59,11 @@ export function RmsDataLayout() {
         </div>
         <time className="pb-2 font-mono text-[10px] tabular-nums text-[#94a3b8]">{timestamp}</time>
       </div>
-      <div className="min-h-0 flex-1 overflow-auto">
+      <div className="min-h-0 flex-1 overflow-auto bg-[#0a0e1a]">
         {activeView === "rms-digital-io" ? (
           <RmsDigitalIo />
         ) : activeView === "rms-power-supply" ? (
           <RmsPowerSupply />
-        ) : activeView === "rms-temperature" ? (
-          <RmsTemperature />
         ) : activeView === "rms-ad-data" ? (
           <RmsAdData />
         ) : (

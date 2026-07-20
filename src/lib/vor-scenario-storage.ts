@@ -24,10 +24,12 @@ export interface VorStorageLike {
 }
 
 const validViews: readonly VorViewId[] = [
-  "home", "rms-maintenance-alerts", "rms-digital-io", "rms-logs-alarms",
-  "rms-logs-maintenance", "monitor-integral", "monitor-sideband-vswr",
-  "monitor-alarm-limits", "monitor-1-offsets", "monitor-2-offsets",
-  "tx-data-main", "tx-status-1", "tx-config-nominal", "tx-config-offsets",
+  "home", "rms-maintenance-alerts", "rms-digital-io", "rms-power-supply",
+  "rms-temperature", "rms-ad-data", "rms-logs-alarms", "rms-logs-maintenance",
+  "rms-config-general", "rms-config-station", "rms-config-power-limits", "rms-config-ad-limits",
+  "monitor-integral", "monitor-sideband-vswr", "monitor-notch", "monitor-alarm-limits",
+  "monitor-config-general", "monitor-1-offsets", "monitor-2-offsets",
+  "tx-data-main", "tx-status-1", "tx-status-2", "tx-config-nominal", "tx-config-offsets",
   "disabled",
 ];
 

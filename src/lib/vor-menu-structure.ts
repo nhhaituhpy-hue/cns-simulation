@@ -64,7 +64,7 @@ export const vorMenuStructure: readonly VorMenuGroup[] = [
       { id: "rms-status", label: "Status", enabled: false },
       { id: "rms-data", label: "Data", enabled: true, screenId: "rms-data" },
       { id: "rms-logs", label: "Logs", enabled: true, screenId: "rms-logs" },
-      { id: "rms-configuration", label: "Configuration", enabled: false },
+      { id: "rms-configuration", label: "Configuration", enabled: true, screenId: "rms-config" },
       { id: "rms-commands", label: "Commands", enabled: false },
       { id: "rms-config-restore", label: "Config Restore", enabled: false },
       { id: "rms-config-backup", label: "Config Backup", enabled: false },

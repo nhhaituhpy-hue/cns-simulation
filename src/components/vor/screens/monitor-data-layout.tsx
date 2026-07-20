@@ -5,11 +5,12 @@ import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
 import { PmdtToolbar } from "../pmdt-toolbar";
 import { MonitorIntegral } from "./monitor-integral";
 import { MonitorSidebandVswr } from "./monitor-sideband-vswr";
+import { MonitorNotch } from "./monitor-notch";
 
 const tabs: readonly { id: string; label: string; enabled: boolean; viewId?: VorViewId }[] = [
   { id: "integral", label: "Integral", enabled: true, viewId: "monitor-integral" },
   { id: "vswr", label: "Sideband Antenna VSWR", enabled: true, viewId: "monitor-sideband-vswr" },
-  { id: "notch", label: "Notch Monitor", enabled: false },
+  { id: "notch", label: "Notch Monitor", enabled: true, viewId: "monitor-notch" },
 ];
 
 export function MonitorDataLayout() {
@@ -33,7 +34,13 @@ export function MonitorDataLayout() {
         })}
       </div>
       <div className="min-h-0 flex-1 overflow-auto">
-        {activeView === "monitor-sideband-vswr" ? <MonitorSidebandVswr /> : <MonitorIntegral />}
+        {activeView === "monitor-sideband-vswr" ? (
+          <MonitorSidebandVswr />
+        ) : activeView === "monitor-notch" ? (
+          <MonitorNotch />
+        ) : (
+          <MonitorIntegral />
+        )}
       </div>
     </section>
   );

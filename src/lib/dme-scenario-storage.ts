@@ -1,4 +1,4 @@
-﻿import {
+import {
   DME_INDICATOR_COLORS,
   DME_PARAMETER_STATUSES,
   type DmeExpectedCheckpoint,
@@ -24,11 +24,17 @@ export interface DmeStorageLike {
 }
 
 const validViews: readonly DmeViewId[] = [
-  "home", "rms-status-main", "rms-status-monitor-tx", "rms-logs-alarms",
-  "rms-logs-maintenance", "monitor-integral", "monitor-standby",
-  "monitor-alarm-limits", "monitor-1-decoder-results", "monitor-2-decoder-results",
-  "monitor-1-offsets", "monitor-2-offsets", "tx-data-main", "tx-rtc-data",
-  "tx-config-nominal", "tx-config-offsets",
+  "home", "rms-status-main", "rms-status-monitor-tx",
+  "rms-power-supply", "rms-ad-data", "rms-digital-io",
+  "rms-logs-alarms", "rms-logs-maintenance",
+  "rms-config-general", "rms-config-station", "rms-config-power-limits", "rms-config-ad-limits",
+  "monitor-integral", "monitor-standby", "monitor-config-general", "monitor-alarm-limits",
+  "monitor-1-decoder-results", "monitor-2-decoder-results",
+  "monitor-1-offsets", "monitor-2-offsets",
+  "monitor-1-data-detail-integral", "monitor-1-data-detail-standby",
+  "monitor-2-data-detail-integral", "monitor-2-data-detail-standby",
+  "monitor-1-calibration", "monitor-2-calibration",
+  "tx-data-main", "tx-rtc-data", "tx-config-nominal", "tx-config-offsets",
   "disabled",
 ];
 

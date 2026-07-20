@@ -14,6 +14,7 @@ export type VorScreenId =
   | "home"
   | "rms-data"
   | "rms-logs"
+  | "rms-config"
   | "monitor-data"
   | "monitor-config"
   | "monitor-1-offsets"
@@ -26,15 +27,25 @@ export type VorViewId =
   | "home"
   | "rms-maintenance-alerts"
   | "rms-digital-io"
+  | "rms-power-supply"
+  | "rms-temperature"
+  | "rms-ad-data"
   | "rms-logs-alarms"
   | "rms-logs-maintenance"
+  | "rms-config-general"
+  | "rms-config-station"
+  | "rms-config-power-limits"
+  | "rms-config-ad-limits"
   | "monitor-integral"
   | "monitor-sideband-vswr"
+  | "monitor-notch"
   | "monitor-alarm-limits"
+  | "monitor-config-general"
   | "monitor-1-offsets"
   | "monitor-2-offsets"
   | "tx-data-main"
   | "tx-status-1"
+  | "tx-status-2"
   | "tx-config-nominal"
   | "tx-config-offsets"
   | "disabled";
@@ -190,6 +201,90 @@ export interface VorTxConfigNominal {
   keyerOutput: { externalKeying: string; suppressOnShutdown: boolean };
 }
 
+export interface VorRmsVoltageRow {
+  parameter: string;
+  low: number;
+  preLow: number;
+  volts: number;
+  preHigh: number;
+  high: number;
+}
+
+export interface VorRmsCurrentRow {
+  parameter: string;
+  low: number;
+  preLow: number;
+  amps: number;
+  preHigh: number;
+  high: number;
+}
+
+export interface VorRmsTemperatureRow {
+  parameter: string;
+  low: number | null;
+  preLow: number | null;
+  value: number;
+  preHigh: number;
+  high: number;
+}
+
+export interface VorRmsAdDataRow {
+  parameter: string;
+  low: number;
+  preLow: number;
+  volts: number;
+  preHigh: number;
+  high: number;
+}
+
+export interface VorRmsConfigGeneral {
+  monitorIntegrityTestsEnabled: boolean;
+  votingLogic: "OR" | "AND";
+  transfer: string;
+  automaticRestartsEnabled: boolean;
+  firstRestartDelay: number;
+  numberOfAutomaticRestarts: number;
+  rcsuPresent: boolean;
+  rcsuConnectionType: string;
+  spiFilterType: string;
+  coLocatedType: string;
+  smokeAlarmInstalled: boolean;
+  intrusionAlarmInstalled: boolean;
+  exitDelay: number;
+  entryDelay: number;
+  remoteResetEnabledSmoke: boolean;
+  remoteResetEnabledIntrusion: boolean;
+  spareInputs: string[];
+  rmmConnectionType: string;
+  dialInRings: number;
+  dialOutOnStatusChange: string;
+  dialOutPhoneNumber: string;
+  toneDialOut: boolean;
+}
+
+export interface VorRmsConfigStation {
+  stationType: "CVOR" | "DVOR";
+  transmitterConfig: "Dual Transmitters" | "Single Transmitter";
+  monitorConfig: "Dual Monitors" | "Single Monitor";
+  stationDescription: string;
+  transmitterFrequency: string;
+}
+
+export interface VorMonitorConfigGeneralRow {
+  parameter: string;
+  primary: boolean;
+  secondary: boolean;
+  isCheckbox?: boolean;
+  checked?: boolean;
+}
+
+export interface VorNotchMonitorRow {
+  antenna: number;
+  baseline: number;
+  mon1: number;
+  mon2: number;
+}
+
 export interface VorPmdtData {
   connected: boolean;
   alert: boolean;
@@ -234,6 +329,17 @@ export interface VorPmdtData {
   txSidebandPaAlerts: VorIndicatorAlert[];
   txConfigNominal: VorTxConfigNominal;
   txOffsets: VorTxDualValueRow[];
+
+  // Missing PMDT Screens Data
+  rmsVoltageData: VorRmsVoltageRow[];
+  rmsCurrentData: VorRmsCurrentRow[];
+  bcpsCommFaults: { bcps1: boolean; bcps2: boolean };
+  rmsTemperatureData: VorRmsTemperatureRow[];
+  rmsAdData: VorRmsAdDataRow[];
+  rmsConfigGeneral: VorRmsConfigGeneral;
+  rmsConfigStation: VorRmsConfigStation;
+  monitorConfigGeneral: VorMonitorConfigGeneralRow[];
+  notchData: VorNotchMonitorRow[];
 }
 
 export interface VorFieldOverride {

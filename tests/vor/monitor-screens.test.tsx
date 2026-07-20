@@ -18,7 +18,7 @@ describe("Monitor screens", () => {
     await user.click(screen.getByRole("tab", { name: "Sideband Antenna VSWR" }));
     expect(screen.getByText("Antenna 1")).toBeInTheDocument();
     expect(screen.getByText("Antenna 48")).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Notch Monitor" })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: "Notch Monitor" })).not.toHaveAttribute(
       "aria-disabled",
       "true",
     );

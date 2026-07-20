@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, type ReactNode } from "react";
 import type { DmePmdtMode } from "@/lib/dme-types";
@@ -15,6 +15,10 @@ import { MonitorDecoderResults } from "./screens/monitor-decoder-results";
 import { MonitorOffsets } from "./screens/monitor-offsets";
 import { RmsLogsLayout } from "./screens/rms-logs-layout";
 import { RmsStatusLayout } from "./screens/rms-status-layout";
+import { RmsDataLayout } from "./screens/rms-data-layout";
+import { RmsConfigLayout } from "./screens/rms-config-layout";
+import { MonitorDetailData } from "./screens/monitor-data-detail";
+import { MonitorCalibration } from "./screens/monitor-calibration";
 import { TxConfigLayout } from "./screens/tx-config-layout";
 import { TxDataLayout } from "./screens/tx-data-layout";
 
@@ -28,6 +32,8 @@ function PmdtScreenRouter() {
   const activeScreen = useDmePmdtStore((state) => state.activeScreen);
 
   if (activeScreen === "rms-status") return <RmsStatusLayout />;
+  if (activeScreen === "rms-data") return <RmsDataLayout />;
+  if (activeScreen === "rms-config") return <RmsConfigLayout />;
   if (activeScreen === "rms-logs") return <RmsLogsLayout />;
   if (activeScreen === "monitor-data") return <MonitorDataLayout />;
   if (activeScreen === "monitor-config") return <MonitorConfigLayout />;
@@ -35,6 +41,10 @@ function PmdtScreenRouter() {
   if (activeScreen === "monitor-2-test-results") return <MonitorDecoderResults monitorNumber={2} />;
   if (activeScreen === "monitor-1-offsets") return <MonitorOffsets monitorNumber={1} />;
   if (activeScreen === "monitor-2-offsets") return <MonitorOffsets monitorNumber={2} />;
+  if (activeScreen === "monitor-1-data") return <MonitorDetailData monitorNumber={1} />;
+  if (activeScreen === "monitor-2-data") return <MonitorDetailData monitorNumber={2} />;
+  if (activeScreen === "monitor-1-calibration") return <MonitorCalibration monitorNumber={1} />;
+  if (activeScreen === "monitor-2-calibration") return <MonitorCalibration monitorNumber={2} />;
   if (activeScreen === "tx-data") return <TxDataLayout />;
   if (activeScreen === "tx-config") return <TxConfigLayout />;
   if (activeScreen === "disabled") return <DisabledScreen />;

@@ -18,9 +18,9 @@ describe("RMS screens", () => {
     expect(screen.getByLabelText("File System Fault, Mon 2")).toBeChecked();
 
     const powerTab = screen.getByRole("tab", { name: "Power Supply Data" });
+    expect(powerTab).not.toHaveAttribute("aria-disabled", "true");
     await user.click(powerTab);
-    expect(powerTab).toHaveAttribute("aria-disabled", "true");
-    expect(useVorPmdtStore.getState().activeView).toBe("rms-maintenance-alerts");
+    expect(useVorPmdtStore.getState().activeView).toBe("rms-power-supply");
   });
 
   it("records the detailed Digital I/O view in student mode", async () => {

@@ -14,6 +14,7 @@ import { MonitorDataLayout } from "./screens/monitor-data-layout";
 import { MonitorOffsets } from "./screens/monitor-offsets";
 import { RmsDataLayout } from "./screens/rms-data-layout";
 import { RmsLogsLayout } from "./screens/rms-logs-layout";
+import { RmsConfigLayout } from "./screens/rms-config-layout";
 import { TxConfigLayout } from "./screens/tx-config-layout";
 import { TxDataLayout } from "./screens/tx-data-layout";
 
@@ -28,6 +29,7 @@ function PmdtScreenRouter() {
 
   if (activeScreen === "rms-data") return <RmsDataLayout />;
   if (activeScreen === "rms-logs") return <RmsLogsLayout />;
+  if (activeScreen === "rms-config") return <RmsConfigLayout />;
   if (activeScreen === "monitor-data") return <MonitorDataLayout />;
   if (activeScreen === "monitor-config") return <MonitorConfigLayout />;
   if (activeScreen === "monitor-1-offsets") return <MonitorOffsets monitorNumber={1} />;

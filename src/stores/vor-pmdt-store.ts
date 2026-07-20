@@ -24,6 +24,7 @@ const defaultViews: Record<VorScreenId, VorViewId> = {
   home: "home",
   "rms-data": "rms-maintenance-alerts",
   "rms-logs": "rms-logs-alarms",
+  "rms-config": "rms-config-general",
   "monitor-data": "monitor-integral",
   "monitor-config": "monitor-alarm-limits",
   "monitor-1-offsets": "monitor-1-offsets",

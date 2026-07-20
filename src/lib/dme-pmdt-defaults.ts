@@ -6,6 +6,9 @@ import type {
   DmeMaintenanceLogEntry,
   DmeMonitorOffsetRow,
   DmePmdtData,
+  DmeDigitalInput,
+  DmeDigitalOutput,
+  DmeDualIndicatorRow,
 } from "./dme-types";
 
 export const defaultDmeAlarmLogs: DmeAlarmLogEntry[] = [
@@ -24,6 +27,39 @@ export const defaultDmeMaintenanceLogs: DmeMaintenanceLogEntry[] = [
   { timeTag: "01/13/11 11:14:09", type: "Monitor 2", alert: "Integrity Test Alert", state: "Alert" },
   { timeTag: "01/13/11 11:14:05", type: "RTC 2", alert: "Standby Delay", state: "Normal" },
   { timeTag: "01/13/11 11:11:20", type: "Monitor 1", alert: "Standby Efficiency", state: "Pre-Alert" },
+];
+
+export const defaultDmeDigitalInputs: DmeDigitalInput[] = [
+  { name: "Smoke Detector", configuration: "Disabled", status: "" },
+  { name: "Intrusion Detector", configuration: "Disabled", status: "" },
+  { name: "Spare Input 1", configuration: "Not Present", status: "" },
+  { name: "Spare Input 2", configuration: "Not Present", status: "" },
+  { name: "Spare Input 3", configuration: "Not Present", status: "" },
+  { name: "Spare Input 4", configuration: "Not Present", status: "" },
+];
+
+export const defaultDmeDigitalOutputs: DmeDigitalOutput[] = [
+  { name: "Battery Charger", status: "Off", altStatus: "Trickle" },
+  { name: "Spare Output 1", status: "Low" },
+  { name: "Spare Output 2", status: "Low" },
+  { name: "Spare Output 3", status: "Low" },
+  { name: "Spare Output 4", status: "Low" },
+];
+
+export const defaultDmeSystemPowerStatus: DmeDualIndicatorRow[] = [
+  { name: "Battery Fault", tx1: "green", tx2: "green" },
+  { name: "On Battery", tx1: "green", tx2: "green" },
+  { name: "LVPS", tx1: "green", tx2: "green" },
+  { name: "RMS", tx1: "green", tx2: "gray" },
+  { name: "Facilities", tx1: "green", tx2: "gray" },
+  { name: "Test Generator", tx1: "green", tx2: "gray" },
+  { name: "LCU", tx1: "green", tx2: "gray" },
+];
+
+export const defaultDmeTxAlerts: DmeDualIndicatorRow[] = [
+  { name: "Carrier VSWR", tx1: "green", tx2: "green" },
+  { name: "Carrier Overtemp", tx1: "green", tx2: "green" },
+  { name: "Carrier Overpower", tx1: "green", tx2: "green" },
 ];
 
 export const defaultDmeIntegralData: DmeDualValueRow[] = [
@@ -180,6 +216,127 @@ export const defaultDmePmdtData: DmePmdtData = {
     { parameter: "Rx Sensitivity Offset", tx1: 3, tx2: 3, unit: "dB" },
     { parameter: "Base Offset", tx1: 0, tx2: 0, unit: "us" },
   ],
+  rmsVoltageData: [
+    { parameter: "+3.3 VDC", low: 3.14, preLow: 3.14, volts: 3.29, preHigh: 3.46, high: 3.46 },
+    { parameter: "+5 VDC", low: 4.75, preLow: 4.75, volts: 4.94, preHigh: 5.25, high: 5.25 },
+    { parameter: "+12 VDC Analog", low: 10.80, preLow: 10.80, volts: 12.10, preHigh: 13.20, high: 13.20 },
+    { parameter: "-12 VDC Analog", low: -13.20, preLow: -13.20, volts: -12.25, preHigh: -10.80, high: -10.80 },
+    { parameter: "+12 VDC Digital", low: 10.80, preLow: 10.80, volts: 12.08, preHigh: 13.20, high: 13.20 },
+    { parameter: "-12 VDC Digital", low: -13.20, preLow: -13.20, volts: -12.23, preHigh: -10.80, high: -10.80 },
+    { parameter: "+15 VDC", low: 13.50, preLow: 13.50, volts: 14.96, preHigh: 16.50, high: 16.50 },
+    { parameter: "-15 VDC", low: -16.50, preLow: -16.50, volts: -15.01, preHigh: -13.50, high: -13.50 },
+    { parameter: "+24 VDC", low: 21.6, preLow: 21.6, volts: 23.6, preHigh: 26.4, high: 26.4 },
+    { parameter: "AC Input", low: 180.0, preLow: 180.0, volts: 230.2, preHigh: 260.0, high: 260.0 },
+    { parameter: "OB Light", low: 180.0, preLow: 180.0, volts: 0.0, preHigh: 260.0, high: 260.0 },
+    { parameter: "Tx 1 48 V PS 1", low: 46.6, preLow: 46.6, volts: 51.8, preHigh: 54.4, high: 54.4 },
+    { parameter: "Tx 1 48 V PS 2", low: 46.6, preLow: 46.6, volts: 0.0, preHigh: 54.4, high: 54.4 },
+    { parameter: "Tx 2 48 V PS 1", low: 46.6, preLow: 46.6, volts: 52.9, preHigh: 54.4, high: 54.4 },
+    { parameter: "Tx 2 48 V PS 2", low: 46.6, preLow: 46.6, volts: 0.0, preHigh: 54.4, high: 54.4 },
+    { parameter: "Battery 1", low: 42.0, preLow: 42.0, volts: 54.3, preHigh: 60.0, high: 60.0 },
+    { parameter: "Battery 2", low: 42.0, preLow: 42.0, volts: 54.4, preHigh: 60.0, high: 60.0 },
+  ],
+  rmsCurrentData: [
+    { parameter: "AC Input", low: 1.0, preLow: 1.0, amps: 2.4, preHigh: 7.0, high: 7.0 },
+    { parameter: "OB Light", low: 0.0, preLow: 0.0, amps: 0.0, preHigh: 20.0, high: 20.0 },
+    { parameter: "Tx 1 48 V PS 1", low: 0.5, preLow: 0.5, amps: 6.0, preHigh: 15.0, high: 15.0 },
+    { parameter: "Tx 1 48 V PS 2", low: 0.5, preLow: 0.5, amps: 0.0, preHigh: 15.0, high: 15.0 },
+    { parameter: "Tx 2 48 V PS 1", low: 0.5, preLow: 0.5, amps: 2.7, preHigh: 15.0, high: 15.0 },
+    { parameter: "Tx 2 48 V PS 2", low: 0.5, preLow: 0.5, amps: 0.0, preHigh: 15.0, high: 15.0 },
+    { parameter: "Battery 1", low: -6.0, preLow: -6.0, amps: 0.0, preHigh: 10.0, high: 10.0 },
+    { parameter: "Battery 2", low: -6.0, preLow: -6.0, amps: 0.0, preHigh: 10.0, high: 10.0 },
+  ],
+  bcpsCommFaults: { bcps1: false, bcps2: false },
+  rmsTemperatureData: [
+    { parameter: "Cabinet Temperature", low: 0, preLow: 0, value: 26, preHigh: 40, high: 40 },
+    { parameter: "Transmitter LPA Temp", low: null, preLow: null, value: 32, preHigh: 80, high: 85 },
+    { parameter: "Transmitter HPA Temp", low: null, preLow: null, value: 39, preHigh: 80, high: 85 },
+    { parameter: "External Temperature", low: -25, preLow: -25, value: -25, preHigh: 70, high: 70 },
+  ],
+  rmsAdData: Array.from({ length: 10 }, (_, i) => ({
+    parameter: `Spare A/D ${i + 1}`,
+    low: -5.00,
+    preLow: -5.00,
+    volts: -0.01,
+    preHigh: 5.00,
+    high: 5.00,
+  })),
+  rmsConfigGeneral: {
+    monitorIntegrityTestsEnabled: true,
+    votingLogic: "AND",
+    transfer: "on Primary Alarm",
+    automaticRestartsEnabled: false,
+    firstRestartDelay: 50,
+    numberOfAutomaticRestarts: 2,
+    rcsuPresent: true,
+    rcsuConnectionType: "Dedicated Modem",
+    spiFilterType: "Normal",
+    smokeAlarmInstalled: false,
+    intrusionAlarmInstalled: false,
+    exitDelay: 30,
+    entryDelay: 5,
+    remoteResetEnabledSmoke: true,
+    remoteResetEnabledIntrusion: true,
+    spareInputs: ["Not Present", "Not Present", "Not Present", "Not Present"],
+    rmmConnectionType: "PSTN Modem",
+    dialInRings: 1,
+    dialOutOnStatusChange: "Disabled",
+    dialOutPhoneNumber: "6811",
+    toneDialOut: true,
+  },
+  rmsConfigStation: {
+    stationType: "DME",
+    transmitterConfig: "Dual Transmitters",
+    monitorConfig: "Dual Monitors",
+    stationDescription: "TUY HOA 1119A DME",
+    transmitterFrequency: "117.0 MHz",
+  },
+  monitorConfigGeneral: [
+    { parameter: "Delay", primary: true, secondary: false },
+    { parameter: "Spacing", primary: true, secondary: false },
+    { parameter: "Peak Power", primary: true, secondary: false },
+    { parameter: "Reply Efficiency", primary: true, secondary: false },
+    { parameter: "Pulse Rate (PRF)", primary: true, secondary: false },
+    { parameter: "Spurious Replies", primary: true, secondary: false },
+    { parameter: "Squitter Rate", primary: true, secondary: false },
+    { parameter: "Ident Status", primary: true, secondary: false },
+    { parameter: "Monitor 1/2 Sync", primary: true, secondary: false },
+  ],
+  monitorCalibrationData: {
+    monitor1: [
+      { parameter: "Delay", baseline: 50.00, actual: 50.01, offset: 0.01, scale: 1.000, unit: "us" },
+      { parameter: "Spacing", baseline: 12.00, actual: 12.02, offset: 0.02, scale: 1.000, unit: "us" },
+      { parameter: "Peak Power", baseline: 1000, actual: 998, offset: -2, scale: 1.000, unit: "W" },
+      { parameter: "Efficiency", baseline: 80.0, actual: 80.1, offset: 0.1, scale: 1.000, unit: "%" },
+      { parameter: "PRF", baseline: 800, actual: 801, offset: 1, scale: 1.000, unit: "Hz" },
+    ],
+    monitor2: [
+      { parameter: "Delay", baseline: 50.00, actual: 50.02, offset: 0.02, scale: 1.000, unit: "us" },
+      { parameter: "Spacing", baseline: 12.00, actual: 12.01, offset: 0.01, scale: 1.000, unit: "us" },
+      { parameter: "Peak Power", baseline: 1000, actual: 1001, offset: 1, scale: 1.000, unit: "W" },
+      { parameter: "Efficiency", baseline: 80.0, actual: 80.0, offset: 0.0, scale: 1.000, unit: "%" },
+      { parameter: "PRF", baseline: 800, actual: 800, offset: 0, scale: 1.000, unit: "Hz" },
+    ],
+  },
+  monitorDetailData: {
+    monitor1: [
+      { label: "Delay", mon1Value: "50.02", mon1Status: "normal", mon2Value: "50.01", mon2Status: "normal", unit: "us" },
+      { label: "Spacing", mon1Value: "12.01", mon1Status: "normal", mon2Value: "12.03", mon2Status: "normal", unit: "us" },
+      { label: "Peak Power", mon1Value: "998", mon1Status: "normal", mon2Value: "1002", mon2Status: "normal", unit: "W" },
+      { label: "Efficiency", mon1Value: "80.2", mon1Status: "normal", mon2Value: "80.1", mon2Status: "normal", unit: "%" },
+      { label: "Pulse Rate (PRF)", mon1Value: "801", mon1Status: "normal", mon2Value: "800", mon2Status: "normal", unit: "Hz" },
+    ],
+    monitor2: [
+      { label: "Delay", mon1Value: "50.01", mon1Status: "normal", mon2Value: "50.03", mon2Status: "normal", unit: "us" },
+      { label: "Spacing", mon1Value: "12.02", mon1Status: "normal", mon2Value: "12.01", mon2Status: "normal", unit: "us" },
+      { label: "Peak Power", mon1Value: "1001", mon1Status: "normal", mon2Value: "997", mon2Status: "normal", unit: "W" },
+      { label: "Efficiency", mon1Value: "80.0", mon1Status: "normal", mon2Value: "80.3", mon2Status: "normal", unit: "%" },
+      { label: "Pulse Rate (PRF)", mon1Value: "800", mon1Status: "normal", mon2Value: "802", mon2Status: "normal", unit: "Hz" },
+    ],
+  },
+  digitalInputs: defaultDmeDigitalInputs,
+  digitalOutputs: defaultDmeDigitalOutputs,
+  systemPowerStatus: defaultDmeSystemPowerStatus,
+  txAlerts: defaultDmeTxAlerts,
 };
 
 export function cloneDefaultDmePmdtData(): DmePmdtData {

@@ -32,10 +32,9 @@ describe("DME PMDT shell", () => {
 
     await user.click(screen.getByRole("button", { name: "RMS" }));
     const dataItem = screen.getByRole("menuitem", { name: "Data" });
-    expect(dataItem).toHaveAttribute("aria-disabled", "true");
-    expect(dataItem).toHaveAttribute("title", "Chưa khả dụng");
+    expect(dataItem).not.toHaveAttribute("aria-disabled", "true");
     await user.click(dataItem);
-    expect(useDmePmdtStore.getState().activeScreen).toBe("rms-status");
+    expect(useDmePmdtStore.getState().activeScreen).toBe("rms-data");
   });
 
   it("shows scenario-specific alarm text in RMS Logs", async () => {

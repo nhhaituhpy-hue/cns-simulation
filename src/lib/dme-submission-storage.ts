@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   DmeAttemptEvent,
   DmeScreenId,
   DmeStudentAnswer,
@@ -20,16 +20,24 @@ interface DmeSubmissionEnvelope {
 
 const validStatuses: readonly DmeSubmissionStatus[] = ["draft", "submitted", "reviewed"];
 const validScreens: readonly DmeScreenId[] = [
-  "home", "rms-status", "rms-logs", "monitor-data", "monitor-config",
+  "home", "rms-status", "rms-data", "rms-logs", "rms-config", "monitor-data", "monitor-config",
   "monitor-1-test-results", "monitor-2-test-results", "monitor-1-offsets",
-  "monitor-2-offsets", "tx-data", "tx-config", "disabled",
+  "monitor-2-offsets", "monitor-1-data", "monitor-2-data", "monitor-1-calibration", "monitor-2-calibration",
+  "tx-data", "tx-config", "disabled",
 ];
 const validViews: readonly DmeViewId[] = [
-  "home", "rms-status-main", "rms-status-monitor-tx", "rms-logs-alarms",
-  "rms-logs-maintenance", "monitor-integral", "monitor-standby",
-  "monitor-alarm-limits", "monitor-1-decoder-results", "monitor-2-decoder-results",
-  "monitor-1-offsets", "monitor-2-offsets", "tx-data-main", "tx-rtc-data",
-  "tx-config-nominal", "tx-config-offsets", "disabled",
+  "home", "rms-status-main", "rms-status-monitor-tx",
+  "rms-power-supply", "rms-ad-data", "rms-digital-io",
+  "rms-logs-alarms", "rms-logs-maintenance",
+  "rms-config-general", "rms-config-station", "rms-config-power-limits", "rms-config-ad-limits",
+  "monitor-integral", "monitor-standby", "monitor-config-general", "monitor-alarm-limits",
+  "monitor-1-decoder-results", "monitor-2-decoder-results",
+  "monitor-1-offsets", "monitor-2-offsets",
+  "monitor-1-data-detail-integral", "monitor-1-data-detail-standby",
+  "monitor-2-data-detail-integral", "monitor-2-data-detail-standby",
+  "monitor-1-calibration", "monitor-2-calibration",
+  "tx-data-main", "tx-rtc-data", "tx-config-nominal", "tx-config-offsets",
+  "disabled",
 ];
 
 function isRecord(value: unknown): value is Record<string, unknown> {

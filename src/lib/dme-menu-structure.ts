@@ -2,7 +2,12 @@ import type { DmeMenuGroup, DmeMenuItem } from "./dme-types";
 
 function monitorItems(monitorNumber: 1 | 2): readonly DmeMenuItem[] {
   return [
-    { id: `monitor-${monitorNumber}-data`, label: "Data", enabled: false },
+    {
+      id: `monitor-${monitorNumber}-data`,
+      label: "Data",
+      enabled: true,
+      screenId: monitorNumber === 1 ? "monitor-1-data" : "monitor-2-data",
+    },
     {
       id: `monitor-${monitorNumber}-test-results`,
       label: "Test Results",
@@ -15,6 +20,12 @@ function monitorItems(monitorNumber: 1 | 2): readonly DmeMenuItem[] {
       label: "Offsets & Scale Factors",
       enabled: true,
       screenId: monitorNumber === 1 ? "monitor-1-offsets" : "monitor-2-offsets",
+    },
+    {
+      id: `monitor-${monitorNumber}-calibration`,
+      label: "Calibration",
+      enabled: true,
+      screenId: monitorNumber === 1 ? "monitor-1-calibration" : "monitor-2-calibration",
     },
     { id: `monitor-${monitorNumber}-trigger`, label: "Trigger", enabled: false },
   ];
@@ -40,9 +51,9 @@ export const dmeMenuStructure: readonly DmeMenuGroup[] = [
     label: "RMS",
     items: [
       { id: "rms-status", label: "Status", enabled: true, screenId: "rms-status" },
-      { id: "rms-data", label: "Data", enabled: false },
+      { id: "rms-data", label: "Data", enabled: true, screenId: "rms-data" },
       { id: "rms-logs", label: "Logs", enabled: true, screenId: "rms-logs" },
-      { id: "rms-configuration", label: "Configuration", enabled: false },
+      { id: "rms-configuration", label: "Configuration", enabled: true, screenId: "rms-config" },
       { id: "rms-commands", label: "Commands", enabled: false },
       { id: "rms-config-restore", label: "Config Restore", enabled: false },
       { id: "rms-config-backup", label: "Config Backup", enabled: false },
