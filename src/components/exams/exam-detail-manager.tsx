@@ -481,7 +481,7 @@ export function ExamDetailManager({
       {printData ? (
         <div className="hidden print:block print:bg-white print:text-black print:text-xs print:leading-relaxed max-w-[190mm] mx-auto print:p-0">
           {/* Header */}
-          <div className="grid grid-cols-2 gap-4 border-b-2 border-black pb-4 text-center font-semibold">
+          <div className="grid grid-cols-2 gap-4 text-center font-semibold pb-4">
             <div>
               <p className="uppercase text-[10px] font-bold">CÔNG TY TNHH KỸ THUẬT QUẢN LÝ BAY</p>
               <p className="uppercase text-[10px] font-bold mt-1">HỘI ĐỒNG THI ĐÁNH GIÁ NĂNG LỰC</p>
@@ -493,7 +493,7 @@ export function ExamDetailManager({
             <div>
               <p className="uppercase text-[10px] font-bold">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
               <p className="text-[10px] font-bold mt-0.5">Độc lập - Tự do - Hạnh phúc</p>
-              <p className="border-t border-black w-24 mx-auto my-1.5"></p>
+              <p className="border-t border-black w-24 mx-auto mt-[2px] mb-1.5"></p>
               <p className="italic text-[9px] font-normal mt-2">
                 {locationLabels[printData.location as keyof typeof locationLabels] || printData.location}, ngày ...... tháng ...... năm .........
               </p>
@@ -515,7 +515,7 @@ export function ExamDetailManager({
 
           {/* Results details */}
           <div className="mt-6 space-y-5">
-            <h2 className="text-[11px] font-bold uppercase border-b border-black pb-1">KẾT QUẢ CHI TIẾT CÁC PHẦN THI THỰC HÀNH:</h2>
+            <h2 className="text-[11px] font-bold uppercase pb-1">KẾT QUẢ CHI TIẾT CÁC PHẦN THI THỰC HÀNH:</h2>
             {printData.subjects.map((subject) => {
               const isVorDme = subject.subjectName.toLowerCase().includes("vor") || subject.subjectName.toLowerCase().includes("dme");
               const isAdsb = subject.subjectName.toLowerCase().includes("ads-b") || subject.subjectName.toLowerCase().includes("adsb");
@@ -557,7 +557,7 @@ export function ExamDetailManager({
                         </div>
                       ))}
 
-                      <div className="font-semibold text-[11px] border-t border-dashed border-gray-400 pt-1 mt-2">
+                      <div className="font-semibold text-[11px] mt-2">
                         TỔNG KẾT ĐIỂM MÔN THỰC HÀNH VOR-DME: {subject.officialScore !== null ? `${subject.officialScore}/100` : "Chưa chấm"}
                       </div>
                     </>
@@ -581,7 +581,7 @@ export function ExamDetailManager({
                         </div>
                       ))}
 
-                      <div className="font-semibold text-[11px] border-t border-dashed border-gray-400 pt-1 mt-2">
+                      <div className="font-semibold text-[11px] mt-2">
                         TỔNG KẾT ĐIỂM MÔN THỰC HÀNH ADS-B: {subject.officialScore !== null ? `${subject.officialScore}/100` : "Chưa chấm"}
                       </div>
                     </>
