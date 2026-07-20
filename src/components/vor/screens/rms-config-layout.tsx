@@ -1,8 +1,16 @@
 "use client";
 
-import { resolveVorField, useVorPmdtStore } from "@/stores/vor-pmdt-store";
+import { resolveVorField, resolveVorStatus, useVorPmdtStore } from "@/stores/vor-pmdt-store";
+import type { VorIndicatorColor } from "@/lib/vor-types";
 import { PmdtToolbar } from "../pmdt-toolbar";
 import { useState } from "react";
+
+const accentClasses: Record<VorIndicatorColor, string> = {
+  green: "accent-[#22c55e]",
+  yellow: "accent-[#eab308]",
+  red: "accent-[#ef4444]",
+  gray: "accent-[#475569]",
+};
 
 // ReadOnly or editable input helper
 function ConfigInput({
@@ -20,13 +28,17 @@ function ConfigInput({
   const resolved = resolveVorField(value, fieldId, overrides);
 
   if (type === "checkbox") {
+    const status = resolveVorStatus(resolved ? "green" : "gray", fieldId, overrides);
     return (
       <input
         type="checkbox"
         data-vor-field-id={fieldId}
-        disabled
+        data-vor-field-value={Boolean(value)}
+        data-vor-field-type="boolean"
+        data-vor-field-label={fieldId}
+        readOnly
         checked={Boolean(resolved)}
-        className="accent-[#22c55e] disabled:opacity-100 cursor-default"
+        className={`size-3.5 pointer-events-none ${accentClasses[status]}`}
       />
     );
   }

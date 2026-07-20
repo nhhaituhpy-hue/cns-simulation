@@ -1,6 +1,14 @@
 "use client";
 
-import { resolveDmeField, useDmePmdtStore } from "@/stores/dme-pmdt-store";
+import { resolveDmeField, resolveDmeStatus, useDmePmdtStore } from "@/stores/dme-pmdt-store";
+import type { DmeIndicatorColor } from "@/lib/dme-types";
+
+const accentClasses: Record<DmeIndicatorColor, string> = {
+  green: "accent-[#22c55e]",
+  yellow: "accent-[#eab308]",
+  red: "accent-[#ef4444]",
+  gray: "accent-[#475569]",
+};
 
 export function MonitorConfigGeneral() {
   const data = useDmePmdtStore((state) => state.data);
@@ -36,9 +44,12 @@ export function MonitorConfigGeneral() {
                           <input
                             type="checkbox"
                             data-dme-field-id={`${prefix}.checked`}
-                            disabled
+                            data-dme-field-value={Boolean(row.checked)}
+                            data-dme-field-type="boolean"
+                            data-dme-field-label={row.parameter}
+                            readOnly
                             checked={Boolean(isEnabled)}
-                            className="accent-[#22c55e] disabled:opacity-80"
+                            className={`size-3.5 pointer-events-none ${accentClasses[resolveDmeStatus(isEnabled ? "green" : "gray", `${prefix}.checked`, overrides)]}`}
                           />
                           {row.parameter}
                         </label>

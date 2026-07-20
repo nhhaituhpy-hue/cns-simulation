@@ -1,6 +1,7 @@
 "use client";
 
-import { resolveVorField, useVorPmdtStore } from "@/stores/vor-pmdt-store";
+import type { VorIndicatorColor } from "@/lib/vor-types";
+import { resolveVorField, resolveVorStatus, useVorPmdtStore } from "@/stores/vor-pmdt-store";
 
 const alertColumns = [
   { key: "mon1", label: "Mon 1" },
@@ -8,6 +9,20 @@ const alertColumns = [
   { key: "agen1", label: "AGen 1" },
   { key: "agen2", label: "AGen 2" },
 ] as const;
+
+const accentClasses: Record<VorIndicatorColor, string> = {
+  green: "accent-[#22c55e]",
+  yellow: "accent-[#eab308]",
+  red: "accent-[#ef4444]",
+  gray: "accent-[#475569]",
+};
+
+const textClasses: Record<VorIndicatorColor, string> = {
+  green: "text-[#22c55e]",
+  yellow: "text-[#eab308]",
+  red: "text-[#ef4444]",
+  gray: "text-[#94a3b8]",
+};
 
 export function RmsMaintenanceAlerts() {
   const data = useVorPmdtStore((state) => state.data);
@@ -23,19 +38,23 @@ export function RmsMaintenanceAlerts() {
           {data.generalAlerts.map((alert) => {
             const fieldId = `generalAlerts.${alert.id}.checked`;
             const checked = resolveVorField(alert.checked, fieldId, overrides);
+            const status = resolveVorStatus(checked ? "red" : "gray", fieldId, overrides);
             return (
               <label
                 key={alert.id}
                 data-vor-field-id={fieldId}
-                className="flex min-h-7 items-center gap-2 border border-transparent px-1 text-[11px] text-[#cbd5e1] hover:border-[#334155]"
+                data-vor-field-value={alert.checked}
+                data-vor-field-type="boolean"
+                data-vor-field-label={alert.label}
+                className="flex min-h-7 items-center gap-2 border border-transparent px-1 text-[11px] text-[#cbd5e1] hover:border-[#334155] cursor-pointer"
               >
                 <input
                   type="checkbox"
                   checked={checked}
-                  disabled
-                  className="size-3.5 accent-[#eab308] disabled:opacity-100"
+                  readOnly
+                  className={`size-3.5 pointer-events-none ${accentClasses[status]}`}
                 />
-                <span>{alert.label}</span>
+                <span className={status === "gray" ? "" : textClasses[status]}>{alert.label}</span>
               </label>
             );
           })}
@@ -65,14 +84,22 @@ export function RmsMaintenanceAlerts() {
                   {alertColumns.map((column) => {
                     const fieldId = `monitorAgenAlerts.${rowIndex}.${column.key}`;
                     const checked = resolveVorField(row[column.key], fieldId, overrides);
+                    const status = resolveVorStatus(checked ? "red" : "gray", fieldId, overrides);
                     return (
-                      <td key={column.key} data-vor-field-id={fieldId} className="px-2 py-2 text-center">
+                      <td
+                        key={column.key}
+                        data-vor-field-id={fieldId}
+                        data-vor-field-value={row[column.key]}
+                        data-vor-field-type="boolean"
+                        data-vor-field-label={`${row.label} ${column.label}`}
+                        className="px-2 py-2 text-center"
+                      >
                         <input
                           aria-label={`${row.label}, ${column.label}`}
                           type="checkbox"
                           checked={checked}
-                          disabled
-                          className="size-3.5 accent-[#eab308] disabled:opacity-100"
+                          readOnly
+                          className={`size-3.5 pointer-events-none ${accentClasses[status]}`}
                         />
                       </td>
                     );

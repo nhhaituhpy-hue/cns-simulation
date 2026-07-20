@@ -1,6 +1,14 @@
 "use client";
 
-import { resolveVorField, useVorPmdtStore } from "@/stores/vor-pmdt-store";
+import { resolveVorField, resolveVorStatus, useVorPmdtStore } from "@/stores/vor-pmdt-store";
+import type { VorIndicatorColor } from "@/lib/vor-types";
+
+const accentClasses: Record<VorIndicatorColor, string> = {
+  green: "accent-[#22c55e]",
+  yellow: "accent-[#eab308]",
+  red: "accent-[#ef4444]",
+  gray: "accent-[#475569]",
+};
 
 export function MonitorConfigGeneral() {
   const data = useVorPmdtStore((state) => state.data);
@@ -36,9 +44,12 @@ export function MonitorConfigGeneral() {
                           <input
                             type="checkbox"
                             data-vor-field-id={`${prefix}.checked`}
-                            disabled
+                            data-vor-field-value={Boolean(row.checked)}
+                            data-vor-field-type="boolean"
+                            data-vor-field-label={row.parameter}
+                            readOnly
                             checked={Boolean(isEnabled)}
-                            className="accent-[#22c55e] disabled:opacity-80"
+                            className={`size-3.5 pointer-events-none ${accentClasses[resolveVorStatus(isEnabled ? "green" : "gray", `${prefix}.checked`, overrides)]}`}
                           />
                           {row.parameter}
                         </label>
