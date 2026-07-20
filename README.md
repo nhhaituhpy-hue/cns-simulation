@@ -16,7 +16,7 @@ Dự án đang ở giai đoạn **MVP hoạt động đầy đủ cho đào tạ
 | DME | PMDT Model 1118A/1119A, cấu hình kịch bản, nhật ký, Local/Integral Bypass/Standby Bypass và sơ đồ Dual High Power | Giám khảo xem bằng chứng, đối chiếu checkpoint và nhập điểm thủ công |
 | ADS-B | QCMS, terminal SA/MA, trạng thái site/sensor, sự cố phần cứng, ghi nhận và sắp xếp thao tác | Chấm tự động theo ngữ cảnh menu, thứ tự thao tác và dữ liệu nhập |
 
-Mốc xác minh gần nhất được ghi nhận ngày **18/07/2026**: 215 bài kiểm thử Vitest vượt qua và production build thành công. README không thay thế kết quả kiểm tra hiện tại; hãy chạy các quality gate trước khi phát hành thay đổi mới.
+Mốc xác minh gần nhất được ghi nhận ngày **20/07/2026**: 217 bài kiểm thử Vitest vượt qua và production build thành công. README không thay thế kết quả kiểm tra hiện tại; hãy chạy các quality gate trước khi phát hành thay đổi mới.
 
 ## Chức năng chính
 
@@ -316,3 +316,6 @@ Khi kế hoạch nội bộ và manual nhà sản xuất khác nhau, manual là 
 - Bổ sung fault preset, topology và tiêu chí chẩn đoán cho nhiều cấu hình thiết bị/site.
 - Chuẩn hóa tiêu chí chấm điểm giữa phần thao tác PMDT, phần cứng và câu trả lời kỹ thuật.
 - Mở rộng kiểm thử E2E, accessibility, hiệu năng và quan sát lỗi production.
+
+## Session Log
+- [2026-07-20] Hoàn thành tích hợp toàn bộ các màn hình PMDT của VOR và DME còn thiếu theo tài liệu `PMDT Capture.docx`. Mọi kiểm tra TypeScript, Linting, 217 bài test Vitest và Production Build đều vượt qua thành công 100%. Đã commit và push code lên repository.
