@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { createClient } from "@/lib/supabase/server";
 import { mapExamAttempt } from "./queries";
+import { mapRowToDmeScenario } from "@/lib/dme-scenario-storage";
+import { mapRowToScenario } from "@/lib/supabase/scenarios";
+import { mapRowToVorScenario } from "@/lib/vor-scenario-storage";
+import { presentPmdtResult, presentAdsbResult } from "./result-presentation";
 import type {
   CandidateResultInput,
   CompleteAttemptItemInput,
@@ -372,3 +376,256 @@ export async function completeExamAttemptAction(attemptIdValue: string): Promise
     return actionError("Complete exam attempt failed", error);
   }
 }
+
+export interface CandidatePrintData {
+  examName: string;
+  decisionBasis: string;
+  location: string;
+  examDate: string;
+  candidateName: string;
+  candidateUnit: string;
+  candidateEmail: string;
+  examiners: { fullName: string; subjectName: string; position: number }[];
+  subjects: {
+    id: string;
+    subjectName: string;
+    paperTitle: string;
+    officialScore: number | null;
+    status: string;
+    details: {
+      moduleCode: string;
+      scenarioTitle: string;
+      checkpointsVisited?: number;
+      checkpointsTotal?: number;
+      hardwareCorrect?: number;
+      hardwareTotal?: number;
+      terminalCorrect?: number;
+      terminalTotal?: number;
+    }[];
+  }[];
+}
+
+// Helpers local
+const str = (v: unknown): string => (typeof v === "string" ? v : "");
+const num = (v: unknown): number => (typeof v === "number" ? v : Number(v) || 0);
+const relationRow = (v: unknown): Row =>
+  Array.isArray(v) ? asRow(v[0]) : asRow(v);
+const parseRows = (v: unknown): Row[] =>
+  Array.isArray(v) ? v.map(asRow) : [];
+const nullableNum = (v: unknown): number | null =>
+  v === null || v === undefined ? null : typeof v === "number" ? v : Number(v) || 0;
+
+export async function getExamCandidatePrintDataAction(
+  candidateIdValue: string,
+): Promise<ExamActionResult<CandidatePrintData>> {
+  try {
+    await requireAdmin();
+    const candidateId = validateUuid(candidateIdValue, "Mã thí sinh");
+    const supabase = await createClient();
+
+    // 1. Lấy thông tin thí sinh và kỳ thi
+    const { data: candidateRow, error: candidateError } = await supabase
+      .from("exam_candidates")
+      .select("id,full_name,work_unit,email,exam_id,exams(name,exam_date,location,decision_basis)")
+      .eq("id", candidateId)
+      .maybeSingle();
+
+    if (candidateError) throw candidateError;
+    if (!candidateRow) throw new ExamValidationError("Không tìm thấy thông tin thí sinh.");
+
+    const candidate = asRow(candidateRow);
+    const exam = asRow(candidate.exams);
+    const examId = str(candidate.exam_id);
+
+    // 2. Lấy danh sách giám khảo của kỳ thi
+    const { data: examinersData, error: examinersError } = await supabase
+      .from("exam_examiners")
+      .select("id,full_name,subject_id,position,exam_subjects(name)")
+      .eq("exam_id", examId)
+      .order("position");
+    if (examinersError) throw examinersError;
+
+    const examiners = parseRows(examinersData).map((ex) => ({
+      fullName: str(ex.full_name),
+      subjectName: str(relationRow(ex.exam_subjects).name),
+      position: num(ex.position),
+    }));
+
+    // 3. Lấy danh sách môn thi của thí sinh
+    const { data: subjectsData, error: subjectsError } = await supabase
+      .from("exam_candidate_subjects")
+      .select("id,subject_id,exam_paper_id,official_score,examiner_comment,status,exam_subjects(name),exam_papers(title,paper_number)")
+      .eq("candidate_id", candidateId)
+      .order("created_at");
+    if (subjectsError) throw subjectsError;
+
+    const candidateSubjects = parseRows(subjectsData);
+    const candidateSubjectIds = candidateSubjects.map((sub) => str(sub.id));
+
+    // 4. Lấy attempts của thí sinh
+    const attempts: Row[] = [];
+    if (candidateSubjectIds.length > 0) {
+      const { data: attemptsData, error: attemptsError } = await supabase
+        .from("exam_attempts")
+        .select("id,candidate_subject_id,status,started_at,submitted_at,exam_attempt_items(id,attempt_id,paper_scenario_id,module_code,scenario_id,position,status,started_at,submitted_at,submission_ref,result_json,exam_scenario_catalog(title))")
+        .in("candidate_subject_id", candidateSubjectIds);
+      if (attemptsError) throw attemptsError;
+      attempts.push(...parseRows(attemptsData));
+    }
+
+    // 5. Gom nhóm kịch bản và load kịch bản gốc
+    const vorScenarioIds: string[] = [];
+    const dmeScenarioIds: string[] = [];
+    const adsbScenarioIds: string[] = [];
+
+    attempts.forEach((attempt) => {
+      const items = parseRows(attempt.exam_attempt_items);
+      items.forEach((item) => {
+        const mod = str(item.module_code);
+        const scId = str(item.scenario_id);
+        if (mod === "vor" && scId) vorScenarioIds.push(scId);
+        if (mod === "dme" && scId) dmeScenarioIds.push(scId);
+        if (mod === "ads-b" && scId) adsbScenarioIds.push(scId);
+      });
+    });
+
+    const [vorScenariosRes, dmeScenariosRes, adsbScenariosRes] = await Promise.all([
+      vorScenarioIds.length > 0
+        ? supabase.from("vor_scenarios").select("*").in("id", vorScenarioIds)
+        : { data: [], error: null },
+      dmeScenarioIds.length > 0
+        ? supabase.from("dme_scenarios").select("*").in("id", dmeScenarioIds)
+        : { data: [], error: null },
+      adsbScenarioIds.length > 0
+        ? supabase.from("scenarios").select("*").in("id", adsbScenarioIds)
+        : { data: [], error: null },
+    ]);
+
+    if (vorScenariosRes.error) throw vorScenariosRes.error;
+    if (dmeScenariosRes.error) throw dmeScenariosRes.error;
+    if (adsbScenariosRes.error) throw adsbScenariosRes.error;
+
+    const vorScenariosMap = new Map(parseRows(vorScenariosRes.data).map((r) => [str(r.id), mapRowToVorScenario(r)]));
+    const dmeScenariosMap = new Map(parseRows(dmeScenariosRes.data).map((r) => [str(r.id), mapRowToDmeScenario(r)]));
+    const adsbScenariosMap = new Map(parseRows(adsbScenariosRes.data).map((r) => [str(r.id), mapRowToScenario(r)]));
+
+    // 6. Xây dựng cấu trúc kết quả in ấn
+    const subjectsPrint = candidateSubjects.map((cSub) => {
+      const cSubId = str(cSub.id);
+      const attempt = attempts.find((att) => str(att.candidate_subject_id) === cSubId);
+      const attemptItems = attempt ? parseRows(attempt.exam_attempt_items) : [];
+
+      const details = attemptItems.map((item) => {
+        const mod = str(item.module_code);
+        const scId = str(item.scenario_id);
+        const resultJson = item.result_json && typeof item.result_json === "object" ? (item.result_json as Record<string, unknown>) : null;
+        const scenarioTitle = str(relationRow(item.exam_scenario_catalog).title) || "Kịch bản";
+
+        if (mod === "vor" || mod === "dme") {
+          const result = presentPmdtResult(resultJson);
+          const scenario = mod === "vor" ? vorScenariosMap.get(scId) : dmeScenariosMap.get(scId);
+
+          if (result && scenario) {
+            const visitedViews = new Set(result.events.filter((e) => e.eventType === "view").map((e) => e.viewId));
+            const checkpointsVisited = scenario.expectedCheckpoints.filter((cp) => visitedViews.has(cp.viewId)).length;
+            const checkpointsTotal = scenario.expectedCheckpoints.length;
+
+            let hardwareCorrect = 0;
+            let hardwareTotal = 0;
+            if (scenario.hardwareTask) {
+              const expectedIds = scenario.hardwareTask.expectedComponentIds || [];
+              const suspectedIds: string[] = result.hardwareAnswer?.selectedComponentIds || [];
+              hardwareTotal = expectedIds.length;
+              hardwareCorrect = suspectedIds.filter((id: string) => expectedIds.includes(id)).length;
+            }
+
+            return {
+              moduleCode: mod,
+              scenarioTitle,
+              checkpointsVisited,
+              checkpointsTotal,
+              hardwareCorrect,
+              hardwareTotal,
+            };
+          }
+        } else if (mod === "ads-b") {
+          const result = presentAdsbResult(resultJson);
+          const scenario = adsbScenariosMap.get(scId);
+
+          if (result && scenario) {
+            let terminalCorrect = 0;
+            let terminalTotal = 0;
+            if (scenario.expectedActions) {
+              const expectedGradable = scenario.expectedActions.filter((a) => a.kind === "menu-selection" || a.kind === "value-input" || a.kind === "authentication");
+              const submittedGradable = result.selectedActions.filter((a) => a.kind === "menu-selection" || a.kind === "value-input" || a.kind === "authentication");
+
+              let correct = 0;
+              let sIdx = 0;
+              for (const exp of expectedGradable) {
+                while (sIdx < submittedGradable.length) {
+                  const sub = submittedGradable[sIdx];
+                  sIdx++;
+                  if (exp.kind === sub.kind && exp.input === sub.input && exp.menuId === sub.menuId) {
+                    correct++;
+                    break;
+                  }
+                }
+              }
+              terminalCorrect = correct;
+              terminalTotal = expectedGradable.length;
+            }
+
+            let hardwareCorrect = 0;
+            let hardwareTotal = 0;
+            if (scenario.hardwareFault) {
+              const expectedIds = scenario.hardwareFault.faultyComponentIds || [];
+              const diagnosedIds = result.diagnosedComponentIds || [];
+              hardwareTotal = expectedIds.length;
+              hardwareCorrect = diagnosedIds.filter((id) => expectedIds.includes(id)).length;
+            }
+
+            return {
+              moduleCode: mod,
+              scenarioTitle,
+              terminalCorrect,
+              terminalTotal,
+              hardwareCorrect,
+              hardwareTotal,
+            };
+          }
+        }
+
+        return {
+          moduleCode: mod,
+          scenarioTitle,
+        };
+      });
+
+      return {
+        id: cSubId,
+        subjectName: str(relationRow(cSub.exam_subjects).name),
+        paperTitle: str(relationRow(cSub.exam_papers).title),
+        officialScore: nullableNum(cSub.official_score),
+        status: str(cSub.status),
+        details,
+      };
+    });
+
+    const printData: CandidatePrintData = {
+      examName: str(exam.name),
+      decisionBasis: str(exam.decision_basis),
+      location: str(exam.location),
+      examDate: str(exam.exam_date),
+      candidateName: str(candidate.full_name),
+      candidateUnit: str(candidate.work_unit),
+      candidateEmail: str(candidate.email),
+      examiners,
+      subjects: subjectsPrint,
+    };
+
+    return { ok: true, message: "Tải dữ liệu in thành công.", data: printData };
+  } catch (error) {
+    return actionError("Get candidate print data failed", error);
+  }
+}
+

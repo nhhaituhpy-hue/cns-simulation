@@ -6,6 +6,7 @@ import { FloppyDisk } from "@phosphor-icons/react/dist/csr/FloppyDisk";
 import { NotePencil } from "@phosphor-icons/react/dist/csr/NotePencil";
 import { Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { Trash } from "@phosphor-icons/react/dist/csr/Trash";
+import { Printer } from "@phosphor-icons/react/dist/csr/Printer";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -13,6 +14,8 @@ import {
   deleteExamCandidateAction,
   saveExamCandidateAction,
   saveExamExaminersAction,
+  getExamCandidatePrintDataAction,
+  type CandidatePrintData,
 } from "@/lib/exams/actions";
 import { ActionFeedback } from "./action-feedback";
 import { CandidateResultEditor } from "./candidate-result-editor";
@@ -304,7 +307,31 @@ export function ExamDetailManager({
   const [examinerFeedback, setExaminerFeedback] = useState<{ tone: "success" | "error"; message: string } | null>(null);
   const [candidateEditing, setCandidateEditing] = useState<ExamCandidateView | "new" | null>(null);
   const [expandedCandidateId, setExpandedCandidateId] = useState<string | null>(null);
+  const [printData, setPrintData] = useState<CandidatePrintData | null>(null);
+  const [isPrinting, setIsPrinting] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const locationLabels = { ha_noi: "Hà Nội", da_nang: "Đà Nẵng", tp_hcm: "TP. HCM" } as const;
+
+  async function handlePrint(candidateId: string) {
+    setIsPrinting(candidateId);
+    try {
+      const res = await getExamCandidatePrintDataAction(candidateId);
+      if (res.ok && res.data) {
+        setPrintData(res.data);
+        setTimeout(() => {
+          window.print();
+        }, 200);
+      } else {
+        window.alert(res.message || "Không thể tải dữ liệu in.");
+      }
+    } catch (e) {
+      console.error(e);
+      window.alert("Đã xảy ra lỗi khi tải dữ liệu in.");
+    } finally {
+      setIsPrinting(null);
+    }
+  }
 
   function saveExaminers() {
     const populated = examiners.filter((examiner) => examiner.fullName.trim());
@@ -329,7 +356,8 @@ export function ExamDetailManager({
   }
 
   return (
-    <div className="mt-6 grid gap-6">
+    <>
+      <div className="mt-6 grid gap-6 print:hidden">
       <section className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[var(--shadow-card)]">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -381,7 +409,31 @@ export function ExamDetailManager({
                   <td className="px-3 py-3 text-sm leading-5 text-[var(--text-secondary)]">{candidate.email}</td>
                   <td className="px-3 py-3"><div className="grid gap-1.5">{candidate.subjects.map((subject) => <p key={subject.id} className="text-sm leading-5 text-[var(--text-secondary)]">{subject.subjectName} - {subject.paperTitle}</p>)}</div></td>
                   <td className="px-3 py-3 text-sm leading-5"><div className="grid gap-1.5">{candidate.subjects.map((subject) => <button key={subject.id} type="button" onClick={() => setExpandedCandidateId((current) => current === candidate.id ? null : candidate.id)} aria-expanded={expandedCandidateId === candidate.id} aria-controls={`candidate-result-${candidate.id}`} aria-label={`Mở kết quả ${subject.subjectName} của ${candidate.fullName}`} className="candidate-result-trigger m-0 block w-fit appearance-none border-0 bg-transparent p-0 text-left">{subject.officialScore === null ? statusLabel(subject.status) : `${subject.officialScore}/100`}</button>)}</div></td>
-                  <td className="px-3 py-3 text-right"><div className="inline-flex align-top gap-1">{!rosterReadOnly ? <><button type="button" onClick={() => setCandidateEditing(candidate)} title="Sửa thí sinh" className="inline-flex size-5 items-center justify-center rounded text-[var(--accent)] hover:bg-[var(--accent-muted)]" aria-label={`Sửa ${candidate.fullName}`}><NotePencil aria-hidden size={16} /></button><button type="button" onClick={() => deleteCandidate(candidate)} disabled={isPending} title="Xóa thí sinh" className="inline-flex size-5 items-center justify-center rounded text-[var(--danger)] hover:bg-[var(--danger-muted)]" aria-label={`Xóa ${candidate.fullName}`}><Trash aria-hidden size={16} /></button></> : null}</div></td>
+                  <td className="px-3 py-3 text-right">
+                    <div className="inline-flex align-top gap-1.5">
+                      {!rosterReadOnly ? (
+                        <>
+                          <button type="button" onClick={() => setCandidateEditing(candidate)} title="Sửa thí sinh" className="inline-flex size-5 items-center justify-center rounded text-[var(--accent)] hover:bg-[var(--accent-muted)]" aria-label={`Sửa ${candidate.fullName}`}><NotePencil aria-hidden size={16} /></button>
+                          <button type="button" onClick={() => deleteCandidate(candidate)} disabled={isPending} title="Xóa thí sinh" className="inline-flex size-5 items-center justify-center rounded text-[var(--danger)] hover:bg-[var(--danger-muted)]" aria-label={`Xóa ${candidate.fullName}`}><Trash aria-hidden size={16} /></button>
+                        </>
+                      ) : null}
+                      {(() => {
+                        const hasScore = candidate.subjects.some((subject) => subject.officialScore !== null);
+                        return (
+                          <button
+                            type="button"
+                            onClick={() => handlePrint(candidate.id)}
+                            disabled={!hasScore || isPrinting === candidate.id}
+                            title={hasScore ? "In kết quả thi" : "Chưa chốt điểm để in"}
+                            className={`inline-flex size-5 items-center justify-center rounded text-[var(--accent)] hover:bg-[var(--accent-muted)] ${!hasScore ? "opacity-35 cursor-not-allowed" : ""}`}
+                            aria-label={`In kết quả của ${candidate.fullName}`}
+                          >
+                            <Printer aria-hidden size={16} className={isPrinting === candidate.id ? "animate-pulse" : ""} />
+                          </button>
+                        );
+                      })()}
+                    </div>
+                  </td>
                 </tr>
               ))}
               {candidates.length === 0 ? <tr><td colSpan={7} className="px-5 py-12 text-center text-sm text-[var(--text-secondary)]">Chưa có thí sinh trong kỳ thi.</td></tr> : null}
@@ -424,6 +476,144 @@ export function ExamDetailManager({
           </nav>
         </div>
       </section>
-    </div>
+      </div>
+
+      {printData ? (
+        <div className="hidden print:block print:w-[210mm] print:min-h-[297mm] print:bg-white print:text-black print:text-xs print:p-12 print:leading-relaxed mx-auto">
+          {/* Header */}
+          <div className="grid grid-cols-2 gap-4 border-b-2 border-black pb-4 text-center font-semibold">
+            <div>
+              <p className="uppercase text-[10px] font-bold">CÔNG TY TNHH KỸ THUẬT QUẢN LÝ BAY</p>
+              <p className="uppercase text-[10px] font-bold mt-1">HỘI ĐỒNG THI ĐÁNH GIÁ NĂNG LỰC</p>
+              {printData.decisionBasis && (
+                <p className="text-[9px] font-normal italic mt-1">(QĐ số {printData.decisionBasis})</p>
+              )}
+              <p className="mt-2 text-[10px]">Số: ...../..............</p>
+            </div>
+            <div>
+              <p className="uppercase text-[10px] font-bold">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>
+              <p className="text-[10px] font-bold mt-0.5">Độc lập - Tự do - Hạnh phúc</p>
+              <p className="border-t border-black w-24 mx-auto my-1.5"></p>
+              <p className="italic text-[9px] font-normal mt-2">
+                {locationLabels[printData.location as keyof typeof locationLabels] || printData.location}, ngày ...... tháng ...... năm .........
+              </p>
+            </div>
+          </div>
+
+          {/* Title */}
+          <div className="text-center mt-6">
+            <h1 className="text-sm font-bold uppercase tracking-wider">KẾT QUẢ THI ĐÁNH GIÁ NĂNG LỰC</h1>
+            <p className="text-[11px] font-semibold mt-1">Kỳ thi: {printData.examName}</p>
+          </div>
+
+          {/* Candidate Info */}
+          <div className="mt-6 grid grid-cols-2 gap-y-2 text-[11px]">
+            <p><strong>Họ và tên thí sinh:</strong> {printData.candidateName}</p>
+            <p><strong>Mã số (Email):</strong> {printData.candidateEmail}</p>
+            <p className="col-span-2"><strong>Đơn vị công tác:</strong> {printData.candidateUnit}</p>
+          </div>
+
+          {/* Results details */}
+          <div className="mt-6 space-y-5">
+            <h2 className="text-[11px] font-bold uppercase border-b border-black pb-1">KẾT QUẢ CHI TIẾT CÁC PHẦN THI THỰC HÀNH:</h2>
+            {printData.subjects.map((subject) => {
+              const isVorDme = subject.subjectName.toLowerCase().includes("vor") || subject.subjectName.toLowerCase().includes("dme");
+              const isAdsb = subject.subjectName.toLowerCase().includes("ads-b") || subject.subjectName.toLowerCase().includes("adsb");
+
+              return (
+                <div key={subject.id} className="space-y-4">
+                  {/* VOR/DME */}
+                  {isVorDme && (
+                    <>
+                      {/* VOR */}
+                      {subject.details.filter(d => d.moduleCode === "vor").map((d, idx) => (
+                        <div key={`vor-${idx}`}>
+                          <h3 className="font-bold">I. THỰC HÀNH TÌNH HUỐNG VOR</h3>
+                          <ul className="list-disc list-inside ml-2 mt-1 space-y-1 text-[10px]">
+                            <li>Kịch bản: {d.scenarioTitle}</li>
+                            <li>Bằng chứng PMDT: Đã kiểm tra đúng kịch bản {d.checkpointsVisited !== undefined ? `${String(d.checkpointsVisited).padStart(2, "0")}/${String(d.checkpointsTotal).padStart(2, "0")}` : "00/00"} màn hình PMDT.</li>
+                            {d.hardwareTotal !== undefined && d.hardwareTotal > 0 ? (
+                              <li>Xác định lỗi: Đã xác định đúng {String(d.hardwareCorrect).padStart(2, "0")}/{String(d.hardwareTotal).padStart(2, "0")} khối phần cứng bị sự cố.</li>
+                            ) : (
+                              <li>Xác định lỗi: Kịch bản không yêu cầu chẩn đoán phần cứng.</li>
+                            )}
+                          </ul>
+                        </div>
+                      ))}
+
+                      {/* DME */}
+                      {subject.details.filter(d => d.moduleCode === "dme").map((d, idx) => (
+                        <div key={`dme-${idx}`}>
+                          <h3 className="font-bold mt-3">II. THỰC HÀNH TÌNH HUỐNG DME</h3>
+                          <ul className="list-disc list-inside ml-2 mt-1 space-y-1 text-[10px]">
+                            <li>Kịch bản: {d.scenarioTitle}</li>
+                            <li>Bằng chứng PMDT: Đã kiểm tra đúng kịch bản {d.checkpointsVisited !== undefined ? `${String(d.checkpointsVisited).padStart(2, "0")}/${String(d.checkpointsTotal).padStart(2, "0")}` : "00/00"} màn hình PMDT.</li>
+                            {d.hardwareTotal !== undefined && d.hardwareTotal > 0 ? (
+                              <li>Xác định lỗi: Đã xác định đúng {String(d.hardwareCorrect).padStart(2, "0")}/{String(d.hardwareTotal).padStart(2, "0")} khối phần cứng bị sự cố.</li>
+                            ) : (
+                              <li>Xác định lỗi: Kịch bản không yêu cầu chẩn đoán phần cứng.</li>
+                            )}
+                          </ul>
+                        </div>
+                      ))}
+
+                      <div className="font-semibold text-[11px] border-t border-dashed border-gray-400 pt-1 mt-2">
+                        TỔNG KẾT ĐIỂM MÔN THỰC HÀNH VOR-DME: {subject.officialScore !== null ? `${subject.officialScore}/100` : "Chưa chấm"}
+                      </div>
+                    </>
+                  )}
+
+                  {/* ADS-B */}
+                  {isAdsb && (
+                    <>
+                      {subject.details.filter(d => d.moduleCode === "ads-b").map((d, idx) => (
+                        <div key={`adsb-${idx}`}>
+                          <h3 className="font-bold">III. THỰC HÀNH TÌNH HUỐNG ADS-B</h3>
+                          <ul className="list-disc list-inside ml-2 mt-1 space-y-1 text-[10px]">
+                            <li>Kịch bản: {d.scenarioTitle}</li>
+                            <li>Bằng chứng SSH: Đã thực hiện đúng {d.terminalCorrect !== undefined ? `${String(d.terminalCorrect).padStart(2, "0")}/${String(d.terminalTotal).padStart(2, "0")}` : "00/00"} thao tác lệnh Terminal SSH.</li>
+                            {d.hardwareTotal !== undefined && d.hardwareTotal > 0 ? (
+                              <li>Xác định lỗi: Đã xác định đúng {String(d.hardwareCorrect).padStart(2, "0")}/{String(d.hardwareTotal).padStart(2, "0")} khối phần cứng bị sự cố.</li>
+                            ) : (
+                              <li>Xác định lỗi: Kịch bản không yêu cầu chẩn đoán phần cứng.</li>
+                            )}
+                          </ul>
+                        </div>
+                      ))}
+
+                      <div className="font-semibold text-[11px] border-t border-dashed border-gray-400 pt-1 mt-2">
+                        TỔNG KẾT ĐIỂM MÔN THỰC HÀNH ADS-B: {subject.officialScore !== null ? `${subject.officialScore}/100` : "Chưa chấm"}
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Signatures */}
+          <div className="mt-12 grid grid-cols-3 gap-4 text-center font-semibold text-[10px] pt-8">
+            <div>
+              <p className="uppercase">GIÁM KHẢO 1</p>
+              <p className="font-normal italic text-[8px] mt-0.5">(Ký và ghi rõ họ tên)</p>
+              <div className="h-20"></div>
+              <p className="font-bold text-[10px]">{printData.examiners.find((ex) => ex.position === 1)?.fullName || "............................................"}</p>
+            </div>
+            <div>
+              <p className="uppercase">GIÁM KHẢO 2</p>
+              <p className="font-normal italic text-[8px] mt-0.5">(Ký và ghi rõ họ tên)</p>
+              <div className="h-20"></div>
+              <p className="font-bold text-[10px]">{printData.examiners.find((ex) => ex.position === 2)?.fullName || "............................................"}</p>
+            </div>
+            <div>
+              <p className="uppercase">THÍ SINH</p>
+              <p className="font-normal italic text-[8px] mt-0.5">(Ký và ghi rõ họ tên)</p>
+              <div className="h-20"></div>
+              <p className="font-bold text-[10px]">{printData.candidateName}</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }
