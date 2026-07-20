@@ -481,7 +481,7 @@ export function ExamDetailManager({
       {printData ? (
         <div 
           className="hidden print:block print:bg-white print:text-black print:leading-relaxed max-w-[190mm] mx-auto print:p-0"
-          style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "13pt" }}
+          style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "12pt" }}
         >
           {/* Header */}
           <div className="grid grid-cols-2 gap-4 text-center font-semibold pb-4">
@@ -505,14 +505,14 @@ export function ExamDetailManager({
 
           {/* Title */}
           <div className="text-center mt-6">
-            <h1 className="text-[14pt] font-bold uppercase tracking-wider">KẾT QUẢ THI ĐÁNH GIÁ NĂNG LỰC</h1>
-            <p className="text-[13pt] font-semibold mt-1">Kỳ thi: {printData.examName}</p>
+            <h1 className="text-[13pt] font-bold uppercase tracking-wider">KẾT QUẢ THI ĐÁNH GIÁ NĂNG LỰC</h1>
+            <p className="text-[12pt] font-semibold mt-1">Kỳ thi: {printData.examName}</p>
           </div>
 
           {/* Body content with 1cm indentation */}
           <div className="pl-[1cm]">
             {/* Candidate Info */}
-            <div className="mt-6 grid grid-cols-2 gap-y-2 text-[13pt]">
+            <div className="mt-6 grid grid-cols-2 gap-y-2 text-[12pt]">
               <p><strong>Họ và tên thí sinh:</strong> {printData.candidateName}</p>
               <p><strong>Mã số (Email):</strong> {printData.candidateEmail}</p>
               <p className="col-span-2"><strong>Đơn vị công tác:</strong> {printData.candidateUnit}</p>
@@ -520,7 +520,7 @@ export function ExamDetailManager({
 
           {/* Results details */}
           <div className="mt-6 space-y-5">
-            <h2 className="text-[13pt] font-bold uppercase pb-1">KẾT QUẢ CHI TIẾT CÁC PHẦN THI THỰC HÀNH:</h2>
+            <h2 className="text-[12pt] font-bold uppercase pb-1">KẾT QUẢ CHI TIẾT CÁC PHẦN THI THỰC HÀNH:</h2>
             {printData.subjects.map((subject) => {
               const isVorDme = subject.subjectName.toLowerCase().includes("vor") || subject.subjectName.toLowerCase().includes("dme");
               const isAdsb = subject.subjectName.toLowerCase().includes("ads-b") || subject.subjectName.toLowerCase().includes("adsb");
@@ -534,7 +534,7 @@ export function ExamDetailManager({
                       {subject.details.filter(d => d.moduleCode === "vor").map((d, idx) => (
                         <div key={`vor-${idx}`}>
                           <h3 className="font-bold">I. THỰC HÀNH TÌNH HUỐNG VOR</h3>
-                          <ul className="list-disc list-inside ml-2 mt-1 space-y-1 text-[13pt]">
+                          <ul className="list-disc list-inside ml-2 mt-1 space-y-1 text-[12pt]">
                             <li>Kịch bản: {d.scenarioTitle}</li>
                             <li>Bằng chứng PMDT: Đã kiểm tra đúng kịch bản {d.checkpointsVisited !== undefined ? `${String(d.checkpointsVisited).padStart(2, "0")}/${String(d.checkpointsTotal).padStart(2, "0")}` : "00/00"} màn hình PMDT.</li>
                             {d.hardwareTotal !== undefined && d.hardwareTotal > 0 ? (
@@ -543,6 +543,14 @@ export function ExamDetailManager({
                               <li>Xác định lỗi: Kịch bản không yêu cầu chẩn đoán phần cứng.</li>
                             )}
                           </ul>
+                          {d.studentAnswer && (
+                            <div className="mt-2 ml-2 text-[12pt] space-y-0.5 border border-gray-300 p-2 rounded">
+                              <p className="font-semibold underline">Câu trả lời của thí sinh:</p>
+                              <p className="ml-2"><strong>- Vị trí / sự cố nghi ngờ:</strong> {d.studentAnswer.suspectedFault || "Không có"}</p>
+                              <p className="ml-2"><strong>- Căn cứ chẩn đoán:</strong> {d.studentAnswer.reasoning || "Không có"}</p>
+                              <p className="ml-2"><strong>- Hướng khắc phục:</strong> {d.studentAnswer.remediation || "Không có"}</p>
+                            </div>
+                          )}
                         </div>
                       ))}
 
@@ -550,7 +558,7 @@ export function ExamDetailManager({
                       {subject.details.filter(d => d.moduleCode === "dme").map((d, idx) => (
                         <div key={`dme-${idx}`}>
                           <h3 className="font-bold mt-3">II. THỰC HÀNH TÌNH HUỐNG DME</h3>
-                          <ul className="list-disc list-inside ml-2 mt-1 space-y-1 text-[13pt]">
+                          <ul className="list-disc list-inside ml-2 mt-1 space-y-1 text-[12pt]">
                             <li>Kịch bản: {d.scenarioTitle}</li>
                             <li>Bằng chứng PMDT: Đã kiểm tra đúng kịch bản {d.checkpointsVisited !== undefined ? `${String(d.checkpointsVisited).padStart(2, "0")}/${String(d.checkpointsTotal).padStart(2, "0")}` : "00/00"} màn hình PMDT.</li>
                             {d.hardwareTotal !== undefined && d.hardwareTotal > 0 ? (
@@ -559,10 +567,18 @@ export function ExamDetailManager({
                               <li>Xác định lỗi: Kịch bản không yêu cầu chẩn đoán phần cứng.</li>
                             )}
                           </ul>
+                          {d.studentAnswer && (
+                            <div className="mt-2 ml-2 text-[12pt] space-y-0.5 border border-gray-300 p-2 rounded">
+                              <p className="font-semibold underline">Câu trả lời của thí sinh:</p>
+                              <p className="ml-2"><strong>- Vị trí / sự cố nghi ngờ:</strong> {d.studentAnswer.suspectedFault || "Không có"}</p>
+                              <p className="ml-2"><strong>- Căn cứ chẩn đoán:</strong> {d.studentAnswer.reasoning || "Không có"}</p>
+                              <p className="ml-2"><strong>- Hướng khắc phục:</strong> {d.studentAnswer.remediation || "Không có"}</p>
+                            </div>
+                          )}
                         </div>
                       ))}
 
-                      <div className="font-semibold text-[13pt] mt-2">
+                      <div className="font-semibold text-[12pt] mt-2">
                         TỔNG KẾT ĐIỂM MÔN THỰC HÀNH VOR-DME: {subject.officialScore !== null ? `${subject.officialScore}/100` : "Chưa chấm"}
                       </div>
                     </>
@@ -574,7 +590,7 @@ export function ExamDetailManager({
                       {subject.details.filter(d => d.moduleCode === "ads-b").map((d, idx) => (
                         <div key={`adsb-${idx}`}>
                           <h3 className="font-bold">III. THỰC HÀNH TÌNH HUỐNG ADS-B</h3>
-                          <ul className="list-disc list-inside ml-2 mt-1 space-y-1 text-[13pt]">
+                          <ul className="list-disc list-inside ml-2 mt-1 space-y-1 text-[12pt]">
                             <li>Kịch bản: {d.scenarioTitle}</li>
                             <li>Bằng chứng SSH: Đã thực hiện đúng {d.terminalCorrect !== undefined ? `${String(d.terminalCorrect).padStart(2, "0")}/${String(d.terminalTotal).padStart(2, "0")}` : "00/00"} thao tác lệnh Terminal SSH.</li>
                             {d.hardwareTotal !== undefined && d.hardwareTotal > 0 ? (
@@ -586,7 +602,7 @@ export function ExamDetailManager({
                         </div>
                       ))}
 
-                      <div className="font-semibold text-[13pt] mt-2">
+                      <div className="font-semibold text-[12pt] mt-2">
                         TỔNG KẾT ĐIỂM MÔN THỰC HÀNH ADS-B: {subject.officialScore !== null ? `${subject.officialScore}/100` : "Chưa chấm"}
                       </div>
                     </>
@@ -600,24 +616,24 @@ export function ExamDetailManager({
           </div>
 
           {/* Signatures */}
-          <div className="mt-12 grid grid-cols-3 gap-4 text-center font-semibold text-[13pt] pt-8">
+          <div className="mt-12 grid grid-cols-3 gap-4 text-center font-semibold text-[12pt] pt-8">
             <div>
               <p className="uppercase">GIÁM KHẢO 1</p>
-              <p className="font-normal italic text-[11pt] mt-0.5">(Ký và ghi rõ họ tên)</p>
+              <p className="font-normal italic text-[10pt] mt-0.5">(Ký và ghi rõ họ tên)</p>
               <div className="h-20"></div>
-              <p className="font-bold text-[13pt]">{printData.examiners.find((ex) => ex.position === 1)?.fullName || "............................................"}</p>
+              <p className="font-bold text-[12pt]">{printData.examiners.find((ex) => ex.position === 1)?.fullName || "............................................"}</p>
             </div>
             <div>
               <p className="uppercase">GIÁM KHẢO 2</p>
-              <p className="font-normal italic text-[11pt] mt-0.5">(Ký và ghi rõ họ tên)</p>
+              <p className="font-normal italic text-[10pt] mt-0.5">(Ký và ghi rõ họ tên)</p>
               <div className="h-20"></div>
-              <p className="font-bold text-[13pt]">{printData.examiners.find((ex) => ex.position === 2)?.fullName || "............................................"}</p>
+              <p className="font-bold text-[12pt]">{printData.examiners.find((ex) => ex.position === 2)?.fullName || "............................................"}</p>
             </div>
             <div>
               <p className="uppercase">THÍ SINH</p>
-              <p className="font-normal italic text-[11pt] mt-0.5">(Ký và ghi rõ họ tên)</p>
+              <p className="font-normal italic text-[10pt] mt-0.5">(Ký và ghi rõ họ tên)</p>
               <div className="h-20"></div>
-              <p className="font-bold text-[13pt]">{printData.candidateName}</p>
+              <p className="font-bold text-[12pt]">{printData.candidateName}</p>
             </div>
           </div>
         </div>

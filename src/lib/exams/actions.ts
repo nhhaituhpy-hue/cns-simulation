@@ -401,6 +401,11 @@ export interface CandidatePrintData {
       hardwareTotal?: number;
       terminalCorrect?: number;
       terminalTotal?: number;
+      studentAnswer?: {
+        suspectedFault: string;
+        reasoning: string;
+        remediation: string;
+      };
     }[];
   }[];
 }
@@ -546,6 +551,11 @@ export async function getExamCandidatePrintDataAction(
               checkpointsTotal,
               hardwareCorrect,
               hardwareTotal,
+              studentAnswer: result.answer ? {
+                suspectedFault: result.answer.suspectedFault || "",
+                reasoning: result.answer.reasoning || "",
+                remediation: result.answer.remediation || "",
+              } : undefined,
             };
           }
         } else if (mod === "ads-b") {
