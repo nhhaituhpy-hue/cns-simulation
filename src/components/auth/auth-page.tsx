@@ -60,7 +60,7 @@ function LoginSuccessOverlay({ reduceMotion }: { reduceMotion: boolean }) {
             <motion.span
               key={`${character}-${index}`}
               className="inline-block"
-              initial={false}
+              initial={{ y: 0 }}
               animate={reduceMotion ? undefined : { y: [0, -10, 0] }}
               transition={{
                 duration: 0.36,
