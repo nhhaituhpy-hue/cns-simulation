@@ -1,0 +1,289 @@
+{
+    "projectRoot":  "C:\\Users\\nhhai\\Desktop\\cns-simulator",
+    "batchFiles":  [
+                       {
+                           "path":  "src/app/admin/ads-b/page.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  5,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/app/admin/dme/page.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  5,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/app/admin/vor/page.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  5,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/app/student/ads-b/page.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  5,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/app/student/dme/page.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  5,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/app/student/loading.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  6,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/app/student/vor/page.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  5,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/admin/admin-dashboard.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  252,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/admin/delete-scenario-dialog.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  83,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/admin/dme-admin-dashboard.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  189,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/qcms/student-dashboard.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  181,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/qcms/student-loading.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  61,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/ui/exam-workspace.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  196,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/ui/scenario-data-table.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  199,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/vor/admin/vor-admin-dashboard.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  189,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/lib/scenario-normalization.ts",
+                           "language":  "typescript",
+                           "sizeLines":  46,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/lib/scenario-order.ts",
+                           "language":  "typescript",
+                           "sizeLines":  17,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/lib/storage.ts",
+                           "language":  "typescript",
+                           "sizeLines":  510,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/stores/scenario-store.ts",
+                           "language":  "typescript",
+                           "sizeLines":  315,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "tests/admin/admin-dashboard.test.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  106,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "tests/core/scenario-normalization.test.ts",
+                           "language":  "typescript",
+                           "sizeLines":  54,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "tests/core/scenario-order.test.ts",
+                           "language":  "typescript",
+                           "sizeLines":  49,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "tests/core/storage.test.ts",
+                           "language":  "typescript",
+                           "sizeLines":  80,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "tests/layout/module-routing.test.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  63,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "tests/layout/scenario-data-table.test.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  86,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "tests/qcms/student-dashboard.test.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  98,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "tests/state/scenario-store.test.ts",
+                           "language":  "typescript",
+                           "sizeLines":  172,
+                           "fileCategory":  "code"
+                       }
+                   ],
+    "batchImportData":  {
+                            "src/app/admin/ads-b/page.tsx":  [
+                                                                 "src/components/admin/admin-dashboard.tsx"
+                                                             ],
+                            "src/app/admin/dme/page.tsx":  [
+                                                               "src/components/admin/admin-dashboard.tsx"
+                                                           ],
+                            "src/app/admin/vor/page.tsx":  [
+                                                               "src/components/admin/admin-dashboard.tsx"
+                                                           ],
+                            "src/app/student/ads-b/page.tsx":  [
+                                                                   "src/components/qcms/student-dashboard.tsx"
+                                                               ],
+                            "src/app/student/dme/page.tsx":  [
+                                                                 "src/components/qcms/student-dashboard.tsx"
+                                                             ],
+                            "src/app/student/loading.tsx":  [
+                                                                "src/components/qcms/student-loading.tsx"
+                                                            ],
+                            "src/app/student/vor/page.tsx":  [
+                                                                 "src/components/qcms/student-dashboard.tsx"
+                                                             ],
+                            "src/components/admin/admin-dashboard.tsx":  [
+                                                                             "src/components/admin/delete-scenario-dialog.tsx",
+                                                                             "src/components/dme/admin/dme-admin-dashboard.tsx",
+                                                                             "src/components/ui/exam-workspace.tsx",
+                                                                             "src/components/ui/scenario-data-table.tsx",
+                                                                             "src/components/vor/admin/vor-admin-dashboard.tsx",
+                                                                             "src/lib/scenario-order.ts",
+                                                                             "src/lib/types.ts",
+                                                                             "src/stores/scenario-store.ts"
+                                                                         ],
+                            "src/components/admin/delete-scenario-dialog.tsx":  [
+
+                                                                                ],
+                            "src/components/dme/admin/dme-admin-dashboard.tsx":  [
+                                                                                     "src/components/ui/exam-workspace.tsx",
+                                                                                     "src/components/ui/scenario-data-table.tsx",
+                                                                                     "src/lib/dme-types.ts",
+                                                                                     "src/stores/dme-scenario-store.ts",
+                                                                                     "src/stores/dme-submission-store.ts"
+                                                                                 ],
+                            "src/components/qcms/student-dashboard.tsx":  [
+                                                                              "src/components/dme/student/dme-student-dashboard.tsx",
+                                                                              "src/components/qcms/qcms-utils.ts",
+                                                                              "src/components/qcms/student-loading.tsx",
+                                                                              "src/components/ui/exam-workspace.tsx",
+                                                                              "src/components/ui/scenario-data-table.tsx",
+                                                                              "src/components/vor/student/vor-student-dashboard.tsx",
+                                                                              "src/lib/scenario-order.ts",
+                                                                              "src/lib/types.ts",
+                                                                              "src/stores/scenario-store.ts"
+                                                                          ],
+                            "src/components/qcms/student-loading.tsx":  [
+
+                                                                        ],
+                            "src/components/ui/exam-workspace.tsx":  [
+
+                                                                     ],
+                            "src/components/ui/scenario-data-table.tsx":  [
+
+                                                                          ],
+                            "src/components/vor/admin/vor-admin-dashboard.tsx":  [
+                                                                                     "src/components/ui/exam-workspace.tsx",
+                                                                                     "src/components/ui/scenario-data-table.tsx",
+                                                                                     "src/lib/vor-types.ts",
+                                                                                     "src/stores/vor-scenario-store.ts",
+                                                                                     "src/stores/vor-submission-store.ts"
+                                                                                 ],
+                            "src/lib/scenario-normalization.ts":  [
+                                                                      "src/lib/types.ts"
+                                                                  ],
+                            "src/lib/scenario-order.ts":  [
+                                                              "src/lib/types.ts"
+                                                          ],
+                            "src/lib/storage.ts":  [
+                                                       "src/lib/scenario-normalization.ts",
+                                                       "src/lib/types.ts"
+                                                   ],
+                            "src/stores/scenario-store.ts":  [
+                                                                 "src/lib/storage.ts",
+                                                                 "src/lib/types.ts",
+                                                                 "src/stores/default-scenarios.ts"
+                                                             ],
+                            "tests/admin/admin-dashboard.test.tsx":  [
+                                                                         "src/components/admin/admin-dashboard.tsx",
+                                                                         "src/lib/types.ts",
+                                                                         "src/stores/scenario-store.ts"
+                                                                     ],
+                            "tests/core/scenario-normalization.test.ts":  [
+                                                                              "src/lib/scenario-normalization.ts"
+                                                                          ],
+                            "tests/core/scenario-order.test.ts":  [
+                                                                      "src/lib/scenario-order.ts",
+                                                                      "src/lib/types.ts"
+                                                                  ],
+                            "tests/core/storage.test.ts":  [
+                                                               "src/lib/storage.ts",
+                                                               "src/lib/types.ts"
+                                                           ],
+                            "tests/layout/module-routing.test.tsx":  [
+                                                                         "src/components/admin/admin-dashboard.tsx",
+                                                                         "src/components/qcms/student-dashboard.tsx",
+                                                                         "src/stores/dme-scenario-store.ts",
+                                                                         "src/stores/dme-submission-store.ts",
+                                                                         "src/stores/scenario-store.ts",
+                                                                         "src/stores/vor-scenario-store.ts"
+                                                                     ],
+                            "tests/layout/scenario-data-table.test.tsx":  [
+                                                                              "src/components/ui/scenario-data-table.tsx"
+                                                                          ],
+                            "tests/qcms/student-dashboard.test.tsx":  [
+                                                                          "src/components/qcms/student-dashboard.tsx",
+                                                                          "src/lib/types.ts",
+                                                                          "src/stores/scenario-store.ts"
+                                                                      ],
+                            "tests/state/scenario-store.test.ts":  [
+                                                                       "src/lib/storage.ts",
+                                                                       "src/lib/types.ts",
+                                                                       "src/stores/scenario-store.ts"
+                                                                   ]
+                        }
+}

@@ -1,0 +1,139 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 4,
+  "filesSkipped": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 4,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 4,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "results": [
+    {
+      "path": "src/app/admin/exam-sets/loading.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 5,
+      "nonEmptyLines": 4,
+      "functions": [
+        {
+          "name": "Loading",
+          "startLine": 3,
+          "endLine": 5,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "Loading",
+          "line": 3,
+          "isDefault": true
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/admin/exams/loading.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 5,
+      "nonEmptyLines": 4,
+      "functions": [
+        {
+          "name": "Loading",
+          "startLine": 3,
+          "endLine": 5,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "Loading",
+          "line": 3,
+          "isDefault": true
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/student/exams/loading.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 5,
+      "nonEmptyLines": 4,
+      "functions": [
+        {
+          "name": "Loading",
+          "startLine": 3,
+          "endLine": 5,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "Loading",
+          "line": 3,
+          "isDefault": true
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/exams/route-loading.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 19,
+      "nonEmptyLines": 19,
+      "functions": [
+        {
+          "name": "ExamRouteLoading",
+          "startLine": 1,
+          "endLine": 19,
+          "params": [
+            "{ label = \"Đang tải dữ liệu kỳ thi\" }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "ExamRouteLoading",
+          "line": 1,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "ExamRouteLoading",
+          "callee": "[0, 1, 2, 3].map",
+          "lineNumber": 9
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    }
+  ]
+}

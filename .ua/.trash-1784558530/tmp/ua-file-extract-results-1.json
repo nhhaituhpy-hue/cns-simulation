@@ -1,0 +1,3114 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 32,
+  "filesSkipped": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 32,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 32,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "results": [
+    {
+      "path": "src/app/admin/vor-pmdt/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 25,
+      "nonEmptyLines": 23,
+      "functions": [
+        {
+          "name": "VorPmdtPage",
+          "startLine": 10,
+          "endLine": 25,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "metadata",
+          "line": 6,
+          "isDefault": false
+        },
+        {
+          "name": "VorPmdtPage",
+          "line": 10,
+          "isDefault": true
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/admin/vor/create/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 10,
+      "nonEmptyLines": 8,
+      "functions": [
+        {
+          "name": "CreateVorScenarioPage",
+          "startLine": 8,
+          "endLine": 10,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "metadata",
+          "line": 4,
+          "isDefault": false
+        },
+        {
+          "name": "CreateVorScenarioPage",
+          "line": 8,
+          "isDefault": true
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/admin/vor/edit/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 18,
+      "nonEmptyLines": 15,
+      "functions": [
+        {
+          "name": "EditVorScenarioContent",
+          "startLine": 7,
+          "endLine": 10,
+          "params": []
+        },
+        {
+          "name": "EditVorScenarioPage",
+          "startLine": 12,
+          "endLine": 18,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "EditVorScenarioPage",
+          "line": 12,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "EditVorScenarioContent",
+          "callee": "useSearchParams",
+          "lineNumber": 8
+        },
+        {
+          "caller": "EditVorScenarioContent",
+          "callee": "searchParams.get",
+          "lineNumber": 9
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/admin/vor/submissions/[id]/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 13,
+      "nonEmptyLines": 10,
+      "functions": [
+        {
+          "name": "VorSubmissionReviewPage",
+          "startLine": 10,
+          "endLine": 13,
+          "params": [
+            "{ params }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "metadata",
+          "line": 4,
+          "isDefault": false
+        },
+        {
+          "name": "VorSubmissionReviewPage",
+          "line": 10,
+          "isDefault": true
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/admin/vor/submissions/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 8,
+      "nonEmptyLines": 6,
+      "functions": [
+        {
+          "name": "VorSubmissionsPage",
+          "startLine": 6,
+          "endLine": 8,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "metadata",
+          "line": 4,
+          "isDefault": false
+        },
+        {
+          "name": "VorSubmissionsPage",
+          "line": 6,
+          "isDefault": true
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/admin/vor-author-panel.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 189,
+      "nonEmptyLines": 174,
+      "functions": [
+        {
+          "name": "getLogStateOptions",
+          "startLine": 21,
+          "endLine": 25,
+          "params": [
+            "fieldId"
+          ]
+        },
+        {
+          "name": "getLogStateStatus",
+          "startLine": 27,
+          "endLine": 30,
+          "params": [
+            "fieldId",
+            "value"
+          ]
+        },
+        {
+          "name": "VorAuthorPanel",
+          "startLine": 51,
+          "endLine": 189,
+          "params": [
+            "{\n  draft,\n  selectedField,\n  saving,\n  error,\n  onDraftChange,\n  onApplyField,\n  onRemoveField,\n  onSave,\n  onOpenHardware,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "VorAuthorPanel",
+          "line": 51,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "getLogStateOptions",
+          "callee": "/^alarmLogs\\.\\d+\\.state$/.test",
+          "lineNumber": 22
+        },
+        {
+          "caller": "getLogStateOptions",
+          "callee": "/^maintenanceLogs\\.\\d+\\.state$/.test",
+          "lineNumber": 23
+        },
+        {
+          "caller": "getLogStateStatus",
+          "callee": "fieldId.startsWith",
+          "lineNumber": 29
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 62
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 63
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 64
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 65
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 66
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "useState",
+          "lineNumber": 67
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "String",
+          "lineNumber": 68
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "useState",
+          "lineNumber": 70
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "useState",
+          "lineNumber": 71
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "useState",
+          "lineNumber": 78
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "getSidebarInteractionTargets",
+          "lineNumber": 79
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "getLogStateOptions",
+          "lineNumber": 80
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "/^(alarmLogs|maintenanceLogs)\\.\\d+\\.timeTag$/.test",
+          "lineNumber": 81
+        },
+        {
+          "caller": "applyField",
+          "callee": "logTimeTagPattern.test",
+          "lineNumber": 85
+        },
+        {
+          "caller": "applyField",
+          "callee": "fieldValue.trim",
+          "lineNumber": 85
+        },
+        {
+          "caller": "applyField",
+          "callee": "setFieldError",
+          "lineNumber": 86
+        },
+        {
+          "caller": "applyField",
+          "callee": "Number",
+          "lineNumber": 92
+        },
+        {
+          "caller": "applyField",
+          "callee": "Number.isFinite",
+          "lineNumber": 93
+        },
+        {
+          "caller": "applyField",
+          "callee": "setFieldError",
+          "lineNumber": 96
+        },
+        {
+          "caller": "applyField",
+          "callee": "getLogStateStatus",
+          "lineNumber": 98
+        },
+        {
+          "caller": "applyField",
+          "callee": "String",
+          "lineNumber": 98
+        },
+        {
+          "caller": "applyField",
+          "callee": "onApplyField",
+          "lineNumber": 102
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "onDraftChange",
+          "lineNumber": 114
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "onDraftChange",
+          "lineNumber": 115
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "onDraftChange",
+          "lineNumber": 116
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "onDraftChange",
+          "lineNumber": 117
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "isInteractiveSidebarField",
+          "lineNumber": 126
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "setFieldValue",
+          "lineNumber": 132
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "logStateOptions.map",
+          "lineNumber": 132
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "setFieldChecked",
+          "lineNumber": 134
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "setFieldValue",
+          "lineNumber": 136
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "setFieldStatus",
+          "lineNumber": 143
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "addCheckpoint",
+          "lineNumber": 166
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "activeMenuPath.join",
+          "lineNumber": 167
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "checkpoints.map",
+          "lineNumber": 168
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "checkpoint.menuPath.join",
+          "lineNumber": 168
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "removeCheckpoint",
+          "lineNumber": 168
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "interactionTargets.map",
+          "lineNumber": 175
+        },
+        {
+          "caller": "VorAuthorPanel",
+          "callee": "String",
+          "lineNumber": 178
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 1,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/admin/vor-scenario-author.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 293,
+      "nonEmptyLines": 279,
+      "functions": [
+        {
+          "name": "parseVisibleValue",
+          "startLine": 37,
+          "endLine": 60,
+          "params": [
+            "element"
+          ]
+        },
+        {
+          "name": "selectedFromElement",
+          "startLine": 62,
+          "endLine": 83,
+          "params": [
+            "element",
+            "overrides"
+          ]
+        },
+        {
+          "name": "VorScenarioAuthor",
+          "startLine": 85,
+          "endLine": 111,
+          "params": [
+            "{ scenarioId }"
+          ]
+        },
+        {
+          "name": "VorScenarioAuthorEditor",
+          "startLine": 113,
+          "endLine": 293,
+          "params": [
+            "{\n  scenarioId,\n  initialScenario,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "VorScenarioAuthor",
+          "line": 85,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "parseVisibleValue",
+          "callee": "Number",
+          "lineNumber": 42
+        },
+        {
+          "caller": "parseVisibleValue",
+          "callee": "Number.isFinite",
+          "lineNumber": 43
+        },
+        {
+          "caller": "parseVisibleValue",
+          "callee": "element.matches",
+          "lineNumber": 47
+        },
+        {
+          "caller": "parseVisibleValue",
+          "callee": "element.querySelector",
+          "lineNumber": 49
+        },
+        {
+          "caller": "parseVisibleValue",
+          "callee": "Number",
+          "lineNumber": 52
+        },
+        {
+          "caller": "parseVisibleValue",
+          "callee": "input.value.trim",
+          "lineNumber": 53
+        },
+        {
+          "caller": "parseVisibleValue",
+          "callee": "Number.isFinite",
+          "lineNumber": 53
+        },
+        {
+          "caller": "parseVisibleValue",
+          "callee": "element.textContent?.trim",
+          "lineNumber": 57
+        },
+        {
+          "caller": "parseVisibleValue",
+          "callee": "Number",
+          "lineNumber": 58
+        },
+        {
+          "caller": "parseVisibleValue",
+          "callee": "Number.isFinite",
+          "lineNumber": 59
+        },
+        {
+          "caller": "selectedFromElement",
+          "callee": "overrides.find",
+          "lineNumber": 68
+        },
+        {
+          "caller": "selectedFromElement",
+          "callee": "element.textContent?.trim",
+          "lineNumber": 69
+        },
+        {
+          "caller": "selectedFromElement",
+          "callee": "visibleText.match",
+          "lineNumber": 70
+        },
+        {
+          "caller": "selectedFromElement",
+          "callee": "visibleText.slice",
+          "lineNumber": 73
+        },
+        {
+          "caller": "selectedFromElement",
+          "callee": "parseVisibleValue",
+          "lineNumber": 74
+        },
+        {
+          "caller": "selectedFromElement",
+          "callee": "statusMatch[1].toLowerCase",
+          "lineNumber": 80
+        },
+        {
+          "caller": "VorScenarioAuthor",
+          "callee": "useVorScenarioStore",
+          "lineNumber": 86
+        },
+        {
+          "caller": "VorScenarioAuthor",
+          "callee": "useVorScenarioStore",
+          "lineNumber": 87
+        },
+        {
+          "caller": "VorScenarioAuthor",
+          "callee": "useVorScenarioStore",
+          "lineNumber": 88
+        },
+        {
+          "caller": "VorScenarioAuthor",
+          "callee": "scenarios.find",
+          "lineNumber": 90
+        },
+        {
+          "caller": "VorScenarioAuthor",
+          "callee": "useEffect",
+          "lineNumber": 93
+        },
+        {
+          "caller": "VorScenarioAuthor",
+          "callee": "hydrate",
+          "lineNumber": 94
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "useRouter",
+          "lineNumber": 120
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "useVorScenarioStore",
+          "lineNumber": 121
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "useVorScenarioStore",
+          "lineNumber": 122
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 123
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 124
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 125
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "useState",
+          "lineNumber": 126
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "initialScenario.overrides.map",
+          "lineNumber": 133
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "initialScenario.expectedCheckpoints.map",
+          "lineNumber": 134
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "structuredClone",
+          "lineNumber": 139
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "useState",
+          "lineNumber": 144
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "useState",
+          "lineNumber": 145
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "useState",
+          "lineNumber": 146
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "useState",
+          "lineNumber": 147
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "useEffect",
+          "lineNumber": 148
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "initializeSession",
+          "lineNumber": 149
+        },
+        {
+          "caller": "selectField",
+          "callee": "target.closest",
+          "lineNumber": 160
+        },
+        {
+          "caller": "selectField",
+          "callee": "selectedFromElement",
+          "lineNumber": 162
+        },
+        {
+          "caller": "selectField",
+          "callee": "useVorPmdtStore.getState",
+          "lineNumber": 164
+        },
+        {
+          "caller": "selectField",
+          "callee": "setSelectedField",
+          "lineNumber": 166
+        },
+        {
+          "caller": "save",
+          "callee": "draft.title.trim",
+          "lineNumber": 172
+        },
+        {
+          "caller": "save",
+          "callee": "draft.description.trim",
+          "lineNumber": 173
+        },
+        {
+          "caller": "save",
+          "callee": "draft.prompt.trim",
+          "lineNumber": 174
+        },
+        {
+          "caller": "save",
+          "callee": "useVorPmdtStore.getState",
+          "lineNumber": 175
+        },
+        {
+          "caller": "save",
+          "callee": "useVorPmdtStore.getState",
+          "lineNumber": 176
+        },
+        {
+          "caller": "save",
+          "callee": "setError",
+          "lineNumber": 179
+        },
+        {
+          "caller": "save",
+          "callee": "setError",
+          "lineNumber": 183
+        },
+        {
+          "caller": "save",
+          "callee": "setError",
+          "lineNumber": 187
+        },
+        {
+          "caller": "save",
+          "callee": "metadata.overrides.some",
+          "lineNumber": 190
+        },
+        {
+          "caller": "save",
+          "callee": "isInteractiveSidebarField",
+          "lineNumber": 191
+        },
+        {
+          "caller": "save",
+          "callee": "setError",
+          "lineNumber": 194
+        },
+        {
+          "caller": "save",
+          "callee": "setError",
+          "lineNumber": 198
+        },
+        {
+          "caller": "save",
+          "callee": "setSaving",
+          "lineNumber": 202
+        },
+        {
+          "caller": "save",
+          "callee": "setError",
+          "lineNumber": 203
+        },
+        {
+          "caller": "save",
+          "callee": "updateScenario",
+          "lineNumber": 206
+        },
+        {
+          "caller": "save",
+          "callee": "createScenario",
+          "lineNumber": 209
+        },
+        {
+          "caller": "save",
+          "callee": "router.push",
+          "lineNumber": 211
+        },
+        {
+          "caller": "save",
+          "callee": "setError",
+          "lineNumber": 213
+        },
+        {
+          "caller": "save",
+          "callee": "setSaving",
+          "lineNumber": 214
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "String",
+          "lineNumber": 220
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "setDraft",
+          "lineNumber": 226
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "setError",
+          "lineNumber": 227
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "setOverride",
+          "lineNumber": 231
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "setSelectedField",
+          "lineNumber": 232
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "removeOverride",
+          "lineNumber": 236
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "setHardwareEditorOpen",
+          "lineNumber": 238
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "save",
+          "lineNumber": 239
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "e.preventDefault",
+          "lineNumber": 249
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "useVorPmdtStore.getState",
+          "lineNumber": 250
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "draft.title.trim",
+          "lineNumber": 252
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "draft.description.trim",
+          "lineNumber": 253
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "draft.prompt.trim",
+          "lineNumber": 254
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "window.confirm",
+          "lineNumber": 260
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "router.push",
+          "lineNumber": 264
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "setDraft",
+          "lineNumber": 280
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "setError",
+          "lineNumber": 286
+        },
+        {
+          "caller": "VorScenarioAuthorEditor",
+          "callee": "setHardwareEditorOpen",
+          "lineNumber": 288
+        }
+      ],
+      "metrics": {
+        "importCount": 8,
+        "exportCount": 1,
+        "functionCount": 4,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/admin/vor-submission-list.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 93,
+      "nonEmptyLines": 85,
+      "functions": [
+        {
+          "name": "VorSubmissionList",
+          "startLine": 16,
+          "endLine": 93,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "VorSubmissionList",
+          "line": 16,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "VorSubmissionList",
+          "callee": "useVorSubmissionStore",
+          "lineNumber": 17
+        },
+        {
+          "caller": "VorSubmissionList",
+          "callee": "useVorSubmissionStore",
+          "lineNumber": 18
+        },
+        {
+          "caller": "VorSubmissionList",
+          "callee": "useVorSubmissionStore",
+          "lineNumber": 19
+        },
+        {
+          "caller": "VorSubmissionList",
+          "callee": "useVorSubmissionStore",
+          "lineNumber": 20
+        },
+        {
+          "caller": "VorSubmissionList",
+          "callee": "useVorScenarioStore",
+          "lineNumber": 21
+        },
+        {
+          "caller": "VorSubmissionList",
+          "callee": "useVorScenarioStore",
+          "lineNumber": 22
+        },
+        {
+          "caller": "VorSubmissionList",
+          "callee": "useEffect",
+          "lineNumber": 24
+        },
+        {
+          "caller": "VorSubmissionList",
+          "callee": "hydrateSubmissions",
+          "lineNumber": 25
+        },
+        {
+          "caller": "VorSubmissionList",
+          "callee": "hydrateScenarios",
+          "lineNumber": 26
+        },
+        {
+          "caller": "VorSubmissionList",
+          "callee": "submissions.map",
+          "lineNumber": 63
+        },
+        {
+          "caller": "VorSubmissionList",
+          "callee": "scenarios.find",
+          "lineNumber": 64
+        },
+        {
+          "caller": "VorSubmissionList",
+          "callee": "dateFormatter.format",
+          "lineNumber": 77
+        },
+        {
+          "caller": "VorSubmissionList",
+          "callee": "encodeURIComponent",
+          "lineNumber": 79
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/admin/vor-submission-review.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 195,
+      "nonEmptyLines": 179,
+      "functions": [
+        {
+          "name": "VorSubmissionReview",
+          "startLine": 18,
+          "endLine": 187,
+          "params": [
+            "{ submissionId }"
+          ]
+        },
+        {
+          "name": "ReviewSection",
+          "startLine": 189,
+          "endLine": 191,
+          "params": [
+            "{ title, children }"
+          ]
+        },
+        {
+          "name": "Answer",
+          "startLine": 193,
+          "endLine": 195,
+          "params": [
+            "{ title, value }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "VorSubmissionReview",
+          "line": 18,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "useVorSubmissionStore",
+          "lineNumber": 19
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "useVorSubmissionStore",
+          "lineNumber": 20
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "useVorSubmissionStore",
+          "lineNumber": 21
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "useVorSubmissionStore",
+          "lineNumber": 22
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "useVorScenarioStore",
+          "lineNumber": 23
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "useVorScenarioStore",
+          "lineNumber": 24
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "submissions.find",
+          "lineNumber": 25
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "scenarios.find",
+          "lineNumber": 26
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "useState",
+          "lineNumber": 27
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "useEffect",
+          "lineNumber": 29
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "hydrateSubmissions",
+          "lineNumber": 30
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "hydrateScenarios",
+          "lineNumber": 31
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "useMemo",
+          "lineNumber": 34
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "submission?.events\n        .filter((event) => event.eventType !== \"sidebar\")\n        .map",
+          "lineNumber": 36
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "submission?.events\n        .filter",
+          "lineNumber": 36
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "useMemo",
+          "lineNumber": 42
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "getSidebarInteractionTargets",
+          "lineNumber": 43
+        },
+        {
+          "caller": "saveReview",
+          "callee": "event.preventDefault",
+          "lineNumber": 64
+        },
+        {
+          "caller": "saveReview",
+          "callee": "Number",
+          "lineNumber": 66
+        },
+        {
+          "caller": "saveReview",
+          "callee": "formData.get",
+          "lineNumber": 66
+        },
+        {
+          "caller": "saveReview",
+          "callee": "String",
+          "lineNumber": 67
+        },
+        {
+          "caller": "saveReview",
+          "callee": "formData.get",
+          "lineNumber": 67
+        },
+        {
+          "caller": "saveReview",
+          "callee": "Number.isFinite",
+          "lineNumber": 68
+        },
+        {
+          "caller": "saveReview",
+          "callee": "setMessage",
+          "lineNumber": 69
+        },
+        {
+          "caller": "saveReview",
+          "callee": "reviewSubmission",
+          "lineNumber": 72
+        },
+        {
+          "caller": "saveReview",
+          "callee": "setMessage",
+          "lineNumber": 73
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "submission.events.map",
+          "lineNumber": 93
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "String(item.sequence).padStart",
+          "lineNumber": 96
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "String",
+          "lineNumber": 96
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "item.menuPath.join",
+          "lineNumber": 99
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "String",
+          "lineNumber": 102
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "scenario.expectedCheckpoints.map",
+          "lineNumber": 130
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "visitedViews.has",
+          "lineNumber": 131
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "sidebarTargets.map",
+          "lineNumber": 150
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "submission.events\n                      .filter((event) =>\n                        event.eventType === \"sidebar\" && event.fieldId === target.fieldId,\n                      )\n                      .at",
+          "lineNumber": 151
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "submission.events\n                      .filter",
+          "lineNumber": 151
+        },
+        {
+          "caller": "VorSubmissionReview",
+          "callee": "String",
+          "lineNumber": 164
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 1,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/pmdt-layout.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 85,
+      "nonEmptyLines": 78,
+      "functions": [
+        {
+          "name": "PmdtScreenRouter",
+          "startLine": 27,
+          "endLine": 41,
+          "params": []
+        },
+        {
+          "name": "PmdtLayout",
+          "startLine": 43,
+          "endLine": 85,
+          "params": [
+            "{\n  mode = \"preview\",\n  children,\n  sidePanel,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "PmdtLayout",
+          "line": 43,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "PmdtScreenRouter",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 28
+        },
+        {
+          "caller": "PmdtLayout",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 48
+        },
+        {
+          "caller": "PmdtLayout",
+          "callee": "useEffect",
+          "lineNumber": 50
+        },
+        {
+          "caller": "PmdtLayout",
+          "callee": "setMode",
+          "lineNumber": 51
+        }
+      ],
+      "metrics": {
+        "importCount": 16,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/pmdt-menu-bar.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 158,
+      "nonEmptyLines": 146,
+      "functions": [
+        {
+          "name": "MenuItemRow",
+          "startLine": 20,
+          "endLine": 76,
+          "params": [
+            "{\n  group,\n  item,\n  closeMenu,\n  depth = 0,\n}"
+          ]
+        },
+        {
+          "name": "PmdtMenuBar",
+          "startLine": 78,
+          "endLine": 158,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "PmdtMenuBar",
+          "line": 78,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "MenuItemRow",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 26
+        },
+        {
+          "caller": "MenuItemRow",
+          "callee": "Boolean",
+          "lineNumber": 28
+        },
+        {
+          "caller": "selectItem",
+          "callee": "openScreen",
+          "lineNumber": 32
+        },
+        {
+          "caller": "selectItem",
+          "callee": "closeMenu",
+          "lineNumber": 33
+        },
+        {
+          "caller": "MenuItemRow",
+          "callee": "item.children?.map",
+          "lineNumber": 63
+        },
+        {
+          "caller": "PmdtMenuBar",
+          "callee": "useState",
+          "lineNumber": 79
+        },
+        {
+          "caller": "PmdtMenuBar",
+          "callee": "useRef",
+          "lineNumber": 80
+        },
+        {
+          "caller": "PmdtMenuBar",
+          "callee": "useEffect",
+          "lineNumber": 82
+        },
+        {
+          "caller": "closeOnOutsidePointer",
+          "callee": "containerRef.current.contains",
+          "lineNumber": 87
+        },
+        {
+          "caller": "closeOnOutsidePointer",
+          "callee": "setOpenGroupId",
+          "lineNumber": 89
+        },
+        {
+          "caller": "closeOnEscape",
+          "callee": "setOpenGroupId",
+          "lineNumber": 94
+        },
+        {
+          "caller": "PmdtMenuBar",
+          "callee": "document.addEventListener",
+          "lineNumber": 97
+        },
+        {
+          "caller": "PmdtMenuBar",
+          "callee": "document.addEventListener",
+          "lineNumber": 98
+        },
+        {
+          "caller": "PmdtMenuBar",
+          "callee": "document.removeEventListener",
+          "lineNumber": 100
+        },
+        {
+          "caller": "PmdtMenuBar",
+          "callee": "document.removeEventListener",
+          "lineNumber": 101
+        },
+        {
+          "caller": "PmdtMenuBar",
+          "callee": "vorMenuStructure.map",
+          "lineNumber": 111
+        },
+        {
+          "caller": "PmdtMenuBar",
+          "callee": "event.currentTarget.contains",
+          "lineNumber": 118
+        },
+        {
+          "caller": "PmdtMenuBar",
+          "callee": "setOpenGroupId",
+          "lineNumber": 119
+        },
+        {
+          "caller": "PmdtMenuBar",
+          "callee": "setOpenGroupId",
+          "lineNumber": 127
+        },
+        {
+          "caller": "PmdtMenuBar",
+          "callee": "group.items.map",
+          "lineNumber": 142
+        },
+        {
+          "caller": "PmdtMenuBar",
+          "callee": "setOpenGroupId",
+          "lineNumber": 147
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/pmdt-sidebar.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 225,
+      "nonEmptyLines": 208,
+      "functions": [
+        {
+          "name": "Indicator",
+          "startLine": 34,
+          "endLine": 41,
+          "params": [
+            "{ color }"
+          ]
+        },
+        {
+          "name": "fieldMetadata",
+          "startLine": 43,
+          "endLine": 56,
+          "params": [
+            "fieldId",
+            "label",
+            "value",
+            "status"
+          ]
+        },
+        {
+          "name": "PmdtSidebar",
+          "startLine": 80,
+          "endLine": 225,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "PmdtSidebar",
+          "line": 80,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "fieldMetadata",
+          "callee": "String",
+          "lineNumber": 52
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 81
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 82
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 83
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 84
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 85
+        },
+        {
+          "caller": "displayInteractiveField",
+          "callee": "resolveVorField",
+          "lineNumber": 93
+        },
+        {
+          "caller": "displayInteractiveField",
+          "callee": "resolveVorStatus",
+          "lineNumber": 96
+        },
+        {
+          "caller": "displayInteractiveField",
+          "callee": "studentFieldStates.find",
+          "lineNumber": 99
+        },
+        {
+          "caller": "displayInteractiveField",
+          "callee": "Boolean",
+          "lineNumber": 101
+        },
+        {
+          "caller": "toggleInteractiveField",
+          "callee": "overrides.find",
+          "lineNumber": 114
+        },
+        {
+          "caller": "toggleInteractiveField",
+          "callee": "Boolean",
+          "lineNumber": 115
+        },
+        {
+          "caller": "toggleInteractiveField",
+          "callee": "interactWithSidebar",
+          "lineNumber": 118
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "resolveVorField",
+          "lineNumber": 126
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "resolveVorStatus",
+          "lineNumber": 127
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "resolveVorField",
+          "lineNumber": 128
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "resolveVorStatus",
+          "lineNumber": 129
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "displayInteractiveField",
+          "lineNumber": 130
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "fieldMetadata",
+          "lineNumber": 136
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "fieldMetadata",
+          "lineNumber": 144
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "fieldMetadata",
+          "lineNumber": 152
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "toggleInteractiveField",
+          "lineNumber": 153
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "transmitterRows.map",
+          "lineNumber": 172
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "([\"tx1\", \"tx2\"] as const).map",
+          "lineNumber": 175
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "resolveVorStatus",
+          "lineNumber": 177
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "fieldMetadata",
+          "lineNumber": 178
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "transmitter.toUpperCase",
+          "lineNumber": 178
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "monitorRows.map",
+          "lineNumber": 188
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "displayInteractiveField",
+          "lineNumber": 192
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "(() => {\n                  const value = resolveVorField(data.monitorIntegral[row.key], fieldId, overrides);\n                  return { value, status: resolveVorStatus(value ? row.activeColor : \"gray\", fieldId, overrides) };\n                })",
+          "lineNumber": 193
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "resolveVorField",
+          "lineNumber": 194
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "resolveVorStatus",
+          "lineNumber": 195
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "fieldMetadata",
+          "lineNumber": 199
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "toggleInteractiveField",
+          "lineNumber": 199
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "fieldMetadata",
+          "lineNumber": 201
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "parameterRows.map",
+          "lineNumber": 210
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "resolveVorField",
+          "lineNumber": 213
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "resolveVorStatus",
+          "lineNumber": 214
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "fieldMetadata",
+          "lineNumber": 216
+        },
+        {
+          "caller": "PmdtSidebar",
+          "callee": "value.toFixed",
+          "lineNumber": 217
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/pmdt-status-bar.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 36,
+      "nonEmptyLines": 32,
+      "functions": [
+        {
+          "name": "PmdtStatusBar",
+          "startLine": 14,
+          "endLine": 36,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "PmdtStatusBar",
+          "line": 14,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "PmdtStatusBar",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 15
+        },
+        {
+          "caller": "PmdtStatusBar",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 16
+        },
+        {
+          "caller": "PmdtStatusBar",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 17
+        },
+        {
+          "caller": "PmdtStatusBar",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 18
+        },
+        {
+          "caller": "PmdtStatusBar",
+          "callee": "activeMenuPath.join",
+          "lineNumber": 23
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/pmdt-title-bar.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 42,
+      "nonEmptyLines": 39,
+      "functions": [
+        {
+          "name": "PmdtTitleBar",
+          "startLine": 13,
+          "endLine": 42,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "PmdtTitleBar",
+          "line": 13,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "PmdtTitleBar",
+          "callee": "windowButtons.map",
+          "lineNumber": 26
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/pmdt-toolbar.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 9,
+      "nonEmptyLines": 8,
+      "functions": [
+        {
+          "name": "PmdtToolbar",
+          "startLine": 3,
+          "endLine": 9,
+          "params": [
+            "{ title }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "PmdtToolbar",
+          "line": 3,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/screens/disabled-screen.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 16,
+      "nonEmptyLines": 14,
+      "functions": [
+        {
+          "name": "DisabledScreen",
+          "startLine": 5,
+          "endLine": 16,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "DisabledScreen",
+          "line": 5,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/screens/home-screen.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 18,
+      "nonEmptyLines": 17,
+      "functions": [
+        {
+          "name": "HomeScreen",
+          "startLine": 3,
+          "endLine": 18,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "HomeScreen",
+          "line": 3,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/screens/monitor-alarm-limits.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 83,
+      "nonEmptyLines": 77,
+      "functions": [
+        {
+          "name": "ReadOnlyValue",
+          "startLine": 8,
+          "endLine": 17,
+          "params": [
+            "{ fieldId, value, unit }"
+          ]
+        },
+        {
+          "name": "MonitorAlarmLimits",
+          "startLine": 19,
+          "endLine": 83,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "MonitorAlarmLimits",
+          "line": 19,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "ReadOnlyValue",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 9
+        },
+        {
+          "caller": "ReadOnlyValue",
+          "callee": "resolveVorField",
+          "lineNumber": 10
+        },
+        {
+          "caller": "MonitorAlarmLimits",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 20
+        },
+        {
+          "caller": "MonitorAlarmLimits",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 21
+        },
+        {
+          "caller": "MonitorAlarmLimits",
+          "callee": "([\n              [\"shutdown\", \"Shutdown\"],\n              [\"continuousIdent\", \"Continuous Ident\"],\n              [\"noIdent\", \"No Ident\"],\n            ] as const).map",
+          "lineNumber": 37
+        },
+        {
+          "caller": "MonitorAlarmLimits",
+          "callee": "data.alarmLimits.map",
+          "lineNumber": 55
+        },
+        {
+          "caller": "MonitorAlarmLimits",
+          "callee": "columns.map",
+          "lineNumber": 58
+        },
+        {
+          "caller": "MonitorAlarmLimits",
+          "callee": "resolveVorField",
+          "lineNumber": 60
+        },
+        {
+          "caller": "MonitorAlarmLimits",
+          "callee": "data.monitorAntennas.map",
+          "lineNumber": 72
+        },
+        {
+          "caller": "MonitorAlarmLimits",
+          "callee": "resolveVorField",
+          "lineNumber": 74
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/screens/monitor-config-general.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 91,
+      "nonEmptyLines": 86,
+      "functions": [
+        {
+          "name": "MonitorConfigGeneral",
+          "startLine": 13,
+          "endLine": 91,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "MonitorConfigGeneral",
+          "line": 13,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "MonitorConfigGeneral",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 14
+        },
+        {
+          "caller": "MonitorConfigGeneral",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 15
+        },
+        {
+          "caller": "MonitorConfigGeneral",
+          "callee": "data.monitorConfigGeneral.map",
+          "lineNumber": 33
+        },
+        {
+          "caller": "MonitorConfigGeneral",
+          "callee": "resolveVorField",
+          "lineNumber": 35
+        },
+        {
+          "caller": "MonitorConfigGeneral",
+          "callee": "resolveVorField",
+          "lineNumber": 36
+        },
+        {
+          "caller": "MonitorConfigGeneral",
+          "callee": "resolveVorField",
+          "lineNumber": 37
+        },
+        {
+          "caller": "MonitorConfigGeneral",
+          "callee": "Boolean",
+          "lineNumber": 47
+        },
+        {
+          "caller": "MonitorConfigGeneral",
+          "callee": "Boolean",
+          "lineNumber": 51
+        },
+        {
+          "caller": "MonitorConfigGeneral",
+          "callee": "resolveVorStatus",
+          "lineNumber": 52
+        },
+        {
+          "caller": "MonitorConfigGeneral",
+          "callee": "Boolean",
+          "lineNumber": 66
+        },
+        {
+          "caller": "MonitorConfigGeneral",
+          "callee": "Boolean",
+          "lineNumber": 77
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/screens/monitor-config-layout.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 48,
+      "nonEmptyLines": 45,
+      "functions": [
+        {
+          "name": "MonitorConfigLayout",
+          "startLine": 8,
+          "endLine": 48,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "MonitorConfigLayout",
+          "line": 8,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "MonitorConfigLayout",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 9
+        },
+        {
+          "caller": "MonitorConfigLayout",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 10
+        },
+        {
+          "caller": "MonitorConfigLayout",
+          "callee": "openView",
+          "lineNumber": 20
+        },
+        {
+          "caller": "MonitorConfigLayout",
+          "callee": "openView",
+          "lineNumber": 33
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/screens/monitor-data-layout.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 47,
+      "nonEmptyLines": 43,
+      "functions": [
+        {
+          "name": "MonitorDataLayout",
+          "startLine": 16,
+          "endLine": 47,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "MonitorDataLayout",
+          "line": 16,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "MonitorDataLayout",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 17
+        },
+        {
+          "caller": "MonitorDataLayout",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 18
+        },
+        {
+          "caller": "MonitorDataLayout",
+          "callee": "tabs.map",
+          "lineNumber": 24
+        },
+        {
+          "caller": "MonitorDataLayout",
+          "callee": "openView",
+          "lineNumber": 29
+        }
+      ],
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/screens/monitor-integral.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 54,
+      "nonEmptyLines": 50,
+      "functions": [
+        {
+          "name": "MonitorIntegral",
+          "startLine": 17,
+          "endLine": 54,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "MonitorIntegral",
+          "line": 17,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "MonitorIntegral",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 18
+        },
+        {
+          "caller": "MonitorIntegral",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 19
+        },
+        {
+          "caller": "MonitorIntegral",
+          "callee": "data.integralData.map",
+          "lineNumber": 32
+        },
+        {
+          "caller": "MonitorIntegral",
+          "callee": "([1, 2] as const).map",
+          "lineNumber": 35
+        },
+        {
+          "caller": "MonitorIntegral",
+          "callee": "resolveVorField",
+          "lineNumber": 39
+        },
+        {
+          "caller": "MonitorIntegral",
+          "callee": "resolveVorStatus",
+          "lineNumber": 40
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/screens/monitor-notch.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 78,
+      "nonEmptyLines": 72,
+      "functions": [
+        {
+          "name": "MonitorNotch",
+          "startLine": 5,
+          "endLine": 78,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "MonitorNotch",
+          "line": 5,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "MonitorNotch",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 6
+        },
+        {
+          "caller": "MonitorNotch",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 7
+        },
+        {
+          "caller": "MonitorNotch",
+          "callee": "data.notchData.slice",
+          "lineNumber": 11
+        },
+        {
+          "caller": "MonitorNotch",
+          "callee": "data.notchData.slice",
+          "lineNumber": 12
+        },
+        {
+          "caller": "MonitorNotch",
+          "callee": "data.notchData.slice",
+          "lineNumber": 13
+        },
+        {
+          "caller": "MonitorNotch",
+          "callee": "cols.map",
+          "lineNumber": 18
+        },
+        {
+          "caller": "MonitorNotch",
+          "callee": "colData.map",
+          "lineNumber": 30
+        },
+        {
+          "caller": "MonitorNotch",
+          "callee": "resolveVorField",
+          "lineNumber": 35
+        },
+        {
+          "caller": "MonitorNotch",
+          "callee": "resolveVorField",
+          "lineNumber": 36
+        },
+        {
+          "caller": "MonitorNotch",
+          "callee": "resolveVorField",
+          "lineNumber": 37
+        },
+        {
+          "caller": "MonitorNotch",
+          "callee": "Number(resolvedBaseline).toFixed",
+          "lineNumber": 49
+        },
+        {
+          "caller": "MonitorNotch",
+          "callee": "Number",
+          "lineNumber": 49
+        },
+        {
+          "caller": "MonitorNotch",
+          "callee": "Number(resolvedMon1).toFixed",
+          "lineNumber": 58
+        },
+        {
+          "caller": "MonitorNotch",
+          "callee": "Number",
+          "lineNumber": 58
+        },
+        {
+          "caller": "MonitorNotch",
+          "callee": "Number(resolvedMon2).toFixed",
+          "lineNumber": 67
+        },
+        {
+          "caller": "MonitorNotch",
+          "callee": "Number",
+          "lineNumber": 67
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/screens/monitor-offsets.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 47,
+      "nonEmptyLines": 43,
+      "functions": [
+        {
+          "name": "MonitorOffsets",
+          "startLine": 16,
+          "endLine": 47,
+          "params": [
+            "{ monitorNumber }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "MonitorOffsets",
+          "line": 16,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "MonitorOffsets",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 17
+        },
+        {
+          "caller": "MonitorOffsets",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 18
+        },
+        {
+          "caller": "MonitorOffsets",
+          "callee": "columns.map",
+          "lineNumber": 30
+        },
+        {
+          "caller": "MonitorOffsets",
+          "callee": "rows.map",
+          "lineNumber": 31
+        },
+        {
+          "caller": "MonitorOffsets",
+          "callee": "columns.map",
+          "lineNumber": 34
+        },
+        {
+          "caller": "MonitorOffsets",
+          "callee": "resolveVorField",
+          "lineNumber": 36
+        },
+        {
+          "caller": "MonitorOffsets",
+          "callee": "resolveVorStatus",
+          "lineNumber": 37
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/screens/monitor-sideband-vswr.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 57,
+      "nonEmptyLines": 53,
+      "functions": [
+        {
+          "name": "MonitorSidebandVswr",
+          "startLine": 17,
+          "endLine": 57,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "MonitorSidebandVswr",
+          "line": 17,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "MonitorSidebandVswr",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 18
+        },
+        {
+          "caller": "MonitorSidebandVswr",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 19
+        },
+        {
+          "caller": "MonitorSidebandVswr",
+          "callee": "[0, 1, 2].map",
+          "lineNumber": 31
+        },
+        {
+          "caller": "MonitorSidebandVswr",
+          "callee": "values.slice(column * 16, column * 16 + 16).map",
+          "lineNumber": 33
+        },
+        {
+          "caller": "MonitorSidebandVswr",
+          "callee": "values.slice",
+          "lineNumber": 33
+        },
+        {
+          "caller": "MonitorSidebandVswr",
+          "callee": "resolveVorField",
+          "lineNumber": 36
+        },
+        {
+          "caller": "MonitorSidebandVswr",
+          "callee": "resolveVorStatus",
+          "lineNumber": 37
+        },
+        {
+          "caller": "MonitorSidebandVswr",
+          "callee": "Number(value).toFixed",
+          "lineNumber": 48
+        },
+        {
+          "caller": "MonitorSidebandVswr",
+          "callee": "Number",
+          "lineNumber": 48
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/screens/rms-ad-data.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 47,
+      "nonEmptyLines": 44,
+      "functions": [
+        {
+          "name": "RmsAdData",
+          "startLine": 5,
+          "endLine": 47,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "RmsAdData",
+          "line": 5,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "RmsAdData",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 6
+        },
+        {
+          "caller": "RmsAdData",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 7
+        },
+        {
+          "caller": "RmsAdData",
+          "callee": "data.rmsAdData.map",
+          "lineNumber": 26
+        },
+        {
+          "caller": "RmsAdData",
+          "callee": "resolveVorField",
+          "lineNumber": 31
+        },
+        {
+          "caller": "RmsAdData",
+          "callee": "resolveVorField",
+          "lineNumber": 32
+        },
+        {
+          "caller": "RmsAdData",
+          "callee": "Number(resolveVorField(row.volts, `${prefix}.volts`, overrides)).toFixed",
+          "lineNumber": 34
+        },
+        {
+          "caller": "RmsAdData",
+          "callee": "Number",
+          "lineNumber": 34
+        },
+        {
+          "caller": "RmsAdData",
+          "callee": "resolveVorField",
+          "lineNumber": 34
+        },
+        {
+          "caller": "RmsAdData",
+          "callee": "resolveVorField",
+          "lineNumber": 36
+        },
+        {
+          "caller": "RmsAdData",
+          "callee": "resolveVorField",
+          "lineNumber": 37
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/screens/rms-config-layout.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 516,
+      "nonEmptyLines": 485,
+      "functions": [
+        {
+          "name": "ConfigInput",
+          "startLine": 16,
+          "endLine": 55,
+          "params": [
+            "{\n  fieldId,\n  value,\n  type = \"text\",\n  className = \"\",\n}"
+          ]
+        },
+        {
+          "name": "SectionBox",
+          "startLine": 57,
+          "endLine": 64,
+          "params": [
+            "{ title, children }"
+          ]
+        },
+        {
+          "name": "RmsConfigGeneralTab",
+          "startLine": 66,
+          "endLine": 211,
+          "params": []
+        },
+        {
+          "name": "RmsConfigStationTab",
+          "startLine": 213,
+          "endLine": 296,
+          "params": []
+        },
+        {
+          "name": "RmsConfigPowerLimitsTab",
+          "startLine": 298,
+          "endLine": 376,
+          "params": []
+        },
+        {
+          "name": "RmsConfigAdLimitsTab",
+          "startLine": 378,
+          "endLine": 468,
+          "params": []
+        },
+        {
+          "name": "RmsConfigLayout",
+          "startLine": 470,
+          "endLine": 516,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "RmsConfigLayout",
+          "line": 470,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "ConfigInput",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 27
+        },
+        {
+          "caller": "ConfigInput",
+          "callee": "resolveVorField",
+          "lineNumber": 28
+        },
+        {
+          "caller": "ConfigInput",
+          "callee": "resolveVorStatus",
+          "lineNumber": 31
+        },
+        {
+          "caller": "ConfigInput",
+          "callee": "Boolean",
+          "lineNumber": 36
+        },
+        {
+          "caller": "ConfigInput",
+          "callee": "Boolean",
+          "lineNumber": 40
+        },
+        {
+          "caller": "ConfigInput",
+          "callee": "String",
+          "lineNumber": 51
+        },
+        {
+          "caller": "RmsConfigGeneralTab",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 67
+        },
+        {
+          "caller": "RmsConfigGeneralTab",
+          "callee": "data.spareInputs.map",
+          "lineNumber": 174
+        },
+        {
+          "caller": "RmsConfigStationTab",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 214
+        },
+        {
+          "caller": "RmsConfigPowerLimitsTab",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 299
+        },
+        {
+          "caller": "RmsConfigPowerLimitsTab",
+          "callee": "data.rmsVoltageData.map",
+          "lineNumber": 317
+        },
+        {
+          "caller": "RmsConfigPowerLimitsTab",
+          "callee": "data.rmsCurrentData.map",
+          "lineNumber": 353
+        },
+        {
+          "caller": "RmsConfigAdLimitsTab",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 379
+        },
+        {
+          "caller": "RmsConfigAdLimitsTab",
+          "callee": "data.rmsAdData.map",
+          "lineNumber": 397
+        },
+        {
+          "caller": "RmsConfigAdLimitsTab",
+          "callee": "data.rmsTemperatureData.map",
+          "lineNumber": 433
+        },
+        {
+          "caller": "RmsConfigLayout",
+          "callee": "useState",
+          "lineNumber": 471
+        },
+        {
+          "caller": "RmsConfigLayout",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 472
+        },
+        {
+          "caller": "RmsConfigLayout",
+          "callee": "tabs.map",
+          "lineNumber": 485
+        },
+        {
+          "caller": "RmsConfigLayout",
+          "callee": "setActiveTab",
+          "lineNumber": 494
+        },
+        {
+          "caller": "RmsConfigLayout",
+          "callee": "openView",
+          "lineNumber": 495
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 1,
+        "functionCount": 7,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/screens/rms-data-layout.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 79,
+      "nonEmptyLines": 75,
+      "functions": [
+        {
+          "name": "RmsDataLayout",
+          "startLine": 25,
+          "endLine": 79,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "RmsDataLayout",
+          "line": 25,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "RmsDataLayout",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 26
+        },
+        {
+          "caller": "RmsDataLayout",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 27
+        },
+        {
+          "caller": "RmsDataLayout",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 28
+        },
+        {
+          "caller": "RmsDataLayout",
+          "callee": "tabs.map",
+          "lineNumber": 35
+        },
+        {
+          "caller": "RmsDataLayout",
+          "callee": "openView",
+          "lineNumber": 47
+        }
+      ],
+      "metrics": {
+        "importCount": 8,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/screens/rms-digital-io.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 87,
+      "nonEmptyLines": 79,
+      "functions": [
+        {
+          "name": "Indicator",
+          "startLine": 15,
+          "endLine": 22,
+          "params": [
+            "{ color, label }"
+          ]
+        },
+        {
+          "name": "Panel",
+          "startLine": 24,
+          "endLine": 31,
+          "params": [
+            "{ title, children }"
+          ]
+        },
+        {
+          "name": "RmsDigitalIo",
+          "startLine": 33,
+          "endLine": 87,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "RmsDigitalIo",
+          "line": 33,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "RmsDigitalIo",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 34
+        },
+        {
+          "caller": "RmsDigitalIo",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 35
+        },
+        {
+          "caller": "RmsDigitalIo",
+          "callee": "data.digitalInputs.map",
+          "lineNumber": 42
+        },
+        {
+          "caller": "RmsDigitalIo",
+          "callee": "resolveVorField",
+          "lineNumber": 45
+        },
+        {
+          "caller": "RmsDigitalIo",
+          "callee": "resolveVorField",
+          "lineNumber": 46
+        },
+        {
+          "caller": "RmsDigitalIo",
+          "callee": "data.digitalOutputs.map",
+          "lineNumber": 55
+        },
+        {
+          "caller": "RmsDigitalIo",
+          "callee": "resolveVorField",
+          "lineNumber": 58
+        },
+        {
+          "caller": "RmsDigitalIo",
+          "callee": "resolveVorField",
+          "lineNumber": 59
+        },
+        {
+          "caller": "RmsDigitalIo",
+          "callee": "[\n        [\"System Power Status\", \"systemPowerStatus\", data.systemPowerStatus],\n        [\"Transmitter Alerts\", \"txAlerts\", data.txAlerts],\n      ].map",
+          "lineNumber": 65
+        },
+        {
+          "caller": "RmsDigitalIo",
+          "callee": "String",
+          "lineNumber": 69
+        },
+        {
+          "caller": "RmsDigitalIo",
+          "callee": "String",
+          "lineNumber": 69
+        },
+        {
+          "caller": "RmsDigitalIo",
+          "callee": "(rows as typeof data.txAlerts).map",
+          "lineNumber": 72
+        },
+        {
+          "caller": "RmsDigitalIo",
+          "callee": "([\"tx1\", \"tx2\"] as const).map",
+          "lineNumber": 75
+        },
+        {
+          "caller": "RmsDigitalIo",
+          "callee": "resolveVorStatus",
+          "lineNumber": 77
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/screens/rms-logs-alarms.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 45,
+      "nonEmptyLines": 42,
+      "functions": [
+        {
+          "name": "RmsLogsAlarms",
+          "startLine": 9,
+          "endLine": 45,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "RmsLogsAlarms",
+          "line": 9,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "RmsLogsAlarms",
+          "callee": "useVorPmdtStore((state) => state.data.alarmLogs).slice",
+          "lineNumber": 10
+        },
+        {
+          "caller": "RmsLogsAlarms",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 10
+        },
+        {
+          "caller": "RmsLogsAlarms",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 11
+        },
+        {
+          "caller": "RmsLogsAlarms",
+          "callee": "logs.map",
+          "lineNumber": 21
+        },
+        {
+          "caller": "RmsLogsAlarms",
+          "callee": "resolveVorField",
+          "lineNumber": 23
+        },
+        {
+          "caller": "RmsLogsAlarms",
+          "callee": "resolveVorField",
+          "lineNumber": 24
+        },
+        {
+          "caller": "RmsLogsAlarms",
+          "callee": "resolveVorField",
+          "lineNumber": 25
+        },
+        {
+          "caller": "RmsLogsAlarms",
+          "callee": "resolveVorField",
+          "lineNumber": 26
+        },
+        {
+          "caller": "RmsLogsAlarms",
+          "callee": "resolveVorStatus",
+          "lineNumber": 27
+        },
+        {
+          "caller": "RmsLogsAlarms",
+          "callee": "String",
+          "lineNumber": 34
+        },
+        {
+          "caller": "RmsLogsAlarms",
+          "callee": "String",
+          "lineNumber": 35
+        },
+        {
+          "caller": "RmsLogsAlarms",
+          "callee": "String",
+          "lineNumber": 36
+        },
+        {
+          "caller": "RmsLogsAlarms",
+          "callee": "String",
+          "lineNumber": 37
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/screens/rms-logs-layout.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 56,
+      "nonEmptyLines": 51,
+      "functions": [
+        {
+          "name": "RmsLogsLayout",
+          "startLine": 24,
+          "endLine": 56,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "RmsLogsLayout",
+          "line": 24,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "RmsLogsLayout",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 25
+        },
+        {
+          "caller": "RmsLogsLayout",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 26
+        },
+        {
+          "caller": "RmsLogsLayout",
+          "callee": "logButtons.map",
+          "lineNumber": 32
+        },
+        {
+          "caller": "RmsLogsLayout",
+          "callee": "tabs.map",
+          "lineNumber": 39
+        },
+        {
+          "caller": "RmsLogsLayout",
+          "callee": "openView",
+          "lineNumber": 44
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/screens/rms-logs-maintenance.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 45,
+      "nonEmptyLines": 42,
+      "functions": [
+        {
+          "name": "RmsLogsMaintenance",
+          "startLine": 9,
+          "endLine": 45,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "RmsLogsMaintenance",
+          "line": 9,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "RmsLogsMaintenance",
+          "callee": "useVorPmdtStore((state) => state.data.maintenanceLogs).slice",
+          "lineNumber": 10
+        },
+        {
+          "caller": "RmsLogsMaintenance",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 10
+        },
+        {
+          "caller": "RmsLogsMaintenance",
+          "callee": "useVorPmdtStore",
+          "lineNumber": 11
+        },
+        {
+          "caller": "RmsLogsMaintenance",
+          "callee": "logs.map",
+          "lineNumber": 21
+        },
+        {
+          "caller": "RmsLogsMaintenance",
+          "callee": "resolveVorField",
+          "lineNumber": 23
+        },
+        {
+          "caller": "RmsLogsMaintenance",
+          "callee": "resolveVorField",
+          "lineNumber": 24
+        },
+        {
+          "caller": "RmsLogsMaintenance",
+          "callee": "resolveVorField",
+          "lineNumber": 25
+        },
+        {
+          "caller": "RmsLogsMaintenance",
+          "callee": "resolveVorField",
+          "lineNumber": 26
+        },
+        {
+          "caller": "RmsLogsMaintenance",
+          "callee": "resolveVorStatus",
+          "lineNumber": 27
+        },
+        {
+          "caller": "RmsLogsMaintenance",
+          "callee": "String",
+          "lineNumber": 34
+        },
+        {
+          "caller": "RmsLogsMaintenance",
+          "callee": "String",
+          "lineNumber": 35
+        },
+        {
+          "caller": "RmsLogsMaintenance",
+          "callee": "String",
+          "lineNumber": 36
+        },
+        {
+          "caller": "RmsLogsMaintenance",
+          "callee": "String",
+          "lineNumber": 37
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    }
+  ]
+}

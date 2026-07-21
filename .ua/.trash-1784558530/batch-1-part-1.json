@@ -1,0 +1,1377 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/app/admin/vor-pmdt/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/admin/vor-pmdt/page.tsx",
+      "summary": "Trang Next.js mở giao diện PMDT của VOR ở chế độ quản trị, đồng thời khai báo metadata cho màn hình mô phỏng.",
+      "tags": [
+        "nextjs",
+        "entry-point",
+        "admin",
+        "vor"
+      ],
+      "complexity": "simple",
+      "languageNotes": "TSX React component dùng named/default export theo quy ước Next.js App Router; kiểu dữ liệu và store selector giúp giữ luồng trạng thái rõ ràng."
+    },
+    {
+      "id": "function:src/app/admin/vor-pmdt/page.tsx:VorPmdtPage",
+      "type": "function",
+      "name": "VorPmdtPage",
+      "filePath": "src/app/admin/vor-pmdt/page.tsx",
+      "lineRange": [
+        10,
+        25
+      ],
+      "summary": "Khởi tạo trang PMDT VOR và render bố cục mô phỏng chính.",
+      "tags": [
+        "component",
+        "admin",
+        "event-handler",
+        "vor"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/admin/vor/create/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/admin/vor/create/page.tsx",
+      "summary": "Trang tạo kịch bản VOR mới, chuyển quyền điều khiển giao diện và dữ liệu sang trình biên soạn kịch bản.",
+      "tags": [
+        "nextjs",
+        "entry-point",
+        "admin",
+        "vor"
+      ],
+      "complexity": "simple",
+      "languageNotes": "TSX React component dùng named/default export theo quy ước Next.js App Router; kiểu dữ liệu và store selector giúp giữ luồng trạng thái rõ ràng."
+    },
+    {
+      "id": "function:src/app/admin/vor/create/page.tsx:CreateVorScenarioPage",
+      "type": "function",
+      "name": "CreateVorScenarioPage",
+      "filePath": "src/app/admin/vor/create/page.tsx",
+      "lineRange": [
+        8,
+        10
+      ],
+      "summary": "Render trình biên soạn ở chế độ tạo kịch bản VOR mới.",
+      "tags": [
+        "component",
+        "admin",
+        "event-handler",
+        "vor"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/admin/vor/edit/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/admin/vor/edit/page.tsx",
+      "summary": "Trang chỉnh sửa kịch bản VOR, đọc mã kịch bản từ query string rồi nạp trình biên soạn bên trong Suspense.",
+      "tags": [
+        "nextjs",
+        "entry-point",
+        "admin",
+        "vor"
+      ],
+      "complexity": "simple",
+      "languageNotes": "TSX React component dùng named/default export theo quy ước Next.js App Router; kiểu dữ liệu và store selector giúp giữ luồng trạng thái rõ ràng."
+    },
+    {
+      "id": "function:src/app/admin/vor/edit/page.tsx:EditVorScenarioPage",
+      "type": "function",
+      "name": "EditVorScenarioPage",
+      "filePath": "src/app/admin/vor/edit/page.tsx",
+      "lineRange": [
+        12,
+        18
+      ],
+      "summary": "Bọc nội dung chỉnh sửa trong Suspense để đọc query string an toàn trên client.",
+      "tags": [
+        "component",
+        "admin",
+        "event-handler",
+        "vor"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/admin/vor/submissions/[id]/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/admin/vor/submissions/[id]/page.tsx",
+      "summary": "Trang động hiển thị chi tiết một bài nộp VOR để quản trị viên chấm điểm và đánh giá.",
+      "tags": [
+        "nextjs",
+        "entry-point",
+        "admin",
+        "vor"
+      ],
+      "complexity": "simple",
+      "languageNotes": "TSX React component dùng named/default export theo quy ước Next.js App Router; kiểu dữ liệu và store selector giúp giữ luồng trạng thái rõ ràng."
+    },
+    {
+      "id": "function:src/app/admin/vor/submissions/[id]/page.tsx:VorSubmissionReviewPage",
+      "type": "function",
+      "name": "VorSubmissionReviewPage",
+      "filePath": "src/app/admin/vor/submissions/[id]/page.tsx",
+      "lineRange": [
+        10,
+        13
+      ],
+      "summary": "Giải quyết tham số route bất đồng bộ và mở màn hình đánh giá bài nộp tương ứng.",
+      "tags": [
+        "component",
+        "admin",
+        "event-handler",
+        "vor"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/admin/vor/submissions/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/admin/vor/submissions/page.tsx",
+      "summary": "Trang quản trị liệt kê các bài nộp kịch bản VOR và điều hướng tới màn hình đánh giá chi tiết.",
+      "tags": [
+        "nextjs",
+        "entry-point",
+        "admin",
+        "vor"
+      ],
+      "complexity": "simple",
+      "languageNotes": "TSX React component dùng named/default export theo quy ước Next.js App Router; kiểu dữ liệu và store selector giúp giữ luồng trạng thái rõ ràng."
+    },
+    {
+      "id": "function:src/app/admin/vor/submissions/page.tsx:VorSubmissionsPage",
+      "type": "function",
+      "name": "VorSubmissionsPage",
+      "filePath": "src/app/admin/vor/submissions/page.tsx",
+      "lineRange": [
+        6,
+        8
+      ],
+      "summary": "Render danh sách bài nộp VOR cho khu vực quản trị.",
+      "tags": [
+        "component",
+        "admin",
+        "event-handler",
+        "vor"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/vor/admin/vor-author-panel.tsx",
+      "type": "file",
+      "name": "vor-author-panel.tsx",
+      "filePath": "src/components/vor/admin/vor-author-panel.tsx",
+      "summary": "Bảng điều khiển biên soạn kịch bản VOR, cho phép sửa metadata, override trường PMDT, checkpoint và trạng thái phần cứng trước khi lưu.",
+      "tags": [
+        "react",
+        "component",
+        "admin",
+        "workflow"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TSX React component dùng named/default export theo quy ước Next.js App Router; kiểu dữ liệu và store selector giúp giữ luồng trạng thái rõ ràng."
+    },
+    {
+      "id": "function:src/components/vor/admin/vor-author-panel.tsx:VorAuthorPanel",
+      "type": "function",
+      "name": "VorAuthorPanel",
+      "filePath": "src/components/vor/admin/vor-author-panel.tsx",
+      "lineRange": [
+        51,
+        189
+      ],
+      "summary": "Quản lý form biên soạn, kiểm tra và áp dụng override trường, checkpoint và dữ liệu phần cứng của kịch bản.",
+      "tags": [
+        "component",
+        "admin",
+        "event-handler",
+        "vor"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/vor/admin/vor-scenario-author.tsx",
+      "type": "file",
+      "name": "vor-scenario-author.tsx",
+      "filePath": "src/components/vor/admin/vor-scenario-author.tsx",
+      "summary": "Điều phối toàn bộ quy trình tạo hoặc sửa kịch bản VOR: hydrate dữ liệu, chọn phần tử trực tiếp trên PMDT, kiểm tra đầu vào và lưu vào scenario store.",
+      "tags": [
+        "react",
+        "component",
+        "admin",
+        "workflow"
+      ],
+      "complexity": "complex",
+      "languageNotes": "TSX React component dùng named/default export theo quy ước Next.js App Router; kiểu dữ liệu và store selector giúp giữ luồng trạng thái rõ ràng."
+    },
+    {
+      "id": "function:src/components/vor/admin/vor-scenario-author.tsx:parseVisibleValue",
+      "type": "function",
+      "name": "parseVisibleValue",
+      "filePath": "src/components/vor/admin/vor-scenario-author.tsx",
+      "lineRange": [
+        37,
+        60
+      ],
+      "summary": "Trích xuất giá trị số, checkbox hoặc văn bản đang hiển thị từ một phần tử DOM của PMDT.",
+      "tags": [
+        "utility",
+        "type-safety",
+        "dom",
+        "serialization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/vor/admin/vor-scenario-author.tsx:selectedFromElement",
+      "type": "function",
+      "name": "selectedFromElement",
+      "filePath": "src/components/vor/admin/vor-scenario-author.tsx",
+      "lineRange": [
+        62,
+        83
+      ],
+      "summary": "Chuyển phần tử PMDT được chọn thành metadata trường, kết hợp giá trị hiển thị với override hiện có.",
+      "tags": [
+        "utility",
+        "type-safety",
+        "dom",
+        "serialization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/vor/admin/vor-scenario-author.tsx:VorScenarioAuthor",
+      "type": "function",
+      "name": "VorScenarioAuthor",
+      "filePath": "src/components/vor/admin/vor-scenario-author.tsx",
+      "lineRange": [
+        85,
+        111
+      ],
+      "summary": "Hydrate scenario store, tìm kịch bản cần sửa và chọn trạng thái loading hoặc editor phù hợp.",
+      "tags": [
+        "component",
+        "admin",
+        "event-handler",
+        "vor"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/vor/admin/vor-scenario-author.tsx:VorScenarioAuthorEditor",
+      "type": "function",
+      "name": "VorScenarioAuthorEditor",
+      "filePath": "src/components/vor/admin/vor-scenario-author.tsx",
+      "lineRange": [
+        113,
+        293
+      ],
+      "summary": "Điều phối tương tác chọn trường trên PMDT, chỉnh sửa draft, validation và thao tác tạo/cập nhật kịch bản.",
+      "tags": [
+        "component",
+        "admin",
+        "event-handler",
+        "vor"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/vor/admin/vor-submission-list.tsx",
+      "type": "file",
+      "name": "vor-submission-list.tsx",
+      "filePath": "src/components/vor/admin/vor-submission-list.tsx",
+      "summary": "Bảng danh sách bài nộp VOR, kết hợp dữ liệu bài nộp với tên kịch bản, trạng thái chấm và thời gian để phục vụ quản trị.",
+      "tags": [
+        "react",
+        "component",
+        "admin",
+        "workflow"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TSX React component dùng named/default export theo quy ước Next.js App Router; kiểu dữ liệu và store selector giúp giữ luồng trạng thái rõ ràng."
+    },
+    {
+      "id": "function:src/components/vor/admin/vor-submission-list.tsx:VorSubmissionList",
+      "type": "function",
+      "name": "VorSubmissionList",
+      "filePath": "src/components/vor/admin/vor-submission-list.tsx",
+      "lineRange": [
+        16,
+        93
+      ],
+      "summary": "Nạp scenario và submission store rồi render bảng bài nộp có trạng thái chấm và liên kết chi tiết.",
+      "tags": [
+        "component",
+        "admin",
+        "event-handler",
+        "vor"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/vor/admin/vor-submission-review.tsx",
+      "type": "file",
+      "name": "vor-submission-review.tsx",
+      "filePath": "src/components/vor/admin/vor-submission-review.tsx",
+      "summary": "Màn hình đánh giá bài nộp VOR, đối chiếu event và checkpoint mong đợi, hiển thị tương tác sidebar/phần cứng và ghi điểm nhận xét.",
+      "tags": [
+        "react",
+        "component",
+        "admin",
+        "workflow"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TSX React component dùng named/default export theo quy ước Next.js App Router; kiểu dữ liệu và store selector giúp giữ luồng trạng thái rõ ràng."
+    },
+    {
+      "id": "function:src/components/vor/admin/vor-submission-review.tsx:VorSubmissionReview",
+      "type": "function",
+      "name": "VorSubmissionReview",
+      "filePath": "src/components/vor/admin/vor-submission-review.tsx",
+      "lineRange": [
+        18,
+        187
+      ],
+      "summary": "Tổng hợp timeline, checkpoint và tương tác thiết bị để hiển thị hồ sơ bài làm và lưu kết quả chấm.",
+      "tags": [
+        "component",
+        "admin",
+        "event-handler",
+        "vor"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/vor/pmdt-layout.tsx",
+      "type": "file",
+      "name": "pmdt-layout.tsx",
+      "filePath": "src/components/vor/pmdt-layout.tsx",
+      "summary": "Khung giao diện PMDT VOR mô phỏng ứng dụng desktop, ghép title bar, menu, sidebar, status bar và định tuyến màn hình theo Zustand store.",
+      "tags": [
+        "react",
+        "component",
+        "pmdt",
+        "vor"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TSX React component dùng named/default export theo quy ước Next.js App Router; kiểu dữ liệu và store selector giúp giữ luồng trạng thái rõ ràng."
+    },
+    {
+      "id": "function:src/components/vor/pmdt-layout.tsx:PmdtScreenRouter",
+      "type": "function",
+      "name": "PmdtScreenRouter",
+      "filePath": "src/components/vor/pmdt-layout.tsx",
+      "lineRange": [
+        27,
+        41
+      ],
+      "summary": "Ánh xạ view đang hoạt động trong store sang component màn hình PMDT tương ứng.",
+      "tags": [
+        "component",
+        "router",
+        "state-management",
+        "pmdt"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/vor/pmdt-layout.tsx:PmdtLayout",
+      "type": "function",
+      "name": "PmdtLayout",
+      "filePath": "src/components/vor/pmdt-layout.tsx",
+      "lineRange": [
+        43,
+        85
+      ],
+      "summary": "Lắp ráp khung PMDT và đồng bộ chế độ preview, author hoặc student vào store.",
+      "tags": [
+        "component",
+        "pmdt",
+        "ui",
+        "vor"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/vor/pmdt-menu-bar.tsx",
+      "type": "file",
+      "name": "pmdt-menu-bar.tsx",
+      "filePath": "src/components/vor/pmdt-menu-bar.tsx",
+      "summary": "Thanh menu phân cấp của PMDT VOR, quản lý menu đang mở, xử lý chọn màn hình và đóng menu khi nhấn ra ngoài hoặc Escape.",
+      "tags": [
+        "react",
+        "component",
+        "pmdt",
+        "vor"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TSX React component dùng named/default export theo quy ước Next.js App Router; kiểu dữ liệu và store selector giúp giữ luồng trạng thái rõ ràng."
+    },
+    {
+      "id": "function:src/components/vor/pmdt-menu-bar.tsx:MenuItemRow",
+      "type": "function",
+      "name": "MenuItemRow",
+      "filePath": "src/components/vor/pmdt-menu-bar.tsx",
+      "lineRange": [
+        20,
+        76
+      ],
+      "summary": "Render một mục menu phân cấp, mở submenu hoặc điều hướng view rồi đóng menu.",
+      "tags": [
+        "component",
+        "pmdt",
+        "ui",
+        "vor"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/vor/pmdt-menu-bar.tsx:PmdtMenuBar",
+      "type": "function",
+      "name": "PmdtMenuBar",
+      "filePath": "src/components/vor/pmdt-menu-bar.tsx",
+      "lineRange": [
+        78,
+        158
+      ],
+      "summary": "Quản lý trạng thái menu cấp cao cùng hành vi pointer, keyboard và render cây menu VOR.",
+      "tags": [
+        "component",
+        "pmdt",
+        "ui",
+        "vor"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/vor/pmdt-sidebar.tsx",
+      "type": "file",
+      "name": "pmdt-sidebar.tsx",
+      "filePath": "src/components/vor/pmdt-sidebar.tsx",
+      "summary": "Sidebar giám sát VOR mật độ cao, hiển thị trạng thái transmitter, monitor và tham số với override kịch bản cùng tương tác của học viên.",
+      "tags": [
+        "react",
+        "component",
+        "pmdt",
+        "vor"
+      ],
+      "complexity": "complex",
+      "languageNotes": "TSX React component dùng named/default export theo quy ước Next.js App Router; kiểu dữ liệu và store selector giúp giữ luồng trạng thái rõ ràng."
+    },
+    {
+      "id": "function:src/components/vor/pmdt-sidebar.tsx:fieldMetadata",
+      "type": "function",
+      "name": "fieldMetadata",
+      "filePath": "src/components/vor/pmdt-sidebar.tsx",
+      "lineRange": [
+        43,
+        56
+      ],
+      "summary": "Chuẩn hóa metadata của một trường sidebar để phục vụ chọn trường và ghi nhận tương tác.",
+      "tags": [
+        "utility",
+        "type-safety",
+        "dom",
+        "serialization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/vor/pmdt-sidebar.tsx:PmdtSidebar",
+      "type": "function",
+      "name": "PmdtSidebar",
+      "filePath": "src/components/vor/pmdt-sidebar.tsx",
+      "lineRange": [
+        80,
+        225
+      ],
+      "summary": "Tính giá trị/trạng thái hiệu dụng và render các nhóm chỉ báo vận hành trong sidebar VOR.",
+      "tags": [
+        "component",
+        "pmdt",
+        "ui",
+        "vor"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/vor/pmdt-status-bar.tsx",
+      "type": "file",
+      "name": "pmdt-status-bar.tsx",
+      "filePath": "src/components/vor/pmdt-status-bar.tsx",
+      "summary": "Thanh trạng thái PMDT trình bày đường dẫn menu hiện tại, trạng thái transmitter và monitor lấy từ store VOR.",
+      "tags": [
+        "react",
+        "component",
+        "pmdt",
+        "vor"
+      ],
+      "complexity": "simple",
+      "languageNotes": "TSX React component dùng named/default export theo quy ước Next.js App Router; kiểu dữ liệu và store selector giúp giữ luồng trạng thái rõ ràng."
+    },
+    {
+      "id": "function:src/components/vor/pmdt-status-bar.tsx:PmdtStatusBar",
+      "type": "function",
+      "name": "PmdtStatusBar",
+      "filePath": "src/components/vor/pmdt-status-bar.tsx",
+      "lineRange": [
+        14,
+        36
+      ],
+      "summary": "Render ngữ cảnh menu và trạng thái thiết bị hiện tại ở đáy cửa sổ PMDT.",
+      "tags": [
+        "component",
+        "pmdt",
+        "ui",
+        "vor"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/vor/pmdt-title-bar.tsx",
+      "type": "file",
+      "name": "pmdt-title-bar.tsx",
+      "filePath": "src/components/vor/pmdt-title-bar.tsx",
+      "summary": "Thanh tiêu đề mô phỏng cửa sổ PMDT kiểu desktop với tên sản phẩm và các nút điều khiển cửa sổ mang tính trình bày.",
+      "tags": [
+        "react",
+        "component",
+        "pmdt",
+        "vor"
+      ],
+      "complexity": "simple",
+      "languageNotes": "TSX React component dùng named/default export theo quy ước Next.js App Router; kiểu dữ liệu và store selector giúp giữ luồng trạng thái rõ ràng."
+    },
+    {
+      "id": "function:src/components/vor/pmdt-title-bar.tsx:PmdtTitleBar",
+      "type": "function",
+      "name": "PmdtTitleBar",
+      "filePath": "src/components/vor/pmdt-title-bar.tsx",
+      "lineRange": [
+        13,
+        42
+      ],
+      "summary": "Render tiêu đề ứng dụng và bộ nút điều khiển cửa sổ mô phỏng.",
+      "tags": [
+        "component",
+        "pmdt",
+        "ui",
+        "vor"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/vor/pmdt-toolbar.tsx",
+      "type": "file",
+      "name": "pmdt-toolbar.tsx",
+      "filePath": "src/components/vor/pmdt-toolbar.tsx",
+      "summary": "Toolbar dùng lại cho các màn hình PMDT, hiển thị tiêu đề vùng làm việc theo phong cách giao diện thiết bị.",
+      "tags": [
+        "react",
+        "component",
+        "pmdt",
+        "vor"
+      ],
+      "complexity": "simple",
+      "languageNotes": "TSX React component dùng named/default export theo quy ước Next.js App Router; kiểu dữ liệu và store selector giúp giữ luồng trạng thái rõ ràng."
+    },
+    {
+      "id": "function:src/components/vor/pmdt-toolbar.tsx:PmdtToolbar",
+      "type": "function",
+      "name": "PmdtToolbar",
+      "filePath": "src/components/vor/pmdt-toolbar.tsx",
+      "lineRange": [
+        3,
+        9
+      ],
+      "summary": "Render thanh công cụ tiêu chuẩn với tiêu đề màn hình.",
+      "tags": [
+        "component",
+        "pmdt",
+        "ui",
+        "vor"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/vor/screens/disabled-screen.tsx",
+      "type": "file",
+      "name": "disabled-screen.tsx",
+      "filePath": "src/components/vor/screens/disabled-screen.tsx",
+      "summary": "Màn hình placeholder cho chức năng PMDT bị vô hiệu hóa hoặc chưa khả dụng trong mô phỏng.",
+      "tags": [
+        "react",
+        "component",
+        "monitoring",
+        "vor"
+      ],
+      "complexity": "simple",
+      "languageNotes": "TSX React component dùng named/default export theo quy ước Next.js App Router; kiểu dữ liệu và store selector giúp giữ luồng trạng thái rõ ràng."
+    },
+    {
+      "id": "function:src/components/vor/screens/disabled-screen.tsx:DisabledScreen",
+      "type": "function",
+      "name": "DisabledScreen",
+      "filePath": "src/components/vor/screens/disabled-screen.tsx",
+      "lineRange": [
+        5,
+        16
+      ],
+      "summary": "Thông báo rằng màn hình được chọn hiện không khả dụng.",
+      "tags": [
+        "component",
+        "monitoring",
+        "data-display",
+        "vor"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/app/admin/vor-pmdt/page.tsx",
+      "target": "function:src/app/admin/vor-pmdt/page.tsx:VorPmdtPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/vor-pmdt/page.tsx",
+      "target": "function:src/app/admin/vor-pmdt/page.tsx:VorPmdtPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/vor-pmdt/page.tsx",
+      "target": "file:src/components/vor/pmdt-layout.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/vor/create/page.tsx",
+      "target": "function:src/app/admin/vor/create/page.tsx:CreateVorScenarioPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/vor/create/page.tsx",
+      "target": "function:src/app/admin/vor/create/page.tsx:CreateVorScenarioPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/vor/create/page.tsx",
+      "target": "file:src/components/vor/admin/vor-scenario-author.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/vor/edit/page.tsx",
+      "target": "function:src/app/admin/vor/edit/page.tsx:EditVorScenarioPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/vor/edit/page.tsx",
+      "target": "function:src/app/admin/vor/edit/page.tsx:EditVorScenarioPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/vor/edit/page.tsx",
+      "target": "file:src/components/vor/admin/vor-scenario-author.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/vor/submissions/[id]/page.tsx",
+      "target": "function:src/app/admin/vor/submissions/[id]/page.tsx:VorSubmissionReviewPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/vor/submissions/[id]/page.tsx",
+      "target": "function:src/app/admin/vor/submissions/[id]/page.tsx:VorSubmissionReviewPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/vor/submissions/[id]/page.tsx",
+      "target": "file:src/components/vor/admin/vor-submission-review.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/vor/submissions/page.tsx",
+      "target": "function:src/app/admin/vor/submissions/page.tsx:VorSubmissionsPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/vor/submissions/page.tsx",
+      "target": "function:src/app/admin/vor/submissions/page.tsx:VorSubmissionsPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/vor/submissions/page.tsx",
+      "target": "file:src/components/vor/admin/vor-submission-list.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-author-panel.tsx",
+      "target": "function:src/components/vor/admin/vor-author-panel.tsx:VorAuthorPanel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-author-panel.tsx",
+      "target": "function:src/components/vor/admin/vor-author-panel.tsx:VorAuthorPanel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-author-panel.tsx",
+      "target": "file:src/lib/vor-sidebar-fields.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-author-panel.tsx",
+      "target": "file:src/lib/vor-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-author-panel.tsx",
+      "target": "file:src/stores/vor-pmdt-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-author-panel.tsx",
+      "target": "file:src/stores/vor-scenario-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-scenario-author.tsx",
+      "target": "function:src/components/vor/admin/vor-scenario-author.tsx:parseVisibleValue",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-scenario-author.tsx",
+      "target": "function:src/components/vor/admin/vor-scenario-author.tsx:selectedFromElement",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-scenario-author.tsx",
+      "target": "function:src/components/vor/admin/vor-scenario-author.tsx:VorScenarioAuthor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-scenario-author.tsx",
+      "target": "function:src/components/vor/admin/vor-scenario-author.tsx:VorScenarioAuthor",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-scenario-author.tsx",
+      "target": "function:src/components/vor/admin/vor-scenario-author.tsx:VorScenarioAuthorEditor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-scenario-author.tsx",
+      "target": "file:src/components/hardware/hardware-task-editor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-scenario-author.tsx",
+      "target": "file:src/components/vor/admin/vor-author-panel.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-scenario-author.tsx",
+      "target": "file:src/components/vor/pmdt-layout.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-scenario-author.tsx",
+      "target": "file:src/lib/vor-hardware-model.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-scenario-author.tsx",
+      "target": "file:src/lib/vor-sidebar-fields.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-scenario-author.tsx",
+      "target": "file:src/lib/vor-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-scenario-author.tsx",
+      "target": "file:src/stores/vor-pmdt-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-scenario-author.tsx",
+      "target": "file:src/stores/vor-scenario-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-submission-list.tsx",
+      "target": "function:src/components/vor/admin/vor-submission-list.tsx:VorSubmissionList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-submission-list.tsx",
+      "target": "function:src/components/vor/admin/vor-submission-list.tsx:VorSubmissionList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-submission-list.tsx",
+      "target": "file:src/stores/vor-scenario-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-submission-list.tsx",
+      "target": "file:src/stores/vor-submission-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-submission-review.tsx",
+      "target": "function:src/components/vor/admin/vor-submission-review.tsx:VorSubmissionReview",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-submission-review.tsx",
+      "target": "function:src/components/vor/admin/vor-submission-review.tsx:VorSubmissionReview",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-submission-review.tsx",
+      "target": "file:src/components/hardware/hardware-review.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-submission-review.tsx",
+      "target": "file:src/lib/vor-hardware-model.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-submission-review.tsx",
+      "target": "file:src/lib/vor-sidebar-fields.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-submission-review.tsx",
+      "target": "file:src/stores/vor-scenario-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/admin/vor-submission-review.tsx",
+      "target": "file:src/stores/vor-submission-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-layout.tsx",
+      "target": "function:src/components/vor/pmdt-layout.tsx:PmdtScreenRouter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/vor/pmdt-layout.tsx",
+      "target": "function:src/components/vor/pmdt-layout.tsx:PmdtLayout",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/vor/pmdt-layout.tsx",
+      "target": "function:src/components/vor/pmdt-layout.tsx:PmdtLayout",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/vor/pmdt-layout.tsx",
+      "target": "file:src/components/vor/pmdt-menu-bar.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-layout.tsx",
+      "target": "file:src/components/vor/pmdt-sidebar.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-layout.tsx",
+      "target": "file:src/components/vor/pmdt-status-bar.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-layout.tsx",
+      "target": "file:src/components/vor/pmdt-title-bar.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-layout.tsx",
+      "target": "file:src/components/vor/screens/disabled-screen.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-layout.tsx",
+      "target": "file:src/components/vor/screens/home-screen.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-layout.tsx",
+      "target": "file:src/components/vor/screens/monitor-config-layout.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-layout.tsx",
+      "target": "file:src/components/vor/screens/monitor-data-layout.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-layout.tsx",
+      "target": "file:src/components/vor/screens/monitor-offsets.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-layout.tsx",
+      "target": "file:src/components/vor/screens/rms-config-layout.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-layout.tsx",
+      "target": "file:src/components/vor/screens/rms-data-layout.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-layout.tsx",
+      "target": "file:src/components/vor/screens/rms-logs-layout.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-layout.tsx",
+      "target": "file:src/components/vor/screens/tx-config-layout.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-layout.tsx",
+      "target": "file:src/components/vor/screens/tx-data-layout.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-layout.tsx",
+      "target": "file:src/lib/vor-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-layout.tsx",
+      "target": "file:src/stores/vor-pmdt-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-menu-bar.tsx",
+      "target": "function:src/components/vor/pmdt-menu-bar.tsx:MenuItemRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/vor/pmdt-menu-bar.tsx",
+      "target": "function:src/components/vor/pmdt-menu-bar.tsx:PmdtMenuBar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/vor/pmdt-menu-bar.tsx",
+      "target": "function:src/components/vor/pmdt-menu-bar.tsx:PmdtMenuBar",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/vor/pmdt-menu-bar.tsx",
+      "target": "file:src/lib/vor-menu-structure.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-menu-bar.tsx",
+      "target": "file:src/lib/vor-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-menu-bar.tsx",
+      "target": "file:src/stores/vor-pmdt-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-sidebar.tsx",
+      "target": "function:src/components/vor/pmdt-sidebar.tsx:fieldMetadata",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/vor/pmdt-sidebar.tsx",
+      "target": "function:src/components/vor/pmdt-sidebar.tsx:PmdtSidebar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/vor/pmdt-sidebar.tsx",
+      "target": "function:src/components/vor/pmdt-sidebar.tsx:PmdtSidebar",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/vor/pmdt-sidebar.tsx",
+      "target": "file:src/lib/vor-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-sidebar.tsx",
+      "target": "file:src/stores/vor-pmdt-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-status-bar.tsx",
+      "target": "function:src/components/vor/pmdt-status-bar.tsx:PmdtStatusBar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/vor/pmdt-status-bar.tsx",
+      "target": "function:src/components/vor/pmdt-status-bar.tsx:PmdtStatusBar",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/vor/pmdt-status-bar.tsx",
+      "target": "file:src/lib/vor-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-status-bar.tsx",
+      "target": "file:src/stores/vor-pmdt-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/vor/pmdt-title-bar.tsx",
+      "target": "function:src/components/vor/pmdt-title-bar.tsx:PmdtTitleBar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/vor/pmdt-title-bar.tsx",
+      "target": "function:src/components/vor/pmdt-title-bar.tsx:PmdtTitleBar",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/vor/pmdt-toolbar.tsx",
+      "target": "function:src/components/vor/pmdt-toolbar.tsx:PmdtToolbar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/vor/pmdt-toolbar.tsx",
+      "target": "function:src/components/vor/pmdt-toolbar.tsx:PmdtToolbar",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/vor/screens/disabled-screen.tsx",
+      "target": "function:src/components/vor/screens/disabled-screen.tsx:DisabledScreen",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/vor/screens/disabled-screen.tsx",
+      "target": "function:src/components/vor/screens/disabled-screen.tsx:DisabledScreen",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/vor/admin/vor-author-panel.tsx:VorAuthorPanel",
+      "target": "function:src/stores/vor-pmdt-store.ts:useVorPmdtStore",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/vor/admin/vor-author-panel.tsx:VorAuthorPanel",
+      "target": "function:src/lib/vor-sidebar-fields.ts:getSidebarInteractionTargets",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/vor/admin/vor-author-panel.tsx:VorAuthorPanel",
+      "target": "function:src/lib/vor-sidebar-fields.ts:isInteractiveSidebarField",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/vor/admin/vor-scenario-author.tsx:selectedFromElement",
+      "target": "function:src/components/vor/admin/vor-scenario-author.tsx:parseVisibleValue",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/vor/admin/vor-scenario-author.tsx:VorScenarioAuthor",
+      "target": "function:src/stores/vor-scenario-store.ts:useVorScenarioStore",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/vor/admin/vor-scenario-author.tsx:VorScenarioAuthorEditor",
+      "target": "function:src/stores/vor-scenario-store.ts:useVorScenarioStore",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/vor/admin/vor-scenario-author.tsx:VorScenarioAuthorEditor",
+      "target": "function:src/stores/vor-pmdt-store.ts:useVorPmdtStore",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/vor/admin/vor-submission-list.tsx:VorSubmissionList",
+      "target": "function:src/stores/vor-submission-store.ts:useVorSubmissionStore",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/vor/admin/vor-submission-list.tsx:VorSubmissionList",
+      "target": "function:src/stores/vor-scenario-store.ts:useVorScenarioStore",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/vor/admin/vor-submission-review.tsx:VorSubmissionReview",
+      "target": "function:src/stores/vor-submission-store.ts:useVorSubmissionStore",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/vor/admin/vor-submission-review.tsx:VorSubmissionReview",
+      "target": "function:src/stores/vor-scenario-store.ts:useVorScenarioStore",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/vor/admin/vor-submission-review.tsx:VorSubmissionReview",
+      "target": "function:src/lib/vor-sidebar-fields.ts:getSidebarInteractionTargets",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/vor/pmdt-layout.tsx:PmdtScreenRouter",
+      "target": "function:src/stores/vor-pmdt-store.ts:useVorPmdtStore",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/vor/pmdt-layout.tsx:PmdtLayout",
+      "target": "function:src/stores/vor-pmdt-store.ts:useVorPmdtStore",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/vor/pmdt-menu-bar.tsx:MenuItemRow",
+      "target": "function:src/stores/vor-pmdt-store.ts:useVorPmdtStore",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/vor/pmdt-sidebar.tsx:PmdtSidebar",
+      "target": "function:src/stores/vor-pmdt-store.ts:useVorPmdtStore",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/vor/pmdt-sidebar.tsx:PmdtSidebar",
+      "target": "function:src/stores/vor-pmdt-store.ts:resolveVorField",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/vor/pmdt-sidebar.tsx:PmdtSidebar",
+      "target": "function:src/stores/vor-pmdt-store.ts:resolveVorStatus",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/vor/pmdt-sidebar.tsx:PmdtSidebar",
+      "target": "function:src/components/vor/pmdt-sidebar.tsx:fieldMetadata",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/vor/pmdt-status-bar.tsx:PmdtStatusBar",
+      "target": "function:src/stores/vor-pmdt-store.ts:useVorPmdtStore",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

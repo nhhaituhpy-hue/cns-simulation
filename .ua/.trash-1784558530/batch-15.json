@@ -1,0 +1,1466 @@
+{
+  "nodes": [
+    {
+      "id": "schema:supabase/migrations/202607160001_create_scenarios_anon_test.sql",
+      "type": "schema",
+      "name": "202607160001_create_scenarios_anon_test.sql",
+      "filePath": "supabase/migrations/202607160001_create_scenarios_anon_test.sql",
+      "summary": "Migration khởi tạo bảng scenarios cho kịch bản ADS-B, index theo thời gian và các RLS policy công khai tạm thời phục vụ giai đoạn thử nghiệm.",
+      "tags": [
+        "database",
+        "migration",
+        "supabase",
+        "schema-definition"
+      ],
+      "complexity": "simple",
+      "languageNotes": "PostgreSQL migration dùng DDL/DML có version theo timestamp; RLS, constraints và JSONB được áp dụng phù hợp với Supabase."
+    },
+    {
+      "id": "table:supabase/migrations/202607160001_create_scenarios_anon_test.sql:scenarios",
+      "type": "table",
+      "name": "scenarios",
+      "filePath": "supabase/migrations/202607160001_create_scenarios_anon_test.sql",
+      "summary": "Migration này định nghĩa Lưu kịch bản ADS-B, mục tiêu sensor/login, hành động mong đợi và dữ liệu huấn luyện dạng JSONB.",
+      "tags": [
+        "database",
+        "table",
+        "schema-definition",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "schema:supabase/migrations/202607160002_add_scenario_training_data.sql",
+      "type": "schema",
+      "name": "202607160002_add_scenario_training_data.sql",
+      "filePath": "supabase/migrations/202607160002_add_scenario_training_data.sql",
+      "summary": "Migration bổ sung dữ liệu chẩn đoán phần cứng và event log dạng JSONB vào bảng scenario ADS-B.",
+      "tags": [
+        "database",
+        "migration",
+        "supabase",
+        "schema-definition"
+      ],
+      "complexity": "simple",
+      "languageNotes": "PostgreSQL migration dùng DDL/DML có version theo timestamp; RLS, constraints và JSONB được áp dụng phù hợp với Supabase."
+    },
+    {
+      "id": "table:supabase/migrations/202607160002_add_scenario_training_data.sql:scenarios",
+      "type": "table",
+      "name": "scenarios",
+      "filePath": "supabase/migrations/202607160002_add_scenario_training_data.sql",
+      "summary": "Migration này cập nhật hoặc nạp dữ liệu cho Lưu kịch bản ADS-B, mục tiêu sensor/login, hành động mong đợi và dữ liệu huấn luyện dạng JSONB.",
+      "tags": [
+        "database",
+        "table",
+        "migration",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "schema:supabase/migrations/202607160003_create_vor_training.sql",
+      "type": "schema",
+      "name": "202607160003_create_vor_training.sql",
+      "filePath": "supabase/migrations/202607160003_create_vor_training.sql",
+      "summary": "Migration tạo schema huấn luyện VOR gồm bảng kịch bản, bài nộp, index truy vấn và RLS policy quản lý tạm thời.",
+      "tags": [
+        "database",
+        "migration",
+        "supabase",
+        "schema-definition"
+      ],
+      "complexity": "simple",
+      "languageNotes": "PostgreSQL migration dùng DDL/DML có version theo timestamp; RLS, constraints và JSONB được áp dụng phù hợp với Supabase."
+    },
+    {
+      "id": "table:supabase/migrations/202607160003_create_vor_training.sql:vor_scenarios",
+      "type": "table",
+      "name": "vor_scenarios",
+      "filePath": "supabase/migrations/202607160003_create_vor_training.sql",
+      "summary": "Migration này định nghĩa Lưu kịch bản VOR với prompt, override PMDT, checkpoint và task phần cứng tùy chọn.",
+      "tags": [
+        "database",
+        "table",
+        "schema-definition",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607160003_create_vor_training.sql:vor_submissions",
+      "type": "table",
+      "name": "vor_submissions",
+      "filePath": "supabase/migrations/202607160003_create_vor_training.sql",
+      "summary": "Migration này định nghĩa Lưu bài làm VOR, timeline event, câu trả lời, chẩn đoán phần cứng và kết quả chấm.",
+      "tags": [
+        "database",
+        "table",
+        "schema-definition",
+        "supabase"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "schema:supabase/migrations/202607170001_create_dme_training.sql",
+      "type": "schema",
+      "name": "202607170001_create_dme_training.sql",
+      "filePath": "supabase/migrations/202607170001_create_dme_training.sql",
+      "summary": "Migration tạo schema huấn luyện DME gồm kịch bản, bài nộp, quan hệ khóa ngoại, index và RLS policy ban đầu.",
+      "tags": [
+        "database",
+        "migration",
+        "supabase",
+        "schema-definition"
+      ],
+      "complexity": "simple",
+      "languageNotes": "PostgreSQL migration dùng DDL/DML có version theo timestamp; RLS, constraints và JSONB được áp dụng phù hợp với Supabase."
+    },
+    {
+      "id": "table:supabase/migrations/202607170001_create_dme_training.sql:dme_scenarios",
+      "type": "table",
+      "name": "dme_scenarios",
+      "filePath": "supabase/migrations/202607170001_create_dme_training.sql",
+      "summary": "Migration này định nghĩa Lưu kịch bản DME với prompt, override thiết bị, checkpoint và task chẩn đoán.",
+      "tags": [
+        "database",
+        "table",
+        "schema-definition",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607170001_create_dme_training.sql:dme_submissions",
+      "type": "table",
+      "name": "dme_submissions",
+      "filePath": "supabase/migrations/202607170001_create_dme_training.sql",
+      "summary": "Migration này định nghĩa Lưu bài làm DME, event, câu trả lời, chẩn đoán phần cứng và nhận xét của giám khảo.",
+      "tags": [
+        "database",
+        "table",
+        "schema-definition",
+        "supabase"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "schema:supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql",
+      "type": "schema",
+      "name": "202607170002_add_vor_dme_hardware_diagnosis.sql",
+      "filePath": "supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql",
+      "summary": "Migration mở rộng kịch bản và bài nộp VOR/DME với task chẩn đoán phần cứng cùng kết quả chẩn đoán dạng JSONB.",
+      "tags": [
+        "database",
+        "migration",
+        "supabase",
+        "schema-definition"
+      ],
+      "complexity": "simple",
+      "languageNotes": "PostgreSQL migration dùng DDL/DML có version theo timestamp; RLS, constraints và JSONB được áp dụng phù hợp với Supabase."
+    },
+    {
+      "id": "table:supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql:vor_scenarios",
+      "type": "table",
+      "name": "vor_scenarios",
+      "filePath": "supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql",
+      "summary": "Migration này cập nhật hoặc nạp dữ liệu cho Lưu kịch bản VOR với prompt, override PMDT, checkpoint và task phần cứng tùy chọn.",
+      "tags": [
+        "database",
+        "table",
+        "migration",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql:dme_scenarios",
+      "type": "table",
+      "name": "dme_scenarios",
+      "filePath": "supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql",
+      "summary": "Migration này cập nhật hoặc nạp dữ liệu cho Lưu kịch bản DME với prompt, override thiết bị, checkpoint và task chẩn đoán.",
+      "tags": [
+        "database",
+        "table",
+        "migration",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql:vor_submissions",
+      "type": "table",
+      "name": "vor_submissions",
+      "filePath": "supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql",
+      "summary": "Migration này cập nhật hoặc nạp dữ liệu cho Lưu bài làm VOR, timeline event, câu trả lời, chẩn đoán phần cứng và kết quả chấm.",
+      "tags": [
+        "database",
+        "table",
+        "migration",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql:dme_submissions",
+      "type": "table",
+      "name": "dme_submissions",
+      "filePath": "supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql",
+      "summary": "Migration này cập nhật hoặc nạp dữ liệu cho Lưu bài làm DME, event, câu trả lời, chẩn đoán phần cứng và nhận xét của giám khảo.",
+      "tags": [
+        "database",
+        "table",
+        "migration",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "schema:supabase/migrations/202607170003_create_training_media_bucket.sql",
+      "type": "schema",
+      "name": "202607170003_create_training_media_bucket.sql",
+      "filePath": "supabase/migrations/202607170003_create_training_media_bucket.sql",
+      "summary": "Migration cấu hình Supabase Storage bucket công khai cho training media và RLS policy chỉ đọc các object thuộc bucket này.",
+      "tags": [
+        "database",
+        "migration",
+        "supabase",
+        "schema-definition"
+      ],
+      "complexity": "simple",
+      "languageNotes": "PostgreSQL migration dùng DDL/DML có version theo timestamp; RLS, constraints và JSONB được áp dụng phù hợp với Supabase."
+    },
+    {
+      "id": "table:supabase/migrations/202607170003_create_training_media_bucket.sql:storage.buckets",
+      "type": "table",
+      "name": "storage.buckets",
+      "filePath": "supabase/migrations/202607170003_create_training_media_bucket.sql",
+      "summary": "Migration này cập nhật hoặc nạp dữ liệu cho Metadata bucket Supabase Storage; migration cấu hình bucket training-media công khai và MIME type cho phép.",
+      "tags": [
+        "database",
+        "table",
+        "migration",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607170003_create_training_media_bucket.sql:storage.objects",
+      "type": "table",
+      "name": "storage.objects",
+      "filePath": "supabase/migrations/202607170003_create_training_media_bucket.sql",
+      "summary": "Migration này cập nhật hoặc nạp dữ liệu cho Metadata object của Supabase Storage; policy giới hạn quyền đọc theo bucket training-media.",
+      "tags": [
+        "database",
+        "table",
+        "migration",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "schema:supabase/migrations/202607170004_seed_vor_scenarios.sql",
+      "type": "schema",
+      "name": "202607170004_seed_vor_scenarios.sql",
+      "filePath": "supabase/migrations/202607170004_seed_vor_scenarios.sql",
+      "summary": "Migration seed bộ kịch bản VOR thực hành với override thiết bị, checkpoint và nội dung mô phỏng để dùng ngay trong huấn luyện.",
+      "tags": [
+        "database",
+        "migration",
+        "supabase",
+        "seed-data"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "PostgreSQL migration dùng DDL/DML có version theo timestamp; RLS, constraints và JSONB được áp dụng phù hợp với Supabase."
+    },
+    {
+      "id": "table:supabase/migrations/202607170004_seed_vor_scenarios.sql:vor_scenarios",
+      "type": "table",
+      "name": "vor_scenarios",
+      "filePath": "supabase/migrations/202607170004_seed_vor_scenarios.sql",
+      "summary": "Migration này cập nhật hoặc nạp dữ liệu cho Lưu kịch bản VOR với prompt, override PMDT, checkpoint và task phần cứng tùy chọn.",
+      "tags": [
+        "database",
+        "table",
+        "migration",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "schema:supabase/migrations/202607170005_seed_dme_scenarios.sql",
+      "type": "schema",
+      "name": "202607170005_seed_dme_scenarios.sql",
+      "filePath": "supabase/migrations/202607170005_seed_dme_scenarios.sql",
+      "summary": "Migration seed bộ kịch bản DME thực hành với cấu hình PMDT, checkpoint và tình huống vận hành mẫu.",
+      "tags": [
+        "database",
+        "migration",
+        "supabase",
+        "seed-data"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "PostgreSQL migration dùng DDL/DML có version theo timestamp; RLS, constraints và JSONB được áp dụng phù hợp với Supabase."
+    },
+    {
+      "id": "table:supabase/migrations/202607170005_seed_dme_scenarios.sql:dme_scenarios",
+      "type": "table",
+      "name": "dme_scenarios",
+      "filePath": "supabase/migrations/202607170005_seed_dme_scenarios.sql",
+      "summary": "Migration này cập nhật hoặc nạp dữ liệu cho Lưu kịch bản DME với prompt, override thiết bị, checkpoint và task chẩn đoán.",
+      "tags": [
+        "database",
+        "table",
+        "migration",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "schema:supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "type": "schema",
+      "name": "202607180001_add_auth_profiles_and_security.sql",
+      "filePath": "supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "summary": "Migration bảo mật toàn hệ thống: tạo profile và lockout đăng nhập, liên kết submission với auth user, thay policy tạm bằng RLS theo role và cung cấp trigger/hook xác thực.",
+      "tags": [
+        "database",
+        "migration",
+        "supabase",
+        "schema-definition"
+      ],
+      "complexity": "complex",
+      "languageNotes": "PostgreSQL migration kết hợp normalized tables, foreign keys, indexes, triggers, stored procedures và RLS policies để bảo toàn nghiệp vụ ngay tại database."
+    },
+    {
+      "id": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:profiles",
+      "type": "table",
+      "name": "profiles",
+      "filePath": "supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "summary": "Migration này định nghĩa Hồ sơ ứng dụng ánh xạ auth user sang email, họ tên, đơn vị và role student/admin.",
+      "tags": [
+        "database",
+        "table",
+        "schema-definition",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:auth_login_attempts",
+      "type": "table",
+      "name": "auth_login_attempts",
+      "filePath": "supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "summary": "Migration này định nghĩa Theo dõi số lần đăng nhập thất bại theo hash email và thời điểm khóa để chống brute force.",
+      "tags": [
+        "database",
+        "table",
+        "schema-definition",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:scenarios",
+      "type": "table",
+      "name": "scenarios",
+      "filePath": "supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "summary": "Migration này cập nhật hoặc nạp dữ liệu cho Lưu kịch bản ADS-B, mục tiêu sensor/login, hành động mong đợi và dữ liệu huấn luyện dạng JSONB.",
+      "tags": [
+        "database",
+        "table",
+        "migration",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:vor_scenarios",
+      "type": "table",
+      "name": "vor_scenarios",
+      "filePath": "supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "summary": "Migration này cập nhật hoặc nạp dữ liệu cho Lưu kịch bản VOR với prompt, override PMDT, checkpoint và task phần cứng tùy chọn.",
+      "tags": [
+        "database",
+        "table",
+        "migration",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:dme_scenarios",
+      "type": "table",
+      "name": "dme_scenarios",
+      "filePath": "supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "summary": "Migration này cập nhật hoặc nạp dữ liệu cho Lưu kịch bản DME với prompt, override thiết bị, checkpoint và task chẩn đoán.",
+      "tags": [
+        "database",
+        "table",
+        "migration",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:vor_submissions",
+      "type": "table",
+      "name": "vor_submissions",
+      "filePath": "supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "summary": "Migration này cập nhật hoặc nạp dữ liệu cho Lưu bài làm VOR, timeline event, câu trả lời, chẩn đoán phần cứng và kết quả chấm.",
+      "tags": [
+        "database",
+        "table",
+        "migration",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:dme_submissions",
+      "type": "table",
+      "name": "dme_submissions",
+      "filePath": "supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "summary": "Migration này cập nhật hoặc nạp dữ liệu cho Lưu bài làm DME, event, câu trả lời, chẩn đoán phần cứng và nhận xét của giám khảo.",
+      "tags": [
+        "database",
+        "table",
+        "migration",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "type": "schema",
+      "name": "202607180002_create_exam_management.sql",
+      "filePath": "supabase/migrations/202607180002_create_exam_management.sql",
+      "summary": "Migration schema kỳ thi toàn diện với 14 bảng chuẩn hóa, foreign key/index, trigger bảo vệ trạng thái, RLS theo role và stored procedure cho bộ đề, thí sinh cùng attempt.",
+      "tags": [
+        "database",
+        "migration",
+        "supabase",
+        "schema-definition"
+      ],
+      "complexity": "complex",
+      "languageNotes": "PostgreSQL migration kết hợp normalized tables, foreign keys, indexes, triggers, stored procedures và RLS policies để bảo toàn nghiệp vụ ngay tại database."
+    },
+    {
+      "id": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_modules",
+      "type": "table",
+      "name": "exam_modules",
+      "filePath": "supabase/migrations/202607180002_create_exam_management.sql",
+      "summary": "Migration này định nghĩa Danh mục module thi VOR, DME và ADS-B dùng làm khóa tham chiếu cho catalog và đề thi.",
+      "tags": [
+        "database",
+        "table",
+        "schema-definition",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_subjects",
+      "type": "table",
+      "name": "exam_subjects",
+      "filePath": "supabase/migrations/202607180002_create_exam_management.sql",
+      "summary": "Migration này định nghĩa Danh mục môn thi có mã, mô tả, trạng thái hoạt động và thứ tự hiển thị.",
+      "tags": [
+        "database",
+        "table",
+        "schema-definition",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_subject_modules",
+      "type": "table",
+      "name": "exam_subject_modules",
+      "filePath": "supabase/migrations/202607180002_create_exam_management.sql",
+      "summary": "Migration này định nghĩa Bảng nối chuẩn hóa quan hệ nhiều-nhiều giữa môn thi và module mô phỏng.",
+      "tags": [
+        "database",
+        "table",
+        "schema-definition",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_scenario_catalog",
+      "type": "table",
+      "name": "exam_scenario_catalog",
+      "filePath": "supabase/migrations/202607180002_create_exam_management.sql",
+      "summary": "Migration này định nghĩa Catalog scenario theo module, đồng bộ tiêu đề nguồn để bộ đề tham chiếu ổn định.",
+      "tags": [
+        "database",
+        "table",
+        "schema-definition",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_sets",
+      "type": "table",
+      "name": "exam_sets",
+      "filePath": "supabase/migrations/202607180002_create_exam_management.sql",
+      "summary": "Migration này định nghĩa Thông tin bộ đề, trạng thái vòng đời và người quản trị đã tạo.",
+      "tags": [
+        "database",
+        "table",
+        "schema-definition",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_set_subjects",
+      "type": "table",
+      "name": "exam_set_subjects",
+      "filePath": "supabase/migrations/202607180002_create_exam_management.sql",
+      "summary": "Migration này định nghĩa Các môn thuộc một bộ đề cùng thứ tự trình bày.",
+      "tags": [
+        "database",
+        "table",
+        "schema-definition",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_papers",
+      "type": "table",
+      "name": "exam_papers",
+      "filePath": "supabase/migrations/202607180002_create_exam_management.sql",
+      "summary": "Migration này định nghĩa Các đề thi theo môn trong bộ đề, gồm số đề, tiêu đề và trạng thái đã lưu.",
+      "tags": [
+        "database",
+        "table",
+        "schema-definition",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_paper_scenarios",
+      "type": "table",
+      "name": "exam_paper_scenarios",
+      "filePath": "supabase/migrations/202607180002_create_exam_management.sql",
+      "summary": "Migration này định nghĩa Danh sách scenario có thứ tự cấu thành một đề thi và module nguồn tương ứng.",
+      "tags": [
+        "database",
+        "table",
+        "schema-definition",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607180002_create_exam_management.sql:exams",
+      "type": "table",
+      "name": "exams",
+      "filePath": "supabase/migrations/202607180002_create_exam_management.sql",
+      "summary": "Migration này định nghĩa Kỳ thi cụ thể với ngày, địa điểm, căn cứ, bộ đề và trạng thái vận hành.",
+      "tags": [
+        "database",
+        "table",
+        "schema-definition",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_examiners",
+      "type": "table",
+      "name": "exam_examiners",
+      "filePath": "supabase/migrations/202607180002_create_exam_management.sql",
+      "summary": "Migration này định nghĩa Danh sách giám khảo được phân theo kỳ thi, môn và thứ tự ký/chấm.",
+      "tags": [
+        "database",
+        "table",
+        "schema-definition",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_candidates",
+      "type": "table",
+      "name": "exam_candidates",
+      "filePath": "supabase/migrations/202607180002_create_exam_management.sql",
+      "summary": "Migration này định nghĩa Hồ sơ thí sinh trong một kỳ thi gồm họ tên, đơn vị và email định danh.",
+      "tags": [
+        "database",
+        "table",
+        "schema-definition",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_candidate_subjects",
+      "type": "table",
+      "name": "exam_candidate_subjects",
+      "filePath": "supabase/migrations/202607180002_create_exam_management.sql",
+      "summary": "Migration này định nghĩa Phân môn và đề được giao cho thí sinh, kèm điểm chính thức, nhận xét và trạng thái.",
+      "tags": [
+        "database",
+        "table",
+        "schema-definition",
+        "supabase"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_attempts",
+      "type": "table",
+      "name": "exam_attempts",
+      "filePath": "supabase/migrations/202607180002_create_exam_management.sql",
+      "summary": "Migration này định nghĩa Lượt làm bài của một phân môn, gắn auth user với thời gian bắt đầu/nộp và trạng thái.",
+      "tags": [
+        "database",
+        "table",
+        "schema-definition",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_attempt_items",
+      "type": "table",
+      "name": "exam_attempt_items",
+      "filePath": "supabase/migrations/202607180002_create_exam_management.sql",
+      "summary": "Migration này định nghĩa Kết quả từng scenario trong attempt, gồm module, thứ tự, submission reference và result JSON.",
+      "tags": [
+        "database",
+        "table",
+        "schema-definition",
+        "supabase"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "table:supabase/migrations/202607180002_create_exam_management.sql:scenarios",
+      "type": "table",
+      "name": "scenarios",
+      "filePath": "supabase/migrations/202607180002_create_exam_management.sql",
+      "summary": "Migration này cập nhật hoặc nạp dữ liệu cho Lưu kịch bản ADS-B, mục tiêu sensor/login, hành động mong đợi và dữ liệu huấn luyện dạng JSONB.",
+      "tags": [
+        "database",
+        "table",
+        "migration",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607180002_create_exam_management.sql:vor_scenarios",
+      "type": "table",
+      "name": "vor_scenarios",
+      "filePath": "supabase/migrations/202607180002_create_exam_management.sql",
+      "summary": "Migration này cập nhật hoặc nạp dữ liệu cho Lưu kịch bản VOR với prompt, override PMDT, checkpoint và task phần cứng tùy chọn.",
+      "tags": [
+        "database",
+        "table",
+        "migration",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:supabase/migrations/202607180002_create_exam_management.sql:dme_scenarios",
+      "type": "table",
+      "name": "dme_scenarios",
+      "filePath": "supabase/migrations/202607180002_create_exam_management.sql",
+      "summary": "Migration này cập nhật hoặc nạp dữ liệu cho Lưu kịch bản DME với prompt, override thiết bị, checkpoint và task chẩn đoán.",
+      "tags": [
+        "database",
+        "table",
+        "migration",
+        "supabase"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "schema:supabase/migrations/202607190001_allow_training_media_audio.sql",
+      "type": "schema",
+      "name": "202607190001_allow_training_media_audio.sql",
+      "filePath": "supabase/migrations/202607190001_allow_training_media_audio.sql",
+      "summary": "Migration mở rộng MIME type được chấp nhận của training-media bucket để hỗ trợ tệp audio dùng cho hướng dẫn.",
+      "tags": [
+        "database",
+        "migration",
+        "supabase",
+        "schema-definition"
+      ],
+      "complexity": "simple",
+      "languageNotes": "PostgreSQL migration dùng DDL/DML có version theo timestamp; RLS, constraints và JSONB được áp dụng phù hợp với Supabase."
+    },
+    {
+      "id": "table:supabase/migrations/202607190001_allow_training_media_audio.sql:storage.buckets",
+      "type": "table",
+      "name": "storage.buckets",
+      "filePath": "supabase/migrations/202607190001_allow_training_media_audio.sql",
+      "summary": "Migration này cập nhật hoặc nạp dữ liệu cho Metadata bucket Supabase Storage; migration cấu hình bucket training-media công khai và MIME type cho phép.",
+      "tags": [
+        "database",
+        "table",
+        "migration",
+        "supabase"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "schema:supabase/migrations/202607160001_create_scenarios_anon_test.sql",
+      "target": "table:supabase/migrations/202607160001_create_scenarios_anon_test.sql:scenarios",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607160001_create_scenarios_anon_test.sql",
+      "target": "table:supabase/migrations/202607160001_create_scenarios_anon_test.sql:scenarios",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "schema:supabase/migrations/202607160002_add_scenario_training_data.sql",
+      "target": "table:supabase/migrations/202607160002_add_scenario_training_data.sql:scenarios",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607160003_create_vor_training.sql",
+      "target": "table:supabase/migrations/202607160003_create_vor_training.sql:vor_scenarios",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607160003_create_vor_training.sql",
+      "target": "table:supabase/migrations/202607160003_create_vor_training.sql:vor_scenarios",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "schema:supabase/migrations/202607160003_create_vor_training.sql",
+      "target": "table:supabase/migrations/202607160003_create_vor_training.sql:vor_submissions",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607160003_create_vor_training.sql",
+      "target": "table:supabase/migrations/202607160003_create_vor_training.sql:vor_submissions",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "schema:supabase/migrations/202607170001_create_dme_training.sql",
+      "target": "table:supabase/migrations/202607170001_create_dme_training.sql:dme_scenarios",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607170001_create_dme_training.sql",
+      "target": "table:supabase/migrations/202607170001_create_dme_training.sql:dme_scenarios",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "schema:supabase/migrations/202607170001_create_dme_training.sql",
+      "target": "table:supabase/migrations/202607170001_create_dme_training.sql:dme_submissions",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607170001_create_dme_training.sql",
+      "target": "table:supabase/migrations/202607170001_create_dme_training.sql:dme_submissions",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "schema:supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql",
+      "target": "table:supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql:vor_scenarios",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql",
+      "target": "table:supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql:dme_scenarios",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql",
+      "target": "table:supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql:vor_submissions",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql",
+      "target": "table:supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql:dme_submissions",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607170003_create_training_media_bucket.sql",
+      "target": "table:supabase/migrations/202607170003_create_training_media_bucket.sql:storage.buckets",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607170003_create_training_media_bucket.sql",
+      "target": "table:supabase/migrations/202607170003_create_training_media_bucket.sql:storage.objects",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607170004_seed_vor_scenarios.sql",
+      "target": "table:supabase/migrations/202607170004_seed_vor_scenarios.sql:vor_scenarios",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607170005_seed_dme_scenarios.sql",
+      "target": "table:supabase/migrations/202607170005_seed_dme_scenarios.sql:dme_scenarios",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "target": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:profiles",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "target": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:profiles",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "schema:supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "target": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:auth_login_attempts",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "target": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:auth_login_attempts",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "schema:supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "target": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:scenarios",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "target": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:vor_scenarios",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "target": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:dme_scenarios",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "target": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:vor_submissions",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "target": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:dme_submissions",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_modules",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_modules",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_subjects",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_subjects",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_subject_modules",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_subject_modules",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_scenario_catalog",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_scenario_catalog",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_sets",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_sets",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_set_subjects",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_set_subjects",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_papers",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_papers",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_paper_scenarios",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_paper_scenarios",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exams",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exams",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_examiners",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_examiners",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_candidates",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_candidates",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_candidate_subjects",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_candidate_subjects",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_attempts",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_attempts",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_attempt_items",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_attempt_items",
+      "type": "defines_schema",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:scenarios",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:vor_scenarios",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:dme_scenarios",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607190001_allow_training_media_audio.sql",
+      "target": "table:supabase/migrations/202607190001_allow_training_media_audio.sql:storage.buckets",
+      "type": "migrates",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "schema:supabase/migrations/202607160002_add_scenario_training_data.sql",
+      "target": "schema:supabase/migrations/202607160001_create_scenarios_anon_test.sql",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "schema:supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql",
+      "target": "schema:supabase/migrations/202607160003_create_vor_training.sql",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "schema:supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql",
+      "target": "schema:supabase/migrations/202607170001_create_dme_training.sql",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "schema:supabase/migrations/202607170004_seed_vor_scenarios.sql",
+      "target": "schema:supabase/migrations/202607160003_create_vor_training.sql",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "schema:supabase/migrations/202607170005_seed_dme_scenarios.sql",
+      "target": "schema:supabase/migrations/202607170001_create_dme_training.sql",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "schema:supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "target": "schema:supabase/migrations/202607160001_create_scenarios_anon_test.sql",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "schema:supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "target": "schema:supabase/migrations/202607160003_create_vor_training.sql",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "schema:supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "target": "schema:supabase/migrations/202607170001_create_dme_training.sql",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "schema:supabase/migrations/202607180002_create_exam_management.sql",
+      "target": "schema:supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "schema:supabase/migrations/202607190001_allow_training_media_audio.sql",
+      "target": "schema:supabase/migrations/202607170003_create_training_media_bucket.sql",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "table:supabase/migrations/202607160003_create_vor_training.sql:vor_submissions",
+      "target": "table:supabase/migrations/202607160003_create_vor_training.sql:vor_scenarios",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607170001_create_dme_training.sql:dme_submissions",
+      "target": "table:supabase/migrations/202607170001_create_dme_training.sql:dme_scenarios",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:vor_submissions",
+      "target": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:profiles",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:dme_submissions",
+      "target": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:profiles",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:vor_submissions",
+      "target": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:vor_scenarios",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:dme_submissions",
+      "target": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:dme_scenarios",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_subject_modules",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_subjects",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_subject_modules",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_modules",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_scenario_catalog",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_modules",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_sets",
+      "target": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:profiles",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_set_subjects",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_sets",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_set_subjects",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_subjects",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_papers",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_set_subjects",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_papers",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_sets",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_papers",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_subjects",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_paper_scenarios",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_papers",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_paper_scenarios",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_sets",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_paper_scenarios",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_subjects",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_paper_scenarios",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_modules",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exams",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_sets",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exams",
+      "target": "table:supabase/migrations/202607180001_add_auth_profiles_and_security.sql:profiles",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_examiners",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exams",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_examiners",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_sets",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_examiners",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_subjects",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_candidates",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exams",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_candidates",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_sets",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_candidate_subjects",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_candidates",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_candidate_subjects",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exams",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_candidate_subjects",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_sets",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_candidate_subjects",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_subjects",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_candidate_subjects",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_papers",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_attempts",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_candidate_subjects",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_attempts",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_papers",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_attempt_items",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_attempts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_attempt_items",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_papers",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_attempt_items",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_paper_scenarios",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_attempt_items",
+      "target": "table:supabase/migrations/202607180002_create_exam_management.sql:exam_modules",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

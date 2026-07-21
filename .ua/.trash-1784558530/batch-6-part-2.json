@@ -1,0 +1,1237 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/components/grading/grading-result.tsx",
+      "type": "file",
+      "name": "grading-result.tsx",
+      "filePath": "src/components/grading/grading-result.tsx",
+      "summary": "Hiển thị kết quả chấm bài tổng hợp và diff theo từng bước giữa hành động thực tế với đáp án kỳ vọng.",
+      "tags": [
+        "react-component",
+        "chấm-điểm",
+        "so-sánh-kết-quả",
+        "workflow"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "React function component viết bằng TSX với typed props và state được thu hẹp bằng literal union khi phù hợp."
+    },
+    {
+      "id": "function:src/components/grading/grading-result.tsx:GradingResult",
+      "type": "function",
+      "name": "GradingResult",
+      "filePath": "src/components/grading/grading-result.tsx",
+      "lineRange": [
+        16,
+        72
+      ],
+      "summary": "Render tổng điểm và danh sách StepDiff cho toàn bộ bài làm.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "workflow"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/grading/hardware-grading-result.tsx",
+      "type": "file",
+      "name": "hardware-grading-result.tsx",
+      "filePath": "src/components/grading/hardware-grading-result.tsx",
+      "summary": "Hiển thị kết quả chẩn đoán phần cứng, so sánh component, loại lỗi, lý luận và biện pháp khắc phục.",
+      "tags": [
+        "react-component",
+        "chấm-điểm",
+        "so-sánh-kết-quả",
+        "workflow"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "React function component viết bằng TSX với typed props và state được thu hẹp bằng literal union khi phù hợp."
+    },
+    {
+      "id": "function:src/components/grading/hardware-grading-result.tsx:ResultLine",
+      "type": "function",
+      "name": "ResultLine",
+      "filePath": "src/components/grading/hardware-grading-result.tsx",
+      "lineRange": [
+        19,
+        38
+      ],
+      "summary": "Render một dòng so sánh kết quả phần cứng với trạng thái đạt hoặc sai.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "workflow"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/grading/hardware-grading-result.tsx:componentNames",
+      "type": "function",
+      "name": "componentNames",
+      "filePath": "src/components/grading/hardware-grading-result.tsx",
+      "lineRange": [
+        40,
+        50
+      ],
+      "summary": "Tạo ánh xạ component id sang tên hiển thị từ hardware model.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "workflow"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/grading/hardware-grading-result.tsx:HardwareGradingResult",
+      "type": "function",
+      "name": "HardwareGradingResult",
+      "filePath": "src/components/grading/hardware-grading-result.tsx",
+      "lineRange": [
+        52,
+        161
+      ],
+      "summary": "So sánh câu trả lời chẩn đoán với đáp án phần cứng và trình bày kết quả.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "workflow"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/grading/step-diff.tsx",
+      "type": "file",
+      "name": "step-diff.tsx",
+      "filePath": "src/components/grading/step-diff.tsx",
+      "summary": "Trình bày sai khác của một bước thao tác với đánh dấu command, target, tham số và điểm đạt được.",
+      "tags": [
+        "react-component",
+        "chấm-điểm",
+        "so-sánh-kết-quả",
+        "workflow"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "React function component viết bằng TSX với typed props và state được thu hẹp bằng literal union khi phù hợp."
+    },
+    {
+      "id": "function:src/components/grading/step-diff.tsx:ActionCell",
+      "type": "function",
+      "name": "ActionCell",
+      "filePath": "src/components/grading/step-diff.tsx",
+      "lineRange": [
+        34,
+        60
+      ],
+      "summary": "Render một ô action trong bảng diff với định dạng theo loại thao tác.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "workflow"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/grading/step-diff.tsx:StepDiff",
+      "type": "function",
+      "name": "StepDiff",
+      "filePath": "src/components/grading/step-diff.tsx",
+      "lineRange": [
+        62,
+        125
+      ],
+      "summary": "Render chi tiết sai khác và điểm của một bước giữa expected với actual action.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "workflow"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/hardware/component-inspector.tsx",
+      "type": "file",
+      "name": "component-inspector.tsx",
+      "filePath": "src/components/hardware/component-inspector.tsx",
+      "summary": "Hiển thị chi tiết component phần cứng được chọn, trạng thái, tham số kỹ thuật và thông tin liên kết.",
+      "tags": [
+        "react-component",
+        "chẩn-đoán-phần-cứng",
+        "signal-path",
+        "tương-tác"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "React function component viết bằng TSX với typed props và state được thu hẹp bằng literal union khi phù hợp."
+    },
+    {
+      "id": "function:src/components/hardware/component-inspector.tsx:ComponentInspector",
+      "type": "function",
+      "name": "ComponentInspector",
+      "filePath": "src/components/hardware/component-inspector.tsx",
+      "lineRange": [
+        44,
+        177
+      ],
+      "summary": "Render thuộc tính và trạng thái của hardware component đang được chọn.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "workflow"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/components/hardware/hardware-diagnosis-workspace.tsx",
+      "type": "file",
+      "name": "hardware-diagnosis-workspace.tsx",
+      "filePath": "src/components/hardware/hardware-diagnosis-workspace.tsx",
+      "summary": "Tổ chức workspace chẩn đoán phần cứng gồm sơ đồ signal path, inspector và vùng nhập kết luận của học viên.",
+      "tags": [
+        "react-component",
+        "chẩn-đoán-phần-cứng",
+        "signal-path",
+        "tương-tác"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "React function component viết bằng TSX với typed props và state được thu hẹp bằng literal union khi phù hợp."
+    },
+    {
+      "id": "function:src/components/hardware/hardware-diagnosis-workspace.tsx:HardwareDiagnosisWorkspace",
+      "type": "function",
+      "name": "HardwareDiagnosisWorkspace",
+      "filePath": "src/components/hardware/hardware-diagnosis-workspace.tsx",
+      "lineRange": [
+        20,
+        144
+      ],
+      "summary": "Điều phối selection, sơ đồ, inspector và form trả lời chẩn đoán.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "workflow"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/components/hardware/signal-path-diagram.tsx",
+      "type": "file",
+      "name": "signal-path-diagram.tsx",
+      "filePath": "src/components/hardware/signal-path-diagram.tsx",
+      "summary": "Vẽ sơ đồ signal path tương tác, thể hiện node, connector, trạng thái lỗi và component đang được chọn.",
+      "tags": [
+        "react-component",
+        "chẩn-đoán-phần-cứng",
+        "signal-path",
+        "tương-tác"
+      ],
+      "complexity": "complex",
+      "languageNotes": "React function component viết bằng TSX với typed props và state được thu hẹp bằng literal union khi phù hợp."
+    },
+    {
+      "id": "function:src/components/hardware/signal-path-diagram.tsx:Connector",
+      "type": "function",
+      "name": "Connector",
+      "filePath": "src/components/hardware/signal-path-diagram.tsx",
+      "lineRange": [
+        51,
+        69
+      ],
+      "summary": "Render đường nối SVG giữa hai node trong signal path diagram.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "workflow"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/hardware/signal-path-diagram.tsx:SignalPathDiagram",
+      "type": "function",
+      "name": "SignalPathDiagram",
+      "filePath": "src/components/hardware/signal-path-diagram.tsx",
+      "lineRange": [
+        71,
+        216
+      ],
+      "summary": "Render sơ đồ tín hiệu tương tác và áp dụng trạng thái lỗi cho từng component.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "workflow"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/components/qcms/elapsed-timer.tsx",
+      "type": "file",
+      "name": "elapsed-timer.tsx",
+      "filePath": "src/components/qcms/elapsed-timer.tsx",
+      "summary": "Hiển thị bộ đếm thời gian đã trôi qua của phiên QC-Monitoring với định dạng thời lượng dùng chung.",
+      "tags": [
+        "react-component",
+        "qcms",
+        "giao-diện-vận-hành",
+        "giám-sát"
+      ],
+      "complexity": "simple",
+      "languageNotes": "React function component viết bằng TSX với typed props và state được thu hẹp bằng literal union khi phù hợp."
+    },
+    {
+      "id": "function:src/components/qcms/elapsed-timer.tsx:ElapsedTimer",
+      "type": "function",
+      "name": "ElapsedTimer",
+      "filePath": "src/components/qcms/elapsed-timer.tsx",
+      "lineRange": [
+        7,
+        35
+      ],
+      "summary": "Cập nhật định kỳ và hiển thị thời gian trôi qua kể từ mốc bắt đầu.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "qcms"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/qcms/general-settings-dialog.tsx",
+      "type": "file",
+      "name": "general-settings-dialog.tsx",
+      "filePath": "src/components/qcms/general-settings-dialog.tsx",
+      "summary": "Hộp thoại cài đặt chung theo phong cách QC-Monitoring cho các tùy chọn hiển thị và vận hành.",
+      "tags": [
+        "react-component",
+        "qcms",
+        "giao-diện-vận-hành",
+        "giám-sát"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "React function component viết bằng TSX với typed props và state được thu hẹp bằng literal union khi phù hợp."
+    },
+    {
+      "id": "function:src/components/qcms/general-settings-dialog.tsx:SettingsGroup",
+      "type": "function",
+      "name": "SettingsGroup",
+      "filePath": "src/components/qcms/general-settings-dialog.tsx",
+      "lineRange": [
+        11,
+        26
+      ],
+      "summary": "Nhóm các tùy chọn cài đặt có tiêu đề trong dialog.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "qcms"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/general-settings-dialog.tsx:Setting",
+      "type": "function",
+      "name": "Setting",
+      "filePath": "src/components/qcms/general-settings-dialog.tsx",
+      "lineRange": [
+        28,
+        37
+      ],
+      "summary": "Render một dòng cài đặt với nhãn và control tương ứng.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "qcms"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/general-settings-dialog.tsx:GeneralSettingsDialog",
+      "type": "function",
+      "name": "GeneralSettingsDialog",
+      "filePath": "src/components/qcms/general-settings-dialog.tsx",
+      "lineRange": [
+        39,
+        108
+      ],
+      "summary": "Render hộp thoại cấu hình chung và xử lý thao tác đóng.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "qcms"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/qcms/ground-stations-window.tsx",
+      "type": "file",
+      "name": "ground-stations-window.tsx",
+      "filePath": "src/components/qcms/ground-stations-window.tsx",
+      "summary": "Cửa sổ quản lý các slot ground station, trạng thái site, lựa chọn trực quan hóa và context menu vận hành.",
+      "tags": [
+        "react-component",
+        "qcms",
+        "giao-diện-vận-hành",
+        "giám-sát"
+      ],
+      "complexity": "complex",
+      "languageNotes": "React function component viết bằng TSX với typed props và state được thu hẹp bằng literal union khi phù hợp."
+    },
+    {
+      "id": "function:src/components/qcms/ground-stations-window.tsx:LegacyButton",
+      "type": "function",
+      "name": "LegacyButton",
+      "filePath": "src/components/qcms/ground-stations-window.tsx",
+      "lineRange": [
+        34,
+        60
+      ],
+      "summary": "Render nút điều khiển kiểu legacy cho cửa sổ ground station.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "qcms"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/ground-stations-window.tsx:EmptySlot",
+      "type": "function",
+      "name": "EmptySlot",
+      "filePath": "src/components/qcms/ground-stations-window.tsx",
+      "lineRange": [
+        62,
+        100
+      ],
+      "summary": "Render một slot ground station trống với hành động cấu hình.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "qcms"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/ground-stations-window.tsx:GroundStationsWindow",
+      "type": "function",
+      "name": "GroundStationsWindow",
+      "filePath": "src/components/qcms/ground-stations-window.tsx",
+      "lineRange": [
+        102,
+        237
+      ],
+      "summary": "Render danh sách slot ground station và xử lý chọn/context menu site.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "qcms"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/components/qcms/log-window.tsx",
+      "type": "file",
+      "name": "log-window.tsx",
+      "filePath": "src/components/qcms/log-window.tsx",
+      "summary": "Sinh và hiển thị dòng sự kiện theo thời gian cho scenario, gồm sự kiện site, sensor và hành động mô phỏng.",
+      "tags": [
+        "react-component",
+        "qcms",
+        "giao-diện-vận-hành",
+        "giám-sát"
+      ],
+      "complexity": "complex",
+      "languageNotes": "React function component viết bằng TSX với typed props và state được thu hẹp bằng literal union khi phù hợp."
+    },
+    {
+      "id": "function:src/components/qcms/log-window.tsx:sensorEvents",
+      "type": "function",
+      "name": "sensorEvents",
+      "filePath": "src/components/qcms/log-window.tsx",
+      "lineRange": [
+        52,
+        90
+      ],
+      "summary": "Sinh các log event của sensor dựa trên trạng thái và timeline scenario.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "qcms"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/log-window.tsx:generateScenarioEvents",
+      "type": "function",
+      "name": "generateScenarioEvents",
+      "filePath": "src/components/qcms/log-window.tsx",
+      "lineRange": [
+        92,
+        109
+      ],
+      "summary": "Tổng hợp, đóng dấu thời gian và sắp xếp toàn bộ event của scenario.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "qcms"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/log-window.tsx:LogWindow",
+      "type": "function",
+      "name": "LogWindow",
+      "filePath": "src/components/qcms/log-window.tsx",
+      "lineRange": [
+        111,
+        220
+      ],
+      "summary": "Render bảng log có thể cuộn từ các event đã sinh cho scenario.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "qcms"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/qcms/qcms-toolbar.tsx",
+      "type": "file",
+      "name": "qcms-toolbar.tsx",
+      "filePath": "src/components/qcms/qcms-toolbar.tsx",
+      "summary": "Thanh công cụ QC-Monitoring với đồng hồ, các trường trạng thái và nhóm nút điều khiển giao diện.",
+      "tags": [
+        "react-component",
+        "qcms",
+        "giao-diện-vận-hành",
+        "giám-sát"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "React function component viết bằng TSX với typed props và state được thu hẹp bằng literal union khi phù hợp."
+    },
+    {
+      "id": "function:src/components/qcms/qcms-toolbar.tsx:QcmsClock",
+      "type": "function",
+      "name": "QcmsClock",
+      "filePath": "src/components/qcms/qcms-toolbar.tsx",
+      "lineRange": [
+        59,
+        85
+      ],
+      "summary": "Duy trì và hiển thị đồng hồ thời gian thực trên toolbar.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "qcms"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/qcms-toolbar.tsx:QcmsToolbar",
+      "type": "function",
+      "name": "QcmsToolbar",
+      "filePath": "src/components/qcms/qcms-toolbar.tsx",
+      "lineRange": [
+        96,
+        161
+      ],
+      "summary": "Render nhóm nút và trường trạng thái chính của QC-Monitoring.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "giao-diện",
+        "qcms"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/qcms/qcms-utils.ts",
+      "type": "file",
+      "name": "qcms-utils.ts",
+      "filePath": "src/components/qcms/qcms-utils.ts",
+      "summary": "Tập hợp hằng số và utility cho slot site, trực quan hóa sensor, SNMP freshness, độ khó và định dạng thời gian.",
+      "tags": [
+        "utility",
+        "qcms",
+        "snmp",
+        "định-dạng"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Các utility giữ kiểu dữ liệu domain xuyên suốt và dùng readonly input khi không cần mutation."
+    },
+    {
+      "id": "function:src/components/qcms/qcms-utils.ts:createGroundStationSlots",
+      "type": "function",
+      "name": "createGroundStationSlots",
+      "filePath": "src/components/qcms/qcms-utils.ts",
+      "lineRange": [
+        89,
+        98
+      ],
+      "summary": "Phân bổ site vào số lượng slot ground station cố định.",
+      "tags": [
+        "factory",
+        "chuyển-đổi-dữ-liệu",
+        "scenario",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/qcms-utils.ts:toggleSensorVisualization",
+      "type": "function",
+      "name": "toggleSensorVisualization",
+      "filePath": "src/components/qcms/qcms-utils.ts",
+      "lineRange": [
+        123,
+        141
+      ],
+      "summary": "Bật hoặc tắt sensor trong danh sách đang được trực quan hóa.",
+      "tags": [
+        "utility",
+        "dữ-liệu",
+        "typescript",
+        "qcms"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/qcms-utils.ts:siteHasVisualizedSensor",
+      "type": "function",
+      "name": "siteHasVisualizedSensor",
+      "filePath": "src/components/qcms/qcms-utils.ts",
+      "lineRange": [
+        143,
+        150
+      ],
+      "summary": "Kiểm tra một site có sensor nào đang được trực quan hóa hay không.",
+      "tags": [
+        "logic-nghiệp-vụ",
+        "typescript",
+        "scenario",
+        "utility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/qcms-utils.ts:getSnmpAgeSeconds",
+      "type": "function",
+      "name": "getSnmpAgeSeconds",
+      "filePath": "src/components/qcms/qcms-utils.ts",
+      "lineRange": [
+        152,
+        163
+      ],
+      "summary": "Tính tuổi dữ liệu SNMP theo giây từ timestamp gần nhất.",
+      "tags": [
+        "utility",
+        "dữ-liệu",
+        "typescript",
+        "qcms"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/qcms-utils.ts:isSnmpStale",
+      "type": "function",
+      "name": "isSnmpStale",
+      "filePath": "src/components/qcms/qcms-utils.ts",
+      "lineRange": [
+        165,
+        172
+      ],
+      "summary": "Xác định dữ liệu SNMP đã vượt ngưỡng stale hay chưa.",
+      "tags": [
+        "validation",
+        "type-guard",
+        "typescript",
+        "dữ-liệu"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/qcms-utils.ts:formatSnmpAge",
+      "type": "function",
+      "name": "formatSnmpAge",
+      "filePath": "src/components/qcms/qcms-utils.ts",
+      "lineRange": [
+        174,
+        194
+      ],
+      "summary": "Định dạng tuổi dữ liệu SNMP thành chuỗi ngắn dễ đọc.",
+      "tags": [
+        "utility",
+        "dữ-liệu",
+        "typescript",
+        "qcms"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/qcms-utils.ts:countScenarioSensors",
+      "type": "function",
+      "name": "countScenarioSensors",
+      "filePath": "src/components/qcms/qcms-utils.ts",
+      "lineRange": [
+        196,
+        202
+      ],
+      "summary": "Đếm tổng số sensor trong toàn bộ site của scenario.",
+      "tags": [
+        "utility",
+        "dữ-liệu",
+        "typescript",
+        "qcms"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/qcms-utils.ts:formatElapsedTime",
+      "type": "function",
+      "name": "formatElapsedTime",
+      "filePath": "src/components/qcms/qcms-utils.ts",
+      "lineRange": [
+        204,
+        219
+      ],
+      "summary": "Định dạng số giây thành thời lượng giờ, phút và giây.",
+      "tags": [
+        "utility",
+        "dữ-liệu",
+        "typescript",
+        "qcms"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/components/grading/grading-result.tsx",
+      "target": "function:src/components/grading/grading-result.tsx:GradingResult",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/grading/grading-result.tsx",
+      "target": "function:src/components/grading/grading-result.tsx:GradingResult",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/grading/grading-result.tsx",
+      "target": "file:src/components/grading/step-diff.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/grading/grading-result.tsx",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/grading/hardware-grading-result.tsx",
+      "target": "function:src/components/grading/hardware-grading-result.tsx:ResultLine",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/grading/hardware-grading-result.tsx",
+      "target": "function:src/components/grading/hardware-grading-result.tsx:componentNames",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/grading/hardware-grading-result.tsx",
+      "target": "function:src/components/grading/hardware-grading-result.tsx:HardwareGradingResult",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/grading/hardware-grading-result.tsx",
+      "target": "function:src/components/grading/hardware-grading-result.tsx:HardwareGradingResult",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/grading/hardware-grading-result.tsx",
+      "target": "file:src/lib/hardware-model.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/grading/hardware-grading-result.tsx",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/grading/step-diff.tsx",
+      "target": "function:src/components/grading/step-diff.tsx:ActionCell",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/grading/step-diff.tsx",
+      "target": "function:src/components/grading/step-diff.tsx:StepDiff",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/grading/step-diff.tsx",
+      "target": "function:src/components/grading/step-diff.tsx:StepDiff",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/grading/step-diff.tsx",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/hardware/component-inspector.tsx",
+      "target": "function:src/components/hardware/component-inspector.tsx:ComponentInspector",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/hardware/component-inspector.tsx",
+      "target": "function:src/components/hardware/component-inspector.tsx:ComponentInspector",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/hardware/component-inspector.tsx",
+      "target": "file:src/lib/hardware-model.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/hardware/hardware-diagnosis-workspace.tsx",
+      "target": "function:src/components/hardware/hardware-diagnosis-workspace.tsx:HardwareDiagnosisWorkspace",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/hardware/hardware-diagnosis-workspace.tsx",
+      "target": "function:src/components/hardware/hardware-diagnosis-workspace.tsx:HardwareDiagnosisWorkspace",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/hardware/hardware-diagnosis-workspace.tsx",
+      "target": "file:src/components/hardware/component-inspector.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/hardware/hardware-diagnosis-workspace.tsx",
+      "target": "file:src/components/hardware/signal-path-diagram.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/hardware/hardware-diagnosis-workspace.tsx",
+      "target": "file:src/lib/hardware-model.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/hardware/hardware-diagnosis-workspace.tsx",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/hardware/signal-path-diagram.tsx",
+      "target": "function:src/components/hardware/signal-path-diagram.tsx:Connector",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/hardware/signal-path-diagram.tsx",
+      "target": "function:src/components/hardware/signal-path-diagram.tsx:SignalPathDiagram",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/hardware/signal-path-diagram.tsx",
+      "target": "function:src/components/hardware/signal-path-diagram.tsx:SignalPathDiagram",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/hardware/signal-path-diagram.tsx",
+      "target": "file:src/lib/hardware-model.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/elapsed-timer.tsx",
+      "target": "function:src/components/qcms/elapsed-timer.tsx:ElapsedTimer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/elapsed-timer.tsx",
+      "target": "function:src/components/qcms/elapsed-timer.tsx:ElapsedTimer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/elapsed-timer.tsx",
+      "target": "file:src/components/qcms/qcms-utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/general-settings-dialog.tsx",
+      "target": "function:src/components/qcms/general-settings-dialog.tsx:SettingsGroup",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/general-settings-dialog.tsx",
+      "target": "function:src/components/qcms/general-settings-dialog.tsx:Setting",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/general-settings-dialog.tsx",
+      "target": "function:src/components/qcms/general-settings-dialog.tsx:GeneralSettingsDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/general-settings-dialog.tsx",
+      "target": "function:src/components/qcms/general-settings-dialog.tsx:GeneralSettingsDialog",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/ground-stations-window.tsx",
+      "target": "function:src/components/qcms/ground-stations-window.tsx:LegacyButton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/ground-stations-window.tsx",
+      "target": "function:src/components/qcms/ground-stations-window.tsx:EmptySlot",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/ground-stations-window.tsx",
+      "target": "function:src/components/qcms/ground-stations-window.tsx:GroundStationsWindow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/ground-stations-window.tsx",
+      "target": "function:src/components/qcms/ground-stations-window.tsx:GroundStationsWindow",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/ground-stations-window.tsx",
+      "target": "file:src/components/qcms/qcms-utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/ground-stations-window.tsx",
+      "target": "file:src/components/qcms/site-context-menu.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/ground-stations-window.tsx",
+      "target": "file:src/components/qcms/site-item.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/ground-stations-window.tsx",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/log-window.tsx",
+      "target": "function:src/components/qcms/log-window.tsx:sensorEvents",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/log-window.tsx",
+      "target": "function:src/components/qcms/log-window.tsx:generateScenarioEvents",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/log-window.tsx",
+      "target": "function:src/components/qcms/log-window.tsx:generateScenarioEvents",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/log-window.tsx",
+      "target": "function:src/components/qcms/log-window.tsx:LogWindow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/log-window.tsx",
+      "target": "function:src/components/qcms/log-window.tsx:LogWindow",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/log-window.tsx",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/qcms-toolbar.tsx",
+      "target": "function:src/components/qcms/qcms-toolbar.tsx:QcmsClock",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/qcms-toolbar.tsx",
+      "target": "function:src/components/qcms/qcms-toolbar.tsx:QcmsToolbar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/qcms-toolbar.tsx",
+      "target": "function:src/components/qcms/qcms-toolbar.tsx:QcmsToolbar",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/qcms-utils.ts",
+      "target": "function:src/components/qcms/qcms-utils.ts:createGroundStationSlots",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/qcms-utils.ts",
+      "target": "function:src/components/qcms/qcms-utils.ts:createGroundStationSlots",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/qcms-utils.ts",
+      "target": "function:src/components/qcms/qcms-utils.ts:toggleSensorVisualization",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/qcms-utils.ts",
+      "target": "function:src/components/qcms/qcms-utils.ts:toggleSensorVisualization",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/qcms-utils.ts",
+      "target": "function:src/components/qcms/qcms-utils.ts:siteHasVisualizedSensor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/qcms-utils.ts",
+      "target": "function:src/components/qcms/qcms-utils.ts:siteHasVisualizedSensor",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/qcms-utils.ts",
+      "target": "function:src/components/qcms/qcms-utils.ts:getSnmpAgeSeconds",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/qcms-utils.ts",
+      "target": "function:src/components/qcms/qcms-utils.ts:getSnmpAgeSeconds",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/qcms-utils.ts",
+      "target": "function:src/components/qcms/qcms-utils.ts:isSnmpStale",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/qcms-utils.ts",
+      "target": "function:src/components/qcms/qcms-utils.ts:isSnmpStale",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/qcms-utils.ts",
+      "target": "function:src/components/qcms/qcms-utils.ts:formatSnmpAge",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/qcms-utils.ts",
+      "target": "function:src/components/qcms/qcms-utils.ts:formatSnmpAge",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/qcms-utils.ts",
+      "target": "function:src/components/qcms/qcms-utils.ts:countScenarioSensors",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/qcms-utils.ts",
+      "target": "function:src/components/qcms/qcms-utils.ts:countScenarioSensors",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/qcms-utils.ts",
+      "target": "function:src/components/qcms/qcms-utils.ts:formatElapsedTime",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/qcms-utils.ts",
+      "target": "function:src/components/qcms/qcms-utils.ts:formatElapsedTime",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/qcms-utils.ts",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/grading/grading-result.tsx",
+      "target": "file:src/components/grading/step-diff.tsx",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/hardware/hardware-diagnosis-workspace.tsx",
+      "target": "file:src/components/hardware/component-inspector.tsx",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/hardware/hardware-diagnosis-workspace.tsx",
+      "target": "file:src/components/hardware/signal-path-diagram.tsx",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/ground-stations-window.tsx",
+      "target": "file:src/components/qcms/site-context-menu.tsx",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/ground-stations-window.tsx",
+      "target": "file:src/components/qcms/site-item.tsx",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    }
+  ]
+}

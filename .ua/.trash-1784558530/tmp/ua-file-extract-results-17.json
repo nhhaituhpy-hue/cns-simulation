@@ -1,0 +1,2845 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 16,
+  "filesSkipped": [
+    ".node-version",
+    ".ua/.understandignore",
+    "public/images/auth-cns-background.webp",
+    "public/images/cns-image.webp",
+    "src/app/globals.css",
+    "vitest.config.mts"
+  ],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 16,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 14,
+      "failed": 0,
+      "skipped": 2
+    }
+  },
+  "results": [
+    {
+      "path": ".ua/config.json",
+      "language": "json",
+      "fileCategory": "config",
+      "totalLines": 3,
+      "nonEmptyLines": 3,
+      "sections": [
+        {
+          "heading": "outputLanguage",
+          "level": 1,
+          "line": 2
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 1
+      }
+    },
+    {
+      "path": "eslint.config.mjs",
+      "language": "javascript",
+      "fileCategory": "code",
+      "totalLines": 40,
+      "nonEmptyLines": 38,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "next.config.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 14,
+      "nonEmptyLines": 11,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "playwright.config.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 48,
+      "nonEmptyLines": 45,
+      "exports": [
+        {
+          "name": "E2E_BASE_URL",
+          "line": 3,
+          "isDefault": false
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "postcss.config.mjs",
+      "language": "javascript",
+      "fileCategory": "code",
+      "totalLines": 7,
+      "nonEmptyLines": 6,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "scripts/generate-guidance-media.mjs",
+      "language": "javascript",
+      "fileCategory": "code",
+      "totalLines": 578,
+      "nonEmptyLines": 549,
+      "functions": [
+        {
+          "name": "createClip",
+          "startLine": 58,
+          "endLine": 62,
+          "params": [
+            "slug",
+            "title",
+            "audience"
+          ]
+        },
+        {
+          "name": "safeTimestamp",
+          "startLine": 64,
+          "endLine": 68,
+          "params": [
+            "totalSeconds"
+          ]
+        },
+        {
+          "name": "waitForServer",
+          "startLine": 70,
+          "endLine": 83,
+          "params": [
+            "server"
+          ]
+        },
+        {
+          "name": "waitForPage",
+          "startLine": 85,
+          "endLine": 92,
+          "params": [
+            "page"
+          ]
+        },
+        {
+          "name": "navigate",
+          "startLine": 94,
+          "endLine": 97,
+          "params": [
+            "page",
+            "path"
+          ]
+        },
+        {
+          "name": "removeOverlay",
+          "startLine": 99,
+          "endLine": 101,
+          "params": [
+            "page"
+          ]
+        },
+        {
+          "name": "addOverlay",
+          "startLine": 103,
+          "endLine": 153,
+          "params": [
+            "page",
+            "locator",
+            "instruction",
+            "screenIndex",
+            "actionIndex",
+            "actionCount"
+          ]
+        },
+        {
+          "name": "captureGroup",
+          "startLine": 155,
+          "endLine": 179,
+          "params": [
+            "clip",
+            "page",
+            "screenName",
+            "actions"
+          ]
+        },
+        {
+          "name": "roleCookie",
+          "startLine": 181,
+          "endLine": 183,
+          "params": [
+            "role"
+          ]
+        },
+        {
+          "name": "labelControl",
+          "startLine": 185,
+          "endLine": 187,
+          "params": [
+            "page",
+            "sectionId",
+            "labelText",
+            "selector"
+          ]
+        },
+        {
+          "name": "captureExamSetGuide",
+          "startLine": 189,
+          "endLine": 215,
+          "params": [
+            "page"
+          ]
+        },
+        {
+          "name": "captureExamGuide",
+          "startLine": 217,
+          "endLine": 257,
+          "params": [
+            "page"
+          ]
+        },
+        {
+          "name": "captureVorDmeGuide",
+          "startLine": 259,
+          "endLine": 319,
+          "params": [
+            "page"
+          ]
+        },
+        {
+          "name": "captureAdsbGuide",
+          "startLine": 321,
+          "endLine": 356,
+          "params": [
+            "page"
+          ]
+        },
+        {
+          "name": "capturePracticeGuide",
+          "startLine": 358,
+          "endLine": 403,
+          "params": [
+            "page"
+          ]
+        },
+        {
+          "name": "captureStudentExamGuide",
+          "startLine": 405,
+          "endLine": 437,
+          "params": [
+            "page"
+          ]
+        },
+        {
+          "name": "runFfmpeg",
+          "startLine": 439,
+          "endLine": 441,
+          "params": [
+            "argumentsList"
+          ]
+        },
+        {
+          "name": "writeStoryboardHtml",
+          "startLine": 443,
+          "endLine": 451,
+          "params": [
+            "clip"
+          ]
+        },
+        {
+          "name": "compileClip",
+          "startLine": 453,
+          "endLine": 486,
+          "params": [
+            "clip"
+          ]
+        },
+        {
+          "name": "writeVoiceScript",
+          "startLine": 488,
+          "endLine": 507,
+          "params": []
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "createClip",
+          "callee": "clips.push",
+          "lineNumber": 60
+        },
+        {
+          "caller": "safeTimestamp",
+          "callee": "Math.floor",
+          "lineNumber": 65
+        },
+        {
+          "caller": "safeTimestamp",
+          "callee": "String(minutes).padStart",
+          "lineNumber": 67
+        },
+        {
+          "caller": "safeTimestamp",
+          "callee": "String",
+          "lineNumber": 67
+        },
+        {
+          "caller": "safeTimestamp",
+          "callee": "String(seconds).padStart",
+          "lineNumber": 67
+        },
+        {
+          "caller": "safeTimestamp",
+          "callee": "String",
+          "lineNumber": 67
+        },
+        {
+          "caller": "waitForServer",
+          "callee": "Date.now",
+          "lineNumber": 71
+        },
+        {
+          "caller": "waitForServer",
+          "callee": "Date.now",
+          "lineNumber": 72
+        },
+        {
+          "caller": "waitForServer",
+          "callee": "fetch",
+          "lineNumber": 75
+        },
+        {
+          "caller": "waitForServer",
+          "callee": "setTimeout",
+          "lineNumber": 80
+        },
+        {
+          "caller": "waitForPage",
+          "callee": "page.waitForLoadState",
+          "lineNumber": 86
+        },
+        {
+          "caller": "waitForPage",
+          "callee": "page.waitForFunction",
+          "lineNumber": 87
+        },
+        {
+          "caller": "waitForPage",
+          "callee": "document.querySelector",
+          "lineNumber": 88
+        },
+        {
+          "caller": "waitForPage",
+          "callee": "getComputedStyle",
+          "lineNumber": 89
+        },
+        {
+          "caller": "waitForPage",
+          "callee": "page.waitForTimeout",
+          "lineNumber": 91
+        },
+        {
+          "caller": "navigate",
+          "callee": "page.goto",
+          "lineNumber": 95
+        },
+        {
+          "caller": "navigate",
+          "callee": "waitForPage",
+          "lineNumber": 96
+        },
+        {
+          "caller": "removeOverlay",
+          "callee": "page.evaluate",
+          "lineNumber": 100
+        },
+        {
+          "caller": "removeOverlay",
+          "callee": "document.querySelector(\"#media-guide-overlay\")?.remove",
+          "lineNumber": 100
+        },
+        {
+          "caller": "removeOverlay",
+          "callee": "document.querySelector",
+          "lineNumber": 100
+        },
+        {
+          "caller": "addOverlay",
+          "callee": "locator.scrollIntoViewIfNeeded",
+          "lineNumber": 104
+        },
+        {
+          "caller": "addOverlay",
+          "callee": "page.waitForTimeout",
+          "lineNumber": 105
+        },
+        {
+          "caller": "addOverlay",
+          "callee": "locator.boundingBox",
+          "lineNumber": 106
+        },
+        {
+          "caller": "addOverlay",
+          "callee": "page.evaluate",
+          "lineNumber": 108
+        },
+        {
+          "caller": "addOverlay",
+          "callee": "document.querySelector(\"#media-guide-overlay\")?.remove",
+          "lineNumber": 109
+        },
+        {
+          "caller": "addOverlay",
+          "callee": "document.querySelector",
+          "lineNumber": 109
+        },
+        {
+          "caller": "addOverlay",
+          "callee": "document.createElement",
+          "lineNumber": 110
+        },
+        {
+          "caller": "addOverlay",
+          "callee": "document.createElement",
+          "lineNumber": 113
+        },
+        {
+          "caller": "addOverlay",
+          "callee": "[\n      \"position:fixed\",\n      `left:${Math.max(3, boxValue.x - 7)}px`,\n      `top:${Math.max(3, boxValue.y - 7)}px`,\n      `width:${Math.max(26, boxValue.width + 14)}px`,\n      `height:${Math.max(26, boxValue.height + 14)}px`,\n      \"border:4px solid #ef4444\",\n      \"border-radius:10px\",\n      \"box-shadow:0 0 0 7px rgba(239,68,68,.22),0 8px 28px rgba(15,23,42,.32)\",\n      \"background:rgba(255,255,255,.04)\",\n    ].join",
+          "lineNumber": 114
+        },
+        {
+          "caller": "addOverlay",
+          "callee": "Math.max",
+          "lineNumber": 116
+        },
+        {
+          "caller": "addOverlay",
+          "callee": "Math.max",
+          "lineNumber": 117
+        },
+        {
+          "caller": "addOverlay",
+          "callee": "Math.max",
+          "lineNumber": 118
+        },
+        {
+          "caller": "addOverlay",
+          "callee": "Math.max",
+          "lineNumber": 119
+        },
+        {
+          "caller": "addOverlay",
+          "callee": "document.createElement",
+          "lineNumber": 125
+        },
+        {
+          "caller": "addOverlay",
+          "callee": "[\n      \"position:fixed\",\n      \"left:205px\",\n      placeAtTop ? \"top:96px\" : \"bottom:22px\",\n      \"max-width:1180px\",\n      \"display:flex\",\n      \"align-items:center\",\n      \"gap:16px\",\n      \"padding:14px 20px\",\n      \"border:1px solid #38bdf8\",\n      \"border-left:7px solid #0ea5e9\",\n      \"border-radius:12px\",\n      \"background:rgba(7,20,34,.96)\",\n      \"color:white\",\n      \"box-shadow:0 16px 42px rgba(15,23,42,.35)\",\n    ].join",
+          "lineNumber": 127
+        },
+        {
+          "caller": "addOverlay",
+          "callee": "document.createElement",
+          "lineNumber": 143
+        },
+        {
+          "caller": "addOverlay",
+          "callee": "document.createElement",
+          "lineNumber": 146
+        },
+        {
+          "caller": "addOverlay",
+          "callee": "banner.append",
+          "lineNumber": 149
+        },
+        {
+          "caller": "addOverlay",
+          "callee": "root.append",
+          "lineNumber": 150
+        },
+        {
+          "caller": "addOverlay",
+          "callee": "document.body.append",
+          "lineNumber": 151
+        },
+        {
+          "caller": "captureGroup",
+          "callee": "action.target",
+          "lineNumber": 160
+        },
+        {
+          "caller": "captureGroup",
+          "callee": "addOverlay",
+          "lineNumber": 161
+        },
+        {
+          "caller": "captureGroup",
+          "callee": "join",
+          "lineNumber": 163
+        },
+        {
+          "caller": "captureGroup",
+          "callee": "String(sequence).padStart",
+          "lineNumber": 163
+        },
+        {
+          "caller": "captureGroup",
+          "callee": "String",
+          "lineNumber": 163
+        },
+        {
+          "caller": "captureGroup",
+          "callee": "mkdirSync",
+          "lineNumber": 164
+        },
+        {
+          "caller": "captureGroup",
+          "callee": "dirname",
+          "lineNumber": 164
+        },
+        {
+          "caller": "captureGroup",
+          "callee": "page.screenshot",
+          "lineNumber": 165
+        },
+        {
+          "caller": "captureGroup",
+          "callee": "clip.frames.push",
+          "lineNumber": 166
+        },
+        {
+          "caller": "captureGroup",
+          "callee": "removeOverlay",
+          "lineNumber": 173
+        },
+        {
+          "caller": "captureGroup",
+          "callee": "action.after",
+          "lineNumber": 175
+        },
+        {
+          "caller": "captureGroup",
+          "callee": "page.waitForTimeout",
+          "lineNumber": 176
+        },
+        {
+          "caller": "labelControl",
+          "callee": "page.locator(`section[aria-labelledby=\"${sectionId}\"] label`).filter({ hasText: labelText }).locator(selector).first",
+          "lineNumber": 186
+        },
+        {
+          "caller": "labelControl",
+          "callee": "page.locator(`section[aria-labelledby=\"${sectionId}\"] label`).filter({ hasText: labelText }).locator",
+          "lineNumber": 186
+        },
+        {
+          "caller": "labelControl",
+          "callee": "page.locator(`section[aria-labelledby=\"${sectionId}\"] label`).filter",
+          "lineNumber": 186
+        },
+        {
+          "caller": "labelControl",
+          "callee": "page.locator",
+          "lineNumber": 186
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "createClip",
+          "lineNumber": 190
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "navigate",
+          "lineNumber": 191
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "captureGroup",
+          "lineNumber": 192
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 193
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.getByRole(\"link\", { name: \"Tạo bộ đề thi\" }).click",
+          "lineNumber": 196
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 196
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "waitForPage",
+          "lineNumber": 196
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "captureGroup",
+          "lineNumber": 198
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.locator",
+          "lineNumber": 199
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.locator(\"#exam-set-name\").fill",
+          "lineNumber": 199
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.locator",
+          "lineNumber": 199
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.locator",
+          "lineNumber": 200
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.locator(\"#exam-set-description\").fill",
+          "lineNumber": 200
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.locator",
+          "lineNumber": 200
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.locator",
+          "lineNumber": 201
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.locator(\"#exam-set-subject\").selectOption",
+          "lineNumber": 201
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.locator",
+          "lineNumber": 201
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 202
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.getByRole(\"button\", { name: \"Thêm môn\" }).click",
+          "lineNumber": 202
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 202
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "captureGroup",
+          "lineNumber": 204
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.getByLabel",
+          "lineNumber": 205
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.getByLabel(\"Tên đề số 1\").fill",
+          "lineNumber": 205
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.getByLabel",
+          "lineNumber": 205
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.getByRole(\"button\", { name: \"Thêm kịch bản\" }).first",
+          "lineNumber": 206
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 206
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.getByRole(\"button\", { name: \"Thêm kịch bản\" }).first().click",
+          "lineNumber": 206
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.getByRole(\"button\", { name: \"Thêm kịch bản\" }).first",
+          "lineNumber": 206
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 206
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.getByLabel",
+          "lineNumber": 207
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.getByLabel(/Kịch bản thứ 1/).selectOption",
+          "lineNumber": 207
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.getByLabel",
+          "lineNumber": 207
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 208
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "captureGroup",
+          "lineNumber": 210
+        },
+        {
+          "caller": "captureExamSetGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 211
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "createClip",
+          "lineNumber": 218
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "navigate",
+          "lineNumber": 219
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "captureGroup",
+          "lineNumber": 220
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 221
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.getByRole(\"link\", { name: \"Tạo kỳ thi\" }).click",
+          "lineNumber": 224
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 224
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "waitForPage",
+          "lineNumber": 224
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "captureGroup",
+          "lineNumber": 226
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator",
+          "lineNumber": 227
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator(\"#exam-name\").fill",
+          "lineNumber": 227
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator",
+          "lineNumber": 227
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator",
+          "lineNumber": 228
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator(\"#exam-date\").fill",
+          "lineNumber": 228
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator",
+          "lineNumber": 228
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator",
+          "lineNumber": 229
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator(\"#exam-location\").selectOption",
+          "lineNumber": 229
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator",
+          "lineNumber": 229
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator",
+          "lineNumber": 230
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator(\"#exam-decision\").fill",
+          "lineNumber": 230
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator",
+          "lineNumber": 230
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator",
+          "lineNumber": 231
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator(\"#exam-set\").selectOption",
+          "lineNumber": 231
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator",
+          "lineNumber": 231
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 232
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "navigate",
+          "lineNumber": 232
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "page.locator",
+          "lineNumber": 234
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "page.locator",
+          "lineNumber": 235
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "captureGroup",
+          "lineNumber": 236
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "examinerInputs.nth",
+          "lineNumber": 237
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "examinerInputs.nth(0).fill",
+          "lineNumber": 237
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "examinerInputs.nth",
+          "lineNumber": 237
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "examinerSelects.nth",
+          "lineNumber": 238
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "examinerSelects.nth(0).selectOption",
+          "lineNumber": 238
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "examinerSelects.nth",
+          "lineNumber": 238
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "examinerInputs.nth",
+          "lineNumber": 239
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "examinerInputs.nth(1).fill",
+          "lineNumber": 239
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "examinerInputs.nth",
+          "lineNumber": 239
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "examinerSelects.nth",
+          "lineNumber": 240
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "examinerSelects.nth(1).selectOption",
+          "lineNumber": 240
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "examinerSelects.nth",
+          "lineNumber": 240
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 241
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "captureGroup",
+          "lineNumber": 243
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 244
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.getByRole(\"button\", { name: \"Thêm thí sinh\" }).click",
+          "lineNumber": 247
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 247
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "captureGroup",
+          "lineNumber": 249
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator",
+          "lineNumber": 250
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator(\"#candidate-name\").fill",
+          "lineNumber": 250
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator",
+          "lineNumber": 250
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator",
+          "lineNumber": 251
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator(\"#candidate-unit\").fill",
+          "lineNumber": 251
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator",
+          "lineNumber": 251
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator",
+          "lineNumber": 252
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator(\"#candidate-email\").fill",
+          "lineNumber": 252
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.locator",
+          "lineNumber": 252
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 253
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.getByRole(\"button\", { name: \"Thêm môn thi\" }).click",
+          "lineNumber": 253
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 253
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.getByLabel",
+          "lineNumber": 254
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.getByLabel(\"Đề thi\").selectOption",
+          "lineNumber": 254
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.getByLabel",
+          "lineNumber": 254
+        },
+        {
+          "caller": "captureExamGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 255
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "createClip",
+          "lineNumber": 260
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "navigate",
+          "lineNumber": 261
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "page.getByRole(\"heading\", { name: /PMDT Simulator - DVOR/ }).waitFor",
+          "lineNumber": 262
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "page.getByRole",
+          "lineNumber": 262
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "captureGroup",
+          "lineNumber": 263
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole(\"link\", { name: \"Tạo kịch bản VOR\" }).first",
+          "lineNumber": 264
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 264
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole(\"link\", { name: \"Tạo kịch bản VOR\" }).first().click",
+          "lineNumber": 267
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole(\"link\", { name: \"Tạo kịch bản VOR\" }).first",
+          "lineNumber": 267
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 267
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "waitForPage",
+          "lineNumber": 267
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "captureGroup",
+          "lineNumber": 269
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "labelControl",
+          "lineNumber": 270
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "labelControl(current, \"vor-metadata-title\", \"Tiêu đề\", \"input\").fill",
+          "lineNumber": 270
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "labelControl",
+          "lineNumber": 270
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "labelControl",
+          "lineNumber": 271
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "labelControl(current, \"vor-metadata-title\", \"Mô tả\", \"textarea\").fill",
+          "lineNumber": 271
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "labelControl",
+          "lineNumber": 271
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "labelControl",
+          "lineNumber": 272
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "labelControl(current, \"vor-metadata-title\", \"Đề bài\", \"textarea\").fill",
+          "lineNumber": 272
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "labelControl",
+          "lineNumber": 272
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "captureGroup",
+          "lineNumber": 274
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 275
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole(\"button\", { name: \"Transmitters\" }).click",
+          "lineNumber": 275
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 275
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 276
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole(\"menuitem\", { name: \"Data\", exact: true }).click",
+          "lineNumber": 276
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 276
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "captureGroup",
+          "lineNumber": 278
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 279
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole(\"button\", { name: \"Thêm màn hình\" }).click",
+          "lineNumber": 282
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 282
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "captureGroup",
+          "lineNumber": 284
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.locator",
+          "lineNumber": 285
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.locator('[data-vor-field-id=\"monitorIntegral.bypass\"]').click",
+          "lineNumber": 285
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.locator",
+          "lineNumber": 285
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.locator",
+          "lineNumber": 286
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.locator('section[aria-labelledby=\"vor-field-title\"] input[type=\"checkbox\"]').check",
+          "lineNumber": 286
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.locator",
+          "lineNumber": 286
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.locator('section[aria-labelledby=\"vor-field-title\"] select').last",
+          "lineNumber": 287
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.locator",
+          "lineNumber": 287
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.locator('section[aria-labelledby=\"vor-field-title\"] select').last().selectOption",
+          "lineNumber": 287
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.locator('section[aria-labelledby=\"vor-field-title\"] select').last",
+          "lineNumber": 287
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.locator",
+          "lineNumber": 287
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 288
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole(\"button\", { name: \"Áp dụng\" }).click",
+          "lineNumber": 288
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 288
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "captureGroup",
+          "lineNumber": 290
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 291
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole(\"button\", { name: \"Cấu hình\" }).click",
+          "lineNumber": 294
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 294
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "captureGroup",
+          "lineNumber": 296
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByLabel",
+          "lineNumber": 297
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByLabel(/Bật bước xác định phần cứng/).check",
+          "lineNumber": 297
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByLabel",
+          "lineNumber": 297
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.locator('section[aria-label=\"Sơ đồ khối thiết bị\"] button[aria-pressed]').first",
+          "lineNumber": 298
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.locator",
+          "lineNumber": 298
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.locator('section[aria-label=\"Sơ đồ khối thiết bị\"] button[aria-pressed]').first().click",
+          "lineNumber": 298
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.locator('section[aria-label=\"Sơ đồ khối thiết bị\"] button[aria-pressed]').first",
+          "lineNumber": 298
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.locator",
+          "lineNumber": 298
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 299
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole(\"button\", { name: \"Đóng cấu hình phần cứng\" }).click",
+          "lineNumber": 299
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 299
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "captureGroup",
+          "lineNumber": 301
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 302
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "navigate",
+          "lineNumber": 306
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "page.getByRole(\"heading\", { name: /PMDT Simulator - DME/ }).waitFor",
+          "lineNumber": 307
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "page.getByRole",
+          "lineNumber": 307
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "captureGroup",
+          "lineNumber": 308
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole(\"link\", { name: \"Tạo kịch bản DME\" }).first",
+          "lineNumber": 309
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 309
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole(\"link\", { name: \"Tạo kịch bản DME\" }).first().click",
+          "lineNumber": 312
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole(\"link\", { name: \"Tạo kịch bản DME\" }).first",
+          "lineNumber": 312
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 312
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "waitForPage",
+          "lineNumber": 312
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "captureGroup",
+          "lineNumber": 314
+        },
+        {
+          "caller": "captureVorDmeGuide",
+          "callee": "current.locator",
+          "lineNumber": 315
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "createClip",
+          "lineNumber": 322
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "navigate",
+          "lineNumber": 323
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "page.getByRole(\"heading\", { name: \"Mô phỏng giám sát ADS-B\" }).waitFor",
+          "lineNumber": 324
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "page.getByRole",
+          "lineNumber": 324
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "captureGroup",
+          "lineNumber": 325
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole(\"link\", { name: /Tạo kịch bản ADS-B/ }).first",
+          "lineNumber": 326
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 326
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole(\"link\", { name: /Tạo kịch bản ADS-B/ }).first().click",
+          "lineNumber": 329
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole(\"link\", { name: /Tạo kịch bản ADS-B/ }).first",
+          "lineNumber": 329
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 329
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "waitForPage",
+          "lineNumber": 329
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "captureGroup",
+          "lineNumber": 331
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator",
+          "lineNumber": 332
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator(\"#scenario-title\").fill",
+          "lineNumber": 332
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator",
+          "lineNumber": 332
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator",
+          "lineNumber": 333
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator(\"#scenario-description\").fill",
+          "lineNumber": 333
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator",
+          "lineNumber": 333
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator",
+          "lineNumber": 334
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator('input[name=\"difficulty\"][value=\"medium\"]').check",
+          "lineNumber": 334
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator",
+          "lineNumber": 334
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 335
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole(\"button\", { name: \"Tiếp tục\" }).click",
+          "lineNumber": 335
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 335
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "captureGroup",
+          "lineNumber": 337
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator('input[name=\"target-sensor\"]').first",
+          "lineNumber": 338
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator",
+          "lineNumber": 338
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator('input[name=\"target-sensor\"]').first().check",
+          "lineNumber": 338
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator('input[name=\"target-sensor\"]').first",
+          "lineNumber": 338
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator",
+          "lineNumber": 338
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator('select[id^=\"sensor-status-\"]').first",
+          "lineNumber": 339
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator",
+          "lineNumber": 339
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator('select[id^=\"sensor-status-\"]').first().selectOption",
+          "lineNumber": 339
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator('select[id^=\"sensor-status-\"]').first",
+          "lineNumber": 339
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator",
+          "lineNumber": 339
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 340
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole(\"button\", { name: \"Tiếp tục\" }).click",
+          "lineNumber": 340
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 340
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "captureGroup",
+          "lineNumber": 342
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator",
+          "lineNumber": 343
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator('input[name=\"target-login-user\"][value=\"sysadmin\"]').check",
+          "lineNumber": 343
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.locator",
+          "lineNumber": 343
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 344
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole(\"button\", { name: \"Tiếp tục\" }).click",
+          "lineNumber": 344
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 344
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "captureGroup",
+          "lineNumber": 346
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 347
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole(\"button\", { name: /General Settings/ }).click",
+          "lineNumber": 347
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 347
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 348
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole(\"button\", { name: /Enable \\/ Disable ADS-B Cat21/ }).click",
+          "lineNumber": 348
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 348
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 349
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole(\"button\", { name: /Enabled/ }).click",
+          "lineNumber": 349
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 349
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 350
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole(\"button\", { name: \"Tiếp tục\" }).click",
+          "lineNumber": 350
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 350
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "captureGroup",
+          "lineNumber": 352
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByLabel",
+          "lineNumber": 353
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByLabel(\"Kịch bản sự cố phần cứng\").check",
+          "lineNumber": 353
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByLabel",
+          "lineNumber": 353
+        },
+        {
+          "caller": "captureAdsbGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 354
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "createClip",
+          "lineNumber": 359
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "navigate",
+          "lineNumber": 360
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "page.getByRole(\"link\", { name: /Bắt đầu bài VOR/ }).waitFor",
+          "lineNumber": 361
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "page.getByRole",
+          "lineNumber": 361
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "captureGroup",
+          "lineNumber": 362
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByRole(\"link\", { name: /Bắt đầu bài VOR/ }).first",
+          "lineNumber": 363
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 363
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByRole(\"link\", { name: /Bắt đầu bài VOR/ }).first().click",
+          "lineNumber": 366
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByRole(\"link\", { name: /Bắt đầu bài VOR/ }).first",
+          "lineNumber": 366
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 366
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "waitForPage",
+          "lineNumber": 366
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "captureGroup",
+          "lineNumber": 368
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByText",
+          "lineNumber": 369
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "navigate",
+          "lineNumber": 372
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "page.getByRole(\"link\", { name: /Bắt đầu bài DME/ }).waitFor",
+          "lineNumber": 374
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "page.getByRole",
+          "lineNumber": 374
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "captureGroup",
+          "lineNumber": 375
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByRole(\"link\", { name: /Bắt đầu bài DME/ }).first",
+          "lineNumber": 376
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 376
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByRole(\"link\", { name: /Bắt đầu bài DME/ }).first().click",
+          "lineNumber": 379
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByRole(\"link\", { name: /Bắt đầu bài DME/ }).first",
+          "lineNumber": 379
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 379
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "waitForPage",
+          "lineNumber": 379
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "captureGroup",
+          "lineNumber": 381
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByText",
+          "lineNumber": 382
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "navigate",
+          "lineNumber": 385
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "page.getByRole(\"link\", { name: /Khôi phục đầu ra ADS-B CAT21/ }).waitFor",
+          "lineNumber": 387
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "page.getByRole",
+          "lineNumber": 387
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "captureGroup",
+          "lineNumber": 388
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByRole(\"link\", { name: /Khôi phục đầu ra ADS-B CAT21/ }).first",
+          "lineNumber": 389
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 389
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByRole(\"link\", { name: /Khôi phục đầu ra ADS-B CAT21/ }).first().click",
+          "lineNumber": 392
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByRole(\"link\", { name: /Khôi phục đầu ra ADS-B CAT21/ }).first",
+          "lineNumber": 392
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 392
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "waitForPage",
+          "lineNumber": 392
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "captureGroup",
+          "lineNumber": 394
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 395
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByRole(\"button\", { name: /Mở giám sát Sensor A tại Đà Nẵng/ }).click",
+          "lineNumber": 395
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 395
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 396
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByRole(\"link\", { name: \"Mở ứng dụng bảo trì\" }).click",
+          "lineNumber": 396
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 396
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "waitForPage",
+          "lineNumber": 396
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "captureGroup",
+          "lineNumber": 398
+        },
+        {
+          "caller": "capturePracticeGuide",
+          "callee": "current.locator",
+          "lineNumber": 399
+        },
+        {
+          "caller": "captureStudentExamGuide",
+          "callee": "createClip",
+          "lineNumber": 406
+        },
+        {
+          "caller": "captureStudentExamGuide",
+          "callee": "navigate",
+          "lineNumber": 407
+        },
+        {
+          "caller": "captureStudentExamGuide",
+          "callee": "captureGroup",
+          "lineNumber": 408
+        },
+        {
+          "caller": "captureStudentExamGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 409
+        },
+        {
+          "caller": "captureStudentExamGuide",
+          "callee": "navigate",
+          "lineNumber": 412
+        },
+        {
+          "caller": "captureStudentExamGuide",
+          "callee": "captureGroup",
+          "lineNumber": 414
+        },
+        {
+          "caller": "captureStudentExamGuide",
+          "callee": "current.getByRole(\"link\", { name: \"Vào thi\" }).first",
+          "lineNumber": 415
+        },
+        {
+          "caller": "captureStudentExamGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 415
+        },
+        {
+          "caller": "captureStudentExamGuide",
+          "callee": "navigate",
+          "lineNumber": 418
+        },
+        {
+          "caller": "captureStudentExamGuide",
+          "callee": "captureGroup",
+          "lineNumber": 420
+        },
+        {
+          "caller": "captureStudentExamGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 421
+        },
+        {
+          "caller": "captureStudentExamGuide",
+          "callee": "navigate",
+          "lineNumber": 424
+        },
+        {
+          "caller": "captureStudentExamGuide",
+          "callee": "captureGroup",
+          "lineNumber": 426
+        },
+        {
+          "caller": "captureStudentExamGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 427
+        },
+        {
+          "caller": "captureStudentExamGuide",
+          "callee": "navigate",
+          "lineNumber": 430
+        },
+        {
+          "caller": "captureStudentExamGuide",
+          "callee": "captureGroup",
+          "lineNumber": 432
+        },
+        {
+          "caller": "captureStudentExamGuide",
+          "callee": "current.getByRole",
+          "lineNumber": 433
+        },
+        {
+          "caller": "runFfmpeg",
+          "callee": "execFileSync",
+          "lineNumber": 440
+        },
+        {
+          "caller": "writeStoryboardHtml",
+          "callee": "clip.frames.map",
+          "lineNumber": 444
+        },
+        {
+          "caller": "writeStoryboardHtml",
+          "callee": "String(index + 1).padStart",
+          "lineNumber": 445
+        },
+        {
+          "caller": "writeStoryboardHtml",
+          "callee": "String",
+          "lineNumber": 445
+        },
+        {
+          "caller": "writeStoryboardHtml",
+          "callee": "JSON.stringify",
+          "lineNumber": 450
+        },
+        {
+          "caller": "compileClip",
+          "callee": "join",
+          "lineNumber": 455
+        },
+        {
+          "caller": "compileClip",
+          "callee": "mkdirSync",
+          "lineNumber": 456
+        },
+        {
+          "caller": "compileClip",
+          "callee": "join",
+          "lineNumber": 458
+        },
+        {
+          "caller": "compileClip",
+          "callee": "String(index + 1).padStart",
+          "lineNumber": 458
+        },
+        {
+          "caller": "compileClip",
+          "callee": "String",
+          "lineNumber": 458
+        },
+        {
+          "caller": "compileClip",
+          "callee": "runFfmpeg",
+          "lineNumber": 459
+        },
+        {
+          "caller": "compileClip",
+          "callee": "copyFileSync",
+          "lineNumber": 461
+        },
+        {
+          "caller": "compileClip",
+          "callee": "join",
+          "lineNumber": 461
+        },
+        {
+          "caller": "compileClip",
+          "callee": "join",
+          "lineNumber": 461
+        },
+        {
+          "caller": "compileClip",
+          "callee": "writeFileSync",
+          "lineNumber": 462
+        },
+        {
+          "caller": "compileClip",
+          "callee": "join",
+          "lineNumber": 462
+        },
+        {
+          "caller": "compileClip",
+          "callee": "writeStoryboardHtml",
+          "lineNumber": 462
+        },
+        {
+          "caller": "compileClip",
+          "callee": "writeFileSync",
+          "lineNumber": 463
+        },
+        {
+          "caller": "compileClip",
+          "callee": "join",
+          "lineNumber": 463
+        },
+        {
+          "caller": "compileClip",
+          "callee": "JSON.stringify",
+          "lineNumber": 463
+        },
+        {
+          "caller": "compileClip",
+          "callee": "clip.frames.reduce",
+          "lineNumber": 466
+        },
+        {
+          "caller": "compileClip",
+          "callee": "clip.frames.map",
+          "lineNumber": 467
+        },
+        {
+          "caller": "compileClip",
+          "callee": "String(index + 1).padStart",
+          "lineNumber": 468
+        },
+        {
+          "caller": "compileClip",
+          "callee": "String",
+          "lineNumber": 468
+        },
+        {
+          "caller": "compileClip",
+          "callee": "videoArguments.push",
+          "lineNumber": 477
+        },
+        {
+          "caller": "compileClip",
+          "callee": "String",
+          "lineNumber": 477
+        },
+        {
+          "caller": "compileClip",
+          "callee": "clip.frames.map((_, index) => `[${index}:v]`).join",
+          "lineNumber": 478
+        },
+        {
+          "caller": "compileClip",
+          "callee": "clip.frames.map",
+          "lineNumber": 478
+        },
+        {
+          "caller": "compileClip",
+          "callee": "clip.frames.reduce",
+          "lineNumber": 479
+        },
+        {
+          "caller": "compileClip",
+          "callee": "videoArguments.push",
+          "lineNumber": 480
+        },
+        {
+          "caller": "compileClip",
+          "callee": "String",
+          "lineNumber": 483
+        },
+        {
+          "caller": "compileClip",
+          "callee": "join",
+          "lineNumber": 483
+        },
+        {
+          "caller": "compileClip",
+          "callee": "runFfmpeg",
+          "lineNumber": 485
+        },
+        {
+          "caller": "writeVoiceScript",
+          "callee": "clip.frames.reduce",
+          "lineNumber": 496
+        },
+        {
+          "caller": "writeVoiceScript",
+          "callee": "lines.push",
+          "lineNumber": 497
+        },
+        {
+          "caller": "writeVoiceScript",
+          "callee": "safeTimestamp",
+          "lineNumber": 497
+        },
+        {
+          "caller": "writeVoiceScript",
+          "callee": "lines.push",
+          "lineNumber": 501
+        },
+        {
+          "caller": "writeVoiceScript",
+          "callee": "safeTimestamp",
+          "lineNumber": 501
+        },
+        {
+          "caller": "writeVoiceScript",
+          "callee": "safeTimestamp",
+          "lineNumber": 501
+        },
+        {
+          "caller": "writeVoiceScript",
+          "callee": "lines.push",
+          "lineNumber": 504
+        },
+        {
+          "caller": "writeVoiceScript",
+          "callee": "clip.frames.map((frame) => frame.voice).join",
+          "lineNumber": 504
+        },
+        {
+          "caller": "writeVoiceScript",
+          "callee": "clip.frames.map",
+          "lineNumber": 504
+        },
+        {
+          "caller": "writeVoiceScript",
+          "callee": "writeFileSync",
+          "lineNumber": 506
+        },
+        {
+          "caller": "writeVoiceScript",
+          "callee": "join",
+          "lineNumber": 506
+        },
+        {
+          "caller": "writeVoiceScript",
+          "callee": "lines.join",
+          "lineNumber": 506
+        },
+        {
+          "caller": "seedStorage",
+          "callee": "window.localStorage.setItem",
+          "lineNumber": 545
+        },
+        {
+          "caller": "seedStorage",
+          "callee": "JSON.stringify",
+          "lineNumber": 545
+        },
+        {
+          "caller": "seedStorage",
+          "callee": "window.localStorage.setItem",
+          "lineNumber": 546
+        },
+        {
+          "caller": "seedStorage",
+          "callee": "JSON.stringify",
+          "lineNumber": 546
+        },
+        {
+          "caller": "seedStorage",
+          "callee": "window.localStorage.removeItem",
+          "lineNumber": 547
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 20,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "scripts/upload-training-media.mjs",
+      "language": "javascript",
+      "fileCategory": "code",
+      "totalLines": 96,
+      "nonEmptyLines": 81,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/admin/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 10,
+      "nonEmptyLines": 8,
+      "functions": [
+        {
+          "name": "AdminPage",
+          "startLine": 8,
+          "endLine": 10,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "metadata",
+          "line": 4,
+          "isDefault": false
+        },
+        {
+          "name": "AdminPage",
+          "line": 8,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "AdminPage",
+          "callee": "redirect",
+          "lineNumber": 9
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/student/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 5,
+      "nonEmptyLines": 4,
+      "functions": [
+        {
+          "name": "StudentPage",
+          "startLine": 3,
+          "endLine": 5,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "StudentPage",
+          "line": 3,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "StudentPage",
+          "callee": "redirect",
+          "lineNumber": 4
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/lib/supabase/client.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 14,
+      "nonEmptyLines": 10,
+      "functions": [
+        {
+          "name": "createClient",
+          "startLine": 5,
+          "endLine": 14,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "createClient",
+          "line": 5,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "createClient",
+          "callee": "createBrowserClient",
+          "lineNumber": 13
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/lib/supabase/proxy.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 30,
+      "nonEmptyLines": 26,
+      "functions": [
+        {
+          "name": "refreshAuthSession",
+          "startLine": 4,
+          "endLine": 30,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "refreshAuthSession",
+          "line": 4,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "refreshAuthSession",
+          "callee": "NextResponse.next",
+          "lineNumber": 5
+        },
+        {
+          "caller": "refreshAuthSession",
+          "callee": "createServerClient",
+          "lineNumber": 13
+        },
+        {
+          "caller": "getAll",
+          "callee": "request.cookies.getAll",
+          "lineNumber": 16
+        },
+        {
+          "caller": "setAll",
+          "callee": "cookiesToSet.forEach",
+          "lineNumber": 19
+        },
+        {
+          "caller": "setAll",
+          "callee": "request.cookies.set",
+          "lineNumber": 19
+        },
+        {
+          "caller": "setAll",
+          "callee": "NextResponse.next",
+          "lineNumber": 20
+        },
+        {
+          "caller": "setAll",
+          "callee": "cookiesToSet.forEach",
+          "lineNumber": 21
+        },
+        {
+          "caller": "setAll",
+          "callee": "response.cookies.set",
+          "lineNumber": 22
+        },
+        {
+          "caller": "refreshAuthSession",
+          "callee": "supabase.auth.getClaims",
+          "lineNumber": 28
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/proxy.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 42,
+      "nonEmptyLines": 35,
+      "functions": [
+        {
+          "name": "responseWithRefreshedCookies",
+          "startLine": 4,
+          "endLine": 8,
+          "params": [
+            "target",
+            "source"
+          ]
+        },
+        {
+          "name": "proxy",
+          "startLine": 10,
+          "endLine": 36,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "proxy",
+          "line": 10,
+          "isDefault": false
+        },
+        {
+          "name": "config",
+          "line": 38,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "responseWithRefreshedCookies",
+          "callee": "NextResponse.redirect",
+          "lineNumber": 5
+        },
+        {
+          "caller": "responseWithRefreshedCookies",
+          "callee": "source.cookies.getAll().forEach",
+          "lineNumber": 6
+        },
+        {
+          "caller": "responseWithRefreshedCookies",
+          "callee": "source.cookies.getAll",
+          "lineNumber": 6
+        },
+        {
+          "caller": "responseWithRefreshedCookies",
+          "callee": "redirect.cookies.set",
+          "lineNumber": 6
+        },
+        {
+          "caller": "proxy",
+          "callee": "NextResponse.next",
+          "lineNumber": 12
+        },
+        {
+          "caller": "proxy",
+          "callee": "refreshAuthSession",
+          "lineNumber": 15
+        },
+        {
+          "caller": "proxy",
+          "callee": "pathname.startsWith",
+          "lineNumber": 18
+        },
+        {
+          "caller": "proxy",
+          "callee": "request.nextUrl.clone",
+          "lineNumber": 22
+        },
+        {
+          "caller": "proxy",
+          "callee": "loginUrl.searchParams.set",
+          "lineNumber": 24
+        },
+        {
+          "caller": "proxy",
+          "callee": "responseWithRefreshedCookies",
+          "lineNumber": 25
+        },
+        {
+          "caller": "proxy",
+          "callee": "request.nextUrl.clone",
+          "lineNumber": 29
+        },
+        {
+          "caller": "proxy",
+          "callee": "responseWithRefreshedCookies",
+          "lineNumber": 32
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "supabase/config.toml",
+      "language": "toml",
+      "fileCategory": "config",
+      "totalLines": 414,
+      "nonEmptyLines": 363,
+      "sections": [
+        {
+          "heading": "api",
+          "level": 1,
+          "line": 7
+        },
+        {
+          "heading": "api.tls",
+          "level": 2,
+          "line": 26
+        },
+        {
+          "heading": "db",
+          "level": 1,
+          "line": 33
+        },
+        {
+          "heading": "db.pooler",
+          "level": 2,
+          "line": 44
+        },
+        {
+          "heading": "db.migrations",
+          "level": 2,
+          "line": 59
+        },
+        {
+          "heading": "db.seed",
+          "level": 2,
+          "line": 66
+        },
+        {
+          "heading": "db.network_restrictions",
+          "level": 2,
+          "line": 73
+        },
+        {
+          "heading": "realtime",
+          "level": 1,
+          "line": 87
+        },
+        {
+          "heading": "studio",
+          "level": 1,
+          "line": 94
+        },
+        {
+          "heading": "local_smtp",
+          "level": 1,
+          "line": 105
+        },
+        {
+          "heading": "storage",
+          "level": 1,
+          "line": 115
+        },
+        {
+          "heading": "storage.s3_protocol",
+          "level": 2,
+          "line": 128
+        },
+        {
+          "heading": "storage.analytics",
+          "level": 2,
+          "line": 137
+        },
+        {
+          "heading": "storage.vector",
+          "level": 2,
+          "line": 147
+        },
+        {
+          "heading": "auth",
+          "level": 1,
+          "line": 155
+        },
+        {
+          "heading": "auth.rate_limit",
+          "level": 2,
+          "line": 197
+        },
+        {
+          "heading": "auth.email",
+          "level": 2,
+          "line": 219
+        },
+        {
+          "heading": "auth.sms",
+          "level": 2,
+          "line": 257
+        },
+        {
+          "heading": "auth.sms.twilio",
+          "level": 3,
+          "line": 289
+        },
+        {
+          "heading": "auth.mfa",
+          "level": 2,
+          "line": 297
+        },
+        {
+          "heading": "auth.mfa.totp",
+          "level": 3,
+          "line": 302
+        },
+        {
+          "heading": "auth.mfa.phone",
+          "level": 3,
+          "line": 307
+        },
+        {
+          "heading": "auth.external.apple",
+          "level": 3,
+          "line": 322
+        },
+        {
+          "heading": "auth.web3.solana",
+          "level": 3,
+          "line": 339
+        },
+        {
+          "heading": "auth.third_party.firebase",
+          "level": 3,
+          "line": 343
+        },
+        {
+          "heading": "auth.third_party.auth0",
+          "level": 3,
+          "line": 348
+        },
+        {
+          "heading": "auth.third_party.aws_cognito",
+          "level": 3,
+          "line": 354
+        },
+        {
+          "heading": "auth.third_party.clerk",
+          "level": 3,
+          "line": 360
+        },
+        {
+          "heading": "auth.oauth_server",
+          "level": 2,
+          "line": 366
+        },
+        {
+          "heading": "edge_runtime",
+          "level": 1,
+          "line": 374
+        },
+        {
+          "heading": "analytics",
+          "level": 1,
+          "line": 388
+        },
+        {
+          "heading": "experimental",
+          "level": 1,
+          "line": 395
+        },
+        {
+          "heading": "experimental.pgdelta",
+          "level": 2,
+          "line": 409
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "sectionCount": 33
+      }
+    },
+    {
+      "path": "tests/e2e/app.spec.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 155,
+      "nonEmptyLines": 130,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "tests/mocks/server-only.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 3,
+      "nonEmptyLines": 3,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "tests/setup.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 7,
+      "nonEmptyLines": 6,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    }
+  ]
+}

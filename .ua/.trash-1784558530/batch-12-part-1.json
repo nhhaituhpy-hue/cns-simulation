@@ -1,0 +1,821 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/app/admin/dme/submissions/[id]/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/admin/dme/submissions/[id]/page.tsx",
+      "summary": "Next.js App Router page mở màn hình review chi tiết một bài nộp DME theo route parameter.",
+      "tags": [
+        "nextjs",
+        "app-router",
+        "dme",
+        "review"
+      ],
+      "complexity": "simple",
+      "languageNotes": "Tuân theo Next.js App Router với typed dynamic params và page component server-side gọn nhẹ."
+    },
+    {
+      "id": "function:src/app/admin/dme/submissions/[id]/page.tsx:DmeSubmissionReviewPage",
+      "type": "function",
+      "name": "DmeSubmissionReviewPage",
+      "filePath": "src/app/admin/dme/submissions/[id]/page.tsx",
+      "lineRange": [
+        10,
+        13
+      ],
+      "summary": "Render màn hình review bài nộp DME cho id lấy từ dynamic route.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "review",
+        "workflow"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/admin/dme/submissions/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/admin/dme/submissions/page.tsx",
+      "summary": "Next.js App Router page hiển thị danh sách bài nộp DME dành cho quản trị viên hoặc giám khảo.",
+      "tags": [
+        "nextjs",
+        "app-router",
+        "dme",
+        "review"
+      ],
+      "complexity": "simple",
+      "languageNotes": "Tuân theo Next.js App Router với typed dynamic params và page component server-side gọn nhẹ."
+    },
+    {
+      "id": "function:src/app/admin/dme/submissions/page.tsx:DmeSubmissionsPage",
+      "type": "function",
+      "name": "DmeSubmissionsPage",
+      "filePath": "src/app/admin/dme/submissions/page.tsx",
+      "lineRange": [
+        6,
+        8
+      ],
+      "summary": "Render danh sách bài nộp DME trong khu vực quản trị.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "review",
+        "workflow"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/dme/admin/dme-submission-list.tsx",
+      "type": "file",
+      "name": "dme-submission-list.tsx",
+      "filePath": "src/components/dme/admin/dme-submission-list.tsx",
+      "summary": "Hiển thị danh sách bài nộp DME, trạng thái chấm và liên kết tới màn hình review theo từng kịch bản.",
+      "tags": [
+        "react-component",
+        "dme",
+        "submission-review",
+        "grading"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "React function component viết bằng TSX với typed props và các nhánh render theo discriminated domain state."
+    },
+    {
+      "id": "function:src/components/dme/admin/dme-submission-list.tsx:DmeSubmissionList",
+      "type": "function",
+      "name": "DmeSubmissionList",
+      "filePath": "src/components/dme/admin/dme-submission-list.tsx",
+      "lineRange": [
+        16,
+        93
+      ],
+      "summary": "Hydrate stores và render các bài nộp DME kèm trạng thái, học viên và liên kết review.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "review",
+        "workflow"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/dme/admin/dme-submission-review.tsx",
+      "type": "file",
+      "name": "dme-submission-review.tsx",
+      "filePath": "src/components/dme/admin/dme-submission-review.tsx",
+      "summary": "Điều phối review bài nộp DME, trình bày nhật ký, câu trả lời, chẩn đoán phần cứng và thao tác nhập điểm.",
+      "tags": [
+        "react-component",
+        "dme",
+        "submission-review",
+        "grading"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "React function component viết bằng TSX với typed props và các nhánh render theo discriminated domain state."
+    },
+    {
+      "id": "function:src/components/dme/admin/dme-submission-review.tsx:DmeSubmissionReview",
+      "type": "function",
+      "name": "DmeSubmissionReview",
+      "filePath": "src/components/dme/admin/dme-submission-review.tsx",
+      "lineRange": [
+        18,
+        187
+      ],
+      "summary": "Nạp bài nộp cùng scenario, hiển thị evidence và gửi kết quả chấm của giám khảo.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "review",
+        "workflow"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/components/exams/official-exam-review.tsx",
+      "type": "file",
+      "name": "official-exam-review.tsx",
+      "filePath": "src/components/exams/official-exam-review.tsx",
+      "summary": "Hiển thị kết quả official exam đa module, chuẩn hóa evidence PMDT/ADS-B, diff thao tác và phần review chẩn đoán phần cứng.",
+      "tags": [
+        "react-component",
+        "official-exam",
+        "result-presentation",
+        "grading"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "React function component viết bằng TSX với typed props và các nhánh render theo discriminated domain state."
+    },
+    {
+      "id": "function:src/components/exams/official-exam-review.tsx:PmdtEvidence",
+      "type": "function",
+      "name": "PmdtEvidence",
+      "filePath": "src/components/exams/official-exam-review.tsx",
+      "lineRange": [
+        57,
+        128
+      ],
+      "summary": "Chuyển evidence PMDT thành các bảng sự kiện, câu trả lời và hardware review dễ đọc.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "review",
+        "workflow"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/exams/official-exam-review.tsx:AdsbEvidence",
+      "type": "function",
+      "name": "AdsbEvidence",
+      "filePath": "src/components/exams/official-exam-review.tsx",
+      "lineRange": [
+        134,
+        166
+      ],
+      "summary": "Trình bày recorded actions và grading details của kết quả ADS-B.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "review",
+        "workflow"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/exams/official-exam-review.tsx:AttemptItemReview",
+      "type": "function",
+      "name": "AttemptItemReview",
+      "filePath": "src/components/exams/official-exam-review.tsx",
+      "lineRange": [
+        168,
+        188
+      ],
+      "summary": "Chọn renderer phù hợp với module và trạng thái của một attempt item.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "review",
+        "workflow"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/exams/official-exam-review.tsx:OfficialExamReview",
+      "type": "function",
+      "name": "OfficialExamReview",
+      "filePath": "src/components/exams/official-exam-review.tsx",
+      "lineRange": [
+        190,
+        213
+      ],
+      "summary": "Render tổng quan official exam và danh sách kết quả theo từng module thi.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "review",
+        "workflow"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/hardware/equipment-block-diagram.tsx",
+      "type": "file",
+      "name": "equipment-block-diagram.tsx",
+      "filePath": "src/components/hardware/equipment-block-diagram.tsx",
+      "summary": "Render sơ đồ khối thiết bị bằng SVG với component, signal link và selection tương tác.",
+      "tags": [
+        "react-component",
+        "hardware-diagnosis",
+        "equipment-diagram",
+        "tương-tác"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "React function component viết bằng TSX với typed props và các nhánh render theo discriminated domain state."
+    },
+    {
+      "id": "function:src/components/hardware/equipment-block-diagram.tsx:EquipmentBlockDiagram",
+      "type": "function",
+      "name": "EquipmentBlockDiagram",
+      "filePath": "src/components/hardware/equipment-block-diagram.tsx",
+      "lineRange": [
+        44,
+        101
+      ],
+      "summary": "Render SVG equipment diagram và phát sự kiện khi người dùng chọn component.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "review",
+        "workflow"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/hardware/hardware-diagnosis-step.tsx",
+      "type": "file",
+      "name": "hardware-diagnosis-step.tsx",
+      "filePath": "src/components/hardware/hardware-diagnosis-step.tsx",
+      "summary": "Bước chẩn đoán phần cứng cho học viên, kết hợp sơ đồ thiết bị với form chọn lỗi, lý luận và biện pháp khắc phục.",
+      "tags": [
+        "react-component",
+        "hardware-diagnosis",
+        "equipment-diagram",
+        "tương-tác"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "React function component viết bằng TSX với typed props và các nhánh render theo discriminated domain state."
+    },
+    {
+      "id": "function:src/components/hardware/hardware-diagnosis-step.tsx:HardwareDiagnosisStep",
+      "type": "function",
+      "name": "HardwareDiagnosisStep",
+      "filePath": "src/components/hardware/hardware-diagnosis-step.tsx",
+      "lineRange": [
+        23,
+        118
+      ],
+      "summary": "Quản lý câu trả lời chẩn đoán và điều phối thao tác quay lại hoặc nộp bài.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "review",
+        "workflow"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/hardware/hardware-review.tsx",
+      "type": "file",
+      "name": "hardware-review.tsx",
+      "filePath": "src/components/hardware/hardware-review.tsx",
+      "summary": "Trình bày câu trả lời chẩn đoán phần cứng và đối chiếu component được chọn trên sơ đồ thiết bị.",
+      "tags": [
+        "react-component",
+        "hardware-diagnosis",
+        "equipment-diagram",
+        "tương-tác"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "React function component viết bằng TSX với typed props và các nhánh render theo discriminated domain state."
+    },
+    {
+      "id": "function:src/components/hardware/hardware-review.tsx:HardwareReview",
+      "type": "function",
+      "name": "HardwareReview",
+      "filePath": "src/components/hardware/hardware-review.tsx",
+      "lineRange": [
+        16,
+        59
+      ],
+      "summary": "Render thông tin task/answer chẩn đoán và highlight component liên quan.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "review",
+        "workflow"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/hardware/hardware-task-editor.tsx",
+      "type": "file",
+      "name": "hardware-task-editor.tsx",
+      "filePath": "src/components/hardware/hardware-task-editor.tsx",
+      "summary": "Biên tập đáp án nhiệm vụ chẩn đoán phần cứng bằng cách chọn component trên sơ đồ và nhập hướng dẫn kỳ vọng.",
+      "tags": [
+        "react-component",
+        "hardware-diagnosis",
+        "equipment-diagram",
+        "tương-tác"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "React function component viết bằng TSX với typed props và các nhánh render theo discriminated domain state."
+    },
+    {
+      "id": "function:src/components/hardware/hardware-task-editor.tsx:HardwareTaskEditor",
+      "type": "function",
+      "name": "HardwareTaskEditor",
+      "filePath": "src/components/hardware/hardware-task-editor.tsx",
+      "lineRange": [
+        19,
+        55
+      ],
+      "summary": "Render editor chọn component hỏng và cập nhật hướng dẫn chẩn đoán kỳ vọng.",
+      "tags": [
+        "react-component",
+        "tsx",
+        "review",
+        "workflow"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/lib/dme-hardware-model.ts",
+      "type": "file",
+      "name": "dme-hardware-model.ts",
+      "filePath": "src/lib/dme-hardware-model.ts",
+      "summary": "Định nghĩa các equipment block diagram của hệ thống DME, gồm component, tọa độ connector và signal link.",
+      "tags": [
+        "hardware-model",
+        "equipment-diagram",
+        "signal-path",
+        "dme"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Mô hình sơ đồ được khai báo dữ liệu-first bằng typed component/link factory, giúp kiểm tra cấu trúc tĩnh và render dùng chung."
+    },
+    {
+      "id": "function:src/lib/dme-hardware-model.ts:component",
+      "type": "function",
+      "name": "component",
+      "filePath": "src/lib/dme-hardware-model.ts",
+      "lineRange": [
+        11,
+        31
+      ],
+      "summary": "Tạo định nghĩa equipment component với vị trí, kích thước và metadata chuẩn hóa.",
+      "tags": [
+        "factory",
+        "hardware-model",
+        "equipment-diagram",
+        "signal-path"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/dme-hardware-model.ts:link",
+      "type": "function",
+      "name": "link",
+      "filePath": "src/lib/dme-hardware-model.ts",
+      "lineRange": [
+        37,
+        51
+      ],
+      "summary": "Tạo signal link giữa hai connector trong equipment block diagram.",
+      "tags": [
+        "factory",
+        "hardware-model",
+        "equipment-diagram",
+        "signal-path"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/app/admin/dme/submissions/[id]/page.tsx",
+      "target": "function:src/app/admin/dme/submissions/[id]/page.tsx:DmeSubmissionReviewPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/dme/submissions/[id]/page.tsx",
+      "target": "function:src/app/admin/dme/submissions/[id]/page.tsx:DmeSubmissionReviewPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/dme/submissions/[id]/page.tsx",
+      "target": "file:src/components/dme/admin/dme-submission-review.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/dme/submissions/page.tsx",
+      "target": "function:src/app/admin/dme/submissions/page.tsx:DmeSubmissionsPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/dme/submissions/page.tsx",
+      "target": "function:src/app/admin/dme/submissions/page.tsx:DmeSubmissionsPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/dme/submissions/page.tsx",
+      "target": "file:src/components/dme/admin/dme-submission-list.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/admin/dme-submission-list.tsx",
+      "target": "function:src/components/dme/admin/dme-submission-list.tsx:DmeSubmissionList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/dme/admin/dme-submission-list.tsx",
+      "target": "function:src/components/dme/admin/dme-submission-list.tsx:DmeSubmissionList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/dme/admin/dme-submission-list.tsx",
+      "target": "file:src/stores/dme-scenario-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/admin/dme-submission-list.tsx",
+      "target": "file:src/stores/dme-submission-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/admin/dme-submission-review.tsx",
+      "target": "function:src/components/dme/admin/dme-submission-review.tsx:DmeSubmissionReview",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/dme/admin/dme-submission-review.tsx",
+      "target": "function:src/components/dme/admin/dme-submission-review.tsx:DmeSubmissionReview",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/dme/admin/dme-submission-review.tsx",
+      "target": "file:src/components/hardware/hardware-review.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/admin/dme-submission-review.tsx",
+      "target": "file:src/lib/dme-hardware-model.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/admin/dme-submission-review.tsx",
+      "target": "file:src/lib/dme-sidebar-fields.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/admin/dme-submission-review.tsx",
+      "target": "file:src/stores/dme-scenario-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/admin/dme-submission-review.tsx",
+      "target": "file:src/stores/dme-submission-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/official-exam-review.tsx",
+      "target": "function:src/components/exams/official-exam-review.tsx:PmdtEvidence",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/official-exam-review.tsx",
+      "target": "function:src/components/exams/official-exam-review.tsx:AdsbEvidence",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/official-exam-review.tsx",
+      "target": "function:src/components/exams/official-exam-review.tsx:AttemptItemReview",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/official-exam-review.tsx",
+      "target": "function:src/components/exams/official-exam-review.tsx:OfficialExamReview",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/official-exam-review.tsx",
+      "target": "function:src/components/exams/official-exam-review.tsx:OfficialExamReview",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/exams/official-exam-review.tsx",
+      "target": "file:src/components/exams/candidate-result-editor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/official-exam-review.tsx",
+      "target": "file:src/components/grading/step-diff.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/official-exam-review.tsx",
+      "target": "file:src/components/hardware/hardware-review.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/official-exam-review.tsx",
+      "target": "file:src/lib/dme-hardware-model.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/official-exam-review.tsx",
+      "target": "file:src/lib/dme-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/official-exam-review.tsx",
+      "target": "file:src/lib/exams/result-presentation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/official-exam-review.tsx",
+      "target": "file:src/lib/exams/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/official-exam-review.tsx",
+      "target": "file:src/lib/grading.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/official-exam-review.tsx",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/official-exam-review.tsx",
+      "target": "file:src/lib/vor-hardware-model.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/official-exam-review.tsx",
+      "target": "file:src/lib/vor-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/hardware/equipment-block-diagram.tsx",
+      "target": "function:src/components/hardware/equipment-block-diagram.tsx:EquipmentBlockDiagram",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/hardware/equipment-block-diagram.tsx",
+      "target": "function:src/components/hardware/equipment-block-diagram.tsx:EquipmentBlockDiagram",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/hardware/equipment-block-diagram.tsx",
+      "target": "file:src/lib/equipment-diagram-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/hardware/hardware-diagnosis-step.tsx",
+      "target": "function:src/components/hardware/hardware-diagnosis-step.tsx:HardwareDiagnosisStep",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/hardware/hardware-diagnosis-step.tsx",
+      "target": "function:src/components/hardware/hardware-diagnosis-step.tsx:HardwareDiagnosisStep",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/hardware/hardware-diagnosis-step.tsx",
+      "target": "file:src/components/hardware/equipment-block-diagram.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/hardware/hardware-diagnosis-step.tsx",
+      "target": "file:src/lib/equipment-diagram-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/hardware/hardware-review.tsx",
+      "target": "function:src/components/hardware/hardware-review.tsx:HardwareReview",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/hardware/hardware-review.tsx",
+      "target": "function:src/components/hardware/hardware-review.tsx:HardwareReview",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/hardware/hardware-review.tsx",
+      "target": "file:src/lib/equipment-diagram-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/hardware/hardware-task-editor.tsx",
+      "target": "function:src/components/hardware/hardware-task-editor.tsx:HardwareTaskEditor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/hardware/hardware-task-editor.tsx",
+      "target": "function:src/components/hardware/hardware-task-editor.tsx:HardwareTaskEditor",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/hardware/hardware-task-editor.tsx",
+      "target": "file:src/components/hardware/equipment-block-diagram.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/hardware/hardware-task-editor.tsx",
+      "target": "file:src/lib/equipment-diagram-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/dme-hardware-model.ts",
+      "target": "function:src/lib/dme-hardware-model.ts:component",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/dme-hardware-model.ts",
+      "target": "function:src/lib/dme-hardware-model.ts:link",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/dme-hardware-model.ts",
+      "target": "file:src/lib/equipment-diagram-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/hardware/equipment-block-diagram.tsx",
+      "target": "file:tests/hardware-diagrams.test.tsx",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/components/hardware/hardware-review.tsx",
+      "target": "file:tests/hardware-diagrams.test.tsx",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/lib/dme-hardware-model.ts",
+      "target": "file:tests/hardware-diagrams.test.tsx",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/components/dme/admin/dme-submission-review.tsx",
+      "target": "file:src/components/hardware/hardware-review.tsx",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/official-exam-review.tsx",
+      "target": "file:src/components/exams/candidate-result-editor.tsx",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/official-exam-review.tsx",
+      "target": "file:src/components/grading/step-diff.tsx",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/official-exam-review.tsx",
+      "target": "file:src/components/hardware/hardware-review.tsx",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/hardware/hardware-diagnosis-step.tsx",
+      "target": "file:src/components/hardware/equipment-block-diagram.tsx",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/hardware/hardware-task-editor.tsx",
+      "target": "file:src/components/hardware/equipment-block-diagram.tsx",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    }
+  ]
+}

@@ -1,0 +1,262 @@
+{
+    "projectRoot":  "C:\\Users\\nhhai\\Desktop\\cns-simulator",
+    "batchFiles":  [
+                       {
+                           "path":  "src/app/access-actions.ts",
+                           "language":  "typescript",
+                           "sizeLines":  8,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/app/admin/layout.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  9,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/app/api/dme/scenarios/route.ts",
+                           "language":  "typescript",
+                           "sizeLines":  94,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/app/api/dme/submissions/route.ts",
+                           "language":  "typescript",
+                           "sizeLines":  85,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/app/api/scenarios/route.ts",
+                           "language":  "typescript",
+                           "sizeLines":  126,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/app/api/vor/scenarios/route.ts",
+                           "language":  "typescript",
+                           "sizeLines":  93,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/app/api/vor/submissions/route.ts",
+                           "language":  "typescript",
+                           "sizeLines":  84,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/app/layout.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  34,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/app/login/actions.ts",
+                           "language":  "typescript",
+                           "sizeLines":  305,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/app/login/page.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  17,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/app/page.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  55,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/app/student/dme/session/page.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  17,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/app/student/layout.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  8,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/app/student/vor/session/page.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  15,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/auth/auth-page.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  577,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/home/home-media-carousel.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  213,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/layout/app-shell.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  487,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/ui/role-card.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  82,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/lib/auth/login-lockout.ts",
+                           "language":  "typescript",
+                           "sizeLines":  66,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/lib/auth/profile.ts",
+                           "language":  "typescript",
+                           "sizeLines":  66,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/lib/supabase/admin.ts",
+                           "language":  "typescript",
+                           "sizeLines":  20,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/lib/supabase/server.ts",
+                           "language":  "typescript",
+                           "sizeLines":  37,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "tests/auth/login-actions.test.ts",
+                           "language":  "typescript",
+                           "sizeLines":  76,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "tests/layout/app-shell.test.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  148,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "tests/layout/home-media-carousel.test.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  24,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "tests/layout/home-page.test.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  80,
+                           "fileCategory":  "code"
+                       }
+                   ],
+    "batchImportData":  {
+                            "src/app/access-actions.ts":  [
+                                                              "src/lib/auth/profile.ts"
+                                                          ],
+                            "src/app/admin/layout.tsx":  [
+                                                             "src/lib/auth/profile.ts"
+                                                         ],
+                            "src/app/api/dme/scenarios/route.ts":  [
+                                                                       "src/lib/auth/profile.ts",
+                                                                       "src/lib/dme-scenario-storage.ts",
+                                                                       "src/lib/supabase/server.ts"
+                                                                   ],
+                            "src/app/api/dme/submissions/route.ts":  [
+                                                                         "src/lib/auth/profile.ts",
+                                                                         "src/lib/dme-submission-storage.ts",
+                                                                         "src/lib/dme-types.ts",
+                                                                         "src/lib/supabase/server.ts"
+                                                                     ],
+                            "src/app/api/scenarios/route.ts":  [
+                                                                   "src/lib/auth/profile.ts",
+                                                                   "src/lib/supabase/scenarios.ts",
+                                                                   "src/lib/supabase/server.ts",
+                                                                   "src/lib/types.ts"
+                                                               ],
+                            "src/app/api/vor/scenarios/route.ts":  [
+                                                                       "src/lib/auth/profile.ts",
+                                                                       "src/lib/supabase/server.ts",
+                                                                       "src/lib/vor-scenario-storage.ts"
+                                                                   ],
+                            "src/app/api/vor/submissions/route.ts":  [
+                                                                         "src/lib/auth/profile.ts",
+                                                                         "src/lib/supabase/server.ts",
+                                                                         "src/lib/vor-submission-storage.ts",
+                                                                         "src/lib/vor-types.ts"
+                                                                     ],
+                            "src/app/layout.tsx":  [
+                                                       "src/app/globals.css",
+                                                       "src/components/layout/app-shell.tsx",
+                                                       "src/lib/auth/profile.ts"
+                                                   ],
+                            "src/app/login/actions.ts":  [
+                                                             "src/lib/auth/login-lockout.ts",
+                                                             "src/lib/supabase/server.ts"
+                                                         ],
+                            "src/app/login/page.tsx":  [
+                                                           "src/components/auth/auth-page.tsx"
+                                                       ],
+                            "src/app/page.tsx":  [
+                                                     "src/components/home/home-media-carousel.tsx",
+                                                     "src/components/ui/role-card.tsx"
+                                                 ],
+                            "src/app/student/dme/session/page.tsx":  [
+                                                                         "src/components/dme/student/dme-student-session.tsx",
+                                                                         "src/lib/auth/profile.ts"
+                                                                     ],
+                            "src/app/student/layout.tsx":  [
+                                                               "src/lib/auth/profile.ts"
+                                                           ],
+                            "src/app/student/vor/session/page.tsx":  [
+                                                                         "src/components/vor/student/vor-student-session.tsx",
+                                                                         "src/lib/auth/profile.ts"
+                                                                     ],
+                            "src/components/auth/auth-page.tsx":  [
+                                                                      "src/app/login/actions.ts"
+                                                                  ],
+                            "src/components/home/home-media-carousel.tsx":  [
+
+                                                                            ],
+                            "src/components/layout/app-shell.tsx":  [
+                                                                        "src/app/login/actions.ts",
+                                                                        "src/lib/auth/profile.ts"
+                                                                    ],
+                            "src/components/ui/role-card.tsx":  [
+                                                                    "src/app/access-actions.ts",
+                                                                    "src/lib/auth/profile.ts"
+                                                                ],
+                            "src/lib/auth/login-lockout.ts":  [
+                                                                  "src/lib/supabase/admin.ts"
+                                                              ],
+                            "src/lib/auth/profile.ts":  [
+                                                            "src/lib/supabase/server.ts"
+                                                        ],
+                            "src/lib/supabase/admin.ts":  [
+
+                                                          ],
+                            "src/lib/supabase/server.ts":  [
+
+                                                           ],
+                            "tests/auth/login-actions.test.ts":  [
+                                                                     "src/app/login/actions.ts"
+                                                                 ],
+                            "tests/layout/app-shell.test.tsx":  [
+                                                                    "src/components/layout/app-shell.tsx"
+                                                                ],
+                            "tests/layout/home-media-carousel.test.tsx":  [
+                                                                              "src/components/home/home-media-carousel.tsx"
+                                                                          ],
+                            "tests/layout/home-page.test.tsx":  [
+                                                                    "src/app/page.tsx"
+                                                                ]
+                        }
+}

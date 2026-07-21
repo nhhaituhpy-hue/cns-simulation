@@ -1,0 +1,2506 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/components/exams/exam-set-editor.tsx",
+      "type": "file",
+      "name": "exam-set-editor.tsx",
+      "filePath": "src/components/exams/exam-set-editor.tsx",
+      "summary": "Trình biên soạn bộ đề thi nhiều môn, cho phép tổ chức các đề và kịch bản VOR/DME/ADS-B, validation bản nháp và lưu từng phần qua server action.",
+      "tags": [
+        "component",
+        "react",
+        "exams",
+        "admin-ui"
+      ],
+      "complexity": "complex",
+      "languageNotes": "TSX React component sử dụng typed props, hooks và transition để giữ giao diện kỳ thi phản hồi tốt trong Next.js App Router."
+    },
+    {
+      "id": "function:src/components/exams/exam-set-editor.tsx:toEditableSubjects",
+      "type": "function",
+      "name": "toEditableSubjects",
+      "filePath": "src/components/exams/exam-set-editor.tsx",
+      "lineRange": [
+        91,
+        106
+      ],
+      "summary": "Chuyển chi tiết bộ đề đã lưu thành cấu trúc editable có key cục bộ cho subject, paper và scenario.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/exams/exam-set-editor.tsx:ExamSetEditor",
+      "type": "function",
+      "name": "ExamSetEditor",
+      "filePath": "src/components/exams/exam-set-editor.tsx",
+      "lineRange": [
+        113,
+        553
+      ],
+      "summary": "Điều phối state của bộ đề, thêm/xóa môn và đề, validation từng bản nháp cùng quy trình lưu/điều hướng.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "exams"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/components/exams/exam-set-list.tsx",
+      "type": "file",
+      "name": "exam-set-list.tsx",
+      "filePath": "src/components/exams/exam-set-list.tsx",
+      "summary": "Danh sách bộ đề dành cho quản trị viên, hỗ trợ tìm kiếm tiếng Việt không dấu, mở chỉnh sửa và archive có xác nhận.",
+      "tags": [
+        "component",
+        "react",
+        "exams",
+        "admin-ui"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TSX React component sử dụng typed props, hooks và transition để giữ giao diện kỳ thi phản hồi tốt trong Next.js App Router."
+    },
+    {
+      "id": "function:src/components/exams/exam-set-list.tsx:ExamSetList",
+      "type": "function",
+      "name": "ExamSetList",
+      "filePath": "src/components/exams/exam-set-list.tsx",
+      "lineRange": [
+        34,
+        150
+      ],
+      "summary": "Lọc, render và archive danh sách bộ đề bằng transition không chặn UI.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "exams"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/exams/route-error.tsx",
+      "type": "file",
+      "name": "route-error.tsx",
+      "filePath": "src/components/exams/route-error.tsx",
+      "summary": "Trạng thái lỗi dùng chung cho route kỳ thi, hiển thị thông báo và nút thử lại thông qua reset callback của Next.js.",
+      "tags": [
+        "component",
+        "react",
+        "exams",
+        "admin-ui"
+      ],
+      "complexity": "simple",
+      "languageNotes": "TSX React component sử dụng typed props, hooks và transition để giữ giao diện kỳ thi phản hồi tốt trong Next.js App Router."
+    },
+    {
+      "id": "function:src/components/exams/route-error.tsx:ExamRouteError",
+      "type": "function",
+      "name": "ExamRouteError",
+      "filePath": "src/components/exams/route-error.tsx",
+      "lineRange": [
+        7,
+        18
+      ],
+      "summary": "Render lỗi route kỳ thi và gọi reset để thử tải lại.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/exams/shared.tsx",
+      "type": "file",
+      "name": "shared.tsx",
+      "filePath": "src/components/exams/shared.tsx",
+      "summary": "Bộ component và CSS class dùng chung cho giao diện kỳ thi, gồm page frame, header, status badge, trạng thái thiếu dữ liệu và field có accessibility metadata.",
+      "tags": [
+        "component",
+        "react",
+        "exams",
+        "admin-ui"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TSX React component sử dụng typed props, hooks và transition để giữ giao diện kỳ thi phản hồi tốt trong Next.js App Router."
+    },
+    {
+      "id": "function:src/components/exams/shared.tsx:ExamPageFrame",
+      "type": "function",
+      "name": "ExamPageFrame",
+      "filePath": "src/components/exams/shared.tsx",
+      "lineRange": [
+        21,
+        27
+      ],
+      "summary": "Cung cấp container bố cục tiêu chuẩn cho trang kỳ thi.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/exams/shared.tsx:ExamPageHeader",
+      "type": "function",
+      "name": "ExamPageHeader",
+      "filePath": "src/components/exams/shared.tsx",
+      "lineRange": [
+        29,
+        51
+      ],
+      "summary": "Render tiêu đề trang, mô tả và vùng action tùy chọn.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/exams/shared.tsx:ExamStatusBadge",
+      "type": "function",
+      "name": "ExamStatusBadge",
+      "filePath": "src/components/exams/shared.tsx",
+      "lineRange": [
+        53,
+        60
+      ],
+      "summary": "Ánh xạ trạng thái nghiệp vụ kỳ thi sang badge trực quan.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/exams/shared.tsx:DataUnavailable",
+      "type": "function",
+      "name": "DataUnavailable",
+      "filePath": "src/components/exams/shared.tsx",
+      "lineRange": [
+        62,
+        76
+      ],
+      "summary": "Hiển thị trạng thái dữ liệu chưa sẵn sàng hoặc không tồn tại.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/exams/shared.tsx:Field",
+      "type": "function",
+      "name": "Field",
+      "filePath": "src/components/exams/shared.tsx",
+      "lineRange": [
+        78,
+        122
+      ],
+      "summary": "Bọc form control với label, hint và liên kết aria-describedby an toàn qua React cloneElement.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/exams/student-exam-detail.tsx",
+      "type": "file",
+      "name": "student-exam-detail.tsx",
+      "filePath": "src/components/exams/student-exam-detail.tsx",
+      "summary": "Màn hình chi tiết kỳ thi của thí sinh, trình bày thông tin kỳ thi và danh sách phân môn với trạng thái, đề thi và điểm chính thức.",
+      "tags": [
+        "component",
+        "react",
+        "exams",
+        "admin-ui"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TSX React component sử dụng typed props, hooks và transition để giữ giao diện kỳ thi phản hồi tốt trong Next.js App Router."
+    },
+    {
+      "id": "function:src/components/exams/student-exam-detail.tsx:StudentExamDetail",
+      "type": "function",
+      "name": "StudentExamDetail",
+      "filePath": "src/components/exams/student-exam-detail.tsx",
+      "lineRange": [
+        25,
+        58
+      ],
+      "summary": "Render thông tin kỳ thi và từng phân môn được giao cho thí sinh.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/exams/student-exam-list.tsx",
+      "type": "file",
+      "name": "student-exam-list.tsx",
+      "filePath": "src/components/exams/student-exam-list.tsx",
+      "summary": "Danh sách kỳ thi đang mở cho thí sinh, định dạng ngày và hiển thị trạng thái phân công theo từng kỳ.",
+      "tags": [
+        "component",
+        "react",
+        "exams",
+        "admin-ui"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TSX React component sử dụng typed props, hooks và transition để giữ giao diện kỳ thi phản hồi tốt trong Next.js App Router."
+    },
+    {
+      "id": "function:src/components/exams/student-exam-list.tsx:StudentExamList",
+      "type": "function",
+      "name": "StudentExamList",
+      "filePath": "src/components/exams/student-exam-list.tsx",
+      "lineRange": [
+        22,
+        56
+      ],
+      "summary": "Render các kỳ thi mở cùng ngày, địa điểm và trạng thái phân công.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/exams/student-subject-progress.tsx",
+      "type": "file",
+      "name": "student-subject-progress.tsx",
+      "filePath": "src/components/exams/student-subject-progress.tsx",
+      "summary": "Bảng tiến độ một phân môn thi, điều phối bắt đầu/hoàn tất lượt thi và liên kết từng scenario tới module mô phỏng tương ứng.",
+      "tags": [
+        "component",
+        "react",
+        "exams",
+        "admin-ui"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TSX React component sử dụng typed props, hooks và transition để giữ giao diện kỳ thi phản hồi tốt trong Next.js App Router."
+    },
+    {
+      "id": "function:src/components/exams/student-subject-progress.tsx:StudentSubjectProgress",
+      "type": "function",
+      "name": "StudentSubjectProgress",
+      "filePath": "src/components/exams/student-subject-progress.tsx",
+      "lineRange": [
+        30,
+        117
+      ],
+      "summary": "Quản lý hành động bắt đầu/hoàn tất và render tiến độ từng scenario trong lượt thi.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "exams"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/exams/actions.ts",
+      "type": "file",
+      "name": "actions.ts",
+      "filePath": "src/lib/exams/actions.ts",
+      "summary": "Tầng server actions cho nghiệp vụ kỳ thi: quản lý bộ đề, kỳ thi, giám khảo, thí sinh, lượt làm bài, kết quả và dữ liệu in báo cáo qua Supabase.",
+      "tags": [
+        "server-action",
+        "supabase",
+        "authorization",
+        "exams"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/lib/exams/actions.ts:actionError",
+      "type": "function",
+      "name": "actionError",
+      "filePath": "src/lib/exams/actions.ts",
+      "lineRange": [
+        40,
+        51
+      ],
+      "summary": "Chuẩn hóa exception thành kết quả action an toàn, giữ message nghiệp vụ và che chi tiết lỗi hệ thống.",
+      "tags": [
+        "server-action",
+        "authorization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/actions.ts:saveExamSetAction",
+      "type": "function",
+      "name": "saveExamSetAction",
+      "filePath": "src/lib/exams/actions.ts",
+      "lineRange": [
+        82,
+        101
+      ],
+      "summary": "Validate và lưu bộ đề qua Supabase RPC rồi revalidate các route liên quan.",
+      "tags": [
+        "server-action",
+        "authorization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/actions.ts:archiveExamSetAction",
+      "type": "function",
+      "name": "archiveExamSetAction",
+      "filePath": "src/lib/exams/actions.ts",
+      "lineRange": [
+        103,
+        125
+      ],
+      "summary": "Chặn archive bộ đề đang được kỳ thi sử dụng rồi cập nhật trạng thái trong Supabase.",
+      "tags": [
+        "server-action",
+        "authorization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/actions.ts:saveExamAction",
+      "type": "function",
+      "name": "saveExamAction",
+      "filePath": "src/lib/exams/actions.ts",
+      "lineRange": [
+        127,
+        186
+      ],
+      "summary": "Tạo hoặc cập nhật kỳ thi sau khi kiểm tra quyền, input và trạng thái bộ đề.",
+      "tags": [
+        "server-action",
+        "authorization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/exams/actions.ts:setExamStatusAction",
+      "type": "function",
+      "name": "setExamStatusAction",
+      "filePath": "src/lib/exams/actions.ts",
+      "lineRange": [
+        188,
+        202
+      ],
+      "summary": "Validate và chuyển trạng thái kỳ thi, ủy quyền quy trình archive khi cần.",
+      "tags": [
+        "server-action",
+        "authorization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/actions.ts:archiveExamAction",
+      "type": "function",
+      "name": "archiveExamAction",
+      "filePath": "src/lib/exams/actions.ts",
+      "lineRange": [
+        204,
+        226
+      ],
+      "summary": "Chặn archive khi còn lượt thi đang chạy rồi đánh dấu kỳ thi đã lưu trữ.",
+      "tags": [
+        "server-action",
+        "authorization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/actions.ts:replaceExaminers",
+      "type": "function",
+      "name": "replaceExaminers",
+      "filePath": "src/lib/exams/actions.ts",
+      "lineRange": [
+        228,
+        239
+      ],
+      "summary": "Thay toàn bộ danh sách giám khảo của kỳ thi bằng payload đã chuẩn hóa qua RPC.",
+      "tags": [
+        "server-action",
+        "authorization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/actions.ts:saveExamExaminersAction",
+      "type": "function",
+      "name": "saveExamExaminersAction",
+      "filePath": "src/lib/exams/actions.ts",
+      "lineRange": [
+        241,
+        252
+      ],
+      "summary": "Kiểm tra quyền và lưu danh sách giám khảo, sau đó làm mới các view kỳ thi.",
+      "tags": [
+        "server-action",
+        "authorization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/actions.ts:saveCandidate",
+      "type": "function",
+      "name": "saveCandidate",
+      "filePath": "src/lib/exams/actions.ts",
+      "lineRange": [
+        254,
+        268
+      ],
+      "summary": "Validate và upsert thí sinh cùng phân môn/đề thi qua Supabase RPC.",
+      "tags": [
+        "server-action",
+        "authorization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/actions.ts:saveExamCandidateAction",
+      "type": "function",
+      "name": "saveExamCandidateAction",
+      "filePath": "src/lib/exams/actions.ts",
+      "lineRange": [
+        270,
+        280
+      ],
+      "summary": "Server action quản trị để lưu thí sinh và revalidate chi tiết kỳ thi.",
+      "tags": [
+        "server-action",
+        "authorization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/actions.ts:deleteExamCandidateAction",
+      "type": "function",
+      "name": "deleteExamCandidateAction",
+      "filePath": "src/lib/exams/actions.ts",
+      "lineRange": [
+        282,
+        305
+      ],
+      "summary": "Chỉ xóa thí sinh khi không có lượt thi liên quan, đồng thời dọn các phân môn được gán.",
+      "tags": [
+        "server-action",
+        "authorization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/actions.ts:saveCandidateResultAction",
+      "type": "function",
+      "name": "saveCandidateResultAction",
+      "filePath": "src/lib/exams/actions.ts",
+      "lineRange": [
+        307,
+        323
+      ],
+      "summary": "Validate điểm/nhận xét và lưu kết quả chính thức của một phân môn.",
+      "tags": [
+        "server-action",
+        "authorization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/actions.ts:startExamAttemptAction",
+      "type": "function",
+      "name": "startExamAttemptAction",
+      "filePath": "src/lib/exams/actions.ts",
+      "lineRange": [
+        325,
+        339
+      ],
+      "summary": "Yêu cầu role student, khởi tạo lượt thi bằng RPC và ánh xạ kết quả typed.",
+      "tags": [
+        "server-action",
+        "authorization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/actions.ts:completeExamAttemptItemAction",
+      "type": "function",
+      "name": "completeExamAttemptItemAction",
+      "filePath": "src/lib/exams/actions.ts",
+      "lineRange": [
+        341,
+        362
+      ],
+      "summary": "Validate kết quả scenario và hoàn tất một attempt item của thí sinh.",
+      "tags": [
+        "server-action",
+        "authorization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/actions.ts:completeExamAttemptAction",
+      "type": "function",
+      "name": "completeExamAttemptAction",
+      "filePath": "src/lib/exams/actions.ts",
+      "lineRange": [
+        364,
+        378
+      ],
+      "summary": "Hoàn tất toàn bộ lượt thi của phân môn và trả về attempt mới nhất.",
+      "tags": [
+        "server-action",
+        "authorization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/actions.ts:getExamCandidatePrintDataAction",
+      "type": "function",
+      "name": "getExamCandidatePrintDataAction",
+      "filePath": "src/lib/exams/actions.ts",
+      "lineRange": [
+        423,
+        640
+      ],
+      "summary": "Tổng hợp kỳ thi, giám khảo, phân môn, attempt và scenario đa module thành dữ liệu in kết quả chi tiết.",
+      "tags": [
+        "server-action",
+        "authorization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/lib/exams/queries.ts",
+      "type": "file",
+      "name": "queries.ts",
+      "filePath": "src/lib/exams/queries.ts",
+      "summary": "Tầng truy vấn kỳ thi phía server, kiểm soát quyền và ánh xạ quan hệ Supabase thành các view model typed cho quản trị viên và thí sinh.",
+      "tags": [
+        "data-access",
+        "supabase",
+        "authorization",
+        "exams"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/lib/exams/queries.ts:mapAttemptItem",
+      "type": "function",
+      "name": "mapAttemptItem",
+      "filePath": "src/lib/exams/queries.ts",
+      "lineRange": [
+        82,
+        102
+      ],
+      "summary": "Ánh xạ row attempt item và result JSON sang mô hình typed dùng trong ứng dụng.",
+      "tags": [
+        "data-access",
+        "serialization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/queries.ts:mapExamAttempt",
+      "type": "function",
+      "name": "mapExamAttempt",
+      "filePath": "src/lib/exams/queries.ts",
+      "lineRange": [
+        104,
+        114
+      ],
+      "summary": "Ánh xạ attempt cùng các item lồng nhau từ quan hệ Supabase.",
+      "tags": [
+        "data-access",
+        "serialization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/queries.ts:listSubjects",
+      "type": "function",
+      "name": "listSubjects",
+      "filePath": "src/lib/exams/queries.ts",
+      "lineRange": [
+        116,
+        141
+      ],
+      "summary": "Truy vấn danh sách môn thi và module được cấu hình theo thứ tự hiển thị.",
+      "tags": [
+        "data-access",
+        "serialization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/queries.ts:listScenarioOptions",
+      "type": "function",
+      "name": "listScenarioOptions",
+      "filePath": "src/lib/exams/queries.ts",
+      "lineRange": [
+        143,
+        172
+      ],
+      "summary": "Truy vấn catalog scenario phù hợp với các module của môn thi.",
+      "tags": [
+        "data-access",
+        "serialization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/queries.ts:getOfficialExamScenario",
+      "type": "function",
+      "name": "getOfficialExamScenario",
+      "filePath": "src/lib/exams/queries.ts",
+      "lineRange": [
+        174,
+        182
+      ],
+      "summary": "Nạp scenario chính thức theo module rồi loại bỏ dữ liệu đáp án trước khi trả cho thí sinh.",
+      "tags": [
+        "data-access",
+        "serialization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/queries.ts:loadOfficialExamScenario",
+      "type": "function",
+      "name": "loadOfficialExamScenario",
+      "filePath": "src/lib/exams/queries.ts",
+      "lineRange": [
+        184,
+        202
+      ],
+      "summary": "Chọn bảng và mapper VOR, DME hoặc ADS-B để nạp scenario theo ID.",
+      "tags": [
+        "data-access",
+        "serialization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/queries.ts:listAdminExamSets",
+      "type": "function",
+      "name": "listAdminExamSets",
+      "filePath": "src/lib/exams/queries.ts",
+      "lineRange": [
+        204,
+        228
+      ],
+      "summary": "Truy vấn tóm tắt bộ đề kèm số môn, số đề và trạng thái đang được sử dụng.",
+      "tags": [
+        "data-access",
+        "serialization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/queries.ts:getExamSetDetail",
+      "type": "function",
+      "name": "getExamSetDetail",
+      "filePath": "src/lib/exams/queries.ts",
+      "lineRange": [
+        230,
+        287
+      ],
+      "summary": "Nạp toàn bộ cấu trúc bộ đề, môn, paper và scenario theo đúng thứ tự.",
+      "tags": [
+        "data-access",
+        "serialization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/exams/queries.ts:listAdminExams",
+      "type": "function",
+      "name": "listAdminExams",
+      "filePath": "src/lib/exams/queries.ts",
+      "lineRange": [
+        289,
+        311
+      ],
+      "summary": "Truy vấn danh sách kỳ thi quản trị cùng bộ đề và số lượng thí sinh.",
+      "tags": [
+        "data-access",
+        "serialization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/queries.ts:mapCandidateSubject",
+      "type": "function",
+      "name": "mapCandidateSubject",
+      "filePath": "src/lib/exams/queries.ts",
+      "lineRange": [
+        313,
+        328
+      ],
+      "summary": "Ánh xạ phân môn của thí sinh và quan hệ subject/paper thành view model typed.",
+      "tags": [
+        "data-access",
+        "serialization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/queries.ts:getAdminExamDetail",
+      "type": "function",
+      "name": "getAdminExamDetail",
+      "filePath": "src/lib/exams/queries.ts",
+      "lineRange": [
+        330,
+        416
+      ],
+      "summary": "Tổng hợp chi tiết kỳ thi, môn, đề, giám khảo và danh sách thí sinh có phân trang.",
+      "tags": [
+        "data-access",
+        "serialization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/exams/queries.ts:getAdminCandidateSubjectReview",
+      "type": "function",
+      "name": "getAdminCandidateSubjectReview",
+      "filePath": "src/lib/exams/queries.ts",
+      "lineRange": [
+        418,
+        473
+      ],
+      "summary": "Nạp hồ sơ review phân môn, attempt và scenario gốc để giám khảo đánh giá.",
+      "tags": [
+        "data-access",
+        "serialization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/exams/queries.ts:listStudentOpenExams",
+      "type": "function",
+      "name": "listStudentOpenExams",
+      "filePath": "src/lib/exams/queries.ts",
+      "lineRange": [
+        475,
+        496
+      ],
+      "summary": "Liệt kê kỳ thi mở và đối chiếu email profile để xác định phân công của thí sinh.",
+      "tags": [
+        "data-access",
+        "serialization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/queries.ts:getStudentExamDetail",
+      "type": "function",
+      "name": "getStudentExamDetail",
+      "filePath": "src/lib/exams/queries.ts",
+      "lineRange": [
+        498,
+        525
+      ],
+      "summary": "Nạp chi tiết kỳ thi cùng hồ sơ và các phân môn thuộc thí sinh hiện tại.",
+      "tags": [
+        "data-access",
+        "serialization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/queries.ts:getStudentCandidateSubject",
+      "type": "function",
+      "name": "getStudentCandidateSubject",
+      "filePath": "src/lib/exams/queries.ts",
+      "lineRange": [
+        527,
+        570
+      ],
+      "summary": "Nạp một phân môn cùng attempt hiện tại sau khi kiểm tra quyền sở hữu.",
+      "tags": [
+        "data-access",
+        "serialization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/queries.ts:getStudentAttemptItem",
+      "type": "function",
+      "name": "getStudentAttemptItem",
+      "filePath": "src/lib/exams/queries.ts",
+      "lineRange": [
+        572,
+        598
+      ],
+      "summary": "Nạp attempt item, xác minh quan hệ với thí sinh và bổ sung context điều hướng.",
+      "tags": [
+        "data-access",
+        "serialization",
+        "supabase",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/lib/exams/student-scenario.ts",
+      "type": "file",
+      "name": "student-scenario.ts",
+      "filePath": "src/lib/exams/student-scenario.ts",
+      "summary": "Bộ lọc bảo mật loại bỏ đáp án, component lỗi và dữ liệu chẩn đoán chỉ dành cho giám khảo trước khi scenario chính thức được gửi tới browser thí sinh.",
+      "tags": [
+        "security",
+        "serialization",
+        "authorization",
+        "exams"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Thu hẹp discriminated union bằng moduleCode để áp dụng sanitization riêng cho VOR, DME và ADS-B một cách exhaustive."
+    },
+    {
+      "id": "function:src/lib/exams/student-scenario.ts:sanitizeOfficialExamScenario",
+      "type": "function",
+      "name": "sanitizeOfficialExamScenario",
+      "filePath": "src/lib/exams/student-scenario.ts",
+      "lineRange": [
+        7,
+        56
+      ],
+      "summary": "Dựa trên discriminated union moduleCode để xóa checkpoint, fault component và đáp án chẩn đoán khỏi scenario của thí sinh.",
+      "tags": [
+        "security",
+        "serialization",
+        "type-narrowing",
+        "exams"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/exams/types.ts",
+      "type": "file",
+      "name": "types.ts",
+      "filePath": "src/lib/exams/types.ts",
+      "summary": "Mô hình TypeScript toàn diện cho miền kỳ thi, bao gồm bộ đề, kỳ thi, phân môn, lượt thi, scenario đa module và các view model admin/student.",
+      "tags": [
+        "type-definition",
+        "typescript",
+        "data-model",
+        "exams"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Dùng generics, Pick/Omit/Required và discriminated union OfficialExamScenario để mô hình hóa dữ liệu đa module mà vẫn giữ type safety."
+    },
+    {
+      "id": "file:src/lib/exams/validation.ts",
+      "type": "file",
+      "name": "validation.ts",
+      "filePath": "src/lib/exams/validation.ts",
+      "summary": "Lớp validation runtime cho mọi payload kỳ thi, chuẩn hóa dữ liệu và áp đặt ràng buộc UUID, ngày, địa điểm, email, trạng thái, điểm cùng kích thước kết quả.",
+      "tags": [
+        "validation",
+        "type-safety",
+        "security",
+        "exams"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/exams/validation.ts:validateUuid",
+      "type": "function",
+      "name": "validateUuid",
+      "filePath": "src/lib/exams/validation.ts",
+      "lineRange": [
+        41,
+        44
+      ],
+      "summary": "Type-check và chuẩn hóa UUID hợp lệ sang chữ thường.",
+      "tags": [
+        "validation",
+        "type-guard",
+        "security",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/validation.ts:validateExamSetInput",
+      "type": "function",
+      "name": "validateExamSetInput",
+      "filePath": "src/lib/exams/validation.ts",
+      "lineRange": [
+        46,
+        109
+      ],
+      "summary": "Kiểm tra sâu bộ đề, môn, paper, scenario, thứ tự và tính duy nhất của các khóa.",
+      "tags": [
+        "validation",
+        "type-guard",
+        "security",
+        "exams"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/exams/validation.ts:validateExamInput",
+      "type": "function",
+      "name": "validateExamInput",
+      "filePath": "src/lib/exams/validation.ts",
+      "lineRange": [
+        111,
+        127
+      ],
+      "summary": "Kiểm tra tên, ngày, địa điểm, căn cứ và bộ đề của kỳ thi.",
+      "tags": [
+        "validation",
+        "type-guard",
+        "security",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/validation.ts:validateExaminerInput",
+      "type": "function",
+      "name": "validateExaminerInput",
+      "filePath": "src/lib/exams/validation.ts",
+      "lineRange": [
+        129,
+        139
+      ],
+      "summary": "Kiểm tra thông tin giám khảo, môn chấm và thứ tự hiển thị.",
+      "tags": [
+        "validation",
+        "type-guard",
+        "security",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/validation.ts:validateCandidateInput",
+      "type": "function",
+      "name": "validateCandidateInput",
+      "filePath": "src/lib/exams/validation.ts",
+      "lineRange": [
+        141,
+        168
+      ],
+      "summary": "Kiểm tra hồ sơ thí sinh, email ATTECH và các phân môn/đề được giao không trùng nhau.",
+      "tags": [
+        "validation",
+        "type-guard",
+        "security",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/validation.ts:validateCandidateResultInput",
+      "type": "function",
+      "name": "validateCandidateResultInput",
+      "filePath": "src/lib/exams/validation.ts",
+      "lineRange": [
+        170,
+        181
+      ],
+      "summary": "Kiểm tra điểm 0-100 và chuẩn hóa nhận xét của giám khảo.",
+      "tags": [
+        "validation",
+        "type-guard",
+        "security",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/validation.ts:validateExamStatus",
+      "type": "function",
+      "name": "validateExamStatus",
+      "filePath": "src/lib/exams/validation.ts",
+      "lineRange": [
+        183,
+        188
+      ],
+      "summary": "Thu hẹp giá trị runtime thành một ExamStatus hợp lệ.",
+      "tags": [
+        "validation",
+        "type-guard",
+        "security",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/exams/validation.ts:validateCompleteAttemptItemInput",
+      "type": "function",
+      "name": "validateCompleteAttemptItemInput",
+      "filePath": "src/lib/exams/validation.ts",
+      "lineRange": [
+        190,
+        201
+      ],
+      "summary": "Kiểm tra result object, giới hạn kích thước serialized và chuẩn hóa submission reference.",
+      "tags": [
+        "validation",
+        "type-guard",
+        "security",
+        "exams"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:src/lib/exams/validation.ts:ExamValidationError",
+      "type": "class",
+      "name": "ExamValidationError",
+      "filePath": "src/lib/exams/validation.ts",
+      "lineRange": [
+        20,
+        25
+      ],
+      "summary": "Loại lỗi nghiệp vụ chuyên biệt cho payload kỳ thi không hợp lệ.",
+      "tags": [
+        "validation",
+        "error-handling",
+        "type-safety",
+        "exams"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/components/exams/exam-set-editor.tsx",
+      "target": "function:src/components/exams/exam-set-editor.tsx:toEditableSubjects",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/exam-set-editor.tsx",
+      "target": "function:src/components/exams/exam-set-editor.tsx:ExamSetEditor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/exam-set-editor.tsx",
+      "target": "function:src/components/exams/exam-set-editor.tsx:ExamSetEditor",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/exams/exam-set-editor.tsx",
+      "target": "file:src/components/exams/action-feedback.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/exam-set-editor.tsx",
+      "target": "file:src/components/exams/shared.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/exam-set-editor.tsx",
+      "target": "file:src/lib/exams/actions.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/exam-set-list.tsx",
+      "target": "function:src/components/exams/exam-set-list.tsx:ExamSetList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/exam-set-list.tsx",
+      "target": "function:src/components/exams/exam-set-list.tsx:ExamSetList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/exams/exam-set-list.tsx",
+      "target": "file:src/components/exams/action-feedback.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/exam-set-list.tsx",
+      "target": "file:src/components/exams/shared.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/exam-set-list.tsx",
+      "target": "file:src/lib/exams/actions.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/route-error.tsx",
+      "target": "function:src/components/exams/route-error.tsx:ExamRouteError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/route-error.tsx",
+      "target": "function:src/components/exams/route-error.tsx:ExamRouteError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/exams/route-error.tsx",
+      "target": "file:src/components/exams/shared.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/shared.tsx",
+      "target": "function:src/components/exams/shared.tsx:ExamPageFrame",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/shared.tsx",
+      "target": "function:src/components/exams/shared.tsx:ExamPageFrame",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/exams/shared.tsx",
+      "target": "function:src/components/exams/shared.tsx:ExamPageHeader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/shared.tsx",
+      "target": "function:src/components/exams/shared.tsx:ExamPageHeader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/exams/shared.tsx",
+      "target": "function:src/components/exams/shared.tsx:ExamStatusBadge",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/shared.tsx",
+      "target": "function:src/components/exams/shared.tsx:ExamStatusBadge",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/exams/shared.tsx",
+      "target": "function:src/components/exams/shared.tsx:DataUnavailable",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/shared.tsx",
+      "target": "function:src/components/exams/shared.tsx:DataUnavailable",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/exams/shared.tsx",
+      "target": "function:src/components/exams/shared.tsx:Field",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/shared.tsx",
+      "target": "function:src/components/exams/shared.tsx:Field",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/exams/student-exam-detail.tsx",
+      "target": "function:src/components/exams/student-exam-detail.tsx:StudentExamDetail",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/student-exam-detail.tsx",
+      "target": "function:src/components/exams/student-exam-detail.tsx:StudentExamDetail",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/exams/student-exam-list.tsx",
+      "target": "function:src/components/exams/student-exam-list.tsx:StudentExamList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/student-exam-list.tsx",
+      "target": "function:src/components/exams/student-exam-list.tsx:StudentExamList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/exams/student-subject-progress.tsx",
+      "target": "function:src/components/exams/student-subject-progress.tsx:StudentSubjectProgress",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/student-subject-progress.tsx",
+      "target": "function:src/components/exams/student-subject-progress.tsx:StudentSubjectProgress",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/exams/student-subject-progress.tsx",
+      "target": "file:src/components/exams/action-feedback.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/student-subject-progress.tsx",
+      "target": "file:src/components/exams/shared.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/student-subject-progress.tsx",
+      "target": "file:src/lib/exams/actions.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:actionError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:saveExamSetAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:saveExamSetAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:archiveExamSetAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:archiveExamSetAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:saveExamAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:saveExamAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:setExamStatusAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:setExamStatusAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:archiveExamAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:archiveExamAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:replaceExaminers",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:saveExamExaminersAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:saveExamExaminersAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:saveCandidate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:saveExamCandidateAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:saveExamCandidateAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:deleteExamCandidateAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:deleteExamCandidateAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:saveCandidateResultAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:saveCandidateResultAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:startExamAttemptAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:startExamAttemptAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:completeExamAttemptItemAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:completeExamAttemptItemAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:completeExamAttemptAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:completeExamAttemptAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:getExamCandidatePrintDataAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "function:src/lib/exams/actions.ts:getExamCandidatePrintDataAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "file:src/lib/auth/profile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "file:src/lib/dme-scenario-storage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "file:src/lib/exams/queries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "file:src/lib/exams/result-presentation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "file:src/lib/exams/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "file:src/lib/exams/validation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "file:src/lib/supabase/scenarios.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "file:src/lib/supabase/server.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/exams/actions.ts",
+      "target": "file:src/lib/vor-scenario-storage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:mapAttemptItem",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:mapExamAttempt",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:mapExamAttempt",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:listSubjects",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:listSubjects",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:listScenarioOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:listScenarioOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:getOfficialExamScenario",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:getOfficialExamScenario",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:loadOfficialExamScenario",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:listAdminExamSets",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:listAdminExamSets",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:getExamSetDetail",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:getExamSetDetail",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:listAdminExams",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:listAdminExams",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:mapCandidateSubject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:getAdminExamDetail",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:getAdminExamDetail",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:getAdminCandidateSubjectReview",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:getAdminCandidateSubjectReview",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:listStudentOpenExams",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:listStudentOpenExams",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:getStudentExamDetail",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:getStudentExamDetail",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:getStudentCandidateSubject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:getStudentCandidateSubject",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:getStudentAttemptItem",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "function:src/lib/exams/queries.ts:getStudentAttemptItem",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "file:src/lib/auth/profile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "file:src/lib/dme-scenario-storage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "file:src/lib/exams/student-scenario.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "file:src/lib/exams/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "file:src/lib/supabase/scenarios.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "file:src/lib/supabase/server.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/exams/queries.ts",
+      "target": "file:src/lib/vor-scenario-storage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/exams/student-scenario.ts",
+      "target": "function:src/lib/exams/student-scenario.ts:sanitizeOfficialExamScenario",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/student-scenario.ts",
+      "target": "function:src/lib/exams/student-scenario.ts:sanitizeOfficialExamScenario",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/student-scenario.ts",
+      "target": "file:src/lib/exams/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/exams/types.ts",
+      "target": "file:src/lib/dme-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/exams/types.ts",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/exams/types.ts",
+      "target": "file:src/lib/vor-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/exams/validation.ts",
+      "target": "function:src/lib/exams/validation.ts:validateUuid",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/validation.ts",
+      "target": "function:src/lib/exams/validation.ts:validateUuid",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/validation.ts",
+      "target": "function:src/lib/exams/validation.ts:validateExamSetInput",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/validation.ts",
+      "target": "function:src/lib/exams/validation.ts:validateExamSetInput",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/validation.ts",
+      "target": "function:src/lib/exams/validation.ts:validateExamInput",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/validation.ts",
+      "target": "function:src/lib/exams/validation.ts:validateExamInput",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/validation.ts",
+      "target": "function:src/lib/exams/validation.ts:validateExaminerInput",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/validation.ts",
+      "target": "function:src/lib/exams/validation.ts:validateExaminerInput",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/validation.ts",
+      "target": "function:src/lib/exams/validation.ts:validateCandidateInput",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/validation.ts",
+      "target": "function:src/lib/exams/validation.ts:validateCandidateInput",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/validation.ts",
+      "target": "function:src/lib/exams/validation.ts:validateCandidateResultInput",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/validation.ts",
+      "target": "function:src/lib/exams/validation.ts:validateCandidateResultInput",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/validation.ts",
+      "target": "function:src/lib/exams/validation.ts:validateExamStatus",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/validation.ts",
+      "target": "function:src/lib/exams/validation.ts:validateExamStatus",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/validation.ts",
+      "target": "function:src/lib/exams/validation.ts:validateCompleteAttemptItemInput",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/validation.ts",
+      "target": "function:src/lib/exams/validation.ts:validateCompleteAttemptItemInput",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/validation.ts",
+      "target": "class:src/lib/exams/validation.ts:ExamValidationError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/exams/validation.ts",
+      "target": "class:src/lib/exams/validation.ts:ExamValidationError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/exams/validation.ts",
+      "target": "file:src/lib/exams/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:src/components/exams/exam-set-editor.tsx:ExamSetEditor",
+      "target": "function:src/components/exams/exam-set-editor.tsx:toEditableSubjects",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:saveExamSetAction",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:saveExamSetAction",
+      "target": "function:src/lib/exams/actions.ts:actionError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:archiveExamSetAction",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:archiveExamSetAction",
+      "target": "function:src/lib/exams/actions.ts:actionError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:saveExamAction",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:saveExamAction",
+      "target": "function:src/lib/exams/actions.ts:actionError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:setExamStatusAction",
+      "target": "function:src/lib/exams/actions.ts:archiveExamAction",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:setExamStatusAction",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:setExamStatusAction",
+      "target": "function:src/lib/exams/actions.ts:actionError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:archiveExamAction",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:archiveExamAction",
+      "target": "function:src/lib/exams/actions.ts:actionError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:replaceExaminers",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:saveExamExaminersAction",
+      "target": "function:src/lib/exams/actions.ts:replaceExaminers",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:saveExamExaminersAction",
+      "target": "function:src/lib/exams/actions.ts:actionError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:saveCandidate",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:saveExamCandidateAction",
+      "target": "function:src/lib/exams/actions.ts:saveCandidate",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:saveExamCandidateAction",
+      "target": "function:src/lib/exams/actions.ts:actionError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:deleteExamCandidateAction",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:deleteExamCandidateAction",
+      "target": "function:src/lib/exams/actions.ts:actionError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:saveCandidateResultAction",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:saveCandidateResultAction",
+      "target": "function:src/lib/exams/actions.ts:actionError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:startExamAttemptAction",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:startExamAttemptAction",
+      "target": "function:src/lib/exams/actions.ts:actionError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:completeExamAttemptItemAction",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:completeExamAttemptItemAction",
+      "target": "function:src/lib/exams/actions.ts:actionError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:completeExamAttemptAction",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:completeExamAttemptAction",
+      "target": "function:src/lib/exams/actions.ts:actionError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:getExamCandidatePrintDataAction",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:getExamCandidatePrintDataAction",
+      "target": "function:src/lib/vor-scenario-storage.ts:mapRowToVorScenario",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:getExamCandidatePrintDataAction",
+      "target": "function:src/lib/dme-scenario-storage.ts:mapRowToDmeScenario",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:getExamCandidatePrintDataAction",
+      "target": "function:src/lib/exams/result-presentation.ts:presentPmdtResult",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:getExamCandidatePrintDataAction",
+      "target": "function:src/lib/exams/result-presentation.ts:presentAdsbResult",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/actions.ts:getExamCandidatePrintDataAction",
+      "target": "function:src/lib/exams/actions.ts:actionError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:listSubjects",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:listScenarioOptions",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:getOfficialExamScenario",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:getOfficialExamScenario",
+      "target": "function:src/lib/exams/queries.ts:loadOfficialExamScenario",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:loadOfficialExamScenario",
+      "target": "function:src/lib/vor-scenario-storage.ts:mapRowToVorScenario",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:loadOfficialExamScenario",
+      "target": "function:src/lib/dme-scenario-storage.ts:mapRowToDmeScenario",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:listAdminExamSets",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:getExamSetDetail",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:getExamSetDetail",
+      "target": "function:src/lib/exams/queries.ts:listScenarioOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:listAdminExams",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:getAdminExamDetail",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:getAdminExamDetail",
+      "target": "function:src/lib/exams/queries.ts:mapCandidateSubject",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:getAdminCandidateSubjectReview",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:getAdminCandidateSubjectReview",
+      "target": "function:src/lib/exams/queries.ts:mapExamAttempt",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:getAdminCandidateSubjectReview",
+      "target": "function:src/lib/exams/queries.ts:loadOfficialExamScenario",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:listStudentOpenExams",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:getStudentExamDetail",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:getStudentCandidateSubject",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:getStudentCandidateSubject",
+      "target": "function:src/lib/exams/queries.ts:mapExamAttempt",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:getStudentAttemptItem",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:getStudentAttemptItem",
+      "target": "function:src/lib/exams/queries.ts:getStudentCandidateSubject",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/queries.ts:getStudentAttemptItem",
+      "target": "function:src/lib/exams/queries.ts:mapAttemptItem",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/validation.ts:validateExamSetInput",
+      "target": "function:src/lib/exams/validation.ts:validateUuid",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/validation.ts:validateExamInput",
+      "target": "function:src/lib/exams/validation.ts:validateUuid",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/validation.ts:validateExaminerInput",
+      "target": "function:src/lib/exams/validation.ts:validateUuid",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/validation.ts:validateCandidateInput",
+      "target": "function:src/lib/exams/validation.ts:validateUuid",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/lib/exams/validation.ts:validateCandidateResultInput",
+      "target": "function:src/lib/exams/validation.ts:validateUuid",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

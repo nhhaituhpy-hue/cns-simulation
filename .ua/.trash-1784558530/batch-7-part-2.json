@@ -1,0 +1,840 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/components/dme/student/dme-student-dashboard.tsx",
+      "type": "file",
+      "name": "dme-student-dashboard.tsx",
+      "filePath": "src/components/dme/student/dme-student-dashboard.tsx",
+      "summary": "Dashboard học viên DME hydrate và sắp xếp kịch bản, hiển thị danh sách cùng trạng thái sẵn sàng hoặc empty/loading.",
+      "tags": [
+        "component",
+        "student-dashboard",
+        "dme",
+        "scenario-list",
+        "zustand"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/dme/student/dme-student-dashboard.tsx:DmeStudentDashboard",
+      "type": "function",
+      "name": "DmeStudentDashboard",
+      "filePath": "src/components/dme/student/dme-student-dashboard.tsx",
+      "lineRange": [
+        43,
+        130
+      ],
+      "summary": "Hydrate, sắp xếp và render danh sách kịch bản DME cho học viên.",
+      "tags": [
+        "component",
+        "student-dashboard",
+        "dme",
+        "zustand"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/dme/student/dme-student-journal.tsx",
+      "type": "file",
+      "name": "dme-student-journal.tsx",
+      "filePath": "src/components/dme/student/dme-student-journal.tsx",
+      "summary": "Nhật ký bài thi DME cho phép học viên ghi câu trả lời, gửi bài và theo dõi trạng thái nộp trong phiên.",
+      "tags": [
+        "component",
+        "student-journal",
+        "dme",
+        "form",
+        "submission"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/dme/student/dme-student-journal.tsx:DmeStudentJournal",
+      "type": "function",
+      "name": "DmeStudentJournal",
+      "filePath": "src/components/dme/student/dme-student-journal.tsx",
+      "lineRange": [
+        17,
+        124
+      ],
+      "summary": "Quản lý câu trả lời và thao tác nộp bài trong journal của phiên DME.",
+      "tags": [
+        "component",
+        "student-journal",
+        "submission",
+        "form"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/dme/student/dme-student-journal.tsx:AnswerField",
+      "type": "function",
+      "name": "AnswerField",
+      "filePath": "src/components/dme/student/dme-student-journal.tsx",
+      "lineRange": [
+        126,
+        138
+      ],
+      "summary": "Render textarea cho một mục trả lời có nhãn và callback cập nhật.",
+      "tags": [
+        "component",
+        "form-control",
+        "student-journal"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/dme/student/dme-student-session.tsx",
+      "type": "file",
+      "name": "dme-student-session.tsx",
+      "filePath": "src/components/dme/student/dme-student-session.tsx",
+      "summary": "Điều phối phiên mô phỏng DME: tải scenario, khởi tạo PMDT, ghi action, quản lý journal và hoàn tất submission.",
+      "tags": [
+        "component",
+        "student-session",
+        "dme",
+        "simulation",
+        "state-management"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/dme/student/dme-student-session.tsx:DmeStudentSession",
+      "type": "function",
+      "name": "DmeStudentSession",
+      "filePath": "src/components/dme/student/dme-student-session.tsx",
+      "lineRange": [
+        37,
+        184
+      ],
+      "summary": "Khởi tạo phiên DME từ scenario, ghi action PMDT và kết nối journal với submission store.",
+      "tags": [
+        "component",
+        "student-session",
+        "simulation",
+        "state-management"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/dme-menu-structure.ts",
+      "type": "file",
+      "name": "dme-menu-structure.ts",
+      "filePath": "src/lib/dme-menu-structure.ts",
+      "summary": "Khai báo cây menu PMDT DME và tooltip cho các mục chưa hỗ trợ, dùng để route tới monitor, RMS, TX và RTC screens.",
+      "tags": [
+        "configuration",
+        "menu",
+        "navigation",
+        "dme",
+        "type-definition"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/dme-menu-structure.ts:monitorItems",
+      "type": "function",
+      "name": "monitorItems",
+      "filePath": "src/lib/dme-menu-structure.ts",
+      "lineRange": [
+        3,
+        32
+      ],
+      "summary": "Tạo danh sách menu con cho nhóm Monitor với các screen và mục vô hiệu hóa tương ứng.",
+      "tags": [
+        "factory",
+        "menu",
+        "navigation",
+        "dme"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/lib/dme-pmdt-defaults.ts",
+      "type": "file",
+      "name": "dme-pmdt-defaults.ts",
+      "filePath": "src/lib/dme-pmdt-defaults.ts",
+      "summary": "Cung cấp toàn bộ dữ liệu PMDT mặc định cho log, digital I/O, power, alarm limits, offsets, integral và các tham số DME khác.",
+      "tags": [
+        "data-model",
+        "defaults",
+        "dme",
+        "pmdt",
+        "factory"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:src/lib/dme-pmdt-defaults.ts:cloneDefaultDmePmdtData",
+      "type": "function",
+      "name": "cloneDefaultDmePmdtData",
+      "filePath": "src/lib/dme-pmdt-defaults.ts",
+      "lineRange": [
+        342,
+        344
+      ],
+      "summary": "Tạo deep clone độc lập của dữ liệu PMDT mặc định để khởi tạo phiên mới.",
+      "tags": [
+        "factory",
+        "defaults",
+        "serialization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/lib/dme-sidebar-fields.ts",
+      "type": "file",
+      "name": "dme-sidebar-fields.ts",
+      "filePath": "src/lib/dme-sidebar-fields.ts",
+      "summary": "Định nghĩa các field sidebar DME có thể tương tác và helper ánh xạ target chính/phụ cho thao tác mô phỏng.",
+      "tags": [
+        "utility",
+        "sidebar",
+        "interaction",
+        "dme"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/dme-sidebar-fields.ts:isInteractiveSidebarField",
+      "type": "function",
+      "name": "isInteractiveSidebarField",
+      "filePath": "src/lib/dme-sidebar-fields.ts",
+      "lineRange": [
+        11,
+        15
+      ],
+      "summary": "Type guard xác định field id thuộc tập sidebar DME có thể tương tác.",
+      "tags": [
+        "type-guard",
+        "sidebar",
+        "interaction"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/dme-sidebar-fields.ts:getSidebarInteractionTargets",
+      "type": "function",
+      "name": "getSidebarInteractionTargets",
+      "filePath": "src/lib/dme-sidebar-fields.ts",
+      "lineRange": [
+        17,
+        29
+      ],
+      "summary": "Trả về target chính và các target liên quan cần cập nhật cho một field sidebar.",
+      "tags": [
+        "utility",
+        "sidebar",
+        "interaction"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/lib/dme-types.ts",
+      "type": "file",
+      "name": "dme-types.ts",
+      "filePath": "src/lib/dme-types.ts",
+      "summary": "Tập type/interface trung tâm mô tả PMDT data, screen ids, field overrides, scenario, submission và các trạng thái tham số DME.",
+      "tags": [
+        "type-definition",
+        "data-model",
+        "dme",
+        "pmdt"
+      ],
+      "complexity": "complex",
+      "languageNotes": "File chủ yếu gồm interfaces, literal unions và Record types để mô hình hóa dữ liệu CNS có cấu trúc mà không tạo runtime code ngoài các constant trạng thái."
+    },
+    {
+      "id": "file:src/stores/dme-pmdt-store.ts",
+      "type": "file",
+      "name": "dme-pmdt-store.ts",
+      "filePath": "src/stores/dme-pmdt-store.ts",
+      "summary": "Zustand store điều khiển PMDT DME: mode, navigation, dữ liệu runtime, override, lựa chọn field, action log và tương tác sidebar.",
+      "tags": [
+        "state-management",
+        "zustand",
+        "dme",
+        "pmdt",
+        "simulation"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Zustand `create<DmePmdtStore>()` giữ type-safe cho state/actions; helper resolve nhận generic field value và override dạng discriminated data."
+    },
+    {
+      "id": "function:src/stores/dme-pmdt-store.ts:initialState",
+      "type": "function",
+      "name": "initialState",
+      "filePath": "src/stores/dme-pmdt-store.ts",
+      "lineRange": [
+        114,
+        132
+      ],
+      "summary": "Tạo state PMDT ban đầu với dữ liệu mặc định, mode và trạng thái điều hướng rỗng.",
+      "tags": [
+        "factory",
+        "state-management",
+        "defaults"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/stores/dme-pmdt-store.ts:resolveDmeField",
+      "type": "function",
+      "name": "resolveDmeField",
+      "filePath": "src/stores/dme-pmdt-store.ts",
+      "lineRange": [
+        134,
+        141
+      ],
+      "summary": "Ưu tiên giá trị override theo field path, nếu không có thì trả về giá trị baseline.",
+      "tags": [
+        "utility",
+        "state-management",
+        "override"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/stores/dme-pmdt-store.ts:resolveDmeStatus",
+      "type": "function",
+      "name": "resolveDmeStatus",
+      "filePath": "src/stores/dme-pmdt-store.ts",
+      "lineRange": [
+        143,
+        167
+      ],
+      "summary": "Resolve trạng thái override cho field và chuẩn hóa fallback thành DME parameter status hợp lệ.",
+      "tags": [
+        "utility",
+        "state-management",
+        "status",
+        "type-guard"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/stores/dme-pmdt-store.ts:createDmePmdtStore",
+      "type": "function",
+      "name": "createDmePmdtStore",
+      "filePath": "src/stores/dme-pmdt-store.ts",
+      "lineRange": [
+        169,
+        339
+      ],
+      "summary": "Tạo Zustand PMDT store với navigation, mode, override, recorded actions và các action tương tác DME.",
+      "tags": [
+        "factory",
+        "zustand",
+        "pmdt",
+        "simulation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/stores/dme-scenario-store.ts",
+      "type": "file",
+      "name": "dme-scenario-store.ts",
+      "filePath": "src/stores/dme-scenario-store.ts",
+      "summary": "Factory Zustand quản lý kịch bản DME với hydrate từ API, CRUD, reset và cơ chế fallback/báo lỗi khi persistence thất bại.",
+      "tags": [
+        "state-management",
+        "zustand",
+        "dme",
+        "scenario",
+        "api-client"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/stores/dme-scenario-store.ts:createDmeScenarioStore",
+      "type": "function",
+      "name": "createDmeScenarioStore",
+      "filePath": "src/stores/dme-scenario-store.ts",
+      "lineRange": [
+        70,
+        220
+      ],
+      "summary": "Tạo Zustand scenario store DME với dependency injection, hydrate API và các action CRUD/reset.",
+      "tags": [
+        "factory",
+        "zustand",
+        "scenario",
+        "api-client"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:tests/dme/dme-authoring.test.tsx",
+      "type": "file",
+      "name": "dme-authoring.test.tsx",
+      "filePath": "tests/dme/dme-authoring.test.tsx",
+      "summary": "Kiểm thử luồng biên soạn DME, bao gồm chọn field PMDT và tạo override từ thao tác của giảng viên.",
+      "tags": [
+        "test",
+        "component-test",
+        "dme",
+        "scenario-authoring"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:tests/dme/pmdt-shell.test.tsx",
+      "type": "file",
+      "name": "pmdt-shell.test.tsx",
+      "filePath": "tests/dme/pmdt-shell.test.tsx",
+      "summary": "Kiểm thử shell PMDT DME về render layout, menu navigation và chuyển màn hình theo thao tác người dùng.",
+      "tags": [
+        "test",
+        "component-test",
+        "dme",
+        "pmdt",
+        "navigation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:tests/state/dme-pmdt-store.test.ts",
+      "type": "file",
+      "name": "dme-pmdt-store.test.ts",
+      "filePath": "tests/state/dme-pmdt-store.test.ts",
+      "summary": "Kiểm thử DME PMDT store về khởi tạo, resolve override, navigation và ghi nhận tương tác mô phỏng.",
+      "tags": [
+        "test",
+        "unit-test",
+        "zustand",
+        "dme",
+        "state-management"
+      ],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/components/dme/student/dme-student-dashboard.tsx",
+      "target": "function:src/components/dme/student/dme-student-dashboard.tsx:DmeStudentDashboard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-dashboard.tsx",
+      "target": "function:src/components/dme/student/dme-student-dashboard.tsx:DmeStudentDashboard",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-journal.tsx",
+      "target": "function:src/components/dme/student/dme-student-journal.tsx:DmeStudentJournal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-journal.tsx",
+      "target": "function:src/components/dme/student/dme-student-journal.tsx:DmeStudentJournal",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-journal.tsx",
+      "target": "function:src/components/dme/student/dme-student-journal.tsx:AnswerField",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-session.tsx",
+      "target": "function:src/components/dme/student/dme-student-session.tsx:DmeStudentSession",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-session.tsx",
+      "target": "function:src/components/dme/student/dme-student-session.tsx:DmeStudentSession",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/dme-menu-structure.ts",
+      "target": "function:src/lib/dme-menu-structure.ts:monitorItems",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/dme-pmdt-defaults.ts",
+      "target": "function:src/lib/dme-pmdt-defaults.ts:cloneDefaultDmePmdtData",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/dme-pmdt-defaults.ts",
+      "target": "function:src/lib/dme-pmdt-defaults.ts:cloneDefaultDmePmdtData",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/dme-sidebar-fields.ts",
+      "target": "function:src/lib/dme-sidebar-fields.ts:isInteractiveSidebarField",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/dme-sidebar-fields.ts",
+      "target": "function:src/lib/dme-sidebar-fields.ts:isInteractiveSidebarField",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/dme-sidebar-fields.ts",
+      "target": "function:src/lib/dme-sidebar-fields.ts:getSidebarInteractionTargets",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/dme-sidebar-fields.ts",
+      "target": "function:src/lib/dme-sidebar-fields.ts:getSidebarInteractionTargets",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/stores/dme-pmdt-store.ts",
+      "target": "function:src/stores/dme-pmdt-store.ts:initialState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/stores/dme-pmdt-store.ts",
+      "target": "function:src/stores/dme-pmdt-store.ts:resolveDmeField",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/stores/dme-pmdt-store.ts",
+      "target": "function:src/stores/dme-pmdt-store.ts:resolveDmeField",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/stores/dme-pmdt-store.ts",
+      "target": "function:src/stores/dme-pmdt-store.ts:resolveDmeStatus",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/stores/dme-pmdt-store.ts",
+      "target": "function:src/stores/dme-pmdt-store.ts:resolveDmeStatus",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/stores/dme-pmdt-store.ts",
+      "target": "function:src/stores/dme-pmdt-store.ts:createDmePmdtStore",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/stores/dme-pmdt-store.ts",
+      "target": "function:src/stores/dme-pmdt-store.ts:createDmePmdtStore",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/stores/dme-scenario-store.ts",
+      "target": "function:src/stores/dme-scenario-store.ts:createDmeScenarioStore",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/stores/dme-scenario-store.ts",
+      "target": "function:src/stores/dme-scenario-store.ts:createDmeScenarioStore",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-dashboard.tsx",
+      "target": "file:src/components/ui/exam-workspace.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-dashboard.tsx",
+      "target": "file:src/components/ui/scenario-data-table.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-dashboard.tsx",
+      "target": "file:src/lib/dme-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-dashboard.tsx",
+      "target": "file:src/stores/dme-scenario-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-journal.tsx",
+      "target": "file:src/lib/dme-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-journal.tsx",
+      "target": "file:src/stores/dme-pmdt-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-session.tsx",
+      "target": "file:src/components/dme/pmdt-layout.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-session.tsx",
+      "target": "file:src/components/dme/student/dme-student-journal.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-session.tsx",
+      "target": "file:src/components/hardware/hardware-diagnosis-step.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-session.tsx",
+      "target": "file:src/lib/dme-hardware-model.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-session.tsx",
+      "target": "file:src/lib/dme-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-session.tsx",
+      "target": "file:src/lib/equipment-diagram-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-session.tsx",
+      "target": "file:src/lib/exams/actions.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-session.tsx",
+      "target": "file:src/lib/exams/client-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-session.tsx",
+      "target": "file:src/stores/dme-pmdt-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-session.tsx",
+      "target": "file:src/stores/dme-scenario-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/student/dme-student-session.tsx",
+      "target": "file:src/stores/dme-submission-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/dme-menu-structure.ts",
+      "target": "file:src/lib/dme-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/dme-pmdt-defaults.ts",
+      "target": "file:src/lib/dme-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/dme-sidebar-fields.ts",
+      "target": "file:src/lib/dme-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/dme-types.ts",
+      "target": "file:src/lib/equipment-diagram-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/stores/dme-pmdt-store.ts",
+      "target": "file:src/lib/dme-pmdt-defaults.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/stores/dme-pmdt-store.ts",
+      "target": "file:src/lib/dme-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/stores/dme-scenario-store.ts",
+      "target": "file:src/lib/dme-scenario-storage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/stores/dme-scenario-store.ts",
+      "target": "file:src/lib/dme-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:tests/dme/dme-authoring.test.tsx",
+      "target": "file:src/components/dme/admin/dme-scenario-author.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:tests/dme/dme-authoring.test.tsx",
+      "target": "file:src/stores/dme-pmdt-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:tests/dme/dme-authoring.test.tsx",
+      "target": "file:src/stores/dme-scenario-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:tests/dme/pmdt-shell.test.tsx",
+      "target": "file:src/components/dme/pmdt-layout.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:tests/dme/pmdt-shell.test.tsx",
+      "target": "file:src/stores/dme-pmdt-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:tests/state/dme-pmdt-store.test.ts",
+      "target": "file:src/lib/dme-menu-structure.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:tests/state/dme-pmdt-store.test.ts",
+      "target": "file:src/lib/dme-pmdt-defaults.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:tests/state/dme-pmdt-store.test.ts",
+      "target": "file:src/stores/dme-pmdt-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:src/lib/dme-sidebar-fields.ts:getSidebarInteractionTargets",
+      "target": "function:src/lib/dme-sidebar-fields.ts:isInteractiveSidebarField",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/stores/dme-pmdt-store.ts:createDmePmdtStore",
+      "target": "function:src/stores/dme-pmdt-store.ts:initialState",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/stores/dme-pmdt-store.ts",
+      "target": "file:tests/state/dme-pmdt-store.test.ts",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:tests/dme/dme-authoring.test.tsx",
+      "target": "file:src/components/dme/admin/dme-scenario-author.tsx",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:tests/dme/pmdt-shell.test.tsx",
+      "target": "file:src/components/dme/pmdt-layout.tsx",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

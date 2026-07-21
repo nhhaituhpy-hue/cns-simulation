@@ -1,0 +1,1097 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/app/admin/ads-b/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/admin/ads-b/page.tsx",
+      "summary": "Route App Router mở dashboard quản trị ADS-B bằng cách cấu hình module hoạt động cho dashboard dùng chung.",
+      "tags": [
+        "nextjs-route",
+        "component",
+        "admin",
+        "ads-b"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/admin/ads-b/page.tsx:AdsbAdminDashboardPage",
+      "type": "function",
+      "name": "AdsbAdminDashboardPage",
+      "filePath": "src/app/admin/ads-b/page.tsx",
+      "lineRange": [
+        3,
+        5
+      ],
+      "summary": "Render dashboard quản trị với module ADS-B được chọn.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "admin"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/admin/dme/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/admin/dme/page.tsx",
+      "summary": "Route App Router mở dashboard quản trị DME bằng cách cấu hình module hoạt động cho dashboard dùng chung.",
+      "tags": [
+        "nextjs-route",
+        "component",
+        "admin",
+        "dme"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/admin/dme/page.tsx:DmeAdminDashboardPage",
+      "type": "function",
+      "name": "DmeAdminDashboardPage",
+      "filePath": "src/app/admin/dme/page.tsx",
+      "lineRange": [
+        3,
+        5
+      ],
+      "summary": "Render dashboard quản trị với module DME được chọn.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "admin"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/admin/vor/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/admin/vor/page.tsx",
+      "summary": "Route App Router mở dashboard quản trị VOR bằng cách cấu hình module hoạt động cho dashboard dùng chung.",
+      "tags": [
+        "nextjs-route",
+        "component",
+        "admin",
+        "vor"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/admin/vor/page.tsx:VorAdminDashboardPage",
+      "type": "function",
+      "name": "VorAdminDashboardPage",
+      "filePath": "src/app/admin/vor/page.tsx",
+      "lineRange": [
+        3,
+        5
+      ],
+      "summary": "Render dashboard quản trị với module VOR được chọn.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "admin"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/student/ads-b/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/student/ads-b/page.tsx",
+      "summary": "Route App Router mở dashboard học viên ADS-B thông qua dashboard QC/M dùng chung.",
+      "tags": [
+        "nextjs-route",
+        "component",
+        "student",
+        "ads-b"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/student/ads-b/page.tsx:AdsbStudentDashboardPage",
+      "type": "function",
+      "name": "AdsbStudentDashboardPage",
+      "filePath": "src/app/student/ads-b/page.tsx",
+      "lineRange": [
+        3,
+        5
+      ],
+      "summary": "Render dashboard học viên với module ADS-B được chọn.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "student"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/student/dme/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/student/dme/page.tsx",
+      "summary": "Route App Router mở dashboard học viên DME thông qua dashboard QC/M dùng chung.",
+      "tags": [
+        "nextjs-route",
+        "component",
+        "student",
+        "dme"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/student/dme/page.tsx:DmeStudentDashboardPage",
+      "type": "function",
+      "name": "DmeStudentDashboardPage",
+      "filePath": "src/app/student/dme/page.tsx",
+      "lineRange": [
+        3,
+        5
+      ],
+      "summary": "Render dashboard học viên với module DME được chọn.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "student"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/student/loading.tsx",
+      "type": "file",
+      "name": "loading.tsx",
+      "filePath": "src/app/student/loading.tsx",
+      "summary": "Loading UI của nhánh route học viên, hiển thị skeleton trong khi trang dashboard đang được tải.",
+      "tags": [
+        "nextjs-route",
+        "loading-ui",
+        "component",
+        "skeleton"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/student/loading.tsx:StudentLoading",
+      "type": "function",
+      "name": "StudentLoading",
+      "filePath": "src/app/student/loading.tsx",
+      "lineRange": [
+        3,
+        5
+      ],
+      "summary": "Render loading UI mặc định cho nhánh route học viên.",
+      "tags": [
+        "component",
+        "loading-ui",
+        "nextjs-route"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/student/vor/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/student/vor/page.tsx",
+      "summary": "Route App Router mở dashboard học viên VOR thông qua dashboard QC/M dùng chung.",
+      "tags": [
+        "nextjs-route",
+        "component",
+        "student",
+        "vor"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/student/vor/page.tsx:VorStudentDashboardPage",
+      "type": "function",
+      "name": "VorStudentDashboardPage",
+      "filePath": "src/app/student/vor/page.tsx",
+      "lineRange": [
+        3,
+        5
+      ],
+      "summary": "Render dashboard học viên với module VOR được chọn.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "student"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/admin/admin-dashboard.tsx",
+      "type": "file",
+      "name": "admin-dashboard.tsx",
+      "filePath": "src/components/admin/admin-dashboard.tsx",
+      "summary": "Dashboard quản trị cấp cao điều phối giao diện VOR, DME và ADS-B, hydrate kho kịch bản, sắp xếp dữ liệu và xử lý xác nhận xóa.",
+      "tags": [
+        "component",
+        "admin-dashboard",
+        "module-routing",
+        "scenario-management",
+        "zustand"
+      ],
+      "complexity": "complex",
+      "languageNotes": "TSX sử dụng union type CnsModule để điều phối render theo module và selector Zustand riêng cho từng phần state."
+    },
+    {
+      "id": "function:src/components/admin/admin-dashboard.tsx:AdminDashboard",
+      "type": "function",
+      "name": "AdminDashboard",
+      "filePath": "src/components/admin/admin-dashboard.tsx",
+      "lineRange": [
+        65,
+        252
+      ],
+      "summary": "Điều phối dashboard quản trị theo module, tải danh sách kịch bản và xử lý luồng xóa có xác nhận.",
+      "tags": [
+        "component",
+        "admin-dashboard",
+        "event-handler",
+        "zustand"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/admin/delete-scenario-dialog.tsx",
+      "type": "file",
+      "name": "delete-scenario-dialog.tsx",
+      "filePath": "src/components/admin/delete-scenario-dialog.tsx",
+      "summary": "Dialog xác nhận xóa kịch bản dùng HTML dialog, quản lý focus và ngăn đóng ngoài ý muốn khi đang xử lý.",
+      "tags": [
+        "component",
+        "dialog",
+        "confirmation",
+        "accessibility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/admin/delete-scenario-dialog.tsx:DeleteScenarioDialog",
+      "type": "function",
+      "name": "DeleteScenarioDialog",
+      "filePath": "src/components/admin/delete-scenario-dialog.tsx",
+      "lineRange": [
+        12,
+        83
+      ],
+      "summary": "Hiển thị dialog modal xác nhận xóa, đồng bộ trạng thái mở và chuyển tiếp hành động xác nhận/hủy.",
+      "tags": [
+        "component",
+        "dialog",
+        "event-handler",
+        "accessibility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/dme/admin/dme-admin-dashboard.tsx",
+      "type": "file",
+      "name": "dme-admin-dashboard.tsx",
+      "filePath": "src/components/dme/admin/dme-admin-dashboard.tsx",
+      "summary": "Dashboard quản trị DME tổng hợp kịch bản và lượt nộp, hydrate các store, trình bày trạng thái tham số và cung cấp thao tác xem hoặc xóa.",
+      "tags": [
+        "component",
+        "admin-dashboard",
+        "dme",
+        "scenario-management",
+        "zustand"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/dme/admin/dme-admin-dashboard.tsx:DmeAdminDashboard",
+      "type": "function",
+      "name": "DmeAdminDashboard",
+      "filePath": "src/components/dme/admin/dme-admin-dashboard.tsx",
+      "lineRange": [
+        37,
+        189
+      ],
+      "summary": "Render workspace quản trị DME từ scenario store và submission store, kèm trạng thái, kết quả và thao tác quản lý.",
+      "tags": [
+        "component",
+        "admin-dashboard",
+        "dme",
+        "zustand"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/qcms/student-dashboard.tsx",
+      "type": "file",
+      "name": "student-dashboard.tsx",
+      "filePath": "src/components/qcms/student-dashboard.tsx",
+      "summary": "Dashboard học viên QC/M chọn giao diện theo module CNS, hydrate và sắp xếp kịch bản ADS-B, đồng thời ủy quyền VOR/DME cho dashboard chuyên biệt.",
+      "tags": [
+        "component",
+        "student-dashboard",
+        "module-routing",
+        "scenario-list",
+        "zustand"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/qcms/student-dashboard.tsx:ScenarioCells",
+      "type": "function",
+      "name": "ScenarioCells",
+      "filePath": "src/components/qcms/student-dashboard.tsx",
+      "lineRange": [
+        36,
+        95
+      ],
+      "summary": "Render các ô dữ liệu cho một kịch bản ADS-B, gồm số thứ tự, mức độ, số sensor và liên kết bắt đầu.",
+      "tags": [
+        "component",
+        "table-row",
+        "scenario",
+        "ads-b"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/qcms/student-dashboard.tsx:StudentDashboard",
+      "type": "function",
+      "name": "StudentDashboard",
+      "filePath": "src/components/qcms/student-dashboard.tsx",
+      "lineRange": [
+        99,
+        181
+      ],
+      "summary": "Chọn dashboard học viên phù hợp module và render danh sách kịch bản ADS-B đã sắp xếp.",
+      "tags": [
+        "component",
+        "student-dashboard",
+        "module-routing",
+        "zustand"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/qcms/student-loading.tsx",
+      "type": "file",
+      "name": "student-loading.tsx",
+      "filePath": "src/components/qcms/student-loading.tsx",
+      "summary": "Cung cấp skeleton tái sử dụng cho danh sách kịch bản học viên và màn hình giám sát trong lúc dữ liệu đang tải.",
+      "tags": [
+        "component",
+        "loading-ui",
+        "skeleton",
+        "student-dashboard"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/qcms/student-loading.tsx:StudentDashboardLoading",
+      "type": "function",
+      "name": "StudentDashboardLoading",
+      "filePath": "src/components/qcms/student-loading.tsx",
+      "lineRange": [
+        1,
+        44
+      ],
+      "summary": "Render skeleton hoàn chỉnh của dashboard học viên và các hàng kịch bản giả lập.",
+      "tags": [
+        "component",
+        "loading-ui",
+        "skeleton"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/student-loading.tsx:ScenarioMonitorLoading",
+      "type": "function",
+      "name": "ScenarioMonitorLoading",
+      "filePath": "src/components/qcms/student-loading.tsx",
+      "lineRange": [
+        46,
+        61
+      ],
+      "summary": "Render skeleton gọn cho vùng giám sát kịch bản.",
+      "tags": [
+        "component",
+        "loading-ui",
+        "monitoring"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/ui/exam-workspace.tsx",
+      "type": "file",
+      "name": "exam-workspace.tsx",
+      "filePath": "src/components/ui/exam-workspace.tsx",
+      "summary": "Bộ component trình bày workspace bài thi gồm header, tóm tắt module, tiêu đề khu vực, khung danh sách, hàng loading và empty state.",
+      "tags": [
+        "component",
+        "ui-library",
+        "exam-workspace",
+        "layout",
+        "accessibility"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/ui/exam-workspace.tsx:WorkspaceHeader",
+      "type": "function",
+      "name": "WorkspaceHeader",
+      "filePath": "src/components/ui/exam-workspace.tsx",
+      "lineRange": [
+        26,
+        67
+      ],
+      "summary": "Render header workspace theo vai trò cùng tiêu đề và mô tả ngữ cảnh.",
+      "tags": [
+        "component",
+        "layout",
+        "header"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/ui/exam-workspace.tsx:ModuleSummary",
+      "type": "function",
+      "name": "ModuleSummary",
+      "filePath": "src/components/ui/exam-workspace.tsx",
+      "lineRange": [
+        69,
+        104
+      ],
+      "summary": "Render thẻ tóm tắt module với icon và vùng action tùy chọn.",
+      "tags": [
+        "component",
+        "summary",
+        "layout"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/ui/exam-workspace.tsx:ScenarioSectionHeader",
+      "type": "function",
+      "name": "ScenarioSectionHeader",
+      "filePath": "src/components/ui/exam-workspace.tsx",
+      "lineRange": [
+        106,
+        138
+      ],
+      "summary": "Render tiêu đề khu vực kịch bản cùng số lượng và mô tả hỗ trợ.",
+      "tags": [
+        "component",
+        "section-header",
+        "scenario"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/ui/exam-workspace.tsx:ScenarioListFrame",
+      "type": "function",
+      "name": "ScenarioListFrame",
+      "filePath": "src/components/ui/exam-workspace.tsx",
+      "lineRange": [
+        140,
+        146
+      ],
+      "summary": "Bọc nội dung danh sách trong khung giao diện thống nhất.",
+      "tags": [
+        "component",
+        "layout",
+        "container"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/ui/exam-workspace.tsx:LoadingRows",
+      "type": "function",
+      "name": "LoadingRows",
+      "filePath": "src/components/ui/exam-workspace.tsx",
+      "lineRange": [
+        148,
+        169
+      ],
+      "summary": "Render ba hàng skeleton có nhãn cho trạng thái tải dữ liệu.",
+      "tags": [
+        "component",
+        "loading-ui",
+        "skeleton"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/ui/exam-workspace.tsx:EmptyState",
+      "type": "function",
+      "name": "EmptyState",
+      "filePath": "src/components/ui/exam-workspace.tsx",
+      "lineRange": [
+        171,
+        196
+      ],
+      "summary": "Render trạng thái rỗng có icon, mô tả và action tùy chọn.",
+      "tags": [
+        "component",
+        "empty-state",
+        "accessibility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/ui/scenario-data-table.tsx",
+      "type": "file",
+      "name": "scenario-data-table.tsx",
+      "filePath": "src/components/ui/scenario-data-table.tsx",
+      "summary": "Bảng kịch bản tổng quát có tìm kiếm tiếng Việt không dấu, phân trang, trạng thái rỗng và API render cell linh hoạt.",
+      "tags": [
+        "component",
+        "data-table",
+        "search",
+        "pagination",
+        "accessibility"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TSX dùng generic ScenarioDataTableProps<T> để bảng giữ type-safe cho nhiều kiểu kịch bản; chuỗi tìm kiếm được normalize Unicode theo locale vi-VN."
+    },
+    {
+      "id": "function:src/components/ui/scenario-data-table.tsx:ScenarioDataTable",
+      "type": "function",
+      "name": "ScenarioDataTable",
+      "filePath": "src/components/ui/scenario-data-table.tsx",
+      "lineRange": [
+        35,
+        199
+      ],
+      "summary": "Lọc kịch bản theo tiêu đề đã chuẩn hóa, tính trang hợp lệ và render bảng cùng bộ điều khiển phân trang.",
+      "tags": [
+        "component",
+        "data-table",
+        "search",
+        "pagination"
+      ],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/app/admin/ads-b/page.tsx",
+      "target": "function:src/app/admin/ads-b/page.tsx:AdsbAdminDashboardPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/ads-b/page.tsx",
+      "target": "function:src/app/admin/ads-b/page.tsx:AdsbAdminDashboardPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/dme/page.tsx",
+      "target": "function:src/app/admin/dme/page.tsx:DmeAdminDashboardPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/dme/page.tsx",
+      "target": "function:src/app/admin/dme/page.tsx:DmeAdminDashboardPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/vor/page.tsx",
+      "target": "function:src/app/admin/vor/page.tsx:VorAdminDashboardPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/vor/page.tsx",
+      "target": "function:src/app/admin/vor/page.tsx:VorAdminDashboardPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/student/ads-b/page.tsx",
+      "target": "function:src/app/student/ads-b/page.tsx:AdsbStudentDashboardPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/student/ads-b/page.tsx",
+      "target": "function:src/app/student/ads-b/page.tsx:AdsbStudentDashboardPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/student/dme/page.tsx",
+      "target": "function:src/app/student/dme/page.tsx:DmeStudentDashboardPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/student/dme/page.tsx",
+      "target": "function:src/app/student/dme/page.tsx:DmeStudentDashboardPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/student/loading.tsx",
+      "target": "function:src/app/student/loading.tsx:StudentLoading",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/student/loading.tsx",
+      "target": "function:src/app/student/loading.tsx:StudentLoading",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/student/vor/page.tsx",
+      "target": "function:src/app/student/vor/page.tsx:VorStudentDashboardPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/student/vor/page.tsx",
+      "target": "function:src/app/student/vor/page.tsx:VorStudentDashboardPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/admin/admin-dashboard.tsx",
+      "target": "function:src/components/admin/admin-dashboard.tsx:AdminDashboard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/admin/admin-dashboard.tsx",
+      "target": "function:src/components/admin/admin-dashboard.tsx:AdminDashboard",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/admin/delete-scenario-dialog.tsx",
+      "target": "function:src/components/admin/delete-scenario-dialog.tsx:DeleteScenarioDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/admin/delete-scenario-dialog.tsx",
+      "target": "function:src/components/admin/delete-scenario-dialog.tsx:DeleteScenarioDialog",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/dme/admin/dme-admin-dashboard.tsx",
+      "target": "function:src/components/dme/admin/dme-admin-dashboard.tsx:DmeAdminDashboard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/dme/admin/dme-admin-dashboard.tsx",
+      "target": "function:src/components/dme/admin/dme-admin-dashboard.tsx:DmeAdminDashboard",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/student-dashboard.tsx",
+      "target": "function:src/components/qcms/student-dashboard.tsx:ScenarioCells",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/student-dashboard.tsx",
+      "target": "function:src/components/qcms/student-dashboard.tsx:StudentDashboard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/student-dashboard.tsx",
+      "target": "function:src/components/qcms/student-dashboard.tsx:StudentDashboard",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/student-loading.tsx",
+      "target": "function:src/components/qcms/student-loading.tsx:StudentDashboardLoading",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/student-loading.tsx",
+      "target": "function:src/components/qcms/student-loading.tsx:StudentDashboardLoading",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/student-loading.tsx",
+      "target": "function:src/components/qcms/student-loading.tsx:ScenarioMonitorLoading",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/student-loading.tsx",
+      "target": "function:src/components/qcms/student-loading.tsx:ScenarioMonitorLoading",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/ui/exam-workspace.tsx",
+      "target": "function:src/components/ui/exam-workspace.tsx:WorkspaceHeader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/ui/exam-workspace.tsx",
+      "target": "function:src/components/ui/exam-workspace.tsx:WorkspaceHeader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/ui/exam-workspace.tsx",
+      "target": "function:src/components/ui/exam-workspace.tsx:ModuleSummary",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/ui/exam-workspace.tsx",
+      "target": "function:src/components/ui/exam-workspace.tsx:ModuleSummary",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/ui/exam-workspace.tsx",
+      "target": "function:src/components/ui/exam-workspace.tsx:ScenarioSectionHeader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/ui/exam-workspace.tsx",
+      "target": "function:src/components/ui/exam-workspace.tsx:ScenarioSectionHeader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/ui/exam-workspace.tsx",
+      "target": "function:src/components/ui/exam-workspace.tsx:ScenarioListFrame",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/ui/exam-workspace.tsx",
+      "target": "function:src/components/ui/exam-workspace.tsx:ScenarioListFrame",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/ui/exam-workspace.tsx",
+      "target": "function:src/components/ui/exam-workspace.tsx:LoadingRows",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/ui/exam-workspace.tsx",
+      "target": "function:src/components/ui/exam-workspace.tsx:LoadingRows",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/ui/exam-workspace.tsx",
+      "target": "function:src/components/ui/exam-workspace.tsx:EmptyState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/ui/exam-workspace.tsx",
+      "target": "function:src/components/ui/exam-workspace.tsx:EmptyState",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/ui/scenario-data-table.tsx",
+      "target": "function:src/components/ui/scenario-data-table.tsx:ScenarioDataTable",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/ui/scenario-data-table.tsx",
+      "target": "function:src/components/ui/scenario-data-table.tsx:ScenarioDataTable",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/ads-b/page.tsx",
+      "target": "file:src/components/admin/admin-dashboard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/dme/page.tsx",
+      "target": "file:src/components/admin/admin-dashboard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/vor/page.tsx",
+      "target": "file:src/components/admin/admin-dashboard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/ads-b/page.tsx",
+      "target": "file:src/components/qcms/student-dashboard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/dme/page.tsx",
+      "target": "file:src/components/qcms/student-dashboard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/loading.tsx",
+      "target": "file:src/components/qcms/student-loading.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/vor/page.tsx",
+      "target": "file:src/components/qcms/student-dashboard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/admin/admin-dashboard.tsx",
+      "target": "file:src/components/admin/delete-scenario-dialog.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/admin/admin-dashboard.tsx",
+      "target": "file:src/components/dme/admin/dme-admin-dashboard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/admin/admin-dashboard.tsx",
+      "target": "file:src/components/ui/exam-workspace.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/admin/admin-dashboard.tsx",
+      "target": "file:src/components/ui/scenario-data-table.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/admin/admin-dashboard.tsx",
+      "target": "file:src/components/vor/admin/vor-admin-dashboard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/admin/admin-dashboard.tsx",
+      "target": "file:src/lib/scenario-order.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/admin/admin-dashboard.tsx",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/admin/admin-dashboard.tsx",
+      "target": "file:src/stores/scenario-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/admin/dme-admin-dashboard.tsx",
+      "target": "file:src/components/ui/exam-workspace.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/admin/dme-admin-dashboard.tsx",
+      "target": "file:src/components/ui/scenario-data-table.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/admin/dme-admin-dashboard.tsx",
+      "target": "file:src/lib/dme-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/admin/dme-admin-dashboard.tsx",
+      "target": "file:src/stores/dme-scenario-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/dme/admin/dme-admin-dashboard.tsx",
+      "target": "file:src/stores/dme-submission-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/student-dashboard.tsx",
+      "target": "file:src/components/dme/student/dme-student-dashboard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/student-dashboard.tsx",
+      "target": "file:src/components/qcms/qcms-utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/student-dashboard.tsx",
+      "target": "file:src/components/qcms/student-loading.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/student-dashboard.tsx",
+      "target": "file:src/components/ui/exam-workspace.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/student-dashboard.tsx",
+      "target": "file:src/components/ui/scenario-data-table.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/student-dashboard.tsx",
+      "target": "file:src/components/vor/student/vor-student-dashboard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/student-dashboard.tsx",
+      "target": "file:src/lib/scenario-order.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/student-dashboard.tsx",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/student-dashboard.tsx",
+      "target": "file:src/stores/scenario-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/admin/admin-dashboard.tsx",
+      "target": "file:tests/admin/admin-dashboard.test.tsx",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/components/admin/admin-dashboard.tsx",
+      "target": "file:tests/layout/module-routing.test.tsx",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/components/qcms/student-dashboard.tsx",
+      "target": "file:tests/layout/module-routing.test.tsx",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/components/ui/scenario-data-table.tsx",
+      "target": "file:tests/layout/scenario-data-table.test.tsx",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:src/components/qcms/student-dashboard.tsx",
+      "target": "file:tests/qcms/student-dashboard.test.tsx",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

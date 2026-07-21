@@ -1,0 +1,300 @@
+{
+    "projectRoot":  "C:\\Users\\nhhai\\Desktop\\cns-simulator",
+    "batchFiles":  [
+                       {
+                           "path":  "src/app/admin/dme-pmdt/page.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  26,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/app/admin/dme/create/page.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  11,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/app/admin/dme/edit/page.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  19,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/admin/dme-author-panel.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  195,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/admin/dme-scenario-author.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  294,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/pmdt-layout.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  97,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/pmdt-menu-bar.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  159,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/pmdt-sidebar.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  213,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/pmdt-status-bar.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  37,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/pmdt-title-bar.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  43,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/pmdt-toolbar.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  10,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/screens/disabled-screen.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  17,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/screens/home-screen.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  19,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/screens/monitor-alarm-limits.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  73,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/screens/monitor-calibration.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  89,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/screens/monitor-config-general.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  91,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/screens/monitor-config-layout.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  48,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/screens/monitor-data-detail.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  129,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/screens/monitor-data-layout.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  23,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/screens/monitor-decoder-results.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  39,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/screens/monitor-integral.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  52,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/screens/monitor-offsets.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  48,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/screens/rms-ad-data.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  141,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/screens/rms-config-layout.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  511,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/screens/rms-data-layout.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  75,
+                           "fileCategory":  "code"
+                       },
+                       {
+                           "path":  "src/components/dme/screens/rms-digital-io.tsx",
+                           "language":  "typescript",
+                           "sizeLines":  125,
+                           "fileCategory":  "code"
+                       }
+                   ],
+    "batchImportData":  {
+                            "src/app/admin/dme-pmdt/page.tsx":  [
+                                                                    "src/components/dme/pmdt-layout.tsx"
+                                                                ],
+                            "src/app/admin/dme/create/page.tsx":  [
+                                                                      "src/components/dme/admin/dme-scenario-author.tsx"
+                                                                  ],
+                            "src/app/admin/dme/edit/page.tsx":  [
+                                                                    "src/components/dme/admin/dme-scenario-author.tsx"
+                                                                ],
+                            "src/components/dme/admin/dme-author-panel.tsx":  [
+                                                                                  "src/lib/dme-sidebar-fields.ts",
+                                                                                  "src/lib/dme-types.ts",
+                                                                                  "src/stores/dme-pmdt-store.ts",
+                                                                                  "src/stores/dme-scenario-store.ts"
+                                                                              ],
+                            "src/components/dme/admin/dme-scenario-author.tsx":  [
+                                                                                     "src/components/dme/admin/dme-author-panel.tsx",
+                                                                                     "src/components/dme/pmdt-layout.tsx",
+                                                                                     "src/components/hardware/hardware-task-editor.tsx",
+                                                                                     "src/lib/dme-hardware-model.ts",
+                                                                                     "src/lib/dme-sidebar-fields.ts",
+                                                                                     "src/lib/dme-types.ts",
+                                                                                     "src/stores/dme-pmdt-store.ts",
+                                                                                     "src/stores/dme-scenario-store.ts"
+                                                                                 ],
+                            "src/components/dme/pmdt-layout.tsx":  [
+                                                                       "src/components/dme/pmdt-menu-bar.tsx",
+                                                                       "src/components/dme/pmdt-sidebar.tsx",
+                                                                       "src/components/dme/pmdt-status-bar.tsx",
+                                                                       "src/components/dme/pmdt-title-bar.tsx",
+                                                                       "src/components/dme/screens/disabled-screen.tsx",
+                                                                       "src/components/dme/screens/home-screen.tsx",
+                                                                       "src/components/dme/screens/monitor-calibration.tsx",
+                                                                       "src/components/dme/screens/monitor-config-layout.tsx",
+                                                                       "src/components/dme/screens/monitor-data-detail.tsx",
+                                                                       "src/components/dme/screens/monitor-data-layout.tsx",
+                                                                       "src/components/dme/screens/monitor-decoder-results.tsx",
+                                                                       "src/components/dme/screens/monitor-offsets.tsx",
+                                                                       "src/components/dme/screens/rms-config-layout.tsx",
+                                                                       "src/components/dme/screens/rms-data-layout.tsx",
+                                                                       "src/components/dme/screens/rms-logs-layout.tsx",
+                                                                       "src/components/dme/screens/rms-status-layout.tsx",
+                                                                       "src/components/dme/screens/tx-config-layout.tsx",
+                                                                       "src/components/dme/screens/tx-data-layout.tsx",
+                                                                       "src/lib/dme-types.ts",
+                                                                       "src/stores/dme-pmdt-store.ts"
+                                                                   ],
+                            "src/components/dme/pmdt-menu-bar.tsx":  [
+                                                                         "src/lib/dme-menu-structure.ts",
+                                                                         "src/lib/dme-types.ts",
+                                                                         "src/stores/dme-pmdt-store.ts"
+                                                                     ],
+                            "src/components/dme/pmdt-sidebar.tsx":  [
+                                                                        "src/components/dme/screens/screen-primitives.tsx",
+                                                                        "src/lib/dme-types.ts",
+                                                                        "src/stores/dme-pmdt-store.ts"
+                                                                    ],
+                            "src/components/dme/pmdt-status-bar.tsx":  [
+                                                                           "src/lib/dme-types.ts",
+                                                                           "src/stores/dme-pmdt-store.ts"
+                                                                       ],
+                            "src/components/dme/pmdt-title-bar.tsx":  [
+
+                                                                      ],
+                            "src/components/dme/pmdt-toolbar.tsx":  [
+
+                                                                    ],
+                            "src/components/dme/screens/disabled-screen.tsx":  [
+
+                                                                               ],
+                            "src/components/dme/screens/home-screen.tsx":  [
+
+                                                                           ],
+                            "src/components/dme/screens/monitor-alarm-limits.tsx":  [
+                                                                                        "src/components/dme/screens/screen-primitives.tsx",
+                                                                                        "src/stores/dme-pmdt-store.ts"
+                                                                                    ],
+                            "src/components/dme/screens/monitor-calibration.tsx":  [
+                                                                                       "src/components/dme/pmdt-toolbar.tsx",
+                                                                                       "src/stores/dme-pmdt-store.ts"
+                                                                                   ],
+                            "src/components/dme/screens/monitor-config-general.tsx":  [
+                                                                                          "src/lib/dme-types.ts",
+                                                                                          "src/stores/dme-pmdt-store.ts"
+                                                                                      ],
+                            "src/components/dme/screens/monitor-config-layout.tsx":  [
+                                                                                         "src/components/dme/pmdt-toolbar.tsx",
+                                                                                         "src/components/dme/screens/monitor-alarm-limits.tsx",
+                                                                                         "src/components/dme/screens/monitor-config-general.tsx",
+                                                                                         "src/stores/dme-pmdt-store.ts"
+                                                                                     ],
+                            "src/components/dme/screens/monitor-data-detail.tsx":  [
+                                                                                       "src/components/dme/pmdt-toolbar.tsx",
+                                                                                       "src/stores/dme-pmdt-store.ts"
+                                                                                   ],
+                            "src/components/dme/screens/monitor-data-layout.tsx":  [
+                                                                                       "src/components/dme/pmdt-toolbar.tsx",
+                                                                                       "src/components/dme/screens/monitor-integral.tsx",
+                                                                                       "src/components/dme/screens/screen-primitives.tsx",
+                                                                                       "src/stores/dme-pmdt-store.ts"
+                                                                                   ],
+                            "src/components/dme/screens/monitor-decoder-results.tsx":  [
+                                                                                           "src/components/dme/pmdt-toolbar.tsx",
+                                                                                           "src/components/dme/screens/screen-primitives.tsx",
+                                                                                           "src/stores/dme-pmdt-store.ts"
+                                                                                       ],
+                            "src/components/dme/screens/monitor-integral.tsx":  [
+                                                                                    "src/components/dme/screens/screen-primitives.tsx",
+                                                                                    "src/stores/dme-pmdt-store.ts"
+                                                                                ],
+                            "src/components/dme/screens/monitor-offsets.tsx":  [
+                                                                                   "src/components/dme/pmdt-toolbar.tsx",
+                                                                                   "src/components/dme/screens/screen-primitives.tsx",
+                                                                                   "src/stores/dme-pmdt-store.ts"
+                                                                               ],
+                            "src/components/dme/screens/rms-ad-data.tsx":  [
+                                                                               "src/lib/dme-types.ts",
+                                                                               "src/stores/dme-pmdt-store.ts"
+                                                                           ],
+                            "src/components/dme/screens/rms-config-layout.tsx":  [
+                                                                                     "src/components/dme/pmdt-toolbar.tsx",
+                                                                                     "src/lib/dme-types.ts",
+                                                                                     "src/stores/dme-pmdt-store.ts"
+                                                                                 ],
+                            "src/components/dme/screens/rms-data-layout.tsx":  [
+                                                                                   "src/components/dme/pmdt-toolbar.tsx",
+                                                                                   "src/components/dme/screens/rms-ad-data.tsx",
+                                                                                   "src/components/dme/screens/rms-digital-io.tsx",
+                                                                                   "src/components/dme/screens/rms-maintenance-alerts.tsx",
+                                                                                   "src/components/dme/screens/rms-power-supply.tsx",
+                                                                                   "src/lib/dme-types.ts",
+                                                                                   "src/stores/dme-pmdt-store.ts"
+                                                                               ],
+                            "src/components/dme/screens/rms-digital-io.tsx":  [
+                                                                                  "src/lib/dme-types.ts",
+                                                                                  "src/stores/dme-pmdt-store.ts"
+                                                                              ]
+                        }
+}

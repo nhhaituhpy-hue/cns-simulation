@@ -1,0 +1,858 @@
+{
+  "nodes": [
+    {
+      "id": "file:.node-version",
+      "type": "file",
+      "name": ".node-version",
+      "filePath": ".node-version",
+      "summary": "Ghim phiên bản Node.js 20.18.0 cho môi trường phát triển và công cụ quản lý runtime.",
+      "tags": [
+        "configuration",
+        "nodejs",
+        "runtime-version"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.ua/.understandignore",
+      "type": "config",
+      "name": ".understandignore",
+      "filePath": ".ua/.understandignore",
+      "summary": "Cấu hình loại trừ của Understand Anything với các pattern gợi ý từ .gitignore, thư mục phát hiện và nhiều quy ước tên file test; hiện các rule đều ở dạng comment.",
+      "tags": [
+        "configuration",
+        "understand-anything",
+        "ignore-patterns",
+        "analysis-scope"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:.ua/config.json",
+      "type": "config",
+      "name": "config.json",
+      "filePath": ".ua/config.json",
+      "summary": "Cấu hình dự án Understand Anything yêu cầu sinh nội dung knowledge graph bằng tiếng Việt.",
+      "tags": [
+        "configuration",
+        "understand-anything",
+        "localization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "eslint.config.mjs",
+      "summary": "ESLint flat config cho Next.js/TypeScript, áp dụng Core Web Vitals và cấm barrel imports Phosphor Icons để hạn chế cache Turbopack phình lớn.",
+      "tags": [
+        "configuration",
+        "eslint",
+        "typescript",
+        "code-quality",
+        "performance"
+      ],
+      "complexity": "simple",
+      "languageNotes": "ES Module flat config dùng spread các preset Next.js và `globalIgnores`; rule tùy chỉnh kiểm soát import path thay vì runtime behavior."
+    },
+    {
+      "id": "file:next.config.ts",
+      "type": "file",
+      "name": "next.config.ts",
+      "filePath": "next.config.ts",
+      "summary": "Next.js config tắt header nhận diện framework và đặt Turbopack root theo thư mục chứa config.",
+      "tags": [
+        "configuration",
+        "nextjs",
+        "turbopack",
+        "build-system"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:playwright.config.ts",
+      "type": "file",
+      "name": "playwright.config.ts",
+      "filePath": "playwright.config.ts",
+      "summary": "Playwright config chạy E2E tuần tự trên Desktop Chrome và Pixel 7, tự khởi động dev server cổng 3100, thu trace khi retry và screenshot khi lỗi.",
+      "tags": [
+        "configuration",
+        "playwright",
+        "e2e",
+        "test",
+        "browser-automation"
+      ],
+      "complexity": "simple",
+      "languageNotes": "Type guard trong `Object.entries(...).filter` thu hẹp tuple thành `[string, string]`, giúp truyền environment type-safe cho webServer."
+    },
+    {
+      "id": "file:postcss.config.mjs",
+      "type": "file",
+      "name": "postcss.config.mjs",
+      "filePath": "postcss.config.mjs",
+      "summary": "PostCSS config tối giản kích hoạt plugin Tailwind CSS cho quá trình build stylesheet.",
+      "tags": [
+        "configuration",
+        "postcss",
+        "tailwind-css",
+        "build-system"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:public/images/auth-cns-background.webp",
+      "type": "file",
+      "name": "auth-cns-background.webp",
+      "filePath": "public/images/auth-cns-background.webp",
+      "summary": "Ảnh nền WebP tông xanh cho màn hình xác thực, kết hợp radar, máy bay, anten và mạng liên kết trong bối cảnh CNS.",
+      "tags": [
+        "image-asset",
+        "authentication",
+        "cns",
+        "webp"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:public/images/cns-image.webp",
+      "type": "file",
+      "name": "cns-image.webp",
+      "filePath": "public/images/cns-image.webp",
+      "summary": "Ảnh WebP khổ ngang về máy bay cất cánh cạnh đài dẫn đường và tháp kiểm soát, dùng làm hình minh họa chủ đề CNS.",
+      "tags": [
+        "image-asset",
+        "aviation",
+        "cns",
+        "webp"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/generate-guidance-media.mjs",
+      "type": "file",
+      "name": "generate-guidance-media.mjs",
+      "filePath": "scripts/generate-guidance-media.mjs",
+      "summary": "Script tự động hóa Playwright và FFmpeg để chụp luồng hướng dẫn giám khảo/thí sinh, dựng storyboard, video, thumbnail và voice script cho media đào tạo.",
+      "tags": [
+        "script",
+        "browser-automation",
+        "media-generation",
+        "playwright",
+        "ffmpeg"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:scripts/generate-guidance-media.mjs:waitForServer",
+      "type": "function",
+      "name": "waitForServer",
+      "filePath": "scripts/generate-guidance-media.mjs",
+      "lineRange": [
+        70,
+        83
+      ],
+      "summary": "Poll endpoint cho tới khi dev server phản hồi thành công hoặc hết timeout.",
+      "tags": [
+        "utility",
+        "async",
+        "health-check"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/generate-guidance-media.mjs:addOverlay",
+      "type": "function",
+      "name": "addOverlay",
+      "filePath": "scripts/generate-guidance-media.mjs",
+      "lineRange": [
+        103,
+        153
+      ],
+      "summary": "Chèn overlay hướng dẫn vào trang Playwright với tiêu đề, mô tả và điểm nhấn thao tác.",
+      "tags": [
+        "browser-automation",
+        "overlay",
+        "dom",
+        "guidance"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/generate-guidance-media.mjs:captureGroup",
+      "type": "function",
+      "name": "captureGroup",
+      "filePath": "scripts/generate-guidance-media.mjs",
+      "lineRange": [
+        155,
+        179
+      ],
+      "summary": "Điều phối chụp một nhóm bước hướng dẫn và ghi metadata clip tương ứng.",
+      "tags": [
+        "browser-automation",
+        "media-capture",
+        "orchestration"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/generate-guidance-media.mjs:captureExamSetGuide",
+      "type": "function",
+      "name": "captureExamSetGuide",
+      "filePath": "scripts/generate-guidance-media.mjs",
+      "lineRange": [
+        189,
+        215
+      ],
+      "summary": "Tự động hóa luồng tạo bộ đề của giám khảo để thu các cảnh hướng dẫn.",
+      "tags": [
+        "browser-automation",
+        "exam-set",
+        "guidance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/generate-guidance-media.mjs:captureExamGuide",
+      "type": "function",
+      "name": "captureExamGuide",
+      "filePath": "scripts/generate-guidance-media.mjs",
+      "lineRange": [
+        217,
+        257
+      ],
+      "summary": "Tự động hóa luồng tạo kỳ thi và quản lý thí sinh để thu hướng dẫn.",
+      "tags": [
+        "browser-automation",
+        "exam",
+        "guidance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/generate-guidance-media.mjs:captureVorDmeGuide",
+      "type": "function",
+      "name": "captureVorDmeGuide",
+      "filePath": "scripts/generate-guidance-media.mjs",
+      "lineRange": [
+        259,
+        319
+      ],
+      "summary": "Thu chuỗi thao tác biên soạn kịch bản VOR/DME trên giao diện PMDT.",
+      "tags": [
+        "browser-automation",
+        "vor",
+        "dme",
+        "guidance"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/generate-guidance-media.mjs:captureAdsbGuide",
+      "type": "function",
+      "name": "captureAdsbGuide",
+      "filePath": "scripts/generate-guidance-media.mjs",
+      "lineRange": [
+        321,
+        356
+      ],
+      "summary": "Thu chuỗi thao tác biên soạn và chạy kịch bản ADS-B.",
+      "tags": [
+        "browser-automation",
+        "ads-b",
+        "guidance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/generate-guidance-media.mjs:capturePracticeGuide",
+      "type": "function",
+      "name": "capturePracticeGuide",
+      "filePath": "scripts/generate-guidance-media.mjs",
+      "lineRange": [
+        358,
+        403
+      ],
+      "summary": "Thu hướng dẫn học viên chọn module và chạy bài luyện tập.",
+      "tags": [
+        "browser-automation",
+        "student",
+        "practice",
+        "guidance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/generate-guidance-media.mjs:captureStudentExamGuide",
+      "type": "function",
+      "name": "captureStudentExamGuide",
+      "filePath": "scripts/generate-guidance-media.mjs",
+      "lineRange": [
+        405,
+        437
+      ],
+      "summary": "Thu hướng dẫn học viên vào kỳ thi và bắt đầu attempt chính thức.",
+      "tags": [
+        "browser-automation",
+        "student",
+        "exam",
+        "guidance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/generate-guidance-media.mjs:compileClip",
+      "type": "function",
+      "name": "compileClip",
+      "filePath": "scripts/generate-guidance-media.mjs",
+      "lineRange": [
+        453,
+        486
+      ],
+      "summary": "Dựng clip hướng dẫn từ ảnh chụp và storyboard bằng FFmpeg, đồng thời tạo thumbnail.",
+      "tags": [
+        "media-generation",
+        "ffmpeg",
+        "video",
+        "storyboard"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/generate-guidance-media.mjs:writeVoiceScript",
+      "type": "function",
+      "name": "writeVoiceScript",
+      "filePath": "scripts/generate-guidance-media.mjs",
+      "lineRange": [
+        488,
+        507
+      ],
+      "summary": "Sinh voice script theo từng cảnh để phục vụ thuyết minh media đào tạo.",
+      "tags": [
+        "media-generation",
+        "voice-over",
+        "guidance"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:scripts/upload-training-media.mjs",
+      "type": "file",
+      "name": "upload-training-media.mjs",
+      "filePath": "scripts/upload-training-media.mjs",
+      "summary": "Script ESM kiểm tra và tải bộ video/WebP/MP3 hướng dẫn lên Supabase Storage, từ chối ghi đè khác kích thước và xác minh đủ asset sau upload.",
+      "tags": [
+        "script",
+        "supabase",
+        "media-upload",
+        "validation",
+        "storage"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/admin/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/admin/page.tsx",
+      "summary": "Route gốc quản trị khai báo metadata và chuyển hướng người dùng sang danh sách kỳ thi.",
+      "tags": [
+        "nextjs-route",
+        "admin",
+        "redirect",
+        "entry-point"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/admin/page.tsx:AdminPage",
+      "type": "function",
+      "name": "AdminPage",
+      "filePath": "src/app/admin/page.tsx",
+      "lineRange": [
+        8,
+        10
+      ],
+      "summary": "Chuyển hướng route quản trị gốc sang `/admin/exams`.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "redirect"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/globals.css",
+      "type": "file",
+      "name": "globals.css",
+      "filePath": "src/app/globals.css",
+      "summary": "Stylesheet toàn cục nhập Tailwind, định nghĩa design tokens sáng, typography, glass/sidebar/terminal surfaces và accessibility fallbacks cho motion/transparency.",
+      "tags": [
+        "stylesheet",
+        "design-tokens",
+        "tailwind-css",
+        "accessibility",
+        "responsive-design"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "CSS custom properties tạo design token tập trung; media queries `prefers-reduced-*` giảm hiệu ứng cho người dùng có nhu cầu accessibility."
+    },
+    {
+      "id": "file:src/app/student/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/student/page.tsx",
+      "summary": "Route gốc học viên chuyển hướng trực tiếp sang danh sách kỳ thi được phân công.",
+      "tags": [
+        "nextjs-route",
+        "student",
+        "redirect",
+        "entry-point"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/student/page.tsx:StudentPage",
+      "type": "function",
+      "name": "StudentPage",
+      "filePath": "src/app/student/page.tsx",
+      "lineRange": [
+        3,
+        5
+      ],
+      "summary": "Chuyển hướng route học viên gốc sang `/student/exams`.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "redirect"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/lib/supabase/client.ts",
+      "type": "file",
+      "name": "client.ts",
+      "filePath": "src/lib/supabase/client.ts",
+      "summary": "Factory Supabase browser client, kiểm tra public URL/publishable key trước khi tạo client dùng trong Client Components.",
+      "tags": [
+        "factory",
+        "supabase",
+        "browser-client",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/supabase/client.ts:createClient",
+      "type": "function",
+      "name": "createClient",
+      "filePath": "src/lib/supabase/client.ts",
+      "lineRange": [
+        5,
+        14
+      ],
+      "summary": "Kiểm tra biến môi trường và tạo Supabase browser client cho frontend.",
+      "tags": [
+        "factory",
+        "supabase",
+        "browser-client",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/lib/supabase/proxy.ts",
+      "type": "file",
+      "name": "proxy.ts",
+      "filePath": "src/lib/supabase/proxy.ts",
+      "summary": "Helper phía server làm mới auth session Supabase, đồng bộ cookie request/response và trả về claims hiện tại cho proxy bảo vệ route.",
+      "tags": [
+        "authentication",
+        "supabase",
+        "middleware",
+        "session-management",
+        "cookies"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/supabase/proxy.ts:refreshAuthSession",
+      "type": "function",
+      "name": "refreshAuthSession",
+      "filePath": "src/lib/supabase/proxy.ts",
+      "lineRange": [
+        4,
+        30
+      ],
+      "summary": "Tạo Supabase server client, đồng bộ cookie và lấy claims mới nhất cho request.",
+      "tags": [
+        "authentication",
+        "supabase",
+        "session-management",
+        "cookies"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/proxy.ts",
+      "type": "file",
+      "name": "proxy.ts",
+      "filePath": "src/proxy.ts",
+      "summary": "Next.js proxy bảo vệ page routes bằng Supabase claims, chuyển người chưa đăng nhập về login và người đã đăng nhập rời login, đồng thời bảo toàn cookie làm mới.",
+      "tags": [
+        "middleware",
+        "authentication",
+        "route-guard",
+        "supabase",
+        "redirect"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/proxy.ts:proxy",
+      "type": "function",
+      "name": "proxy",
+      "filePath": "src/proxy.ts",
+      "lineRange": [
+        10,
+        36
+      ],
+      "summary": "Áp dụng route guard dựa trên claims và trả redirect có cookie làm mới khi trạng thái đăng nhập không phù hợp.",
+      "tags": [
+        "middleware",
+        "authentication",
+        "route-guard",
+        "redirect"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:supabase/config.toml",
+      "type": "config",
+      "name": "config.toml",
+      "filePath": "supabase/config.toml",
+      "summary": "Cấu hình Supabase local stack gồm API, Postgres, migrations/seed, Realtime, Studio, Storage, Auth, OAuth, email, Edge Runtime, analytics và các giới hạn bảo mật.",
+      "tags": [
+        "configuration",
+        "supabase",
+        "local-development",
+        "database",
+        "authentication"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:tests/e2e/app.spec.ts",
+      "type": "file",
+      "name": "app.spec.ts",
+      "filePath": "tests/e2e/app.spec.ts",
+      "summary": "Playwright E2E suite kiểm tra các luồng ứng dụng chính trên desktop/mobile, gồm xác thực, điều hướng, quản lý và trải nghiệm học viên.",
+      "tags": [
+        "test",
+        "e2e",
+        "playwright",
+        "browser-automation",
+        "user-flow"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:tests/mocks/server-only.ts",
+      "type": "file",
+      "name": "server-only.ts",
+      "filePath": "tests/mocks/server-only.ts",
+      "summary": "Module mock rỗng thay thế package server-only trong môi trường unit test phía client/jsdom.",
+      "tags": [
+        "test",
+        "mock",
+        "server-only",
+        "compatibility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:tests/setup.ts",
+      "type": "file",
+      "name": "setup.ts",
+      "filePath": "tests/setup.ts",
+      "summary": "Thiết lập Vitest mở rộng jest-dom và xóa localStorage/sessionStorage sau mỗi test để tránh rò rỉ state.",
+      "tags": [
+        "test",
+        "setup",
+        "vitest",
+        "test-isolation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:vitest.config.mts",
+      "type": "file",
+      "name": "vitest.config.mts",
+      "filePath": "vitest.config.mts",
+      "summary": "Vitest config dùng React plugin và jsdom, alias server-only sang mock, nạp setup chung, giới hạn test pattern và thu V8 coverage cho lib/store.",
+      "tags": [
+        "configuration",
+        "vitest",
+        "unit-test",
+        "coverage",
+        "jsdom"
+      ],
+      "complexity": "simple",
+      "languageNotes": "Đuôi `.mts` buộc ESM semantics; alias dùng `import.meta.url` và `fileURLToPath` để resolve mock ổn định đa nền tảng."
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:scripts/generate-guidance-media.mjs",
+      "target": "function:scripts/generate-guidance-media.mjs:waitForServer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:scripts/generate-guidance-media.mjs",
+      "target": "function:scripts/generate-guidance-media.mjs:addOverlay",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:scripts/generate-guidance-media.mjs",
+      "target": "function:scripts/generate-guidance-media.mjs:captureGroup",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:scripts/generate-guidance-media.mjs",
+      "target": "function:scripts/generate-guidance-media.mjs:captureExamSetGuide",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:scripts/generate-guidance-media.mjs",
+      "target": "function:scripts/generate-guidance-media.mjs:captureExamGuide",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:scripts/generate-guidance-media.mjs",
+      "target": "function:scripts/generate-guidance-media.mjs:captureVorDmeGuide",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:scripts/generate-guidance-media.mjs",
+      "target": "function:scripts/generate-guidance-media.mjs:captureAdsbGuide",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:scripts/generate-guidance-media.mjs",
+      "target": "function:scripts/generate-guidance-media.mjs:capturePracticeGuide",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:scripts/generate-guidance-media.mjs",
+      "target": "function:scripts/generate-guidance-media.mjs:captureStudentExamGuide",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:scripts/generate-guidance-media.mjs",
+      "target": "function:scripts/generate-guidance-media.mjs:compileClip",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:scripts/generate-guidance-media.mjs",
+      "target": "function:scripts/generate-guidance-media.mjs:writeVoiceScript",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/page.tsx",
+      "target": "function:src/app/admin/page.tsx:AdminPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/page.tsx",
+      "target": "function:src/app/admin/page.tsx:AdminPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/student/page.tsx",
+      "target": "function:src/app/student/page.tsx:StudentPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/student/page.tsx",
+      "target": "function:src/app/student/page.tsx:StudentPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/supabase/client.ts",
+      "target": "function:src/lib/supabase/client.ts:createClient",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/supabase/client.ts",
+      "target": "function:src/lib/supabase/client.ts:createClient",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/supabase/proxy.ts",
+      "target": "function:src/lib/supabase/proxy.ts:refreshAuthSession",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/supabase/proxy.ts",
+      "target": "function:src/lib/supabase/proxy.ts:refreshAuthSession",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/proxy.ts",
+      "target": "function:src/proxy.ts:proxy",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/proxy.ts",
+      "target": "function:src/proxy.ts:proxy",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/proxy.ts",
+      "target": "file:src/lib/supabase/proxy.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:scripts/generate-guidance-media.mjs:captureGroup",
+      "target": "function:scripts/generate-guidance-media.mjs:addOverlay",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/generate-guidance-media.mjs:captureExamSetGuide",
+      "target": "function:scripts/generate-guidance-media.mjs:captureGroup",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/generate-guidance-media.mjs:captureExamGuide",
+      "target": "function:scripts/generate-guidance-media.mjs:captureGroup",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/generate-guidance-media.mjs:captureVorDmeGuide",
+      "target": "function:scripts/generate-guidance-media.mjs:captureGroup",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/generate-guidance-media.mjs:captureAdsbGuide",
+      "target": "function:scripts/generate-guidance-media.mjs:captureGroup",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/generate-guidance-media.mjs:capturePracticeGuide",
+      "target": "function:scripts/generate-guidance-media.mjs:captureGroup",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:scripts/generate-guidance-media.mjs:captureStudentExamGuide",
+      "target": "function:scripts/generate-guidance-media.mjs:captureGroup",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "config:supabase/config.toml",
+      "target": "file:src/lib/supabase/client.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:supabase/config.toml",
+      "target": "file:src/lib/supabase/proxy.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:src/app/globals.css",
+      "target": "file:src/app/layout.tsx",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:playwright.config.ts",
+      "target": "file:tests/e2e/app.spec.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:vitest.config.mts",
+      "target": "file:tests/setup.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:vitest.config.mts",
+      "target": "file:tests/mocks/server-only.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "function:src/proxy.ts:proxy",
+      "target": "function:src/lib/supabase/proxy.ts:refreshAuthSession",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

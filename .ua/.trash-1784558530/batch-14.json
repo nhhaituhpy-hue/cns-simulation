@@ -1,0 +1,15 @@
+{
+  "nodes": [
+    {
+      "id": "pipeline:.github/workflows/ci.yml",
+      "type": "pipeline",
+      "name": "ci.yml",
+      "filePath": ".github/workflows/ci.yml",
+      "summary": "GitHub Actions CI chạy khi push lên main hoặc có pull request; job quality trên Ubuntu thực hiện checkout, cài Node.js 24, npm ci, lint, typecheck, unit/component tests, production build và audit dependency mức high.",
+      "tags": ["ci-cd", "github-actions", "quality-gate", "build-system", "security"],
+      "complexity": "simple",
+      "languageNotes": "YAML dùng cấu trúc lồng theo indentation cho một job tuần tự, quyền `contents: read`, timeout 15 phút và biến Supabase placeholder chỉ trong bước production build."
+    }
+  ],
+  "edges": []
+}

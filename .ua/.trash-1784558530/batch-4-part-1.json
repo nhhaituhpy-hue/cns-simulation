@@ -1,0 +1,1408 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/app/access-actions.ts",
+      "type": "file",
+      "name": "access-actions.ts",
+      "filePath": "src/app/access-actions.ts",
+      "summary": "Server action kiểm tra profile hiện tại có đúng role yêu cầu hay không, dùng cho kiểm soát điều hướng theo quyền từ client.",
+      "tags": [
+        "nextjs",
+        "entry-point",
+        "routing",
+        "cns"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/access-actions.ts:hasRequiredRoleAction",
+      "type": "function",
+      "name": "hasRequiredRoleAction",
+      "filePath": "src/app/access-actions.ts",
+      "lineRange": [
+        5,
+        8
+      ],
+      "summary": "So sánh role của profile hiện tại với role được yêu cầu và trả về kết quả boolean.",
+      "tags": [
+        "server-action",
+        "authentication",
+        "validation",
+        "security"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/admin/layout.tsx",
+      "type": "file",
+      "name": "layout.tsx",
+      "filePath": "src/app/admin/layout.tsx",
+      "summary": "Layout bảo vệ toàn bộ vùng quản trị, yêu cầu profile role admin và chuyển người dùng không đủ quyền về trang đăng nhập.",
+      "tags": [
+        "nextjs",
+        "layout",
+        "authorization",
+        "routing"
+      ],
+      "complexity": "simple",
+      "languageNotes": "TSX React component dùng typed props và quy ước Next.js App Router để tách server/client responsibilities."
+    },
+    {
+      "id": "function:src/app/admin/layout.tsx:AdminLayout",
+      "type": "function",
+      "name": "AdminLayout",
+      "filePath": "src/app/admin/layout.tsx",
+      "lineRange": [
+        4,
+        9
+      ],
+      "summary": "Bảo vệ cây route admin bằng cách kiểm tra profile rồi redirect khi không phải quản trị viên.",
+      "tags": [
+        "component",
+        "nextjs",
+        "routing",
+        "authorization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/api/dme/scenarios/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/dme/scenarios/route.ts",
+      "summary": "API route quản lý kịch bản DME trong Supabase, hỗ trợ đọc danh sách, upsert và xóa với xác thực role admin cho thao tác ghi.",
+      "tags": [
+        "api-handler",
+        "nextjs",
+        "supabase",
+        "authorization"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Next.js App Router route handler dùng named exports GET/POST/DELETE; payload được kiểm tra và mapping bằng TypeScript trước khi truy cập Supabase."
+    },
+    {
+      "id": "function:src/app/api/dme/scenarios/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "src/app/api/dme/scenarios/route.ts",
+      "lineRange": [
+        14,
+        34
+      ],
+      "summary": "Xác thực người dùng, truy vấn danh sách kịch bản DME và trả về dữ liệu đã mapping.",
+      "tags": [
+        "api-handler",
+        "authorization",
+        "supabase",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/api/dme/scenarios/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "src/app/api/dme/scenarios/route.ts",
+      "lineRange": [
+        36,
+        66
+      ],
+      "summary": "Validate quyền và payload rồi upsert kịch bản DME vào Supabase.",
+      "tags": [
+        "api-handler",
+        "authorization",
+        "supabase",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/api/dme/scenarios/route.ts:DELETE",
+      "type": "function",
+      "name": "DELETE",
+      "filePath": "src/app/api/dme/scenarios/route.ts",
+      "lineRange": [
+        68,
+        93
+      ],
+      "summary": "Kiểm tra quyền quản trị và xóa kịch bản DME theo id.",
+      "tags": [
+        "api-handler",
+        "authorization",
+        "supabase",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/api/dme/submissions/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/dme/submissions/route.ts",
+      "summary": "API route đọc và lưu bài nộp DME, hỗ trợ lọc theo kịch bản/trạng thái và ràng buộc bài nộp với người dùng đang đăng nhập.",
+      "tags": [
+        "api-handler",
+        "nextjs",
+        "supabase",
+        "authorization"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Next.js App Router route handler dùng named exports GET/POST/DELETE; payload được kiểm tra và mapping bằng TypeScript trước khi truy cập Supabase."
+    },
+    {
+      "id": "function:src/app/api/dme/submissions/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "src/app/api/dme/submissions/route.ts",
+      "lineRange": [
+        15,
+        45
+      ],
+      "summary": "Xác thực người dùng, truy vấn danh sách bài nộp DME và trả về dữ liệu đã mapping.",
+      "tags": [
+        "api-handler",
+        "authorization",
+        "supabase",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/api/dme/submissions/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "src/app/api/dme/submissions/route.ts",
+      "lineRange": [
+        47,
+        84
+      ],
+      "summary": "Validate quyền và payload rồi upsert bài nộp DME vào Supabase.",
+      "tags": [
+        "api-handler",
+        "authorization",
+        "supabase",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/api/scenarios/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/scenarios/route.ts",
+      "summary": "API route cho kịch bản ADS-B dùng bảng scenarios, thực hiện serialization dữ liệu lồng nhau, kiểm soát quyền và cung cấp chế độ E2E tách khỏi Supabase.",
+      "tags": [
+        "api-handler",
+        "nextjs",
+        "supabase",
+        "authorization"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Next.js App Router route handler dùng named exports GET/POST/DELETE; payload được kiểm tra và mapping bằng TypeScript trước khi truy cập Supabase."
+    },
+    {
+      "id": "function:src/app/api/scenarios/route.ts:toRow",
+      "type": "function",
+      "name": "toRow",
+      "filePath": "src/app/api/scenarios/route.ts",
+      "lineRange": [
+        16,
+        33
+      ],
+      "summary": "Chuyển mô hình kịch bản ADS-B thành row Supabase và serialize các cấu trúc lồng nhau sang JSON.",
+      "tags": [
+        "utility",
+        "type-safety",
+        "serialization",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/api/scenarios/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "src/app/api/scenarios/route.ts",
+      "lineRange": [
+        35,
+        60
+      ],
+      "summary": "Xác thực người dùng, truy vấn danh sách kịch bản ADS-B và trả về dữ liệu đã mapping.",
+      "tags": [
+        "api-handler",
+        "authorization",
+        "supabase",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/api/scenarios/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "src/app/api/scenarios/route.ts",
+      "lineRange": [
+        62,
+        95
+      ],
+      "summary": "Validate quyền và payload rồi upsert kịch bản ADS-B vào Supabase.",
+      "tags": [
+        "api-handler",
+        "authorization",
+        "supabase",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/api/scenarios/route.ts:DELETE",
+      "type": "function",
+      "name": "DELETE",
+      "filePath": "src/app/api/scenarios/route.ts",
+      "lineRange": [
+        97,
+        126
+      ],
+      "summary": "Kiểm tra quyền quản trị và xóa kịch bản ADS-B theo id.",
+      "tags": [
+        "api-handler",
+        "authorization",
+        "supabase",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/api/vor/scenarios/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/vor/scenarios/route.ts",
+      "summary": "API route quản lý kịch bản VOR trong Supabase, gồm truy vấn, validation/upsert và xóa có kiểm tra quyền quản trị.",
+      "tags": [
+        "api-handler",
+        "nextjs",
+        "supabase",
+        "authorization"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Next.js App Router route handler dùng named exports GET/POST/DELETE; payload được kiểm tra và mapping bằng TypeScript trước khi truy cập Supabase."
+    },
+    {
+      "id": "function:src/app/api/vor/scenarios/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "src/app/api/vor/scenarios/route.ts",
+      "lineRange": [
+        14,
+        34
+      ],
+      "summary": "Xác thực người dùng, truy vấn danh sách kịch bản VOR và trả về dữ liệu đã mapping.",
+      "tags": [
+        "api-handler",
+        "authorization",
+        "supabase",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/api/vor/scenarios/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "src/app/api/vor/scenarios/route.ts",
+      "lineRange": [
+        36,
+        66
+      ],
+      "summary": "Validate quyền và payload rồi upsert kịch bản VOR vào Supabase.",
+      "tags": [
+        "api-handler",
+        "authorization",
+        "supabase",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/api/vor/scenarios/route.ts:DELETE",
+      "type": "function",
+      "name": "DELETE",
+      "filePath": "src/app/api/vor/scenarios/route.ts",
+      "lineRange": [
+        68,
+        93
+      ],
+      "summary": "Kiểm tra quyền quản trị và xóa kịch bản VOR theo id.",
+      "tags": [
+        "api-handler",
+        "authorization",
+        "supabase",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/api/vor/submissions/route.ts",
+      "type": "file",
+      "name": "route.ts",
+      "filePath": "src/app/api/vor/submissions/route.ts",
+      "summary": "API route đọc và lưu bài nộp VOR, cho phép lọc danh sách và bảo đảm payload thuộc về profile đang đăng nhập.",
+      "tags": [
+        "api-handler",
+        "nextjs",
+        "supabase",
+        "authorization"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Next.js App Router route handler dùng named exports GET/POST/DELETE; payload được kiểm tra và mapping bằng TypeScript trước khi truy cập Supabase."
+    },
+    {
+      "id": "function:src/app/api/vor/submissions/route.ts:GET",
+      "type": "function",
+      "name": "GET",
+      "filePath": "src/app/api/vor/submissions/route.ts",
+      "lineRange": [
+        15,
+        45
+      ],
+      "summary": "Xác thực người dùng, truy vấn danh sách bài nộp VOR và trả về dữ liệu đã mapping.",
+      "tags": [
+        "api-handler",
+        "authorization",
+        "supabase",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/api/vor/submissions/route.ts:POST",
+      "type": "function",
+      "name": "POST",
+      "filePath": "src/app/api/vor/submissions/route.ts",
+      "lineRange": [
+        47,
+        84
+      ],
+      "summary": "Validate quyền và payload rồi upsert bài nộp VOR vào Supabase.",
+      "tags": [
+        "api-handler",
+        "authorization",
+        "supabase",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/layout.tsx",
+      "type": "file",
+      "name": "layout.tsx",
+      "filePath": "src/app/layout.tsx",
+      "summary": "Root layout của Next.js, khai báo metadata, nạp global styles và bọc nội dung trong AppShell dựa trên profile người dùng hiện tại.",
+      "tags": [
+        "nextjs",
+        "layout",
+        "authorization",
+        "routing"
+      ],
+      "complexity": "simple",
+      "languageNotes": "TSX React component dùng typed props và quy ước Next.js App Router để tách server/client responsibilities."
+    },
+    {
+      "id": "function:src/app/layout.tsx:RootLayout",
+      "type": "function",
+      "name": "RootLayout",
+      "filePath": "src/app/layout.tsx",
+      "lineRange": [
+        17,
+        34
+      ],
+      "summary": "Tạo document shell và truyền profile hiện tại vào AppShell cho toàn bộ ứng dụng.",
+      "tags": [
+        "component",
+        "nextjs",
+        "routing",
+        "authorization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/login/actions.ts",
+      "type": "file",
+      "name": "actions.ts",
+      "filePath": "src/app/login/actions.ts",
+      "summary": "Tập server actions hoàn chỉnh cho đăng nhập, đăng ký, OTP, khôi phục mật khẩu và đăng xuất, tích hợp Supabase Auth cùng cơ chế khóa đăng nhập.",
+      "tags": [
+        "authentication",
+        "security",
+        "supabase",
+        "server-action"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Các async server actions trả về discriminated result để UI thu hẹp trạng thái thành công/lỗi mà không cần exception flow ở client."
+    },
+    {
+      "id": "function:src/app/login/actions.ts:loginAction",
+      "type": "function",
+      "name": "loginAction",
+      "filePath": "src/app/login/actions.ts",
+      "lineRange": [
+        47,
+        132
+      ],
+      "summary": "Kiểm tra thông tin đăng nhập, áp dụng lockout, xác thực Supabase và xác minh role profile trước khi cho phép truy cập.",
+      "tags": [
+        "server-action",
+        "authentication",
+        "validation",
+        "security"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/login/actions.ts:signUpAction",
+      "type": "function",
+      "name": "signUpAction",
+      "filePath": "src/app/login/actions.ts",
+      "lineRange": [
+        134,
+        178
+      ],
+      "summary": "Validate hồ sơ đăng ký rồi tạo tài khoản Supabase kèm metadata người dùng.",
+      "tags": [
+        "server-action",
+        "authentication",
+        "validation",
+        "security"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/login/actions.ts:verifySignupOtpAction",
+      "type": "function",
+      "name": "verifySignupOtpAction",
+      "filePath": "src/app/login/actions.ts",
+      "lineRange": [
+        180,
+        200
+      ],
+      "summary": "Xác minh OTP đăng ký sáu chữ số qua Supabase Auth.",
+      "tags": [
+        "server-action",
+        "authentication",
+        "validation",
+        "security"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/login/actions.ts:resendSignupOtpAction",
+      "type": "function",
+      "name": "resendSignupOtpAction",
+      "filePath": "src/app/login/actions.ts",
+      "lineRange": [
+        202,
+        218
+      ],
+      "summary": "Yêu cầu Supabase gửi lại OTP đăng ký sau khi chuẩn hóa email.",
+      "tags": [
+        "server-action",
+        "authentication",
+        "validation",
+        "security"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/login/actions.ts:requestPasswordResetAction",
+      "type": "function",
+      "name": "requestPasswordResetAction",
+      "filePath": "src/app/login/actions.ts",
+      "lineRange": [
+        220,
+        244
+      ],
+      "summary": "Khởi tạo quy trình khôi phục mật khẩu và gửi OTP tới email hợp lệ.",
+      "tags": [
+        "server-action",
+        "authentication",
+        "validation",
+        "security"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/login/actions.ts:verifyRecoveryOtpAction",
+      "type": "function",
+      "name": "verifyRecoveryOtpAction",
+      "filePath": "src/app/login/actions.ts",
+      "lineRange": [
+        246,
+        266
+      ],
+      "summary": "Xác minh OTP recovery và thiết lập session cho bước đổi mật khẩu.",
+      "tags": [
+        "server-action",
+        "authentication",
+        "validation",
+        "security"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/login/actions.ts:updateRecoveredPasswordAction",
+      "type": "function",
+      "name": "updateRecoveredPasswordAction",
+      "filePath": "src/app/login/actions.ts",
+      "lineRange": [
+        268,
+        294
+      ],
+      "summary": "Kiểm tra session recovery, cập nhật mật khẩu, xóa lockout và đăng xuất để đăng nhập lại.",
+      "tags": [
+        "server-action",
+        "authentication",
+        "validation",
+        "security"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/login/actions.ts:logoutAction",
+      "type": "function",
+      "name": "logoutAction",
+      "filePath": "src/app/login/actions.ts",
+      "lineRange": [
+        296,
+        305
+      ],
+      "summary": "Đăng xuất khỏi Supabase và chuyển người dùng về trang login.",
+      "tags": [
+        "server-action",
+        "authentication",
+        "validation",
+        "security"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/login/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/login/page.tsx",
+      "summary": "Trang đăng nhập đọc đích chuyển hướng an toàn từ query params và render giao diện AuthPage với metadata phù hợp.",
+      "tags": [
+        "authentication",
+        "security",
+        "supabase",
+        "server-action"
+      ],
+      "complexity": "simple",
+      "languageNotes": "TSX React component dùng typed props và quy ước Next.js App Router để tách server/client responsibilities."
+    },
+    {
+      "id": "function:src/app/login/page.tsx:LoginPage",
+      "type": "function",
+      "name": "LoginPage",
+      "filePath": "src/app/login/page.tsx",
+      "lineRange": [
+        12,
+        17
+      ],
+      "summary": "Chuẩn hóa tham số next để ngăn redirect không an toàn rồi render AuthPage.",
+      "tags": [
+        "component",
+        "nextjs",
+        "routing",
+        "authorization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/page.tsx",
+      "summary": "Trang chủ hệ thống huấn luyện CNS, cung cấp lối vào theo role và carousel hướng dẫn lấy media từ Supabase Storage hoặc thư mục cục bộ.",
+      "tags": [
+        "nextjs",
+        "entry-point",
+        "routing",
+        "cns"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TSX React component dùng typed props và quy ước Next.js App Router để tách server/client responsibilities."
+    },
+    {
+      "id": "function:src/app/page.tsx:Home",
+      "type": "function",
+      "name": "Home",
+      "filePath": "src/app/page.tsx",
+      "lineRange": [
+        7,
+        55
+      ],
+      "summary": "Tính base URL cho media và render trang giới thiệu cùng các lựa chọn workspace theo role.",
+      "tags": [
+        "component",
+        "nextjs",
+        "routing",
+        "authorization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/student/dme/session/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/student/dme/session/page.tsx",
+      "summary": "Trang phiên thực hành DME của thí sinh, kiểm tra profile và scenarioId trước khi mở trình chạy kịch bản.",
+      "tags": [
+        "nextjs",
+        "entry-point",
+        "routing",
+        "cns"
+      ],
+      "complexity": "simple",
+      "languageNotes": "TSX React component dùng typed props và quy ước Next.js App Router để tách server/client responsibilities."
+    },
+    {
+      "id": "function:src/app/student/dme/session/page.tsx:DmeStudentSessionPage",
+      "type": "function",
+      "name": "DmeStudentSessionPage",
+      "filePath": "src/app/student/dme/session/page.tsx",
+      "lineRange": [
+        10,
+        16
+      ],
+      "summary": "Kiểm tra profile student và scenarioId rồi render DME scenario runner.",
+      "tags": [
+        "component",
+        "nextjs",
+        "routing",
+        "authorization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/student/layout.tsx",
+      "type": "file",
+      "name": "layout.tsx",
+      "filePath": "src/app/student/layout.tsx",
+      "summary": "Layout bảo vệ khu vực thí sinh, yêu cầu đăng nhập và role student trước khi render nội dung con.",
+      "tags": [
+        "nextjs",
+        "layout",
+        "authorization",
+        "routing"
+      ],
+      "complexity": "simple",
+      "languageNotes": "TSX React component dùng typed props và quy ước Next.js App Router để tách server/client responsibilities."
+    },
+    {
+      "id": "function:src/app/student/layout.tsx:StudentLayout",
+      "type": "function",
+      "name": "StudentLayout",
+      "filePath": "src/app/student/layout.tsx",
+      "lineRange": [
+        4,
+        8
+      ],
+      "summary": "Bảo vệ các route student và redirect profile không hợp lệ.",
+      "tags": [
+        "component",
+        "nextjs",
+        "routing",
+        "authorization"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/app/access-actions.ts",
+      "target": "function:src/app/access-actions.ts:hasRequiredRoleAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/access-actions.ts",
+      "target": "function:src/app/access-actions.ts:hasRequiredRoleAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/access-actions.ts",
+      "target": "file:src/lib/auth/profile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/layout.tsx",
+      "target": "function:src/app/admin/layout.tsx:AdminLayout",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/layout.tsx",
+      "target": "function:src/app/admin/layout.tsx:AdminLayout",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/layout.tsx",
+      "target": "file:src/lib/auth/profile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/dme/scenarios/route.ts",
+      "target": "function:src/app/api/dme/scenarios/route.ts:GET",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/api/dme/scenarios/route.ts",
+      "target": "function:src/app/api/dme/scenarios/route.ts:GET",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/api/dme/scenarios/route.ts",
+      "target": "function:src/app/api/dme/scenarios/route.ts:POST",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/api/dme/scenarios/route.ts",
+      "target": "function:src/app/api/dme/scenarios/route.ts:POST",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/api/dme/scenarios/route.ts",
+      "target": "function:src/app/api/dme/scenarios/route.ts:DELETE",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/api/dme/scenarios/route.ts",
+      "target": "function:src/app/api/dme/scenarios/route.ts:DELETE",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/api/dme/scenarios/route.ts",
+      "target": "file:src/lib/auth/profile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/dme/scenarios/route.ts",
+      "target": "file:src/lib/dme-scenario-storage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/dme/scenarios/route.ts",
+      "target": "file:src/lib/supabase/server.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/dme/submissions/route.ts",
+      "target": "function:src/app/api/dme/submissions/route.ts:GET",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/api/dme/submissions/route.ts",
+      "target": "function:src/app/api/dme/submissions/route.ts:GET",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/api/dme/submissions/route.ts",
+      "target": "function:src/app/api/dme/submissions/route.ts:POST",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/api/dme/submissions/route.ts",
+      "target": "function:src/app/api/dme/submissions/route.ts:POST",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/api/dme/submissions/route.ts",
+      "target": "file:src/lib/auth/profile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/dme/submissions/route.ts",
+      "target": "file:src/lib/dme-submission-storage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/dme/submissions/route.ts",
+      "target": "file:src/lib/dme-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/dme/submissions/route.ts",
+      "target": "file:src/lib/supabase/server.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/scenarios/route.ts",
+      "target": "function:src/app/api/scenarios/route.ts:toRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/api/scenarios/route.ts",
+      "target": "function:src/app/api/scenarios/route.ts:GET",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/api/scenarios/route.ts",
+      "target": "function:src/app/api/scenarios/route.ts:GET",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/api/scenarios/route.ts",
+      "target": "function:src/app/api/scenarios/route.ts:POST",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/api/scenarios/route.ts",
+      "target": "function:src/app/api/scenarios/route.ts:POST",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/api/scenarios/route.ts",
+      "target": "function:src/app/api/scenarios/route.ts:DELETE",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/api/scenarios/route.ts",
+      "target": "function:src/app/api/scenarios/route.ts:DELETE",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/api/scenarios/route.ts",
+      "target": "file:src/lib/auth/profile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/scenarios/route.ts",
+      "target": "file:src/lib/supabase/scenarios.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/scenarios/route.ts",
+      "target": "file:src/lib/supabase/server.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/scenarios/route.ts",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/vor/scenarios/route.ts",
+      "target": "function:src/app/api/vor/scenarios/route.ts:GET",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/api/vor/scenarios/route.ts",
+      "target": "function:src/app/api/vor/scenarios/route.ts:GET",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/api/vor/scenarios/route.ts",
+      "target": "function:src/app/api/vor/scenarios/route.ts:POST",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/api/vor/scenarios/route.ts",
+      "target": "function:src/app/api/vor/scenarios/route.ts:POST",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/api/vor/scenarios/route.ts",
+      "target": "function:src/app/api/vor/scenarios/route.ts:DELETE",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/api/vor/scenarios/route.ts",
+      "target": "function:src/app/api/vor/scenarios/route.ts:DELETE",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/api/vor/scenarios/route.ts",
+      "target": "file:src/lib/auth/profile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/vor/scenarios/route.ts",
+      "target": "file:src/lib/supabase/server.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/vor/scenarios/route.ts",
+      "target": "file:src/lib/vor-scenario-storage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/vor/submissions/route.ts",
+      "target": "function:src/app/api/vor/submissions/route.ts:GET",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/api/vor/submissions/route.ts",
+      "target": "function:src/app/api/vor/submissions/route.ts:GET",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/api/vor/submissions/route.ts",
+      "target": "function:src/app/api/vor/submissions/route.ts:POST",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/api/vor/submissions/route.ts",
+      "target": "function:src/app/api/vor/submissions/route.ts:POST",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/api/vor/submissions/route.ts",
+      "target": "file:src/lib/auth/profile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/vor/submissions/route.ts",
+      "target": "file:src/lib/supabase/server.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/vor/submissions/route.ts",
+      "target": "file:src/lib/vor-submission-storage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/api/vor/submissions/route.ts",
+      "target": "file:src/lib/vor-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/layout.tsx",
+      "target": "function:src/app/layout.tsx:RootLayout",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/layout.tsx",
+      "target": "function:src/app/layout.tsx:RootLayout",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/layout.tsx",
+      "target": "file:src/app/globals.css",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/layout.tsx",
+      "target": "file:src/components/layout/app-shell.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/layout.tsx",
+      "target": "file:src/lib/auth/profile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/login/actions.ts",
+      "target": "function:src/app/login/actions.ts:loginAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/login/actions.ts",
+      "target": "function:src/app/login/actions.ts:loginAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/login/actions.ts",
+      "target": "function:src/app/login/actions.ts:signUpAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/login/actions.ts",
+      "target": "function:src/app/login/actions.ts:signUpAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/login/actions.ts",
+      "target": "function:src/app/login/actions.ts:verifySignupOtpAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/login/actions.ts",
+      "target": "function:src/app/login/actions.ts:verifySignupOtpAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/login/actions.ts",
+      "target": "function:src/app/login/actions.ts:resendSignupOtpAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/login/actions.ts",
+      "target": "function:src/app/login/actions.ts:resendSignupOtpAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/login/actions.ts",
+      "target": "function:src/app/login/actions.ts:requestPasswordResetAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/login/actions.ts",
+      "target": "function:src/app/login/actions.ts:requestPasswordResetAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/login/actions.ts",
+      "target": "function:src/app/login/actions.ts:verifyRecoveryOtpAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/login/actions.ts",
+      "target": "function:src/app/login/actions.ts:verifyRecoveryOtpAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/login/actions.ts",
+      "target": "function:src/app/login/actions.ts:updateRecoveredPasswordAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/login/actions.ts",
+      "target": "function:src/app/login/actions.ts:updateRecoveredPasswordAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/login/actions.ts",
+      "target": "function:src/app/login/actions.ts:logoutAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/login/actions.ts",
+      "target": "function:src/app/login/actions.ts:logoutAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/login/actions.ts",
+      "target": "file:src/lib/auth/login-lockout.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/login/actions.ts",
+      "target": "file:src/lib/supabase/server.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/login/page.tsx",
+      "target": "function:src/app/login/page.tsx:LoginPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/login/page.tsx",
+      "target": "function:src/app/login/page.tsx:LoginPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/login/page.tsx",
+      "target": "file:src/components/auth/auth-page.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/page.tsx",
+      "target": "function:src/app/page.tsx:Home",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/page.tsx",
+      "target": "function:src/app/page.tsx:Home",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/page.tsx",
+      "target": "file:src/components/home/home-media-carousel.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/page.tsx",
+      "target": "file:src/components/ui/role-card.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/dme/session/page.tsx",
+      "target": "function:src/app/student/dme/session/page.tsx:DmeStudentSessionPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/student/dme/session/page.tsx",
+      "target": "function:src/app/student/dme/session/page.tsx:DmeStudentSessionPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/student/dme/session/page.tsx",
+      "target": "file:src/components/dme/student/dme-student-session.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/dme/session/page.tsx",
+      "target": "file:src/lib/auth/profile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/layout.tsx",
+      "target": "function:src/app/student/layout.tsx:StudentLayout",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/student/layout.tsx",
+      "target": "function:src/app/student/layout.tsx:StudentLayout",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/student/layout.tsx",
+      "target": "file:src/lib/auth/profile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:src/app/api/dme/scenarios/route.ts:POST",
+      "target": "function:src/lib/dme-scenario-storage.ts:isDmeScenario",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/api/dme/scenarios/route.ts:POST",
+      "target": "function:src/lib/dme-scenario-storage.ts:mapRowToDmeScenario",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/api/dme/submissions/route.ts:POST",
+      "target": "function:src/lib/dme-submission-storage.ts:isDmeSubmission",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/api/dme/submissions/route.ts:POST",
+      "target": "function:src/lib/dme-submission-storage.ts:mapRowToDmeSubmission",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/api/scenarios/route.ts:POST",
+      "target": "function:src/app/api/scenarios/route.ts:toRow",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/api/scenarios/route.ts:POST",
+      "target": "function:src/lib/supabase/scenarios.ts:mapRowToScenario",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/api/vor/scenarios/route.ts:POST",
+      "target": "function:src/lib/vor-scenario-storage.ts:isVorScenario",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/api/vor/scenarios/route.ts:POST",
+      "target": "function:src/lib/vor-scenario-storage.ts:mapRowToVorScenario",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/api/vor/submissions/route.ts:POST",
+      "target": "function:src/lib/vor-submission-storage.ts:isVorSubmission",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/app/api/vor/submissions/route.ts:POST",
+      "target": "function:src/lib/vor-submission-storage.ts:mapRowToVorSubmission",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

@@ -1,0 +1,1178 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/components/qcms/replay-dialog.tsx",
+      "type": "file",
+      "name": "replay-dialog.tsx",
+      "filePath": "src/components/qcms/replay-dialog.tsx",
+      "summary": "Hộp thoại cấu hình chế độ QCMS online/replay, cho phép chọn thời điểm, tốc độ phát lại và trạng thái nguồn dữ liệu.",
+      "tags": [
+        "component",
+        "qcms",
+        "monitoring",
+        "ads-b"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TSX React component dùng typed props, hooks và event handlers để mô phỏng hành vi cửa sổ vận hành QCMS/terminal."
+    },
+    {
+      "id": "function:src/components/qcms/replay-dialog.tsx:ReplayDialog",
+      "type": "function",
+      "name": "ReplayDialog",
+      "filePath": "src/components/qcms/replay-dialog.tsx",
+      "lineRange": [
+        34,
+        168
+      ],
+      "summary": "Quản lý form chế độ replay/online, phím Escape và các thao tác đặt thời gian phát lại.",
+      "tags": [
+        "component",
+        "qcms",
+        "event-handler",
+        "monitoring"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/qcms/scenario-monitor-view.tsx",
+      "type": "file",
+      "name": "scenario-monitor-view.tsx",
+      "filePath": "src/components/qcms/scenario-monitor-view.tsx",
+      "summary": "Màn hình điều phối phiên thực hành ADS-B trong QCMS, kết hợp monitoring, terminal, chẩn đoán phần cứng, recording và quy trình nộp bài chính thức.",
+      "tags": [
+        "component",
+        "qcms",
+        "monitoring",
+        "ads-b"
+      ],
+      "complexity": "complex",
+      "languageNotes": "TSX React component dùng typed props, hooks và event handlers để mô phỏng hành vi cửa sổ vận hành QCMS/terminal."
+    },
+    {
+      "id": "function:src/components/qcms/scenario-monitor-view.tsx:ScenarioMonitorView",
+      "type": "function",
+      "name": "ScenarioMonitorView",
+      "filePath": "src/components/qcms/scenario-monitor-view.tsx",
+      "lineRange": [
+        31,
+        378
+      ],
+      "summary": "Điều phối toàn bộ workspace QCMS của scenario và kết nối recording với quy trình hoàn tất bài thi.",
+      "tags": [
+        "component",
+        "qcms",
+        "event-handler",
+        "monitoring"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/components/qcms/sensor-config-window.tsx",
+      "type": "file",
+      "name": "sensor-config-window.tsx",
+      "filePath": "src/components/qcms/sensor-config-window.tsx",
+      "summary": "Cửa sổ cấu hình sensor mô phỏng, hiển thị profile vận hành, network client và thời điểm cập nhật trong giao diện kiểu desktop.",
+      "tags": [
+        "component",
+        "qcms",
+        "monitoring",
+        "ads-b"
+      ],
+      "complexity": "complex",
+      "languageNotes": "TSX React component dùng typed props, hooks và event handlers để mô phỏng hành vi cửa sổ vận hành QCMS/terminal."
+    },
+    {
+      "id": "function:src/components/qcms/sensor-config-window.tsx:Panel",
+      "type": "function",
+      "name": "Panel",
+      "filePath": "src/components/qcms/sensor-config-window.tsx",
+      "lineRange": [
+        17,
+        34
+      ],
+      "summary": "Render một nhóm cấu hình sensor có tiêu đề và nội dung con thống nhất.",
+      "tags": [
+        "component",
+        "qcms",
+        "event-handler",
+        "monitoring"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/sensor-config-window.tsx:Field",
+      "type": "function",
+      "name": "Field",
+      "filePath": "src/components/qcms/sensor-config-window.tsx",
+      "lineRange": [
+        36,
+        53
+      ],
+      "summary": "Render cặp nhãn/giá trị cho trường cấu hình QCMS.",
+      "tags": [
+        "component",
+        "qcms",
+        "event-handler",
+        "monitoring"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/sensor-config-window.tsx:SensorConfigWindow",
+      "type": "function",
+      "name": "SensorConfigWindow",
+      "filePath": "src/components/qcms/sensor-config-window.tsx",
+      "lineRange": [
+        66,
+        231
+      ],
+      "summary": "Render cửa sổ cấu hình sensor, network client và metadata cập nhật với hành vi đóng bằng keyboard.",
+      "tags": [
+        "component",
+        "qcms",
+        "event-handler",
+        "monitoring"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/qcms/sensor-monitoring-modal.tsx",
+      "type": "file",
+      "name": "sensor-monitoring-modal.tsx",
+      "filePath": "src/components/qcms/sensor-monitoring-modal.tsx",
+      "summary": "Modal giám sát chi tiết sensor ADS-B, trình bày SNMP age, điện áp, GPS, lỗi CRC và triệu chứng QCMS với quản lý focus truy cập được.",
+      "tags": [
+        "component",
+        "qcms",
+        "monitoring",
+        "ads-b"
+      ],
+      "complexity": "complex",
+      "languageNotes": "TSX React component dùng typed props, hooks và event handlers để mô phỏng hành vi cửa sổ vận hành QCMS/terminal."
+    },
+    {
+      "id": "function:src/components/qcms/sensor-monitoring-modal.tsx:Metric",
+      "type": "function",
+      "name": "Metric",
+      "filePath": "src/components/qcms/sensor-monitoring-modal.tsx",
+      "lineRange": [
+        38,
+        59
+      ],
+      "summary": "Render một metric giám sát gồm nhãn, giá trị và trạng thái cảnh báo tùy chọn.",
+      "tags": [
+        "component",
+        "qcms",
+        "event-handler",
+        "monitoring"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/sensor-monitoring-modal.tsx:SensorMonitoringModal",
+      "type": "function",
+      "name": "SensorMonitoringModal",
+      "filePath": "src/components/qcms/sensor-monitoring-modal.tsx",
+      "lineRange": [
+        75,
+        284
+      ],
+      "summary": "Quản lý modal monitoring truy cập được và hiển thị telemetry cùng triệu chứng của sensor.",
+      "tags": [
+        "component",
+        "qcms",
+        "event-handler",
+        "monitoring"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/components/qcms/sensor-status-window.tsx",
+      "type": "file",
+      "name": "sensor-status-window.tsx",
+      "filePath": "src/components/qcms/sensor-status-window.tsx",
+      "summary": "Cửa sổ status log của sensor, sinh message định kỳ từ trạng thái site và tô màu theo mức operational, degraded hoặc mất dữ liệu.",
+      "tags": [
+        "component",
+        "qcms",
+        "monitoring",
+        "ads-b"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TSX React component dùng typed props, hooks và event handlers để mô phỏng hành vi cửa sổ vận hành QCMS/terminal."
+    },
+    {
+      "id": "function:src/components/qcms/sensor-status-window.tsx:generateSensorStatusMessages",
+      "type": "function",
+      "name": "generateSensorStatusMessages",
+      "filePath": "src/components/qcms/sensor-status-window.tsx",
+      "lineRange": [
+        37,
+        73
+      ],
+      "summary": "Sinh tập status message có timestamp từ trạng thái sensor, SNMP, GPS và luồng surveillance hiện tại.",
+      "tags": [
+        "component",
+        "qcms",
+        "event-handler",
+        "monitoring"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/sensor-status-window.tsx:SensorStatusWindow",
+      "type": "function",
+      "name": "SensorStatusWindow",
+      "filePath": "src/components/qcms/sensor-status-window.tsx",
+      "lineRange": [
+        85,
+        202
+      ],
+      "summary": "Cập nhật và render dòng status log của sensor trong cửa sổ có chế độ xem thay đổi được.",
+      "tags": [
+        "component",
+        "qcms",
+        "event-handler",
+        "monitoring"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/qcms/site-context-menu.tsx",
+      "type": "file",
+      "name": "site-context-menu.tsx",
+      "filePath": "src/components/qcms/site-context-menu.tsx",
+      "summary": "Context menu có hỗ trợ keyboard cho site QCMS, quản lý focus và phát các hành động mở monitoring, settings hoặc statistics.",
+      "tags": [
+        "component",
+        "qcms",
+        "monitoring",
+        "ads-b"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TSX React component dùng typed props, hooks và event handlers để mô phỏng hành vi cửa sổ vận hành QCMS/terminal."
+    },
+    {
+      "id": "function:src/components/qcms/site-context-menu.tsx:MenuActionButton",
+      "type": "function",
+      "name": "MenuActionButton",
+      "filePath": "src/components/qcms/site-context-menu.tsx",
+      "lineRange": [
+        33,
+        49
+      ],
+      "summary": "Render nút hành động trong context menu với trạng thái disabled và nội dung mô tả.",
+      "tags": [
+        "component",
+        "qcms",
+        "event-handler",
+        "monitoring"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/site-context-menu.tsx:SiteContextMenu",
+      "type": "function",
+      "name": "SiteContextMenu",
+      "filePath": "src/components/qcms/site-context-menu.tsx",
+      "lineRange": [
+        51,
+        159
+      ],
+      "summary": "Quản lý focus, click ngoài, resize và keyboard cho menu hành động của site.",
+      "tags": [
+        "component",
+        "qcms",
+        "event-handler",
+        "monitoring"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/qcms/site-item.tsx",
+      "type": "file",
+      "name": "site-item.tsx",
+      "filePath": "src/components/qcms/site-item.tsx",
+      "summary": "Mục site trong cây QCMS, render hai sensor, trạng thái visualization/range ring và mở context menu được neo theo vị trí phần tử.",
+      "tags": [
+        "component",
+        "qcms",
+        "monitoring",
+        "ads-b"
+      ],
+      "complexity": "complex",
+      "languageNotes": "TSX React component dùng typed props, hooks và event handlers để mô phỏng hành vi cửa sổ vận hành QCMS/terminal."
+    },
+    {
+      "id": "function:src/components/qcms/site-item.tsx:SensorRow",
+      "type": "function",
+      "name": "SensorRow",
+      "filePath": "src/components/qcms/site-item.tsx",
+      "lineRange": [
+        40,
+        115
+      ],
+      "summary": "Render một sensor trong site cùng badge trạng thái và các điều khiển monitoring/visualization.",
+      "tags": [
+        "component",
+        "qcms",
+        "event-handler",
+        "monitoring"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/qcms/site-item.tsx:SiteItem",
+      "type": "function",
+      "name": "SiteItem",
+      "filePath": "src/components/qcms/site-item.tsx",
+      "lineRange": [
+        117,
+        246
+      ],
+      "summary": "Render site QCMS, điều phối chọn site, range ring và vị trí context menu.",
+      "tags": [
+        "component",
+        "qcms",
+        "event-handler",
+        "monitoring"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/qcms/site-monitor.tsx",
+      "type": "file",
+      "name": "site-monitor.tsx",
+      "filePath": "src/components/qcms/site-monitor.tsx",
+      "summary": "Bộ điều phối giám sát site QCMS, quản lý site/sensor đang chọn, cửa sổ ngữ cảnh, visualization, range ring và các modal chi tiết.",
+      "tags": [
+        "component",
+        "qcms",
+        "monitoring",
+        "ads-b"
+      ],
+      "complexity": "complex",
+      "languageNotes": "TSX React component dùng typed props, hooks và event handlers để mô phỏng hành vi cửa sổ vận hành QCMS/terminal."
+    },
+    {
+      "id": "function:src/components/qcms/site-monitor.tsx:SiteMonitor",
+      "type": "function",
+      "name": "SiteMonitor",
+      "filePath": "src/components/qcms/site-monitor.tsx",
+      "lineRange": [
+        32,
+        270
+      ],
+      "summary": "Quản lý state các site/sensor và mở đúng cửa sổ monitoring, settings, status hoặc statistics.",
+      "tags": [
+        "component",
+        "qcms",
+        "event-handler",
+        "monitoring"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/components/qcms/site-settings-window.tsx",
+      "type": "file",
+      "name": "site-settings-window.tsx",
+      "filePath": "src/components/qcms/site-settings-window.tsx",
+      "summary": "Cửa sổ settings của site và sensor, định dạng tọa độ địa lý cùng các thuộc tính cấu hình theo giao diện QCMS.",
+      "tags": [
+        "component",
+        "qcms",
+        "monitoring",
+        "ads-b"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TSX React component dùng typed props, hooks và event handlers để mô phỏng hành vi cửa sổ vận hành QCMS/terminal."
+    },
+    {
+      "id": "function:src/components/qcms/site-settings-window.tsx:Setting",
+      "type": "function",
+      "name": "Setting",
+      "filePath": "src/components/qcms/site-settings-window.tsx",
+      "lineRange": [
+        14,
+        23
+      ],
+      "summary": "Render một hàng setting với nhãn và giá trị trong cửa sổ site.",
+      "tags": [
+        "component",
+        "qcms",
+        "event-handler",
+        "monitoring"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/site-settings-window.tsx:SensorSettings",
+      "type": "function",
+      "name": "SensorSettings",
+      "filePath": "src/components/qcms/site-settings-window.tsx",
+      "lineRange": [
+        34,
+        72
+      ],
+      "summary": "Render nhóm thuộc tính cấu hình chi tiết cho một sensor của site.",
+      "tags": [
+        "component",
+        "qcms",
+        "event-handler",
+        "monitoring"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/site-settings-window.tsx:SiteSettingsWindow",
+      "type": "function",
+      "name": "SiteSettingsWindow",
+      "filePath": "src/components/qcms/site-settings-window.tsx",
+      "lineRange": [
+        74,
+        137
+      ],
+      "summary": "Render settings site/sensor và xử lý đóng cửa sổ bằng Escape.",
+      "tags": [
+        "component",
+        "qcms",
+        "event-handler",
+        "monitoring"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/qcms/site-statistics-window.tsx",
+      "type": "file",
+      "name": "site-statistics-window.tsx",
+      "filePath": "src/components/qcms/site-statistics-window.tsx",
+      "summary": "Cửa sổ thống kê site với nhiều tab, dải độ cao, bảng số liệu suy ra từ message count và quy trình xác nhận reset.",
+      "tags": [
+        "component",
+        "qcms",
+        "monitoring",
+        "ads-b"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TSX React component dùng typed props, hooks và event handlers để mô phỏng hành vi cửa sổ vận hành QCMS/terminal."
+    },
+    {
+      "id": "function:src/components/qcms/site-statistics-window.tsx:tableData",
+      "type": "function",
+      "name": "tableData",
+      "filePath": "src/components/qcms/site-statistics-window.tsx",
+      "lineRange": [
+        29,
+        70
+      ],
+      "summary": "Tạo headings và rows thống kê giả lập có tỷ lệ theo message count và dải độ cao.",
+      "tags": [
+        "component",
+        "qcms",
+        "event-handler",
+        "monitoring"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/qcms/site-statistics-window.tsx:SiteStatisticsWindow",
+      "type": "function",
+      "name": "SiteStatisticsWindow",
+      "filePath": "src/components/qcms/site-statistics-window.tsx",
+      "lineRange": [
+        72,
+        176
+      ],
+      "summary": "Điều phối tab, altitude band, bảng thống kê và xác nhận reset số liệu của site.",
+      "tags": [
+        "component",
+        "qcms",
+        "event-handler",
+        "monitoring"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/qcms/status-badge.tsx",
+      "type": "file",
+      "name": "status-badge.tsx",
+      "filePath": "src/components/qcms/status-badge.tsx",
+      "summary": "Badge trạng thái dùng chung cho QCMS, ánh xạ trạng thái sensor và mức độ cũ của SNMP sang nhãn cùng màu trực quan.",
+      "tags": [
+        "component",
+        "qcms",
+        "monitoring",
+        "ads-b"
+      ],
+      "complexity": "simple",
+      "languageNotes": "TSX React component dùng typed props, hooks và event handlers để mô phỏng hành vi cửa sổ vận hành QCMS/terminal."
+    },
+    {
+      "id": "function:src/components/qcms/status-badge.tsx:StatusBadge",
+      "type": "function",
+      "name": "StatusBadge",
+      "filePath": "src/components/qcms/status-badge.tsx",
+      "lineRange": [
+        25,
+        46
+      ],
+      "summary": "Ánh xạ trạng thái sensor và SNMP freshness sang badge có màu và nhãn phù hợp.",
+      "tags": [
+        "component",
+        "qcms",
+        "event-handler",
+        "monitoring"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/terminal/action-panel.tsx",
+      "type": "file",
+      "name": "action-panel.tsx",
+      "filePath": "src/components/terminal/action-panel.tsx",
+      "summary": "Panel thao tác của terminal mô phỏng, liệt kê action khả dụng và các bước đã chọn để người học xây dựng phương án xử lý.",
+      "tags": [
+        "component",
+        "terminal",
+        "simulation",
+        "ads-b"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TSX React component dùng typed props, hooks và event handlers để mô phỏng hành vi cửa sổ vận hành QCMS/terminal."
+    },
+    {
+      "id": "function:src/components/terminal/action-panel.tsx:ActionPanel",
+      "type": "function",
+      "name": "ActionPanel",
+      "filePath": "src/components/terminal/action-panel.tsx",
+      "lineRange": [
+        23,
+        164
+      ],
+      "summary": "Render danh sách action và cho phép bật/tắt các bước được chọn trong phiên terminal.",
+      "tags": [
+        "component",
+        "terminal",
+        "event-handler",
+        "simulation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/terminal/terminal-input.tsx",
+      "type": "file",
+      "name": "terminal-input.tsx",
+      "filePath": "src/components/terminal/terminal-input.tsx",
+      "summary": "Ô nhập terminal có prompt theo giai đoạn đăng nhập/session, tự focus và gửi lệnh khi người dùng nhấn Enter.",
+      "tags": [
+        "component",
+        "terminal",
+        "simulation",
+        "ads-b"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TSX React component dùng typed props, hooks và event handlers để mô phỏng hành vi cửa sổ vận hành QCMS/terminal."
+    },
+    {
+      "id": "function:src/components/terminal/terminal-input.tsx:TerminalInput",
+      "type": "function",
+      "name": "TerminalInput",
+      "filePath": "src/components/terminal/terminal-input.tsx",
+      "lineRange": [
+        21,
+        74
+      ],
+      "summary": "Quản lý giá trị input, focus và submit lệnh terminal theo prompt hiện tại.",
+      "tags": [
+        "component",
+        "terminal",
+        "event-handler",
+        "simulation"
+      ],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/components/qcms/replay-dialog.tsx",
+      "target": "function:src/components/qcms/replay-dialog.tsx:ReplayDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/replay-dialog.tsx",
+      "target": "function:src/components/qcms/replay-dialog.tsx:ReplayDialog",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/scenario-monitor-view.tsx",
+      "target": "function:src/components/qcms/scenario-monitor-view.tsx:ScenarioMonitorView",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/scenario-monitor-view.tsx",
+      "target": "function:src/components/qcms/scenario-monitor-view.tsx:ScenarioMonitorView",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/scenario-monitor-view.tsx",
+      "target": "file:src/components/grading/hardware-grading-result.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/scenario-monitor-view.tsx",
+      "target": "file:src/components/hardware/hardware-diagnosis-workspace.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/scenario-monitor-view.tsx",
+      "target": "file:src/components/qcms/elapsed-timer.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/scenario-monitor-view.tsx",
+      "target": "file:src/components/qcms/general-settings-dialog.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/scenario-monitor-view.tsx",
+      "target": "file:src/components/qcms/log-window.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/scenario-monitor-view.tsx",
+      "target": "file:src/components/qcms/qcms-toolbar.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/scenario-monitor-view.tsx",
+      "target": "file:src/components/qcms/qcms-utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/scenario-monitor-view.tsx",
+      "target": "file:src/components/qcms/replay-dialog.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/scenario-monitor-view.tsx",
+      "target": "file:src/components/qcms/site-monitor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/scenario-monitor-view.tsx",
+      "target": "file:src/components/qcms/student-loading.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/scenario-monitor-view.tsx",
+      "target": "file:src/lib/exams/actions.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/scenario-monitor-view.tsx",
+      "target": "file:src/lib/exams/client-types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/scenario-monitor-view.tsx",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/scenario-monitor-view.tsx",
+      "target": "file:src/stores/recording-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/scenario-monitor-view.tsx",
+      "target": "file:src/stores/scenario-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/sensor-config-window.tsx",
+      "target": "function:src/components/qcms/sensor-config-window.tsx:Panel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/sensor-config-window.tsx",
+      "target": "function:src/components/qcms/sensor-config-window.tsx:Field",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/sensor-config-window.tsx",
+      "target": "function:src/components/qcms/sensor-config-window.tsx:SensorConfigWindow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/sensor-config-window.tsx",
+      "target": "function:src/components/qcms/sensor-config-window.tsx:SensorConfigWindow",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/sensor-config-window.tsx",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/sensor-monitoring-modal.tsx",
+      "target": "function:src/components/qcms/sensor-monitoring-modal.tsx:Metric",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/sensor-monitoring-modal.tsx",
+      "target": "function:src/components/qcms/sensor-monitoring-modal.tsx:SensorMonitoringModal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/sensor-monitoring-modal.tsx",
+      "target": "function:src/components/qcms/sensor-monitoring-modal.tsx:SensorMonitoringModal",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/sensor-monitoring-modal.tsx",
+      "target": "file:src/components/qcms/qcms-utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/sensor-monitoring-modal.tsx",
+      "target": "file:src/components/qcms/status-badge.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/sensor-monitoring-modal.tsx",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/sensor-status-window.tsx",
+      "target": "function:src/components/qcms/sensor-status-window.tsx:generateSensorStatusMessages",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/sensor-status-window.tsx",
+      "target": "function:src/components/qcms/sensor-status-window.tsx:generateSensorStatusMessages",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/sensor-status-window.tsx",
+      "target": "function:src/components/qcms/sensor-status-window.tsx:SensorStatusWindow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/sensor-status-window.tsx",
+      "target": "function:src/components/qcms/sensor-status-window.tsx:SensorStatusWindow",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/sensor-status-window.tsx",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/site-context-menu.tsx",
+      "target": "function:src/components/qcms/site-context-menu.tsx:MenuActionButton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/site-context-menu.tsx",
+      "target": "function:src/components/qcms/site-context-menu.tsx:SiteContextMenu",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/site-context-menu.tsx",
+      "target": "function:src/components/qcms/site-context-menu.tsx:SiteContextMenu",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/site-context-menu.tsx",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/site-item.tsx",
+      "target": "function:src/components/qcms/site-item.tsx:SensorRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/site-item.tsx",
+      "target": "function:src/components/qcms/site-item.tsx:SiteItem",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/site-item.tsx",
+      "target": "function:src/components/qcms/site-item.tsx:SiteItem",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/site-item.tsx",
+      "target": "file:src/components/qcms/qcms-utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/site-item.tsx",
+      "target": "file:src/components/qcms/site-context-menu.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/site-item.tsx",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/site-monitor.tsx",
+      "target": "function:src/components/qcms/site-monitor.tsx:SiteMonitor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/site-monitor.tsx",
+      "target": "function:src/components/qcms/site-monitor.tsx:SiteMonitor",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/site-monitor.tsx",
+      "target": "file:src/components/qcms/ground-stations-window.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/site-monitor.tsx",
+      "target": "file:src/components/qcms/qcms-utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/site-monitor.tsx",
+      "target": "file:src/components/qcms/sensor-config-window.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/site-monitor.tsx",
+      "target": "file:src/components/qcms/sensor-monitoring-modal.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/site-monitor.tsx",
+      "target": "file:src/components/qcms/sensor-status-window.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/site-monitor.tsx",
+      "target": "file:src/components/qcms/site-context-menu.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/site-monitor.tsx",
+      "target": "file:src/components/qcms/site-settings-window.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/site-monitor.tsx",
+      "target": "file:src/components/qcms/site-statistics-window.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/site-monitor.tsx",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/site-settings-window.tsx",
+      "target": "function:src/components/qcms/site-settings-window.tsx:Setting",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/site-settings-window.tsx",
+      "target": "function:src/components/qcms/site-settings-window.tsx:SensorSettings",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/site-settings-window.tsx",
+      "target": "function:src/components/qcms/site-settings-window.tsx:SiteSettingsWindow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/site-settings-window.tsx",
+      "target": "function:src/components/qcms/site-settings-window.tsx:SiteSettingsWindow",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/site-settings-window.tsx",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/site-statistics-window.tsx",
+      "target": "function:src/components/qcms/site-statistics-window.tsx:tableData",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/site-statistics-window.tsx",
+      "target": "function:src/components/qcms/site-statistics-window.tsx:SiteStatisticsWindow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/site-statistics-window.tsx",
+      "target": "function:src/components/qcms/site-statistics-window.tsx:SiteStatisticsWindow",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/site-statistics-window.tsx",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/status-badge.tsx",
+      "target": "function:src/components/qcms/status-badge.tsx:StatusBadge",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/qcms/status-badge.tsx",
+      "target": "function:src/components/qcms/status-badge.tsx:StatusBadge",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/qcms/status-badge.tsx",
+      "target": "file:src/components/qcms/qcms-utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/qcms/status-badge.tsx",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/terminal/action-panel.tsx",
+      "target": "function:src/components/terminal/action-panel.tsx:ActionPanel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/terminal/action-panel.tsx",
+      "target": "function:src/components/terminal/action-panel.tsx:ActionPanel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/terminal/action-panel.tsx",
+      "target": "file:src/lib/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/terminal/terminal-input.tsx",
+      "target": "function:src/components/terminal/terminal-input.tsx:TerminalInput",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/terminal/terminal-input.tsx",
+      "target": "function:src/components/terminal/terminal-input.tsx:TerminalInput",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/terminal/terminal-input.tsx",
+      "target": "file:src/stores/terminal-store.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:src/components/qcms/scenario-monitor-view.tsx:ScenarioMonitorView",
+      "target": "function:src/stores/recording-store.ts:useRecordingStore",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/qcms/scenario-monitor-view.tsx:ScenarioMonitorView",
+      "target": "function:src/stores/scenario-store.ts:useScenarioStore",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/qcms/scenario-monitor-view.tsx:ScenarioMonitorView",
+      "target": "function:src/lib/exams/actions.ts:completeExamAttemptItemAction",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/qcms/sensor-monitoring-modal.tsx:SensorMonitoringModal",
+      "target": "function:src/components/qcms/qcms-utils.ts:getSnmpAgeSeconds",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/qcms/sensor-monitoring-modal.tsx:SensorMonitoringModal",
+      "target": "function:src/components/qcms/qcms-utils.ts:isSnmpStale",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/qcms/sensor-monitoring-modal.tsx:SensorMonitoringModal",
+      "target": "function:src/components/qcms/qcms-utils.ts:formatSnmpAge",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/qcms/sensor-status-window.tsx:SensorStatusWindow",
+      "target": "function:src/components/qcms/sensor-status-window.tsx:generateSensorStatusMessages",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:src/components/qcms/site-statistics-window.tsx:SiteStatisticsWindow",
+      "target": "function:src/components/qcms/site-statistics-window.tsx:tableData",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

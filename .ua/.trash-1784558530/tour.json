@@ -1,0 +1,142 @@
+[
+  {
+    "order": 1,
+    "title": "Tổng quan dự án",
+    "description": "Bắt đầu từ README để hiểu cns-simulator là nền tảng huấn luyện CNS hoàn chỉnh cho giám khảo và học viên, bao phủ VOR, DME và ADS-B. Tài liệu này đặt các khối xác thực, mô phỏng, kỳ thi, dữ liệu và triển khai vào cùng một bức tranh trước khi đi sâu vào mã nguồn.",
+    "nodeIds": [
+      "document:README.md"
+    ]
+  },
+  {
+    "order": 2,
+    "title": "Cổng vào hệ thống",
+    "description": "Từ bức tranh tổng quan, trang gốc App Router tạo cổng vào theo role và ghép carousel media hướng dẫn. Server action kiểm tra quyền dựa trên profile đã xác thực, còn profile có thể được cache theo request và giả lập riêng khi tạo media, cho thấy luồng điều hướng được bảo vệ ngay từ đầu.",
+    "nodeIds": [
+      "file:src/app/page.tsx",
+      "file:src/components/home/home-media-carousel.tsx",
+      "file:src/app/access-actions.ts",
+      "file:src/lib/auth/profile.ts"
+    ],
+    "languageLesson": "Trong Next.js App Router, page.tsx định nghĩa route bằng cấu trúc thư mục; Server Action cho phép UI gọi logic phía server mà vẫn giữ kiểm tra quyền và dữ liệu nhạy cảm ngoài client bundle."
+  },
+  {
+    "order": 3,
+    "title": "Mô hình miền chung",
+    "description": "Sau khi thấy cách người dùng đi vào ứng dụng, hãy học từ vựng chung mà mọi module sử dụng: scenario, site, sensor, action, grading, recording và fault phần cứng. Các type chuyên biệt của VOR và DME mở rộng nền này bằng dữ liệu PMDT, checkpoint, submission và trạng thái thiết bị, giúp các tầng UI, state và persistence thống nhất hợp đồng.",
+    "nodeIds": [
+      "file:src/lib/types.ts",
+      "file:src/lib/vor-types.ts",
+      "file:src/lib/dme-types.ts",
+      "file:src/lib/equipment-diagram-types.ts"
+    ],
+    "languageLesson": "TypeScript literal union và interface biến các trạng thái thiết bị cùng payload nghiệp vụ thành hợp đồng có thể kiểm tra lúc biên dịch, giảm việc truyền chuỗi hoặc object tùy ý giữa các tầng."
+  },
+  {
+    "order": 4,
+    "title": "Mô phỏng ADS-B",
+    "description": "Dựa trên mô hình miền ở bước trước, màn hình QCMS điều phối toàn bộ phiên ADS-B: monitoring, terminal, chẩn đoán phần cứng, recording và nộp bài. Site monitor và utility chuyển state sensor thành cửa sổ vận hành, trong khi topology phần cứng cùng terminal state machine biến sự cố và thao tác của học viên thành dữ liệu có cấu trúc để đánh giá.",
+    "nodeIds": [
+      "file:src/components/qcms/scenario-monitor-view.tsx",
+      "file:src/components/qcms/site-monitor.tsx",
+      "file:src/components/qcms/qcms-utils.ts",
+      "file:src/lib/hardware-model.ts",
+      "file:src/lib/terminal-engine.ts"
+    ],
+    "languageLesson": "State machine mô hình hóa terminal bằng tập trạng thái và chuyển tiếp hợp lệ; cách này dễ kiểm thử hơn nhiều so với rải các cờ boolean độc lập trong UI."
+  },
+  {
+    "order": 5,
+    "title": "PMDT VOR",
+    "description": "Từ mô phỏng ADS-B, module VOR cho thấy cùng bài toán huấn luyện được thể hiện qua giao diện PMDT kiểu desktop. Layout ghép menu, sidebar, status bar và màn hình chức năng, còn Zustand store giữ điều hướng, overlay lỗi, checkpoint, action log và câu trả lời học viên dựa trên domain type VOR.",
+    "nodeIds": [
+      "file:src/components/vor/pmdt-layout.tsx",
+      "file:src/stores/vor-pmdt-store.ts",
+      "file:src/lib/vor-types.ts"
+    ],
+    "languageLesson": "Zustand store gom state và action theo một nguồn dữ liệu duy nhất; selector trong React component giúp chỉ render lại khi phần state được chọn thực sự thay đổi."
+  },
+  {
+    "order": 6,
+    "title": "PMDT DME",
+    "description": "Module DME song song với VOR nhưng dùng bộ dữ liệu, màn hình và quy tắc vận hành riêng. Layout định tuyến các màn hình PMDT từ state điều hướng, còn store quản lý mode, runtime data, override, field selection và action log để UI có thể tái hiện chính xác phiên thực hành DME.",
+    "nodeIds": [
+      "file:src/components/dme/pmdt-layout.tsx",
+      "file:src/stores/dme-pmdt-store.ts",
+      "file:src/lib/dme-types.ts",
+      "file:src/components/dme/screens/screen-primitives.tsx"
+    ],
+    "languageLesson": "Các screen primitive tái sử dụng là pattern composition của React: xây dựng màn hình phức tạp từ các khối nhỏ có API ổn định, thay vì sao chép markup và hành vi giữa nhiều trang PMDT."
+  },
+  {
+    "order": 7,
+    "title": "Biên soạn kịch bản",
+    "description": "Sau khi hiểu ba môi trường mô phỏng, hãy xem cách giám khảo tạo dữ liệu đầu vào cho chúng. Wizard nhiều bước điều phối validation và submit, trong khi các editor mô tả site, sensor và fault theo đúng domain model; sự gắn kết chặt giữa các file này bảo đảm signal path phần cứng có thể được cấu hình và trực quan hóa nhất quán.",
+    "nodeIds": [
+      "file:src/components/admin/scenario-wizard-form.tsx",
+      "file:src/components/admin/hardware-fault-step.tsx",
+      "file:src/components/admin/site-state-editor.tsx",
+      "file:src/lib/hardware-model.ts",
+      "file:src/lib/types.ts"
+    ]
+  },
+  {
+    "order": 8,
+    "title": "Nghiệp vụ kỳ thi",
+    "description": "Kịch bản từ bước trước được tổ chức thành bộ đề, kỳ thi, thí sinh, lượt làm bài và kết quả qua tầng server actions cùng truy vấn typed. Validation bảo vệ mọi payload ở runtime, còn màn hình review hợp nhất evidence PMDT/ADS-B, diff thao tác và chẩn đoán phần cứng thành trải nghiệm chấm thi chính thức.",
+    "nodeIds": [
+      "file:src/lib/exams/actions.ts",
+      "file:src/lib/exams/queries.ts",
+      "file:src/lib/exams/validation.ts",
+      "file:src/components/exams/official-exam-review.tsx",
+      "file:src/components/exams/shared.tsx"
+    ],
+    "languageLesson": "Kiểu TypeScript chỉ bảo vệ lúc biên dịch; validation runtime vẫn bắt buộc tại biên hệ thống vì form, URL và dữ liệu Supabase đều có thể chứa giá trị không đúng hợp đồng."
+  },
+  {
+    "order": 9,
+    "title": "API và persistence",
+    "description": "Nghiệp vụ kỳ thi và mô phỏng đi qua lớp persistence có hai đường: Supabase trên cloud và storage cục bộ làm phương án dự phòng. Factory SSR đồng bộ auth cookie theo request, các adapter VOR/DME ánh xạ domain model sang row database, còn API route ADS-B serialize dữ liệu lồng nhau và cung cấp chế độ E2E tách khỏi Supabase.",
+    "nodeIds": [
+      "file:src/lib/supabase/server.ts",
+      "file:src/lib/storage.ts",
+      "file:src/lib/vor-scenario-storage.ts",
+      "file:src/lib/dme-scenario-storage.ts",
+      "file:src/app/api/scenarios/route.ts"
+    ]
+  },
+  {
+    "order": 10,
+    "title": "Lược đồ cơ sở dữ liệu",
+    "description": "Các migration hiện thực hóa hợp đồng persistence: VOR và DME có bảng kịch bản, bài nộp, khóa ngoại và index riêng, sau đó được siết bằng profile, lockout và RLS theo role. Migration kỳ thi mở rộng hệ thống thành 14 bảng chuẩn hóa cùng trigger và stored procedure, tạo nền dữ liệu cho luồng quản trị, làm bài và review ở bước 8.",
+    "nodeIds": [
+      "schema:supabase/migrations/202607160003_create_vor_training.sql",
+      "schema:supabase/migrations/202607170001_create_dme_training.sql",
+      "schema:supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "schema:supabase/migrations/202607180002_create_exam_management.sql"
+    ],
+    "languageLesson": "Migration SQL nên chạy theo thứ tự và tiến hóa schema từng bước; foreign key giữ tính toàn vẹn quan hệ, index tối ưu truy vấn, còn Row Level Security (RLS) áp quyền ngay tại cơ sở dữ liệu."
+  },
+  {
+    "order": 11,
+    "title": "Chiến lược kiểm thử",
+    "description": "Khi đã thấy toàn bộ đường đi từ UI đến database, lớp kiểm thử xác nhận cả chi tiết lẫn hành trình hoàn chỉnh. Vitest chạy trong jsdom và thu coverage cho lib/store, test grading kiểm tra so khớp action cùng thứ tự bước, còn Playwright bao phủ xác thực, điều hướng, quản lý và trải nghiệm học viên trên desktop lẫn mobile.",
+    "nodeIds": [
+      "file:vitest.config.mts",
+      "file:tests/core/grading.test.ts",
+      "file:tests/e2e/app.spec.ts"
+    ],
+    "languageLesson": "Unit test cô lập thuật toán và state, component test kiểm tra hành vi UI trong jsdom, còn E2E test chạy qua trình duyệt thật để xác nhận các tầng phối hợp đúng với nhau."
+  },
+  {
+    "order": 12,
+    "title": "Cấu hình và CI/CD",
+    "description": "Điểm kết thúc của tour là cách dự án được chạy, kiểm tra và triển khai nhất quán. package.json tập hợp script và dependency, cấu hình Supabase dựng local stack, Wrangler mô tả đích Cloudflare Pages cùng binding D1, còn GitHub Actions tự động lint, typecheck, test, build và audit dependency trước khi thay đổi được chấp nhận.",
+    "nodeIds": [
+      "config:package.json",
+      "config:supabase/config.toml",
+      "config:wrangler.json",
+      "pipeline:.github/workflows/ci.yml"
+    ],
+    "languageLesson": "Trong GitHub Actions YAML, trigger quyết định thời điểm workflow chạy, job có thể chạy song song và các step trong một job chạy tuần tự; cache dependency giúp giảm đáng kể thời gian CI."
+  }
+]

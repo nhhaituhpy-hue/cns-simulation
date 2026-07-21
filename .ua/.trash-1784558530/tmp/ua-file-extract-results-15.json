@@ -1,0 +1,706 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 11,
+  "filesSkipped": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 11,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 0,
+      "failed": 0,
+      "skipped": 11
+    }
+  },
+  "results": [
+    {
+      "path": "supabase/migrations/202607160001_create_scenarios_anon_test.sql",
+      "language": "sql",
+      "fileCategory": "data",
+      "totalLines": 48,
+      "nonEmptyLines": 40,
+      "definitions": [
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "title",
+            "description",
+            "difficulty",
+            "sites_json",
+            "target_sensor_id",
+            "target_login_user",
+            "expected_actions_json",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 4,
+          "endLine": 15
+        },
+        {
+          "name": "scenarios_created_at_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 17,
+          "endLine": 17
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 2
+      }
+    },
+    {
+      "path": "supabase/migrations/202607160002_add_scenario_training_data.sql",
+      "language": "sql",
+      "fileCategory": "data",
+      "totalLines": 5,
+      "nonEmptyLines": 4,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 0
+      }
+    },
+    {
+      "path": "supabase/migrations/202607160003_create_vor_training.sql",
+      "language": "sql",
+      "fileCategory": "data",
+      "totalLines": 55,
+      "nonEmptyLines": 47,
+      "definitions": [
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "title",
+            "description",
+            "difficulty",
+            "prompt",
+            "overrides",
+            "expected_checkpoints",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 4,
+          "endLine": 14
+        },
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "scenario_id",
+            "student_name",
+            "student_code",
+            "status",
+            "started_at",
+            "submitted_at",
+            "reviewed_at",
+            "events",
+            "answer",
+            "score",
+            "examiner_comment"
+          ],
+          "startLine": 19,
+          "endLine": 32
+        },
+        {
+          "name": "vor_scenarios_created_at_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 16,
+          "endLine": 16
+        },
+        {
+          "name": "vor_submissions_scenario_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 34,
+          "endLine": 34
+        },
+        {
+          "name": "vor_submissions_status_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 36,
+          "endLine": 36
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 5
+      }
+    },
+    {
+      "path": "supabase/migrations/202607170001_create_dme_training.sql",
+      "language": "sql",
+      "fileCategory": "data",
+      "totalLines": 55,
+      "nonEmptyLines": 47,
+      "definitions": [
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "title",
+            "description",
+            "difficulty",
+            "prompt",
+            "overrides",
+            "expected_checkpoints",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 4,
+          "endLine": 14
+        },
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "scenario_id",
+            "student_name",
+            "student_code",
+            "status",
+            "started_at",
+            "submitted_at",
+            "reviewed_at",
+            "events",
+            "answer",
+            "score",
+            "examiner_comment"
+          ],
+          "startLine": 19,
+          "endLine": 32
+        },
+        {
+          "name": "dme_scenarios_created_at_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 16,
+          "endLine": 16
+        },
+        {
+          "name": "dme_submissions_scenario_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 34,
+          "endLine": 34
+        },
+        {
+          "name": "dme_submissions_status_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 36,
+          "endLine": 36
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 5
+      }
+    },
+    {
+      "path": "supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql",
+      "language": "sql",
+      "fileCategory": "data",
+      "totalLines": 20,
+      "nonEmptyLines": 16,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 0
+      }
+    },
+    {
+      "path": "supabase/migrations/202607170003_create_training_media_bucket.sql",
+      "language": "sql",
+      "fileCategory": "data",
+      "totalLines": 27,
+      "nonEmptyLines": 25,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 0
+      }
+    },
+    {
+      "path": "supabase/migrations/202607170004_seed_vor_scenarios.sql",
+      "language": "sql",
+      "fileCategory": "data",
+      "totalLines": 200,
+      "nonEmptyLines": 196,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 0
+      }
+    },
+    {
+      "path": "supabase/migrations/202607170005_seed_dme_scenarios.sql",
+      "language": "sql",
+      "fileCategory": "data",
+      "totalLines": 204,
+      "nonEmptyLines": 200,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 0
+      }
+    },
+    {
+      "path": "supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+      "language": "sql",
+      "fileCategory": "data",
+      "totalLines": 286,
+      "nonEmptyLines": 249,
+      "definitions": [
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "email",
+            "full_name",
+            "work_unit",
+            "role",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 5,
+          "endLine": 13
+        },
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "email_hash",
+            "failed_count",
+            "locked_until",
+            "updated_at"
+          ],
+          "startLine": 221,
+          "endLine": 226
+        },
+        {
+          "name": "vor_submissions_user_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 129,
+          "endLine": 129
+        },
+        {
+          "name": "dme_submissions_user_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 131,
+          "endLine": 131
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 4
+      }
+    },
+    {
+      "path": "supabase/migrations/202607180002_create_exam_management.sql",
+      "language": "sql",
+      "fileCategory": "data",
+      "totalLines": 1805,
+      "nonEmptyLines": 1665,
+      "definitions": [
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "code",
+            "name",
+            "sort_order",
+            "created_at"
+          ],
+          "startLine": 4,
+          "endLine": 10
+        },
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "code",
+            "name",
+            "description",
+            "is_active",
+            "sort_order",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 12,
+          "endLine": 24
+        },
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "subject_id",
+            "module_code",
+            "module_name",
+            "sort_order",
+            "created_at"
+          ],
+          "startLine": 26,
+          "endLine": 33
+        },
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "module_code",
+            "scenario_id",
+            "title",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 37,
+          "endLine": 46
+        },
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "name",
+            "description",
+            "status",
+            "created_by",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 48,
+          "endLine": 58
+        },
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "exam_set_id",
+            "subject_id",
+            "position",
+            "created_at"
+          ],
+          "startLine": 60,
+          "endLine": 69
+        },
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "exam_set_subject_id",
+            "exam_set_id",
+            "subject_id",
+            "paper_number",
+            "title",
+            "is_saved",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 71,
+          "endLine": 86
+        },
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "exam_paper_id",
+            "exam_set_id",
+            "subject_id",
+            "module_code",
+            "scenario_id",
+            "position",
+            "created_at"
+          ],
+          "startLine": 88,
+          "endLine": 106
+        },
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "name",
+            "exam_date",
+            "location",
+            "decision_basis",
+            "exam_set_id",
+            "status",
+            "created_by",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 108,
+          "endLine": 122
+        },
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "exam_id",
+            "exam_set_id",
+            "subject_id",
+            "full_name",
+            "position",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 124,
+          "endLine": 139
+        },
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "exam_id",
+            "exam_set_id",
+            "full_name",
+            "work_unit",
+            "email",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 141,
+          "endLine": 158
+        },
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "candidate_id",
+            "exam_id",
+            "exam_set_id",
+            "subject_id",
+            "exam_paper_id",
+            "official_score",
+            "examiner_comment",
+            "status",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 160,
+          "endLine": 180
+        },
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "candidate_subject_id",
+            "exam_paper_id",
+            "user_id",
+            "status",
+            "started_at",
+            "submitted_at",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 182,
+          "endLine": 200
+        },
+        {
+          "name": "public",
+          "kind": "table",
+          "fields": [
+            "id",
+            "attempt_id",
+            "exam_paper_id",
+            "paper_scenario_id",
+            "module_code",
+            "scenario_id",
+            "position",
+            "status",
+            "started_at",
+            "submitted_at",
+            "submission_ref",
+            "result_json",
+            "created_at",
+            "updated_at"
+          ],
+          "startLine": 202,
+          "endLine": 232
+        },
+        {
+          "name": "exam_subjects_active_order_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 234,
+          "endLine": 234
+        },
+        {
+          "name": "exam_subject_modules_order_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 235,
+          "endLine": 235
+        },
+        {
+          "name": "exam_scenario_catalog_title_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 236,
+          "endLine": 236
+        },
+        {
+          "name": "exam_sets_status_updated_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 237,
+          "endLine": 237
+        },
+        {
+          "name": "exam_set_subjects_set_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 238,
+          "endLine": 238
+        },
+        {
+          "name": "exam_papers_set_subject_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 239,
+          "endLine": 239
+        },
+        {
+          "name": "exam_paper_scenarios_paper_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 240,
+          "endLine": 240
+        },
+        {
+          "name": "exams_status_date_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 241,
+          "endLine": 241
+        },
+        {
+          "name": "exams_set_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 242,
+          "endLine": 242
+        },
+        {
+          "name": "exam_examiners_exam_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 243,
+          "endLine": 243
+        },
+        {
+          "name": "exam_candidates_exam_name_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 244,
+          "endLine": 244
+        },
+        {
+          "name": "exam_candidates_email_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 245,
+          "endLine": 245
+        },
+        {
+          "name": "exam_candidate_subjects_exam_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 246,
+          "endLine": 246
+        },
+        {
+          "name": "exam_candidate_subjects_paper_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 247,
+          "endLine": 247
+        },
+        {
+          "name": "exam_attempts_user_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 248,
+          "endLine": 248
+        },
+        {
+          "name": "exam_attempt_items_attempt_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 249,
+          "endLine": 249
+        },
+        {
+          "name": "exam_attempt_items_one_in_progress_idx",
+          "kind": "index",
+          "fields": [],
+          "startLine": 250,
+          "endLine": 250
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 31
+      }
+    },
+    {
+      "path": "supabase/migrations/202607190001_allow_training_media_audio.sql",
+      "language": "sql",
+      "fileCategory": "data",
+      "totalLines": 3,
+      "nonEmptyLines": 3,
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0,
+        "definitionCount": 0
+      }
+    }
+  ]
+}

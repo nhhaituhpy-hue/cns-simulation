@@ -1,0 +1,3920 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 26,
+  "filesSkipped": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 26,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 26,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "results": [
+    {
+      "path": "src/app/access-actions.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 8,
+      "nonEmptyLines": 6,
+      "functions": [
+        {
+          "name": "hasRequiredRoleAction",
+          "startLine": 5,
+          "endLine": 8,
+          "params": [
+            "requiredRole"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "hasRequiredRoleAction",
+          "line": 5,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "hasRequiredRoleAction",
+          "callee": "getCurrentProfile",
+          "lineNumber": 6
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/admin/layout.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 9,
+      "nonEmptyLines": 8,
+      "functions": [
+        {
+          "name": "AdminLayout",
+          "startLine": 4,
+          "endLine": 9,
+          "params": [
+            "{ children }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "AdminLayout",
+          "line": 4,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "AdminLayout",
+          "callee": "getCurrentProfile",
+          "lineNumber": 5
+        },
+        {
+          "caller": "AdminLayout",
+          "callee": "redirect",
+          "lineNumber": 6
+        },
+        {
+          "caller": "AdminLayout",
+          "callee": "redirect",
+          "lineNumber": 7
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/dme/scenarios/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 94,
+      "nonEmptyLines": 82,
+      "functions": [
+        {
+          "name": "errorMessage",
+          "startLine": 10,
+          "endLine": 12,
+          "params": [
+            "error"
+          ]
+        },
+        {
+          "name": "GET",
+          "startLine": 14,
+          "endLine": 34,
+          "params": []
+        },
+        {
+          "name": "POST",
+          "startLine": 36,
+          "endLine": 66,
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "name": "DELETE",
+          "startLine": 68,
+          "endLine": 93,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "GET",
+          "line": 14,
+          "isDefault": false
+        },
+        {
+          "name": "POST",
+          "line": 36,
+          "isDefault": false
+        },
+        {
+          "name": "DELETE",
+          "line": 68,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "GET",
+          "callee": "getCurrentProfile",
+          "lineNumber": 15
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 16
+        },
+        {
+          "caller": "GET",
+          "callee": "createClient",
+          "lineNumber": 19
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from(\"dme_scenarios\")\n      .select(\"*\")\n      .order",
+          "lineNumber": 20
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from(\"dme_scenarios\")\n      .select",
+          "lineNumber": 20
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from",
+          "lineNumber": 20
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 26
+        },
+        {
+          "caller": "GET",
+          "callee": "(data ?? []).map",
+          "lineNumber": 26
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 28
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 29
+        },
+        {
+          "caller": "GET",
+          "callee": "errorMessage",
+          "lineNumber": 30
+        },
+        {
+          "caller": "POST",
+          "callee": "getCurrentProfile",
+          "lineNumber": 37
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 38
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 39
+        },
+        {
+          "caller": "POST",
+          "callee": "request.json",
+          "lineNumber": 42
+        },
+        {
+          "caller": "POST",
+          "callee": "isDmeScenario",
+          "lineNumber": 43
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 44
+        },
+        {
+          "caller": "POST",
+          "callee": "createClient",
+          "lineNumber": 50
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from(\"dme_scenarios\")\n      .upsert(dmeScenarioToRow(payload), { onConflict: \"id\" })\n      .select()\n      .single",
+          "lineNumber": 51
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from(\"dme_scenarios\")\n      .upsert(dmeScenarioToRow(payload), { onConflict: \"id\" })\n      .select",
+          "lineNumber": 51
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from(\"dme_scenarios\")\n      .upsert",
+          "lineNumber": 51
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from",
+          "lineNumber": 51
+        },
+        {
+          "caller": "POST",
+          "callee": "dmeScenarioToRow",
+          "lineNumber": 53
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 58
+        },
+        {
+          "caller": "POST",
+          "callee": "mapRowToDmeScenario",
+          "lineNumber": 58
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 60
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 61
+        },
+        {
+          "caller": "POST",
+          "callee": "errorMessage",
+          "lineNumber": 62
+        },
+        {
+          "caller": "DELETE",
+          "callee": "getCurrentProfile",
+          "lineNumber": 69
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 70
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 71
+        },
+        {
+          "caller": "DELETE",
+          "callee": "new URL(request.url).searchParams.get(\"id\")?.trim",
+          "lineNumber": 74
+        },
+        {
+          "caller": "DELETE",
+          "callee": "new URL(request.url).searchParams.get",
+          "lineNumber": 74
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 76
+        },
+        {
+          "caller": "DELETE",
+          "callee": "createClient",
+          "lineNumber": 79
+        },
+        {
+          "caller": "DELETE",
+          "callee": "supabase\n      .from(\"dme_scenarios\")\n      .delete()\n      .eq",
+          "lineNumber": 80
+        },
+        {
+          "caller": "DELETE",
+          "callee": "supabase\n      .from(\"dme_scenarios\")\n      .delete",
+          "lineNumber": 80
+        },
+        {
+          "caller": "DELETE",
+          "callee": "supabase\n      .from",
+          "lineNumber": 80
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 85
+        },
+        {
+          "caller": "DELETE",
+          "callee": "console.error",
+          "lineNumber": 87
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 88
+        },
+        {
+          "caller": "DELETE",
+          "callee": "errorMessage",
+          "lineNumber": 89
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 3,
+        "functionCount": 4,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/dme/submissions/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 85,
+      "nonEmptyLines": 76,
+      "functions": [
+        {
+          "name": "errorMessage",
+          "startLine": 11,
+          "endLine": 13,
+          "params": [
+            "error"
+          ]
+        },
+        {
+          "name": "GET",
+          "startLine": 15,
+          "endLine": 45,
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "name": "POST",
+          "startLine": 47,
+          "endLine": 84,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "GET",
+          "line": 15,
+          "isDefault": false
+        },
+        {
+          "name": "POST",
+          "line": 47,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "GET",
+          "callee": "getCurrentProfile",
+          "lineNumber": 16
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 17
+        },
+        {
+          "caller": "GET",
+          "callee": "searchParams.get(\"scenarioId\")?.trim",
+          "lineNumber": 21
+        },
+        {
+          "caller": "GET",
+          "callee": "searchParams.get",
+          "lineNumber": 21
+        },
+        {
+          "caller": "GET",
+          "callee": "searchParams.get(\"status\")?.trim",
+          "lineNumber": 22
+        },
+        {
+          "caller": "GET",
+          "callee": "searchParams.get",
+          "lineNumber": 22
+        },
+        {
+          "caller": "GET",
+          "callee": "[\"draft\", \"submitted\", \"reviewed\"].includes",
+          "lineNumber": 23
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 24
+        },
+        {
+          "caller": "GET",
+          "callee": "createClient",
+          "lineNumber": 27
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase.from(\"dme_submissions\").select",
+          "lineNumber": 28
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase.from",
+          "lineNumber": 28
+        },
+        {
+          "caller": "GET",
+          "callee": "query.eq",
+          "lineNumber": 29
+        },
+        {
+          "caller": "GET",
+          "callee": "query.eq",
+          "lineNumber": 30
+        },
+        {
+          "caller": "GET",
+          "callee": "query.order",
+          "lineNumber": 31
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 37
+        },
+        {
+          "caller": "GET",
+          "callee": "(data ?? []).map",
+          "lineNumber": 37
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 39
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 40
+        },
+        {
+          "caller": "GET",
+          "callee": "errorMessage",
+          "lineNumber": 41
+        },
+        {
+          "caller": "POST",
+          "callee": "getCurrentProfile",
+          "lineNumber": 48
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 49
+        },
+        {
+          "caller": "POST",
+          "callee": "request.json",
+          "lineNumber": 52
+        },
+        {
+          "caller": "POST",
+          "callee": "isDmeSubmission",
+          "lineNumber": 53
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 54
+        },
+        {
+          "caller": "POST",
+          "callee": "createClient",
+          "lineNumber": 69
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from(\"dme_submissions\")\n      .upsert(dmeSubmissionToRow(securedPayload), { onConflict: \"id\" })\n      .select()\n      .single",
+          "lineNumber": 70
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from(\"dme_submissions\")\n      .upsert(dmeSubmissionToRow(securedPayload), { onConflict: \"id\" })\n      .select",
+          "lineNumber": 70
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from(\"dme_submissions\")\n      .upsert",
+          "lineNumber": 70
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from",
+          "lineNumber": 70
+        },
+        {
+          "caller": "POST",
+          "callee": "dmeSubmissionToRow",
+          "lineNumber": 72
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 76
+        },
+        {
+          "caller": "POST",
+          "callee": "mapRowToDmeSubmission",
+          "lineNumber": 76
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 78
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 79
+        },
+        {
+          "caller": "POST",
+          "callee": "errorMessage",
+          "lineNumber": 80
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 2,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/scenarios/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 126,
+      "nonEmptyLines": 103,
+      "functions": [
+        {
+          "name": "errorMessage",
+          "startLine": 8,
+          "endLine": 10,
+          "params": [
+            "error"
+          ]
+        },
+        {
+          "name": "isE2eTestMode",
+          "startLine": 12,
+          "endLine": 14,
+          "params": []
+        },
+        {
+          "name": "toRow",
+          "startLine": 16,
+          "endLine": 33,
+          "params": [
+            "scenario"
+          ]
+        },
+        {
+          "name": "GET",
+          "startLine": 35,
+          "endLine": 60,
+          "params": []
+        },
+        {
+          "name": "POST",
+          "startLine": 62,
+          "endLine": 95,
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "name": "DELETE",
+          "startLine": 97,
+          "endLine": 126,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "GET",
+          "line": 35,
+          "isDefault": false
+        },
+        {
+          "name": "POST",
+          "line": 62,
+          "isDefault": false
+        },
+        {
+          "name": "DELETE",
+          "line": 97,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "toRow",
+          "callee": "JSON.stringify",
+          "lineNumber": 22
+        },
+        {
+          "caller": "toRow",
+          "callee": "JSON.stringify",
+          "lineNumber": 25
+        },
+        {
+          "caller": "toRow",
+          "callee": "JSON.stringify",
+          "lineNumber": 27
+        },
+        {
+          "caller": "toRow",
+          "callee": "JSON.stringify",
+          "lineNumber": 29
+        },
+        {
+          "caller": "toRow",
+          "callee": "new Date().toISOString",
+          "lineNumber": 30
+        },
+        {
+          "caller": "GET",
+          "callee": "getCurrentProfile",
+          "lineNumber": 36
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 37
+        },
+        {
+          "caller": "GET",
+          "callee": "isE2eTestMode",
+          "lineNumber": 39
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 40
+        },
+        {
+          "caller": "GET",
+          "callee": "createClient",
+          "lineNumber": 44
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\r\n      .from(\"scenarios\")\r\n      .select(\"*\")\r\n      .order",
+          "lineNumber": 45
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\r\n      .from(\"scenarios\")\r\n      .select",
+          "lineNumber": 45
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\r\n      .from",
+          "lineNumber": 45
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 52
+        },
+        {
+          "caller": "GET",
+          "callee": "(data ?? []).map",
+          "lineNumber": 52
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 54
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 55
+        },
+        {
+          "caller": "GET",
+          "callee": "errorMessage",
+          "lineNumber": 56
+        },
+        {
+          "caller": "POST",
+          "callee": "getCurrentProfile",
+          "lineNumber": 63
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 64
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 65
+        },
+        {
+          "caller": "POST",
+          "callee": "request.json",
+          "lineNumber": 68
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 71
+        },
+        {
+          "caller": "POST",
+          "callee": "isE2eTestMode",
+          "lineNumber": 74
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 75
+        },
+        {
+          "caller": "POST",
+          "callee": "createClient",
+          "lineNumber": 78
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\r\n      .from(\"scenarios\")\r\n      .upsert(toRow(scenario), { onConflict: \"id\" })\r\n      .select()\r\n      .single",
+          "lineNumber": 79
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\r\n      .from(\"scenarios\")\r\n      .upsert(toRow(scenario), { onConflict: \"id\" })\r\n      .select",
+          "lineNumber": 79
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\r\n      .from(\"scenarios\")\r\n      .upsert",
+          "lineNumber": 79
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\r\n      .from",
+          "lineNumber": 79
+        },
+        {
+          "caller": "POST",
+          "callee": "toRow",
+          "lineNumber": 81
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 87
+        },
+        {
+          "caller": "POST",
+          "callee": "mapRowToScenario",
+          "lineNumber": 87
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 89
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 90
+        },
+        {
+          "caller": "POST",
+          "callee": "errorMessage",
+          "lineNumber": 91
+        },
+        {
+          "caller": "DELETE",
+          "callee": "getCurrentProfile",
+          "lineNumber": 98
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 99
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 100
+        },
+        {
+          "caller": "DELETE",
+          "callee": "new URL(request.url).searchParams.get",
+          "lineNumber": 103
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 106
+        },
+        {
+          "caller": "DELETE",
+          "callee": "isE2eTestMode",
+          "lineNumber": 109
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 110
+        },
+        {
+          "caller": "DELETE",
+          "callee": "createClient",
+          "lineNumber": 113
+        },
+        {
+          "caller": "DELETE",
+          "callee": "supabase.from(\"scenarios\").delete().eq",
+          "lineNumber": 114
+        },
+        {
+          "caller": "DELETE",
+          "callee": "supabase.from(\"scenarios\").delete",
+          "lineNumber": 114
+        },
+        {
+          "caller": "DELETE",
+          "callee": "supabase.from",
+          "lineNumber": 114
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 118
+        },
+        {
+          "caller": "DELETE",
+          "callee": "console.error",
+          "lineNumber": 120
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 121
+        },
+        {
+          "caller": "DELETE",
+          "callee": "errorMessage",
+          "lineNumber": 122
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 3,
+        "functionCount": 6,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/vor/scenarios/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 93,
+      "nonEmptyLines": 82,
+      "functions": [
+        {
+          "name": "errorMessage",
+          "startLine": 10,
+          "endLine": 12,
+          "params": [
+            "error"
+          ]
+        },
+        {
+          "name": "GET",
+          "startLine": 14,
+          "endLine": 34,
+          "params": []
+        },
+        {
+          "name": "POST",
+          "startLine": 36,
+          "endLine": 66,
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "name": "DELETE",
+          "startLine": 68,
+          "endLine": 93,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "GET",
+          "line": 14,
+          "isDefault": false
+        },
+        {
+          "name": "POST",
+          "line": 36,
+          "isDefault": false
+        },
+        {
+          "name": "DELETE",
+          "line": 68,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "GET",
+          "callee": "getCurrentProfile",
+          "lineNumber": 15
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 16
+        },
+        {
+          "caller": "GET",
+          "callee": "createClient",
+          "lineNumber": 19
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from(\"vor_scenarios\")\n      .select(\"*\")\n      .order",
+          "lineNumber": 20
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from(\"vor_scenarios\")\n      .select",
+          "lineNumber": 20
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase\n      .from",
+          "lineNumber": 20
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 26
+        },
+        {
+          "caller": "GET",
+          "callee": "(data ?? []).map",
+          "lineNumber": 26
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 28
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 29
+        },
+        {
+          "caller": "GET",
+          "callee": "errorMessage",
+          "lineNumber": 30
+        },
+        {
+          "caller": "POST",
+          "callee": "getCurrentProfile",
+          "lineNumber": 37
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 38
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 39
+        },
+        {
+          "caller": "POST",
+          "callee": "request.json",
+          "lineNumber": 42
+        },
+        {
+          "caller": "POST",
+          "callee": "isVorScenario",
+          "lineNumber": 43
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 44
+        },
+        {
+          "caller": "POST",
+          "callee": "createClient",
+          "lineNumber": 50
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from(\"vor_scenarios\")\n      .upsert(vorScenarioToRow(payload), { onConflict: \"id\" })\n      .select()\n      .single",
+          "lineNumber": 51
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from(\"vor_scenarios\")\n      .upsert(vorScenarioToRow(payload), { onConflict: \"id\" })\n      .select",
+          "lineNumber": 51
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from(\"vor_scenarios\")\n      .upsert",
+          "lineNumber": 51
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from",
+          "lineNumber": 51
+        },
+        {
+          "caller": "POST",
+          "callee": "vorScenarioToRow",
+          "lineNumber": 53
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 58
+        },
+        {
+          "caller": "POST",
+          "callee": "mapRowToVorScenario",
+          "lineNumber": 58
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 60
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 61
+        },
+        {
+          "caller": "POST",
+          "callee": "errorMessage",
+          "lineNumber": 62
+        },
+        {
+          "caller": "DELETE",
+          "callee": "getCurrentProfile",
+          "lineNumber": 69
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 70
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 71
+        },
+        {
+          "caller": "DELETE",
+          "callee": "new URL(request.url).searchParams.get(\"id\")?.trim",
+          "lineNumber": 74
+        },
+        {
+          "caller": "DELETE",
+          "callee": "new URL(request.url).searchParams.get",
+          "lineNumber": 74
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 76
+        },
+        {
+          "caller": "DELETE",
+          "callee": "createClient",
+          "lineNumber": 79
+        },
+        {
+          "caller": "DELETE",
+          "callee": "supabase\n      .from(\"vor_scenarios\")\n      .delete()\n      .eq",
+          "lineNumber": 80
+        },
+        {
+          "caller": "DELETE",
+          "callee": "supabase\n      .from(\"vor_scenarios\")\n      .delete",
+          "lineNumber": 80
+        },
+        {
+          "caller": "DELETE",
+          "callee": "supabase\n      .from",
+          "lineNumber": 80
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 85
+        },
+        {
+          "caller": "DELETE",
+          "callee": "console.error",
+          "lineNumber": 87
+        },
+        {
+          "caller": "DELETE",
+          "callee": "NextResponse.json",
+          "lineNumber": 88
+        },
+        {
+          "caller": "DELETE",
+          "callee": "errorMessage",
+          "lineNumber": 89
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 3,
+        "functionCount": 4,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/api/vor/submissions/route.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 84,
+      "nonEmptyLines": 76,
+      "functions": [
+        {
+          "name": "errorMessage",
+          "startLine": 11,
+          "endLine": 13,
+          "params": [
+            "error"
+          ]
+        },
+        {
+          "name": "GET",
+          "startLine": 15,
+          "endLine": 45,
+          "params": [
+            "request"
+          ]
+        },
+        {
+          "name": "POST",
+          "startLine": 47,
+          "endLine": 84,
+          "params": [
+            "request"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "GET",
+          "line": 15,
+          "isDefault": false
+        },
+        {
+          "name": "POST",
+          "line": 47,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "GET",
+          "callee": "getCurrentProfile",
+          "lineNumber": 16
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 17
+        },
+        {
+          "caller": "GET",
+          "callee": "searchParams.get(\"scenarioId\")?.trim",
+          "lineNumber": 21
+        },
+        {
+          "caller": "GET",
+          "callee": "searchParams.get",
+          "lineNumber": 21
+        },
+        {
+          "caller": "GET",
+          "callee": "searchParams.get(\"status\")?.trim",
+          "lineNumber": 22
+        },
+        {
+          "caller": "GET",
+          "callee": "searchParams.get",
+          "lineNumber": 22
+        },
+        {
+          "caller": "GET",
+          "callee": "[\"draft\", \"submitted\", \"reviewed\"].includes",
+          "lineNumber": 23
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 24
+        },
+        {
+          "caller": "GET",
+          "callee": "createClient",
+          "lineNumber": 27
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase.from(\"vor_submissions\").select",
+          "lineNumber": 28
+        },
+        {
+          "caller": "GET",
+          "callee": "supabase.from",
+          "lineNumber": 28
+        },
+        {
+          "caller": "GET",
+          "callee": "query.eq",
+          "lineNumber": 29
+        },
+        {
+          "caller": "GET",
+          "callee": "query.eq",
+          "lineNumber": 30
+        },
+        {
+          "caller": "GET",
+          "callee": "query.order",
+          "lineNumber": 31
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 37
+        },
+        {
+          "caller": "GET",
+          "callee": "(data ?? []).map",
+          "lineNumber": 37
+        },
+        {
+          "caller": "GET",
+          "callee": "console.error",
+          "lineNumber": 39
+        },
+        {
+          "caller": "GET",
+          "callee": "NextResponse.json",
+          "lineNumber": 40
+        },
+        {
+          "caller": "GET",
+          "callee": "errorMessage",
+          "lineNumber": 41
+        },
+        {
+          "caller": "POST",
+          "callee": "getCurrentProfile",
+          "lineNumber": 48
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 49
+        },
+        {
+          "caller": "POST",
+          "callee": "request.json",
+          "lineNumber": 52
+        },
+        {
+          "caller": "POST",
+          "callee": "isVorSubmission",
+          "lineNumber": 53
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 54
+        },
+        {
+          "caller": "POST",
+          "callee": "createClient",
+          "lineNumber": 69
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from(\"vor_submissions\")\n      .upsert(vorSubmissionToRow(securedPayload), { onConflict: \"id\" })\n      .select()\n      .single",
+          "lineNumber": 70
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from(\"vor_submissions\")\n      .upsert(vorSubmissionToRow(securedPayload), { onConflict: \"id\" })\n      .select",
+          "lineNumber": 70
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from(\"vor_submissions\")\n      .upsert",
+          "lineNumber": 70
+        },
+        {
+          "caller": "POST",
+          "callee": "supabase\n      .from",
+          "lineNumber": 70
+        },
+        {
+          "caller": "POST",
+          "callee": "vorSubmissionToRow",
+          "lineNumber": 72
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 76
+        },
+        {
+          "caller": "POST",
+          "callee": "mapRowToVorSubmission",
+          "lineNumber": 76
+        },
+        {
+          "caller": "POST",
+          "callee": "console.error",
+          "lineNumber": 78
+        },
+        {
+          "caller": "POST",
+          "callee": "NextResponse.json",
+          "lineNumber": 79
+        },
+        {
+          "caller": "POST",
+          "callee": "errorMessage",
+          "lineNumber": 80
+        }
+      ],
+      "metrics": {
+        "importCount": 4,
+        "exportCount": 2,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/layout.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 34,
+      "nonEmptyLines": 31,
+      "functions": [
+        {
+          "name": "RootLayout",
+          "startLine": 17,
+          "endLine": 34,
+          "params": [
+            "{\n  children,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "metadata",
+          "line": 8,
+          "isDefault": false
+        },
+        {
+          "name": "RootLayout",
+          "line": 17,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "RootLayout",
+          "callee": "getCurrentProfile",
+          "lineNumber": 22
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/login/actions.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 305,
+      "nonEmptyLines": 269,
+      "functions": [
+        {
+          "name": "normalizeEmail",
+          "startLine": 26,
+          "endLine": 28,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "validEmail",
+          "startLine": 30,
+          "endLine": 32,
+          "params": [
+            "email"
+          ]
+        },
+        {
+          "name": "validPassword",
+          "startLine": 34,
+          "endLine": 36,
+          "params": [
+            "password"
+          ]
+        },
+        {
+          "name": "serverFailure",
+          "startLine": 38,
+          "endLine": 45,
+          "params": [
+            "context",
+            "error"
+          ]
+        },
+        {
+          "name": "loginAction",
+          "startLine": 47,
+          "endLine": 132,
+          "params": [
+            "input"
+          ]
+        },
+        {
+          "name": "signUpAction",
+          "startLine": 134,
+          "endLine": 178,
+          "params": [
+            "input"
+          ]
+        },
+        {
+          "name": "verifySignupOtpAction",
+          "startLine": 180,
+          "endLine": 200,
+          "params": [
+            "input"
+          ]
+        },
+        {
+          "name": "resendSignupOtpAction",
+          "startLine": 202,
+          "endLine": 218,
+          "params": [
+            "emailValue"
+          ]
+        },
+        {
+          "name": "requestPasswordResetAction",
+          "startLine": 220,
+          "endLine": 244,
+          "params": [
+            "emailValue"
+          ]
+        },
+        {
+          "name": "verifyRecoveryOtpAction",
+          "startLine": 246,
+          "endLine": 266,
+          "params": [
+            "input"
+          ]
+        },
+        {
+          "name": "updateRecoveredPasswordAction",
+          "startLine": 268,
+          "endLine": 294,
+          "params": [
+            "input"
+          ]
+        },
+        {
+          "name": "logoutAction",
+          "startLine": 296,
+          "endLine": 305,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "loginAction",
+          "line": 47,
+          "isDefault": false
+        },
+        {
+          "name": "signUpAction",
+          "line": 134,
+          "isDefault": false
+        },
+        {
+          "name": "verifySignupOtpAction",
+          "line": 180,
+          "isDefault": false
+        },
+        {
+          "name": "resendSignupOtpAction",
+          "line": 202,
+          "isDefault": false
+        },
+        {
+          "name": "requestPasswordResetAction",
+          "line": 220,
+          "isDefault": false
+        },
+        {
+          "name": "verifyRecoveryOtpAction",
+          "line": 246,
+          "isDefault": false
+        },
+        {
+          "name": "updateRecoveredPasswordAction",
+          "line": 268,
+          "isDefault": false
+        },
+        {
+          "name": "logoutAction",
+          "line": 296,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "normalizeEmail",
+          "callee": "value.trim().toLowerCase",
+          "lineNumber": 27
+        },
+        {
+          "caller": "normalizeEmail",
+          "callee": "value.trim",
+          "lineNumber": 27
+        },
+        {
+          "caller": "validEmail",
+          "callee": "ATTECH_EMAIL.test",
+          "lineNumber": 31
+        },
+        {
+          "caller": "validPassword",
+          "callee": "/[A-Za-z]/.test",
+          "lineNumber": 35
+        },
+        {
+          "caller": "validPassword",
+          "callee": "/\\d/.test",
+          "lineNumber": 35
+        },
+        {
+          "caller": "serverFailure",
+          "callee": "console.error",
+          "lineNumber": 39
+        },
+        {
+          "caller": "loginAction",
+          "callee": "input.username.trim().toLowerCase",
+          "lineNumber": 51
+        },
+        {
+          "caller": "loginAction",
+          "callee": "input.username.trim",
+          "lineNumber": 51
+        },
+        {
+          "caller": "loginAction",
+          "callee": "username.endsWith",
+          "lineNumber": 52
+        },
+        {
+          "caller": "loginAction",
+          "callee": "validEmail",
+          "lineNumber": 55
+        },
+        {
+          "caller": "loginAction",
+          "callee": "getLoginLockStatus",
+          "lineNumber": 60
+        },
+        {
+          "caller": "loginAction",
+          "callee": "createClient",
+          "lineNumber": 70
+        },
+        {
+          "caller": "loginAction",
+          "callee": "supabase.auth.signInWithPassword",
+          "lineNumber": 71
+        },
+        {
+          "caller": "loginAction",
+          "callee": "serverFailure",
+          "lineNumber": 91
+        },
+        {
+          "caller": "loginAction",
+          "callee": "recordFailedLogin",
+          "lineNumber": 94
+        },
+        {
+          "caller": "loginAction",
+          "callee": "attemptsRemaining",
+          "lineNumber": 107
+        },
+        {
+          "caller": "loginAction",
+          "callee": "clearFailedLogins",
+          "lineNumber": 111
+        },
+        {
+          "caller": "loginAction",
+          "callee": "supabase\n      .from(\"profiles\")\n      .select(\"role\")\n      .eq(\"id\", authData.user.id)\n      .single",
+          "lineNumber": 112
+        },
+        {
+          "caller": "loginAction",
+          "callee": "supabase\n      .from(\"profiles\")\n      .select(\"role\")\n      .eq",
+          "lineNumber": 112
+        },
+        {
+          "caller": "loginAction",
+          "callee": "supabase\n      .from(\"profiles\")\n      .select",
+          "lineNumber": 112
+        },
+        {
+          "caller": "loginAction",
+          "callee": "supabase\n      .from",
+          "lineNumber": 112
+        },
+        {
+          "caller": "loginAction",
+          "callee": "supabase.auth.signOut",
+          "lineNumber": 119
+        },
+        {
+          "caller": "loginAction",
+          "callee": "serverFailure",
+          "lineNumber": 120
+        },
+        {
+          "caller": "loginAction",
+          "callee": "serverFailure",
+          "lineNumber": 130
+        },
+        {
+          "caller": "signUpAction",
+          "callee": "normalizeEmail",
+          "lineNumber": 140
+        },
+        {
+          "caller": "signUpAction",
+          "callee": "input.fullName.trim",
+          "lineNumber": 141
+        },
+        {
+          "caller": "signUpAction",
+          "callee": "input.workUnit.trim",
+          "lineNumber": 142
+        },
+        {
+          "caller": "signUpAction",
+          "callee": "validEmail",
+          "lineNumber": 144
+        },
+        {
+          "caller": "signUpAction",
+          "callee": "validPassword",
+          "lineNumber": 150
+        },
+        {
+          "caller": "signUpAction",
+          "callee": "createClient",
+          "lineNumber": 155
+        },
+        {
+          "caller": "signUpAction",
+          "callee": "supabase.auth.signUp",
+          "lineNumber": 156
+        },
+        {
+          "caller": "signUpAction",
+          "callee": "serverFailure",
+          "lineNumber": 176
+        },
+        {
+          "caller": "verifySignupOtpAction",
+          "callee": "normalizeEmail",
+          "lineNumber": 184
+        },
+        {
+          "caller": "verifySignupOtpAction",
+          "callee": "input.token.trim",
+          "lineNumber": 185
+        },
+        {
+          "caller": "verifySignupOtpAction",
+          "callee": "validEmail",
+          "lineNumber": 186
+        },
+        {
+          "caller": "verifySignupOtpAction",
+          "callee": "/^\\d{6}$/.test",
+          "lineNumber": 186
+        },
+        {
+          "caller": "verifySignupOtpAction",
+          "callee": "createClient",
+          "lineNumber": 191
+        },
+        {
+          "caller": "verifySignupOtpAction",
+          "callee": "supabase.auth.verifyOtp",
+          "lineNumber": 192
+        },
+        {
+          "caller": "verifySignupOtpAction",
+          "callee": "serverFailure",
+          "lineNumber": 198
+        },
+        {
+          "caller": "resendSignupOtpAction",
+          "callee": "normalizeEmail",
+          "lineNumber": 203
+        },
+        {
+          "caller": "resendSignupOtpAction",
+          "callee": "validEmail",
+          "lineNumber": 204
+        },
+        {
+          "caller": "resendSignupOtpAction",
+          "callee": "createClient",
+          "lineNumber": 209
+        },
+        {
+          "caller": "resendSignupOtpAction",
+          "callee": "supabase.auth.resend",
+          "lineNumber": 210
+        },
+        {
+          "caller": "resendSignupOtpAction",
+          "callee": "serverFailure",
+          "lineNumber": 216
+        },
+        {
+          "caller": "requestPasswordResetAction",
+          "callee": "normalizeEmail",
+          "lineNumber": 221
+        },
+        {
+          "caller": "requestPasswordResetAction",
+          "callee": "validEmail",
+          "lineNumber": 222
+        },
+        {
+          "caller": "requestPasswordResetAction",
+          "callee": "createClient",
+          "lineNumber": 233
+        },
+        {
+          "caller": "requestPasswordResetAction",
+          "callee": "supabase.auth.resetPasswordForEmail",
+          "lineNumber": 234
+        },
+        {
+          "caller": "requestPasswordResetAction",
+          "callee": "console.error",
+          "lineNumber": 238
+        },
+        {
+          "caller": "requestPasswordResetAction",
+          "callee": "console.error",
+          "lineNumber": 241
+        },
+        {
+          "caller": "verifyRecoveryOtpAction",
+          "callee": "normalizeEmail",
+          "lineNumber": 250
+        },
+        {
+          "caller": "verifyRecoveryOtpAction",
+          "callee": "input.token.trim",
+          "lineNumber": 251
+        },
+        {
+          "caller": "verifyRecoveryOtpAction",
+          "callee": "validEmail",
+          "lineNumber": 252
+        },
+        {
+          "caller": "verifyRecoveryOtpAction",
+          "callee": "/^\\d{6}$/.test",
+          "lineNumber": 252
+        },
+        {
+          "caller": "verifyRecoveryOtpAction",
+          "callee": "createClient",
+          "lineNumber": 257
+        },
+        {
+          "caller": "verifyRecoveryOtpAction",
+          "callee": "supabase.auth.verifyOtp",
+          "lineNumber": 258
+        },
+        {
+          "caller": "verifyRecoveryOtpAction",
+          "callee": "serverFailure",
+          "lineNumber": 264
+        },
+        {
+          "caller": "updateRecoveredPasswordAction",
+          "callee": "validPassword",
+          "lineNumber": 271
+        },
+        {
+          "caller": "updateRecoveredPasswordAction",
+          "callee": "createClient",
+          "lineNumber": 276
+        },
+        {
+          "caller": "updateRecoveredPasswordAction",
+          "callee": "supabase.auth.getUser",
+          "lineNumber": 277
+        },
+        {
+          "caller": "updateRecoveredPasswordAction",
+          "callee": "supabase.auth.updateUser",
+          "lineNumber": 283
+        },
+        {
+          "caller": "updateRecoveredPasswordAction",
+          "callee": "clearFailedLogins",
+          "lineNumber": 288
+        },
+        {
+          "caller": "updateRecoveredPasswordAction",
+          "callee": "supabase.auth.signOut",
+          "lineNumber": 289
+        },
+        {
+          "caller": "updateRecoveredPasswordAction",
+          "callee": "serverFailure",
+          "lineNumber": 292
+        },
+        {
+          "caller": "logoutAction",
+          "callee": "createClient",
+          "lineNumber": 297
+        },
+        {
+          "caller": "logoutAction",
+          "callee": "supabase.auth.signOut",
+          "lineNumber": 298
+        },
+        {
+          "caller": "logoutAction",
+          "callee": "console.error",
+          "lineNumber": 300
+        },
+        {
+          "caller": "logoutAction",
+          "callee": "redirect",
+          "lineNumber": 304
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 8,
+        "functionCount": 12,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/login/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 17,
+      "nonEmptyLines": 14,
+      "functions": [
+        {
+          "name": "LoginPage",
+          "startLine": 12,
+          "endLine": 17,
+          "params": [
+            "{ searchParams }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "metadata",
+          "line": 4,
+          "isDefault": false
+        },
+        {
+          "name": "LoginPage",
+          "line": 12,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "LoginPage",
+          "callee": "Array.isArray",
+          "lineNumber": 14
+        },
+        {
+          "caller": "LoginPage",
+          "callee": "nextValue?.startsWith",
+          "lineNumber": 15
+        },
+        {
+          "caller": "LoginPage",
+          "callee": "nextValue.startsWith",
+          "lineNumber": 15
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 55,
+      "nonEmptyLines": 50,
+      "functions": [
+        {
+          "name": "Home",
+          "startLine": 7,
+          "endLine": 55,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "Home",
+          "line": 7,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "Home",
+          "callee": "process.env.NEXT_PUBLIC_SUPABASE_URL?.replace",
+          "lineNumber": 8
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/student/dme/session/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 17,
+      "nonEmptyLines": 13,
+      "functions": [
+        {
+          "name": "DmeStudentSessionPage",
+          "startLine": 10,
+          "endLine": 16,
+          "params": [
+            "{ searchParams }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "DmeStudentSessionPage",
+          "line": 10,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "DmeStudentSessionPage",
+          "callee": "Array.isArray",
+          "lineNumber": 12
+        },
+        {
+          "caller": "DmeStudentSessionPage",
+          "callee": "getCurrentProfile",
+          "lineNumber": 13
+        },
+        {
+          "caller": "DmeStudentSessionPage",
+          "callee": "redirect",
+          "lineNumber": 14
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/student/layout.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 8,
+      "nonEmptyLines": 7,
+      "functions": [
+        {
+          "name": "StudentLayout",
+          "startLine": 4,
+          "endLine": 8,
+          "params": [
+            "{ children }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "StudentLayout",
+          "line": 4,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "StudentLayout",
+          "callee": "getCurrentProfile",
+          "lineNumber": 5
+        },
+        {
+          "caller": "StudentLayout",
+          "callee": "redirect",
+          "lineNumber": 6
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/student/vor/session/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 15,
+      "nonEmptyLines": 13,
+      "functions": [
+        {
+          "name": "VorStudentSessionPage",
+          "startLine": 9,
+          "endLine": 15,
+          "params": [
+            "{ searchParams }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "VorStudentSessionPage",
+          "line": 9,
+          "isDefault": true
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "VorStudentSessionPage",
+          "callee": "Array.isArray",
+          "lineNumber": 11
+        },
+        {
+          "caller": "VorStudentSessionPage",
+          "callee": "getCurrentProfile",
+          "lineNumber": 12
+        },
+        {
+          "caller": "VorStudentSessionPage",
+          "callee": "redirect",
+          "lineNumber": 13
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/auth/auth-page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 577,
+      "nonEmptyLines": 539,
+      "functions": [
+        {
+          "name": "LoginSuccessOverlay",
+          "startLine": 46,
+          "endLine": 79,
+          "params": [
+            "{ reduceMotion }"
+          ]
+        },
+        {
+          "name": "Brand",
+          "startLine": 81,
+          "endLine": 92,
+          "params": []
+        },
+        {
+          "name": "FieldMessage",
+          "startLine": 94,
+          "endLine": 113,
+          "params": [
+            "{ result }"
+          ]
+        },
+        {
+          "name": "OtpFields",
+          "startLine": 115,
+          "endLine": 173,
+          "params": [
+            "{\n  value,\n  onChange,\n  disabled,\n}"
+          ]
+        },
+        {
+          "name": "PasswordField",
+          "startLine": 175,
+          "endLine": 221,
+          "params": [
+            "{\n  id,\n  label,\n  value,\n  onChange,\n  autoComplete,\n  compact = false,\n}"
+          ]
+        },
+        {
+          "name": "AuthPage",
+          "startLine": 223,
+          "endLine": 577,
+          "params": [
+            "{ nextPath }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "AuthPage",
+          "line": 223,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "LoginSuccessOverlay",
+          "callee": "Array.from(LOGIN_SUCCESS_MESSAGE).map",
+          "lineNumber": 59
+        },
+        {
+          "caller": "LoginSuccessOverlay",
+          "callee": "Array.from",
+          "lineNumber": 59
+        },
+        {
+          "caller": "OtpFields",
+          "callee": "useRef",
+          "lineNumber": 124
+        },
+        {
+          "caller": "updateDigit",
+          "callee": "rawValue.replace(/\\D/g, \"\").slice",
+          "lineNumber": 127
+        },
+        {
+          "caller": "updateDigit",
+          "callee": "rawValue.replace",
+          "lineNumber": 127
+        },
+        {
+          "caller": "updateDigit",
+          "callee": "onChange",
+          "lineNumber": 130
+        },
+        {
+          "caller": "updateDigit",
+          "callee": "refs.current[index + 1]?.focus",
+          "lineNumber": 131
+        },
+        {
+          "caller": "handleKeyDown",
+          "callee": "refs.current[index - 1]?.focus",
+          "lineNumber": 136
+        },
+        {
+          "caller": "handleKeyDown",
+          "callee": "refs.current[index - 1]?.focus",
+          "lineNumber": 138
+        },
+        {
+          "caller": "handleKeyDown",
+          "callee": "refs.current[index + 1]?.focus",
+          "lineNumber": 139
+        },
+        {
+          "caller": "handlePaste",
+          "callee": "event.clipboardData.getData(\"text\").replace(/\\D/g, \"\").slice",
+          "lineNumber": 143
+        },
+        {
+          "caller": "handlePaste",
+          "callee": "event.clipboardData.getData(\"text\").replace",
+          "lineNumber": 143
+        },
+        {
+          "caller": "handlePaste",
+          "callee": "event.clipboardData.getData",
+          "lineNumber": 143
+        },
+        {
+          "caller": "handlePaste",
+          "callee": "event.preventDefault",
+          "lineNumber": 145
+        },
+        {
+          "caller": "handlePaste",
+          "callee": "EMPTY_OTP.map",
+          "lineNumber": 146
+        },
+        {
+          "caller": "handlePaste",
+          "callee": "onChange",
+          "lineNumber": 147
+        },
+        {
+          "caller": "handlePaste",
+          "callee": "refs.current[Math.min(digits.length, 6) - 1]?.focus",
+          "lineNumber": 148
+        },
+        {
+          "caller": "handlePaste",
+          "callee": "Math.min",
+          "lineNumber": 148
+        },
+        {
+          "caller": "OtpFields",
+          "callee": "value.map",
+          "lineNumber": 153
+        },
+        {
+          "caller": "OtpFields",
+          "callee": "updateDigit",
+          "lineNumber": 160
+        },
+        {
+          "caller": "OtpFields",
+          "callee": "handleKeyDown",
+          "lineNumber": 161
+        },
+        {
+          "caller": "PasswordField",
+          "callee": "useState",
+          "lineNumber": 190
+        },
+        {
+          "caller": "PasswordField",
+          "callee": "onChange",
+          "lineNumber": 204
+        },
+        {
+          "caller": "PasswordField",
+          "callee": "setVisible",
+          "lineNumber": 212
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "useRouter",
+          "lineNumber": 224
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "useAnimationControls",
+          "lineNumber": 225
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "useReducedMotion",
+          "lineNumber": 226
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "useRef",
+          "lineNumber": 227
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "useState",
+          "lineNumber": 228
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "useState",
+          "lineNumber": 229
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "useState",
+          "lineNumber": 230
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "useState",
+          "lineNumber": 231
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "useState",
+          "lineNumber": 232
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "useState",
+          "lineNumber": 233
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "useState",
+          "lineNumber": 234
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "useState",
+          "lineNumber": 235
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "useState",
+          "lineNumber": 236
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "useState",
+          "lineNumber": 237
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "useState",
+          "lineNumber": 238
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "useState",
+          "lineNumber": 239
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "useState",
+          "lineNumber": 240
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "useState",
+          "lineNumber": 241
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "useEffect",
+          "lineNumber": 243
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "window.setInterval",
+          "lineNumber": 245
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "setResendCooldown",
+          "lineNumber": 246
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "Math.max",
+          "lineNumber": 246
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "window.clearInterval",
+          "lineNumber": 248
+        },
+        {
+          "caller": "switchView",
+          "callee": "setView",
+          "lineNumber": 252
+        },
+        {
+          "caller": "switchView",
+          "callee": "setResult",
+          "lineNumber": 253
+        },
+        {
+          "caller": "switchView",
+          "callee": "setOtp",
+          "lineNumber": 254
+        },
+        {
+          "caller": "flipAuthCard",
+          "callee": "switchView",
+          "lineNumber": 260
+        },
+        {
+          "caller": "flipAuthCard",
+          "callee": "setFlipping",
+          "lineNumber": 266
+        },
+        {
+          "caller": "flipAuthCard",
+          "callee": "flipControls.start",
+          "lineNumber": 269
+        },
+        {
+          "caller": "flipAuthCard",
+          "callee": "switchView",
+          "lineNumber": 274
+        },
+        {
+          "caller": "flipAuthCard",
+          "callee": "window.requestAnimationFrame",
+          "lineNumber": 275
+        },
+        {
+          "caller": "flipAuthCard",
+          "callee": "resolve",
+          "lineNumber": 275
+        },
+        {
+          "caller": "flipAuthCard",
+          "callee": "flipControls.set",
+          "lineNumber": 276
+        },
+        {
+          "caller": "flipAuthCard",
+          "callee": "flipControls.start",
+          "lineNumber": 277
+        },
+        {
+          "caller": "flipAuthCard",
+          "callee": "setFlipping",
+          "lineNumber": 284
+        },
+        {
+          "caller": "run",
+          "callee": "setPending",
+          "lineNumber": 289
+        },
+        {
+          "caller": "run",
+          "callee": "setResult",
+          "lineNumber": 290
+        },
+        {
+          "caller": "run",
+          "callee": "action",
+          "lineNumber": 292
+        },
+        {
+          "caller": "run",
+          "callee": "setPending",
+          "lineNumber": 294
+        },
+        {
+          "caller": "submitLogin",
+          "callee": "event.preventDefault",
+          "lineNumber": 299
+        },
+        {
+          "caller": "submitLogin",
+          "callee": "run",
+          "lineNumber": 300
+        },
+        {
+          "caller": "submitLogin",
+          "callee": "loginAction",
+          "lineNumber": 300
+        },
+        {
+          "caller": "submitLogin",
+          "callee": "setResult",
+          "lineNumber": 302
+        },
+        {
+          "caller": "submitLogin",
+          "callee": "setLoginSucceeded",
+          "lineNumber": 306
+        },
+        {
+          "caller": "submitLogin",
+          "callee": "window.setTimeout",
+          "lineNumber": 307
+        },
+        {
+          "caller": "submitLogin",
+          "callee": "router.replace",
+          "lineNumber": 309
+        },
+        {
+          "caller": "submitLogin",
+          "callee": "router.refresh",
+          "lineNumber": 310
+        },
+        {
+          "caller": "submitSignup",
+          "callee": "event.preventDefault",
+          "lineNumber": 314
+        },
+        {
+          "caller": "submitSignup",
+          "callee": "run",
+          "lineNumber": 315
+        },
+        {
+          "caller": "submitSignup",
+          "callee": "signUpAction",
+          "lineNumber": 315
+        },
+        {
+          "caller": "submitSignup",
+          "callee": "setResult",
+          "lineNumber": 316
+        },
+        {
+          "caller": "submitSignup",
+          "callee": "setPassword",
+          "lineNumber": 318
+        },
+        {
+          "caller": "submitSignup",
+          "callee": "setOtp",
+          "lineNumber": 319
+        },
+        {
+          "caller": "submitSignup",
+          "callee": "setResendCooldown",
+          "lineNumber": 320
+        },
+        {
+          "caller": "submitSignup",
+          "callee": "setView",
+          "lineNumber": 321
+        },
+        {
+          "caller": "submitSignupOtp",
+          "callee": "event.preventDefault",
+          "lineNumber": 326
+        },
+        {
+          "caller": "submitSignupOtp",
+          "callee": "run",
+          "lineNumber": 327
+        },
+        {
+          "caller": "submitSignupOtp",
+          "callee": "verifySignupOtpAction",
+          "lineNumber": 327
+        },
+        {
+          "caller": "submitSignupOtp",
+          "callee": "otp.join",
+          "lineNumber": 327
+        },
+        {
+          "caller": "submitSignupOtp",
+          "callee": "setResult",
+          "lineNumber": 328
+        },
+        {
+          "caller": "submitSignupOtp",
+          "callee": "router.replace",
+          "lineNumber": 330
+        },
+        {
+          "caller": "submitSignupOtp",
+          "callee": "router.refresh",
+          "lineNumber": 331
+        },
+        {
+          "caller": "resendSignupOtp",
+          "callee": "run",
+          "lineNumber": 337
+        },
+        {
+          "caller": "resendSignupOtp",
+          "callee": "resendSignupOtpAction",
+          "lineNumber": 337
+        },
+        {
+          "caller": "resendSignupOtp",
+          "callee": "setResult",
+          "lineNumber": 338
+        },
+        {
+          "caller": "resendSignupOtp",
+          "callee": "setResendCooldown",
+          "lineNumber": 339
+        },
+        {
+          "caller": "submitForgotPassword",
+          "callee": "event.preventDefault",
+          "lineNumber": 343
+        },
+        {
+          "caller": "submitForgotPassword",
+          "callee": "run",
+          "lineNumber": 344
+        },
+        {
+          "caller": "submitForgotPassword",
+          "callee": "requestPasswordResetAction",
+          "lineNumber": 344
+        },
+        {
+          "caller": "submitForgotPassword",
+          "callee": "setResult",
+          "lineNumber": 345
+        },
+        {
+          "caller": "submitForgotPassword",
+          "callee": "setOtp",
+          "lineNumber": 347
+        },
+        {
+          "caller": "submitForgotPassword",
+          "callee": "setResendCooldown",
+          "lineNumber": 348
+        },
+        {
+          "caller": "submitForgotPassword",
+          "callee": "setView",
+          "lineNumber": 349
+        },
+        {
+          "caller": "resendRecoveryOtp",
+          "callee": "run",
+          "lineNumber": 355
+        },
+        {
+          "caller": "resendRecoveryOtp",
+          "callee": "requestPasswordResetAction",
+          "lineNumber": 355
+        },
+        {
+          "caller": "resendRecoveryOtp",
+          "callee": "setResult",
+          "lineNumber": 356
+        },
+        {
+          "caller": "resendRecoveryOtp",
+          "callee": "setResendCooldown",
+          "lineNumber": 357
+        },
+        {
+          "caller": "submitRecoveryOtp",
+          "callee": "event.preventDefault",
+          "lineNumber": 361
+        },
+        {
+          "caller": "submitRecoveryOtp",
+          "callee": "run",
+          "lineNumber": 362
+        },
+        {
+          "caller": "submitRecoveryOtp",
+          "callee": "verifyRecoveryOtpAction",
+          "lineNumber": 362
+        },
+        {
+          "caller": "submitRecoveryOtp",
+          "callee": "otp.join",
+          "lineNumber": 362
+        },
+        {
+          "caller": "submitRecoveryOtp",
+          "callee": "setResult",
+          "lineNumber": 363
+        },
+        {
+          "caller": "submitRecoveryOtp",
+          "callee": "setOtp",
+          "lineNumber": 365
+        },
+        {
+          "caller": "submitRecoveryOtp",
+          "callee": "setView",
+          "lineNumber": 366
+        },
+        {
+          "caller": "submitNewPassword",
+          "callee": "event.preventDefault",
+          "lineNumber": 371
+        },
+        {
+          "caller": "submitNewPassword",
+          "callee": "setResult",
+          "lineNumber": 373
+        },
+        {
+          "caller": "submitNewPassword",
+          "callee": "run",
+          "lineNumber": 376
+        },
+        {
+          "caller": "submitNewPassword",
+          "callee": "updateRecoveredPasswordAction",
+          "lineNumber": 376
+        },
+        {
+          "caller": "submitNewPassword",
+          "callee": "setResult",
+          "lineNumber": 377
+        },
+        {
+          "caller": "submitNewPassword",
+          "callee": "setPassword",
+          "lineNumber": 379
+        },
+        {
+          "caller": "submitNewPassword",
+          "callee": "setNewPassword",
+          "lineNumber": 380
+        },
+        {
+          "caller": "submitNewPassword",
+          "callee": "setConfirmPassword",
+          "lineNumber": 381
+        },
+        {
+          "caller": "submitNewPassword",
+          "callee": "setView",
+          "lineNumber": 382
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "Boolean",
+          "lineNumber": 401
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "flipAuthCard",
+          "lineNumber": 466
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "flipAuthCard",
+          "lineNumber": 476
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "setUsername",
+          "lineNumber": 491
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "event.target.value.replace",
+          "lineNumber": 491
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "switchView",
+          "lineNumber": 501
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "setFullName",
+          "lineNumber": 511
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "setEmail",
+          "lineNumber": 515
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "setWorkUnit",
+          "lineNumber": 520
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "otp.join",
+          "lineNumber": 534
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "switchView",
+          "lineNumber": 540
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "setEmail",
+          "lineNumber": 550
+        },
+        {
+          "caller": "AuthPage",
+          "callee": "switchView",
+          "lineNumber": 556
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 6,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/home/home-media-carousel.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 213,
+      "nonEmptyLines": 193,
+      "functions": [
+        {
+          "name": "joinAssetUrl",
+          "startLine": 22,
+          "endLine": 24,
+          "params": [
+            "baseUrl",
+            "fileName"
+          ]
+        },
+        {
+          "name": "HomeMediaCarousel",
+          "startLine": 26,
+          "endLine": 213,
+          "params": [
+            "{ baseUrl }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "HomeMediaCarousel",
+          "line": 26,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "joinAssetUrl",
+          "callee": "baseUrl.replace",
+          "lineNumber": 23
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "useState",
+          "lineNumber": 27
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "useState",
+          "lineNumber": 28
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "useRef",
+          "lineNumber": 29
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "useRef",
+          "lineNumber": 30
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "useMemo",
+          "lineNumber": 31
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "mediaItems.map",
+          "lineNumber": 32
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "joinAssetUrl",
+          "lineNumber": 34
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "joinAssetUrl",
+          "lineNumber": 35
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "joinAssetUrl",
+          "lineNumber": 36
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "useCallback",
+          "lineNumber": 42
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "setActiveIndex",
+          "lineNumber": 43
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "useCallback",
+          "lineNumber": 46
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "setActiveIndex",
+          "lineNumber": 47
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "useEffect",
+          "lineNumber": 50
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "window.setTimeout",
+          "lineNumber": 52
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "Promise.allSettled",
+          "lineNumber": 53
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "items.flatMap((item) => [\n          item.posterUrl,\n          item.videoUrl,\n          ...(item.voiceUrl ? [item.voiceUrl] : []),\n        ]).map",
+          "lineNumber": 54
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "items.flatMap",
+          "lineNumber": 54
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "fetch",
+          "lineNumber": 59
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "response.arrayBuffer",
+          "lineNumber": 64
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "window.clearTimeout",
+          "lineNumber": 70
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "controller.abort",
+          "lineNumber": 71
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "useEffect",
+          "lineNumber": 75
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "audioRef.current?.pause",
+          "lineNumber": 80
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "audioRef.current.play().catch",
+          "lineNumber": 83
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "audioRef.current.play",
+          "lineNumber": 83
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "console.log",
+          "lineNumber": 83
+        },
+        {
+          "caller": "handlePlay",
+          "callee": "audioRef.current.play().catch",
+          "lineNumber": 90
+        },
+        {
+          "caller": "handlePlay",
+          "callee": "audioRef.current.play",
+          "lineNumber": 90
+        },
+        {
+          "caller": "handlePlay",
+          "callee": "console.log",
+          "lineNumber": 90
+        },
+        {
+          "caller": "handlePause",
+          "callee": "audioRef.current?.pause",
+          "lineNumber": 98
+        },
+        {
+          "caller": "handleSeeked",
+          "callee": "audioRef.current.play().catch",
+          "lineNumber": 111
+        },
+        {
+          "caller": "handleSeeked",
+          "callee": "audioRef.current.play",
+          "lineNumber": 111
+        },
+        {
+          "caller": "handleSeeked",
+          "callee": "console.log",
+          "lineNumber": 111
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "setIsVoiceOverEnabled",
+          "lineNumber": 158
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "items.map",
+          "lineNumber": 198
+        },
+        {
+          "caller": "HomeMediaCarousel",
+          "callee": "setActiveIndex",
+          "lineNumber": 204
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/layout/app-shell.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 487,
+      "nonEmptyLines": 452,
+      "functions": [
+        {
+          "name": "visibleNavigationItems",
+          "startLine": 59,
+          "endLine": 65,
+          "params": [
+            "role"
+          ]
+        },
+        {
+          "name": "BrandWordmark",
+          "startLine": 67,
+          "endLine": 82,
+          "params": []
+        },
+        {
+          "name": "isItemActive",
+          "startLine": 84,
+          "endLine": 91,
+          "params": [
+            "pathname",
+            "href"
+          ]
+        },
+        {
+          "name": "getWorkspaceSection",
+          "startLine": 93,
+          "endLine": 97,
+          "params": [
+            "href"
+          ]
+        },
+        {
+          "name": "isPathWithin",
+          "startLine": 99,
+          "endLine": 101,
+          "params": [
+            "pathname",
+            "href"
+          ]
+        },
+        {
+          "name": "ModuleSubTabs",
+          "startLine": 103,
+          "endLine": 180,
+          "params": [
+            "{\n  section,\n  pathname,\n  mobile = false,\n  onNavigate,\n}"
+          ]
+        },
+        {
+          "name": "MobileNavigation",
+          "startLine": 182,
+          "endLine": 223,
+          "params": [
+            "{ onNavigate, role }"
+          ]
+        },
+        {
+          "name": "DesktopNavigationRail",
+          "startLine": 225,
+          "endLine": 274,
+          "params": [
+            "{ role }"
+          ]
+        },
+        {
+          "name": "PageTransition",
+          "startLine": 276,
+          "endLine": 290,
+          "params": [
+            "{ children }"
+          ]
+        },
+        {
+          "name": "AppShell",
+          "startLine": 292,
+          "endLine": 487,
+          "params": [
+            "{ children, currentUser }"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "AppShell",
+          "line": 292,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "visibleNavigationItems",
+          "callee": "navigationItems.filter",
+          "lineNumber": 60
+        },
+        {
+          "caller": "visibleNavigationItems",
+          "callee": "item.href.startsWith",
+          "lineNumber": 61
+        },
+        {
+          "caller": "visibleNavigationItems",
+          "callee": "item.href.startsWith",
+          "lineNumber": 62
+        },
+        {
+          "caller": "visibleNavigationItems",
+          "callee": "Boolean",
+          "lineNumber": 62
+        },
+        {
+          "caller": "isItemActive",
+          "callee": "href.split",
+          "lineNumber": 89
+        },
+        {
+          "caller": "isItemActive",
+          "callee": "pathname.startsWith",
+          "lineNumber": 90
+        },
+        {
+          "caller": "getWorkspaceSection",
+          "callee": "href.startsWith",
+          "lineNumber": 94
+        },
+        {
+          "caller": "getWorkspaceSection",
+          "callee": "href.startsWith",
+          "lineNumber": 95
+        },
+        {
+          "caller": "isPathWithin",
+          "callee": "pathname.startsWith",
+          "lineNumber": 100
+        },
+        {
+          "caller": "ModuleSubTabs",
+          "callee": "items.map",
+          "lineNumber": 123
+        },
+        {
+          "caller": "ModuleSubTabs",
+          "callee": "isPathWithin",
+          "lineNumber": 124
+        },
+        {
+          "caller": "ModuleSubTabs",
+          "callee": "items.map",
+          "lineNumber": 159
+        },
+        {
+          "caller": "ModuleSubTabs",
+          "callee": "isPathWithin",
+          "lineNumber": 160
+        },
+        {
+          "caller": "MobileNavigation",
+          "callee": "usePathname",
+          "lineNumber": 186
+        },
+        {
+          "caller": "MobileNavigation",
+          "callee": "visibleNavigationItems(role).map",
+          "lineNumber": 190
+        },
+        {
+          "caller": "MobileNavigation",
+          "callee": "visibleNavigationItems",
+          "lineNumber": 190
+        },
+        {
+          "caller": "MobileNavigation",
+          "callee": "isItemActive",
+          "lineNumber": 191
+        },
+        {
+          "caller": "MobileNavigation",
+          "callee": "getWorkspaceSection",
+          "lineNumber": 193
+        },
+        {
+          "caller": "DesktopNavigationRail",
+          "callee": "usePathname",
+          "lineNumber": 226
+        },
+        {
+          "caller": "DesktopNavigationRail",
+          "callee": "visibleNavigationItems(role).map",
+          "lineNumber": 240
+        },
+        {
+          "caller": "DesktopNavigationRail",
+          "callee": "visibleNavigationItems",
+          "lineNumber": 240
+        },
+        {
+          "caller": "DesktopNavigationRail",
+          "callee": "isItemActive",
+          "lineNumber": 241
+        },
+        {
+          "caller": "DesktopNavigationRail",
+          "callee": "getWorkspaceSection",
+          "lineNumber": 242
+        },
+        {
+          "caller": "PageTransition",
+          "callee": "usePathname",
+          "lineNumber": 277
+        },
+        {
+          "caller": "AppShell",
+          "callee": "usePathname",
+          "lineNumber": 293
+        },
+        {
+          "caller": "AppShell",
+          "callee": "useState",
+          "lineNumber": 294
+        },
+        {
+          "caller": "AppShell",
+          "callee": "useState",
+          "lineNumber": 295
+        },
+        {
+          "caller": "signOut",
+          "callee": "setSigningOut",
+          "lineNumber": 302
+        },
+        {
+          "caller": "signOut",
+          "callee": "logoutAction",
+          "lineNumber": 304
+        },
+        {
+          "caller": "signOut",
+          "callee": "console.error",
+          "lineNumber": 306
+        },
+        {
+          "caller": "signOut",
+          "callee": "setSigningOut",
+          "lineNumber": 307
+        },
+        {
+          "caller": "AppShell",
+          "callee": "setMobileNavigationOpen",
+          "lineNumber": 379
+        },
+        {
+          "caller": "AppShell",
+          "callee": "setMobileNavigationOpen",
+          "lineNumber": 436
+        },
+        {
+          "caller": "AppShell",
+          "callee": "setMobileNavigationOpen",
+          "lineNumber": 445
+        },
+        {
+          "caller": "AppShell",
+          "callee": "setMobileNavigationOpen",
+          "lineNumber": 462
+        },
+        {
+          "caller": "AppShell",
+          "callee": "setMobileNavigationOpen",
+          "lineNumber": 467
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 10,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/ui/role-card.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 82,
+      "nonEmptyLines": 75,
+      "functions": [
+        {
+          "name": "RoleCard",
+          "startLine": 20,
+          "endLine": 82,
+          "params": [
+            "{\n  href,\n  title,\n  description,\n  action,\n  icon,\n  requiredRole,\n  accessDeniedMessage = \"Bạn không có quyền truy cập trang này\",\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "RoleCard",
+          "line": 20,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "RoleCard",
+          "callee": "useRouter",
+          "lineNumber": 29
+        },
+        {
+          "caller": "RoleCard",
+          "callee": "useState",
+          "lineNumber": 30
+        },
+        {
+          "caller": "handleClick",
+          "callee": "event.preventDefault",
+          "lineNumber": 35
+        },
+        {
+          "caller": "handleClick",
+          "callee": "setCheckingAccess",
+          "lineNumber": 37
+        },
+        {
+          "caller": "handleClick",
+          "callee": "hasRequiredRoleAction",
+          "lineNumber": 40
+        },
+        {
+          "caller": "handleClick",
+          "callee": "window.alert",
+          "lineNumber": 42
+        },
+        {
+          "caller": "handleClick",
+          "callee": "router.push",
+          "lineNumber": 45
+        },
+        {
+          "caller": "handleClick",
+          "callee": "window.alert",
+          "lineNumber": 47
+        },
+        {
+          "caller": "handleClick",
+          "callee": "setCheckingAccess",
+          "lineNumber": 49
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/lib/auth/login-lockout.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 66,
+      "nonEmptyLines": 54,
+      "functions": [
+        {
+          "name": "emailDigest",
+          "startLine": 14,
+          "endLine": 16,
+          "params": [
+            "email"
+          ]
+        },
+        {
+          "name": "statusFromRow",
+          "startLine": 18,
+          "endLine": 26,
+          "params": [
+            "row"
+          ]
+        },
+        {
+          "name": "getLoginLockStatus",
+          "startLine": 28,
+          "endLine": 38,
+          "params": [
+            "email"
+          ]
+        },
+        {
+          "name": "recordFailedLogin",
+          "startLine": 40,
+          "endLine": 52,
+          "params": [
+            "email"
+          ]
+        },
+        {
+          "name": "clearFailedLogins",
+          "startLine": 54,
+          "endLine": 62,
+          "params": [
+            "email"
+          ]
+        },
+        {
+          "name": "attemptsRemaining",
+          "startLine": 64,
+          "endLine": 66,
+          "params": [
+            "status"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "getLoginLockStatus",
+          "line": 28,
+          "isDefault": false
+        },
+        {
+          "name": "recordFailedLogin",
+          "line": 40,
+          "isDefault": false
+        },
+        {
+          "name": "clearFailedLogins",
+          "line": 54,
+          "isDefault": false
+        },
+        {
+          "name": "attemptsRemaining",
+          "line": 64,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "emailDigest",
+          "callee": "createHash(\"sha256\").update(email.trim().toLowerCase()).digest",
+          "lineNumber": 15
+        },
+        {
+          "caller": "emailDigest",
+          "callee": "createHash(\"sha256\").update",
+          "lineNumber": 15
+        },
+        {
+          "caller": "emailDigest",
+          "callee": "createHash",
+          "lineNumber": 15
+        },
+        {
+          "caller": "emailDigest",
+          "callee": "email.trim().toLowerCase",
+          "lineNumber": 15
+        },
+        {
+          "caller": "emailDigest",
+          "callee": "email.trim",
+          "lineNumber": 15
+        },
+        {
+          "caller": "statusFromRow",
+          "callee": "Boolean",
+          "lineNumber": 24
+        },
+        {
+          "caller": "statusFromRow",
+          "callee": "new Date(lockedUntil).getTime",
+          "lineNumber": 24
+        },
+        {
+          "caller": "statusFromRow",
+          "callee": "Date.now",
+          "lineNumber": 24
+        },
+        {
+          "caller": "getLoginLockStatus",
+          "callee": "createAdminClient",
+          "lineNumber": 29
+        },
+        {
+          "caller": "getLoginLockStatus",
+          "callee": "admin\n    .from(\"auth_login_attempts\")\n    .select(\"failed_count,locked_until\")\n    .eq(\"email_hash\", emailDigest(email))\n    .maybeSingle",
+          "lineNumber": 30
+        },
+        {
+          "caller": "getLoginLockStatus",
+          "callee": "admin\n    .from(\"auth_login_attempts\")\n    .select(\"failed_count,locked_until\")\n    .eq",
+          "lineNumber": 30
+        },
+        {
+          "caller": "getLoginLockStatus",
+          "callee": "admin\n    .from(\"auth_login_attempts\")\n    .select",
+          "lineNumber": 30
+        },
+        {
+          "caller": "getLoginLockStatus",
+          "callee": "admin\n    .from",
+          "lineNumber": 30
+        },
+        {
+          "caller": "getLoginLockStatus",
+          "callee": "emailDigest",
+          "lineNumber": 33
+        },
+        {
+          "caller": "getLoginLockStatus",
+          "callee": "statusFromRow",
+          "lineNumber": 37
+        },
+        {
+          "caller": "recordFailedLogin",
+          "callee": "createAdminClient",
+          "lineNumber": 41
+        },
+        {
+          "caller": "recordFailedLogin",
+          "callee": "admin.rpc",
+          "lineNumber": 42
+        },
+        {
+          "caller": "recordFailedLogin",
+          "callee": "emailDigest",
+          "lineNumber": 43
+        },
+        {
+          "caller": "recordFailedLogin",
+          "callee": "statusFromRow",
+          "lineNumber": 48
+        },
+        {
+          "caller": "clearFailedLogins",
+          "callee": "createAdminClient",
+          "lineNumber": 55
+        },
+        {
+          "caller": "clearFailedLogins",
+          "callee": "admin\n    .from(\"auth_login_attempts\")\n    .delete()\n    .eq",
+          "lineNumber": 56
+        },
+        {
+          "caller": "clearFailedLogins",
+          "callee": "admin\n    .from(\"auth_login_attempts\")\n    .delete",
+          "lineNumber": 56
+        },
+        {
+          "caller": "clearFailedLogins",
+          "callee": "admin\n    .from",
+          "lineNumber": 56
+        },
+        {
+          "caller": "clearFailedLogins",
+          "callee": "emailDigest",
+          "lineNumber": 59
+        },
+        {
+          "caller": "attemptsRemaining",
+          "callee": "Math.max",
+          "lineNumber": 65
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 4,
+        "functionCount": 6,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/lib/auth/profile.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 66,
+      "nonEmptyLines": 55,
+      "functions": [
+        {
+          "name": "getCurrentUserId",
+          "startLine": 61,
+          "endLine": 66,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "getCurrentProfile",
+          "line": 17,
+          "isDefault": false
+        },
+        {
+          "name": "getCurrentUserId",
+          "line": 61,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "getCurrentUserId",
+          "callee": "createClient",
+          "lineNumber": 62
+        },
+        {
+          "caller": "getCurrentUserId",
+          "callee": "supabase.auth.getClaims",
+          "lineNumber": 63
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/lib/supabase/admin.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 20,
+      "nonEmptyLines": 16,
+      "functions": [
+        {
+          "name": "createAdminClient",
+          "startLine": 5,
+          "endLine": 20,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "createAdminClient",
+          "line": 5,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "createAdminClient",
+          "callee": "createSupabaseClient",
+          "lineNumber": 13
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/lib/supabase/server.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 37,
+      "nonEmptyLines": 31,
+      "functions": [
+        {
+          "name": "publicSupabaseConfig",
+          "startLine": 6,
+          "endLine": 15,
+          "params": []
+        },
+        {
+          "name": "createClient",
+          "startLine": 17,
+          "endLine": 37,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "createClient",
+          "line": 17,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "createClient",
+          "callee": "publicSupabaseConfig",
+          "lineNumber": 18
+        },
+        {
+          "caller": "createClient",
+          "callee": "cookies",
+          "lineNumber": 19
+        },
+        {
+          "caller": "createClient",
+          "callee": "createServerClient",
+          "lineNumber": 21
+        },
+        {
+          "caller": "getAll",
+          "callee": "cookieStore.getAll",
+          "lineNumber": 24
+        },
+        {
+          "caller": "setAll",
+          "callee": "cookiesToSet.forEach",
+          "lineNumber": 28
+        },
+        {
+          "caller": "setAll",
+          "callee": "cookieStore.set",
+          "lineNumber": 29
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "tests/auth/login-actions.test.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 76,
+      "nonEmptyLines": 66,
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "tests/layout/app-shell.test.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 148,
+      "nonEmptyLines": 133,
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "tests/layout/home-media-carousel.test.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 24,
+      "nonEmptyLines": 19,
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "tests/layout/home-page.test.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 80,
+      "nonEmptyLines": 69,
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    }
+  ]
+}

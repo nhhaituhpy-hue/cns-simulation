@@ -1,0 +1,3335 @@
+{
+  "scriptCompleted": true,
+  "filesAnalyzed": 27,
+  "filesSkipped": [],
+  "analysisOutcomes": {
+    "structure": {
+      "succeeded": 27,
+      "failed": 0
+    },
+    "callGraph": {
+      "succeeded": 27,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "results": [
+    {
+      "path": "src/app/admin/ads-b/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 5,
+      "nonEmptyLines": 4,
+      "functions": [
+        {
+          "name": "AdsbAdminDashboardPage",
+          "startLine": 3,
+          "endLine": 5,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "AdsbAdminDashboardPage",
+          "line": 3,
+          "isDefault": true
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/admin/dme/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 5,
+      "nonEmptyLines": 4,
+      "functions": [
+        {
+          "name": "DmeAdminDashboardPage",
+          "startLine": 3,
+          "endLine": 5,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "DmeAdminDashboardPage",
+          "line": 3,
+          "isDefault": true
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/admin/vor/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 5,
+      "nonEmptyLines": 4,
+      "functions": [
+        {
+          "name": "VorAdminDashboardPage",
+          "startLine": 3,
+          "endLine": 5,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "VorAdminDashboardPage",
+          "line": 3,
+          "isDefault": true
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/student/ads-b/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 5,
+      "nonEmptyLines": 4,
+      "functions": [
+        {
+          "name": "AdsbStudentDashboardPage",
+          "startLine": 3,
+          "endLine": 5,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "AdsbStudentDashboardPage",
+          "line": 3,
+          "isDefault": true
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/student/dme/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 5,
+      "nonEmptyLines": 4,
+      "functions": [
+        {
+          "name": "DmeStudentDashboardPage",
+          "startLine": 3,
+          "endLine": 5,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "DmeStudentDashboardPage",
+          "line": 3,
+          "isDefault": true
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/student/loading.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 6,
+      "nonEmptyLines": 4,
+      "functions": [
+        {
+          "name": "StudentLoading",
+          "startLine": 3,
+          "endLine": 5,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "StudentLoading",
+          "line": 3,
+          "isDefault": true
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/app/student/vor/page.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 5,
+      "nonEmptyLines": 4,
+      "functions": [
+        {
+          "name": "VorStudentDashboardPage",
+          "startLine": 3,
+          "endLine": 5,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "VorStudentDashboardPage",
+          "line": 3,
+          "isDefault": true
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/admin/admin-dashboard.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 252,
+      "nonEmptyLines": 232,
+      "functions": [
+        {
+          "name": "AdminDashboard",
+          "startLine": 65,
+          "endLine": 252,
+          "params": [
+            "{\n  activeModule = \"vor\",\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "CnsModule",
+          "line": 63,
+          "isDefault": false
+        },
+        {
+          "name": "AdminDashboard",
+          "line": 65,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "AdminDashboard",
+          "callee": "useScenarioStore",
+          "lineNumber": 70
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "useScenarioStore",
+          "lineNumber": 71
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "useScenarioStore",
+          "lineNumber": 72
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "useScenarioStore",
+          "lineNumber": 73
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "useScenarioStore",
+          "lineNumber": 74
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "useState",
+          "lineNumber": 75
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "useState",
+          "lineNumber": 76
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "useEffect",
+          "lineNumber": 78
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "hydrate",
+          "lineNumber": 79
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "useMemo",
+          "lineNumber": 82
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "sortScenariosByRecency",
+          "lineNumber": 83
+        },
+        {
+          "caller": "confirmDelete",
+          "callee": "deleteScenario",
+          "lineNumber": 90
+        },
+        {
+          "caller": "confirmDelete",
+          "callee": "setDeleteError",
+          "lineNumber": 92
+        },
+        {
+          "caller": "confirmDelete",
+          "callee": "setDeleteError",
+          "lineNumber": 94
+        },
+        {
+          "caller": "confirmDelete",
+          "callee": "setScenarioToDelete",
+          "lineNumber": 96
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "formatScenarioNumber",
+          "lineNumber": 191
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "dateFormatter.format",
+          "lineNumber": 210
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "setScenarioToDelete",
+          "lineNumber": 224
+        },
+        {
+          "caller": "AdminDashboard",
+          "callee": "setScenarioToDelete",
+          "lineNumber": 244
+        }
+      ],
+      "metrics": {
+        "importCount": 8,
+        "exportCount": 2,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/admin/delete-scenario-dialog.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 83,
+      "nonEmptyLines": 76,
+      "functions": [
+        {
+          "name": "DeleteScenarioDialog",
+          "startLine": 12,
+          "endLine": 83,
+          "params": [
+            "{\n  scenarioTitle,\n  onCancel,\n  onConfirm,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "DeleteScenarioDialog",
+          "line": 12,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "DeleteScenarioDialog",
+          "callee": "useRef",
+          "lineNumber": 17
+        },
+        {
+          "caller": "DeleteScenarioDialog",
+          "callee": "useEffect",
+          "lineNumber": 19
+        },
+        {
+          "caller": "DeleteScenarioDialog",
+          "callee": "dialog.showModal",
+          "lineNumber": 24
+        },
+        {
+          "caller": "DeleteScenarioDialog",
+          "callee": "dialog.setAttribute",
+          "lineNumber": 26
+        },
+        {
+          "caller": "DeleteScenarioDialog",
+          "callee": "dialog.close",
+          "lineNumber": 31
+        },
+        {
+          "caller": "DeleteScenarioDialog",
+          "callee": "event.preventDefault",
+          "lineNumber": 42
+        },
+        {
+          "caller": "DeleteScenarioDialog",
+          "callee": "onCancel",
+          "lineNumber": 43
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/dme/admin/dme-admin-dashboard.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 189,
+      "nonEmptyLines": 177,
+      "functions": [
+        {
+          "name": "DmeAdminDashboard",
+          "startLine": 37,
+          "endLine": 189,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "DmeAdminDashboard",
+          "line": 37,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "DmeAdminDashboard",
+          "callee": "useDmeScenarioStore",
+          "lineNumber": 38
+        },
+        {
+          "caller": "DmeAdminDashboard",
+          "callee": "useDmeScenarioStore",
+          "lineNumber": 39
+        },
+        {
+          "caller": "DmeAdminDashboard",
+          "callee": "useDmeScenarioStore",
+          "lineNumber": 40
+        },
+        {
+          "caller": "DmeAdminDashboard",
+          "callee": "useDmeScenarioStore",
+          "lineNumber": 41
+        },
+        {
+          "caller": "DmeAdminDashboard",
+          "callee": "useDmeScenarioStore",
+          "lineNumber": 42
+        },
+        {
+          "caller": "DmeAdminDashboard",
+          "callee": "useDmeSubmissionStore",
+          "lineNumber": 43
+        },
+        {
+          "caller": "DmeAdminDashboard",
+          "callee": "useDmeSubmissionStore",
+          "lineNumber": 44
+        },
+        {
+          "caller": "DmeAdminDashboard",
+          "callee": "useEffect",
+          "lineNumber": 46
+        },
+        {
+          "caller": "DmeAdminDashboard",
+          "callee": "hydrate",
+          "lineNumber": 47
+        },
+        {
+          "caller": "DmeAdminDashboard",
+          "callee": "hydrateSubmissions",
+          "lineNumber": 48
+        },
+        {
+          "caller": "DmeAdminDashboard",
+          "callee": "submissions.filter",
+          "lineNumber": 51
+        },
+        {
+          "caller": "DmeAdminDashboard",
+          "callee": "String(rowIndex + 1).padStart",
+          "lineNumber": 135
+        },
+        {
+          "caller": "DmeAdminDashboard",
+          "callee": "String",
+          "lineNumber": 135
+        },
+        {
+          "caller": "DmeAdminDashboard",
+          "callee": "new Date(scenario.createdAt).toLocaleDateString",
+          "lineNumber": 154
+        },
+        {
+          "caller": "DmeAdminDashboard",
+          "callee": "encodeURIComponent",
+          "lineNumber": 159
+        },
+        {
+          "caller": "DmeAdminDashboard",
+          "callee": "window.confirm",
+          "lineNumber": 169
+        },
+        {
+          "caller": "DmeAdminDashboard",
+          "callee": "deleteScenario",
+          "lineNumber": 170
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/qcms/student-dashboard.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 181,
+      "nonEmptyLines": 164,
+      "functions": [
+        {
+          "name": "ScenarioCells",
+          "startLine": 36,
+          "endLine": 95,
+          "params": [
+            "{\n  scenario,\n  index,\n}"
+          ]
+        },
+        {
+          "name": "StudentDashboard",
+          "startLine": 99,
+          "endLine": 181,
+          "params": [
+            "{\n  activeModule = \"vor\",\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "StudentDashboard",
+          "line": 99,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "ScenarioCells",
+          "callee": "countScenarioSensors",
+          "lineNumber": 44
+        },
+        {
+          "caller": "ScenarioCells",
+          "callee": "formatScenarioNumber",
+          "lineNumber": 53
+        },
+        {
+          "caller": "ScenarioCells",
+          "callee": "encodeURIComponent",
+          "lineNumber": 85
+        },
+        {
+          "caller": "StudentDashboard",
+          "callee": "useScenarioStore",
+          "lineNumber": 104
+        },
+        {
+          "caller": "StudentDashboard",
+          "callee": "useMemo",
+          "lineNumber": 105
+        },
+        {
+          "caller": "StudentDashboard",
+          "callee": "sortScenariosByRecency",
+          "lineNumber": 106
+        },
+        {
+          "caller": "StudentDashboard",
+          "callee": "useEffect",
+          "lineNumber": 110
+        },
+        {
+          "caller": "StudentDashboard",
+          "callee": "hydrate",
+          "lineNumber": 111
+        }
+      ],
+      "metrics": {
+        "importCount": 9,
+        "exportCount": 1,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/qcms/student-loading.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 61,
+      "nonEmptyLines": 60,
+      "functions": [
+        {
+          "name": "StudentDashboardLoading",
+          "startLine": 1,
+          "endLine": 44,
+          "params": []
+        },
+        {
+          "name": "ScenarioMonitorLoading",
+          "startLine": 46,
+          "endLine": 61,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "StudentDashboardLoading",
+          "line": 1,
+          "isDefault": false
+        },
+        {
+          "name": "ScenarioMonitorLoading",
+          "line": 46,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "StudentDashboardLoading",
+          "callee": "Array.from",
+          "lineNumber": 25
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/ui/exam-workspace.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 196,
+      "nonEmptyLines": 186,
+      "functions": [
+        {
+          "name": "WorkspaceHeader",
+          "startLine": 26,
+          "endLine": 67,
+          "params": [
+            "{\n  role,\n  title,\n  description,\n}"
+          ]
+        },
+        {
+          "name": "ModuleSummary",
+          "startLine": 69,
+          "endLine": 104,
+          "params": [
+            "{\n  title,\n  description,\n  icon: SummaryIcon = Broadcast,\n  actions,\n}"
+          ]
+        },
+        {
+          "name": "ScenarioSectionHeader",
+          "startLine": 106,
+          "endLine": 138,
+          "params": [
+            "{\n  id,\n  title,\n  description,\n  count,\n  countLabel,\n}"
+          ]
+        },
+        {
+          "name": "ScenarioListFrame",
+          "startLine": 140,
+          "endLine": 146,
+          "params": [
+            "{ children }"
+          ]
+        },
+        {
+          "name": "LoadingRows",
+          "startLine": 148,
+          "endLine": 169,
+          "params": [
+            "{ label }"
+          ]
+        },
+        {
+          "name": "EmptyState",
+          "startLine": 171,
+          "endLine": 196,
+          "params": [
+            "{\n  icon,\n  title,\n  description,\n  action,\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "WorkspaceHeader",
+          "line": 26,
+          "isDefault": false
+        },
+        {
+          "name": "ModuleSummary",
+          "line": 69,
+          "isDefault": false
+        },
+        {
+          "name": "ScenarioSectionHeader",
+          "line": 106,
+          "isDefault": false
+        },
+        {
+          "name": "ScenarioListFrame",
+          "line": 140,
+          "isDefault": false
+        },
+        {
+          "name": "LoadingRows",
+          "line": 148,
+          "isDefault": false
+        },
+        {
+          "name": "EmptyState",
+          "line": 171,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "LoadingRows",
+          "callee": "[0, 1, 2].map",
+          "lineNumber": 157
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 6,
+        "functionCount": 6,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/ui/scenario-data-table.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 199,
+      "nonEmptyLines": 184,
+      "functions": [
+        {
+          "name": "normalizeSearchValue",
+          "startLine": 25,
+          "endLine": 33,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "ScenarioDataTable",
+          "startLine": 35,
+          "endLine": 199,
+          "params": [
+            "{\n  items,\n  caption,\n  columns,\n  renderCells,\n  searchLabel = \"Tìm nhanh theo tiêu đề kịch bản\",\n  emptySearchMessage = \"Không tìm thấy kịch bản phù hợp với tiêu đề đã nhập.\",\n}"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "SCENARIOS_PER_PAGE",
+          "line": 8,
+          "isDefault": false
+        },
+        {
+          "name": "ScenarioDataTable",
+          "line": 35,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "normalizeSearchValue",
+          "callee": "value\n    .normalize(\"NFD\")\n    .replace(/\\p{Diacritic}/gu, \"\")\n    .replace(/đ/g, \"d\")\n    .replace(/Đ/g, \"D\")\n    .toLocaleLowerCase(\"vi-VN\")\n    .trim",
+          "lineNumber": 26
+        },
+        {
+          "caller": "normalizeSearchValue",
+          "callee": "value\n    .normalize(\"NFD\")\n    .replace(/\\p{Diacritic}/gu, \"\")\n    .replace(/đ/g, \"d\")\n    .replace(/Đ/g, \"D\")\n    .toLocaleLowerCase",
+          "lineNumber": 26
+        },
+        {
+          "caller": "normalizeSearchValue",
+          "callee": "value\n    .normalize(\"NFD\")\n    .replace(/\\p{Diacritic}/gu, \"\")\n    .replace(/đ/g, \"d\")\n    .replace",
+          "lineNumber": 26
+        },
+        {
+          "caller": "normalizeSearchValue",
+          "callee": "value\n    .normalize(\"NFD\")\n    .replace(/\\p{Diacritic}/gu, \"\")\n    .replace",
+          "lineNumber": 26
+        },
+        {
+          "caller": "normalizeSearchValue",
+          "callee": "value\n    .normalize(\"NFD\")\n    .replace",
+          "lineNumber": 26
+        },
+        {
+          "caller": "normalizeSearchValue",
+          "callee": "value\n    .normalize",
+          "lineNumber": 26
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "useId",
+          "lineNumber": 43
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "useState",
+          "lineNumber": 44
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "useState",
+          "lineNumber": 45
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "normalizeSearchValue",
+          "lineNumber": 46
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "useMemo",
+          "lineNumber": 48
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "items.filter",
+          "lineNumber": 50
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "normalizeSearchValue(item.title).includes",
+          "lineNumber": 51
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "normalizeSearchValue",
+          "lineNumber": 51
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "Math.max",
+          "lineNumber": 55
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "Math.ceil",
+          "lineNumber": 57
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "Math.min",
+          "lineNumber": 59
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "filteredItems.slice",
+          "lineNumber": 61
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "Math.min",
+          "lineNumber": 66
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "setQuery",
+          "lineNumber": 87
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "setRequestedPage",
+          "lineNumber": 88
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "columns.map",
+          "lineNumber": 110
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "visibleItems.map",
+          "lineNumber": 122
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "renderCells",
+          "lineNumber": 127
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "setRequestedPage",
+          "lineNumber": 155
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "Math.max",
+          "lineNumber": 155
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "Array.from({ length: totalPages }, (_, index) => index + 1).map",
+          "lineNumber": 164
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "Array.from",
+          "lineNumber": 164
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "setRequestedPage",
+          "lineNumber": 169
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "setRequestedPage",
+          "lineNumber": 186
+        },
+        {
+          "caller": "ScenarioDataTable",
+          "callee": "Math.min",
+          "lineNumber": 186
+        }
+      ],
+      "metrics": {
+        "importCount": 0,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/components/vor/admin/vor-admin-dashboard.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 189,
+      "nonEmptyLines": 177,
+      "functions": [
+        {
+          "name": "VorAdminDashboard",
+          "startLine": 37,
+          "endLine": 189,
+          "params": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "VorAdminDashboard",
+          "line": 37,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "VorAdminDashboard",
+          "callee": "useVorScenarioStore",
+          "lineNumber": 38
+        },
+        {
+          "caller": "VorAdminDashboard",
+          "callee": "useVorScenarioStore",
+          "lineNumber": 39
+        },
+        {
+          "caller": "VorAdminDashboard",
+          "callee": "useVorScenarioStore",
+          "lineNumber": 40
+        },
+        {
+          "caller": "VorAdminDashboard",
+          "callee": "useVorScenarioStore",
+          "lineNumber": 41
+        },
+        {
+          "caller": "VorAdminDashboard",
+          "callee": "useVorScenarioStore",
+          "lineNumber": 42
+        },
+        {
+          "caller": "VorAdminDashboard",
+          "callee": "useVorSubmissionStore",
+          "lineNumber": 43
+        },
+        {
+          "caller": "VorAdminDashboard",
+          "callee": "useVorSubmissionStore",
+          "lineNumber": 44
+        },
+        {
+          "caller": "VorAdminDashboard",
+          "callee": "useEffect",
+          "lineNumber": 46
+        },
+        {
+          "caller": "VorAdminDashboard",
+          "callee": "hydrate",
+          "lineNumber": 47
+        },
+        {
+          "caller": "VorAdminDashboard",
+          "callee": "hydrateSubmissions",
+          "lineNumber": 48
+        },
+        {
+          "caller": "VorAdminDashboard",
+          "callee": "submissions.filter",
+          "lineNumber": 51
+        },
+        {
+          "caller": "VorAdminDashboard",
+          "callee": "String(rowIndex + 1).padStart",
+          "lineNumber": 135
+        },
+        {
+          "caller": "VorAdminDashboard",
+          "callee": "String",
+          "lineNumber": 135
+        },
+        {
+          "caller": "VorAdminDashboard",
+          "callee": "new Date(scenario.createdAt).toLocaleDateString",
+          "lineNumber": 154
+        },
+        {
+          "caller": "VorAdminDashboard",
+          "callee": "encodeURIComponent",
+          "lineNumber": 159
+        },
+        {
+          "caller": "VorAdminDashboard",
+          "callee": "window.confirm",
+          "lineNumber": 169
+        },
+        {
+          "caller": "VorAdminDashboard",
+          "callee": "deleteScenario",
+          "lineNumber": 170
+        }
+      ],
+      "metrics": {
+        "importCount": 5,
+        "exportCount": 1,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/lib/scenario-normalization.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 46,
+      "nonEmptyLines": 39,
+      "functions": [
+        {
+          "name": "isRecord",
+          "startLine": 3,
+          "endLine": 5,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "normalizeScenario",
+          "startLine": 8,
+          "endLine": 42,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "normalizeScenarioList",
+          "startLine": 44,
+          "endLine": 46,
+          "params": [
+            "values"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "normalizeScenario",
+          "line": 8,
+          "isDefault": false
+        },
+        {
+          "name": "normalizeScenarioList",
+          "line": 44,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "isRecord",
+          "callee": "Array.isArray",
+          "lineNumber": 4
+        },
+        {
+          "caller": "normalizeScenario",
+          "callee": "isRecord",
+          "lineNumber": 9
+        },
+        {
+          "caller": "normalizeScenario",
+          "callee": "isRecord",
+          "lineNumber": 9
+        },
+        {
+          "caller": "normalizeScenario",
+          "callee": "Array.isArray",
+          "lineNumber": 17
+        },
+        {
+          "caller": "normalizeScenario",
+          "callee": "Array.isArray",
+          "lineNumber": 28
+        },
+        {
+          "caller": "normalizeScenario",
+          "callee": "hardwareFault.hardwareLayout.map",
+          "lineNumber": 29
+        },
+        {
+          "caller": "normalizeScenario",
+          "callee": "isRecord",
+          "lineNumber": 30
+        },
+        {
+          "caller": "normalizeScenarioList",
+          "callee": "values.map",
+          "lineNumber": 45
+        },
+        {
+          "caller": "normalizeScenarioList",
+          "callee": "normalizeScenario",
+          "lineNumber": 45
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 3,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/lib/scenario-order.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 17,
+      "nonEmptyLines": 14,
+      "functions": [
+        {
+          "name": "sortScenariosByRecency",
+          "startLine": 3,
+          "endLine": 13,
+          "params": [
+            "scenarios"
+          ]
+        },
+        {
+          "name": "formatScenarioNumber",
+          "startLine": 15,
+          "endLine": 17,
+          "params": [
+            "index"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "sortScenariosByRecency",
+          "line": 3,
+          "isDefault": false
+        },
+        {
+          "name": "formatScenarioNumber",
+          "line": 15,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "sortScenariosByRecency",
+          "callee": "[...scenarios].sort",
+          "lineNumber": 6
+        },
+        {
+          "caller": "sortScenariosByRecency",
+          "callee": "rightDate.localeCompare",
+          "lineNumber": 9
+        },
+        {
+          "caller": "sortScenariosByRecency",
+          "callee": "left.id.localeCompare",
+          "lineNumber": 11
+        },
+        {
+          "caller": "formatScenarioNumber",
+          "callee": "String(index + 1).padStart",
+          "lineNumber": 16
+        },
+        {
+          "caller": "formatScenarioNumber",
+          "callee": "String",
+          "lineNumber": 16
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 2,
+        "functionCount": 2,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "src/lib/storage.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 510,
+      "nonEmptyLines": 453,
+      "functions": [
+        {
+          "name": "isRecord",
+          "startLine": 43,
+          "endLine": 45,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "isNonEmptyString",
+          "startLine": 47,
+          "endLine": 49,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "isFiniteNumber",
+          "startLine": 51,
+          "endLine": 53,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "isString",
+          "startLine": 55,
+          "endLine": 57,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "isDateString",
+          "startLine": 59,
+          "endLine": 61,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "isMonitoringData",
+          "startLine": 63,
+          "endLine": 81,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "isSensorDataProfile",
+          "startLine": 83,
+          "endLine": 200,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "isSensorState",
+          "startLine": 202,
+          "endLine": 217,
+          "params": [
+            "value",
+            "expectedLabel"
+          ]
+        },
+        {
+          "name": "isSiteState",
+          "startLine": 219,
+          "endLine": 234,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "isRecordedAction",
+          "startLine": 236,
+          "endLine": 253,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "isQcmsEvent",
+          "startLine": 255,
+          "endLine": 267,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "isStringArray",
+          "startLine": 269,
+          "endLine": 271,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "isHardwareFault",
+          "startLine": 273,
+          "endLine": 331,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "isScenario",
+          "startLine": 333,
+          "endLine": 375,
+          "params": [
+            "value"
+          ]
+        },
+        {
+          "name": "assertValidScenario",
+          "startLine": 377,
+          "endLine": 387,
+          "params": [
+            "value",
+            "context"
+          ]
+        },
+        {
+          "name": "createEmptyScenarioStorage",
+          "startLine": 389,
+          "endLine": 391,
+          "params": []
+        },
+        {
+          "name": "deserializeScenarioStorage",
+          "startLine": 393,
+          "endLine": 443,
+          "params": [
+            "rawValue"
+          ]
+        },
+        {
+          "name": "serializeScenarioStorage",
+          "startLine": 445,
+          "endLine": 465,
+          "params": [
+            "scenarios"
+          ]
+        },
+        {
+          "name": "loadScenarios",
+          "startLine": 467,
+          "endLine": 472,
+          "params": [
+            "storage",
+            "key"
+          ]
+        },
+        {
+          "name": "saveScenarios",
+          "startLine": 474,
+          "endLine": 480,
+          "params": [
+            "storage",
+            "scenarios",
+            "key"
+          ]
+        },
+        {
+          "name": "clearScenarios",
+          "startLine": 482,
+          "endLine": 487,
+          "params": [
+            "storage",
+            "key"
+          ]
+        },
+        {
+          "name": "upsertScenario",
+          "startLine": 489,
+          "endLine": 503,
+          "params": [
+            "scenarios",
+            "scenario"
+          ]
+        },
+        {
+          "name": "removeScenario",
+          "startLine": 505,
+          "endLine": 510,
+          "params": [
+            "scenarios",
+            "scenarioId"
+          ]
+        }
+      ],
+      "classes": [
+        {
+          "name": "ScenarioStorageError",
+          "startLine": 32,
+          "endLine": 41,
+          "methods": [
+            "constructor"
+          ],
+          "properties": []
+        }
+      ],
+      "exports": [
+        {
+          "name": "SCENARIO_STORAGE_KEY",
+          "line": 13,
+          "isDefault": false
+        },
+        {
+          "name": "SCENARIO_STORAGE_VERSION",
+          "line": 14,
+          "isDefault": false
+        },
+        {
+          "name": "ScenarioStorageError",
+          "line": 32,
+          "isDefault": false
+        },
+        {
+          "name": "isScenario",
+          "line": 333,
+          "isDefault": false
+        },
+        {
+          "name": "assertValidScenario",
+          "line": 377,
+          "isDefault": false
+        },
+        {
+          "name": "createEmptyScenarioStorage",
+          "line": 389,
+          "isDefault": false
+        },
+        {
+          "name": "deserializeScenarioStorage",
+          "line": 393,
+          "isDefault": false
+        },
+        {
+          "name": "serializeScenarioStorage",
+          "line": 445,
+          "isDefault": false
+        },
+        {
+          "name": "loadScenarios",
+          "line": 467,
+          "isDefault": false
+        },
+        {
+          "name": "saveScenarios",
+          "line": 474,
+          "isDefault": false
+        },
+        {
+          "name": "clearScenarios",
+          "line": 482,
+          "isDefault": false
+        },
+        {
+          "name": "upsertScenario",
+          "line": 489,
+          "isDefault": false
+        },
+        {
+          "name": "removeScenario",
+          "line": 505,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "constructor",
+          "callee": "super",
+          "lineNumber": 38
+        },
+        {
+          "caller": "isRecord",
+          "callee": "Array.isArray",
+          "lineNumber": 44
+        },
+        {
+          "caller": "isNonEmptyString",
+          "callee": "value.trim",
+          "lineNumber": 48
+        },
+        {
+          "caller": "isFiniteNumber",
+          "callee": "Number.isFinite",
+          "lineNumber": 52
+        },
+        {
+          "caller": "isDateString",
+          "callee": "isNonEmptyString",
+          "lineNumber": 60
+        },
+        {
+          "caller": "isDateString",
+          "callee": "Number.isNaN",
+          "lineNumber": 60
+        },
+        {
+          "caller": "isDateString",
+          "callee": "Date.parse",
+          "lineNumber": 60
+        },
+        {
+          "caller": "isMonitoringData",
+          "callee": "isRecord",
+          "lineNumber": 64
+        },
+        {
+          "caller": "isMonitoringData",
+          "callee": "isRecord",
+          "lineNumber": 64
+        },
+        {
+          "caller": "isMonitoringData",
+          "callee": "isDateString",
+          "lineNumber": 69
+        },
+        {
+          "caller": "isMonitoringData",
+          "callee": "isFiniteNumber",
+          "lineNumber": 70
+        },
+        {
+          "caller": "isMonitoringData",
+          "callee": "isFiniteNumber",
+          "lineNumber": 71
+        },
+        {
+          "caller": "isMonitoringData",
+          "callee": "isFiniteNumber",
+          "lineNumber": 72
+        },
+        {
+          "caller": "isMonitoringData",
+          "callee": "isFiniteNumber",
+          "lineNumber": 73
+        },
+        {
+          "caller": "isMonitoringData",
+          "callee": "isFiniteNumber",
+          "lineNumber": 74
+        },
+        {
+          "caller": "isMonitoringData",
+          "callee": "isFiniteNumber",
+          "lineNumber": 75
+        },
+        {
+          "caller": "isMonitoringData",
+          "callee": "isFiniteNumber",
+          "lineNumber": 76
+        },
+        {
+          "caller": "isMonitoringData",
+          "callee": "[\"synchronized\", \"unsynchronized\", \"unavailable\"].includes",
+          "lineNumber": 77
+        },
+        {
+          "caller": "isMonitoringData",
+          "callee": "String",
+          "lineNumber": 78
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isRecord",
+          "lineNumber": 85
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isRecord",
+          "lineNumber": 86
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isRecord",
+          "lineNumber": 87
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isRecord",
+          "lineNumber": 88
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isRecord",
+          "lineNumber": 89
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isRecord",
+          "lineNumber": 90
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isRecord",
+          "lineNumber": 91
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isRecord",
+          "lineNumber": 92
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isRecord",
+          "lineNumber": 93
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isRecord",
+          "lineNumber": 94
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "Array.isArray",
+          "lineNumber": 95
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "Array.isArray",
+          "lineNumber": 96
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "Array.isArray",
+          "lineNumber": 97
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "Array.isArray",
+          "lineNumber": 98
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "[\n    value.receiverStats.shortSquitter,\n    value.receiverStats.extendedSquitter,\n  ].every",
+          "lineNumber": 103
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isFiniteNumber",
+          "lineNumber": 108
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isFiniteNumber",
+          "lineNumber": 109
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isFiniteNumber",
+          "lineNumber": 110
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "value.clients.every",
+          "lineNumber": 113
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isRecord",
+          "lineNumber": 115
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isFiniteNumber",
+          "lineNumber": 116
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isNonEmptyString",
+          "lineNumber": 117
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isNonEmptyString",
+          "lineNumber": 118
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isFiniteNumber",
+          "lineNumber": 119
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "[\"UDP\", \"TCP\"].includes",
+          "lineNumber": 120
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "String",
+          "lineNumber": 120
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isNonEmptyString",
+          "lineNumber": 121
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isFiniteNumber",
+          "lineNumber": 123
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "value.snmpUsers.every",
+          "lineNumber": 126
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isRecord",
+          "lineNumber": 128
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isNonEmptyString",
+          "lineNumber": 129
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "[\"noAuth\", \"authNoPriv\", \"authPriv\"].includes",
+          "lineNumber": 130
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "String",
+          "lineNumber": 130
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "value.snmpTraps.every",
+          "lineNumber": 133
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isRecord",
+          "lineNumber": 135
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isNonEmptyString",
+          "lineNumber": 136
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isFiniteNumber",
+          "lineNumber": 137
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "value.siteMonitors.every",
+          "lineNumber": 141
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isRecord",
+          "lineNumber": 143
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isNonEmptyString",
+          "lineNumber": 145
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isFiniteNumber",
+          "lineNumber": 146
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isNonEmptyString",
+          "lineNumber": 147
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isNonEmptyString",
+          "lineNumber": 151
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isNonEmptyString",
+          "lineNumber": 152
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isNonEmptyString",
+          "lineNumber": 153
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isNonEmptyString",
+          "lineNumber": 154
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isNonEmptyString",
+          "lineNumber": 155
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isNonEmptyString",
+          "lineNumber": 156
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isNonEmptyString",
+          "lineNumber": 158
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isNonEmptyString",
+          "lineNumber": 159
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isNonEmptyString",
+          "lineNumber": 160
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isFiniteNumber",
+          "lineNumber": 162
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isFiniteNumber",
+          "lineNumber": 163
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isFiniteNumber",
+          "lineNumber": 167
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isFiniteNumber",
+          "lineNumber": 168
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isNonEmptyString",
+          "lineNumber": 171
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isString",
+          "lineNumber": 172
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isString",
+          "lineNumber": 173
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isString",
+          "lineNumber": 174
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isString",
+          "lineNumber": 175
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isFiniteNumber",
+          "lineNumber": 177
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isFiniteNumber",
+          "lineNumber": 178
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isString",
+          "lineNumber": 180
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isFiniteNumber",
+          "lineNumber": 182
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isFiniteNumber",
+          "lineNumber": 183
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isFiniteNumber",
+          "lineNumber": 184
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isNonEmptyString",
+          "lineNumber": 185
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isFiniteNumber",
+          "lineNumber": 190
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isFiniteNumber",
+          "lineNumber": 191
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isFiniteNumber",
+          "lineNumber": 194
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isNonEmptyString",
+          "lineNumber": 195
+        },
+        {
+          "caller": "isSensorDataProfile",
+          "callee": "isString",
+          "lineNumber": 197
+        },
+        {
+          "caller": "isSensorState",
+          "callee": "isRecord",
+          "lineNumber": 203
+        },
+        {
+          "caller": "isSensorState",
+          "callee": "isNonEmptyString",
+          "lineNumber": 208
+        },
+        {
+          "caller": "isSensorState",
+          "callee": "SENSOR_STATUSES.includes",
+          "lineNumber": 210
+        },
+        {
+          "caller": "isSensorState",
+          "callee": "isNonEmptyString",
+          "lineNumber": 211
+        },
+        {
+          "caller": "isSensorState",
+          "callee": "isNonEmptyString",
+          "lineNumber": 212
+        },
+        {
+          "caller": "isSensorState",
+          "callee": "isMonitoringData",
+          "lineNumber": 213
+        },
+        {
+          "caller": "isSensorState",
+          "callee": "isSensorDataProfile",
+          "lineNumber": 215
+        },
+        {
+          "caller": "isSiteState",
+          "callee": "isRecord",
+          "lineNumber": 220
+        },
+        {
+          "caller": "isSiteState",
+          "callee": "isNonEmptyString",
+          "lineNumber": 228
+        },
+        {
+          "caller": "isSiteState",
+          "callee": "isNonEmptyString",
+          "lineNumber": 229
+        },
+        {
+          "caller": "isSiteState",
+          "callee": "isSensorState",
+          "lineNumber": 230
+        },
+        {
+          "caller": "isSiteState",
+          "callee": "isSensorState",
+          "lineNumber": 231
+        },
+        {
+          "caller": "isRecordedAction",
+          "callee": "isRecord",
+          "lineNumber": 237
+        },
+        {
+          "caller": "isRecordedAction",
+          "callee": "Number.isInteger",
+          "lineNumber": 242
+        },
+        {
+          "caller": "isRecordedAction",
+          "callee": "Number",
+          "lineNumber": 243
+        },
+        {
+          "caller": "isRecordedAction",
+          "callee": "[\"menu-selection\", \"value-input\", \"authentication\"].includes",
+          "lineNumber": 244
+        },
+        {
+          "caller": "isRecordedAction",
+          "callee": "String",
+          "lineNumber": 245
+        },
+        {
+          "caller": "isRecordedAction",
+          "callee": "isNonEmptyString",
+          "lineNumber": 247
+        },
+        {
+          "caller": "isRecordedAction",
+          "callee": "isNonEmptyString",
+          "lineNumber": 248
+        },
+        {
+          "caller": "isRecordedAction",
+          "callee": "isNonEmptyString",
+          "lineNumber": 250
+        },
+        {
+          "caller": "isRecordedAction",
+          "callee": "isFiniteNumber",
+          "lineNumber": 251
+        },
+        {
+          "caller": "isQcmsEvent",
+          "callee": "isRecord",
+          "lineNumber": 256
+        },
+        {
+          "caller": "isQcmsEvent",
+          "callee": "isNonEmptyString",
+          "lineNumber": 261
+        },
+        {
+          "caller": "isQcmsEvent",
+          "callee": "[\"snmp\", \"qcms\", \"selfmon\", \"error\", \"line\"].includes",
+          "lineNumber": 262
+        },
+        {
+          "caller": "isQcmsEvent",
+          "callee": "String",
+          "lineNumber": 263
+        },
+        {
+          "caller": "isQcmsEvent",
+          "callee": "isNonEmptyString",
+          "lineNumber": 265
+        },
+        {
+          "caller": "isStringArray",
+          "callee": "Array.isArray",
+          "lineNumber": 270
+        },
+        {
+          "caller": "isStringArray",
+          "callee": "value.every",
+          "lineNumber": 270
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isRecord",
+          "lineNumber": 275
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "Array.isArray",
+          "lineNumber": 276
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "Array.isArray",
+          "lineNumber": 277
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "value.hardwareLayout.every",
+          "lineNumber": 282
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isRecord",
+          "lineNumber": 284
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isNonEmptyString",
+          "lineNumber": 285
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isNonEmptyString",
+          "lineNumber": 286
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isNonEmptyString",
+          "lineNumber": 287
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isNonEmptyString",
+          "lineNumber": 288
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isNonEmptyString",
+          "lineNumber": 289
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isRecord",
+          "lineNumber": 290
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "Object.values(component.specs).every",
+          "lineNumber": 291
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "Object.values",
+          "lineNumber": 291
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isRecord",
+          "lineNumber": 292
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isFiniteNumber",
+          "lineNumber": 293
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isFiniteNumber",
+          "lineNumber": 294
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isStringArray",
+          "lineNumber": 295
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "[\"ok\", \"failed\"].includes",
+          "lineNumber": 296
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "String",
+          "lineNumber": 296
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isStringArray",
+          "lineNumber": 298
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "value.hardwareLayout\n      .filter(isRecord)\n      .map",
+          "lineNumber": 301
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "value.hardwareLayout\n      .filter",
+          "lineNumber": 301
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "String",
+          "lineNumber": 303
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "value.signalPaths.every",
+          "lineNumber": 305
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isRecord",
+          "lineNumber": 307
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isNonEmptyString",
+          "lineNumber": 308
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isNonEmptyString",
+          "lineNumber": 309
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isNonEmptyString",
+          "lineNumber": 310
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isStringArray",
+          "lineNumber": 311
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "path.componentIds.every",
+          "lineNumber": 312
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "componentIds.has",
+          "lineNumber": 312
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isStringArray",
+          "lineNumber": 318
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "value.faultyComponentIds.every",
+          "lineNumber": 321
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "componentIds.has",
+          "lineNumber": 321
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "[\"open\", \"short\", \"degraded\", \"disconnected\", \"overheated\"].includes",
+          "lineNumber": 322
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "String",
+          "lineNumber": 323
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isNonEmptyString",
+          "lineNumber": 325
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "SENSOR_STATUSES.includes",
+          "lineNumber": 326
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isStringArray",
+          "lineNumber": 327
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isStringArray",
+          "lineNumber": 328
+        },
+        {
+          "caller": "isHardwareFault",
+          "callee": "isStringArray",
+          "lineNumber": 329
+        },
+        {
+          "caller": "isScenario",
+          "callee": "isRecord",
+          "lineNumber": 334
+        },
+        {
+          "caller": "isScenario",
+          "callee": "Array.isArray",
+          "lineNumber": 334
+        },
+        {
+          "caller": "isScenario",
+          "callee": "value.sites.every",
+          "lineNumber": 342
+        },
+        {
+          "caller": "isScenario",
+          "callee": "sites.map",
+          "lineNumber": 347
+        },
+        {
+          "caller": "isScenario",
+          "callee": "sites.flatMap",
+          "lineNumber": 348
+        },
+        {
+          "caller": "isScenario",
+          "callee": "[site.sensorA, site.sensorB].filter",
+          "lineNumber": 349
+        },
+        {
+          "caller": "isScenario",
+          "callee": "sensors.map",
+          "lineNumber": 353
+        },
+        {
+          "caller": "isScenario",
+          "callee": "isNonEmptyString",
+          "lineNumber": 356
+        },
+        {
+          "caller": "isScenario",
+          "callee": "isNonEmptyString",
+          "lineNumber": 357
+        },
+        {
+          "caller": "isScenario",
+          "callee": "[\"easy\", \"medium\", \"hard\"].includes",
+          "lineNumber": 359
+        },
+        {
+          "caller": "isScenario",
+          "callee": "String",
+          "lineNumber": 359
+        },
+        {
+          "caller": "isScenario",
+          "callee": "isDateString",
+          "lineNumber": 360
+        },
+        {
+          "caller": "isScenario",
+          "callee": "isDateString",
+          "lineNumber": 361
+        },
+        {
+          "caller": "isScenario",
+          "callee": "isHardwareFault",
+          "lineNumber": 364
+        },
+        {
+          "caller": "isScenario",
+          "callee": "isNonEmptyString",
+          "lineNumber": 366
+        },
+        {
+          "caller": "isScenario",
+          "callee": "sensorIds.includes",
+          "lineNumber": 367
+        },
+        {
+          "caller": "isScenario",
+          "callee": "[\"sysadmin\", \"maintenance\"].includes",
+          "lineNumber": 368
+        },
+        {
+          "caller": "isScenario",
+          "callee": "String",
+          "lineNumber": 368
+        },
+        {
+          "caller": "isScenario",
+          "callee": "Array.isArray",
+          "lineNumber": 370
+        },
+        {
+          "caller": "isScenario",
+          "callee": "value.eventLog.every",
+          "lineNumber": 371
+        },
+        {
+          "caller": "isScenario",
+          "callee": "Array.isArray",
+          "lineNumber": 372
+        },
+        {
+          "caller": "isScenario",
+          "callee": "value.expectedActions.every",
+          "lineNumber": 373
+        },
+        {
+          "caller": "assertValidScenario",
+          "callee": "isScenario",
+          "lineNumber": 381
+        },
+        {
+          "caller": "deserializeScenarioStorage",
+          "callee": "rawValue.trim",
+          "lineNumber": 396
+        },
+        {
+          "caller": "deserializeScenarioStorage",
+          "callee": "createEmptyScenarioStorage",
+          "lineNumber": 397
+        },
+        {
+          "caller": "deserializeScenarioStorage",
+          "callee": "JSON.parse",
+          "lineNumber": 402
+        },
+        {
+          "caller": "deserializeScenarioStorage",
+          "callee": "isRecord",
+          "lineNumber": 411
+        },
+        {
+          "caller": "deserializeScenarioStorage",
+          "callee": "Array.isArray",
+          "lineNumber": 418
+        },
+        {
+          "caller": "deserializeScenarioStorage",
+          "callee": "normalizeScenarioList",
+          "lineNumber": 425
+        },
+        {
+          "caller": "deserializeScenarioStorage",
+          "callee": "normalizedScenarios.forEach",
+          "lineNumber": 427
+        },
+        {
+          "caller": "deserializeScenarioStorage",
+          "callee": "assertValidScenario",
+          "lineNumber": 428
+        },
+        {
+          "caller": "deserializeScenarioStorage",
+          "callee": "normalizedScenarios.map",
+          "lineNumber": 431
+        },
+        {
+          "caller": "serializeScenarioStorage",
+          "callee": "scenarios.forEach",
+          "lineNumber": 448
+        },
+        {
+          "caller": "serializeScenarioStorage",
+          "callee": "assertValidScenario",
+          "lineNumber": 449
+        },
+        {
+          "caller": "serializeScenarioStorage",
+          "callee": "scenarios.map",
+          "lineNumber": 452
+        },
+        {
+          "caller": "serializeScenarioStorage",
+          "callee": "JSON.stringify",
+          "lineNumber": 464
+        },
+        {
+          "caller": "loadScenarios",
+          "callee": "deserializeScenarioStorage",
+          "lineNumber": 471
+        },
+        {
+          "caller": "loadScenarios",
+          "callee": "storage.getItem",
+          "lineNumber": 471
+        },
+        {
+          "caller": "saveScenarios",
+          "callee": "storage.setItem",
+          "lineNumber": 479
+        },
+        {
+          "caller": "saveScenarios",
+          "callee": "serializeScenarioStorage",
+          "lineNumber": 479
+        },
+        {
+          "caller": "clearScenarios",
+          "callee": "storage.removeItem",
+          "lineNumber": 486
+        },
+        {
+          "caller": "upsertScenario",
+          "callee": "assertValidScenario",
+          "lineNumber": 493
+        },
+        {
+          "caller": "upsertScenario",
+          "callee": "scenarios.findIndex",
+          "lineNumber": 494
+        },
+        {
+          "caller": "upsertScenario",
+          "callee": "scenarios.map",
+          "lineNumber": 500
+        },
+        {
+          "caller": "removeScenario",
+          "callee": "scenarios.filter",
+          "lineNumber": 509
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 13,
+        "functionCount": 23,
+        "classCount": 1
+      }
+    },
+    {
+      "path": "src/stores/scenario-store.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 315,
+      "nonEmptyLines": 267,
+      "functions": [
+        {
+          "name": "getBrowserStorage",
+          "startLine": 55,
+          "endLine": 61,
+          "params": []
+        },
+        {
+          "name": "errorMessage",
+          "startLine": 63,
+          "endLine": 65,
+          "params": [
+            "error"
+          ]
+        },
+        {
+          "name": "defaultId",
+          "startLine": 67,
+          "endLine": 73,
+          "params": []
+        },
+        {
+          "name": "createScenarioStore",
+          "startLine": 75,
+          "endLine": 311,
+          "params": [
+            "options"
+          ]
+        }
+      ],
+      "exports": [
+        {
+          "name": "createScenarioStore",
+          "line": 75,
+          "isDefault": false
+        },
+        {
+          "name": "useScenarioStore",
+          "line": 313,
+          "isDefault": false
+        },
+        {
+          "name": "DEFAULT_SCENARIOS",
+          "line": 315,
+          "isDefault": false
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "defaultId",
+          "callee": "globalThis.crypto.randomUUID",
+          "lineNumber": 69
+        },
+        {
+          "caller": "defaultId",
+          "callee": "Date.now",
+          "lineNumber": 72
+        },
+        {
+          "caller": "defaultId",
+          "callee": "Math.random().toString(36).slice",
+          "lineNumber": 72
+        },
+        {
+          "caller": "defaultId",
+          "callee": "Math.random().toString",
+          "lineNumber": 72
+        },
+        {
+          "caller": "defaultId",
+          "callee": "Math.random",
+          "lineNumber": 72
+        },
+        {
+          "caller": "resolveStorage",
+          "callee": "Object.prototype.hasOwnProperty.call",
+          "lineNumber": 86
+        },
+        {
+          "caller": "resolveStorage",
+          "callee": "getBrowserStorage",
+          "lineNumber": 88
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "create<ScenarioStore>()",
+          "lineNumber": 90
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "create",
+          "lineNumber": 90
+        },
+        {
+          "caller": "persist",
+          "callee": "resolveStorage",
+          "lineNumber": 92
+        },
+        {
+          "caller": "persist",
+          "callee": "saveScenarios",
+          "lineNumber": 99
+        },
+        {
+          "caller": "persist",
+          "callee": "errorMessage",
+          "lineNumber": 102
+        },
+        {
+          "caller": "ensureHydrated",
+          "callee": "get",
+          "lineNumber": 107
+        },
+        {
+          "caller": "ensureHydrated",
+          "callee": "get().hydrate",
+          "lineNumber": 108
+        },
+        {
+          "caller": "ensureHydrated",
+          "callee": "get",
+          "lineNumber": 108
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "cloneScenarios",
+          "lineNumber": 113
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "get",
+          "lineNumber": 118
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "resolveStorage",
+          "lineNumber": 122
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "storage.getItem",
+          "lineNumber": 128
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "rawValue.trim",
+          "lineNumber": 129
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "cloneScenarios",
+          "lineNumber": 130
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "now().toISOString",
+          "lineNumber": 130
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "now",
+          "lineNumber": 130
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "saveScenarios",
+          "lineNumber": 131
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "set",
+          "lineNumber": 132
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "set",
+          "lineNumber": 135
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "cloneScenarios",
+          "lineNumber": 136
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "loadScenarios",
+          "lineNumber": 136
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "set",
+          "lineNumber": 141
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "cloneScenarios",
+          "lineNumber": 142
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "now().toISOString",
+          "lineNumber": 142
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "now",
+          "lineNumber": 142
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "errorMessage",
+          "lineNumber": 144
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "fetcher(\"/api/scenarios\")\n          .then((res) => {\r\n            if (res.ok) {\r\n              return res.json();\r\n            }\r\n            throw new Error(\"API response not ok\");\r\n          })\r\n          .then((data: Scenario[]) => {\r\n            if (data && Array.isArray(data) && data.length > 0) {\r\n              set({ scenarios: cloneScenarios(data), isHydrated: true, storageError: null });\r\n              if (storage) {\r\n                saveScenarios(storage, data);\r\n              }\r\n            } else {\r\n              // Nếu DB trống, hydrate từ localStorage hoặc dùng defaults\r\n              throw new Error(\"DB is empty\");\r\n            }\r\n          })\r\n          .catch",
+          "lineNumber": 151
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "fetcher(\"/api/scenarios\")\n          .then((res) => {\r\n            if (res.ok) {\r\n              return res.json();\r\n            }\r\n            throw new Error(\"API response not ok\");\r\n          })\r\n          .then",
+          "lineNumber": 151
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "fetcher(\"/api/scenarios\")\n          .then",
+          "lineNumber": 151
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "fetcher",
+          "lineNumber": 151
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "res.json",
+          "lineNumber": 154
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "Array.isArray",
+          "lineNumber": 159
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "set",
+          "lineNumber": 160
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "cloneScenarios",
+          "lineNumber": 160
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "saveScenarios",
+          "lineNumber": 162
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "console.warn",
+          "lineNumber": 170
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "storage.getItem",
+          "lineNumber": 176
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "rawValue.trim",
+          "lineNumber": 178
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "cloneScenarios",
+          "lineNumber": 179
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "now().toISOString",
+          "lineNumber": 179
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "now",
+          "lineNumber": 179
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "saveScenarios",
+          "lineNumber": 180
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "set",
+          "lineNumber": 181
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "cloneScenarios",
+          "lineNumber": 185
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "loadScenarios",
+          "lineNumber": 185
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "set",
+          "lineNumber": 186
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "set",
+          "lineNumber": 188
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "cloneScenarios",
+          "lineNumber": 189
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "now().toISOString",
+          "lineNumber": 189
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "now",
+          "lineNumber": 189
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "errorMessage",
+          "lineNumber": 191
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "ensureHydrated",
+          "lineNumber": 198
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "now().toISOString",
+          "lineNumber": 200
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "now",
+          "lineNumber": 200
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "input.id?.trim",
+          "lineNumber": 203
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "generateId",
+          "lineNumber": 203
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "upsertScenario",
+          "lineNumber": 206
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "get",
+          "lineNumber": 206
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "set",
+          "lineNumber": 208
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "persist",
+          "lineNumber": 208
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "fetcher(\"/api/scenarios\", {\n            method: \"POST\",\r\n            headers: { \"Content-Type\": \"application/json\" },\r\n            body: JSON.stringify(scenario),\r\n          }).catch",
+          "lineNumber": 212
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "fetcher",
+          "lineNumber": 212
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "JSON.stringify",
+          "lineNumber": 215
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "console.error",
+          "lineNumber": 216
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "ensureHydrated",
+          "lineNumber": 223
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "get().scenarios.find",
+          "lineNumber": 225
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "get",
+          "lineNumber": 225
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "now().toISOString",
+          "lineNumber": 237
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "now",
+          "lineNumber": 237
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "upsertScenario",
+          "lineNumber": 239
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "get",
+          "lineNumber": 239
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "set",
+          "lineNumber": 241
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "persist",
+          "lineNumber": 241
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "fetcher(\"/api/scenarios\", {\n            method: \"POST\",\r\n            headers: { \"Content-Type\": \"application/json\" },\r\n            body: JSON.stringify(updated),\r\n          }).catch",
+          "lineNumber": 245
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "fetcher",
+          "lineNumber": 245
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "JSON.stringify",
+          "lineNumber": 248
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "console.error",
+          "lineNumber": 249
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "ensureHydrated",
+          "lineNumber": 256
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "get().scenarios.some",
+          "lineNumber": 258
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "get",
+          "lineNumber": 258
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "removeScenario",
+          "lineNumber": 262
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "get",
+          "lineNumber": 262
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "set",
+          "lineNumber": 263
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "persist",
+          "lineNumber": 263
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "fetcher(`/api/scenarios?id=${encodeURIComponent(scenarioId)}`, {\n            method: \"DELETE\",\r\n          }).catch",
+          "lineNumber": 267
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "fetcher",
+          "lineNumber": 267
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "encodeURIComponent",
+          "lineNumber": 267
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "console.error",
+          "lineNumber": 269
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "get().scenarios.find",
+          "lineNumber": 276
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "get",
+          "lineNumber": 276
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "cloneScenarios",
+          "lineNumber": 279
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "now().toISOString",
+          "lineNumber": 279
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "now",
+          "lineNumber": 279
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "resolveStorage",
+          "lineNumber": 280
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "persist",
+          "lineNumber": 281
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "get",
+          "lineNumber": 284
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "set",
+          "lineNumber": 286
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "get",
+          "lineNumber": 288
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "currentScenarios.forEach",
+          "lineNumber": 294
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "fetcher(`/api/scenarios?id=${encodeURIComponent(s.id)}`, { method: \"DELETE\" })\n              .catch",
+          "lineNumber": 295
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "fetcher",
+          "lineNumber": 295
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "encodeURIComponent",
+          "lineNumber": 295
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "scenarios.forEach",
+          "lineNumber": 298
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "fetcher(\"/api/scenarios\", {\n              method: \"POST\",\r\n              headers: { \"Content-Type\": \"application/json\" },\r\n              body: JSON.stringify(s),\r\n            }).catch",
+          "lineNumber": 299
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "fetcher",
+          "lineNumber": 299
+        },
+        {
+          "caller": "createScenarioStore",
+          "callee": "JSON.stringify",
+          "lineNumber": 302
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 3,
+        "functionCount": 4,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "tests/admin/admin-dashboard.test.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 106,
+      "nonEmptyLines": 93,
+      "functions": [
+        {
+          "name": "scenarioFixture",
+          "startLine": 9,
+          "endLine": 36,
+          "params": [
+            "overrides"
+          ]
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "tests/core/scenario-normalization.test.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 54,
+      "nonEmptyLines": 47,
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "tests/core/scenario-order.test.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 49,
+      "nonEmptyLines": 43,
+      "functions": [
+        {
+          "name": "scenario",
+          "startLine": 9,
+          "endLine": 26,
+          "params": [
+            "id",
+            "createdAt",
+            "updatedAt"
+          ]
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "tests/core/storage.test.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 80,
+      "nonEmptyLines": 71,
+      "functions": [
+        {
+          "name": "validScenario",
+          "startLine": 11,
+          "endLine": 46,
+          "params": []
+        }
+      ],
+      "metrics": {
+        "importCount": 2,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "tests/layout/module-routing.test.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 63,
+      "nonEmptyLines": 55,
+      "metrics": {
+        "importCount": 6,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "tests/layout/scenario-data-table.test.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 86,
+      "nonEmptyLines": 72,
+      "functions": [
+        {
+          "name": "renderTable",
+          "startLine": 20,
+          "endLine": 34,
+          "params": []
+        }
+      ],
+      "callGraph": [
+        {
+          "caller": "renderTable",
+          "callee": "render",
+          "lineNumber": 21
+        }
+      ],
+      "metrics": {
+        "importCount": 1,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "tests/qcms/student-dashboard.test.tsx",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 98,
+      "nonEmptyLines": 86,
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 0,
+        "functionCount": 0,
+        "classCount": 0
+      }
+    },
+    {
+      "path": "tests/state/scenario-store.test.ts",
+      "language": "typescript",
+      "fileCategory": "code",
+      "totalLines": 172,
+      "nonEmptyLines": 148,
+      "functions": [
+        {
+          "name": "scenarioInput",
+          "startLine": 18,
+          "endLine": 30,
+          "params": [
+            "overrides"
+          ]
+        }
+      ],
+      "metrics": {
+        "importCount": 3,
+        "exportCount": 0,
+        "functionCount": 1,
+        "classCount": 0
+      }
+    }
+  ]
+}

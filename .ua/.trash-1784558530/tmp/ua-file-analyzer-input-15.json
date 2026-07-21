@@ -1,0 +1,106 @@
+{
+    "projectRoot":  "C:\\Users\\nhhai\\Desktop\\cns-simulator",
+    "batchFiles":  [
+                       {
+                           "path":  "supabase/migrations/202607160001_create_scenarios_anon_test.sql",
+                           "language":  "sql",
+                           "sizeLines":  48,
+                           "fileCategory":  "data"
+                       },
+                       {
+                           "path":  "supabase/migrations/202607160002_add_scenario_training_data.sql",
+                           "language":  "sql",
+                           "sizeLines":  4,
+                           "fileCategory":  "data"
+                       },
+                       {
+                           "path":  "supabase/migrations/202607160003_create_vor_training.sql",
+                           "language":  "sql",
+                           "sizeLines":  55,
+                           "fileCategory":  "data"
+                       },
+                       {
+                           "path":  "supabase/migrations/202607170001_create_dme_training.sql",
+                           "language":  "sql",
+                           "sizeLines":  55,
+                           "fileCategory":  "data"
+                       },
+                       {
+                           "path":  "supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql",
+                           "language":  "sql",
+                           "sizeLines":  20,
+                           "fileCategory":  "data"
+                       },
+                       {
+                           "path":  "supabase/migrations/202607170003_create_training_media_bucket.sql",
+                           "language":  "sql",
+                           "sizeLines":  27,
+                           "fileCategory":  "data"
+                       },
+                       {
+                           "path":  "supabase/migrations/202607170004_seed_vor_scenarios.sql",
+                           "language":  "sql",
+                           "sizeLines":  200,
+                           "fileCategory":  "data"
+                       },
+                       {
+                           "path":  "supabase/migrations/202607170005_seed_dme_scenarios.sql",
+                           "language":  "sql",
+                           "sizeLines":  204,
+                           "fileCategory":  "data"
+                       },
+                       {
+                           "path":  "supabase/migrations/202607180001_add_auth_profiles_and_security.sql",
+                           "language":  "sql",
+                           "sizeLines":  286,
+                           "fileCategory":  "data"
+                       },
+                       {
+                           "path":  "supabase/migrations/202607180002_create_exam_management.sql",
+                           "language":  "sql",
+                           "sizeLines":  1805,
+                           "fileCategory":  "data"
+                       },
+                       {
+                           "path":  "supabase/migrations/202607190001_allow_training_media_audio.sql",
+                           "language":  "sql",
+                           "sizeLines":  3,
+                           "fileCategory":  "data"
+                       }
+                   ],
+    "batchImportData":  {
+                            "supabase/migrations/202607160001_create_scenarios_anon_test.sql":  [
+
+                                                                                                ],
+                            "supabase/migrations/202607160002_add_scenario_training_data.sql":  [
+
+                                                                                                ],
+                            "supabase/migrations/202607160003_create_vor_training.sql":  [
+
+                                                                                         ],
+                            "supabase/migrations/202607170001_create_dme_training.sql":  [
+
+                                                                                         ],
+                            "supabase/migrations/202607170002_add_vor_dme_hardware_diagnosis.sql":  [
+
+                                                                                                    ],
+                            "supabase/migrations/202607170003_create_training_media_bucket.sql":  [
+
+                                                                                                  ],
+                            "supabase/migrations/202607170004_seed_vor_scenarios.sql":  [
+
+                                                                                        ],
+                            "supabase/migrations/202607170005_seed_dme_scenarios.sql":  [
+
+                                                                                        ],
+                            "supabase/migrations/202607180001_add_auth_profiles_and_security.sql":  [
+
+                                                                                                    ],
+                            "supabase/migrations/202607180002_create_exam_management.sql":  [
+
+                                                                                            ],
+                            "supabase/migrations/202607190001_allow_training_media_audio.sql":  [
+
+                                                                                                ]
+                        }
+}

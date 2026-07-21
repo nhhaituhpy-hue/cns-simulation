@@ -1,0 +1,1585 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/app/admin/exam-sets/[examSetId]/edit/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/admin/exam-sets/[examSetId]/edit/page.tsx",
+      "summary": "Route chỉnh sửa bộ đề: tải song song chi tiết bộ đề, danh sách môn và kịch bản khả dụng rồi chuẩn bị dữ liệu cho ExamSetEditor.",
+      "tags": [
+        "nextjs-route",
+        "admin",
+        "exam-set",
+        "data-fetching",
+        "editor"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/admin/exam-sets/[examSetId]/edit/page.tsx:EditExamSetPage",
+      "type": "function",
+      "name": "EditExamSetPage",
+      "filePath": "src/app/admin/exam-sets/[examSetId]/edit/page.tsx",
+      "lineRange": [
+        9,
+        55
+      ],
+      "summary": "Tải dữ liệu liên quan, kiểm tra bộ đề tồn tại và render editor với cấu trúc môn/kịch bản hiện hành.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "exam-set",
+        "data-fetching"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/admin/exam-sets/error.tsx",
+      "type": "file",
+      "name": "error.tsx",
+      "filePath": "src/app/admin/exam-sets/error.tsx",
+      "summary": "Error boundary phía client cho khu vực quản lý bộ đề, chuyển lỗi route sang component phản hồi dùng chung.",
+      "tags": [
+        "nextjs-route",
+        "error-boundary",
+        "exam-set",
+        "component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/admin/exam-sets/error.tsx:Error",
+      "type": "function",
+      "name": "Error",
+      "filePath": "src/app/admin/exam-sets/error.tsx",
+      "lineRange": [
+        5,
+        7
+      ],
+      "summary": "Chuyển lỗi route và callback reset sang giao diện phản hồi lỗi dùng chung.",
+      "tags": [
+        "component",
+        "error-boundary",
+        "error-handling"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/admin/exam-sets/new/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/admin/exam-sets/new/page.tsx",
+      "summary": "Route tạo bộ đề mới, tải danh sách môn/kịch bản và khởi tạo ExamSetEditor không có dữ liệu ban đầu.",
+      "tags": [
+        "nextjs-route",
+        "admin",
+        "exam-set",
+        "editor"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/admin/exam-sets/new/page.tsx:NewExamSetPage",
+      "type": "function",
+      "name": "NewExamSetPage",
+      "filePath": "src/app/admin/exam-sets/new/page.tsx",
+      "lineRange": [
+        8,
+        28
+      ],
+      "summary": "Tải tùy chọn môn/kịch bản và render editor tạo bộ đề mới.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "exam-set"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/admin/exam-sets/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/admin/exam-sets/page.tsx",
+      "summary": "Route danh sách bộ đề quản trị, tải dữ liệu và render workspace cùng ExamSetList.",
+      "tags": [
+        "nextjs-route",
+        "admin",
+        "exam-set",
+        "data-fetching"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/admin/exam-sets/page.tsx:ExamSetsPage",
+      "type": "function",
+      "name": "ExamSetsPage",
+      "filePath": "src/app/admin/exam-sets/page.tsx",
+      "lineRange": [
+        10,
+        38
+      ],
+      "summary": "Tải và render danh sách bộ đề trong workspace quản trị.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "exam-set"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/admin/exams/[examId]/edit/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/admin/exams/[examId]/edit/page.tsx",
+      "summary": "Route chỉnh sửa kỳ thi, tải chi tiết kỳ thi và các bộ đề để cấu hình ExamEditor.",
+      "tags": [
+        "nextjs-route",
+        "admin",
+        "exam",
+        "editor"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/admin/exams/[examId]/edit/page.tsx:EditExamPage",
+      "type": "function",
+      "name": "EditExamPage",
+      "filePath": "src/app/admin/exams/[examId]/edit/page.tsx",
+      "lineRange": [
+        9,
+        30
+      ],
+      "summary": "Tải kỳ thi cùng các bộ đề khả dụng và render ExamEditor ở chế độ chỉnh sửa.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "exam",
+        "data-fetching"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/admin/exams/[examId]/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/admin/exams/[examId]/page.tsx",
+      "summary": "Route chi tiết kỳ thi quản trị, tải dữ liệu phân trang và trình bày môn, đề, thí sinh cùng ExamDetailManager.",
+      "tags": [
+        "nextjs-route",
+        "admin",
+        "exam",
+        "candidate-management",
+        "data-fetching"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/admin/exams/[examId]/page.tsx:ExamDetailPage",
+      "type": "function",
+      "name": "ExamDetailPage",
+      "filePath": "src/app/admin/exams/[examId]/page.tsx",
+      "lineRange": [
+        12,
+        68
+      ],
+      "summary": "Tải chi tiết kỳ thi theo trang, chuẩn hóa ngày và render thông tin môn/thí sinh cho trình quản lý.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "exam",
+        "candidate-management"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/admin/exams/[examId]/results/[candidateSubjectId]/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/admin/exams/[examId]/results/[candidateSubjectId]/page.tsx",
+      "summary": "Route xem/chấm kết quả chính thức của một môn thi thí sinh, chuyển dữ liệu route vào ExamReview.",
+      "tags": [
+        "nextjs-route",
+        "admin",
+        "exam-results",
+        "review"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/admin/exams/[examId]/results/[candidateSubjectId]/page.tsx:OfficialExamReviewPage",
+      "type": "function",
+      "name": "OfficialExamReviewPage",
+      "filePath": "src/app/admin/exams/[examId]/results/[candidateSubjectId]/page.tsx",
+      "lineRange": [
+        8,
+        17
+      ],
+      "summary": "Render màn hình review kết quả chính thức theo candidate subject từ route params.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "exam-results"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/admin/exams/error.tsx",
+      "type": "file",
+      "name": "error.tsx",
+      "filePath": "src/app/admin/exams/error.tsx",
+      "summary": "Error boundary phía client cho khu vực quản lý kỳ thi, dùng ActionFeedback để cung cấp lỗi và thao tác thử lại.",
+      "tags": [
+        "nextjs-route",
+        "error-boundary",
+        "exam",
+        "component"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/admin/exams/error.tsx:Error",
+      "type": "function",
+      "name": "Error",
+      "filePath": "src/app/admin/exams/error.tsx",
+      "lineRange": [
+        5,
+        7
+      ],
+      "summary": "Chuyển lỗi route và callback reset sang giao diện phản hồi lỗi dùng chung.",
+      "tags": [
+        "component",
+        "error-boundary",
+        "error-handling"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/admin/exams/new/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/admin/exams/new/page.tsx",
+      "summary": "Route tạo kỳ thi mới, tải các bộ đề sẵn sàng và khởi tạo ExamEditor.",
+      "tags": [
+        "nextjs-route",
+        "admin",
+        "exam",
+        "editor"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/admin/exams/new/page.tsx:NewExamPage",
+      "type": "function",
+      "name": "NewExamPage",
+      "filePath": "src/app/admin/exams/new/page.tsx",
+      "lineRange": [
+        8,
+        25
+      ],
+      "summary": "Tải bộ đề sẵn sàng và render form tạo kỳ thi.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "exam"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/admin/exams/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/admin/exams/page.tsx",
+      "summary": "Route danh sách kỳ thi quản trị, tải dữ liệu và render ExamList trong workspace chuẩn.",
+      "tags": [
+        "nextjs-route",
+        "admin",
+        "exam",
+        "data-fetching"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/admin/exams/page.tsx:ExamsPage",
+      "type": "function",
+      "name": "ExamsPage",
+      "filePath": "src/app/admin/exams/page.tsx",
+      "lineRange": [
+        12,
+        33
+      ],
+      "summary": "Tải và render danh sách kỳ thi cho quản trị viên.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "exam"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/admin/media-capture/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/admin/media-capture/page.tsx",
+      "summary": "Trang media capture dành cho giảng viên, xác thực token/session và dựng ngữ cảnh kỳ thi, môn, kịch bản để ghi hình/âm thanh.",
+      "tags": [
+        "nextjs-route",
+        "admin",
+        "media-capture",
+        "exam",
+        "authentication"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/admin/media-capture/page.tsx:AdminMediaCapturePage",
+      "type": "function",
+      "name": "AdminMediaCapturePage",
+      "filePath": "src/app/admin/media-capture/page.tsx",
+      "lineRange": [
+        44,
+        143
+      ],
+      "summary": "Xác thực thông tin media capture của giảng viên và render recorder với ngữ cảnh kỳ thi đầy đủ.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "media-capture",
+        "authentication"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/app/student/exams/[examId]/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/student/exams/[examId]/page.tsx",
+      "summary": "Route chi tiết kỳ thi của học viên, tải kỳ thi được phân công và hiển thị danh sách môn cùng trạng thái làm bài.",
+      "tags": [
+        "nextjs-route",
+        "student",
+        "exam",
+        "data-fetching"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/student/exams/[examId]/page.tsx:StudentExamDetailPage",
+      "type": "function",
+      "name": "StudentExamDetailPage",
+      "filePath": "src/app/student/exams/[examId]/page.tsx",
+      "lineRange": [
+        10,
+        37
+      ],
+      "summary": "Tải kỳ thi được phân công và render chi tiết cùng trạng thái từng môn cho học viên.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "student",
+        "exam"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/student/exams/[examId]/subjects/[candidateSubjectId]/page.tsx",
+      "summary": "Route môn thi của học viên, tải candidate subject và render workspace danh sách kịch bản/attempt.",
+      "tags": [
+        "nextjs-route",
+        "student",
+        "exam-subject",
+        "scenario-list"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/page.tsx:StudentSubjectPage",
+      "type": "function",
+      "name": "StudentSubjectPage",
+      "filePath": "src/app/student/exams/[examId]/subjects/[candidateSubjectId]/page.tsx",
+      "lineRange": [
+        9,
+        35
+      ],
+      "summary": "Tải candidate subject và render danh sách attempt kịch bản của môn thi.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "student",
+        "exam-subject"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/page.tsx",
+      "summary": "Route chạy một kịch bản thi chính thức, tải attempt context và chọn trình mô phỏng phù hợp module CNS.",
+      "tags": [
+        "nextjs-route",
+        "student",
+        "exam-attempt",
+        "simulation",
+        "module-routing"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/page.tsx:OfficialExamScenarioPage",
+      "type": "function",
+      "name": "OfficialExamScenarioPage",
+      "filePath": "src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/page.tsx",
+      "lineRange": [
+        11,
+        52
+      ],
+      "summary": "Tải attempt context và điều phối sang simulator VOR, DME hoặc ADS-B tương ứng.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "simulation",
+        "module-routing"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/terminal/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/terminal/page.tsx",
+      "summary": "Route terminal cho attempt chính thức, tải ngữ cảnh thi và khởi chạy TerminalSession ở chế độ được giám sát.",
+      "tags": [
+        "nextjs-route",
+        "student",
+        "terminal",
+        "exam-attempt"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/terminal/page.tsx:OfficialExamTerminalPage",
+      "type": "function",
+      "name": "OfficialExamTerminalPage",
+      "filePath": "src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/terminal/page.tsx",
+      "lineRange": [
+        8,
+        38
+      ],
+      "summary": "Tải attempt context và render terminal session chính thức của bài thi.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "terminal",
+        "exam-attempt"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/student/exams/error.tsx",
+      "type": "file",
+      "name": "error.tsx",
+      "filePath": "src/app/student/exams/error.tsx",
+      "summary": "Error boundary phía client cho khu vực thi của học viên, hiển thị phản hồi và cho phép thử lại route.",
+      "tags": [
+        "nextjs-route",
+        "error-boundary",
+        "student",
+        "exam"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/student/exams/error.tsx:Error",
+      "type": "function",
+      "name": "Error",
+      "filePath": "src/app/student/exams/error.tsx",
+      "lineRange": [
+        5,
+        7
+      ],
+      "summary": "Chuyển lỗi route và callback reset sang giao diện phản hồi lỗi dùng chung.",
+      "tags": [
+        "component",
+        "error-boundary",
+        "error-handling"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/student/exams/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/student/exams/page.tsx",
+      "summary": "Route danh sách kỳ thi của học viên, tải các bài thi được phân công và render workspace tương ứng.",
+      "tags": [
+        "nextjs-route",
+        "student",
+        "exam",
+        "data-fetching"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/student/exams/page.tsx:StudentExamsPage",
+      "type": "function",
+      "name": "StudentExamsPage",
+      "filePath": "src/app/student/exams/page.tsx",
+      "lineRange": [
+        9,
+        26
+      ],
+      "summary": "Tải và render danh sách kỳ thi được gán cho học viên.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "student",
+        "exam"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/student/media-capture/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/student/media-capture/page.tsx",
+      "summary": "Trang media capture cho học viên, xác thực token và dựng thông tin attempt để ghi nhận media trong phiên thi.",
+      "tags": [
+        "nextjs-route",
+        "student",
+        "media-capture",
+        "exam",
+        "authentication"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/app/student/media-capture/page.tsx:StudentMediaCapturePage",
+      "type": "function",
+      "name": "StudentMediaCapturePage",
+      "filePath": "src/app/student/media-capture/page.tsx",
+      "lineRange": [
+        10,
+        123
+      ],
+      "summary": "Xác thực token học viên và render media recorder gắn với attempt hiện tại.",
+      "tags": [
+        "component",
+        "nextjs-route",
+        "media-capture",
+        "authentication"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/exams/action-feedback.tsx",
+      "type": "file",
+      "name": "action-feedback.tsx",
+      "filePath": "src/components/exams/action-feedback.tsx",
+      "summary": "Component phản hồi thao tác chuẩn hóa cách hiển thị thông báo thành công hoặc lỗi trong các form quản lý thi.",
+      "tags": [
+        "component",
+        "feedback",
+        "error-handling",
+        "accessibility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/exams/action-feedback.tsx:ActionFeedback",
+      "type": "function",
+      "name": "ActionFeedback",
+      "filePath": "src/components/exams/action-feedback.tsx",
+      "lineRange": [
+        6,
+        28
+      ],
+      "summary": "Render thông báo success/error có semantic styling và nội dung dễ truy cập.",
+      "tags": [
+        "component",
+        "feedback",
+        "accessibility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/exams/candidate-result-editor.tsx",
+      "type": "file",
+      "name": "candidate-result-editor.tsx",
+      "filePath": "src/components/exams/candidate-result-editor.tsx",
+      "summary": "Form client cho giảng viên nhập điểm và nhận xét của một candidate subject rồi gọi server action và refresh kết quả.",
+      "tags": [
+        "component",
+        "form",
+        "exam-results",
+        "validation",
+        "server-action"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/exams/candidate-result-editor.tsx:CandidateResultEditor",
+      "type": "function",
+      "name": "CandidateResultEditor",
+      "filePath": "src/components/exams/candidate-result-editor.tsx",
+      "lineRange": [
+        11,
+        59
+      ],
+      "summary": "Validate điểm/nhận xét, gửi server action trong transition và refresh dữ liệu sau khi lưu.",
+      "tags": [
+        "component",
+        "form",
+        "exam-results",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/exams/exam-detail-manager.tsx",
+      "type": "file",
+      "name": "exam-detail-manager.tsx",
+      "filePath": "src/components/exams/exam-detail-manager.tsx",
+      "summary": "Giao diện quản trị chi tiết kỳ thi với CRUD thí sinh, phân công môn, điều khiển trạng thái và danh sách kết quả có phân trang.",
+      "tags": [
+        "component",
+        "exam",
+        "candidate-management",
+        "form",
+        "server-action"
+      ],
+      "complexity": "complex",
+      "languageNotes": "TSX dùng draft types và immutable array updates để quản lý form thí sinh/môn; `useTransition` tách trạng thái pending của server actions khỏi input state."
+    },
+    {
+      "id": "function:src/components/exams/exam-detail-manager.tsx:candidateToDraft",
+      "type": "function",
+      "name": "candidateToDraft",
+      "filePath": "src/components/exams/exam-detail-manager.tsx",
+      "lineRange": [
+        93,
+        106
+      ],
+      "summary": "Chuyển candidate hiện hữu thành draft chỉnh sửa, chuẩn hóa username và cấp key ổn định cho các môn.",
+      "tags": [
+        "utility",
+        "normalization",
+        "candidate",
+        "form-state"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/exams/exam-detail-manager.tsx:CandidateForm",
+      "type": "function",
+      "name": "CandidateForm",
+      "filePath": "src/components/exams/exam-detail-manager.tsx",
+      "lineRange": [
+        117,
+        277
+      ],
+      "summary": "Quản lý draft thí sinh, validate trường và phân công môn rồi gọi server action để thêm hoặc cập nhật.",
+      "tags": [
+        "component",
+        "form",
+        "candidate-management",
+        "validation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/exams/exam-detail-manager.tsx:ExamDetailManager",
+      "type": "function",
+      "name": "ExamDetailManager",
+      "filePath": "src/components/exams/exam-detail-manager.tsx",
+      "lineRange": [
+        279,
+        646
+      ],
+      "summary": "Điều phối danh sách, form và action quản trị thí sinh/kỳ thi, bao gồm phân trang và thay đổi trạng thái.",
+      "tags": [
+        "component",
+        "exam",
+        "candidate-management",
+        "state-transition"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/components/exams/exam-editor.tsx",
+      "type": "file",
+      "name": "exam-editor.tsx",
+      "filePath": "src/components/exams/exam-editor.tsx",
+      "summary": "Form tạo/chỉnh sửa kỳ thi, validate tên, ngày, quyết định, địa điểm và bộ đề trước khi gọi server action.",
+      "tags": [
+        "component",
+        "exam",
+        "editor",
+        "validation",
+        "server-action"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/exams/exam-editor.tsx:ExamEditor",
+      "type": "function",
+      "name": "ExamEditor",
+      "filePath": "src/components/exams/exam-editor.tsx",
+      "lineRange": [
+        41,
+        171
+      ],
+      "summary": "Quản lý state form kỳ thi, validate dữ liệu và lưu qua server action trước khi điều hướng.",
+      "tags": [
+        "component",
+        "form",
+        "exam",
+        "validation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/exams/exam-list.tsx",
+      "type": "file",
+      "name": "exam-list.tsx",
+      "filePath": "src/components/exams/exam-list.tsx",
+      "summary": "Danh sách kỳ thi có tìm kiếm tiếng Việt không dấu và action chuyển trạng thái hoặc lưu trữ, kèm phản hồi bất đồng bộ.",
+      "tags": [
+        "component",
+        "exam",
+        "search",
+        "state-transition",
+        "server-action"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Hàm normalize dùng Unicode NFD và locale vi-VN để tìm kiếm không dấu, còn union status điều khiển các transition hợp lệ của kỳ thi."
+    },
+    {
+      "id": "function:src/components/exams/exam-list.tsx:ExamList",
+      "type": "function",
+      "name": "ExamList",
+      "filePath": "src/components/exams/exam-list.tsx",
+      "lineRange": [
+        36,
+        135
+      ],
+      "summary": "Lọc danh sách kỳ thi theo truy vấn đã chuẩn hóa và xử lý action status/archive có xác nhận.",
+      "tags": [
+        "component",
+        "exam",
+        "search",
+        "state-transition"
+      ],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/app/admin/exam-sets/[examSetId]/edit/page.tsx",
+      "target": "function:src/app/admin/exam-sets/[examSetId]/edit/page.tsx:EditExamSetPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/exam-sets/[examSetId]/edit/page.tsx",
+      "target": "function:src/app/admin/exam-sets/[examSetId]/edit/page.tsx:EditExamSetPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/exam-sets/error.tsx",
+      "target": "function:src/app/admin/exam-sets/error.tsx:Error",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/exam-sets/error.tsx",
+      "target": "function:src/app/admin/exam-sets/error.tsx:Error",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/exam-sets/new/page.tsx",
+      "target": "function:src/app/admin/exam-sets/new/page.tsx:NewExamSetPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/exam-sets/new/page.tsx",
+      "target": "function:src/app/admin/exam-sets/new/page.tsx:NewExamSetPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/exam-sets/page.tsx",
+      "target": "function:src/app/admin/exam-sets/page.tsx:ExamSetsPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/exam-sets/page.tsx",
+      "target": "function:src/app/admin/exam-sets/page.tsx:ExamSetsPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/exams/[examId]/edit/page.tsx",
+      "target": "function:src/app/admin/exams/[examId]/edit/page.tsx:EditExamPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/exams/[examId]/edit/page.tsx",
+      "target": "function:src/app/admin/exams/[examId]/edit/page.tsx:EditExamPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/exams/[examId]/page.tsx",
+      "target": "function:src/app/admin/exams/[examId]/page.tsx:ExamDetailPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/exams/[examId]/page.tsx",
+      "target": "function:src/app/admin/exams/[examId]/page.tsx:ExamDetailPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/exams/[examId]/results/[candidateSubjectId]/page.tsx",
+      "target": "function:src/app/admin/exams/[examId]/results/[candidateSubjectId]/page.tsx:OfficialExamReviewPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/exams/[examId]/results/[candidateSubjectId]/page.tsx",
+      "target": "function:src/app/admin/exams/[examId]/results/[candidateSubjectId]/page.tsx:OfficialExamReviewPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/exams/error.tsx",
+      "target": "function:src/app/admin/exams/error.tsx:Error",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/exams/error.tsx",
+      "target": "function:src/app/admin/exams/error.tsx:Error",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/exams/new/page.tsx",
+      "target": "function:src/app/admin/exams/new/page.tsx:NewExamPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/exams/new/page.tsx",
+      "target": "function:src/app/admin/exams/new/page.tsx:NewExamPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/exams/page.tsx",
+      "target": "function:src/app/admin/exams/page.tsx:ExamsPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/exams/page.tsx",
+      "target": "function:src/app/admin/exams/page.tsx:ExamsPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/media-capture/page.tsx",
+      "target": "function:src/app/admin/media-capture/page.tsx:AdminMediaCapturePage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/admin/media-capture/page.tsx",
+      "target": "function:src/app/admin/media-capture/page.tsx:AdminMediaCapturePage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/student/exams/[examId]/page.tsx",
+      "target": "function:src/app/student/exams/[examId]/page.tsx:StudentExamDetailPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/student/exams/[examId]/page.tsx",
+      "target": "function:src/app/student/exams/[examId]/page.tsx:StudentExamDetailPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/page.tsx",
+      "target": "function:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/page.tsx:StudentSubjectPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/page.tsx",
+      "target": "function:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/page.tsx:StudentSubjectPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/page.tsx",
+      "target": "function:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/page.tsx:OfficialExamScenarioPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/page.tsx",
+      "target": "function:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/page.tsx:OfficialExamScenarioPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/terminal/page.tsx",
+      "target": "function:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/terminal/page.tsx:OfficialExamTerminalPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/terminal/page.tsx",
+      "target": "function:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/terminal/page.tsx:OfficialExamTerminalPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/student/exams/error.tsx",
+      "target": "function:src/app/student/exams/error.tsx:Error",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/student/exams/error.tsx",
+      "target": "function:src/app/student/exams/error.tsx:Error",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/student/exams/page.tsx",
+      "target": "function:src/app/student/exams/page.tsx:StudentExamsPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/student/exams/page.tsx",
+      "target": "function:src/app/student/exams/page.tsx:StudentExamsPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/student/media-capture/page.tsx",
+      "target": "function:src/app/student/media-capture/page.tsx:StudentMediaCapturePage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/student/media-capture/page.tsx",
+      "target": "function:src/app/student/media-capture/page.tsx:StudentMediaCapturePage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/exams/action-feedback.tsx",
+      "target": "function:src/components/exams/action-feedback.tsx:ActionFeedback",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/action-feedback.tsx",
+      "target": "function:src/components/exams/action-feedback.tsx:ActionFeedback",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/exams/candidate-result-editor.tsx",
+      "target": "function:src/components/exams/candidate-result-editor.tsx:CandidateResultEditor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/candidate-result-editor.tsx",
+      "target": "function:src/components/exams/candidate-result-editor.tsx:CandidateResultEditor",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/exams/exam-detail-manager.tsx",
+      "target": "function:src/components/exams/exam-detail-manager.tsx:candidateToDraft",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/exam-detail-manager.tsx",
+      "target": "function:src/components/exams/exam-detail-manager.tsx:CandidateForm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/exam-detail-manager.tsx",
+      "target": "function:src/components/exams/exam-detail-manager.tsx:ExamDetailManager",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/exam-detail-manager.tsx",
+      "target": "function:src/components/exams/exam-detail-manager.tsx:ExamDetailManager",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/exams/exam-editor.tsx",
+      "target": "function:src/components/exams/exam-editor.tsx:ExamEditor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/exam-editor.tsx",
+      "target": "function:src/components/exams/exam-editor.tsx:ExamEditor",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/exams/exam-list.tsx",
+      "target": "function:src/components/exams/exam-list.tsx:ExamList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/exams/exam-list.tsx",
+      "target": "function:src/components/exams/exam-list.tsx:ExamList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/exam-sets/[examSetId]/edit/page.tsx",
+      "target": "file:src/components/exams/exam-set-editor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exam-sets/[examSetId]/edit/page.tsx",
+      "target": "file:src/components/exams/shared.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exam-sets/[examSetId]/edit/page.tsx",
+      "target": "file:src/lib/exams/queries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exam-sets/error.tsx",
+      "target": "file:src/components/exams/route-error.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exam-sets/new/page.tsx",
+      "target": "file:src/components/exams/exam-set-editor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exam-sets/new/page.tsx",
+      "target": "file:src/components/exams/shared.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exam-sets/new/page.tsx",
+      "target": "file:src/lib/exams/queries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exam-sets/page.tsx",
+      "target": "file:src/components/exams/exam-set-list.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exam-sets/page.tsx",
+      "target": "file:src/components/exams/shared.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exam-sets/page.tsx",
+      "target": "file:src/lib/exams/queries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exams/[examId]/edit/page.tsx",
+      "target": "file:src/components/exams/exam-editor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exams/[examId]/edit/page.tsx",
+      "target": "file:src/components/exams/shared.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exams/[examId]/edit/page.tsx",
+      "target": "file:src/lib/exams/queries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exams/[examId]/page.tsx",
+      "target": "file:src/components/exams/exam-detail-manager.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exams/[examId]/page.tsx",
+      "target": "file:src/components/exams/shared.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exams/[examId]/page.tsx",
+      "target": "file:src/lib/exams/queries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exams/[examId]/results/[candidateSubjectId]/page.tsx",
+      "target": "file:src/components/exams/official-exam-review.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exams/[examId]/results/[candidateSubjectId]/page.tsx",
+      "target": "file:src/lib/exams/queries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exams/error.tsx",
+      "target": "file:src/components/exams/route-error.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exams/new/page.tsx",
+      "target": "file:src/components/exams/exam-editor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exams/new/page.tsx",
+      "target": "file:src/components/exams/shared.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exams/new/page.tsx",
+      "target": "file:src/lib/exams/queries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exams/page.tsx",
+      "target": "file:src/components/exams/exam-list.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exams/page.tsx",
+      "target": "file:src/components/exams/shared.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exams/page.tsx",
+      "target": "file:src/lib/exams/queries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/media-capture/page.tsx",
+      "target": "file:src/components/exams/exam-detail-manager.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/media-capture/page.tsx",
+      "target": "file:src/components/exams/exam-editor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/media-capture/page.tsx",
+      "target": "file:src/components/exams/exam-list.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/media-capture/page.tsx",
+      "target": "file:src/components/exams/exam-set-editor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/media-capture/page.tsx",
+      "target": "file:src/components/exams/exam-set-list.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/media-capture/page.tsx",
+      "target": "file:src/components/exams/shared.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/exams/[examId]/page.tsx",
+      "target": "file:src/components/exams/shared.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/exams/[examId]/page.tsx",
+      "target": "file:src/components/exams/student-exam-detail.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/exams/[examId]/page.tsx",
+      "target": "file:src/lib/exams/queries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/page.tsx",
+      "target": "file:src/components/exams/shared.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/page.tsx",
+      "target": "file:src/components/exams/student-subject-progress.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/page.tsx",
+      "target": "file:src/lib/exams/queries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/page.tsx",
+      "target": "file:src/components/dme/student/dme-student-session.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/page.tsx",
+      "target": "file:src/components/qcms/scenario-monitor-view.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/page.tsx",
+      "target": "file:src/components/vor/student/vor-student-session.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/page.tsx",
+      "target": "file:src/lib/auth/profile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/page.tsx",
+      "target": "file:src/lib/exams/queries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/terminal/page.tsx",
+      "target": "file:src/components/terminal/terminal-session.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/exams/[examId]/subjects/[candidateSubjectId]/scenarios/[attemptItemId]/terminal/page.tsx",
+      "target": "file:src/lib/exams/queries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/exams/error.tsx",
+      "target": "file:src/components/exams/route-error.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/exams/page.tsx",
+      "target": "file:src/components/exams/shared.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/exams/page.tsx",
+      "target": "file:src/components/exams/student-exam-list.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/exams/page.tsx",
+      "target": "file:src/lib/exams/queries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/media-capture/page.tsx",
+      "target": "file:src/components/exams/shared.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/media-capture/page.tsx",
+      "target": "file:src/components/exams/student-exam-detail.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/media-capture/page.tsx",
+      "target": "file:src/components/exams/student-exam-list.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/media-capture/page.tsx",
+      "target": "file:src/components/exams/student-subject-progress.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/candidate-result-editor.tsx",
+      "target": "file:src/components/exams/action-feedback.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/candidate-result-editor.tsx",
+      "target": "file:src/components/exams/shared.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/candidate-result-editor.tsx",
+      "target": "file:src/lib/exams/actions.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/candidate-result-editor.tsx",
+      "target": "file:src/lib/exams/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/exam-detail-manager.tsx",
+      "target": "file:src/components/exams/action-feedback.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/exam-detail-manager.tsx",
+      "target": "file:src/components/exams/candidate-result-editor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/exam-detail-manager.tsx",
+      "target": "file:src/components/exams/shared.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/exam-detail-manager.tsx",
+      "target": "file:src/lib/exams/actions.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/exam-editor.tsx",
+      "target": "file:src/components/exams/action-feedback.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/exam-editor.tsx",
+      "target": "file:src/components/exams/shared.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/exam-editor.tsx",
+      "target": "file:src/lib/exams/actions.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/exam-list.tsx",
+      "target": "file:src/components/exams/action-feedback.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/exam-list.tsx",
+      "target": "file:src/components/exams/shared.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/exams/exam-list.tsx",
+      "target": "file:src/lib/exams/actions.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:src/components/exams/exam-detail-manager.tsx:CandidateForm",
+      "target": "function:src/components/exams/exam-detail-manager.tsx:candidateToDraft",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

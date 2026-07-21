@@ -1,0 +1,187 @@
+{
+  "nodes": [
+    {
+      "id": "config:.env.example",
+      "type": "config",
+      "name": ".env.example",
+      "filePath": ".env.example",
+      "summary": "Mẫu biến môi trường cho kết nối Supabase phía client, secret key phía server và URL database tùy chọn dành cho migration tooling.",
+      "tags": ["configuration", "biến-môi-trường", "supabase", "security"],
+      "complexity": "simple",
+      "languageNotes": "Tách rõ biến có tiền tố NEXT_PUBLIC_ dùng ở browser khỏi secret chỉ được phép sử dụng phía server."
+    },
+    {
+      "id": "document:AGENTS.md",
+      "type": "document",
+      "name": "AGENTS.md",
+      "filePath": "AGENTS.md",
+      "summary": "Tài liệu hướng dẫn cộng tác trong repository, gồm lưu ý về phiên bản Next.js và pipeline sửa đổi, xác nhận, kiểm tra, cập nhật tài liệu và Git.",
+      "tags": ["documentation", "quy-trình-phát-triển", "nextjs", "quality-gate"],
+      "complexity": "simple",
+      "languageNotes": "Tài liệu Markdown ngắn dùng heading cấp một, danh sách đánh dấu và inline code để mô tả pipeline theo bước."
+    },
+    {
+      "id": "document:CLAUDE.md",
+      "type": "document",
+      "name": "CLAUDE.md",
+      "filePath": "CLAUDE.md",
+      "summary": "Tài liệu chuyển tiếp một dòng trỏ tới AGENTS.md để dùng chung hướng dẫn cộng tác của repository.",
+      "tags": ["documentation", "tham-chiếu", "quy-trình-phát-triển", "agent"],
+      "complexity": "simple",
+      "languageNotes": "Dùng cú pháp tham chiếu tệp tối giản thay vì lặp lại nội dung tài liệu nguồn."
+    },
+    {
+      "id": "document:README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "README.md",
+      "summary": "Tài liệu tổng quan dự án với 28 mục về chức năng giám khảo/học viên, kiến trúc dữ liệu, Supabase Auth, route, kiểm thử, triển khai, cấu trúc mã nguồn, roadmap và session log.",
+      "tags": ["documentation", "entry-point", "kiến-trúc", "hướng-dẫn-cài-đặt", "roadmap"],
+      "complexity": "complex",
+      "languageNotes": "Markdown có heading phân cấp sâu, code block, danh sách quy trình và cây thư mục để phục vụ cả onboarding lẫn vận hành dự án."
+    },
+    {
+      "id": "config:package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "package.json",
+      "summary": "Node.js manifest của cns-simulator, định nghĩa 14 script phát triển/kiểm tra/media cùng dependencies cho Next.js, React, Supabase, Zustand, Vitest và Playwright.",
+      "tags": ["configuration", "nodejs", "build-system", "dependencies", "quality-gate"],
+      "complexity": "moderate",
+      "languageNotes": "JSON strict chia công cụ runtime và development thành dependencies/devDependencies, đồng thời gom quality checks vào script check."
+    },
+    {
+      "id": "table:schema.sql:Scenarios",
+      "type": "table",
+      "name": "Scenarios",
+      "filePath": "schema.sql",
+      "summary": "DDL tạo bảng Scenarios với khóa chính dạng text, metadata kịch bản, site/action được serialize thành text và timestamp tạo/cập nhật.",
+      "tags": ["database", "schema-definition", "scenarios", "ddl", "data-model"],
+      "complexity": "simple",
+      "languageNotes": "Schema dùng NOT NULL cho các trường bắt buộc nhưng lưu sites và expected actions dưới dạng JSON text, không khai báo foreign key hoặc index phụ."
+    },
+    {
+      "id": "config:tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "tsconfig.json",
+      "summary": "Cấu hình TypeScript strict cho Next.js với moduleResolution bundler, JSX transform của React, noEmit, incremental build và alias @/* tới src/*.",
+      "tags": ["configuration", "typescript", "build-system", "path-alias", "strict-mode"],
+      "complexity": "simple",
+      "languageNotes": "Compiler options hỗ trợ TS/TSX/MTS, resolve JSON module và Next.js plugin trong khi để bundler xử lý module resolution."
+    },
+    {
+      "id": "config:vercel.json",
+      "type": "config",
+      "name": "vercel.json",
+      "filePath": "vercel.json",
+      "summary": "Cấu hình triển khai Vercel theo JSON Schema và ghim workload của ứng dụng vào region Singapore sin1.",
+      "tags": ["configuration", "deployment", "vercel", "region"],
+      "complexity": "simple",
+      "languageNotes": "JSON strict tham chiếu schema chính thức của Vercel để hỗ trợ validation cấu hình."
+    },
+    {
+      "id": "config:wrangler.json",
+      "type": "config",
+      "name": "wrangler.json",
+      "filePath": "wrangler.json",
+      "summary": "Cấu hình Cloudflare Pages cho output tĩnh từ adapter Vercel, bật nodejs_compat và khai báo D1 binding DB tới database adsb-db.",
+      "tags": ["configuration", "cloudflare-pages", "d1", "deployment", "nodejs-compat"],
+      "complexity": "simple",
+      "languageNotes": "Cấu hình JSON kết hợp Pages build output với compatibility date/flags và một D1 database binding có định danh cụ thể."
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:CLAUDE.md",
+      "target": "document:AGENTS.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:AGENTS.md",
+      "target": "config:package.json",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:AGENTS.md",
+      "target": "document:README.md",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "config:.env.example",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "config:package.json",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "table:schema.sql:Scenarios",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "config:vercel.json",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:README.md",
+      "target": "config:wrangler.json",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:package.json",
+      "target": "config:tsconfig.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:vercel.json",
+      "target": "config:package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:wrangler.json",
+      "target": "config:vercel.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:wrangler.json",
+      "target": "table:schema.sql:Scenarios",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:.env.example",
+      "target": "document:README.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

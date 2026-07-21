@@ -50,7 +50,7 @@ function LoginSuccessOverlay({ reduceMotion }: { reduceMotion: boolean }) {
       aria-live="polite"
       initial={reduceMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: reduceMotion ? 0 : 0.16 }}
+      transition={{ duration: reduceMotion ? 0 : 0.5 }}
       className="fixed inset-0 z-50 grid place-items-center bg-white/75 px-5 backdrop-blur-md"
     >
       <p className="text-center text-base font-bold tracking-tight text-[var(--text-primary)] sm:text-lg">
@@ -304,8 +304,10 @@ export function AuthPage({ nextPath }: { nextPath?: string }) {
     }
 
     setLoginSucceeded(true);
-    await new Promise<void>((resolve) => window.setTimeout(resolve, 1500));
     const destination = nextPath ?? "/";
+    router.prefetch(destination);
+    // Xuất hiện mất 0.5s + Giữ nguyên hiển thị 1.5s = Chờ 2.0s rồi chuyển hướng thẳng sang trang mới
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 2000));
     router.replace(destination);
     router.refresh();
   }

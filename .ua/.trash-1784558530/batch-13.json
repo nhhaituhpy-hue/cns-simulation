@@ -1,0 +1,160 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/app/admin/exam-sets/loading.tsx",
+      "type": "file",
+      "name": "loading.tsx",
+      "filePath": "src/app/admin/exam-sets/loading.tsx",
+      "summary": "Loading UI của nhánh quản trị bộ đề, ủy quyền giao diện skeleton cho component dùng chung của các route thi.",
+      "tags": ["nextjs-route", "loading-ui", "exam-set", "skeleton"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/admin/exam-sets/loading.tsx:Loading",
+      "type": "function",
+      "name": "Loading",
+      "filePath": "src/app/admin/exam-sets/loading.tsx",
+      "lineRange": [3, 5],
+      "summary": "Render ExamRouteLoading trong lúc route quản trị bộ đề đang tải.",
+      "tags": ["component", "loading-ui", "nextjs-route"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/admin/exams/loading.tsx",
+      "type": "file",
+      "name": "loading.tsx",
+      "filePath": "src/app/admin/exams/loading.tsx",
+      "summary": "Loading UI của nhánh quản trị kỳ thi, sử dụng skeleton route chung để giữ bố cục ổn định khi chuyển trang.",
+      "tags": ["nextjs-route", "loading-ui", "exam", "skeleton"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/admin/exams/loading.tsx:Loading",
+      "type": "function",
+      "name": "Loading",
+      "filePath": "src/app/admin/exams/loading.tsx",
+      "lineRange": [3, 5],
+      "summary": "Render ExamRouteLoading trong lúc route quản trị kỳ thi đang tải.",
+      "tags": ["component", "loading-ui", "nextjs-route"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/app/student/exams/loading.tsx",
+      "type": "file",
+      "name": "loading.tsx",
+      "filePath": "src/app/student/exams/loading.tsx",
+      "summary": "Loading UI của nhánh kỳ thi học viên, dùng skeleton route chung trong thời gian tải danh sách hoặc chi tiết bài thi.",
+      "tags": ["nextjs-route", "loading-ui", "student", "skeleton"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/app/student/exams/loading.tsx:Loading",
+      "type": "function",
+      "name": "Loading",
+      "filePath": "src/app/student/exams/loading.tsx",
+      "lineRange": [3, 5],
+      "summary": "Render ExamRouteLoading trong lúc route kỳ thi học viên đang tải.",
+      "tags": ["component", "loading-ui", "nextjs-route"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/exams/route-loading.tsx",
+      "type": "file",
+      "name": "route-loading.tsx",
+      "filePath": "src/components/exams/route-loading.tsx",
+      "summary": "Component skeleton dùng chung cho các route kỳ thi và bộ đề, mô phỏng header workspace cùng các khối nội dung đang tải.",
+      "tags": ["component", "loading-ui", "skeleton", "exam"] ,
+      "complexity": "simple",
+      "languageNotes": "TSX component không nhận props, được tái sử dụng trực tiếp bởi các file `loading.tsx` của Next.js App Router."
+    },
+    {
+      "id": "function:src/components/exams/route-loading.tsx:ExamRouteLoading",
+      "type": "function",
+      "name": "ExamRouteLoading",
+      "filePath": "src/components/exams/route-loading.tsx",
+      "lineRange": [1, 19],
+      "summary": "Render skeleton thống nhất cho workspace kỳ thi trong lúc dữ liệu route chưa sẵn sàng.",
+      "tags": ["component", "loading-ui", "skeleton", "exam"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/app/admin/exam-sets/loading.tsx",
+      "target": "function:src/app/admin/exam-sets/loading.tsx:Loading",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/admin/exam-sets/loading.tsx",
+      "target": "function:src/app/admin/exam-sets/loading.tsx:Loading",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/exams/loading.tsx",
+      "target": "function:src/app/admin/exams/loading.tsx:Loading",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/admin/exams/loading.tsx",
+      "target": "function:src/app/admin/exams/loading.tsx:Loading",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/student/exams/loading.tsx",
+      "target": "function:src/app/student/exams/loading.tsx:Loading",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/app/student/exams/loading.tsx",
+      "target": "function:src/app/student/exams/loading.tsx:Loading",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/exams/route-loading.tsx",
+      "target": "function:src/components/exams/route-loading.tsx:ExamRouteLoading",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/components/exams/route-loading.tsx",
+      "target": "function:src/components/exams/route-loading.tsx:ExamRouteLoading",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/admin/exam-sets/loading.tsx",
+      "target": "file:src/components/exams/route-loading.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/admin/exams/loading.tsx",
+      "target": "file:src/components/exams/route-loading.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/exams/loading.tsx",
+      "target": "file:src/components/exams/route-loading.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

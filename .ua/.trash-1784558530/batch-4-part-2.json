@@ -1,0 +1,978 @@
+{
+  "nodes": [
+    {
+      "id": "file:src/app/student/vor/session/page.tsx",
+      "type": "file",
+      "name": "page.tsx",
+      "filePath": "src/app/student/vor/session/page.tsx",
+      "summary": "Trang phiên thực hành VOR, xác thực thí sinh và tham số scenarioId rồi khởi tạo màn hình session tương ứng.",
+      "tags": [
+        "nextjs",
+        "entry-point",
+        "routing",
+        "cns"
+      ],
+      "complexity": "simple",
+      "languageNotes": "TSX React component dùng typed props và quy ước Next.js App Router để tách server/client responsibilities."
+    },
+    {
+      "id": "function:src/app/student/vor/session/page.tsx:VorStudentSessionPage",
+      "type": "function",
+      "name": "VorStudentSessionPage",
+      "filePath": "src/app/student/vor/session/page.tsx",
+      "lineRange": [
+        9,
+        15
+      ],
+      "summary": "Kiểm tra profile student và scenarioId rồi render VOR scenario runner.",
+      "tags": [
+        "component",
+        "nextjs",
+        "routing",
+        "authorization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/components/auth/auth-page.tsx",
+      "type": "file",
+      "name": "auth-page.tsx",
+      "filePath": "src/components/auth/auth-page.tsx",
+      "summary": "Giao diện xác thực nhiều bước hỗ trợ đăng nhập, đăng ký, OTP và khôi phục mật khẩu với animation, validation và điều hướng sau thành công.",
+      "tags": [
+        "authentication",
+        "security",
+        "supabase",
+        "server-action"
+      ],
+      "complexity": "complex",
+      "languageNotes": "TSX React component dùng typed props và quy ước Next.js App Router để tách server/client responsibilities."
+    },
+    {
+      "id": "function:src/components/auth/auth-page.tsx:LoginSuccessOverlay",
+      "type": "function",
+      "name": "LoginSuccessOverlay",
+      "filePath": "src/components/auth/auth-page.tsx",
+      "lineRange": [
+        46,
+        79
+      ],
+      "summary": "Hiển thị lớp phủ animation báo đăng nhập thành công trước khi điều hướng.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "responsive-ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/auth/auth-page.tsx:Brand",
+      "type": "function",
+      "name": "Brand",
+      "filePath": "src/components/auth/auth-page.tsx",
+      "lineRange": [
+        81,
+        92
+      ],
+      "summary": "Render nhận diện thương hiệu cho các mặt của thẻ xác thực.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "responsive-ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/auth/auth-page.tsx:FieldMessage",
+      "type": "function",
+      "name": "FieldMessage",
+      "filePath": "src/components/auth/auth-page.tsx",
+      "lineRange": [
+        94,
+        113
+      ],
+      "summary": "Render thông báo validation hoặc trạng thái cho một trường form.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "responsive-ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/auth/auth-page.tsx:OtpFields",
+      "type": "function",
+      "name": "OtpFields",
+      "filePath": "src/components/auth/auth-page.tsx",
+      "lineRange": [
+        115,
+        173
+      ],
+      "summary": "Quản lý sáu ô OTP, tự chuyển focus và hỗ trợ nhập, xóa bằng phím cùng paste chuỗi số.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "responsive-ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/auth/auth-page.tsx:PasswordField",
+      "type": "function",
+      "name": "PasswordField",
+      "filePath": "src/components/auth/auth-page.tsx",
+      "lineRange": [
+        175,
+        221
+      ],
+      "summary": "Render input mật khẩu có nút chuyển đổi hiển thị nội dung.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "responsive-ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/auth/auth-page.tsx:AuthPage",
+      "type": "function",
+      "name": "AuthPage",
+      "filePath": "src/components/auth/auth-page.tsx",
+      "lineRange": [
+        223,
+        577
+      ],
+      "summary": "Điều phối state machine giao diện xác thực, gọi server actions và quản lý animation, cooldown, lỗi cùng điều hướng.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "responsive-ui"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:src/components/home/home-media-carousel.tsx",
+      "type": "file",
+      "name": "home-media-carousel.tsx",
+      "filePath": "src/components/home/home-media-carousel.tsx",
+      "summary": "Carousel media hướng dẫn trên trang chủ, preload ảnh/video/audio, tự chuyển slide và đồng bộ voice-over với trạng thái phát nội dung.",
+      "tags": [
+        "component",
+        "react",
+        "responsive-ui",
+        "navigation"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TSX React component dùng typed props và quy ước Next.js App Router để tách server/client responsibilities."
+    },
+    {
+      "id": "function:src/components/home/home-media-carousel.tsx:HomeMediaCarousel",
+      "type": "function",
+      "name": "HomeMediaCarousel",
+      "filePath": "src/components/home/home-media-carousel.tsx",
+      "lineRange": [
+        26,
+        213
+      ],
+      "summary": "Quản lý preload, slide hiện tại, video và voice-over cho carousel media hướng dẫn.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "responsive-ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/layout/app-shell.tsx",
+      "type": "file",
+      "name": "app-shell.tsx",
+      "filePath": "src/components/layout/app-shell.tsx",
+      "summary": "Khung điều hướng chính responsive của ứng dụng, lọc mục theo role, cung cấp rail desktop, menu mobile, sub-tabs module và chuyển cảnh trang.",
+      "tags": [
+        "component",
+        "react",
+        "responsive-ui",
+        "navigation"
+      ],
+      "complexity": "complex",
+      "languageNotes": "TSX React component dùng typed props và quy ước Next.js App Router để tách server/client responsibilities."
+    },
+    {
+      "id": "function:src/components/layout/app-shell.tsx:BrandWordmark",
+      "type": "function",
+      "name": "BrandWordmark",
+      "filePath": "src/components/layout/app-shell.tsx",
+      "lineRange": [
+        67,
+        82
+      ],
+      "summary": "Render wordmark và biểu tượng thương hiệu trong khu vực điều hướng.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "responsive-ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/layout/app-shell.tsx:ModuleSubTabs",
+      "type": "function",
+      "name": "ModuleSubTabs",
+      "filePath": "src/components/layout/app-shell.tsx",
+      "lineRange": [
+        103,
+        180
+      ],
+      "summary": "Render các tab con của module hiện tại và đánh dấu tab khớp pathname.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "responsive-ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/layout/app-shell.tsx:MobileNavigation",
+      "type": "function",
+      "name": "MobileNavigation",
+      "filePath": "src/components/layout/app-shell.tsx",
+      "lineRange": [
+        182,
+        223
+      ],
+      "summary": "Render menu điều hướng mobile đã lọc theo role và trạng thái route.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "responsive-ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/layout/app-shell.tsx:DesktopNavigationRail",
+      "type": "function",
+      "name": "DesktopNavigationRail",
+      "filePath": "src/components/layout/app-shell.tsx",
+      "lineRange": [
+        225,
+        274
+      ],
+      "summary": "Render rail điều hướng desktop với mục active và phân vùng workspace.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "responsive-ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/components/layout/app-shell.tsx:PageTransition",
+      "type": "function",
+      "name": "PageTransition",
+      "filePath": "src/components/layout/app-shell.tsx",
+      "lineRange": [
+        276,
+        290
+      ],
+      "summary": "Tạo animation chuyển nội dung mỗi khi pathname thay đổi.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "responsive-ui"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/components/layout/app-shell.tsx:AppShell",
+      "type": "function",
+      "name": "AppShell",
+      "filePath": "src/components/layout/app-shell.tsx",
+      "lineRange": [
+        292,
+        487
+      ],
+      "summary": "Lắp ráp header, navigation responsive, sub-tabs và nội dung trang theo profile cùng pathname.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "responsive-ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/components/ui/role-card.tsx",
+      "type": "file",
+      "name": "role-card.tsx",
+      "filePath": "src/components/ui/role-card.tsx",
+      "summary": "Thẻ điều hướng theo role trên trang chủ, kiểm tra quyền bằng server action trước khi chuyển tới workspace được bảo vệ.",
+      "tags": [
+        "component",
+        "react",
+        "responsive-ui",
+        "navigation"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "TSX React component dùng typed props và quy ước Next.js App Router để tách server/client responsibilities."
+    },
+    {
+      "id": "function:src/components/ui/role-card.tsx:RoleCard",
+      "type": "function",
+      "name": "RoleCard",
+      "filePath": "src/components/ui/role-card.tsx",
+      "lineRange": [
+        20,
+        82
+      ],
+      "summary": "Kiểm tra role khi người dùng chọn thẻ rồi điều hướng hoặc hiển thị cảnh báo truy cập.",
+      "tags": [
+        "component",
+        "react",
+        "event-handler",
+        "responsive-ui"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:src/lib/auth/login-lockout.ts",
+      "type": "file",
+      "name": "login-lockout.ts",
+      "filePath": "src/lib/auth/login-lockout.ts",
+      "summary": "Dịch vụ khóa đăng nhập phía server, băm email, đọc/ghi số lần thất bại qua Supabase admin và tính số lần thử còn lại.",
+      "tags": [
+        "authentication",
+        "security",
+        "supabase",
+        "server-action"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/auth/login-lockout.ts:getLoginLockStatus",
+      "type": "function",
+      "name": "getLoginLockStatus",
+      "filePath": "src/lib/auth/login-lockout.ts",
+      "lineRange": [
+        28,
+        38
+      ],
+      "summary": "Đọc trạng thái khóa và số lần đăng nhập thất bại từ bảng auth_login_attempts.",
+      "tags": [
+        "service",
+        "supabase",
+        "security",
+        "server-only"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/auth/login-lockout.ts:recordFailedLogin",
+      "type": "function",
+      "name": "recordFailedLogin",
+      "filePath": "src/lib/auth/login-lockout.ts",
+      "lineRange": [
+        40,
+        52
+      ],
+      "summary": "Gọi RPC để tăng số lần thất bại và trả về trạng thái lockout mới.",
+      "tags": [
+        "service",
+        "supabase",
+        "security",
+        "server-only"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/auth/login-lockout.ts:clearFailedLogins",
+      "type": "function",
+      "name": "clearFailedLogins",
+      "filePath": "src/lib/auth/login-lockout.ts",
+      "lineRange": [
+        54,
+        62
+      ],
+      "summary": "Xóa bản ghi đăng nhập thất bại theo hash email sau khi xác thực thành công.",
+      "tags": [
+        "service",
+        "supabase",
+        "security",
+        "server-only"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/auth/login-lockout.ts:attemptsRemaining",
+      "type": "function",
+      "name": "attemptsRemaining",
+      "filePath": "src/lib/auth/login-lockout.ts",
+      "lineRange": [
+        64,
+        66
+      ],
+      "summary": "Tính số lần thử còn lại trước khi đạt ngưỡng khóa tài khoản.",
+      "tags": [
+        "utility",
+        "type-safety",
+        "serialization",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/lib/auth/profile.ts",
+      "type": "file",
+      "name": "profile.ts",
+      "filePath": "src/lib/auth/profile.ts",
+      "summary": "Tiện ích server lấy profile đã xác thực và user ID từ Supabase claims, có cache theo request và chế độ profile giả cho media capture.",
+      "tags": [
+        "authentication",
+        "security",
+        "supabase",
+        "server-action"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:src/lib/auth/profile.ts:getCurrentUserId",
+      "type": "function",
+      "name": "getCurrentUserId",
+      "filePath": "src/lib/auth/profile.ts",
+      "lineRange": [
+        61,
+        66
+      ],
+      "summary": "Lấy subject user từ Supabase auth claims và trả về null khi claims không hợp lệ.",
+      "tags": [
+        "component",
+        "nextjs",
+        "routing",
+        "authorization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/lib/supabase/admin.ts",
+      "type": "file",
+      "name": "admin.ts",
+      "filePath": "src/lib/supabase/admin.ts",
+      "summary": "Factory tạo Supabase admin client bằng service-role key cho các tác vụ server đặc quyền như quản lý khóa đăng nhập.",
+      "tags": [
+        "service",
+        "supabase",
+        "server-only",
+        "factory"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/supabase/admin.ts:createAdminClient",
+      "type": "function",
+      "name": "createAdminClient",
+      "filePath": "src/lib/supabase/admin.ts",
+      "lineRange": [
+        5,
+        20
+      ],
+      "summary": "Khởi tạo Supabase client đặc quyền với service-role key và tắt persistence auth.",
+      "tags": [
+        "service",
+        "supabase",
+        "security",
+        "server-only"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:src/lib/supabase/server.ts",
+      "type": "file",
+      "name": "server.ts",
+      "filePath": "src/lib/supabase/server.ts",
+      "summary": "Factory tạo Supabase SSR client theo request, kiểm tra public config và đồng bộ auth cookies qua Next.js headers.",
+      "tags": [
+        "service",
+        "supabase",
+        "server-only",
+        "factory"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/supabase/server.ts:publicSupabaseConfig",
+      "type": "function",
+      "name": "publicSupabaseConfig",
+      "filePath": "src/lib/supabase/server.ts",
+      "lineRange": [
+        6,
+        15
+      ],
+      "summary": "Đọc và kiểm tra URL cùng anon key công khai cần cho Supabase SSR client.",
+      "tags": [
+        "utility",
+        "type-safety",
+        "serialization",
+        "validation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:src/lib/supabase/server.ts:createClient",
+      "type": "function",
+      "name": "createClient",
+      "filePath": "src/lib/supabase/server.ts",
+      "lineRange": [
+        17,
+        37
+      ],
+      "summary": "Tạo Supabase server client và ánh xạ thao tác auth cookie sang cookie store của Next.js.",
+      "tags": [
+        "service",
+        "supabase",
+        "security",
+        "server-only"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:tests/auth/login-actions.test.ts",
+      "type": "file",
+      "name": "login-actions.test.ts",
+      "filePath": "tests/auth/login-actions.test.ts",
+      "summary": "Bộ test server actions xác thực, tập trung vào validation đăng nhập và phản hồi lỗi trước khi gọi backend.",
+      "tags": [
+        "test",
+        "vitest",
+        "validation",
+        "regression"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:tests/layout/app-shell.test.tsx",
+      "type": "file",
+      "name": "app-shell.test.tsx",
+      "filePath": "tests/layout/app-shell.test.tsx",
+      "summary": "Bộ test AppShell kiểm tra điều hướng responsive, lọc mục theo role và trạng thái active của workspace.",
+      "tags": [
+        "test",
+        "vitest",
+        "validation",
+        "regression"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:tests/layout/home-media-carousel.test.tsx",
+      "type": "file",
+      "name": "home-media-carousel.test.tsx",
+      "filePath": "tests/layout/home-media-carousel.test.tsx",
+      "summary": "Bộ test carousel media trang chủ, xác minh render và hành vi cơ bản của nội dung hướng dẫn.",
+      "tags": [
+        "test",
+        "vitest",
+        "validation",
+        "regression"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:tests/layout/home-page.test.tsx",
+      "type": "file",
+      "name": "home-page.test.tsx",
+      "filePath": "tests/layout/home-page.test.tsx",
+      "summary": "Bộ test trang chủ kiểm tra thông điệp CNS, các role card và liên kết với carousel media.",
+      "tags": [
+        "test",
+        "vitest",
+        "validation",
+        "regression"
+      ],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/app/student/vor/session/page.tsx",
+      "target": "function:src/app/student/vor/session/page.tsx:VorStudentSessionPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/app/student/vor/session/page.tsx",
+      "target": "function:src/app/student/vor/session/page.tsx:VorStudentSessionPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/app/student/vor/session/page.tsx",
+      "target": "file:src/components/vor/student/vor-student-session.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/app/student/vor/session/page.tsx",
+      "target": "file:src/lib/auth/profile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/auth/auth-page.tsx",
+      "target": "function:src/components/auth/auth-page.tsx:LoginSuccessOverlay",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/auth/auth-page.tsx",
+      "target": "function:src/components/auth/auth-page.tsx:Brand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/auth/auth-page.tsx",
+      "target": "function:src/components/auth/auth-page.tsx:FieldMessage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/auth/auth-page.tsx",
+      "target": "function:src/components/auth/auth-page.tsx:OtpFields",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/auth/auth-page.tsx",
+      "target": "function:src/components/auth/auth-page.tsx:PasswordField",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/auth/auth-page.tsx",
+      "target": "function:src/components/auth/auth-page.tsx:AuthPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/auth/auth-page.tsx",
+      "target": "function:src/components/auth/auth-page.tsx:AuthPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/auth/auth-page.tsx",
+      "target": "file:src/app/login/actions.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/home/home-media-carousel.tsx",
+      "target": "function:src/components/home/home-media-carousel.tsx:HomeMediaCarousel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/home/home-media-carousel.tsx",
+      "target": "function:src/components/home/home-media-carousel.tsx:HomeMediaCarousel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/layout/app-shell.tsx",
+      "target": "function:src/components/layout/app-shell.tsx:BrandWordmark",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/layout/app-shell.tsx",
+      "target": "function:src/components/layout/app-shell.tsx:ModuleSubTabs",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/layout/app-shell.tsx",
+      "target": "function:src/components/layout/app-shell.tsx:MobileNavigation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/layout/app-shell.tsx",
+      "target": "function:src/components/layout/app-shell.tsx:DesktopNavigationRail",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/layout/app-shell.tsx",
+      "target": "function:src/components/layout/app-shell.tsx:PageTransition",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/layout/app-shell.tsx",
+      "target": "function:src/components/layout/app-shell.tsx:AppShell",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/layout/app-shell.tsx",
+      "target": "function:src/components/layout/app-shell.tsx:AppShell",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/layout/app-shell.tsx",
+      "target": "file:src/app/login/actions.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/layout/app-shell.tsx",
+      "target": "file:src/lib/auth/profile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/ui/role-card.tsx",
+      "target": "function:src/components/ui/role-card.tsx:RoleCard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/components/ui/role-card.tsx",
+      "target": "function:src/components/ui/role-card.tsx:RoleCard",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/components/ui/role-card.tsx",
+      "target": "file:src/app/access-actions.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/components/ui/role-card.tsx",
+      "target": "file:src/lib/auth/profile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/auth/login-lockout.ts",
+      "target": "function:src/lib/auth/login-lockout.ts:getLoginLockStatus",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/auth/login-lockout.ts",
+      "target": "function:src/lib/auth/login-lockout.ts:getLoginLockStatus",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/auth/login-lockout.ts",
+      "target": "function:src/lib/auth/login-lockout.ts:recordFailedLogin",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/auth/login-lockout.ts",
+      "target": "function:src/lib/auth/login-lockout.ts:recordFailedLogin",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/auth/login-lockout.ts",
+      "target": "function:src/lib/auth/login-lockout.ts:clearFailedLogins",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/auth/login-lockout.ts",
+      "target": "function:src/lib/auth/login-lockout.ts:clearFailedLogins",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/auth/login-lockout.ts",
+      "target": "function:src/lib/auth/login-lockout.ts:attemptsRemaining",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/auth/login-lockout.ts",
+      "target": "function:src/lib/auth/login-lockout.ts:attemptsRemaining",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/auth/login-lockout.ts",
+      "target": "file:src/lib/supabase/admin.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/auth/profile.ts",
+      "target": "function:src/lib/auth/profile.ts:getCurrentUserId",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/auth/profile.ts",
+      "target": "function:src/lib/auth/profile.ts:getCurrentUserId",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/auth/profile.ts",
+      "target": "file:src/lib/supabase/server.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:src/lib/supabase/admin.ts",
+      "target": "function:src/lib/supabase/admin.ts:createAdminClient",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/supabase/admin.ts",
+      "target": "function:src/lib/supabase/admin.ts:createAdminClient",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:src/lib/supabase/server.ts",
+      "target": "function:src/lib/supabase/server.ts:publicSupabaseConfig",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/supabase/server.ts",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:src/lib/supabase/server.ts",
+      "target": "function:src/lib/supabase/server.ts:createClient",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/auth/login-actions.test.ts",
+      "target": "file:src/app/login/actions.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:tests/layout/app-shell.test.tsx",
+      "target": "file:src/components/layout/app-shell.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:tests/layout/home-media-carousel.test.tsx",
+      "target": "file:src/components/home/home-media-carousel.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:tests/layout/home-page.test.tsx",
+      "target": "file:src/app/page.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:src/lib/supabase/server.ts:createClient",
+      "target": "function:src/lib/supabase/server.ts:publicSupabaseConfig",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:tests/auth/login-actions.test.ts",
+      "target": "file:src/app/login/actions.ts",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:tests/layout/app-shell.test.tsx",
+      "target": "file:src/components/layout/app-shell.tsx",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:tests/layout/home-media-carousel.test.tsx",
+      "target": "file:src/components/home/home-media-carousel.tsx",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:tests/layout/home-page.test.tsx",
+      "target": "file:src/app/page.tsx",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}
