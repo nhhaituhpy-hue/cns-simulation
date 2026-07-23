@@ -89,7 +89,7 @@ describe("scenario store hydration", () => {
     expect(store.getState().scenarios).toHaveLength(DEFAULT_SCENARIOS.length);
   });
 
-  it("does not upload local scenarios when the remote database is empty", async () => {
+  it("keeps local scenarios and seeds only missing ADS-B defaults when the remote database is empty", async () => {
     const localScenario = {
       ...DEFAULT_SCENARIOS[0],
       id: "local-only-scenario",
@@ -116,9 +116,26 @@ describe("scenario store hydration", () => {
     await vi.waitFor(() => {
       expect(store.getState().isHydrated).toBe(true);
     });
-    expect(store.getState().scenarios).toEqual([localScenario]);
-    expect(fetcher).toHaveBeenCalledTimes(1);
+    const scenarios = store.getState().scenarios;
+    const seededDefaults = DEFAULT_SCENARIOS.filter((scenario) =>
+      /^adsb-(?:0[1-9]|1[0-2])-/.test(scenario.id),
+    );
+
+    expect(scenarios[0]).toEqual(localScenario);
+    expect(scenarios).toHaveLength(1 + seededDefaults.length);
+    expect(scenarios.slice(1).map((scenario) => scenario.id)).toEqual(
+      seededDefaults.map((scenario) => scenario.id),
+    );
+    await vi.waitFor(() => {
+      expect(fetcher).toHaveBeenCalledTimes(1 + seededDefaults.length);
+    });
     expect(fetcher).toHaveBeenCalledWith("/api/scenarios");
+    const seededRequests = fetcher.mock.calls.slice(1);
+    expect(
+      seededRequests.some(([, init]) =>
+        String(init?.body).includes("local-only-scenario"),
+      ),
+    ).toBe(false);
   });
 });
 

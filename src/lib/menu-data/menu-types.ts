@@ -14,9 +14,30 @@ export interface ToggleOption {
   value: string;
 }
 
+export type WorkflowValidation = "ipv4" | "integer" | "text";
+
+export interface WorkflowStep {
+  key: string;
+  prompt: string;
+  kind?: "input" | "choice";
+  options?: readonly ToggleOption[];
+  validation?: WorkflowValidation;
+  min?: number;
+  max?: number;
+  when?: {
+    key: string;
+    value: string;
+  };
+}
+
 export type MenuAction =
   | { type: "navigate"; targetMenuId: string }
   | { type: "display"; content: string; templateId?: string }
+  | {
+      type: "workflow";
+      workflowId: string;
+      steps: readonly WorkflowStep[];
+    }
   | {
       type: "toggle";
       settingId: string;

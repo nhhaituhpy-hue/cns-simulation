@@ -21,7 +21,7 @@ type ActionBuilderProps = {
 
 type PendingUiInteraction = {
   item: MenuItem;
-  type: "display" | "input" | "toggle";
+  type: "display" | "input" | "toggle" | "workflow";
 };
 
 function createInitialEngineSession(
@@ -35,6 +35,7 @@ function createInitialEngineSession(
   });
   let output = engine.renderCurrentMenu();
   let pendingInteraction: PendingUiInteraction | null = null;
+  let pendingItem: MenuItem | undefined;
 
   for (const action of actions) {
     if (action.kind === "authentication") {
@@ -47,6 +48,7 @@ function createInitialEngineSession(
       engine.reset();
       output = engine.renderCurrentMenu();
       pendingInteraction = null;
+      pendingItem = undefined;
       break;
     }
 
@@ -55,22 +57,20 @@ function createInitialEngineSession(
       : menuBeforeInput.items.find(
           (item) => String(item.number) === action.input,
         );
+    const activeItem: MenuItem | undefined = selectedItem ?? pendingItem;
     const result = engine.processInput(action.input);
     output = result.output;
+    const pendingType = engine.getState().pendingInteraction;
 
-    if (
-      result.accepted &&
-      selectedItem &&
-      (selectedItem.action.type === "display" ||
-        selectedItem.action.type === "input" ||
-        selectedItem.action.type === "toggle")
-    ) {
+    if (result.accepted && activeItem && pendingType) {
       pendingInteraction = {
-        item: selectedItem,
-        type: selectedItem.action.type,
+        item: activeItem,
+        type: pendingType,
       };
+      pendingItem = activeItem;
     } else if (result.accepted) {
       pendingInteraction = null;
+      pendingItem = undefined;
     }
   }
 
@@ -134,7 +134,8 @@ export function ActionBuilder({
     if (
       item.action.type === "display" ||
       item.action.type === "input" ||
-      item.action.type === "toggle"
+      item.action.type === "toggle" ||
+      item.action.type === "workflow"
     ) {
       setPendingInteraction({ item, type: item.action.type });
       setInputValue("");
@@ -146,7 +147,10 @@ export function ActionBuilder({
   function completePending(input: string) {
     const result = applyInput(input);
     if (result.accepted) {
-      setPendingInteraction(null);
+      const pendingType = engine.getState().pendingInteraction;
+      setPendingInteraction((current) =>
+        current && pendingType ? { ...current, type: pendingType } : null,
+      );
       setInputValue("");
     }
   }
@@ -308,6 +312,69 @@ export function ActionBuilder({
                   ) : null}
                 </div>
               ) : null}
+
+              {pendingInteraction.type === "workflow" &&
+              engineState.pendingWorkflowStep ? (
+                engineState.pendingWorkflowStep.kind === "choice" ? (
+                  <div className="mt-4 grid gap-2">
+                    <p className="whitespace-pre-wrap text-xs font-medium text-[var(--text-secondary)]">
+                      {engineState.pendingWorkflowStep.prompt}
+                    </p>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {(engineState.pendingWorkflowStep.options ?? []).map(
+                        (option) => (
+                          <button
+                            key={option.number}
+                            type="button"
+                            onClick={() =>
+                              completePending(String(option.number))
+                            }
+                            className="flex min-h-10 items-center gap-3 rounded border border-[var(--border-strong)] bg-white px-3 text-left text-sm text-[var(--text-primary)] hover:border-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                          >
+                            <code className="font-mono text-xs font-semibold text-[var(--accent)]">
+                              {option.number}
+                            </code>
+                            {option.label}
+                          </button>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-4 grid gap-2">
+                    <label
+                      htmlFor="expected-workflow-input"
+                      className="text-xs font-medium text-[var(--text-secondary)]"
+                    >
+                      {engineState.pendingWorkflowStep.prompt}
+                    </label>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <input
+                        id="expected-workflow-input"
+                        type="text"
+                        value={inputValue}
+                        onChange={(event) => setInputValue(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            event.preventDefault();
+                            completePending(inputValue);
+                          }
+                        }}
+                        autoComplete="off"
+                        className="h-10 min-w-0 flex-1 rounded border border-[var(--border-strong)] bg-white px-3 font-mono text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => completePending(inputValue)}
+                        disabled={!inputValue.trim()}
+                        className="h-10 shrink-0 rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Ghi giá trị
+                      </button>
+                    </div>
+                  </div>
+                )
+              ) : null}
             </div>
           ) : (
             <div className="mt-5 grid gap-2">
@@ -360,7 +427,7 @@ export function ActionBuilder({
             <pre
               role="log"
               aria-live="polite"
-              className="min-h-0 flex-1 overflow-auto whitespace-pre p-4 font-mono text-xs leading-5 text-[#e4e4e7]"
+              className="min-h-0 flex-1 overflow-auto whitespace-pre p-4 font-mono text-xs leading-5 text-[var(--terminal-text)]"
             >
               {terminalOutput}
             </pre>

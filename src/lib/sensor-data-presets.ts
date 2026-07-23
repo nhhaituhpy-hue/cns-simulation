@@ -1,4 +1,152 @@
-import type { SensorDataProfile } from "./types";
+import type { SensorDataProfile, SensorMonitoringData } from "./types";
+
+export const NOI_BAI_TRAINING_MONITORING: SensorMonitoringData = {
+  lastSnmpResponseAt: "2026-07-18T01:33:06Z",
+  temperatureC: 41,
+  cpuLoadPercent: 0.2,
+  voltages: {
+    v3_3: 3.2,
+    v5: 5,
+    v12: 11.1,
+  },
+  receiverConfidencePercent: 99,
+  crcErrorCount: 0,
+  gpsStatus: "synchronized",
+};
+
+export const NOI_BAI_TRAINING_SENSOR: SensorDataProfile = {
+  sensorVersion: "1-14-1",
+  configVersion: "NoiBai_ADSB_Training",
+  sensorName: "NoiBai",
+  operationMode: "OPERATIONAL",
+  endToEnd: {
+    alertPower: 164,
+    failurePower: 140,
+    interrogationPeriodMs: 1000,
+    replyDelayNs: 500,
+  },
+  network: {
+    ip: "192.168.10.2",
+    subnet: "255.255.255.0",
+    gateway: "192.168.10.252",
+    dhcp: false,
+    macAddress: "00:50:C2:7E:10:02",
+    ntpServer: "192.168.10.252",
+    bitRate: "100 Mbit/s full duplex",
+  },
+  receiverStats: {
+    shortSquitter: { total: 1_804_211, passed: 1_803_902, failed: 309 },
+    extendedSquitter: { total: 9_604_315, passed: 9_603_811, failed: 504 },
+    totalTargetsDetected: 238_421,
+    currentTargets: 37,
+  },
+  clients: [
+    {
+      id: 1,
+      name: "NBA-QCMS",
+      ip: "192.168.10.8",
+      port: 20550,
+      protocol: "UDP",
+      messageType: "all",
+      enabled: true,
+      messagesSent: 8_521_405,
+    },
+    {
+      id: 2,
+      name: "QCMS-TSC",
+      ip: "192.168.80.8",
+      port: 20550,
+      protocol: "UDP",
+      messageType: "all",
+      enabled: true,
+      messagesSent: 8_520_996,
+    },
+    {
+      id: 3,
+      name: "RECORD",
+      ip: "192.168.80.214",
+      port: 20551,
+      protocol: "UDP",
+      messageType: "cat21",
+      enabled: true,
+      messagesSent: 8_517_203,
+    },
+    {
+      id: 4,
+      name: "Qcms-Cmu",
+      ip: "192.168.80.9",
+      port: 20550,
+      protocol: "UDP",
+      messageType: "all",
+      enabled: false,
+      messagesSent: 0,
+    },
+    {
+      id: 8,
+      name: "ATC-HN",
+      ip: "224.94.60.252",
+      port: 9414,
+      protocol: "UDP",
+      messageType: "all",
+      enabled: true,
+      messagesSent: 8_516_994,
+    },
+  ],
+  snmpUsers: [
+    { name: "qcms_community", authType: "noAuth" },
+    { name: "public", authType: "noAuth" },
+  ],
+  snmpTraps: [],
+  snmpHeartbeatPeriod: 0,
+  snmpAlarmPeriod: 0,
+  gps: {
+    enabled: true,
+    ntpEnabled: false,
+    ntpServer: "0.0.0.0",
+    latitude: "21.2130",
+    longitude: "105.8319",
+    altitude: "29.9000m",
+    deviation: "0.3m",
+  },
+  filters: {
+    altitudeEnabled: true,
+    altitudeMin: -1000,
+    altitudeMax: 60_000,
+    addressFilterEnabled: false,
+    addressFilter: "",
+    positionFilterEnabled: false,
+    positionFilterRadius: 250,
+  },
+  asterix: {
+    sac: 94,
+    sic: 163,
+    cat21Version: "2.1",
+    cat21Enabled: true,
+    nonOpEnabled: true,
+    mlatEnabled: false,
+    rawEnabled: false,
+    dataBlockSize: 1350,
+    ttl: 64,
+  },
+  general: {
+    crcCorrection: true,
+    groundTargets: true,
+    targetOverloadLimit: 1400,
+  },
+  syslog: {
+    localDestination: "Ram",
+    remoteEnabled: false,
+    remoteServerIp: "127.0.0.1",
+  },
+  siteMonitors: [
+    {
+      enabled: true,
+      ip: "888101",
+      port: 888101,
+      name: "Site Monitor",
+    },
+  ],
+};
 
 export const CON_SON_SENSOR_1: SensorDataProfile = {
   sensorVersion: "1-8-3",
@@ -189,11 +337,14 @@ export const CON_SON_SENSOR_3: SensorDataProfile = {
 };
 
 export const SENSOR_DATA_PRESETS: Record<string, SensorDataProfile> = {
+  "noi-bai-training": NOI_BAI_TRAINING_SENSOR,
   "con-son-sensor-1": CON_SON_SENSOR_1,
   "con-son-sensor-3": CON_SON_SENSOR_3,
 };
 
 export const PRESET_LABELS: Record<string, string> = {
+  "noi-bai-training":
+    "ADS-B Nội Bài — Bộ dữ liệu huấn luyện (192.168.10.2)",
   "con-son-sensor-1":
     "ADS-B C\u00f4n S\u01a1n \u2014 Sensor 1 (192.168.201.1)",
   "con-son-sensor-3":

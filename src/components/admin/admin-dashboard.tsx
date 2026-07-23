@@ -4,6 +4,7 @@ import { Broadcast } from "@phosphor-icons/react/dist/csr/Broadcast";
 import { FilePlus } from "@phosphor-icons/react/dist/csr/FilePlus";
 import { PencilSimple } from "@phosphor-icons/react/dist/csr/PencilSimple";
 import { Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { Terminal } from "@phosphor-icons/react/dist/csr/Terminal";
 import { Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import Link from "next/link";
@@ -109,13 +110,24 @@ export function AdminDashboard({
             description="Cấu hình trạng thái site, dữ liệu cảm biến và chuỗi thao tác chuẩn trên QCMS và terminal bảo trì."
             icon={Broadcast}
             actions={
-              <Link
-                href="/admin/create"
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white transition-[background-color,transform] hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98] active:bg-[var(--accent-active)] motion-reduce:transform-none"
-              >
-                <Plus aria-hidden size={18} weight="bold" />
-                Tạo kịch bản ADS-B
-              </Link>
+              <>
+                <Link
+                  href="/admin/ads-b/simulator"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-[var(--accent-border)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--accent)] transition-[background-color,border-color,transform] hover:border-[var(--accent)] hover:bg-[var(--accent-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98] motion-reduce:transform-none"
+                >
+                  <Terminal aria-hidden size={18} weight="bold" />
+                  Mở giả lập ADS-B
+                </Link>
+                <Link
+                  href="/admin/create"
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white transition-[background-color,transform] hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98] active:bg-[var(--accent-active)] motion-reduce:transform-none"
+                >
+                  <Plus aria-hidden size={18} weight="bold" />
+                  Tạo kịch bản ADS-B
+                </Link>
+              </>
             }
           />
 

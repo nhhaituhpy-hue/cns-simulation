@@ -3,6 +3,7 @@ import type {
   MenuItem,
   MenuTree,
   ToggleOption,
+  WorkflowStep,
 } from "./menu-types";
 
 export const MA_ROOT_MENU_ID = "ma.root";
@@ -62,6 +63,19 @@ function toggle(
   };
 }
 
+function workflow(
+  number: number,
+  label: string,
+  workflowId: string,
+  steps: readonly WorkflowStep[],
+): MenuItem {
+  return {
+    number,
+    label,
+    action: { type: "workflow", workflowId, steps },
+  };
+}
+
 export const MA_MENUS = {
   [MA_ROOT_MENU_ID]: {
     id: MA_ROOT_MENU_ID,
@@ -75,9 +89,9 @@ export const MA_MENUS = {
       navigate(5, "Filter Configuration", "ma.filters"),
       navigate(6, "GPS / NTP Configuration", "ma.gps-ntp"),
       navigate(7, "Software", "ma.software"),
-      navigate(8, "Display System Stats", "ma.system-stats"),
+      navigate(8, "Display System Statistics", "ma.system-stats"),
       navigate(9, "Customisation", "ma.customisation"),
-      navigate(10, "Configuration Import / Export", "ma.config-transfer"),
+      navigate(10, "Configuration Export", "ma.config-transfer"),
       navigate(11, "Monitoring Devices", "ma.monitoring-devices"),
     ],
   },
@@ -87,17 +101,50 @@ export const MA_MENUS = {
     title: "General Settings",
     header: MA_HEADER,
     items: [
-      display(
-        1,
-        "Configure ASTERIX",
-        "ASTERIX SAC, SIC, category, edition, and data-field configuration are simulated as an MVP summary.",
-      ),
-      input(
+      navigate(1, "Configure ASTERIX", "ma.asterix"),
+      workflow(
         2,
-        "Sensor Position",
+        "Display and Set Sensor Position",
         "ma.sensor-position",
-        "Enter sensor latitude, longitude, and altitude:",
-        "Sensor position updated in the simulator.",
+        [
+          {
+            key: "source",
+            kind: "choice",
+            prompt: "Select Sensor Position Source:",
+            options: [
+              { number: 1, label: "Enter Position Manually", value: "MANUAL" },
+              { number: 2, label: "Obtain Position from GPS", value: "GPS" },
+            ],
+          },
+          {
+            key: "gpsPosition",
+            kind: "choice",
+            prompt: "Select GPS Position:",
+            options: [
+              { number: 1, label: "Use Actual GPS Position", value: "ACTUAL" },
+              { number: 2, label: "Use Averaged GPS Position", value: "AVERAGED" },
+            ],
+            when: { key: "source", value: "GPS" },
+          },
+          {
+            key: "latitude",
+            prompt: "Enter Sensor Latitude:",
+            validation: "text",
+            when: { key: "source", value: "MANUAL" },
+          },
+          {
+            key: "longitude",
+            prompt: "Enter Sensor Longitude:",
+            validation: "text",
+            when: { key: "source", value: "MANUAL" },
+          },
+          {
+            key: "altitude",
+            prompt: "Enter Sensor Altitude:",
+            validation: "text",
+            when: { key: "source", value: "MANUAL" },
+          },
+        ],
       ),
       input(
         3,
@@ -115,6 +162,56 @@ export const MA_MENUS = {
           { number: 1, label: "DF17", value: "df17" },
           { number: 2, label: "DF18", value: "df18" },
           { number: 3, label: "All supported formats", value: "all" },
+        ],
+      ),
+    ],
+  },
+
+  "ma.asterix": {
+    id: "ma.asterix",
+    title: "Configure ASTERIX",
+    header: MA_HEADER,
+    items: [
+      display(
+        1,
+        "Display ASTERIX Configuration",
+        [
+          "ASTERIX Configuration",
+          "",
+          "System Area Code (SAC)       : {{sac}}",
+          "System Identification Code  : {{sic}}",
+          "CAT21 ADS-B Output          : ENABLED",
+          "CAT21 Non-OP Output         : ENABLED",
+          "Maximum Data Block Size     : 512",
+          "IP Time To Live             : 64",
+        ].join("\n"),
+      ),
+      workflow(
+        2,
+        "Configure SAC",
+        "ma.sac",
+        [
+          {
+            key: "value",
+            prompt: "Enter New Value for SAC (0-255):",
+            validation: "integer",
+            min: 0,
+            max: 255,
+          },
+        ],
+      ),
+      workflow(
+        3,
+        "Configure SIC",
+        "ma.sic",
+        [
+          {
+            key: "value",
+            prompt: "Enter New Value for SIC (0-255):",
+            validation: "integer",
+            min: 0,
+            max: 255,
+          },
         ],
       ),
     ],
@@ -157,7 +254,12 @@ export const MA_MENUS = {
         "Client 1: 239.10.10.1:30001, enabled, ASTERIX CAT21",
         "ma-clients-display",
       ),
-      display(2, "Display Client Statistics", "Client 1 packets sent: 125430\nSend errors: 0"),
+      display(
+        2,
+        "Display Client Statistics",
+        "Client statistics are unavailable.",
+        "sa-clients-stats",
+      ),
       toggle(3, "Enable / Disable Client", "ma.client-enabled", "Select client state:"),
     ],
   },
@@ -248,28 +350,123 @@ export const MA_MENUS = {
 
   "ma.system-stats": {
     id: "ma.system-stats",
-    title: "Display System Stats",
+    title: "Display System Statistics",
     header: MA_HEADER,
     items: [
       display(
         1,
-        "System Configuration",
+        "Display System Configuration",
         "CPU: simulated ARM platform\nMemory: 2048 MB\nStorage: healthy",
         "ma-system-config",
       ),
       display(
         2,
-        "System Status",
+        "Display System Status Information",
         "Uptime: 12 days\nCPU load: 23%\nTemperature: 45 C",
         "ma-system-status",
       ),
       display(
         3,
-        "Extended DSP Statistics",
+        "Display Extended Mode-S Statistics",
         "DSP frames: 2485030\nRejected frames: 17\nOverloads: 0",
         "ma-dsp-stats",
       ),
-      display(4, "Reset DSP Statistics", "DSP statistics reset completed in the simulator."),
+      display(
+        4,
+        "Display Extended Mode-AC Statistics",
+        "Mode A/C receiver statistics are available.",
+        "ma-mode-ac-stats",
+      ),
+      workflow(
+        5,
+        "Reset Extended DSP Statistics",
+        "ma.reset-dsp-statistics",
+        [
+          {
+            key: "action",
+            kind: "choice",
+            prompt: "Reset all extended DSP statistics?",
+            options: [
+              { number: 1, label: "Reset Statistics", value: "RESET" },
+              { number: 2, label: "Do Not Reset", value: "KEEP" },
+            ],
+          },
+        ],
+      ),
+      display(
+        6,
+        "Display Local System Log",
+        "Local system log is available.",
+        "ma-local-system-log",
+      ),
+      workflow(
+        7,
+        "Export Entire Local System Log",
+        "ma.export-local-system-log",
+        [
+          {
+            key: "action",
+            kind: "choice",
+            prompt: "Export the entire local system log?",
+            options: [
+              { number: 1, label: "Continue Export", value: "CONTINUE" },
+              { number: 2, label: "Cancel Export", value: "CANCEL" },
+            ],
+          },
+          {
+            key: "filename",
+            prompt: "Enter remote filename:",
+            validation: "text",
+            when: { key: "action", value: "CONTINUE" },
+          },
+          {
+            key: "remoteIp",
+            prompt: "Enter remote server IP address:",
+            validation: "ipv4",
+            when: { key: "action", value: "CONTINUE" },
+          },
+          {
+            key: "directory",
+            prompt: "Enter remote directory:",
+            validation: "text",
+            when: { key: "action", value: "CONTINUE" },
+          },
+        ],
+      ),
+      workflow(
+        8,
+        "Export System Status Information",
+        "ma.export-system-status",
+        [
+          {
+            key: "action",
+            kind: "choice",
+            prompt: "Export the current system status information?",
+            options: [
+              { number: 1, label: "Continue Export", value: "CONTINUE" },
+              { number: 2, label: "Cancel Export", value: "CANCEL" },
+            ],
+          },
+          {
+            key: "filename",
+            prompt: "Enter remote filename:",
+            validation: "text",
+            when: { key: "action", value: "CONTINUE" },
+          },
+          {
+            key: "remoteIp",
+            prompt: "Enter remote server IP address:",
+            validation: "ipv4",
+            when: { key: "action", value: "CONTINUE" },
+          },
+          {
+            key: "directory",
+            prompt: "Enter remote directory:",
+            validation: "text",
+            when: { key: "action", value: "CONTINUE" },
+          },
+        ],
+      ),
     ],
   },
 
@@ -323,7 +520,22 @@ export const MA_MENUS = {
         "Enter configuration package name:",
         "Configuration import completed in the simulator.",
       ),
-      display(3, "Reset SSH Hosts", "SSH host records reset in the simulator."),
+      workflow(
+        3,
+        "Reset SSH Known Hosts",
+        "reset-ssh-hosts",
+        [
+          {
+            key: "confirm",
+            kind: "choice",
+            prompt: "Reset all SSH known-host records?",
+            options: [
+              { number: 1, label: "Reset SSH Known Hosts", value: "RESET" },
+              { number: 2, label: "Do Not Reset", value: "KEEP" },
+            ],
+          },
+        ],
+      ),
     ],
   },
 

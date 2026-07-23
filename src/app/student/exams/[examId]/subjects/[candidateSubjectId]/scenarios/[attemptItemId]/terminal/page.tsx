@@ -24,6 +24,7 @@ export default async function OfficialExamTerminalPage({
     <TerminalSession
       scenarioId={item.scenarioId}
       sensorId={sensorId}
+      cacheOwnerId={candidateSubjectId}
       officialScenario={officialScenario.scenario}
       officialExam={{
         attemptItemId,

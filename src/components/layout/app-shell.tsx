@@ -279,7 +279,9 @@ function PageTransition({ children }: { children: ReactNode }) {
   return (
     <motion.div
       key={pathname}
-      initial={{ opacity: 0 }}
+      // Trang chủ có video/poster lớn: fade từ opacity 0 sau hydration tạo
+      // cảm giác toàn trang bị nháy. Các route chức năng vẫn giữ chuyển cảnh.
+      initial={pathname === "/" ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.15, ease: "easeInOut" }}
       className="h-full w-full"

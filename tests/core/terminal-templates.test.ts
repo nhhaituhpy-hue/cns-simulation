@@ -30,16 +30,18 @@ const templateExpectations: ReadonlyArray<readonly [string, string]> = [
   ["sa-network-display", "192.168.201.1"],
   ["sa-software-version", "ConSon_V1.0"],
   ["sa-clients-display", "QCMS"],
-  ["sa-clients-stats", "4,523,100"],
+  ["sa-clients-stats", "4523100"],
   ["sa-snmp-users", "qcms_user"],
   ["sa-snmp-traps", "20900"],
   ["sa-syslog-config", "/var/log/sensor.log"],
   ["ma-network-display", "255.255.255.0"],
   ["ma-network-ntp", "192.168.201.10"],
   ["ma-network-bitrate", "100 Mbit/s full duplex"],
-  ["ma-system-config", "120 / 1"],
-  ["ma-system-status", "42.5 \u00b0C"],
+  ["ma-system-config", "SAC: 120"],
+  ["ma-system-status", "42.5 deg.C"],
   ["ma-dsp-stats", "1,284,567"],
+  ["ma-mode-ac-stats", "Extended Mode-AC Statistics"],
+  ["ma-local-system-log", "Local System Log"],
   ["ma-gps-status", "8.6833"],
   ["ma-filter-display", "FL0 - FL600"],
   ["ma-clients-display", "Gateway"],
@@ -47,8 +49,8 @@ const templateExpectations: ReadonlyArray<readonly [string, string]> = [
 ];
 
 describe("terminal data templates", () => {
-  it("defines the complete set of 17 planned templates", () => {
-    expect(TERMINAL_TEMPLATE_IDS).toHaveLength(17);
+  it("defines the complete set of 19 planned templates", () => {
+    expect(TERMINAL_TEMPLATE_IDS).toHaveLength(19);
     expect(TERMINAL_TEMPLATE_IDS).toEqual(
       templateExpectations.map(([templateId]) => templateId),
     );
@@ -64,7 +66,9 @@ describe("terminal data templates", () => {
       );
 
       expect(output).toContain(expectedText);
-      expect(output.endsWith("Press RETURN to continue:")).toBe(true);
+      expect(output).toMatch(
+        /(?:Press RETURN to continue:|PRESS RETURN TO CONTINUE|PRESS ENTER TO RETURN)$/,
+      );
     },
   );
 
@@ -75,10 +79,11 @@ describe("terminal data templates", () => {
       monitoring,
     );
 
-    expect(output).toContain("42.5 \u00b0C");
-    expect(output).toContain("31 %");
-    expect(output).toContain("12.08 V");
-    expect(output).toContain("Synchronized");
+    expect(output).toContain("42.5 deg.C");
+    expect(output).toContain("31.0 %");
+    expect(output).toContain("12.1 V");
+    expect(output).toContain("GPS Synchronised");
+    expect(output).toContain("YES");
   });
 
   it("renders surveillance clients in an aligned console table", () => {
@@ -87,10 +92,11 @@ describe("terminal data templates", () => {
       CON_SON_SENSOR_1,
     );
 
-    expect(output).toContain("Name       IP");
+    expect(output).toContain("QUADRANT SURVEILLANCE CLIENTS");
     expect(output).toContain("QCMS");
     expect(output).toContain("192.168.201.10");
-    expect(output).toContain("Total: 2 clients configured");
+    expect(output.match(/<unconfigured>/g)).toHaveLength(18);
+    expect(output).toContain("PRESS RETURN TO CONTINUE");
   });
 
   it("returns deterministic fallbacks for unknown templates or missing data", () => {

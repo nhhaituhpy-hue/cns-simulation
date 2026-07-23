@@ -62,10 +62,10 @@ describe("terminal store", () => {
     const store = createTerminalStore({
       recordAction: (action) => recorded.push(action),
     });
-    store.getState().initialize("sysadmin");
-    logIn(store, "sysadmin", loginPassword);
-    store.getState().processInput("7");
+    store.getState().initialize("maintenance");
+    logIn(store, "maintenance", loginPassword);
     store.getState().processInput("9");
+    store.getState().processInput("2");
     expect(store.getState()).toMatchObject({
       pendingPrompt: "input",
       pendingSensitive: true,

@@ -18,6 +18,8 @@ export const TERMINAL_TEMPLATE_IDS = [
   "ma-system-config",
   "ma-system-status",
   "ma-dsp-stats",
+  "ma-mode-ac-stats",
+  "ma-local-system-log",
   "ma-gps-status",
   "ma-filter-display",
   "ma-clients-display",
@@ -40,6 +42,18 @@ function enabled(value: boolean): string {
 
 function yesNo(value: boolean): string {
   return value ? "YES" : "NO";
+}
+
+function enabledUpper(value: boolean): string {
+  return value ? "ENABLED" : "DISABLED";
+}
+
+function configurationLine(label: string, value: string | number): string {
+  return `${label.padEnd(42)}: ${value}`;
+}
+
+function statusLine(label: string, value: string | number): string {
+  return `${label.padEnd(56)}: ${value}`;
 }
 
 function formatNumber(value: number): string {
@@ -70,16 +84,39 @@ function clip(value: string, width: number): string {
   return value.slice(0, Math.max(0, width - 3)) + "...";
 }
 
-function clientRow(client: SurveillanceClient): string {
-  return [
-    String(client.id).padStart(2),
-    clip(client.name, 10).padEnd(10),
-    client.ip.padEnd(15),
-    String(client.port).padStart(5),
-    client.protocol.padEnd(5),
-    clip(client.messageType, 18).padEnd(18),
-    yesNo(client.enabled).padStart(7),
-  ].join(" ");
+function clientMessageLabel(messageType: string): string {
+  const normalized = messageType.trim().toLowerCase();
+
+  if (normalized === "all" || normalized === "both") {
+    return "CAT 21/23/247";
+  }
+  if (normalized.includes("non-op")) return "CAT 23/247";
+  if (normalized.includes("cat21") || normalized.includes("cat 21")) {
+    return "CAT 21";
+  }
+  if (normalized.includes("cat48") || normalized.includes("cat 48")) {
+    return "CAT 48";
+  }
+  if (normalized === "raw") return "RAW";
+
+  return messageType;
+}
+
+function clientConfigurationRow(
+  number: number,
+  client: SurveillanceClient | undefined,
+): string {
+  const numberLabel = String(number).padStart(2);
+
+  if (!client) {
+    return `(${numberLabel}) (Disabled) ${"<unconfigured>".padEnd(32)} ${"<None>".padEnd(7)} ${"<None>".padEnd(15)} ${"0.0.0.0".padEnd(15)} 0`;
+  }
+
+  const state = client.enabled ? "Enabled " : "Disabled";
+  const protocol = `AST_${client.protocol}`;
+  const messageType = clientMessageLabel(client.messageType);
+
+  return `(${numberLabel}) (${state}) ${clip(client.name, 32).padEnd(32)} ${protocol.padEnd(7)} ${messageType.padEnd(15)} ${client.ip.padEnd(15)} ${client.port}`;
 }
 
 function renderNetwork(profile: SensorDataProfile, title: string): string {
@@ -98,41 +135,126 @@ function renderNetwork(profile: SensorDataProfile, title: string): string {
   ]);
 }
 
-function renderClients(profile: SensorDataProfile, title: string): string {
-  const rows = profile.clients.length
-    ? profile.clients.map(clientRow).map((row) => "   " + row)
-    : ["   No surveillance clients configured."];
+function renderClients(profile: SensorDataProfile): string {
+  const rows = Array.from({ length: 20 }, (_, index) => {
+    const number = index + 1;
+    const client = profile.clients.find((item) => item.id === number);
+    return clientConfigurationRow(number, client);
+  });
 
-  return finish([
-    "   " + title + ":",
-    LONG_RULE,
-    "   #  Name       IP               Port Proto Type               Enabled",
+  return [
+    "QUADRANT SURVEILLANCE CLIENTS",
     ...rows,
-    LONG_RULE,
-    "   Total: " + profile.clients.length + " clients configured",
-  ]);
+    "",
+    "PRESS RETURN TO CONTINUE",
+  ].join("\n");
 }
 
 function renderClientStats(profile: SensorDataProfile): string {
-  const rows = profile.clients.length
-    ? profile.clients.map((client) =>
-        [
-          "  ",
-          String(client.id).padStart(2),
-          clip(client.name, 16).padEnd(16),
-          formatNumber(client.messagesSent).padStart(18),
-          client.enabled ? "ACTIVE" : "DISABLED",
-        ].join(" "),
-      )
-    : ["   No client statistics available."];
+  type ClientOutputStats = {
+    queuedRecords: number;
+    sentRecords: number;
+    sentMessages: number;
+    messagesPerSecond: number;
+    recordsPerSecond: number;
+    bytesPerSecond: number;
+  };
 
-  return finish([
-    "   Surveillance Client Statistics:",
-    LONG_RULE,
-    "   #  Name                  Messages Sent Status",
+  const referenceStats: Record<number, ClientOutputStats> = {
+    1: {
+      queuedRecords: 208055361,
+      sentRecords: 208028365,
+      sentMessages: 16013362,
+      messagesPerSecond: 2,
+      recordsPerSecond: 24,
+      bytesPerSecond: 1705,
+    },
+    2: {
+      queuedRecords: 208055361,
+      sentRecords: 208035454,
+      sentMessages: 16013361,
+      messagesPerSecond: 2,
+      recordsPerSecond: 24,
+      bytesPerSecond: 1705,
+    },
+    3: {
+      queuedRecords: 207409362,
+      sentRecords: 207390686,
+      sentMessages: 15689975,
+      messagesPerSecond: 2,
+      recordsPerSecond: 24,
+      bytesPerSecond: 1705,
+    },
+    8: {
+      queuedRecords: 208055361,
+      sentRecords: 208055361,
+      sentMessages: 16013360,
+      messagesPerSecond: 2,
+      recordsPerSecond: 24,
+      bytesPerSecond: 1705,
+    },
+  };
+  const emptyStats = (): ClientOutputStats => ({
+    queuedRecords: 0,
+    sentRecords: 0,
+    sentMessages: 0,
+    messagesPerSecond: 0,
+    recordsPerSecond: 0,
+    bytesPerSecond: 0,
+  });
+  const fallbackStats = (client: SurveillanceClient): ClientOutputStats => ({
+    queuedRecords: client.messagesSent,
+    sentRecords: client.messagesSent,
+    sentMessages: Math.floor(client.messagesSent * 0.077),
+    messagesPerSecond: client.messagesSent > 0 ? 2 : 0,
+    recordsPerSecond: client.messagesSent > 0 ? 24 : 0,
+    bytesPerSecond: client.messagesSent > 0 ? 1705 : 0,
+  });
+  const formatStatsRow = (name: string, stats: ClientOutputStats): string =>
+    [
+      clip(name, 32).padEnd(32),
+      String(stats.queuedRecords).padStart(10),
+      String(stats.sentRecords).padStart(10),
+      String(stats.sentMessages).padStart(9),
+      String(stats.messagesPerSecond).padStart(7),
+      String(stats.recordsPerSecond).padStart(9),
+      String(stats.bytesPerSecond).padStart(9),
+    ].join(" ");
+
+  const totals = emptyStats();
+  const rows = Array.from({ length: 20 }, (_, index) => {
+    const clientNumber = index + 1;
+    const client = profile.clients.find((item) => item.id === clientNumber);
+    const name = client?.name ?? "<unconfigured>";
+
+    if (!client?.enabled) return `${clip(name, 32).padEnd(32)}<not enabled>`;
+
+    const stats =
+      profile.sensorName.toLowerCase() === "noibai"
+        ? (referenceStats[clientNumber] ?? fallbackStats(client))
+        : fallbackStats(client);
+    totals.queuedRecords += stats.queuedRecords;
+    totals.sentRecords += stats.sentRecords;
+    totals.sentMessages += stats.sentMessages;
+    totals.messagesPerSecond += stats.messagesPerSecond;
+    totals.recordsPerSecond += stats.recordsPerSecond;
+    totals.bytesPerSecond += stats.bytesPerSecond;
+    return formatStatsRow(name, stats);
+  });
+  const rule = "=".repeat(90);
+
+  return [
+    "QUADRANT SURVEILLANCE CLIENT OUTPUT STATISTICS",
+    "",
+    "Client                              Queued       Sent      Sent    Msgs/  Records/   Bytes/",
+    "                                    Records    Records      Msgs     Sec       Sec      Sec",
+    rule,
     ...rows,
-    LONG_RULE,
-  ]);
+    rule,
+    formatStatsRow("All clients", totals),
+    "",
+    "PRESS ENTER TO RETURN",
+  ].join("\n");
 }
 
 function renderSnmpUsers(profile: SensorDataProfile): string {
@@ -182,63 +304,439 @@ function renderSnmpTraps(profile: SensorDataProfile): string {
 }
 
 function renderSystemConfig(profile: SensorDataProfile): string {
-  return finish([
-    "   System Configuration Summary:",
-    LONG_RULE,
-    "   Sensor Name:       " + profile.sensorName,
-    "   Sensor Version:    " + profile.sensorVersion,
-    "   Config Version:    " + profile.configVersion,
-    "   Network:           " +
-      profile.network.ip +
-      " / " +
-      profile.network.subnet,
-    "   Gateway:           " + profile.network.gateway,
-    "   NTP Server:        " + profile.network.ntpServer,
-    "   GPS Processing:    " + enabled(profile.gps.enabled),
-    "   ASTERIX CAT21:     " + enabled(profile.asterix.cat21Enabled),
-    "   SAC / SIC:         " +
-      profile.asterix.sac +
-      " / " +
-      profile.asterix.sic,
-    "   CAT21 Version:     " + profile.asterix.cat21Version,
-    "   CRC Correction:    " + enabled(profile.general.crcCorrection),
-    "   Ground Targets:    " + enabled(profile.general.groundTargets),
-    "   Client Count:      " + profile.clients.length,
-    "   Site Monitors:     " + profile.siteMonitors.length,
-  ]);
+  const mandatoryFrns = new Set([1, 2, 11, 17]);
+  const dfLines = Array.from({ length: 25 }, (_, index) =>
+    configurationLine(`MLT Uses DF${index}`, "YES"),
+  );
+  const frnLines = Array.from({ length: 49 }, (_, index) => {
+    const frn = index + 1;
+    const mandatory = mandatoryFrns.has(frn) ? " (mandatory)" : "";
+    return configurationLine(`Transmit FRN ${frn}${mandatory}`, "YES");
+  });
+  const clientLines = Array.from({ length: 20 }, (_, index) => {
+    const clientNumber = index + 1;
+    const client = profile.clients.find((item) => item.id === clientNumber);
+
+    if (!client) {
+      return `Client ${clientNumber}: <unconfigured>, disabled, none, none, 0.0.0.0, 0`;
+    }
+
+    return [
+      `Client ${clientNumber}: ${client.name}`,
+      client.enabled ? "enabled" : "disabled",
+      `AST_${client.protocol}`,
+      client.messageType,
+      client.ip,
+      client.port,
+    ].join(", ");
+  });
+  const filterLines = Array.from(
+    { length: 8 },
+    () => configurationLine("<unconfigured>", "NO"),
+  );
+  const routerLines = Array.from({ length: 10 }, (_, index) => {
+    const routerNumber = index + 1;
+    const value =
+      routerNumber === 2
+        ? `Default gateway ${profile.network.gateway}`
+        : "<unconfigured>";
+    return configurationLine(
+      `Router ${String(routerNumber).padStart(2)}`,
+      value,
+    );
+  });
+  const snmpUserLines = Array.from({ length: 10 }, (_, index) => {
+    const user = profile.snmpUsers[index];
+    const value = user
+      ? `${user.name}, ${
+          user.authType === "noAuth"
+            ? "read write community, none, none"
+            : `${user.authType}, authentication, privacy`
+        }`
+      : "<unconfigured>";
+    return configurationLine(`User ${String(index + 1).padStart(2)}`, value);
+  });
+  const trapLines = Array.from({ length: 10 }, (_, index) => {
+    const trap = profile.snmpTraps[index];
+    const value = trap
+      ? `${trap.ip}, ${trap.port}, ${enabledUpper(trap.enabled)}`
+      : "<unconfigured>";
+    return configurationLine(
+      `Trap Destination ${String(index + 1).padStart(2)}`,
+      value,
+    );
+  });
+  const ntpServerLines = Array.from({ length: 5 }, (_, index) =>
+    configurationLine(
+      `NTP server IP address ${index + 1}`,
+      index === 0 ? profile.gps.ntpServer : "0.0.0.0",
+    ),
+  );
+  const monitorLines = Array.from({ length: 10 }, (_, index) => {
+    const monitor = profile.siteMonitors[index];
+    const number = String(index + 1).padStart(2);
+    if (!monitor) {
+      return `   (${number}) (Disabled) ${"<unconfigured>".padEnd(32)} ${"<None>".padEnd(32)} 0`;
+    }
+
+    return `   (${number}) (${monitor.enabled ? "Enabled " : "Disabled"}) ${monitor.ip.padEnd(32)} ${monitor.name.padEnd(32)} ${monitor.port}`;
+  });
+  const altitude = profile.gps.altitude.replace(/\s*m$/i, "");
+  const operationMode =
+    profile.operationMode === "MAINTENANCE" ? "Maintenance" : "Operational";
+
+  return [
+    "QUADRANT Configuration",
+    "",
+    `Sensor Name: ${profile.sensorName}`,
+    "Configuration Tag: Unknown",
+    "",
+    configurationLine("Transmit MLT Messages", "ENABLED"),
+    "",
+    ...dfLines,
+    "",
+    `SAC: ${profile.asterix.sac}`,
+    `SIC: ${profile.asterix.sic}`,
+    "",
+    `ASTERIX Category 21 UAP: Version ${profile.asterix.cat21Version}`,
+    "",
+    "Transmitted Data Items of ASTERIX Category 21 According to Corresponding User Application Profile (UAP)",
+    ...frnLines,
+    "",
+    "ASTERIX Category 21 Transmission Mode: Periodic",
+    "ASTERIX Category 21 Report Period (used only in periodic mode): 1.0 Second(s)",
+    "",
+    `Capacity Threshold: ${profile.general.targetOverloadLimit}`,
+    "",
+    "Position Ambiguity Test Offset: 500.000000 meters.",
+    "",
+    "ASTERIX Category 23 UAP: Version 1.2",
+    "",
+    "ASTERIX Category 23 Update Frequencies:",
+    "",
+    configurationLine("Ground Station Status", 60),
+    configurationLine("Service Status", 60),
+    configurationLine("Service Statistics", 30),
+    "",
+    configurationLine("ASTERIX Category 247 Update Frequency", 600),
+    "",
+    "Surveillance Clients:",
+    ...clientLines,
+    "",
+    configurationLine("Output Message Assembly Delay", 50000),
+    "",
+    configurationLine(
+      "Max Size of ASTERIX Block",
+      profile.asterix.dataBlockSize,
+    ),
+    "",
+    configurationLine("ASTERIX TTL for IP Packets", profile.asterix.ttl),
+    "",
+    "Filter status:",
+    ...filterLines,
+    "",
+    configurationLine(
+      "Transmit ADS-B Data",
+      enabledUpper(profile.asterix.cat21Enabled),
+    ),
+    configurationLine("Transmit ADS-B if Unsynchronised", "ENABLED"),
+    configurationLine(
+      "Transmit RAW Data",
+      enabledUpper(profile.asterix.rawEnabled),
+    ),
+    configurationLine(
+      "Use CRC Correction",
+      enabledUpper(profile.general.crcCorrection),
+    ),
+    configurationLine("Report Out-of-Position Case", "ENABLED"),
+    "",
+    `Network Settings: IP ${profile.network.ip}, Mask ${profile.network.subnet},`,
+    "AutoAllSupport",
+    ...routerLines,
+    "",
+    configurationLine("Maximum Ground Interface Bit Rate", "100000 kBits/s"),
+    "",
+    "SNMP Settings:",
+    ...snmpUserLines,
+    ...trapLines,
+    `SNMP Heartbeat Period : ${profile.snmpHeartbeatPeriod}`,
+    `SNMP Alarm Period     : ${profile.snmpAlarmPeriod}`,
+    "",
+    configurationLine("GPS Status", enabledUpper(profile.gps.enabled)),
+    configurationLine("NTP Status", enabledUpper(profile.gps.ntpEnabled)),
+    configurationLine("GPS operation mode", "Fixed Platform"),
+    ...ntpServerLines,
+    "",
+    configurationLine("Configured Latitude", profile.gps.latitude),
+    configurationLine("Configured Longitude", profile.gps.longitude),
+    configurationLine("Configured Height", altitude),
+    "",
+    "Status of Monitoring Devices:",
+    "Active Settings:",
+    "",
+    ...monitorLines,
+    "",
+    configurationLine(
+      "ASTERIX Processing of SiteMonitor Messages",
+      "ENABLED",
+    ),
+    configurationLine(
+      "MLAT Processing of SiteMonitor Messages",
+      enabledUpper(profile.asterix.mlatEnabled),
+    ),
+    "",
+    "Mode A/C Windowing Function:",
+    "",
+    configurationLine("Window Function", "DISABLED"),
+    configurationLine("Window Controlled by GPS Pulse", "ENABLED"),
+    configurationLine(
+      "Window Controlled by Reference Transponder Telegram",
+      "DISABLED",
+    ),
+    configurationLine("Window Controlled by Internal Timer", "DISABLED"),
+    configurationLine("Window Timeslot", "0x1"),
+    configurationLine("Window Interval", "10 ms"),
+    "",
+    configurationLine(
+      "Mode A/C Empty / Low Confidence Frame Rejection",
+      "DISABLED",
+    ),
+    "",
+    "Syslog Configuration:",
+    configurationLine(
+      "Syslog Local Log Destination",
+      profile.syslog.localDestination,
+    ),
+    configurationLine(
+      "Syslog to Remote Server",
+      enabledUpper(profile.syslog.remoteEnabled),
+    ),
+    configurationLine("Syslog Server IP", profile.syslog.remoteServerIp),
+    "",
+    configurationLine("Test Transmission Timeout", "10 Second(s)"),
+    configurationLine("Test Transmission Allow Loopback", "ENABLED"),
+    configurationLine(
+      "Test Target Alert Power",
+      profile.endToEnd?.alertPower ?? 164,
+    ),
+    configurationLine(
+      "Test Target Failure Power",
+      profile.endToEnd?.failurePower ?? 140,
+    ),
+    "",
+    configurationLine(
+      "Ground Targets Processing",
+      enabledUpper(profile.general.groundTargets),
+    ),
+    `        Operating Mode : ${operationMode}`,
+    "       PRESS RETURN TO CONTINUE",
+  ].join("\n");
 }
 
 function renderSystemStatus(
   profile: SensorDataProfile,
   monitoring: SensorMonitoringData | undefined,
 ): string {
-  return finish([
-    "   System Status:",
-    SHORT_RULE,
-    "   Temperature:     " +
-      (monitoring
-        ? monitoring.temperatureC.toFixed(1) + " \u00b0C"
-        : "Unavailable"),
-    "   CPU Load:        " +
-      (monitoring
-        ? monitoring.cpuLoadPercent.toFixed(0) + " %"
-        : "Unavailable"),
-    "   Voltage 3.3V:    " +
-      (monitoring
-        ? monitoring.voltages.v3_3.toFixed(2) + " V"
-        : "Unavailable"),
-    "   Voltage 5.0V:    " +
-      (monitoring
-        ? monitoring.voltages.v5.toFixed(2) + " V"
-        : "Unavailable"),
-    "   Voltage 12.0V:   " +
-      (monitoring
-        ? monitoring.voltages.v12.toFixed(2) + " V"
-        : "Unavailable"),
-    "   GPS Status:      " + gpsStatus(monitoring, profile),
-    "   GPS Deviation:   " + profile.gps.deviation,
-    "   Uptime:          142d 07h 23m",
-  ]);
+  const cpuLoad = monitoring?.cpuLoadPercent ?? 0.2;
+  const positiveVoltage = monitoring?.voltages.v12 ?? 11.1;
+  const dspBoardVoltage = monitoring?.voltages.v3_3 ?? 3.2;
+  const dspBoardTemperature = monitoring?.temperatureC ?? 41;
+  const gpsAvailable =
+    profile.gps.enabled && monitoring?.gpsStatus !== "unavailable";
+  const gpsSynchronized =
+    profile.gps.enabled &&
+    (!monitoring || monitoring.gpsStatus === "synchronized");
+
+  return [
+    "QUADRANT STATE",
+    "== CPU ==",
+    statusLine(
+      "CPU Load",
+      `${cpuLoad.toFixed(1)} % (allowed range: [0.0 %, 75.0 %])`,
+    ),
+    "",
+    "== GPS ==",
+    statusLine("GPS Status", yesNo(gpsAvailable)),
+    statusLine("Time of Last GPS Message", "Sat Jul 18 01:33:06 2026"),
+    statusLine("GPS Synchronised", yesNo(gpsSynchronized)),
+    statusLine("Time of Last GPS Reset", "Mon Jun 22 03:55:36 2026"),
+    statusLine(
+      "GPS Position [latitude, longitude, geoidal height]",
+      " 21.212968, 105.831885,   18.0",
+    ),
+    statusLine(
+      "GPS Averaged Position [ 8778161 measurements]",
+      " 21.213006, 105.831894,   15.7",
+    ),
+    statusLine(
+      "GPS Averaged Position [  10.000 measurements ]",
+      " 21.213017, 105.831861,   12.1",
+    ),
+    statusLine(
+      "Averaged Position Completed at Time",
+      "Mon Apr  6 05:19:07 2026",
+    ),
+    statusLine(
+      "GPS Averaged Position [ 100.000 measurements ]",
+      " 21.213008, 105.831870,   17.8",
+    ),
+    statusLine(
+      "Averaged Position Completed at Time",
+      "Tue Apr  7 06:19:06 2026",
+    ),
+    statusLine("Speed over ground [km/h]", 0),
+    statusLine("Course over ground [degrees]", 0),
+    statusLine("Distance to Configured Position [metres]", 4),
+    "GPGGA : $GPGGA,013306,2112.7781,N,10549.9131,E,2,09,0.9,18.0,M,-26.7,M,,*5B",
+    "PGRMF : $PGRMF,379,524003,180726,013305,18,2112.7781,N,10549.9131,E,A,2,0,0,2,1*19",
+    "GPGSA : PRNs of Active Satellites: 05, 06, 09, 11, 12, 17, 19, 21, 25",
+    "PGRMT : $PGRMT,GPS 16x-HVS software ver. 4.40,,,,,,,,*75",
+    "PGRMC : $PGRMC,A,00018.0,100,0000000.000,000.000000000,0000,0000,0000,A,3,0,2,04,1.0*47",
+    "PGRMC1: $PGRMC1,1,1,2,,,,1,A,N,,,,2,2,2*68",
+    "",
+    "== Voltages and Temperatures ==",
+    statusLine(
+      "Intermediate Voltage Positive",
+      `${positiveVoltage.toFixed(1).padStart(5)} V     (allowed range: [  9.5 V, 13.5 V])`,
+    ),
+    statusLine(
+      "Intermediate Voltage Negative",
+      "-11.8 V     (allowed range: [-13.5 V, -9.5 V])",
+    ),
+    statusLine(
+      "GPS Voltage",
+      " 11.0 V     (allowed range: [  9.5 V, 13.5 V])",
+    ),
+    statusLine(
+      "FPGA Core Voltage",
+      "  1.2 V     (allowed range: [  1.0 V,  1.4 V])",
+    ),
+    statusLine(
+      "FPGA Auxiliary Voltage",
+      "  2.5 V     (allowed range: [  2.3 V,  2.7 V])",
+    ),
+    statusLine(
+      "DSP-Board Voltage",
+      `${dspBoardVoltage.toFixed(1).padStart(5)} V     (allowed range: [  3.1 V,  3.5 V])`,
+    ),
+    statusLine(
+      "DSP-Board Temperature",
+      `${dspBoardTemperature.toFixed(1).padStart(5)} deg.C    (allowed range: [-20.0 deg.C, 70.0 deg.C])`,
+    ),
+    "",
+    statusLine(
+      "NTP Synchronised",
+      profile.gps.ntpEnabled ? yesNo(gpsSynchronized) : "DISABLED",
+    ),
+    statusLine(
+      "Estimated Error of NTP Time",
+      "0 us, tolerance 4000 us",
+    ),
+    "",
+    "== Power-On-Self-Test Results == ",
+    statusLine("POST Receiver", "YES"),
+    statusLine("POST GPS", yesNo(gpsAvailable)),
+    statusLine("POST Temperature Sensor", "YES"),
+    statusLine("POST Voltage Sensor", "YES"),
+    statusLine("POST FPGA", "YES"),
+    statusLine("POST Completed", "YES"),
+    "",
+    "== Continuous-Built-in-Test Results ==",
+    statusLine(
+      "Last Mode RF Test Message Received",
+      "Sat Jul 18 01:33:04 2026",
+    ),
+    statusLine(
+      "Signal Strength of Last RF Test Message (0..255)",
+      monitoring?.receiverConfidencePercent ?? 99,
+    ),
+    statusLine("Time of Last FIFO Overflow", "Thu Jan  1 00:00:30 1970"),
+    statusLine("DP Comm Queue Overflow", "<never>"),
+    statusLine("Time of Last FPGA Reset (w-dog 1)", "<never>"),
+    statusLine(
+      "Time of Last FPGA Reload (w-dog 2)",
+      "Mon Apr  6 02:36:25 2026",
+    ),
+    statusLine(
+      "Time of Last FPGA Watchdog Signal",
+      "Sat Jul 18 01:33:06 2026",
+    ),
+    statusLine("Time of Last PPS Pulse", "Sat Jul 18 01:33:05 2026"),
+    statusLine("Time of Last #GPS Sat > 3", "Sat Jul 18 01:33:06 2026"),
+    statusLine("Time of Last syscon Intervention", "<never>"),
+    statusLine("Type of Affected Process", 0),
+    statusLine("Last DP Restart", "Mon Apr  6 02:36:13 2026"),
+    statusLine("Time of Last Target Overflow", "<never>"),
+    statusLine("Time of Last Voltage Reading", "Sat Jul 18 01:33:03 2026"),
+    statusLine("Time of Last SNMP Request", "Sat Jul 18 01:33:06 2026"),
+    statusLine("Time of Last Communications Overload", "<never>"),
+    "",
+    "== SITEMONITOR Statistics ==",
+    statusLine(
+      "Time of last Site Monitor Message",
+      "Sat Jul 18 01:33:05 2026",
+    ),
+    statusLine(
+      "Signal Strength of Last RF Sitemonitor Message (0..255)",
+      207,
+    ),
+    "",
+    "== End-to-End Test Results ==",
+    statusLine("End to End Test", "Passed"),
+    statusLine("Receiver Sensitivity", "Passed"),
+    statusLine("Test Transmission Loss", "Passed"),
+    statusLine("Decoder Test", "Passed"),
+    statusLine(
+      "Last Valid Decoded Mode-S Message",
+      "Sat Jul 18 01:33:05 2026",
+    ),
+    "",
+    "== DSP Interface Statistics ==",
+    statusLine("Total Read Attempts", 824635966),
+    statusLine("Total Messages Read", 2263718400),
+    statusLine("Overflows Detected", 1),
+    statusLine("Last Second Reads Attempts", 99),
+    statusLine("Last Second Messages Read", 375),
+    statusLine("Last Second FIFO Overflows", 0),
+    "",
+    "== Monitoring FIFO Interface Statistics ==",
+    statusLine("Total Read Attempts Monitoring FIFO", 1475685),
+    statusLine("Total Messages Read Monitoring FIFO", 1862815),
+    statusLine("Monitoring FIFO Overflows Detected", 0),
+    statusLine(
+      "Last Monitoring FIFO msg Received",
+      "Sat Jul 18 01:33:05 2026",
+    ),
+    statusLine("Last GPS System Time Sync", "Sat Jul 18 01:33:06 2026"),
+    statusLine("Last PPS FIFO Overflow", "<never>"),
+    statusLine("Last Second Messages Read", 2),
+    statusLine("Last Second FIFO Overflows", 0),
+    "",
+    "== MODE-S FIFO Interface Statistics ==",
+    statusLine("Total Read Attempts MODE-S FIFO", 823160280),
+    statusLine("Total Messages Read MODE-S FIFO", 2261854559),
+    statusLine("MODE-S FIFO Overflows Detected", 0),
+    statusLine("Last MODE-S Message Received", "Sat Jul 18 01:33:06 2026"),
+    statusLine("Last MODE-S FIFO Overflow", "<never>"),
+    statusLine("Last Second MODE-S Messages Read", 266),
+    statusLine("Last Second MODE-S FIFO Overflows", 0),
+    statusLine("Last Second MODE-S Messages Regected", 20),
+    "",
+    "== MODE-AC FIFO Interface Statistics ==",
+    statusLine("Total Read Attempts MODE-AC FIFO", 1),
+    statusLine("Total Messages Read MODE-AC FIFO", 1026),
+    statusLine("MODE-AC FIFO Overflows Detected", 1),
+    statusLine("Last MODE-AC Message Received", "Thu Jan  1 00:00:30 1970"),
+    statusLine("Last MODE-AC FIFO Overflow", "Thu Jan  1 00:00:30 1970"),
+    statusLine("Last Second MODE-AC Messages Read", 0),
+    statusLine("Last Second MODE-AC FIFO Overflows", 0),
+    "",
+    "== Device Status ==",
+    statusLine("Ground Station State", "GO"),
+    statusLine("Overall Build-In-Test result", "NO ERROR PENDING"),
+    statusLine("UTC Synchronisation State", "UTC COUPLED"),
+    "PRESS RETURN TO CONTINUE",
+  ].join("\n");
 }
 
 function renderDspStats(
@@ -247,7 +745,7 @@ function renderDspStats(
 ): string {
   const stats = profile.receiverStats;
   return finish([
-    "   Extended DSP Statistics:",
+    "   Extended Mode-S Statistics:",
     LONG_RULE,
     "   Short Squitter Total:    " + formatNumber(stats.shortSquitter.total),
     "   Short Squitter Passed:   " + formatNumber(stats.shortSquitter.passed),
@@ -263,6 +761,49 @@ function renderDspStats(
         : "Unavailable"),
     "   CRC Error Count:         " +
       valueOrUnavailable(monitoring?.crcErrorCount),
+  ]);
+}
+
+function renderModeAcStats(profile: SensorDataProfile): string {
+  const stats = profile.receiverStats;
+  const modeAReplies = Math.floor(stats.shortSquitter.passed * 0.18);
+  const modeCReplies = Math.floor(stats.shortSquitter.passed * 0.12);
+  const acceptedReplies = modeAReplies + modeCReplies;
+
+  return finish([
+    "   Extended Mode-AC Statistics:",
+    LONG_RULE,
+    "   Mode-A Replies Received:  " + formatNumber(modeAReplies),
+    "   Mode-C Replies Received:  " + formatNumber(modeCReplies),
+    "   Replies Accepted:         " + formatNumber(acceptedReplies),
+    "   Replies Rejected:         " +
+      formatNumber(stats.shortSquitter.failed),
+    "   Current Mode-A/C Targets: " +
+      formatNumber(Math.floor(stats.currentTargets * 0.22)),
+    "   Receiver Overloads:       0",
+    "   Decoder State:            OPERATIONAL",
+  ]);
+}
+
+function renderLocalSystemLog(
+  profile: SensorDataProfile,
+  monitoring: SensorMonitoringData | undefined,
+): string {
+  return finish([
+    "   Local System Log:",
+    LONG_RULE,
+    "   2026-07-23 08:00:01 INFO  Maintenance application started",
+    `   2026-07-23 08:00:02 INFO  Sensor ${profile.sensorName} is OPERATIONAL`,
+    `   2026-07-23 08:00:03 INFO  Ethernet link ${profile.network.ip} is UP`,
+    `   2026-07-23 08:00:04 INFO  GPS status: ${gpsStatus(
+      monitoring,
+      profile,
+    )}`,
+    "   2026-07-23 08:00:05 INFO  RF End-to-End test: PASS",
+    `   2026-07-23 08:00:06 INFO  Active surveillance clients: ${
+      profile.clients.filter((client) => client.enabled).length
+    }`,
+    "   2026-07-23 08:00:07 INFO  No active system alarms",
   ]);
 }
 
@@ -352,7 +893,7 @@ export function renderTemplate(
         "   Sensor Name:    " + profile.sensorName,
       ]);
     case "sa-clients-display":
-      return renderClients(profile, "Surveillance Clients");
+      return renderClients(profile);
     case "sa-clients-stats":
       return renderClientStats(profile);
     case "sa-snmp-users":
@@ -395,12 +936,16 @@ export function renderTemplate(
       return renderSystemStatus(profile, monitoring);
     case "ma-dsp-stats":
       return renderDspStats(profile, monitoring);
+    case "ma-mode-ac-stats":
+      return renderModeAcStats(profile);
+    case "ma-local-system-log":
+      return renderLocalSystemLog(profile, monitoring);
     case "ma-gps-status":
       return renderGps(profile, monitoring);
     case "ma-filter-display":
       return renderFilters(profile);
     case "ma-clients-display":
-      return renderClients(profile, "Surveillance Client Configuration");
+      return renderClients(profile);
     case "ma-monitoring-display":
       return renderMonitoringDevices(profile);
     default:

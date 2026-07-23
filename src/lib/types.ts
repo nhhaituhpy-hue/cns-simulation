@@ -236,6 +236,13 @@ export interface SensorDataProfile {
   sensorVersion: string;
   configVersion: string;
   sensorName: string;
+  operationMode?: "OPERATIONAL" | "MAINTENANCE";
+  endToEnd?: {
+    alertPower: number;
+    failurePower: number;
+    interrogationPeriodMs: number;
+    replyDelayNs: number;
+  };
   network: NetworkConfig;
   receiverStats: ReceiverStats;
   clients: SurveillanceClient[];

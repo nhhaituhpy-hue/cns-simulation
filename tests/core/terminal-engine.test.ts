@@ -20,11 +20,11 @@ describe("menu fixtures", () => {
       "sa.root": 9,
       "sa.general": 7,
       "sa.network": 7,
-      "sa.surveillance-clients": 6,
+      "sa.surveillance-clients": 2,
       "sa.system-log": 4,
       "sa.snmp": 10,
       "sa.software": 4,
-      "sa.customisation": 10,
+      "sa.customisation": 7,
       "sa.config-transfer": 3,
     };
     const menus: MenuTree = SA_MENUS;
@@ -51,7 +51,7 @@ describe("menu fixtures", () => {
       "ma.filters": 4,
       "ma.gps-ntp": 5,
       "ma.software": 2,
-      "ma.system-stats": 4,
+      "ma.system-stats": 8,
       "ma.customisation": 4,
       "ma.config-transfer": 3,
       "ma.monitoring-devices": 5,
@@ -71,10 +71,10 @@ describe("renderMenu", () => {
       .split("\n")
       .filter((line) => line.startsWith("*"));
 
-    expect(output).toContain("Quadrant ADS-B Maintenance Application");
-    expect(output).toContain("(  9)    Change Actual Operation Mode");
-    expect(output).toContain("(  0)    Return to Previous Menu");
-    expect(output).toContain("(  X)    Exit Maintenance Application");
+    expect(output).toContain("QUADRANT ADS-B MAINTENANCE APPLICATION");
+    expect(output).toContain("(  9)    CHANGE ACTUAL OPERATION MODE");
+    expect(output).toContain("(  0)    RETURN TO PREVIOUS MENU");
+    expect(output).toContain("(  X)    EXIT MAINTENANCE APPLICATION");
     expect(output).not.toMatch(/[—–]/u);
     expect(boxedLines.every((line) => line.length === 74)).toBe(true);
   });
@@ -82,8 +82,8 @@ describe("renderMenu", () => {
   it("aligns double-digit MA menu choices", () => {
     const output = renderMenu(MA_MENUS[MA_ROOT_MENU_ID]);
 
-    expect(output).toContain("( 10)    Configuration Import / Export");
-    expect(output).toContain("( 11)    Monitoring Devices");
+    expect(output).toContain("( 10)    CONFIGURATION EXPORT");
+    expect(output).toContain("( 11)    MONITORING DEVICES");
   });
 });
 
@@ -210,10 +210,10 @@ describe("TerminalEngine", () => {
   });
 
   it("never stores, records, echoes, or returns a sensitive password", () => {
-    const engine = new TerminalEngine({ targetLoginUser: "sysadmin" });
+    const engine = new TerminalEngine({ targetLoginUser: "maintenance" });
     const secret = "Do-Not-Store-This-Password";
-    engine.processInput("7");
     engine.processInput("9");
+    engine.processInput("2");
     expect(engine.getState().pendingSensitive).toBe(true);
 
     const result = engine.processInput(secret);
@@ -223,7 +223,7 @@ describe("TerminalEngine", () => {
     expect(result.accepted).toBe(true);
     expect(result.normalizedInput).toBe("[REDACTED]");
     expect(result.recordableAction).toBeNull();
-    expect(engine.getState().settings["sa.password"]).toBeUndefined();
+    expect(engine.getState().settings["ma.password"]).toBeUndefined();
     expect(engine.getState().pendingSensitive).toBe(false);
     expect(serializedResult).not.toContain(secret);
     expect(serializedState).not.toContain(secret);

@@ -8,6 +8,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GradingResult } from "@/components/grading/grading-result";
 import { completeExamAttemptItemAction } from "@/lib/exams/actions";
 import type { OfficialExamScenarioContext } from "@/lib/exams/client-types";
+import {
+  buildTerminalSessionCacheKey,
+  fingerprintTerminalBaseline,
+} from "@/lib/terminal-session-cache";
 import type { Scenario, SensorState } from "@/lib/types";
 import { useRecordingStore } from "@/stores/recording-store";
 import { useScenarioStore } from "@/stores/scenario-store";
@@ -43,11 +47,13 @@ export function TerminalSession({
   sensorId,
   officialExam,
   officialScenario,
+  cacheOwnerId,
 }: {
   scenarioId: string;
   sensorId?: string;
   officialExam?: OfficialExamScenarioContext;
   officialScenario?: Scenario;
+  cacheOwnerId: string;
 }) {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -76,14 +82,26 @@ export function TerminalSession({
     );
   }, [requestedSensorId, scenario]);
   const isTargetSensor = selectedSensor?.id === scenario?.targetSensorId;
+  const terminalCacheKey = useMemo(() => {
+    if (!scenario || !selectedSensor) return undefined;
+
+    return buildTerminalSessionCacheKey({
+      ownerId: cacheOwnerId,
+      sessionKey: officialExam?.sessionKey ?? scenario.id,
+      sensorId: selectedSensor.id,
+      baselineRevision: `${scenario.updatedAt ?? scenario.createdAt}:${fingerprintTerminalBaseline(
+        selectedSensor.dataProfile,
+      )}`,
+    });
+  }, [cacheOwnerId, officialExam?.sessionKey, scenario, selectedSensor]);
 
   useEffect(() => {
     if (!officialScenario) hydrate();
   }, [hydrate, officialScenario]);
 
   useEffect(() => {
-    if (!scenario || !selectedSensor || !isTargetSensor) return;
-    const key = `${officialExam?.sessionKey ?? scenario.id}:${selectedSensor.id}`;
+    if (!scenario || !selectedSensor || !isTargetSensor || !terminalCacheKey) return;
+    const key = `${officialExam?.sessionKey ?? scenario.id}:${selectedSensor.id}:${terminalCacheKey}`;
     if (initializedKey.current === key) return;
 
     recording.beginAttempt(scenario.id, officialExam?.sessionKey ?? scenario.id);
@@ -94,12 +112,14 @@ export function TerminalSession({
       header: { sensorName: selectedSensor.name },
       sensorDataProfile: selectedSensor.dataProfile,
       sensorMonitoring: selectedSensor.monitoring,
+      persistenceKey: terminalCacheKey,
     });
     initializedKey.current = key;
-  }, [isTargetSensor, officialExam?.sessionKey, recording, scenario, selectedSensor, terminal]);
+  }, [isTargetSensor, officialExam?.sessionKey, recording, scenario, selectedSensor, terminal, terminalCacheKey]);
 
   const retry = useCallback(() => {
-    if (!scenario || !selectedSensor) return;
+    if (!scenario || !selectedSensor || !terminalCacheKey) return;
+    terminal.clearPersistedSession();
     recording.resetAttempt();
     recording.beginAttempt(scenario.id, officialExam?.sessionKey ?? scenario.id);
     recording.startTerminal();
@@ -109,8 +129,9 @@ export function TerminalSession({
       header: { sensorName: selectedSensor.name },
       sensorDataProfile: selectedSensor.dataProfile,
       sensorMonitoring: selectedSensor.monitoring,
+      persistenceKey: terminalCacheKey,
     });
-  }, [officialExam?.sessionKey, recording, scenario, selectedSensor, terminal]);
+  }, [officialExam?.sessionKey, recording, scenario, selectedSensor, terminal, terminalCacheKey]);
 
   if (!officialScenario && !isHydrated) return <SessionSkeleton />;
 
@@ -268,6 +289,7 @@ export function TerminalSession({
                   setOfficialError(result.message);
                   return;
                 }
+                terminal.clearPersistedSession();
                 setOfficialSubmitted(true);
               });
               return;

@@ -1,9 +1,13 @@
 import { TerminalEngine } from "@/lib/terminal-engine";
-import { CON_SON_SENSOR_1 } from "@/lib/sensor-data-presets";
+import {
+  CON_SON_SENSOR_1,
+  NOI_BAI_TRAINING_SENSOR,
+} from "@/lib/sensor-data-presets";
 import type {
   LoginUser,
   RecordedAction,
   Scenario,
+  SensorDataProfile,
   SensorMonitoringData,
   SensorStatus,
 } from "@/lib/types";
@@ -13,8 +17,12 @@ const SEED_TIMESTAMP = Date.parse("2026-01-01T00:00:00.000Z");
 function buildExpectedActions(
   loginUser: LoginUser,
   inputs: readonly string[],
+  dataProfile?: SensorDataProfile,
 ): RecordedAction[] {
-  const engine = new TerminalEngine({ targetLoginUser: loginUser });
+  const engine = new TerminalEngine({
+    targetLoginUser: loginUser,
+    sensorDataProfile: dataProfile ? structuredClone(dataProfile) : undefined,
+  });
 
   return inputs.flatMap((input) => {
     const action = engine.processInput(input).recordableAction;
@@ -58,6 +66,7 @@ function singleSite(
   sensorLabel: "A" | "B",
   status: SensorStatus,
   gpsStatus: SensorMonitoringData["gpsStatus"] = "synchronized",
+  dataProfile?: SensorDataProfile,
 ): Scenario["sites"] {
   const sensor = {
     id: sensorId,
@@ -66,6 +75,7 @@ function singleSite(
     ipAddress: "10.10.10.3",
     name: "Quadrant ADS-B sensor",
     monitoring: monitoring(gpsStatus),
+    dataProfile,
   };
 
   return [
@@ -74,6 +84,31 @@ function singleSite(
       name: siteName,
       sensorA: sensorLabel === "A" ? sensor : null,
       sensorB: sensorLabel === "B" ? sensor : null,
+    },
+  ];
+}
+
+function noiBaiTrainingSite(sensorId: string): Scenario["sites"] {
+  return [
+    {
+      id: "noi-bai-adsb-training",
+      name: "ADS-B Nội Bài",
+      sensorA: {
+        id: sensorId,
+        sensorLabel: "A",
+        status: "green",
+        ipAddress: NOI_BAI_TRAINING_SENSOR.network.ip,
+        name: NOI_BAI_TRAINING_SENSOR.sensorName,
+        monitoring: {
+          ...monitoring(),
+          temperatureC: 41,
+          cpuLoadPercent: 20,
+          receiverConfidencePercent: 99,
+          crcErrorCount: 0,
+        },
+        dataProfile: structuredClone(NOI_BAI_TRAINING_SENSOR),
+      },
+      sensorB: null,
     },
   ];
 }
@@ -161,6 +196,233 @@ export const DEFAULT_SCENARIOS: readonly Scenario[] = [
     targetSensorId: "con-son-a",
     targetLoginUser: "sysadmin",
     expectedActions: buildExpectedActions("sysadmin", ["2", "1", "", "0"]),
+  },
+  {
+    id: "adsb-01-display-system-configuration",
+    title: "ADS-B 01 — Hiển thị cấu hình hệ thống",
+    description:
+      "Đăng nhập bằng tài khoản maintenance, mở Display System Stats và hiển thị đầy đủ System Configuration.",
+    difficulty: "easy",
+    createdAt: "2026-07-01T00:00:00.000Z",
+    sites: noiBaiTrainingSite("noi-bai-training-01"),
+    targetSensorId: "noi-bai-training-01",
+    targetLoginUser: "maintenance",
+    expectedActions: buildExpectedActions(
+      "maintenance",
+      ["8", "1"],
+      NOI_BAI_TRAINING_SENSOR,
+    ),
+  },
+  {
+    id: "adsb-02-display-system-status",
+    title: "ADS-B 02 — Kiểm tra trạng thái hệ thống",
+    description:
+      "Mở màn hình System Status để kiểm tra CPU, nhiệt độ, điện áp, GPS, mạng và kết quả RF End-to-End.",
+    difficulty: "easy",
+    createdAt: "2026-07-02T00:00:00.000Z",
+    sites: noiBaiTrainingSite("noi-bai-training-02"),
+    targetSensorId: "noi-bai-training-02",
+    targetLoginUser: "maintenance",
+    expectedActions: buildExpectedActions(
+      "maintenance",
+      ["8", "2"],
+      NOI_BAI_TRAINING_SENSOR,
+    ),
+  },
+  {
+    id: "adsb-03-display-clients",
+    title: "ADS-B 03 — Kiểm tra client giám sát",
+    description:
+      "Hiển thị cấu hình các Surveillance Client, quay lại rồi kiểm tra thống kê bản tin của từng client.",
+    difficulty: "easy",
+    createdAt: "2026-07-03T00:00:00.000Z",
+    sites: noiBaiTrainingSite("noi-bai-training-03"),
+    targetSensorId: "noi-bai-training-03",
+    targetLoginUser: "sysadmin",
+    expectedActions: buildExpectedActions(
+      "sysadmin",
+      ["3", "1", "", "2"],
+      NOI_BAI_TRAINING_SENSOR,
+    ),
+  },
+  {
+    id: "adsb-04-display-e2e-thresholds",
+    title: "ADS-B 04 — Kiểm tra ngưỡng RF End-to-End",
+    description:
+      "Mở Customisation và hiển thị Alert Power Level, Failure Power Level cùng kết quả End-to-End hiện tại.",
+    difficulty: "easy",
+    createdAt: "2026-07-04T00:00:00.000Z",
+    sites: noiBaiTrainingSite("noi-bai-training-04"),
+    targetSensorId: "noi-bai-training-04",
+    targetLoginUser: "sysadmin",
+    expectedActions: buildExpectedActions(
+      "sysadmin",
+      ["7", "7"],
+      NOI_BAI_TRAINING_SENSOR,
+    ),
+  },
+  {
+    id: "adsb-05-change-operation-mode",
+    title: "ADS-B 05 — Chuyển chế độ vận hành",
+    description:
+      "Chuyển Actual Sensor Operating Mode từ OPERATIONAL sang MAINTENANCE và kiểm tra màn hình xác nhận kết quả.",
+    difficulty: "easy",
+    createdAt: "2026-07-05T00:00:00.000Z",
+    sites: noiBaiTrainingSite("noi-bai-training-05"),
+    targetSensorId: "noi-bai-training-05",
+    targetLoginUser: "sysadmin",
+    expectedActions: buildExpectedActions(
+      "sysadmin",
+      ["9", "1"],
+      NOI_BAI_TRAINING_SENSOR,
+    ),
+  },
+  {
+    id: "adsb-06-configure-network",
+    title: "ADS-B 06 — Thay đổi và xác nhận địa chỉ mạng",
+    description:
+      "Chuyển sang MAINTENANCE, nhập IP 192.168.10.20, subnet, gateway rồi xác nhận cấu hình mạng mới.",
+    difficulty: "hard",
+    createdAt: "2026-07-06T00:00:00.000Z",
+    sites: noiBaiTrainingSite("noi-bai-training-06"),
+    targetSensorId: "noi-bai-training-06",
+    targetLoginUser: "sysadmin",
+    expectedActions: buildExpectedActions(
+      "sysadmin",
+      [
+        "9",
+        "1",
+        "",
+        "2",
+        "2",
+        "1",
+        "192.168.10.20",
+        "255.255.255.0",
+        "192.168.10.252",
+        "",
+        "3",
+        "1",
+      ],
+      NOI_BAI_TRAINING_SENSOR,
+    ),
+  },
+  {
+    id: "adsb-07-configure-sensor-name",
+    title: "ADS-B 07 — Đổi tên cảm biến",
+    description:
+      "Chuyển sang MAINTENANCE, đặt Sensor Name thành NoiBai-Training và kiểm tra tên mới ngay trên màn hình kết quả.",
+    difficulty: "medium",
+    createdAt: "2026-07-07T00:00:00.000Z",
+    sites: noiBaiTrainingSite("noi-bai-training-07"),
+    targetSensorId: "noi-bai-training-07",
+    targetLoginUser: "sysadmin",
+    expectedActions: buildExpectedActions(
+      "sysadmin",
+      ["9", "1", "", "7", "1", "1", "NoiBai-Training"],
+      NOI_BAI_TRAINING_SENSOR,
+    ),
+  },
+  {
+    id: "adsb-08-configure-sac-sic",
+    title: "ADS-B 08 — Cấu hình ASTERIX SAC/SIC",
+    description:
+      "Trong Configure ASTERIX, đổi SAC thành 95 và SIC thành 164; mỗi thay đổi phải có màn hình xác nhận giá trị cũ và mới.",
+    difficulty: "medium",
+    createdAt: "2026-07-08T00:00:00.000Z",
+    sites: noiBaiTrainingSite("noi-bai-training-08"),
+    targetSensorId: "noi-bai-training-08",
+    targetLoginUser: "maintenance",
+    expectedActions: buildExpectedActions(
+      "maintenance",
+      ["1", "1", "2", "95", "", "3", "164"],
+      NOI_BAI_TRAINING_SENSOR,
+    ),
+  },
+  {
+    id: "adsb-09-configure-client",
+    title: "ADS-B 09 — Thêm Surveillance Client",
+    description:
+      "Chuyển sang MAINTENANCE và cấu hình client số 5: UDP, ADS-B + Non-OP, tên TRAIN-QCMS, IP 192.168.80.50, cổng 20550.",
+    difficulty: "hard",
+    createdAt: "2026-07-09T00:00:00.000Z",
+    sites: noiBaiTrainingSite("noi-bai-training-09"),
+    targetSensorId: "noi-bai-training-09",
+    targetLoginUser: "sysadmin",
+    expectedActions: buildExpectedActions(
+      "sysadmin",
+      [
+        "9",
+        "1",
+        "",
+        "3",
+        "4",
+        "5",
+        "1",
+        "1",
+        "TRAIN-QCMS",
+        "192.168.80.50",
+        "20550",
+      ],
+      NOI_BAI_TRAINING_SENSOR,
+    ),
+  },
+  {
+    id: "adsb-10-export-configuration",
+    title: "ADS-B 10 — Xuất cấu hình hiện tại",
+    description:
+      "Chuyển sang MAINTENANCE và xuất cấu hình tới máy chủ 192.168.10.8 với tên NoiBai_backup.cfg.",
+    difficulty: "medium",
+    createdAt: "2026-07-10T00:00:00.000Z",
+    sites: noiBaiTrainingSite("noi-bai-training-10"),
+    targetSensorId: "noi-bai-training-10",
+    targetLoginUser: "sysadmin",
+    expectedActions: buildExpectedActions(
+      "sysadmin",
+      [
+        "9",
+        "1",
+        "",
+        "8",
+        "1",
+        "1",
+        "NoiBai_backup.cfg",
+        "192.168.10.8",
+        "/home/qcms/config",
+      ],
+      NOI_BAI_TRAINING_SENSOR,
+    ),
+  },
+  {
+    id: "adsb-11-configure-e2e-thresholds",
+    title: "ADS-B 11 — Thay đổi ngưỡng cảnh báo RF",
+    description:
+      "Chuyển sang MAINTENANCE, đặt Alert Power Level = 170 và Failure Power Level = 145 rồi kiểm tra màn hình kết quả.",
+    difficulty: "medium",
+    createdAt: "2026-07-11T00:00:00.000Z",
+    sites: noiBaiTrainingSite("noi-bai-training-11"),
+    targetSensorId: "noi-bai-training-11",
+    targetLoginUser: "sysadmin",
+    expectedActions: buildExpectedActions(
+      "sysadmin",
+      ["9", "1", "", "7", "10", "2", "1", "170", "145"],
+      NOI_BAI_TRAINING_SENSOR,
+    ),
+  },
+  {
+    id: "adsb-12-configure-position-from-gps",
+    title: "ADS-B 12 — Cấu hình vị trí từ GPS",
+    description:
+      "Chọn Obtain Position from GPS, dùng Actual GPS Position và kiểm tra tọa độ Nội Bài trên màn hình kết quả.",
+    difficulty: "medium",
+    createdAt: "2026-07-12T00:00:00.000Z",
+    sites: noiBaiTrainingSite("noi-bai-training-12"),
+    targetSensorId: "noi-bai-training-12",
+    targetLoginUser: "maintenance",
+    expectedActions: buildExpectedActions(
+      "maintenance",
+      ["1", "2", "2", "1"],
+      NOI_BAI_TRAINING_SENSOR,
+    ),
   },
 ];
 

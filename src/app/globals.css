@@ -21,8 +21,8 @@
   --danger: #b42318;
   --danger-muted: #fef3f2;
   --terminal-bg: #000000;
-  --terminal-text: #e4e4e7;
   --terminal-green: #00ff41;
+  --terminal-text: var(--terminal-green);
   --terminal-error: #ef4444;
   --shadow-sm: 0 1px 2px rgb(22 36 47 / 0.06);
   --shadow-card: 0 1px 2px rgb(22 36 47 / 0.04), 0 8px 24px rgb(22 36 47 / 0.035);

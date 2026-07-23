@@ -3,6 +3,7 @@ import type {
   MenuItem,
   MenuTree,
   ToggleOption,
+  WorkflowStep,
 } from "./menu-types";
 
 export const SA_ROOT_MENU_ID = "sa.root";
@@ -62,6 +63,19 @@ function toggle(
   };
 }
 
+function workflow(
+  number: number,
+  label: string,
+  workflowId: string,
+  steps: readonly WorkflowStep[],
+): MenuItem {
+  return {
+    number,
+    label,
+    action: { type: "workflow", workflowId, steps },
+  };
+}
+
 export const SA_MENUS = {
   [SA_ROOT_MENU_ID]: {
     id: SA_ROOT_MENU_ID,
@@ -76,10 +90,21 @@ export const SA_MENUS = {
       navigate(6, "Software", "sa.software"),
       navigate(7, "Customisation", "sa.customisation"),
       navigate(8, "Configuration Import / Export", "sa.config-transfer"),
-      display(
+      workflow(
         9,
         "Change Actual Operation Mode",
-        "Operation mode changes are simulated in this MVP. Maintenance Mode remains active.",
+        "sa.operation-mode",
+        [
+          {
+            key: "mode",
+            kind: "choice",
+            prompt: "Select Actual Sensor Operating Mode:",
+            options: [
+              { number: 1, label: "MAINTENANCE", value: "MAINTENANCE" },
+              { number: 2, label: "OPERATIONAL", value: "OPERATIONAL" },
+            ],
+          },
+        ],
       ),
     ],
   },
@@ -131,17 +156,63 @@ export const SA_MENUS = {
         "Interface eth0: 10.10.10.3/24\nDefault gateway: 10.10.10.1\nDHCP: disabled",
         "sa-network-display",
       ),
-      input(
+      workflow(
         2,
-        "Configure Manual IP",
-        "sa.manual-ip",
-        "Enter IPv4 address and prefix length:",
-        "Manual IP configuration accepted by the simulator.",
+        "Configure Network Settings Manually",
+        "sa.manual-network",
+        [
+          {
+            key: "action",
+            kind: "choice",
+            prompt: "Manual Network Configuration:",
+            options: [
+              {
+                number: 1,
+                label: "Configure New Network Settings",
+                value: "CONFIGURE",
+              },
+              {
+                number: 2,
+                label: "Leave Network Settings Unchanged",
+                value: "KEEP",
+              },
+            ],
+          },
+          {
+            key: "ip",
+            prompt: "Enter New IP Address:",
+            validation: "ipv4",
+            when: { key: "action", value: "CONFIGURE" },
+          },
+          {
+            key: "subnet",
+            prompt: "Enter New Subnet Mask:",
+            validation: "ipv4",
+            when: { key: "action", value: "CONFIGURE" },
+          },
+          {
+            key: "gateway",
+            prompt: "Enter New Default Gateway:",
+            validation: "ipv4",
+            when: { key: "action", value: "CONFIGURE" },
+          },
+        ],
       ),
-      display(
+      workflow(
         3,
         "Confirm Network Changes",
-        "Network-change confirmation is simulated. The training session remains connected.",
+        "sa.confirm-network",
+        [
+          {
+            key: "confirm",
+            kind: "choice",
+            prompt: "Confirm the current network settings?",
+            options: [
+              { number: 1, label: "Confirm Current Settings", value: "CONFIRM" },
+              { number: 2, label: "Leave Settings Unconfirmed", value: "LEAVE" },
+            ],
+          },
+        ],
       ),
       toggle(4, "Enable / Disable DHCP", "sa.dhcp", "Select DHCP state:"),
       input(
@@ -179,7 +250,7 @@ export const SA_MENUS = {
     items: [
       display(
         1,
-        "Display Clients",
+        "Display Client Configuration",
         "Client 1: 239.10.10.1:30001, enabled, ASTERIX CAT21",
         "sa-clients-display",
       ),
@@ -188,32 +259,6 @@ export const SA_MENUS = {
         "Display Client Statistics",
         "Client 1 packets sent: 125430\nSend errors: 0",
         "sa-clients-stats",
-      ),
-      toggle(3, "Enable / Disable Client", "sa.client-enabled", "Select client state:"),
-      input(
-        4,
-        "Configure Client",
-        "sa.client-configuration",
-        "Enter client row and destination:",
-        "Client configuration updated in the simulator.",
-      ),
-      toggle(
-        5,
-        "Change Message Type",
-        "sa.client-message-type",
-        "Select message type:",
-        [
-          { number: 1, label: "ASTERIX CAT21", value: "cat21" },
-          { number: 2, label: "ASTERIX CAT48", value: "cat48" },
-          { number: 3, label: "RAW", value: "raw" },
-        ],
-      ),
-      input(
-        6,
-        "Delete Client",
-        "sa.delete-client",
-        "Enter client row to delete:",
-        "Client deletion simulated.",
       ),
     ],
   },
@@ -347,64 +392,123 @@ export const SA_MENUS = {
     title: "Customisation",
     header: SA_HEADER,
     items: [
-      input(
+      display(
         1,
-        "Sensor Name",
-        "sa.sensor-name",
-        "Enter sensor name:",
-        "Sensor name updated in the simulator.",
+        "Display Sensor Name",
+        "QUADRANT SENSOR NAME\n\nSensor Name: {{sensorName}}",
       ),
-      display(2, "Display ADC Thresholds", "ADC threshold configuration is available as a read-only MVP mock."),
-      input(
+      display(
+        2,
+        "Display Minimum ADC Thresholds for Mode-S and Mode-A/C Processing",
+        [
+          "QUADRANT MINIMUM ADC THRESHOLDS",
+          "",
+          "Mode-S Minimum ADC Threshold    : 0",
+          "Mode-A/C Minimum ADC Threshold  : 0",
+        ].join("\n"),
+      ),
+      display(
         3,
-        "Mode-S Thresholds",
-        "sa.mode-s-thresholds",
-        "Enter Mode-S threshold profile:",
-        "Mode-S thresholds updated in the simulator.",
+        "Display ADC Averaging Settings",
+        [
+          "QUADRANT ADC AVERAGING SETTINGS",
+          "",
+          "Mode-S ADC Averaging   : DISABLED",
+          "Mode-A/C ADC Averaging : DISABLED",
+        ].join("\n"),
       ),
-      input(
+      display(
         4,
-        "Mode-A/C Threshold",
-        "sa.mode-ac-threshold",
-        "Enter Mode-A/C threshold:",
-        "Mode-A/C threshold updated in the simulator.",
+        "Display Output Message Assembly Delay Setting",
+        "Output Message Assembly Delay: 50000 microseconds",
       ),
-      input(
+      display(
         5,
-        "ADC Averaging",
-        "sa.adc-averaging",
-        "Enter ADC averaging value:",
-        "ADC averaging updated in the simulator.",
+        "Mode A/C Windowing Function",
+        [
+          "MODE A/C WINDOWING FUNCTION",
+          "",
+          "Window Function                                  : DISABLED",
+          "Window Controlled by GPS Pulse                  : ENABLED",
+          "Window Controlled by Reference Transponder     : DISABLED",
+          "Window Controlled by Internal Timer            : DISABLED",
+          "Window Timeslot                                 : 0x1",
+          "Window Interval                                 : 10 ms",
+        ].join("\n"),
       ),
-      input(
+      display(
         6,
-        "Assembly Delay",
-        "sa.assembly-delay",
-        "Enter assembly delay:",
-        "Assembly delay updated in the simulator.",
+        "Mode A/C Empty, Low Confidence Frame Rejection",
+        [
+          "MODE A/C EMPTY, LOW CONFIDENCE FRAME REJECTION",
+          "",
+          "Frame Rejection: DISABLED",
+        ].join("\n"),
       ),
-      input(
+      display(
         7,
-        "Mode A/C Window",
-        "sa.mode-ac-window",
-        "Enter Mode A/C window value:",
-        "Mode A/C window updated in the simulator.",
+        "Display End-to-End System Test Parameters",
+        [
+          "RF End-to-End System Test Parameters",
+          "",
+          "Alert Power Level       : {{alertPower}}",
+          "Failure Power Level     : {{failurePower}}",
+          "Sensor Operating Mode   : {{operationMode}}",
+          "",
+          "End-to-End Test Status  : PASS",
+        ].join("\n"),
       ),
-      toggle(
-        8,
-        "Frame Rejection",
-        "sa.frame-rejection",
-        "Select frame-rejection state:",
+    ],
+  },
+
+  "sa.end-to-end": {
+    id: "sa.end-to-end",
+    title: "Configure End-to-End System Test Parameters",
+    header: SA_HEADER,
+    items: [
+      display(
+        1,
+        "Display Current Parameters",
+        [
+          "RF End-to-End System Test Parameters",
+          "",
+          "Alert Power Level       : {{alertPower}}",
+          "Failure Power Level     : {{failurePower}}",
+          "Test Result             : PASS",
+        ].join("\n"),
       ),
-      input(
-        9,
-        "Change Password",
-        "sa.password",
-        "Enter new password:",
-        "Password change simulated.",
-        true,
+      workflow(
+        2,
+        "Configure Power Level Thresholds",
+        "sa.e2e-thresholds",
+        [
+          {
+            key: "action",
+            kind: "choice",
+            prompt: "Power Level Threshold Configuration:",
+            options: [
+              { number: 1, label: "Set New Thresholds", value: "SET" },
+              { number: 2, label: "Leave Thresholds Unchanged", value: "KEEP" },
+            ],
+          },
+          {
+            key: "alert",
+            prompt: "Enter New Alert Power Level:",
+            validation: "integer",
+            min: 0,
+            max: 255,
+            when: { key: "action", value: "SET" },
+          },
+          {
+            key: "failure",
+            prompt: "Enter New Failure Power Level:",
+            validation: "integer",
+            min: 0,
+            max: 255,
+            when: { key: "action", value: "SET" },
+          },
+        ],
       ),
-      display(10, "End-to-End Test", "End-to-end test completed. Simulated result: PASS."),
     ],
   },
 
@@ -413,7 +517,40 @@ export const SA_MENUS = {
     title: "Configuration Import / Export",
     header: SA_HEADER,
     items: [
-      display(1, "Export Configuration", "Configuration export completed in the simulator."),
+      workflow(
+        1,
+        "Export Current System Configuration",
+        "sa.export-config",
+        [
+          {
+            key: "action",
+            kind: "choice",
+            prompt: "Export Current System Configuration:",
+            options: [
+              { number: 1, label: "Continue", value: "CONTINUE" },
+              { number: 2, label: "Cancel", value: "CANCEL" },
+            ],
+          },
+          {
+            key: "filename",
+            prompt: "Enter Remote Filename:",
+            validation: "text",
+            when: { key: "action", value: "CONTINUE" },
+          },
+          {
+            key: "remoteIp",
+            prompt: "Enter Remote IP Address:",
+            validation: "ipv4",
+            when: { key: "action", value: "CONTINUE" },
+          },
+          {
+            key: "directory",
+            prompt: "Enter Remote Directory:",
+            validation: "text",
+            when: { key: "action", value: "CONTINUE" },
+          },
+        ],
+      ),
       input(
         2,
         "Import Configuration",
@@ -421,8 +558,22 @@ export const SA_MENUS = {
         "Enter configuration package name:",
         "Configuration import completed in the simulator.",
       ),
-      display(3, "Reset SSH Hosts", "SSH host records reset in the simulator."),
+      workflow(
+        3,
+        "Reset SSH Known Hosts",
+        "reset-ssh-hosts",
+        [
+          {
+            key: "confirm",
+            kind: "choice",
+            prompt: "Reset all SSH known-host records?",
+            options: [
+              { number: 1, label: "Reset SSH Known Hosts", value: "RESET" },
+              { number: 2, label: "Do Not Reset", value: "KEEP" },
+            ],
+          },
+        ],
+      ),
     ],
   },
 } as const satisfies MenuTree;
-

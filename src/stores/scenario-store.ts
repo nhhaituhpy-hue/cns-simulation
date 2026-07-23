@@ -72,6 +72,28 @@ function defaultId(): string {
   return `scenario-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+const ADS_B_TRAINING_SCENARIO_ID =
+  /^adsb-(?:0[1-9]|1[0-2])-/;
+
+function mergeMissingTrainingScenarios(
+  existingScenarios: readonly Scenario[],
+  defaultScenarios: readonly Scenario[],
+  monitoringTimestamp: string,
+): { scenarios: Scenario[]; missing: Scenario[] } {
+  const existingIds = new Set(existingScenarios.map((scenario) => scenario.id));
+  const missingDefaults = defaultScenarios.filter(
+    (scenario) =>
+      ADS_B_TRAINING_SCENARIO_ID.test(scenario.id) &&
+      !existingIds.has(scenario.id),
+  );
+  const missing = cloneScenarios(missingDefaults, monitoringTimestamp);
+
+  return {
+    scenarios: [...cloneScenarios(existingScenarios), ...missing],
+    missing,
+  };
+}
+
 export function createScenarioStore(
   options: ScenarioStoreOptions = {},
 ): UseBoundStore<StoreApi<ScenarioStore>> {
@@ -106,6 +128,31 @@ export function createScenarioStore(
     const ensureHydrated = (): void => {
       if (!get().isHydrated) {
         get().hydrate();
+      }
+    };
+
+    const syncMissingTrainingScenarios = (
+      scenarios: readonly Scenario[],
+    ): void => {
+      for (const scenario of scenarios) {
+        void fetcher("/api/scenarios", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(scenario),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(
+                `Scenario seed API returned ${response.status}.`,
+              );
+            }
+          })
+          .catch((error) => {
+            console.error(
+              `Failed to seed built-in scenario "${scenario.id}":`,
+              error,
+            );
+          });
       }
     };
 
@@ -157,10 +204,17 @@ export function createScenarioStore(
           })
           .then((data: Scenario[]) => {
             if (data && Array.isArray(data) && data.length > 0) {
-              set({ scenarios: cloneScenarios(data), isHydrated: true, storageError: null });
-              if (storage) {
-                saveScenarios(storage, data);
-              }
+              const merged = mergeMissingTrainingScenarios(
+                data,
+                defaults,
+                now().toISOString(),
+              );
+              set({
+                scenarios: merged.scenarios,
+                isHydrated: true,
+                storageError: persist(merged.scenarios),
+              });
+              syncMissingTrainingScenarios(merged.missing);
             } else {
               // Nếu DB trống, hydrate từ localStorage hoặc dùng defaults
               throw new Error("DB is empty");
@@ -182,8 +236,17 @@ export function createScenarioStore(
                 return;
               }
 
-              const localScenarios = cloneScenarios(loadScenarios(storage));
-              set({ scenarios: localScenarios, isHydrated: true, storageError: null });
+              const merged = mergeMissingTrainingScenarios(
+                loadScenarios(storage),
+                defaults,
+                now().toISOString(),
+              );
+              set({
+                scenarios: merged.scenarios,
+                isHydrated: true,
+                storageError: persist(merged.scenarios),
+              });
+              syncMissingTrainingScenarios(merged.missing);
             } catch (error) {
               set({
                 scenarios: cloneScenarios(defaults, now().toISOString()),
