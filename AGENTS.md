@@ -4,6 +4,15 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
+# CodeGraph Workflow
+- Khi cần tìm hiểu kiến trúc, luồng xử lý, dependency hoặc vị trí cần sửa, chạy `codegraph status` trước và dùng `codegraph explore "<câu hỏi hoặc symbol>"` trước khi tìm kiếm/đọc source diện rộng.
+- Nếu index không còn mới, chạy `codegraph sync` trước khi dựa vào kết quả. Chỉ dùng `codegraph index` khi cần xây dựng lại toàn bộ index.
+- Giữ truy vấn hẹp theo feature, file hoặc symbol để giảm thời gian và token. Dùng `codegraph node`, `callers`, `callees` hoặc `impact` khi cần đi sâu vào một symbol cụ thể.
+- Trước khi sửa logic, dùng `codegraph impact <symbol>` để xác định phạm vi ảnh hưởng nếu có symbol phù hợp. Source hiện tại vẫn là nguồn sự thật cuối cùng; luôn mở và kiểm tra file thực tế trước khi chỉnh sửa.
+- Khi chuẩn bị kiểm thử thay đổi logic, dùng `codegraph affected` để tham khảo các test liên quan, sau đó áp dụng quy tắc kiểm thử tại Custom Developer Workflow bên dưới.
+- Sau khi thay đổi source, chạy `codegraph sync` để cập nhật index. Không commit database hoặc artifact runtime trong `.codegraph/`; chỉ giữ `.codegraph/.gitignore`.
+- Nếu CodeGraph không có kết quả phù hợp hoặc không hỗ trợ loại file cần tìm, chuyển sang `rg`/đọc source trực tiếp và không lặp lại truy vấn vô ích.
+
 # Custom Developer Workflow (Pipeline)
 - **Bước 1 (Sửa đổi):** Khi nhận được yêu cầu thay đổi giao diện hoặc logic, hãy thực hiện chỉnh sửa code trực tiếp trước tiên.
 - **Bước 2 (Chờ xác nhận):** KHÔNG chạy các bộ test tự động (`npm run test:run`) hoặc build (`npm run build`) ngay lập tức. Hãy dừng lại để người dùng tự kiểm tra trực tiếp trên môi trường dev local (`npm run dev`).

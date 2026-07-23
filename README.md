@@ -341,3 +341,4 @@ Khi kế hoạch nội bộ và manual nhà sản xuất khác nhau, manual là 
 - [2026-07-23] Chuẩn hóa menu `sysadmin` theo Operational/Maintenance, menu Configuration Import/Export, Configure End-to-End và General Settings của tài khoản `maintenance`; mọi thay đổi cấu hình tiếp tục được cô lập trong cache phiên thí sinh.
 - [2026-07-23] Xác minh mốc bài 9-13: 57 test liên quan trực tiếp ở terminal engine, terminal templates và scenario store vượt qua; `npm run build` hoàn tất thành công với 40 route trên Next.js 16.2.10.
 - [2026-07-23] Gỡ bỏ tích hợp Understand Anything khỏi dự án: xóa dữ liệu phân tích `.ua` và loại bỏ workflow liên quan khỏi `AGENTS.md` để giảm thời gian xử lý và mức sử dụng token.
+- [2026-07-23] Khởi tạo CodeGraph cho 332 file nguồn, nâng cấp CLI lên `1.5.0` và bổ sung workflow `status → explore/impact → kiểm tra source → affected → sync` trong `AGENTS.md`. Database index được giữ cục bộ và loại khỏi Git.
