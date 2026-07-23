@@ -76,6 +76,61 @@ function workflow(
   };
 }
 
+const EXPORT_CONFIGURATION_STEPS: readonly WorkflowStep[] = [
+  {
+    key: "action",
+    kind: "choice",
+    prompt: [
+      "EXPORT QUADRANT ADS-B RECEIVER UNIT CONFIGURATION",
+      "",
+      "This menu allows export of the current system settings. These settings are",
+      "provided in a human readable text file. The system will transfer the file",
+      "via secure copy to a specified location.",
+      "",
+      "Please Select One of the Following Options:",
+    ].join("\n"),
+    options: [
+      {
+        number: 1,
+        label: "Continue with the Configuration Export Procedure",
+        value: "CONTINUE",
+      },
+      {
+        number: 2,
+        label: "Abort Configuration Export Procedure",
+        value: "CANCEL",
+      },
+    ],
+    showCancel: false,
+    optionStyle: "compact",
+  },
+  {
+    key: "filename",
+    prompt: "Enter the Filename for the Exported Configuration:",
+    validation: "text",
+    when: { key: "action", value: "CONTINUE" },
+  },
+  {
+    key: "remoteIp",
+    prompt: "Enter the IP Address of the Remote Computer:",
+    validation: "ipv4",
+    when: { key: "action", value: "CONTINUE" },
+  },
+  {
+    key: "directory",
+    prompt: "Enter the Directory on the Remote Computer:",
+    validation: "text",
+    when: { key: "action", value: "CONTINUE" },
+  },
+];
+
+const EXPORT_CONFIGURATION_ITEM = workflow(
+  1,
+  "Export Current System Configuration",
+  "sa.export-config",
+  EXPORT_CONFIGURATION_STEPS,
+);
+
 export const SA_MENUS = {
   [SA_ROOT_MENU_ID]: {
     id: SA_ROOT_MENU_ID,
@@ -89,7 +144,7 @@ export const SA_MENUS = {
       navigate(5, "SNMP Configuration", "sa.snmp"),
       navigate(6, "Software", "sa.software"),
       navigate(7, "Customisation", "sa.customisation"),
-      navigate(8, "Configuration Import / Export", "sa.config-transfer"),
+      navigate(8, "Configuration Export", "sa.config-transfer"),
       workflow(
         9,
         "Change Actual Operation Mode",
@@ -337,6 +392,105 @@ export const SA_MENUS = {
         "Display Client Statistics",
         "Client 1 packets sent: 125430\nSend errors: 0",
         "sa-clients-stats",
+      ),
+    ],
+  },
+
+  "sa.surveillance-clients-maintenance": {
+    id: "sa.surveillance-clients-maintenance",
+    title: "Surveillance Clients",
+    header: SA_HEADER,
+    items: [
+      display(
+        1,
+        "Display Client Configuration",
+        "Client configuration is unavailable.",
+        "sa-clients-display",
+      ),
+      display(
+        2,
+        "Display Client Statistics",
+        "Client statistics are unavailable.",
+        "sa-clients-stats",
+      ),
+      input(
+        3,
+        "Enable / Disable Clients",
+        "sa.client-enable-disable",
+        "PLEASE TYPE THE CLIENT ROW NUMBER YOU WANT TO ENABLE / DISABLE:",
+        "Client state updated in the simulator.",
+      ),
+      workflow(4, "Configure Client", "sa.client-config", [
+        {
+          key: "row",
+          prompt: "{{clientConfiguration}}",
+          validation: "integer",
+          min: 1,
+          max: 20,
+        },
+        {
+          key: "protocol",
+          kind: "choice",
+          prompt: "Select Client Type:",
+          options: [
+            { number: 1, label: "ADS-B via UDP", value: "UDP" },
+            { number: 2, label: "ADS-B via TCP", value: "TCP" },
+          ],
+          showCancel: false,
+          optionStyle: "compact",
+        },
+        {
+          key: "messageType",
+          kind: "choice",
+          prompt: "Select Message Types to Send to Client:",
+          options: [
+            {
+              number: 1,
+              label: "Surveillance Messages",
+              value: "SURVEILLANCE",
+            },
+            { number: 2, label: "Service Messages", value: "SERVICE" },
+            {
+              number: 3,
+              label: "Surveillance and Service Messages",
+              value: "BOTH",
+            },
+          ],
+          showCancel: false,
+          optionStyle: "compact",
+        },
+        {
+          key: "name",
+          prompt: "Enter Client Name:",
+          validation: "text",
+        },
+        {
+          key: "ip",
+          prompt: "Enter Client IP Address:",
+          validation: "ipv4",
+        },
+        {
+          key: "port",
+          prompt: "Enter Client UDP Port:",
+          validation: "integer",
+          min: 1,
+          max: 65535,
+          when: { key: "protocol", value: "UDP" },
+        },
+      ]),
+      input(
+        5,
+        "Change Message Type of ASTERIX Clients",
+        "sa.client-message-type",
+        "PLEASE TYPE THE CLIENT ROW NUMBER YOU WANT TO CHANGE:",
+        "Client message type updated in the simulator.",
+      ),
+      input(
+        6,
+        "Delete Client",
+        "sa.client-delete",
+        "PLEASE TYPE THE CLIENT ROW NUMBER YOU WANT TO DELETE:",
+        "Client deletion simulated.",
       ),
     ],
   },
@@ -659,7 +813,7 @@ export const SA_MENUS = {
     items: [
       display(
         1,
-        "Display Current Parameters",
+        "Display End-to-End System Test Parameters",
         [
           "RF End-to-End System Test Parameters",
           "",
@@ -670,17 +824,36 @@ export const SA_MENUS = {
       ),
       workflow(
         2,
-        "Configure Power Level Thresholds",
+        "Configure Power Level Thresholds for the End-to-End System Check",
         "sa.e2e-thresholds",
         [
           {
             key: "action",
             kind: "choice",
-            prompt: "Power Level Threshold Configuration:",
+            prompt: [
+              "CONFIGURE POWER LEVEL THRESHOLDS FOR THE END-TO-END SYSTEM CHECK",
+              "",
+              "Active Configuration(s):",
+              "   Current Power Level to Trigger an Alert   : {{alertPower}}",
+              "   Current Power Level to Trigger a Failure : {{failurePower}}",
+              "",
+              "Configure the power level thresholds to trigger an alert for the",
+              "Ground Station to enter the system into a DEGRADED state and also generate a",
+              "failed state item in the Category 023 ASTERIX report (item I023/110).",
+              "An alarm is triggered if the received power falls below the level.",
+              "",
+              "Please Select One of the Following Options:",
+            ].join("\n"),
             options: [
               { number: 1, label: "Set New Thresholds", value: "SET" },
-              { number: 2, label: "Leave Thresholds Unchanged", value: "KEEP" },
+              {
+                number: 2,
+                label: "Leave Actual Configuration Unchanged",
+                value: "KEEP",
+              },
             ],
+            showCancel: false,
+            optionStyle: "compact",
           },
           {
             key: "alert",
@@ -700,6 +873,31 @@ export const SA_MENUS = {
           },
         ],
       ),
+      toggle(
+        3,
+        "Enable/Disable Internal Loopback for the End-to-End System Check",
+        "sa.e2e-internal-loopback",
+        "Select Internal Loopback State:",
+      ),
+      input(
+        4,
+        "Configure Internal Loopback Timeout for the End-to-End System Check",
+        "sa.e2e-loopback-timeout",
+        "Enter Internal Loopback Timeout in Seconds:",
+        "Internal loopback timeout updated in the simulator.",
+      ),
+      input(
+        5,
+        "Configure Internal RF-Loopback Output Power Level",
+        "sa.e2e-loopback-output-power",
+        "Enter Internal RF-Loopback Output Power Level:",
+        "Internal RF-loopback output power level updated in the simulator.",
+      ),
+      {
+        number: 6,
+        label: "Quit Configuration of End-to-End Parameters",
+        action: { type: "return" },
+      },
     ],
   },
 
@@ -708,40 +906,7 @@ export const SA_MENUS = {
     title: "Configuration Import / Export",
     header: SA_HEADER,
     items: [
-      workflow(
-        1,
-        "Export Current System Configuration",
-        "sa.export-config",
-        [
-          {
-            key: "action",
-            kind: "choice",
-            prompt: "Export Current System Configuration:",
-            options: [
-              { number: 1, label: "Continue", value: "CONTINUE" },
-              { number: 2, label: "Cancel", value: "CANCEL" },
-            ],
-          },
-          {
-            key: "filename",
-            prompt: "Enter Remote Filename:",
-            validation: "text",
-            when: { key: "action", value: "CONTINUE" },
-          },
-          {
-            key: "remoteIp",
-            prompt: "Enter Remote IP Address:",
-            validation: "ipv4",
-            when: { key: "action", value: "CONTINUE" },
-          },
-          {
-            key: "directory",
-            prompt: "Enter Remote Directory:",
-            validation: "text",
-            when: { key: "action", value: "CONTINUE" },
-          },
-        ],
-      ),
+      EXPORT_CONFIGURATION_ITEM,
       input(
         2,
         "Import Configuration",
@@ -753,6 +918,38 @@ export const SA_MENUS = {
         3,
         "Reset SSH Known Hosts",
         "reset-ssh-hosts",
+        [
+          {
+            key: "confirm",
+            kind: "choice",
+            prompt: "Reset all SSH known-host records?",
+            options: [
+              { number: 1, label: "Reset SSH Known Hosts", value: "RESET" },
+              { number: 2, label: "Do Not Reset", value: "KEEP" },
+            ],
+          },
+        ],
+      ),
+    ],
+  },
+
+  "sa.config-transfer-maintenance": {
+    id: "sa.config-transfer-maintenance",
+    title: "Configuration Import / Export",
+    header: SA_HEADER,
+    items: [
+      EXPORT_CONFIGURATION_ITEM,
+      input(
+        2,
+        "Import New System Configuration",
+        "sa.import-new-configuration",
+        "Enter the Configuration Package to Import:",
+        "New system configuration import completed in the simulator.",
+      ),
+      workflow(
+        3,
+        "Reset SSH Known Hosts",
+        "reset-ssh-hosts-maintenance",
         [
           {
             key: "confirm",

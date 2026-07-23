@@ -22,12 +22,15 @@ describe("menu fixtures", () => {
       "sa.general": 7,
       "sa.network": 7,
       "sa.surveillance-clients": 2,
+      "sa.surveillance-clients-maintenance": 6,
       "sa.system-log": 4,
       "sa.snmp": 10,
       "sa.software": 4,
       "sa.customisation": 7,
       "sa.customisation-maintenance": 10,
+      "sa.end-to-end": 6,
       "sa.config-transfer": 3,
+      "sa.config-transfer-maintenance": 3,
     };
     const menus: MenuTree = SA_MENUS;
 
@@ -378,6 +381,325 @@ describe("TerminalEngine", () => {
     restored.processInput("0");
     restored.processInput("9");
     const operational = restored.processInput("1");
+    expect(operational.output).toContain(
+      'Actual Sensor Operating Mode: "OPERATIONAL"',
+    );
+  });
+
+  it("uses mode-specific sysadmin menus and configures a client in maintenance mode", () => {
+    const engine = new TerminalEngine({
+      targetLoginUser: "sysadmin",
+      sensorDataProfile: structuredClone(NOI_BAI_TRAINING_SENSOR),
+    });
+
+    expect(engine.renderCurrentMenu()).toContain("- OPERATIONAL MODE -");
+    expect(engine.renderCurrentMenu()).toContain("CONFIGURATION EXPORT");
+    expect(engine.renderCurrentMenu()).not.toContain(
+      "CONFIGURATION IMPORT / EXPORT",
+    );
+
+    engine.processInput("9");
+    engine.processInput("1");
+    engine.processInput("");
+    expect(engine.renderCurrentMenu()).toContain("- MAINTENANCE MODE -");
+    expect(engine.renderCurrentMenu()).toContain(
+      "CONFIGURATION IMPORT / EXPORT",
+    );
+
+    const clientsMenu = engine.processInput("3");
+    expect(clientsMenu.currentMenuId).toBe(
+      "sa.surveillance-clients-maintenance",
+    );
+    expect(clientsMenu.output).toContain("(  4)    Configure Client");
+    expect(clientsMenu.output).toContain(
+      "(  5)    Change Message Type of ASTERIX Clients",
+    );
+
+    const rowPrompt = engine.processInput("4");
+    expect(rowPrompt.output).toContain("QUADRANT SURVEILLANCE CLIENTS");
+    expect(rowPrompt.output).toContain("( 5) (Disabled) <unconfigured>");
+    expect(rowPrompt.output).toContain(
+      "PLEASE TYPE THE CLIENT ROW NUMBER YOU WANT TO SELECT:",
+    );
+
+    engine.processInput("5");
+    engine.processInput("1");
+    engine.processInput("3");
+    engine.processInput("TRAIN-QCMS");
+    engine.processInput("192.168.80.50");
+    const configured = engine.processInput("20550");
+    expect(configured.output).toContain("Client Type         : ADS-B via UDP");
+    expect(configured.output).toContain(
+      "Message Type        : Surveillance and Service Messages",
+    );
+    expect(configured.output).toContain("Client State        : DISABLED");
+    expect(engine.getPersistentState().sensorDataProfile?.clients).toContainEqual(
+      expect.objectContaining({
+        id: 5,
+        name: "TRAIN-QCMS",
+        ip: "192.168.80.50",
+        port: 20550,
+        protocol: "UDP",
+        messageType: "all",
+        enabled: false,
+      }),
+    );
+
+    engine.processInput("");
+    engine.processInput("4");
+    engine.processInput("6");
+    engine.processInput("2");
+    engine.processInput("1");
+    engine.processInput("TRAIN-TCP");
+    const tcpConfigured = engine.processInput("192.168.80.60");
+    expect(tcpConfigured.output).toContain("Client Type         : ADS-B via TCP");
+    expect(tcpConfigured.output).toContain(
+      "Destination Port    : Not applicable (TCP)",
+    );
+    expect(engine.getPersistentState().sensorDataProfile?.clients).toContainEqual(
+      expect.objectContaining({
+        id: 6,
+        protocol: "TCP",
+        port: 0,
+      }),
+    );
+  });
+
+  it("exports system configuration from the maintenance import/export menu", () => {
+    const engine = new TerminalEngine({
+      targetLoginUser: "sysadmin",
+      sensorDataProfile: structuredClone(NOI_BAI_TRAINING_SENSOR),
+    });
+
+    engine.processInput("9");
+    engine.processInput("1");
+    engine.processInput("");
+    const transferMenu = engine.processInput("8");
+    expect(transferMenu.currentMenuId).toBe("sa.config-transfer-maintenance");
+    expect(transferMenu.output).toContain(
+      "(  1)    Export Current System Configuration",
+    );
+    expect(transferMenu.output).toContain(
+      "(  2)    Import New System Configuration",
+    );
+    expect(transferMenu.output).toContain("(  3)    Reset SSH Known Hosts");
+
+    const exportPrompt = engine.processInput("1");
+    expect(exportPrompt.output).toContain(
+      "EXPORT QUADRANT ADS-B RECEIVER UNIT CONFIGURATION",
+    );
+    expect(exportPrompt.output).toContain(
+      "Continue with the Configuration Export Procedure",
+    );
+    expect(exportPrompt.output).toContain(
+      "Abort Configuration Export Procedure",
+    );
+
+    engine.processInput("1");
+    engine.processInput("NoiBai_backup.cfg");
+    engine.processInput("192.168.10.8");
+    const exported = engine.processInput("/home/qcms/config");
+    expect(exported.output).toContain(
+      "Configuration File  : NoiBai_backup.cfg",
+    );
+    expect(exported.output).toContain("Remote Computer IP  : 192.168.10.8");
+    expect(exported.output).toContain("Transfer Method     : Secure Copy (SCP)");
+    expect(exported.output).toContain("Transfer Status     : SUCCESS");
+
+    engine.processInput("");
+    engine.processInput("0");
+    engine.processInput("9");
+    const operational = engine.processInput("1");
+    expect(operational.output).toContain(
+      'Actual Sensor Operating Mode: "OPERATIONAL"',
+    );
+  });
+
+  it("configures RF alert and failure thresholds from the End-to-End menu", () => {
+    const engine = new TerminalEngine({
+      targetLoginUser: "sysadmin",
+      sensorDataProfile: structuredClone(NOI_BAI_TRAINING_SENSOR),
+    });
+
+    engine.processInput("9");
+    engine.processInput("1");
+    engine.processInput("");
+    engine.processInput("7");
+    const endToEndMenu = engine.processInput("10");
+    expect(endToEndMenu.currentMenuId).toBe("sa.end-to-end");
+    expect(endToEndMenu.output).toContain(
+      "CONFIGURE THE END-TO-END SYSTEM CHECK PARAMETERS",
+    );
+    expect(endToEndMenu.output).toContain(
+      "(2) Configure Power Level Thresholds for the End-to-End System Check",
+    );
+    expect(endToEndMenu.output).toContain(
+      "(6) Quit Configuration of End-to-End Parameters",
+    );
+
+    const thresholdPrompt = engine.processInput("2");
+    expect(thresholdPrompt.output).toContain(
+      "CONFIGURE POWER LEVEL THRESHOLDS FOR THE END-TO-END SYSTEM CHECK",
+    );
+    expect(thresholdPrompt.output).toContain(
+      "Current Power Level to Trigger an Alert   : 164",
+    );
+    expect(thresholdPrompt.output).toContain(
+      "Current Power Level to Trigger a Failure : 140",
+    );
+    expect(thresholdPrompt.output).toContain("(1) Set New Thresholds");
+    expect(thresholdPrompt.output).toContain(
+      "(2) Leave Actual Configuration Unchanged",
+    );
+
+    engine.processInput("1");
+    engine.processInput("170");
+    const configured = engine.processInput("145");
+    expect(configured.output).toContain("New Alert Power Level         : 170");
+    expect(configured.output).toContain("New Failure Power Level       : 145");
+    expect(engine.getPersistentState().runtime).toMatchObject({
+      alertPower: 170,
+      failurePower: 145,
+    });
+    expect(engine.getPersistentState().sensorDataProfile?.endToEnd).toMatchObject(
+      {
+        alertPower: 170,
+        failurePower: 145,
+      },
+    );
+
+    engine.processInput("");
+    engine.processInput("6");
+    engine.processInput("0");
+    engine.processInput("9");
+    const operational = engine.processInput("1");
+    expect(operational.output).toContain(
+      'Actual Sensor Operating Mode: "OPERATIONAL"',
+    );
+  });
+
+  it("obtains the actual NoiBai sensor position from GPS in maintenance mode", () => {
+    const sysadmin = new TerminalEngine({
+      targetLoginUser: "sysadmin",
+      sensorDataProfile: structuredClone(NOI_BAI_TRAINING_SENSOR),
+    });
+    sysadmin.processInput("9");
+    sysadmin.processInput("1");
+    sysadmin.processInput("");
+
+    const maintenance = new TerminalEngine({
+      targetLoginUser: "maintenance",
+      sensorDataProfile: structuredClone(NOI_BAI_TRAINING_SENSOR),
+    });
+    maintenance.restorePersistentState(sysadmin.getPersistentState());
+    const general = maintenance.processInput("1");
+    expect(general.currentMenuId).toBe("ma.general-maintenance");
+    expect(general.output).toContain("(  1)    Configure ASTERIX");
+    expect(general.output).toContain(
+      "(  2)    Display and Set Sensor Position (Direct / Via GPS)",
+    );
+    expect(general.output).toContain(
+      "(  4)    Select Downlink Formats for Transmission",
+    );
+
+    const positionPrompt = maintenance.processInput("2");
+    expect(positionPrompt.output).toContain(
+      "CONFIGURE AND DISPLAY SENSOR POSITION",
+    );
+    expect(positionPrompt.output).toContain(
+      "Latitude (degree)       : 21.212983",
+    );
+    expect(positionPrompt.output).toContain(
+      "Longitude (degree)      : 105.831922",
+    );
+    expect(positionPrompt.output).toContain(
+      "Geoidal Height (metres) : 29.900000",
+    );
+    expect(positionPrompt.output).toContain(
+      "(2) Obtain Position from GPS Device.",
+    );
+
+    const gpsPrompt = maintenance.processInput("2");
+    expect(gpsPrompt.output).toContain("OBTAIN POSITION FROM GPS DEVICE");
+    expect(gpsPrompt.output).toContain("(1) Actual Position");
+    const configured = maintenance.processInput("1");
+    expect(configured.output).toContain(
+      "Latitude (degree)     : 21.212983",
+    );
+    expect(configured.output).toContain(
+      "Longitude (degree)    : 105.831922",
+    );
+    expect(configured.output).toContain(
+      "Geoidal Height (m)    : 29.900000",
+    );
+    expect(maintenance.getPersistentState().sensorDataProfile?.gps).toMatchObject(
+      {
+        latitude: "21.212983",
+        longitude: "105.831922",
+        altitude: "29.900000",
+      },
+    );
+
+    const restoredSysadmin = new TerminalEngine({
+      targetLoginUser: "sysadmin",
+      sensorDataProfile: structuredClone(NOI_BAI_TRAINING_SENSOR),
+    });
+    restoredSysadmin.restorePersistentState(maintenance.getPersistentState());
+    restoredSysadmin.processInput("9");
+    const operational = restoredSysadmin.processInput("1");
+    expect(operational.output).toContain(
+      'Actual Sensor Operating Mode: "OPERATIONAL"',
+    );
+  });
+
+  it("resets SSH known hosts before retrying configuration file transfer", () => {
+    const sysadmin = new TerminalEngine({
+      targetLoginUser: "sysadmin",
+      sensorDataProfile: structuredClone(NOI_BAI_TRAINING_SENSOR),
+    });
+    sysadmin.processInput("9");
+    sysadmin.processInput("1");
+    sysadmin.processInput("");
+
+    const maintenance = new TerminalEngine({
+      targetLoginUser: "maintenance",
+      sensorDataProfile: structuredClone(NOI_BAI_TRAINING_SENSOR),
+    });
+    maintenance.restorePersistentState(sysadmin.getPersistentState());
+    expect(maintenance.renderCurrentMenu()).toContain(
+      "( 10)    CONFIGURATION IMPORT / EXPORT",
+    );
+
+    const transferMenu = maintenance.processInput("10");
+    expect(transferMenu.currentMenuId).toBe("ma.config-transfer");
+    expect(transferMenu.output).toContain("(  3)    Reset SSH Known Hosts");
+
+    const resetPrompt = maintenance.processInput("3");
+    expect(resetPrompt.output).toContain("RESET OF KNOWN HOSTS FILE FOR SSH");
+    expect(resetPrompt.output).toContain(
+      "SSH maintains a list of all known hosts.",
+    );
+    expect(resetPrompt.output).toContain(
+      "(1) Reset the SSH Known Hosts File",
+    );
+    expect(resetPrompt.output).toContain("(2) Abort");
+
+    const reset = maintenance.processInput("1");
+    expect(reset.output).toContain(
+      "The SSH known hosts file has been reset successfully.",
+    );
+    expect(reset.output).toContain(
+      "Configuration file transfer can now be attempted again.",
+    );
+    maintenance.processInput("");
+
+    const restoredSysadmin = new TerminalEngine({
+      targetLoginUser: "sysadmin",
+      sensorDataProfile: structuredClone(NOI_BAI_TRAINING_SENSOR),
+    });
+    restoredSysadmin.restorePersistentState(maintenance.getPersistentState());
+    restoredSysadmin.processInput("9");
+    const operational = restoredSysadmin.processInput("1");
     expect(operational.output).toContain(
       'Actual Sensor Operating Mode: "OPERATIONAL"',
     );

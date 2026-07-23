@@ -1,4 +1,5 @@
 import type { WorkflowStep } from "./menu-data/menu-types";
+import { renderClientConfiguration } from "./terminal-templates";
 import type { NetworkConfig, SensorDataProfile } from "./types";
 
 const RULE = "*".repeat(74);
@@ -186,6 +187,14 @@ export function renderWorkflowStep(
   const dhcpEnabled = runtime?.pendingNetwork
     ? false
     : (profile?.network.dhcp ?? false);
+  const clientConfiguration = profile
+    ? renderClientConfiguration(
+        profile,
+        "PLEASE TYPE THE CLIENT ROW NUMBER YOU WANT TO SELECT:",
+      )
+    : "QUADRANT SURVEILLANCE CLIENTS\n\nClient data is unavailable.";
+  const gpsAltitude =
+    profile?.gps.altitude.replace(/\s*m(?:etres?)?$/i, "") ?? "Unknown";
   const renderText = (value: string): string =>
     value
       .replaceAll("{{operationMode}}", operationMode)
@@ -195,6 +204,12 @@ export function renderWorkflowStep(
       .replaceAll("{{networkIp}}", network?.ip ?? "Unknown")
       .replaceAll("{{networkSubnet}}", network?.subnet ?? "Unknown")
       .replaceAll("{{networkGateway}}", network?.gateway ?? "Unknown")
+      .replaceAll("{{clientConfiguration}}", clientConfiguration)
+      .replaceAll("{{alertPower}}", String(runtime?.alertPower ?? 164))
+      .replaceAll("{{failurePower}}", String(runtime?.failurePower ?? 140))
+      .replaceAll("{{gpsLatitude}}", profile?.gps.latitude ?? "Unknown")
+      .replaceAll("{{gpsLongitude}}", profile?.gps.longitude ?? "Unknown")
+      .replaceAll("{{gpsAltitude}}", gpsAltitude)
       .replaceAll(
         "{{sensorName}}",
         profile?.sensorName ?? "Quadrant ADS-B sensor",
@@ -230,17 +245,20 @@ function updateClient(
 
   const id = Number(values.row);
   const current = profile.clients.find((client) => client.id === id);
+  const messageType =
+    values.messageType === "BOTH"
+      ? "all"
+      : values.messageType === "SERVICE"
+        ? "non-op"
+        : "cat21";
   const next = {
     id,
     name: values.name,
     ip: values.ip,
-    port: Number(values.port),
+    port: values.protocol === "UDP" ? Number(values.port) : 0,
     protocol: values.protocol === "TCP" ? ("TCP" as const) : ("UDP" as const),
-    messageType:
-      values.messageType === "BOTH"
-        ? "ASTERIX CAT21 ADS-B + Non-OP"
-        : values.messageType,
-    enabled: true,
+    messageType,
+    enabled: current?.enabled ?? false,
     messagesSent: current?.messagesSent ?? 0,
   };
 
@@ -360,15 +378,30 @@ export function completeWorkflow(
     }
 
     case "sa.client-config": {
+      const current = profile?.clients.find(
+        (client) => client.id === Number(values.row),
+      );
       updateClient(profile, values);
+      const configured = profile?.clients.find(
+        (client) => client.id === Number(values.row),
+      );
+      const messageTypeLabel =
+        values.messageType === "BOTH"
+          ? "Surveillance and Service Messages"
+          : values.messageType === "SERVICE"
+            ? "Service Messages"
+            : "Surveillance Messages";
       return resultScreen("SURVEILLANCE CLIENT CONFIGURATION", [
         `Client Number       : ${values.row}`,
         `Client Name         : ${values.name}`,
-        `Client Type         : ${values.protocol}`,
-        `Message Type        : ${values.messageType}`,
+        `Client Type         : ADS-B via ${values.protocol}`,
+        `Message Type        : ${messageTypeLabel}`,
         `Destination Address : ${values.ip}`,
-        `Destination Port    : ${values.port}`,
-        `Client State        : ENABLED`,
+        `Destination Port    : ${values.protocol === "UDP" ? values.port : "Not applicable (TCP)"}`,
+        `Client State        : ${configured?.enabled ? "ENABLED" : "DISABLED"}`,
+        ...(current
+          ? [`Previous Client     : ${current.name}`]
+          : ["Previous Client     : <unconfigured>"]),
         "",
         "Client configuration has been updated successfully.",
       ]);
@@ -376,30 +409,34 @@ export function completeWorkflow(
 
     case "sa.export-config":
       if (values.action !== "CONTINUE") {
-        return resultScreen("EXPORT SYSTEM CONFIGURATION", [
+        return resultScreen("EXPORT QUADRANT ADS-B RECEIVER UNIT CONFIGURATION", [
           "Configuration export was cancelled.",
           "No file was transferred.",
         ]);
       }
-      return resultScreen("EXPORT SYSTEM CONFIGURATION", [
-        "Export of current system configuration completed.",
+      return resultScreen("EXPORT QUADRANT ADS-B RECEIVER UNIT CONFIGURATION", [
+        "Export of the current system configuration completed.",
         "",
-        `Remote Filename     : ${values.filename}`,
-        `Remote IP Address   : ${values.remoteIp}`,
+        `Configuration File  : ${values.filename}`,
+        `Remote Computer IP  : ${values.remoteIp}`,
         `Remote Directory    : ${values.directory}`,
-        `Transfer Status     : SUCCESS`,
+        "Transfer Method     : Secure Copy (SCP)",
+        "Transfer Status     : SUCCESS",
       ]);
 
     case "sa.e2e-thresholds": {
       const oldAlert = runtime.alertPower;
       const oldFailure = runtime.failurePower;
       if (values.action !== "SET") {
-        return resultScreen("END-TO-END POWER LEVEL THRESHOLDS", [
-          `Alert Power Level    : ${oldAlert}`,
-          `Failure Power Level  : ${oldFailure}`,
-          "",
-          "Power level thresholds remain unchanged.",
-        ]);
+        return resultScreen(
+          "CONFIGURE POWER LEVEL THRESHOLDS FOR THE END-TO-END SYSTEM CHECK",
+          [
+            `Alert Power Level    : ${oldAlert}`,
+            `Failure Power Level  : ${oldFailure}`,
+            "",
+            "Actual configuration remains unchanged.",
+          ],
+        );
       }
       runtime.alertPower = Number(values.alert);
       runtime.failurePower = Number(values.failure);
@@ -411,15 +448,18 @@ export function completeWorkflow(
           replyDelayNs: profile.endToEnd?.replyDelayNs ?? 500,
         };
       }
-      return resultScreen("END-TO-END POWER LEVEL THRESHOLDS", [
-        `Previous Alert Power Level    : ${oldAlert}`,
-        `Previous Failure Power Level  : ${oldFailure}`,
-        "",
-        `New Alert Power Level         : ${runtime.alertPower}`,
-        `New Failure Power Level       : ${runtime.failurePower}`,
-        "",
-        "End-to-End thresholds have been updated successfully.",
-      ]);
+      return resultScreen(
+        "CONFIGURE POWER LEVEL THRESHOLDS FOR THE END-TO-END SYSTEM CHECK",
+        [
+          `Previous Alert Power Level    : ${oldAlert}`,
+          `Previous Failure Power Level  : ${oldFailure}`,
+          "",
+          `New Alert Power Level         : ${runtime.alertPower}`,
+          `New Failure Power Level       : ${runtime.failurePower}`,
+          "",
+          "End-to-End thresholds have been updated successfully.",
+        ],
+      );
     }
 
     case "ma.sensor-position": {
@@ -427,22 +467,32 @@ export function completeWorkflow(
         profile.gps.latitude = values.latitude;
         profile.gps.longitude = values.longitude;
         profile.gps.altitude = values.altitude;
+      } else if (
+        values.source === "GPS" &&
+        values.gpsPosition === "ACTUAL" &&
+        profile?.sensorName.toLocaleLowerCase("en-US") === "noibai"
+      ) {
+        profile.gps.latitude = "21.212983";
+        profile.gps.longitude = "105.831922";
+        profile.gps.altitude = "29.900000";
       }
       const latitude = profile?.gps.latitude ?? "Unknown";
       const longitude = profile?.gps.longitude ?? "Unknown";
       const altitude = profile?.gps.altitude ?? "Unknown";
-      return resultScreen("SENSOR POSITION CONFIGURATION", [
-        `Position Source      : ${values.source}`,
-        `Position Type        : ${values.gpsPosition ?? "MANUAL ENTRY"}`,
+      return resultScreen("CONFIGURE AND DISPLAY SENSOR POSITION", [
+        `Position Source      : ${values.source === "GPS" ? "GPS DEVICE" : values.source}`,
+        `Position Type        : ${values.gpsPosition ?? (values.source === "KEEP" ? "UNCHANGED" : "MANUAL ENTRY")}`,
         "",
-        `Latitude             : ${latitude}`,
-        `Longitude            : ${longitude}`,
-        `Altitude             : ${altitude}`,
+        `Latitude (degree)     : ${latitude}`,
+        `Longitude (degree)    : ${longitude}`,
+        `Geoidal Height (m)    : ${altitude.replace(/\s*m(?:etres?)?$/i, "")}`,
         `Position Deviation   : ${profile?.gps.deviation ?? "Unknown"}`,
         "",
-        values.source === "GPS"
-          ? "The selected GPS position is now the configured sensor position."
-          : "The manually entered position is now the configured sensor position.",
+        values.source === "KEEP"
+          ? "Position configuration remains unchanged."
+          : values.source === "GPS"
+            ? "The selected GPS position is now the configured sensor position."
+            : "The manually entered position is now the configured sensor position.",
       ]);
     }
 
@@ -505,12 +555,14 @@ export function completeWorkflow(
     }
 
     case "reset-ssh-hosts":
-      return resultScreen("RESET SSH KNOWN HOSTS", [
+      return resultScreen("RESET OF KNOWN HOSTS FILE FOR SSH", [
         values.confirm === "RESET"
-          ? "SSH known-host records have been reset successfully."
-          : "SSH known-host records were not changed.",
+          ? "The SSH known hosts file has been reset successfully."
+          : "Reset of the SSH known hosts file was aborted.",
         "",
-        "A subsequent SSH connection may request host-key confirmation.",
+        values.confirm === "RESET"
+          ? "Configuration file transfer can now be attempted again."
+          : "The existing SSH known hosts file remains unchanged.",
       ]);
 
     default:

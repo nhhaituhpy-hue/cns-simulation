@@ -118,7 +118,7 @@ describe("scenario store hydration", () => {
     });
     const scenarios = store.getState().scenarios;
     const seededDefaults = DEFAULT_SCENARIOS.filter((scenario) =>
-      /^adsb-(?:0[1-9]|1[0-2])-/.test(scenario.id),
+      /^adsb-(?:0[1-9]|1[0-3])-/.test(scenario.id),
     );
 
     expect(scenarios[0]).toEqual(localScenario);

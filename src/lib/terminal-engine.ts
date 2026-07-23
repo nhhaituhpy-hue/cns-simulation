@@ -235,6 +235,18 @@ function renderSystemStatisticsMenu(
   return lines.join("\n");
 }
 
+function renderEndToEndConfigurationMenu(node: MenuNode): string {
+  return [
+    "CONFIGURE THE END-TO-END SYSTEM CHECK PARAMETERS",
+    "",
+    "Please Select One of the Following Options:",
+    "",
+    ...node.items.map((item) => `(${item.number}) ${item.label}`),
+    "",
+    "->",
+  ].join("\n");
+}
+
 /** Renders a deterministic, fixed-width ASCII maintenance menu. */
 export function renderMenu(
   node: MenuNode,
@@ -244,8 +256,12 @@ export function renderMenu(
   const terminalWidth =
     node.id === "sa.customisation-maintenance" ? 80 : TERMINAL_WIDTH;
 
-  if (node.id === "ma.root") {
+  if (node.id === "ma.root" || node.id === "sa.root") {
     return renderSystemStatisticsMenu(node, header);
+  }
+
+  if (node.id === "sa.end-to-end") {
+    return renderEndToEndConfigurationMenu(node);
   }
 
   if (node.id.endsWith(".root")) {
@@ -446,15 +462,17 @@ export class TerminalEngine {
       throw new Error(`Current menu "${this.currentMenuId}" does not exist.`);
     }
 
-    if (
-      menu.id === "ma.root" &&
-      this.workflowRuntime.operationMode === "MAINTENANCE"
-    ) {
+    if (menu.id === "ma.root" || menu.id === "sa.root") {
+      const dynamicItemNumber = menu.id === "ma.root" ? 10 : 8;
+      const dynamicItemLabel =
+        this.workflowRuntime.operationMode === "MAINTENANCE"
+          ? "Configuration Import / Export"
+          : "Configuration Export";
       return {
         ...menu,
         items: menu.items.map((item) =>
-          item.number === 10
-            ? { ...item, label: "Configuration Import / Export" }
+          item.number === dynamicItemNumber
+            ? { ...item, label: dynamicItemLabel }
             : item,
         ),
       };
@@ -587,6 +605,10 @@ export class TerminalEngine {
         if (this.workflowRuntime.operationMode === "MAINTENANCE") {
           if (targetMenuId === "sa.customisation") {
             targetMenuId = "sa.customisation-maintenance";
+          } else if (targetMenuId === "sa.surveillance-clients") {
+            targetMenuId = "sa.surveillance-clients-maintenance";
+          } else if (targetMenuId === "sa.config-transfer") {
+            targetMenuId = "sa.config-transfer-maintenance";
           } else if (targetMenuId === "ma.general") {
             targetMenuId = "ma.general-maintenance";
           }

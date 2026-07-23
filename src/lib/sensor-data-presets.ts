@@ -103,9 +103,9 @@ export const NOI_BAI_TRAINING_SENSOR: SensorDataProfile = {
     enabled: true,
     ntpEnabled: false,
     ntpServer: "0.0.0.0",
-    latitude: "21.2130",
-    longitude: "105.8319",
-    altitude: "29.9000m",
+    latitude: "21.212983",
+    longitude: "105.831922",
+    altitude: "29.900000",
     deviation: "0.3m",
   },
   filters: {

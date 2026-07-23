@@ -73,7 +73,7 @@ function defaultId(): string {
 }
 
 const ADS_B_TRAINING_SCENARIO_ID =
-  /^adsb-(?:0[1-9]|1[0-2])-/;
+  /^adsb-(?:0[1-9]|1[0-3])-/;
 
 function mergeMissingTrainingScenarios(
   existingScenarios: readonly Scenario[],

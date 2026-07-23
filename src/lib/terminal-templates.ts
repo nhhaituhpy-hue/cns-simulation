@@ -136,7 +136,10 @@ function renderNetwork(profile: SensorDataProfile, title: string): string {
   ]);
 }
 
-function renderClients(profile: SensorDataProfile): string {
+export function renderClientConfiguration(
+  profile: SensorDataProfile,
+  footer = "PRESS RETURN TO CONTINUE",
+): string {
   const rows = Array.from({ length: 20 }, (_, index) => {
     const number = index + 1;
     const client = profile.clients.find((item) => item.id === number);
@@ -147,7 +150,7 @@ function renderClients(profile: SensorDataProfile): string {
     "QUADRANT SURVEILLANCE CLIENTS",
     ...rows,
     "",
-    "PRESS RETURN TO CONTINUE",
+    footer,
   ].join("\n");
 }
 
@@ -921,7 +924,7 @@ export function renderTemplate(
         "   Sensor Name:    " + profile.sensorName,
       ]);
     case "sa-clients-display":
-      return renderClients(profile);
+      return renderClientConfiguration(profile);
     case "sa-clients-stats":
       return renderClientStats(profile);
     case "sa-end-to-end-display":
@@ -975,7 +978,7 @@ export function renderTemplate(
     case "ma-filter-display":
       return renderFilters(profile);
     case "ma-clients-display":
-      return renderClients(profile);
+      return renderClientConfiguration(profile);
     case "ma-monitoring-display":
       return renderMonitoringDevices(profile);
     default:
