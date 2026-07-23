@@ -21,6 +21,8 @@ export interface WorkflowStep {
   prompt: string;
   kind?: "input" | "choice";
   options?: readonly ToggleOption[];
+  showCancel?: boolean;
+  optionStyle?: "menu" | "compact";
   validation?: WorkflowValidation;
   min?: number;
   max?: number;

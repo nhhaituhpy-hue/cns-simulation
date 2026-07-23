@@ -88,6 +88,40 @@ function singleSite(
   ];
 }
 
+function buildExpectedActionsAcrossLogins(
+  segments: readonly {
+    loginUser: LoginUser;
+    inputs: readonly string[];
+  }[],
+  dataProfile?: SensorDataProfile,
+): RecordedAction[] {
+  let persistentState: ReturnType<TerminalEngine["getPersistentState"]> | null =
+    null;
+  const actions: Omit<RecordedAction, "step" | "timestamp">[] = [];
+
+  for (const segment of segments) {
+    const engine = new TerminalEngine({
+      targetLoginUser: segment.loginUser,
+      sensorDataProfile: dataProfile ? structuredClone(dataProfile) : undefined,
+    });
+    if (persistentState) {
+      engine.restorePersistentState(persistentState);
+    }
+
+    for (const input of segment.inputs) {
+      const action = engine.processInput(input).recordableAction;
+      if (action) actions.push(action);
+    }
+    persistentState = engine.getPersistentState();
+  }
+
+  return actions.map((action, index) => ({
+    ...action,
+    step: index + 1,
+    timestamp: SEED_TIMESTAMP + index,
+  }));
+}
+
 function noiBaiTrainingSite(sensorId: string): Scenario["sites"] {
   return [
     {
@@ -279,11 +313,12 @@ export const DEFAULT_SCENARIOS: readonly Scenario[] = [
   },
   {
     id: "adsb-06-configure-network",
-    title: "ADS-B 06 — Thay đổi và xác nhận địa chỉ mạng",
+    title: "ADS-B 06 — Cấu hình địa chỉ IP cho máy thu",
     description:
-      "Chuyển sang MAINTENANCE, nhập IP 192.168.10.20, subnet, gateway rồi xác nhận cấu hình mạng mới.",
+      "Chuyển sang MAINTENANCE, nhập IP 192.168.10.20, subnet và gateway; đăng nhập lại bằng sysadmin@192.168.10.20 để xác nhận, sau đó chuyển về OPERATIONAL.",
     difficulty: "hard",
     createdAt: "2026-07-06T00:00:00.000Z",
+    updatedAt: "2026-07-23T07:30:00.000Z",
     sites: noiBaiTrainingSite("noi-bai-training-06"),
     targetSensorId: "noi-bai-training-06",
     targetLoginUser: "sysadmin",
@@ -302,23 +337,40 @@ export const DEFAULT_SCENARIOS: readonly Scenario[] = [
         "",
         "3",
         "1",
+        "",
+        "0",
+        "9",
+        "1",
       ],
       NOI_BAI_TRAINING_SENSOR,
     ),
   },
   {
     id: "adsb-07-configure-sensor-name",
-    title: "ADS-B 07 — Đổi tên cảm biến",
+    title: "ADS-B 07 — Cấu hình tên máy thu",
     description:
-      "Chuyển sang MAINTENANCE, đặt Sensor Name thành NoiBai-Training và kiểm tra tên mới ngay trên màn hình kết quả.",
+      "Chuyển sang MAINTENANCE, đặt Sensor Name thành NoiBai-Training, kiểm tra kết quả rồi chuyển máy thu về OPERATIONAL.",
     difficulty: "medium",
     createdAt: "2026-07-07T00:00:00.000Z",
+    updatedAt: "2026-07-23T08:00:00.000Z",
     sites: noiBaiTrainingSite("noi-bai-training-07"),
     targetSensorId: "noi-bai-training-07",
     targetLoginUser: "sysadmin",
     expectedActions: buildExpectedActions(
       "sysadmin",
-      ["9", "1", "", "7", "1", "1", "NoiBai-Training"],
+      [
+        "9",
+        "1",
+        "",
+        "7",
+        "1",
+        "1",
+        "NoiBai-Training",
+        "",
+        "0",
+        "9",
+        "1",
+      ],
       NOI_BAI_TRAINING_SENSOR,
     ),
   },
@@ -326,15 +378,28 @@ export const DEFAULT_SCENARIOS: readonly Scenario[] = [
     id: "adsb-08-configure-sac-sic",
     title: "ADS-B 08 — Cấu hình ASTERIX SAC/SIC",
     description:
-      "Trong Configure ASTERIX, đổi SAC thành 95 và SIC thành 164; mỗi thay đổi phải có màn hình xác nhận giá trị cũ và mới.",
+      "Dùng sysadmin chuyển máy thu sang MAINTENANCE, đăng nhập maintenance để đổi SAC thành 95 và SIC thành 164, sau đó đăng nhập lại sysadmin và chuyển về OPERATIONAL.",
     difficulty: "medium",
     createdAt: "2026-07-08T00:00:00.000Z",
+    updatedAt: "2026-07-23T09:00:00.000Z",
     sites: noiBaiTrainingSite("noi-bai-training-08"),
     targetSensorId: "noi-bai-training-08",
-    targetLoginUser: "maintenance",
-    expectedActions: buildExpectedActions(
-      "maintenance",
-      ["1", "1", "2", "95", "", "3", "164"],
+    targetLoginUser: "sysadmin",
+    expectedActions: buildExpectedActionsAcrossLogins(
+      [
+        {
+          loginUser: "sysadmin",
+          inputs: ["9", "1", "", "X"],
+        },
+        {
+          loginUser: "maintenance",
+          inputs: ["1", "1", "2", "95", "", "3", "164", "", "X"],
+        },
+        {
+          loginUser: "sysadmin",
+          inputs: ["9", "1"],
+        },
+      ],
       NOI_BAI_TRAINING_SENSOR,
     ),
   },

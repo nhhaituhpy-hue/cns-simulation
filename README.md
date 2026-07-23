@@ -269,9 +269,10 @@ doc/                    Manual, kế hoạch và tài liệu kỹ thuật cục 
 
 - VOR và DME ghi lại các màn hình/checkpoint học viên đã truy cập nhưng không tự quyết định điểm cuối cùng.
 - ADS-B chấm điểm theo số bước đúng, đúng thứ tự và không có thao tác thừa.
-- Username terminal phải khớp vai trò của kịch bản; mọi password không rỗng đều được chấp nhận trong môi trường mô phỏng.
+- Phiên terminal ADS-B chấp nhận `sysadmin` và `maintenance`; thí sinh có thể đăng xuất rồi đổi tài khoản trong cùng một phiên mà không làm mất mode hoặc cấu hình máy thu.
 - Đăng nhập không phải là một phần của đáp án chấm điểm.
-- `RETURN`, phím Enter rỗng và `0` được chuẩn hóa thành cùng một hành động; `x`/`X` thoát menu.
+- `RETURN`, phím Enter rỗng và `0` được chuẩn hóa thành cùng một hành động; `x`/`X` đăng xuất tài khoản hiện tại và đưa terminal trở lại dấu nhắc `login:`.
+- Working copy ADS-B của từng thí sinh được lưu theo phiên trong cache trình duyệt; dữ liệu chuẩn của trình giả lập Admin chỉ thay đổi trong bộ nhớ và được khôi phục khi khởi động lại phiên.
 - Các sơ đồ phần cứng là mô hình tương tác do dự án xây dựng từ tài liệu tham chiếu, không phải ảnh sao chép từ manual nhà sản xuất.
 
 ## Tài liệu tham chiếu
@@ -331,3 +332,7 @@ Khi kế hoạch nội bộ và manual nhà sản xuất khác nhau, manual là 
 - [2026-07-23] Bổ sung trình giả lập ADS-B chuẩn tại `/admin/ads-b/simulator`, hỗ trợ đăng nhập `sysadmin`/`maintenance`, tái sử dụng chung terminal engine với bài thi và giữ bộ dữ liệu chuẩn của Admin độc lập với working copy lưu trong cache trình duyệt của từng thí sinh.
 - [2026-07-23] Tích hợp 12 kịch bản thực hành ADS-B Nội Bài; mở rộng workflow terminal, dữ liệu cảm biến, menu SA/MA và các màn hình kết quả theo tài liệu tham chiếu, gồm cấu hình hệ thống đầy đủ, trạng thái thiết bị, Surveillance Clients 20 dòng, thống kê client và Customisation ở Operational Mode.
 - [2026-07-23] Chuẩn hóa giao diện terminal một màu, sửa luồng khôi phục Action Builder và cập nhật kiểm thử theo đặc tả mới. Kết quả xác nhận: 54 test liên quan vượt qua và `npm run build` thành công với Next.js 16.2.10.
+- [2026-07-23] Hoàn thiện engine ADS-B theo mode: bổ sung menu System Statistics, Surveillance Clients, Customisation và End-to-End Test theo dữ liệu mẫu; tách rõ giao diện Operational/Maintenance và giữ kết quả thay đổi trong working copy của phiên thí sinh.
+- [2026-07-23] Hoàn thiện bài 6-8: cấu hình IP có bước đăng nhập lại bằng IP mới và xác nhận; đổi tên máy thu; cấu hình SAC/SIC với toàn bộ danh sách UAP CAT21 trước dấu nhắc nhập.
+- [2026-07-23] Cho phép chuyển `sysadmin` ↔ `maintenance` trong cùng phiên terminal. Lệnh `X` lưu trạng thái thiết bị rồi trở về `login:`, trong khi mode, IP, tên máy thu và SAC/SIC tiếp tục được giữ đến khi khởi động lại hoặc nộp bài.
+- [2026-07-23] Kiểm tra phiên bản ổn định ADS-B: 58 test trực tiếp vượt qua và production build hoàn tất thành công với Next.js 16.2.10.

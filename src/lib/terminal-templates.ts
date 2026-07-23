@@ -9,6 +9,7 @@ export const TERMINAL_TEMPLATE_IDS = [
   "sa-software-version",
   "sa-clients-display",
   "sa-clients-stats",
+  "sa-end-to-end-display",
   "sa-snmp-users",
   "sa-snmp-traps",
   "sa-syslog-config",
@@ -254,6 +255,33 @@ function renderClientStats(profile: SensorDataProfile): string {
     formatStatsRow("All clients", totals),
     "",
     "PRESS ENTER TO RETURN",
+  ].join("\n");
+}
+
+function renderEndToEndParameters(profile: SensorDataProfile): string {
+  const alertPower = profile.endToEnd?.alertPower ?? 164;
+  const failurePower = profile.endToEnd?.failurePower ?? 140;
+
+  return [
+    "DISPLAY CURRENT END-TO-END SYSTEM TEST PARAMETERS",
+    "",
+    "Active Setting:",
+    "",
+    statusLine("    Current Power Level to Trigger an Alert", alertPower),
+    statusLine("    Current Power Level to Trigger a Failure", failurePower),
+    "",
+    statusLine(
+      "    The Internal RF-Loopback Output Power Level",
+      "0xd (-4.5 dBm)",
+    ),
+    "",
+    statusLine("    The Internal RF-Loopback Transmission is", "ENABLED"),
+    statusLine(
+      "    The Internal RF-Loopback Transmission Timeout is",
+      "10 Second(s)",
+    ),
+    "",
+    "PRESS RETURN TO CONTINUE",
   ].join("\n");
 }
 
@@ -896,6 +924,8 @@ export function renderTemplate(
       return renderClients(profile);
     case "sa-clients-stats":
       return renderClientStats(profile);
+    case "sa-end-to-end-display":
+      return renderEndToEndParameters(profile);
     case "sa-snmp-users":
       return renderSnmpUsers(profile);
     case "sa-snmp-traps":

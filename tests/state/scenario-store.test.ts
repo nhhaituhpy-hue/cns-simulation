@@ -137,6 +137,60 @@ describe("scenario store hydration", () => {
       ),
     ).toBe(false);
   });
+
+  it("refreshes a versioned built-in ADS-B scenario without replacing custom scenarios", async () => {
+    const standard = DEFAULT_SCENARIOS.find(
+      (scenario) => scenario.id === "adsb-06-configure-network",
+    )!;
+    const stale = {
+      ...standard,
+      title: "Old network exercise",
+      updatedAt: undefined,
+      expectedActions: [],
+    };
+    const custom = {
+      ...DEFAULT_SCENARIOS[0],
+      id: "custom-network-exercise",
+      title: "Custom exercise must remain unchanged",
+    };
+    const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify([stale, custom]), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    const store = createScenarioStore({
+      storage: window.localStorage,
+      fetcher,
+      testMode: false,
+      now: () => FIXED_NOW,
+    });
+
+    store.getState().hydrate();
+
+    await vi.waitFor(() => {
+      expect(store.getState().isHydrated).toBe(true);
+    });
+    expect(
+      store.getState().getScenarioById("adsb-06-configure-network"),
+    ).toMatchObject({
+      title: standard.title,
+      updatedAt: standard.updatedAt,
+      expectedActions: standard.expectedActions,
+    });
+    expect(
+      store.getState().getScenarioById("custom-network-exercise"),
+    ).toMatchObject({ title: custom.title });
+    await vi.waitFor(() => {
+      expect(
+        fetcher.mock.calls.some(
+          ([, init]) =>
+            init?.method === "POST" &&
+            String(init.body).includes("adsb-06-configure-network"),
+        ),
+      ).toBe(true);
+    });
+  });
 });
 
 describe("scenario store CRUD", () => {

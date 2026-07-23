@@ -52,11 +52,10 @@ export interface TerminalEngineOptions {
   sensorMonitoring?: SensorMonitoringData;
 }
 
-export const TERMINAL_ENGINE_STATE_VERSION = 1 as const;
+export const TERMINAL_ENGINE_STATE_VERSION = 2 as const;
 
 export interface TerminalEnginePersistentState {
   version: typeof TERMINAL_ENGINE_STATE_VERSION;
-  targetLoginUser: LoginUser;
   sensorDataProfile?: SensorDataProfile;
   runtime: TerminalWorkflowRuntime;
   settings: Record<string, string>;
@@ -95,24 +94,29 @@ type PendingInteraction =
       values: Record<string, string>;
     };
 
-function clampLine(content: string): string {
-  if (content.length <= INNER_WIDTH) {
+function clampLine(content: string, innerWidth = INNER_WIDTH): string {
+  if (content.length <= innerWidth) {
     return content;
   }
 
-  return `${content.slice(0, INNER_WIDTH - 3)}...`;
+  return `${content.slice(0, innerWidth - 3)}...`;
 }
 
-function boxLine(content = ""): string {
-  const safeContent = clampLine(content);
-  return `*${safeContent.padEnd(INNER_WIDTH, " ")}*`;
+function boxLine(content = "", terminalWidth = TERMINAL_WIDTH): string {
+  const innerWidth = terminalWidth - 2;
+  const safeContent = clampLine(content, innerWidth);
+  return `*${safeContent.padEnd(innerWidth, " ")}*`;
 }
 
-function centeredBoxLine(content: string): string {
-  const safeContent = clampLine(content);
-  const totalPadding = INNER_WIDTH - safeContent.length;
+function centeredBoxLine(
+  content: string,
+  terminalWidth = TERMINAL_WIDTH,
+): string {
+  const innerWidth = terminalWidth - 2;
+  const safeContent = clampLine(content, innerWidth);
+  const totalPadding = innerWidth - safeContent.length;
   const leftPadding = Math.floor(totalPadding / 2);
-  return boxLine(`${" ".repeat(leftPadding)}${safeContent}`);
+  return boxLine(`${" ".repeat(leftPadding)}${safeContent}`, terminalWidth);
 }
 
 function centeredLine(content: string): string {
@@ -179,8 +183,12 @@ function isTerminalWorkflowRuntime(
   );
 }
 
-function bannerLine(left: string, right: string): string {
-  const remainingWidth = TERMINAL_WIDTH - left.length - right.length - 2;
+function bannerLine(
+  left: string,
+  right: string,
+  terminalWidth = TERMINAL_WIDTH,
+): string {
+  const remainingWidth = terminalWidth - left.length - right.length - 2;
   return `${left} ${"*".repeat(Math.max(1, remainingWidth))} ${right}`;
 }
 
@@ -233,6 +241,12 @@ export function renderMenu(
   headerOverrides: Partial<MenuHeader> = {},
 ): string {
   const header = { ...node.header, ...headerOverrides };
+  const terminalWidth =
+    node.id === "sa.customisation-maintenance" ? 80 : TERMINAL_WIDTH;
+
+  if (node.id === "ma.root") {
+    return renderSystemStatisticsMenu(node, header);
+  }
 
   if (node.id.endsWith(".root")) {
     const lines = [
@@ -265,26 +279,29 @@ export function renderMenu(
   }
 
   const lines: string[] = [
-    "*".repeat(TERMINAL_WIDTH),
-    boxLine(`${header.sensorName}    Version: ${header.version}`),
-    boxLine(),
-    centeredBoxLine("Quadrant ADS-B Maintenance Application"),
-    centeredBoxLine(`- ${header.mode} -`),
-    centeredBoxLine(node.title),
-    boxLine(),
+    "*".repeat(terminalWidth),
+    boxLine(`${header.sensorName}    Version: ${header.version}`, terminalWidth),
+    boxLine("", terminalWidth),
+    centeredBoxLine("Quadrant ADS-B Maintenance Application", terminalWidth),
+    centeredBoxLine(`- ${header.mode} -`, terminalWidth),
+    centeredBoxLine(node.title, terminalWidth),
+    boxLine("", terminalWidth),
   ];
 
   for (const item of node.items) {
-    lines.push(boxLine(formatMenuItem(item.number, item.label)), boxLine());
+    lines.push(
+      boxLine(formatMenuItem(item.number, item.label), terminalWidth),
+      boxLine("", terminalWidth),
+    );
   }
 
   lines.push(
-    boxLine(formatMenuItem("0", "Return to Previous Menu")),
-    boxLine(),
-    boxLine(formatMenuItem("X", "Exit Maintenance Application")),
-    boxLine(),
-    boxLine(`User: ${header.userLabel}    Tag: ${header.tag}`),
-    "*".repeat(TERMINAL_WIDTH),
+    boxLine(formatMenuItem("0", "Return to Previous Menu"), terminalWidth),
+    boxLine("", terminalWidth),
+    boxLine(formatMenuItem("X", "Exit Maintenance Application"), terminalWidth),
+    boxLine("", terminalWidth),
+    boxLine(`User: ${header.userLabel}    Tag: ${header.tag}`, terminalWidth),
+    "*".repeat(terminalWidth),
     "",
     "Please type the item number you want to select:",
   );
@@ -411,7 +428,15 @@ export class TerminalEngine {
     return authenticateTerminalLogin(
       username,
       this.targetLoginUser,
-      this.targetIpAddress,
+      this.getConnectionIpAddress(),
+    );
+  }
+
+  getConnectionIpAddress(): string | undefined {
+    return (
+      this.workflowRuntime.pendingNetwork?.ip ??
+      this.sensorDataProfile?.network.ip ??
+      this.targetIpAddress
     );
   }
 
@@ -420,6 +445,21 @@ export class TerminalEngine {
     if (!menu) {
       throw new Error(`Current menu "${this.currentMenuId}" does not exist.`);
     }
+
+    if (
+      menu.id === "ma.root" &&
+      this.workflowRuntime.operationMode === "MAINTENANCE"
+    ) {
+      return {
+        ...menu,
+        items: menu.items.map((item) =>
+          item.number === 10
+            ? { ...item, label: "Configuration Import / Export" }
+            : item,
+        ),
+      };
+    }
+
     return menu;
   }
 
@@ -542,9 +582,17 @@ export class TerminalEngine {
     );
 
     switch (action.type) {
-      case "navigate":
+      case "navigate": {
+        let targetMenuId = action.targetMenuId;
+        if (this.workflowRuntime.operationMode === "MAINTENANCE") {
+          if (targetMenuId === "sa.customisation") {
+            targetMenuId = "sa.customisation-maintenance";
+          } else if (targetMenuId === "ma.general") {
+            targetMenuId = "ma.general-maintenance";
+          }
+        }
         this.navigationStack.push(this.currentMenuId);
-        this.currentMenuId = action.targetMenuId;
+        this.currentMenuId = targetMenuId;
         return this.buildResult({
           accepted: true,
           event: "navigate",
@@ -553,6 +601,7 @@ export class TerminalEngine {
           output: this.renderCurrentMenu(),
           recordableAction: selectedAction,
         });
+      }
 
       case "display":
         this.pendingInteraction = { type: "display", item };
@@ -608,7 +657,11 @@ export class TerminalEngine {
           event: "prompt",
           normalizedInput,
           previousMenuId,
-          output: renderWorkflowStep(firstStep.step),
+          output: renderWorkflowStep(
+            firstStep.step,
+            this.workflowRuntime,
+            this.sensorDataProfile,
+          ),
           recordableAction: selectedAction,
         });
       }
@@ -779,7 +832,11 @@ export class TerminalEngine {
           event: "invalid",
           normalizedInput,
           previousMenuId,
-          output: `${validation.message}\n\n${renderWorkflowStep(step)}`,
+          output: `${validation.message}\n\n${renderWorkflowStep(
+            step,
+            this.workflowRuntime,
+            this.sensorDataProfile,
+          )}`,
           recordableAction: this.createAction(
             "value-input",
             normalizedInput,
@@ -801,7 +858,11 @@ export class TerminalEngine {
           previousMenuId,
           output:
             "Failure Power Level must be lower than Alert Power Level.\n\n" +
-            renderWorkflowStep(step),
+            renderWorkflowStep(
+              step,
+              this.workflowRuntime,
+              this.sensorDataProfile,
+            ),
           recordableAction: this.createAction(
             "value-input",
             normalizedInput,
@@ -826,7 +887,11 @@ export class TerminalEngine {
           event: "prompt",
           normalizedInput,
           previousMenuId,
-          output: renderWorkflowStep(nextStep.step),
+          output: renderWorkflowStep(
+            nextStep.step,
+            this.workflowRuntime,
+            this.sensorDataProfile,
+          ),
           recordableAction: this.createAction(
             "value-input",
             normalizedInput,
@@ -901,7 +966,6 @@ export class TerminalEngine {
   getPersistentState(): TerminalEnginePersistentState {
     return {
       version: TERMINAL_ENGINE_STATE_VERSION,
-      targetLoginUser: this.targetLoginUser,
       ...(this.sensorDataProfile
         ? { sensorDataProfile: structuredClone(this.sensorDataProfile) }
         : {}),
@@ -917,9 +981,6 @@ export class TerminalEngine {
     }
     if (snapshot.version !== TERMINAL_ENGINE_STATE_VERSION) {
       throw new Error("Stored terminal state uses an unsupported version.");
-    }
-    if (snapshot.targetLoginUser !== this.targetLoginUser) {
-      throw new Error("Stored terminal state belongs to another login role.");
     }
     if (!isTerminalWorkflowRuntime(snapshot.runtime)) {
       throw new Error("Stored terminal runtime is invalid.");

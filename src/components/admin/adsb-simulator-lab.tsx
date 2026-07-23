@@ -31,6 +31,8 @@ const LAB_INITIALIZATION = {
 
 export function AdsbSimulatorLab() {
   const terminal = useAdsbSimulatorTerminal();
+  const connectionIpAddress =
+    terminal.connectionIpAddress ?? NOI_BAI_TRAINING_SENSOR.network.ip;
 
   useEffect(() => {
     terminal.initialize(LAB_INITIALIZATION);
@@ -91,7 +93,7 @@ export function AdsbSimulatorLab() {
             </span>
             : <span className="font-mono">sysadmin</span>,{" "}
             <span className="font-mono">maintenance</span> hoặc{" "}
-            <span className="font-mono">&lt;tài khoản&gt;@192.168.10.2</span>.
+            <span className="font-mono">&lt;tài khoản&gt;@{connectionIpAddress}</span>.
             Mật khẩu mô phỏng có thể là ký tự bất kỳ.
           </p>
         </div>
@@ -103,13 +105,13 @@ export function AdsbSimulatorLab() {
             maintenance
           </span>
           <span className="rounded-md border border-[var(--accent-border)] bg-white px-2.5 py-1.5 text-[var(--text-secondary)]">
-            IP: {NOI_BAI_TRAINING_SENSOR.network.ip}
+            IP: {connectionIpAddress}
           </span>
         </div>
       </section>
 
       <TerminalWindow
-        ipAddress={NOI_BAI_TRAINING_SENSOR.network.ip}
+        ipAddress={connectionIpAddress}
         output={terminal.output}
         pendingPrompt={terminal.pendingPrompt}
         pendingSensitive={terminal.pendingSensitive}

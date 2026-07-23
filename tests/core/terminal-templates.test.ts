@@ -31,6 +31,7 @@ const templateExpectations: ReadonlyArray<readonly [string, string]> = [
   ["sa-software-version", "ConSon_V1.0"],
   ["sa-clients-display", "QCMS"],
   ["sa-clients-stats", "4523100"],
+  ["sa-end-to-end-display", "Current Power Level to Trigger an Alert"],
   ["sa-snmp-users", "qcms_user"],
   ["sa-snmp-traps", "20900"],
   ["sa-syslog-config", "/var/log/sensor.log"],
@@ -49,8 +50,8 @@ const templateExpectations: ReadonlyArray<readonly [string, string]> = [
 ];
 
 describe("terminal data templates", () => {
-  it("defines the complete set of 19 planned templates", () => {
-    expect(TERMINAL_TEMPLATE_IDS).toHaveLength(19);
+  it("defines the complete set of 20 planned templates", () => {
+    expect(TERMINAL_TEMPLATE_IDS).toHaveLength(20);
     expect(TERMINAL_TEMPLATE_IDS).toEqual(
       templateExpectations.map(([templateId]) => templateId),
     );

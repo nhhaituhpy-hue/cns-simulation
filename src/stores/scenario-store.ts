@@ -81,6 +81,23 @@ function mergeMissingTrainingScenarios(
   monitoringTimestamp: string,
 ): { scenarios: Scenario[]; missing: Scenario[] } {
   const existingIds = new Set(existingScenarios.map((scenario) => scenario.id));
+  const refreshableDefaults = new Map(
+    defaultScenarios
+      .filter(
+        (scenario) =>
+          ADS_B_TRAINING_SCENARIO_ID.test(scenario.id) && scenario.updatedAt,
+      )
+      .map((scenario) => [scenario.id, scenario]),
+  );
+  const refreshed: Scenario[] = [];
+  const existing = cloneScenarios(existingScenarios).map((scenario) => {
+    const standard = refreshableDefaults.get(scenario.id);
+    if (!standard || standard.updatedAt === scenario.updatedAt) return scenario;
+
+    const replacement = cloneScenarios([standard], monitoringTimestamp)[0];
+    refreshed.push(replacement);
+    return replacement;
+  });
   const missingDefaults = defaultScenarios.filter(
     (scenario) =>
       ADS_B_TRAINING_SCENARIO_ID.test(scenario.id) &&
@@ -89,8 +106,8 @@ function mergeMissingTrainingScenarios(
   const missing = cloneScenarios(missingDefaults, monitoringTimestamp);
 
   return {
-    scenarios: [...cloneScenarios(existingScenarios), ...missing],
-    missing,
+    scenarios: [...existing, ...missing],
+    missing: [...refreshed, ...missing],
   };
 }
 

@@ -21,6 +21,81 @@ const ENABLED_DISABLED: readonly ToggleOption[] = [
   { number: 2, label: "Disabled", value: "disabled" },
 ];
 
+const ASTERIX_CAT21_UAP_ITEMS = [
+  [1, "Data Source Identification"],
+  [2, "Target Report Descriptor"],
+  [3, "Target ID"],
+  [4, "Service Identification"],
+  [5, "Time of Applicability for Position"],
+  [6, "Position in WGS-84 co-ordinates"],
+  [7, "Position in WGS-84 co-ordinates, h.r."],
+  [8, "Time of Applicability for Velocity"],
+  [9, "Air Speed"],
+  [10, "True Air Speed"],
+  [11, "Target Address"],
+  [12, "Time of Message Reception of Position"],
+  [13, "Time of Msg. Reception of Pos.-H.P."],
+  [14, "Time of Message Reception of Velocity"],
+  [15, "Time of Msg. Reception of Velocity-H.P."],
+  [16, "Geometric Height"],
+  [17, "Quality Indicators"],
+  [18, "MOPS Version"],
+  [19, "Mode 3/A Code"],
+  [20, "Roll Angle"],
+  [21, "Flight Level"],
+  [22, "Magnetic Heading"],
+  [23, "Target Status"],
+  [24, "Barometric Vertical Rate"],
+  [25, "Geometric Vertical Rate"],
+  [26, "Airborne Ground Vector"],
+  [27, "Track Angle Rate"],
+  [28, "Time of Report Transmission"],
+  [29, "Target Identification"],
+  [30, "Emitter Category"],
+  [31, "Met Information"],
+  [32, "Selected Altitude"],
+  [33, "Final State Selected Altitude"],
+  [34, "Trajectory Intent"],
+  [35, "Service Management"],
+  [36, "Aircraft Operational Status"],
+  [37, "Surface Capabilities and Characteristics"],
+  [38, "Message Amplitude"],
+  [39, "Mode S MB Data"],
+  [40, "ACAS Resolution Advisory Report"],
+  [41, "Receiver ID"],
+  [42, "Data Ages"],
+  [49, "Special Purpose Field"],
+] as const;
+
+function asterixSettings(field?: "SAC" | "SIC"): string {
+  return [
+    "ASTERIX SAC: {{sac}}",
+    "ASTERIX SIC: {{sic}}",
+    "",
+    "Applied ASTERIX Category 21 Version: 2.1",
+    "",
+    "UAP Settings for Category 21 Version 2.1:",
+    ...ASTERIX_CAT21_UAP_ITEMS.map(
+      ([frn, label]) =>
+        `UAP FRN ${String(frn).padStart(2, " ")} (${label.padEnd(40, " ")}) STATUS:    ENABLED`,
+    ),
+    "",
+    "ASTERIX Category 21 Transmission Mode is: Periodic.",
+    "",
+    "ASTERIX Category 21 Periodic Report Period is: 1.000000.",
+    "",
+    "Applied ASTERIX Category 23 Version: 1.2",
+    "",
+    "Category 23 Update Frequencies:",
+    "Ground Station Status Message:  60 Seconds",
+    "Service Status Message:         60 Seconds",
+    "Service Statistics Message:     30 Seconds",
+    "",
+    "Category 247 Update Frequency:  10 Minute(s)",
+    ...(field ? ["", `New value for ${field}:`] : []),
+  ].join("\n");
+}
+
 function navigate(number: number, label: string, targetMenuId: string): MenuItem {
   return { number, label, action: { type: "navigate", targetMenuId } };
 }
@@ -101,10 +176,34 @@ export const MA_MENUS = {
     title: "General Settings",
     header: MA_HEADER,
     items: [
-      navigate(1, "Configure ASTERIX", "ma.asterix"),
+      display(1, "Display ASTERIX Settings", asterixSettings()),
+      display(
+        2,
+        "Display Sensor Position (Direct / Via GPS)",
+        "Sensor Position Source : GPS\nSensor Position Status : CONFIGURED",
+      ),
+      display(
+        3,
+        "Display Sensor Time and Date",
+        "Sensor Time Source : GPS / NTP\nSensor Time Status : SYNCHRONIZED",
+      ),
+      display(
+        4,
+        "Display Downlink Formats for Transmission",
+        "Downlink Formats for Transmission : ALL SUPPORTED FORMATS",
+      ),
+    ],
+  },
+
+  "ma.general-maintenance": {
+    id: "ma.general-maintenance",
+    title: "General Settings",
+    header: MA_HEADER,
+    items: [
+      navigate(1, "Configure ASTERIX", "ma.asterix-maintenance"),
       workflow(
         2,
-        "Display and Set Sensor Position",
+        "Display and Set Sensor Position (Direct / Via GPS)",
         "ma.sensor-position",
         [
           {
@@ -148,20 +247,20 @@ export const MA_MENUS = {
       ),
       input(
         3,
-        "Sensor Time",
+        "Display and Set Sensor Time and Date",
         "ma.sensor-time",
-        "Enter sensor UTC time:",
-        "Sensor time updated in the simulator.",
+        "Enter Sensor UTC Time and Date:",
+        "Sensor time and date updated in the simulator.",
       ),
       toggle(
         4,
-        "Downlink Formats",
+        "Select Downlink Formats for Transmission",
         "ma.downlink-formats",
-        "Select downlink format profile:",
+        "Select Downlink Format for Transmission:",
         [
           { number: 1, label: "DF17", value: "df17" },
           { number: 2, label: "DF18", value: "df18" },
-          { number: 3, label: "All supported formats", value: "all" },
+          { number: 3, label: "All Supported Formats", value: "all" },
         ],
       ),
     ],
@@ -213,6 +312,83 @@ export const MA_MENUS = {
             max: 255,
           },
         ],
+      ),
+    ],
+  },
+
+  "ma.asterix-maintenance": {
+    id: "ma.asterix-maintenance",
+    title: "Configure ASTERIX",
+    header: MA_HEADER,
+    items: [
+      display(1, "Display Settings", asterixSettings()),
+      workflow(2, "Configure SAC", "ma.sac", [
+        {
+          key: "value",
+          prompt: asterixSettings("SAC"),
+          validation: "integer",
+          min: 0,
+          max: 255,
+        },
+      ]),
+      workflow(3, "Configure SIC", "ma.sic", [
+        {
+          key: "value",
+          prompt: asterixSettings("SIC"),
+          validation: "integer",
+          min: 0,
+          max: 255,
+        },
+      ]),
+      input(
+        4,
+        "Configure Applied Version for ASTERIX CAT 21",
+        "ma.asterix-cat21-version",
+        "Enter Applied ASTERIX Category 21 Version:",
+        "Applied ASTERIX Category 21 version updated in the simulator.",
+      ),
+      display(
+        5,
+        "Configure UAP Items for CAT 21 Transmission",
+        asterixSettings(),
+      ),
+      toggle(
+        6,
+        "CAT 21 ASTERIX Transmission Mode Settings",
+        "ma.asterix-cat21-transmission-mode",
+        "Select CAT 21 ASTERIX Transmission Mode:",
+        [
+          { number: 1, label: "Periodic", value: "periodic" },
+          { number: 2, label: "Event Driven", value: "event-driven" },
+        ],
+      ),
+      input(
+        7,
+        "CAT 21 ASTERIX Periodic Report Period Settings",
+        "ma.asterix-cat21-period",
+        "Enter CAT 21 Periodic Report Period:",
+        "CAT 21 periodic report period updated in the simulator.",
+      ),
+      input(
+        8,
+        "Configure Applied Version for ASTERIX CAT 23",
+        "ma.asterix-cat23-version",
+        "Enter Applied ASTERIX Category 23 Version:",
+        "Applied ASTERIX Category 23 version updated in the simulator.",
+      ),
+      input(
+        9,
+        "Configure CAT 23 Update Frequency",
+        "ma.asterix-cat23-frequency",
+        "Enter CAT 23 Update Frequency:",
+        "CAT 23 update frequency updated in the simulator.",
+      ),
+      input(
+        10,
+        "Configure CAT 247 Update Frequency",
+        "ma.asterix-cat247-frequency",
+        "Enter CAT 247 Update Frequency:",
+        "CAT 247 update frequency updated in the simulator.",
       ),
     ],
   },

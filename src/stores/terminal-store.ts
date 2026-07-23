@@ -41,6 +41,7 @@ export type TerminalInitialization = LoginUser | TerminalInitializationOptions;
 export interface TerminalStoreState {
   targetLoginUser: LoginUser | null;
   loginUser: LoginUser | null;
+  connectionIpAddress: string | null;
   isLoggedIn: boolean;
   authPhase: TerminalAuthPhase;
   currentMenuId: string;
@@ -72,6 +73,7 @@ export interface TerminalStoreOptions {
 const EMPTY_STATE: TerminalStoreState = {
   targetLoginUser: null,
   loginUser: null,
+  connectionIpAddress: null,
   isLoggedIn: false,
   authPhase: "not-initialized",
   currentMenuId: "",
@@ -113,6 +115,8 @@ export function createTerminalStore(
   let engine: TerminalEngine | null = null;
   let initializationOptions: TerminalEngineOptions | null = null;
   let activePersistenceKey: string | null = null;
+  let sharedSessionState: ReturnType<TerminalEngine["getPersistentState"]> | null =
+    null;
   let acceptedUsername = false;
   const recordAction =
     options.recordAction ??
@@ -138,6 +142,7 @@ export function createTerminalStore(
         return {
           currentMenuId: "",
           menuStack: [] as string[],
+          connectionIpAddress: null,
           pendingPrompt: null as TerminalPendingPrompt,
           pendingSensitive: false,
           isExited: false,
@@ -148,6 +153,7 @@ export function createTerminalStore(
       return {
         currentMenuId: snapshot.currentMenuId,
         menuStack: [...snapshot.navigationStack],
+        connectionIpAddress: engine.getConnectionIpAddress() ?? null,
         pendingPrompt: snapshot.pendingInteraction,
         pendingSensitive: snapshot.pendingSensitive,
         isExited: snapshot.exited,
@@ -155,35 +161,47 @@ export function createTerminalStore(
     };
 
     const clearPersistentState = () => {
+      sharedSessionState = null;
       const storage = browserStorage();
       if (!storage || !activePersistenceKey) return;
       clearTerminalSessionState(storage, activePersistenceKey);
     };
 
     const restorePersistentState = () => {
+      if (!engine) return;
+
       const storage = browserStorage();
-      if (!engine || !storage || !activePersistenceKey) return;
 
       try {
-        const snapshot = loadTerminalSessionState(
-          storage,
-          activePersistenceKey,
-        );
-        if (snapshot) engine.restorePersistentState(snapshot);
+        const storedSnapshot =
+          storage && activePersistenceKey
+            ? loadTerminalSessionState(storage, activePersistenceKey)
+            : null;
+        const snapshot = storedSnapshot ?? sharedSessionState;
+        if (snapshot) {
+          engine.restorePersistentState(snapshot);
+          sharedSessionState = engine.getPersistentState();
+        }
       } catch {
-        clearTerminalSessionState(storage, activePersistenceKey);
+        sharedSessionState = null;
+        if (storage && activePersistenceKey) {
+          clearTerminalSessionState(storage, activePersistenceKey);
+        }
       }
     };
 
     const persistCurrentState = () => {
+      if (!engine) return;
+
+      sharedSessionState = engine.getPersistentState();
       const storage = browserStorage();
-      if (!engine || !storage || !activePersistenceKey) return;
+      if (!storage || !activePersistenceKey) return;
 
       try {
         saveTerminalSessionState(
           storage,
           activePersistenceKey,
-          engine.getPersistentState(),
+          sharedSessionState,
         );
       } catch {
         // Cache failures must not interrupt an active examination session.
@@ -198,6 +216,7 @@ export function createTerminalStore(
         const resolvedOptions = resolved.engineOptions;
         initializationOptions = resolvedOptions;
         activePersistenceKey = resolved.persistenceKey;
+        sharedSessionState = null;
         engine = new TerminalEngine(resolvedOptions);
         restorePersistentState();
         acceptedUsername = false;
@@ -235,9 +254,7 @@ export function createTerminalStore(
         if (state.authPhase === "username") {
           const acceptedLoginUser = options.acceptedLoginUsers
             ? options.acceptedLoginUsers.find((loginUser) => {
-                const simulatorIpAddress =
-                  initializationOptions?.targetIpAddress ??
-                  initializationOptions?.sensorDataProfile?.network.ip;
+                const simulatorIpAddress = engine?.getConnectionIpAddress();
                 return (
                   authenticateLoginUser(input, loginUser) ||
                   authenticateTerminalLogin(
@@ -319,12 +336,40 @@ export function createTerminalStore(
           recordAction(result.recordableAction);
         }
 
+        persistCurrentState();
+
+        if (result.event === "exit") {
+          const activeLoginUser = engine.targetLoginUser;
+          const baseOptions = initializationOptions ?? {
+            targetLoginUser: activeLoginUser,
+          };
+          engine = new TerminalEngine({
+            ...baseOptions,
+            targetLoginUser: activeLoginUser,
+          });
+          restorePersistentState();
+          acceptedUsername = false;
+
+          set({
+            ...appendOutput(result.output, "", "login:"),
+            ...engineSnapshot(),
+            targetLoginUser: activeLoginUser,
+            loginUser: null,
+            isLoggedIn: false,
+            authPhase: "username",
+            pendingPrompt: "login",
+            pendingSensitive: false,
+            isExited: false,
+            lastProcessResult: result,
+          });
+          return result;
+        }
+
         set({
           ...appendOutput(result.output),
           ...engineSnapshot(),
           lastProcessResult: result,
         });
-        persistCurrentState();
         return result;
       },
 
@@ -336,6 +381,7 @@ export function createTerminalStore(
 
       reset: () => {
         acceptedUsername = false;
+        sharedSessionState = null;
 
         if (!engine) {
           set({ ...EMPTY_STATE, ...outputState([]) });
@@ -374,4 +420,6 @@ export function createTerminalStore(
   });
 }
 
-export const useTerminalStore = createTerminalStore();
+export const useTerminalStore = createTerminalStore({
+  acceptedLoginUsers: ["sysadmin", "maintenance"],
+});

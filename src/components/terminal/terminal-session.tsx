@@ -198,6 +198,9 @@ export function TerminalSession({
     );
   }
 
+  const connectionIpAddress =
+    terminal.connectionIpAddress ?? selectedSensor.ipAddress;
+
   return (
     <div className="mx-auto w-full max-w-[1400px] px-4 py-5 sm:px-6 lg:px-8">
       <div className="mb-5 flex flex-col gap-3 border-b border-[var(--border)] pb-5 sm:flex-row sm:items-end sm:justify-between">
@@ -213,16 +216,16 @@ export function TerminalSession({
             Terminal bảo trì
           </h1>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">
-            {scenario.title}. Cảm biến {selectedSensor.sensorLabel} tại {selectedSensor.ipAddress}.
+            {scenario.title}. Cảm biến {selectedSensor.sensorLabel} tại {connectionIpAddress}.
           </p>
         </div>
         <div className="rounded border border-blue-200 bg-blue-50 px-3 py-2">
           <p className="text-xs text-blue-700">Địa chỉ IP thiết bị</p>
           <p className="mt-0.5 font-mono text-sm font-bold text-blue-950">
-            {selectedSensor.ipAddress}
+            {connectionIpAddress}
           </p>
           <p className="mt-1 font-mono text-[11px] text-blue-800">
-            Định dạng: &lt;tài khoản&gt;@{selectedSensor.ipAddress}
+            Định dạng: &lt;tài khoản&gt;@{connectionIpAddress}
           </p>
         </div>
       </div>
@@ -236,7 +239,7 @@ export function TerminalSession({
 
       <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,7fr)_minmax(20rem,3fr)]">
         <TerminalWindow
-          ipAddress={selectedSensor.ipAddress}
+          ipAddress={connectionIpAddress}
           output={terminal.output}
           pendingPrompt={terminal.pendingPrompt}
           pendingSensitive={terminal.pendingSensitive}

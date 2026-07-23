@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { NOI_BAI_TRAINING_SENSOR } from "@/lib/sensor-data-presets";
 import type { RecordableAction } from "@/lib/types";
 import { createTerminalStore } from "@/stores/terminal-store";
 
@@ -130,4 +131,104 @@ describe("terminal store", () => {
     store.getState().processInput("training-password");
     expect(store.getState().isLoggedIn).toBe(true);
     expect(onAuthenticated).toHaveBeenCalledOnce();
-  });});
+  });
+
+  it("restores a pending network change and accepts the new device IP", () => {
+    const persistenceKey = "terminal-store-network-reconnect";
+    window.localStorage.removeItem(persistenceKey);
+    const firstSession = createTerminalStore();
+    firstSession.getState().initialize({
+      targetLoginUser: "sysadmin",
+      targetIpAddress: "192.168.10.2",
+      sensorDataProfile: NOI_BAI_TRAINING_SENSOR,
+      persistenceKey,
+    });
+    firstSession.getState().processInput("sysadmin@192.168.10.2");
+    firstSession.getState().processInput("password");
+    for (const input of [
+      "9",
+      "1",
+      "",
+      "2",
+      "2",
+      "1",
+      "192.168.10.20",
+      "255.255.255.0",
+      "192.168.10.252",
+    ]) {
+      firstSession.getState().processInput(input);
+    }
+    expect(firstSession.getState().connectionIpAddress).toBe("192.168.10.20");
+
+    const reconnected = createTerminalStore();
+    reconnected.getState().initialize({
+      targetLoginUser: "sysadmin",
+      targetIpAddress: "192.168.10.2",
+      sensorDataProfile: NOI_BAI_TRAINING_SENSOR,
+      persistenceKey,
+    });
+    expect(reconnected.getState().connectionIpAddress).toBe("192.168.10.20");
+
+    reconnected.getState().processInput("sysadmin@192.168.10.2");
+    expect(reconnected.getState().authPhase).toBe("username");
+    reconnected.getState().processInput("sysadmin@192.168.10.20");
+    expect(reconnected.getState().authPhase).toBe("password");
+
+    window.localStorage.removeItem(persistenceKey);
+  });
+
+  it("logs out with X and allows another role to continue the same device session", () => {
+    const store = createTerminalStore({
+      acceptedLoginUsers: ["sysadmin", "maintenance"],
+      recordAction: () => undefined,
+      onAuthenticated: () => undefined,
+    });
+    store.getState().initialize({
+      targetLoginUser: "sysadmin",
+      targetIpAddress: NOI_BAI_TRAINING_SENSOR.network.ip,
+      sensorDataProfile: NOI_BAI_TRAINING_SENSOR,
+    });
+
+    logIn(store, "sysadmin");
+    store.getState().processInput("9");
+    store.getState().processInput("1");
+    store.getState().processInput("");
+    store.getState().processInput("X");
+
+    expect(store.getState()).toMatchObject({
+      loginUser: null,
+      isLoggedIn: false,
+      authPhase: "username",
+      pendingPrompt: "login",
+      isExited: false,
+    });
+    expect(store.getState().output.at(-1)).toBe("login:");
+
+    logIn(store, "maintenance");
+    expect(store.getState().loginUser).toBe("maintenance");
+    expect(store.getState().output.at(-1)).toContain("MAINTENANCE MODE");
+
+    store.getState().processInput("1");
+    expect(store.getState().currentMenuId).toBe("ma.general-maintenance");
+    store.getState().processInput("1");
+    store.getState().processInput("2");
+    expect(store.getState().output.at(-1)).toContain("New value for SAC:");
+    store.getState().processInput("95");
+    store.getState().processInput("");
+    store.getState().processInput("3");
+    expect(store.getState().output.at(-1)).toContain("ASTERIX SAC: 95");
+    store.getState().processInput("164");
+    store.getState().processInput("");
+    store.getState().processInput("X");
+
+    logIn(store, "sysadmin");
+    const modePrompt = store.getState().processInput("9");
+    expect(modePrompt?.output).toContain(
+      "Current Sensor Operation Mode: MAINTENANCE",
+    );
+    const operational = store.getState().processInput("1");
+    expect(operational?.output).toContain(
+      'Actual Sensor Operating Mode: "OPERATIONAL"',
+    );
+  });
+});

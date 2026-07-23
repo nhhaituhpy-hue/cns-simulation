@@ -28,6 +28,64 @@ function resultScreen(title: string, lines: readonly string[]): string {
   ].join("\n");
 }
 
+function effectiveNetwork(
+  profile: SensorDataProfile | undefined,
+  runtime: TerminalWorkflowRuntime,
+): Pick<NetworkConfig, "ip" | "subnet" | "gateway"> | undefined {
+  return runtime.pendingNetwork ?? profile?.network;
+}
+
+function networkSettingsLines(
+  profile: SensorDataProfile | undefined,
+  runtime: TerminalWorkflowRuntime,
+  confirmation: "CONFIRMED" | "UNCONFIRMED",
+): string[] {
+  const network = effectiveNetwork(profile, runtime);
+  const dhcpEnabled = runtime.pendingNetwork
+    ? false
+    : (profile?.network.dhcp ?? false);
+
+  return [
+    "Configured Settings ->",
+    "",
+    "Network Settings",
+    `Confirmation       : ${confirmation}`,
+    "",
+    `DHCP               : ${dhcpEnabled ? "ENABLED" : "DISABLED"}`,
+    `IP Address         : ${network?.ip ?? "Unknown"}`,
+    `NetMask            : ${network?.subnet ?? "Unknown"}`,
+    "Interface Speed    : AutoAllSupport",
+    "",
+    "IP Routing  1      : <unconfigured>",
+    `IP Routing  2      : Default gateway ${network?.gateway ?? "Unknown"}`,
+    "IP Routing  3      : <unconfigured>",
+    "IP Routing  4      : <unconfigured>",
+    "IP Routing  5      : <unconfigured>",
+    "IP Routing  6      : <unconfigured>",
+    "IP Routing  7      : <unconfigured>",
+    "IP Routing  8      : <unconfigured>",
+    "IP Routing  9      : <unconfigured>",
+    "IP Routing 10      : <unconfigured>",
+  ];
+}
+
+function networkSettingsResult(
+  title: string,
+  profile: SensorDataProfile | undefined,
+  runtime: TerminalWorkflowRuntime,
+  confirmation: "CONFIRMED" | "UNCONFIRMED",
+  message: string,
+): string {
+  return [
+    title,
+    "",
+    ...networkSettingsLines(profile, runtime, confirmation),
+    "",
+    message,
+    "PRESS RETURN TO CONTINUE",
+  ].join("\n");
+}
+
 export function renderGenericSettingResult(
   settingLabel: string,
   valueLabel?: string,
@@ -111,17 +169,54 @@ export function workflowValue(
   );
 }
 
-export function renderWorkflowStep(step: WorkflowStep): string {
+export function renderWorkflowStep(
+  step: WorkflowStep,
+  runtime?: TerminalWorkflowRuntime,
+  profile?: SensorDataProfile,
+): string {
+  const operationMode = runtime?.operationMode ?? "OPERATIONAL";
+  const alternateOperationMode =
+    operationMode === "OPERATIONAL" ? "MAINTENANCE" : "OPERATIONAL";
+  const network = runtime
+    ? effectiveNetwork(profile, runtime)
+    : profile?.network;
+  const networkConfirmation = runtime?.pendingNetwork
+    ? "UNCONFIRMED"
+    : "CONFIRMED";
+  const dhcpEnabled = runtime?.pendingNetwork
+    ? false
+    : (profile?.network.dhcp ?? false);
+  const renderText = (value: string): string =>
+    value
+      .replaceAll("{{operationMode}}", operationMode)
+      .replaceAll("{{alternateOperationMode}}", alternateOperationMode)
+      .replaceAll("{{networkConfirmation}}", networkConfirmation)
+      .replaceAll("{{dhcpStatus}}", dhcpEnabled ? "ENABLED" : "DISABLED")
+      .replaceAll("{{networkIp}}", network?.ip ?? "Unknown")
+      .replaceAll("{{networkSubnet}}", network?.subnet ?? "Unknown")
+      .replaceAll("{{networkGateway}}", network?.gateway ?? "Unknown")
+      .replaceAll(
+        "{{sensorName}}",
+        profile?.sensorName ?? "Quadrant ADS-B sensor",
+      )
+      .replaceAll("{{sac}}", String(profile?.asterix.sac ?? "Unknown"))
+      .replaceAll("{{sic}}", String(profile?.asterix.sic ?? "Unknown"));
+
   if (step.kind !== "choice") {
-    return step.prompt;
+    return renderText(step.prompt);
   }
 
+  const optionLine = (number: number, label: string): string =>
+    step.optionStyle === "compact"
+      ? `(${number}) ${renderText(label)}`
+      : `(${String(number).padStart(3, " ")})    ${renderText(label)}`;
+
   return [
-    step.prompt,
-    ...(step.options ?? []).map(
-      (option) => `(${String(option.number).padStart(3, " ")})    ${option.label}`,
+    renderText(step.prompt),
+    ...(step.options ?? []).map((option) =>
+      optionLine(option.number, option.label),
     ),
-    "(  0)    Cancel",
+    ...(step.showCancel === false ? [] : [optionLine(0, "Cancel")]),
   ].join("\n");
 }
 
@@ -166,63 +261,63 @@ export function completeWorkflow(
 ): string {
   switch (workflowId) {
     case "sa.operation-mode": {
-      runtime.operationMode =
-        values.mode === "MAINTENANCE" ? "MAINTENANCE" : "OPERATIONAL";
+      const changed = values.mode === "TOGGLE";
+      if (changed) {
+        runtime.operationMode =
+          runtime.operationMode === "OPERATIONAL"
+            ? "MAINTENANCE"
+            : "OPERATIONAL";
+      }
       if (profile) {
         profile.operationMode = runtime.operationMode;
       }
-      return resultScreen("OPERATION MODE SELECTION", [
+      return [
         `Actual Sensor Operating Mode: "${runtime.operationMode}"`,
-        "",
-        "The requested operating mode is now active.",
-      ]);
+        "PRESS RETURN TO CONTINUE",
+      ].join("\n");
     }
 
     case "sa.manual-network": {
       if (values.action !== "CONFIGURE") {
-        return resultScreen("NETWORK CONFIGURATION RESULT", [
+        return networkSettingsResult(
+          "NETWORK SETTINGS FOR ADS-B QUADRANT",
+          profile,
+          runtime,
+          runtime.pendingNetwork ? "UNCONFIRMED" : "CONFIRMED",
           "Network settings remain unchanged.",
-          "",
-          `IP Address          : ${profile?.network.ip ?? "Unknown"}`,
-          `Subnet Mask         : ${profile?.network.subnet ?? "Unknown"}`,
-          `Default Gateway     : ${profile?.network.gateway ?? "Unknown"}`,
-        ]);
+        );
       }
       runtime.pendingNetwork = {
         ip: values.ip,
         subnet: values.subnet,
         gateway: values.gateway,
       };
-      return resultScreen("NETWORK CONFIGURATION RESULT", [
-        "Network settings have been accepted.",
-        "",
-        `New IP Address       : ${values.ip}`,
-        `New Subnet Mask      : ${values.subnet}`,
-        `New Default Gateway  : ${values.gateway}`,
-        "",
-        "Network Settings Confirmation : PENDING",
-        "Reconnect to the sensor and select Confirm Network Changes.",
-        "The simulator keeps this training terminal connected.",
-      ]);
+      if (profile) profile.network.dhcp = false;
+      return networkSettingsResult(
+        "NETWORK SETTINGS FOR ADS-B QUADRANT",
+        profile,
+        runtime,
+        "UNCONFIRMED",
+        `Reconnect using sysadmin@${values.ip} and confirm the changed network settings.`,
+      );
     }
 
     case "sa.confirm-network": {
       if (values.confirm === "CONFIRM" && runtime.pendingNetwork && profile) {
         Object.assign(profile.network, runtime.pendingNetwork);
       }
-      const network = runtime.pendingNetwork ?? profile?.network;
       if (values.confirm === "CONFIRM") {
         runtime.pendingNetwork = null;
       }
-      return resultScreen("NETWORK SETTINGS CONFIRMATION", [
+      return networkSettingsResult(
+        "CONFIRMATION OF MANUAL NETWORK SETTINGS",
+        profile,
+        runtime,
+        values.confirm === "CONFIRM" ? "CONFIRMED" : "UNCONFIRMED",
         values.confirm === "CONFIRM"
           ? "Current settings are confirmed."
           : "Network settings were left unconfirmed.",
-        "",
-        `IP Address          : ${network?.ip ?? "Unknown"}`,
-        `Subnet Mask         : ${network?.subnet ?? "Unknown"}`,
-        `Default Gateway     : ${network?.gateway ?? "Unknown"}`,
-      ]);
+      );
     }
 
     case "sa.sensor-name": {
