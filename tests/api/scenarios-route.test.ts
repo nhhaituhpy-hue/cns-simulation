@@ -37,18 +37,19 @@ describe("ADS-B scenario API E2E isolation", () => {
 
   it("accepts scenario writes without persisting them", async () => {
     const scenario = DEFAULT_SCENARIOS[0];
+    const serializedScenario = JSON.parse(JSON.stringify(scenario)) as unknown;
     const response = await POST(
       new Request("http://localhost/api/scenarios", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(scenario),
+        body: JSON.stringify(serializedScenario),
       }),
     );
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
       success: true,
-      scenario,
+      scenario: serializedScenario,
       testMode: true,
     });
   });

@@ -95,6 +95,14 @@ describe("renderMenu", () => {
 });
 
 describe("TerminalEngine", () => {
+  it("defaults sessions without a sensor profile to Operational Mode", () => {
+    const sysadmin = new TerminalEngine({ targetLoginUser: "sysadmin" });
+    const maintenance = new TerminalEngine({ targetLoginUser: "maintenance" });
+
+    expect(sysadmin.renderCurrentMenu()).toContain("- OPERATIONAL MODE -");
+    expect(maintenance.renderCurrentMenu()).toContain("- OPERATIONAL MODE -");
+  });
+
   it("authenticates only the scenario target login user", () => {
     expect(authenticateLoginUser(" SYSADMIN ", "sysadmin")).toBe(true);
     expect(authenticateLoginUser("maintenance", "sysadmin")).toBe(false);

@@ -65,6 +65,7 @@ export interface TerminalEngineState {
   currentMenuId: string;
   navigationStack: readonly string[];
   exited: boolean;
+  operationMode: TerminalWorkflowRuntime["operationMode"];
   pendingInteraction: PendingInteractionType | null;
   pendingWorkflowStep: WorkflowStep | null;
   pendingSensitive: boolean;
@@ -425,12 +426,7 @@ export class TerminalEngine {
     this.sensorMonitoring = options.sensorMonitoring;
     this.workflowRuntime = {
       operationMode:
-        this.sensorDataProfile?.operationMode ??
-        (this.menus[this.rootMenuId]?.header.mode
-          .toLocaleUpperCase("en-US")
-          .includes("MAINTENANCE")
-          ? "MAINTENANCE"
-          : "OPERATIONAL"),
+        this.sensorDataProfile?.operationMode ?? "OPERATIONAL",
       alertPower: this.sensorDataProfile?.endToEnd?.alertPower ?? 164,
       failurePower: this.sensorDataProfile?.endToEnd?.failurePower ?? 140,
       pendingNetwork: null,
@@ -486,6 +482,7 @@ export class TerminalEngine {
       currentMenuId: this.currentMenuId,
       navigationStack: [...this.navigationStack],
       exited: this.exited,
+      operationMode: this.workflowRuntime.operationMode,
       pendingInteraction: this.pendingInteraction?.type ?? null,
       pendingWorkflowStep:
         this.pendingInteraction?.type === "workflow"

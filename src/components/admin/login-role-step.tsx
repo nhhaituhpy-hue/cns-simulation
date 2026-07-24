@@ -42,14 +42,17 @@ export function LoginRoleStep({
   return (
     <fieldset aria-describedby={errors.targetLoginUser ? "login-role-error" : undefined}>
       <legend className="text-sm font-semibold text-[var(--text-primary)]">
-        Tài khoản học viên sẽ sử dụng
+        Tài khoản đăng nhập đầu tiên
       </legend>
       <p className="mt-1 max-w-[65ch] text-sm leading-6 text-[var(--text-secondary)]">
-        Cây menu và ngữ cảnh terminal ở bước tiếp theo phụ thuộc vào vai trò này.
+        Bước tiếp theo bắt đầu bằng tài khoản này. Sau khi nhấn X, có thể
+        đăng nhập lại bằng sysadmin hoặc maintenance mà vẫn giữ mode và cấu
+        hình máy thu.
       </p>
       {hasRecordedActions ? (
         <p className="mt-3 rounded border border-[#fde68a] bg-[#fffbeb] px-3 py-2 text-sm text-[#78350f]">
-          Đổi vai trò sẽ xóa chuỗi thao tác đã ghi vì cây menu không còn cùng ngữ cảnh.
+          Đổi tài khoản đăng nhập đầu tiên sẽ xóa chuỗi thao tác đã ghi vì
+          điểm bắt đầu không còn cùng ngữ cảnh.
         </p>
       ) : null}
 

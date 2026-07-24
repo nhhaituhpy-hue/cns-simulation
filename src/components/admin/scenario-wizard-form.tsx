@@ -38,16 +38,16 @@ const steps = [
   { number: 5, label: "Sự cố phần cứng" },
 ] as const;
 
-function findTargetSensorName(draft: ScenarioDraft): string {
+function findTargetSensor(draft: ScenarioDraft): SensorState | null {
   for (const site of draft.sites) {
     for (const sensor of [site.sensorA, site.sensorB]) {
       if (sensor?.id === draft.targetSensorId) {
-        return sensor.name;
+        return sensor;
       }
     }
   }
 
-  return "Quadrant ADS-B sensor";
+  return null;
 }
 
 function firstInvalidStep(errors: ValidationErrors): number {
@@ -84,6 +84,7 @@ export function ScenarioWizardForm({
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const editing = Boolean(initialScenario);
+  const targetSensor = findTargetSensor(draft);
 
   function updateDraft(changes: Partial<ScenarioDraft>) {
     setDraft((current) => ({ ...current, ...changes }));
@@ -276,7 +277,8 @@ export function ScenarioWizardForm({
           <ActionBuilder
             key={`${draft.targetLoginUser}-${draft.targetSensorId}`}
             loginUser={draft.targetLoginUser}
-            sensorName={findTargetSensorName(draft)}
+            sensorName={targetSensor?.name ?? "Quadrant ADS-B sensor"}
+            sensorDataProfile={targetSensor?.dataProfile}
             actions={draft.expectedActions}
             error={errors.expectedActions}
             onChange={(expectedActions) => updateDraft({ expectedActions })}

@@ -8,12 +8,17 @@ import { Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { useState } from "react";
 import { TerminalEngine, type TerminalProcessResult } from "@/lib/terminal-engine";
 import type { MenuItem } from "@/lib/menu-data";
-import type { LoginUser, RecordedAction } from "@/lib/types";
+import type {
+  LoginUser,
+  RecordedAction,
+  SensorDataProfile,
+} from "@/lib/types";
 import { renumberActions } from "./scenario-form-utils";
 
 type ActionBuilderProps = {
   loginUser: LoginUser;
   sensorName: string;
+  sensorDataProfile?: SensorDataProfile;
   actions: RecordedAction[];
   error?: string;
   onChange: (actions: RecordedAction[]) => void;
@@ -24,15 +29,55 @@ type PendingUiInteraction = {
   type: "display" | "input" | "toggle" | "workflow";
 };
 
-function createInitialEngineSession(
+function loginUserForMenu(menuId: string): LoginUser | null {
+  if (menuId.startsWith("sa.")) return "sysadmin";
+  if (menuId.startsWith("ma.")) return "maintenance";
+  return null;
+}
+
+function workflowOptionLabel(
+  label: string,
+  operationMode: "OPERATIONAL" | "MAINTENANCE",
+): string {
+  const alternateOperationMode =
+    operationMode === "OPERATIONAL" ? "MAINTENANCE" : "OPERATIONAL";
+
+  return label
+    .replaceAll("{{operationMode}}", operationMode)
+    .replaceAll("{{alternateOperationMode}}", alternateOperationMode);
+}
+
+function createBuilderEngine(
   loginUser: LoginUser,
   sensorName: string,
-  actions: readonly RecordedAction[],
+  sensorDataProfile?: SensorDataProfile,
+  persistentState?: ReturnType<TerminalEngine["getPersistentState"]>,
 ) {
   const engine = new TerminalEngine({
     targetLoginUser: loginUser,
     header: sensorName.trim() ? { sensorName: sensorName.trim() } : undefined,
+    sensorDataProfile,
   });
+
+  if (persistentState) {
+    engine.restorePersistentState(persistentState);
+  }
+
+  return engine;
+}
+
+function createInitialEngineSession(
+  loginUser: LoginUser,
+  sensorName: string,
+  sensorDataProfile: SensorDataProfile | undefined,
+  actions: readonly RecordedAction[],
+) {
+  let activeLoginUser = loginUser;
+  let engine = createBuilderEngine(
+    activeLoginUser,
+    sensorName,
+    sensorDataProfile,
+  );
   let output = engine.renderCurrentMenu();
   let pendingInteraction: PendingUiInteraction | null = null;
   let pendingItem: MenuItem | undefined;
@@ -40,6 +85,24 @@ function createInitialEngineSession(
   for (const action of actions) {
     if (action.kind === "authentication") {
       continue;
+    }
+
+    const actionLoginUser = loginUserForMenu(action.menuId);
+    if (
+      (actionLoginUser && actionLoginUser !== activeLoginUser) ||
+      engine.getState().exited
+    ) {
+      const persistentState = engine.getPersistentState();
+      activeLoginUser = actionLoginUser ?? activeLoginUser;
+      engine = createBuilderEngine(
+        activeLoginUser,
+        sensorName,
+        sensorDataProfile,
+        persistentState,
+      );
+      output = engine.renderCurrentMenu();
+      pendingInteraction = null;
+      pendingItem = undefined;
     }
 
     const wasPending = engine.getState().pendingInteraction !== null;
@@ -74,7 +137,12 @@ function createInitialEngineSession(
     }
   }
 
-  return { engine, output, pendingInteraction };
+  return {
+    engine,
+    loginUser: activeLoginUser,
+    output,
+    pendingInteraction,
+  };
 }
 
 function toRecordedAction(
@@ -95,14 +163,23 @@ function toRecordedAction(
 export function ActionBuilder({
   loginUser,
   sensorName,
+  sensorDataProfile,
   actions,
   error,
   onChange,
 }: ActionBuilderProps) {
   const [initialSession] = useState(() =>
-    createInitialEngineSession(loginUser, sensorName, actions),
+    createInitialEngineSession(
+      loginUser,
+      sensorName,
+      sensorDataProfile,
+      actions,
+    ),
   );
-  const engine = initialSession.engine;
+  const [engine, setEngine] = useState(initialSession.engine);
+  const [activeLoginUser, setActiveLoginUser] = useState(
+    initialSession.loginUser,
+  );
   const [terminalOutput, setTerminalOutput] = useState(initialSession.output);
   const [pendingInteraction, setPendingInteraction] =
     useState<PendingUiInteraction | null>(initialSession.pendingInteraction);
@@ -119,6 +196,11 @@ export function ActionBuilder({
 
     if (recordedAction) {
       onChange([...actions, recordedAction]);
+    }
+
+    if (result.event === "exit") {
+      setPendingInteraction(null);
+      setInputValue("");
     }
 
     return result;
@@ -162,6 +244,25 @@ export function ActionBuilder({
     setTerminalOutput(engine.renderCurrentMenu());
   }
 
+  function exitCurrentSession() {
+    applyInput("X");
+  }
+
+  function startSessionAs(nextLoginUser: LoginUser) {
+    const nextEngine = createBuilderEngine(
+      nextLoginUser,
+      sensorName,
+      sensorDataProfile,
+      engine.getPersistentState(),
+    );
+
+    setEngine(nextEngine);
+    setActiveLoginUser(nextLoginUser);
+    setPendingInteraction(null);
+    setInputValue("");
+    setTerminalOutput(nextEngine.renderCurrentMenu());
+  }
+
   function moveAction(index: number, direction: -1 | 1) {
     const targetIndex = index + direction;
     if (targetIndex < 0 || targetIndex >= actions.length) {
@@ -199,7 +300,14 @@ export function ActionBuilder({
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--border)] pb-4">
             <div>
               <p className="text-xs font-medium text-[var(--text-muted)]">
-                Menu hiện tại
+                Menu hiện tại · tài khoản{" "}
+                <span className="font-mono font-semibold">
+                  {activeLoginUser}
+                </span>{" "}
+                · mode{" "}
+                <span className="font-mono font-semibold">
+                  {engineState.operationMode}
+                </span>
               </p>
               <h4
                 id="menu-explorer-title"
@@ -211,7 +319,8 @@ export function ActionBuilder({
             <button
               type="button"
               onClick={resetExplorer}
-              className="inline-flex h-9 items-center gap-2 rounded border border-[var(--border-strong)] px-3 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+              disabled={engineState.exited}
+              className="inline-flex h-9 items-center gap-2 rounded border border-[var(--border-strong)] px-3 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ArrowCounterClockwise aria-hidden size={16} weight="regular" />
               Đặt lại menu
@@ -219,13 +328,35 @@ export function ActionBuilder({
           </div>
 
           {engineState.exited ? (
-            <div className="mt-5 rounded border border-[var(--border)] bg-[var(--background)] p-5 text-center">
+            <div className="mt-5 rounded border border-[var(--border)] bg-[var(--background)] p-5">
               <p className="text-sm font-semibold text-[var(--text-primary)]">
-                Ứng dụng bảo trì đã kết thúc
+                Đã đăng xuất tài khoản {activeLoginUser}
               </p>
-              <p className="mt-1 text-sm text-[var(--text-secondary)]">
-                Đặt lại menu để tiếp tục thêm thao tác.
+              <p className="mt-1 max-w-[60ch] text-sm leading-6 text-[var(--text-secondary)]">
+                Chọn tài khoản cho phiên đăng nhập tiếp theo. Mode và các giá
+                trị đã cấu hình trên máy thu vẫn được giữ nguyên.
               </p>
+              <div
+                role="group"
+                aria-label="Chọn tài khoản đăng nhập tiếp theo"
+                className="mt-4 grid gap-2 sm:grid-cols-2"
+              >
+                {(["sysadmin", "maintenance"] as const).map(
+                  (nextLoginUser) => (
+                    <button
+                      key={nextLoginUser}
+                      type="button"
+                      onClick={() => startSessionAs(nextLoginUser)}
+                      className="min-h-11 rounded border border-[var(--border-strong)] bg-white px-4 text-left text-sm font-semibold text-[var(--text-primary)] hover:border-[var(--accent)] hover:bg-[var(--accent-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                    >
+                      Đăng nhập{" "}
+                      <span className="font-mono text-[var(--accent)]">
+                        {nextLoginUser}
+                      </span>
+                    </button>
+                  ),
+                )}
+              </div>
             </div>
           ) : pendingInteraction ? (
             <div className="mt-5 rounded border border-[var(--accent)] bg-[var(--accent-muted)] p-4">
@@ -234,14 +365,24 @@ export function ActionBuilder({
               </p>
 
               {pendingInteraction.type === "display" ? (
-                <button
-                  type="button"
-                  onClick={() => completePending("")}
-                  className="mt-4 inline-flex h-10 items-center gap-2 rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
-                >
-                  <Check aria-hidden size={17} weight="regular" />
-                  Tiếp tục bằng RETURN
-                </button>
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => completePending("0")}
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+                  >
+                    <Check aria-hidden size={17} weight="regular" />
+                    0 / RETURN · Quay lại
+                  </button>
+                  <button
+                    type="button"
+                    onClick={exitCurrentSession}
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded border border-[var(--border-strong)] bg-white px-4 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                  >
+                    <SignOut aria-hidden size={17} weight="regular" />
+                    X · Đăng xuất
+                  </button>
+                </div>
               ) : null}
 
               {pendingInteraction.type === "toggle" &&
@@ -334,7 +475,10 @@ export function ActionBuilder({
                             <code className="font-mono text-xs font-semibold text-[var(--accent)]">
                               {option.number}
                             </code>
-                            {option.label}
+                            {workflowOptionLabel(
+                              option.label,
+                              engineState.operationMode,
+                            )}
                           </button>
                         ),
                       )}
@@ -403,11 +547,11 @@ export function ActionBuilder({
                 </button>
                 <button
                   type="button"
-                  onClick={() => applyInput("X")}
+                  onClick={exitCurrentSession}
                   className="inline-flex min-h-10 items-center justify-center gap-2 rounded border border-[var(--border-strong)] text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                 >
                   <SignOut aria-hidden size={17} weight="regular" />
-                  Kết thúc ứng dụng
+                  Đăng xuất tài khoản
                 </button>
               </div>
             </div>
@@ -477,6 +621,9 @@ export function ActionBuilder({
                     {action.resultLabel}
                   </p>
                   <p className="mt-1 truncate font-mono text-xs text-[var(--text-secondary)]">
+                    {loginUserForMenu(action.menuId)
+                      ? `${loginUserForMenu(action.menuId)} · `
+                      : ""}
                     {action.menuTitle} | input: {action.input}
                   </p>
                 </div>
