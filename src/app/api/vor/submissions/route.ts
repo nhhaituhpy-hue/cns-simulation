@@ -3,8 +3,8 @@ import {
   isVorSubmission,
   mapRowToVorSubmission,
   vorSubmissionToRow,
-} from "@/lib/vor-submission-storage";
-import type { VorSubmissionStatus } from "@/lib/vor-types";
+} from "@/modules/devices/dvor-1150a/server";
+import type { VorSubmissionStatus } from "@/modules/devices/dvor-1150a/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
 

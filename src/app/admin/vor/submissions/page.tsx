@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { VorSubmissionList } from "@/components/vor/admin/vor-submission-list";
+import { Dvor1150aSubmissionList } from "@/modules/devices/dvor-1150a";
 
 export const metadata: Metadata = { title: "Bài nộp VOR" };
 
 export default function VorSubmissionsPage() {
-  return <VorSubmissionList />;
+  return <Dvor1150aSubmissionList />;
 }

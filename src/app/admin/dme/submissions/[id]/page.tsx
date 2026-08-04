@@ -1,5 +1,5 @@
 ﻿import type { Metadata } from "next";
-import { DmeSubmissionReview } from "@/components/dme/admin/dme-submission-review";
+import { Dme1119aSubmissionReview } from "@/modules/devices/dme-1119a";
 
 export const metadata: Metadata = { title: "Chấm bài DME" };
 
@@ -9,6 +9,6 @@ interface DmeSubmissionReviewPageProps {
 
 export default async function DmeSubmissionReviewPage({ params }: DmeSubmissionReviewPageProps) {
   const { id } = await params;
-  return <DmeSubmissionReview submissionId={id} />;
+  return <Dme1119aSubmissionReview submissionId={id} />;
 }
 

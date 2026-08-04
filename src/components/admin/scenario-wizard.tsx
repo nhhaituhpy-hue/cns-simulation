@@ -17,7 +17,7 @@ function WizardLoadingState() {
   return (
     <div aria-busy="true" aria-label="Đang tải trình tạo kịch bản" className="grid gap-6">
       <div className="h-12 animate-pulse rounded bg-[var(--surface-muted)] motion-reduce:animate-none" />
-      <div className="rounded-lg border border-[var(--border)] bg-white p-6">
+      <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-6">
         <div className="h-6 w-2/5 animate-pulse rounded bg-[var(--surface-muted)] motion-reduce:animate-none" />
         <div className="mt-7 grid gap-4">
           <div className="h-11 animate-pulse rounded bg-[var(--surface-muted)] motion-reduce:animate-none" />
@@ -77,7 +77,7 @@ export function ScenarioWizard({ scenarioId }: ScenarioWizardProps) {
       {!isHydrated ? <WizardLoadingState /> : null}
 
       {isHydrated && editing && !scenario ? (
-        <div className="rounded-lg border border-[var(--border)] bg-white px-5 py-12 text-center">
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-5 py-12 text-center">
           <span className="mx-auto inline-flex size-12 items-center justify-center rounded bg-[#fffbeb] text-[#92400e]">
             <WarningCircle aria-hidden size={25} weight="regular" />
           </span>

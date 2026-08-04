@@ -1,5 +1,5 @@
-import { VorStudentSession } from "@/components/vor/student/vor-student-session";
 import { getCurrentProfile } from "@/lib/auth/profile";
+import { Dvor1150aStudentSession } from "@/modules/devices/dvor-1150a";
 import { redirect } from "next/navigation";
 
 interface VorStudentSessionPageProps {
@@ -11,5 +11,5 @@ export default async function VorStudentSessionPage({ searchParams }: VorStudent
   const scenarioId = Array.isArray(params.id) ? params.id[0] ?? "" : params.id ?? "";
   const profile = await getCurrentProfile();
   if (!profile) redirect("/login");
-  return <VorStudentSession scenarioId={scenarioId} identity={{ userId: profile.id, studentName: profile.fullName, workUnit: profile.workUnit }} />;
+  return <Dvor1150aStudentSession scenarioId={scenarioId} identity={{ userId: profile.id, studentName: profile.fullName, workUnit: profile.workUnit }} />;
 }

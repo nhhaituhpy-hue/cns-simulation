@@ -51,7 +51,7 @@ function LoginSuccessOverlay({ reduceMotion }: { reduceMotion: boolean }) {
       initial={reduceMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: reduceMotion ? 0 : 0.5 }}
-      className="fixed inset-0 z-50 grid place-items-center bg-white/75 px-5 backdrop-blur-md"
+      className="fixed inset-0 z-50 grid place-items-center bg-[var(--color-surface-overlay)] px-5 backdrop-blur-md"
     >
       <p className="text-center text-base font-bold tracking-tight text-[var(--text-primary)] sm:text-lg">
         <span className="sr-only">{LOGIN_SUCCESS_MESSAGE}</span>
@@ -165,7 +165,7 @@ function OtpFields({
           aria-label={`Chữ số OTP ${index + 1}`}
           maxLength={1}
           disabled={disabled}
-          className="h-12 min-w-0 rounded-lg border border-[var(--border-strong)] bg-white text-center font-mono text-xl font-bold text-[var(--text-primary)] outline-none transition-[border-color,box-shadow] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 disabled:cursor-not-allowed disabled:opacity-60"
+          className="h-12 min-w-0 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] text-center font-mono text-xl font-bold text-[var(--text-primary)] outline-none transition-[border-color,box-shadow] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 disabled:cursor-not-allowed disabled:opacity-60"
         />
       ))}
     </div>
@@ -205,7 +205,7 @@ function PasswordField({
           autoComplete={autoComplete}
           placeholder="******"
           required
-          className="h-12 w-full rounded-xl border border-[var(--border-strong)] bg-white pl-11 pr-12 text-base font-normal text-[var(--text-primary)] outline-none transition-[border-color,box-shadow] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
+          className="h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] pl-11 pr-12 text-base font-normal text-[var(--text-primary)] outline-none transition-[border-color,box-shadow] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
         />
         <button
           type="button"
@@ -447,7 +447,7 @@ export function AuthPage({ nextPath }: { nextPath?: string }) {
                   transformOrigin: "center center",
                   WebkitBackfaceVisibility: "hidden",
                 }}
-                className={`rounded-2xl border border-[var(--border)] bg-white p-5 shadow-[var(--shadow-card)] sm:p-7 ${flipping ? "pointer-events-none will-change-transform" : ""}`}
+                className={`rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-7 ${flipping ? "pointer-events-none will-change-transform" : ""}`}
               >
             <h2 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">{heading}</h2>
             <p className="mt-2 min-h-12 text-sm leading-6 text-[var(--text-secondary)]">
@@ -490,7 +490,7 @@ export function AuthPage({ nextPath }: { nextPath?: string }) {
                   Tên đăng nhập
                   <span className="relative block">
                     <User aria-hidden size={20} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-                    <input id="login-username" type="text" value={username} onChange={(event) => setUsername(event.target.value.replace(/@attech\.com\.vn$/i, ""))} autoComplete="username" placeholder="user" required className="h-12 w-full rounded-xl border border-[var(--border-strong)] bg-white pl-11 pr-[8.75rem] font-normal text-[var(--text-primary)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20" />
+                    <input id="login-username" type="text" value={username} onChange={(event) => setUsername(event.target.value.replace(/@attech\.com\.vn$/i, ""))} autoComplete="username" placeholder="user" required className="h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] pl-11 pr-[8.75rem] font-normal text-[var(--text-primary)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20" />
                     <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm font-normal text-[var(--text-muted)]">@attech.com.vn</span>
                   </span>
                 </label>
@@ -510,16 +510,16 @@ export function AuthPage({ nextPath }: { nextPath?: string }) {
               <form onSubmit={submitSignup} className="mt-5 grid gap-3">
                 <label htmlFor="signup-name" className="grid gap-1.5 text-sm font-semibold text-[var(--text-secondary)]">
                   Họ và tên
-                  <span className="relative block"><IdentificationCard aria-hidden size={20} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" /><input id="signup-name" value={fullName} onChange={(event) => setFullName(event.target.value)} autoComplete="name" placeholder="Nguyễn Văn A" required className="h-12 w-full rounded-xl border border-[var(--border-strong)] bg-white pl-11 pr-4 font-normal text-[var(--text-primary)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20" /></span>
+                  <span className="relative block"><IdentificationCard aria-hidden size={20} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" /><input id="signup-name" value={fullName} onChange={(event) => setFullName(event.target.value)} autoComplete="name" placeholder="Nguyễn Văn A" required className="h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] pl-11 pr-4 font-normal text-[var(--text-primary)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20" /></span>
                 </label>
                 <label htmlFor="signup-email" className="grid gap-1.5 text-sm font-semibold text-[var(--text-secondary)]">
                   Email
-                  <span className="relative block"><EnvelopeSimple aria-hidden size={20} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" /><input id="signup-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="user@attech.com.vn" required className="h-12 w-full rounded-xl border border-[var(--border-strong)] bg-white pl-11 pr-4 font-normal text-[var(--text-primary)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20" /></span>
+                  <span className="relative block"><EnvelopeSimple aria-hidden size={20} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" /><input id="signup-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="user@attech.com.vn" required className="h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] pl-11 pr-4 font-normal text-[var(--text-primary)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20" /></span>
                 </label>
                 <PasswordField id="signup-password" label="Mật khẩu" value={password} onChange={setPassword} autoComplete="new-password" compact />
                 <label htmlFor="signup-unit" className="grid gap-1.5 text-sm font-semibold text-[var(--text-secondary)]">
                   Đơn vị công tác
-                  <span className="relative block"><Buildings aria-hidden size={20} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" /><input id="signup-unit" value={workUnit} onChange={(event) => setWorkUnit(event.target.value)} autoComplete="organization" placeholder="Đài DVOR/DME ..." required className="h-12 w-full rounded-xl border border-[var(--border-strong)] bg-white pl-11 pr-4 font-normal text-[var(--text-primary)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20" /></span>
+                  <span className="relative block"><Buildings aria-hidden size={20} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" /><input id="signup-unit" value={workUnit} onChange={(event) => setWorkUnit(event.target.value)} autoComplete="organization" placeholder="Đài DVOR/DME ..." required className="h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] pl-11 pr-4 font-normal text-[var(--text-primary)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20" /></span>
                 </label>
                 <FieldMessage result={result} />
                 <button type="submit" disabled={pending} className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-5 text-sm font-bold text-white shadow-sm transition-[background-color,transform] hover:bg-[var(--accent-hover)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60">
@@ -549,7 +549,7 @@ export function AuthPage({ nextPath }: { nextPath?: string }) {
               <form onSubmit={submitForgotPassword} className="mt-6 grid gap-5">
                 <label htmlFor="recovery-email" className="grid gap-2 text-sm font-semibold text-[var(--text-secondary)]">
                   Email đã đăng ký
-                  <span className="relative block"><EnvelopeSimple aria-hidden size={20} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" /><input id="recovery-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="user@attech.com.vn" required className="h-12 w-full rounded-xl border border-[var(--border-strong)] bg-white pl-11 pr-4 font-normal text-[var(--text-primary)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20" /></span>
+                  <span className="relative block"><EnvelopeSimple aria-hidden size={20} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" /><input id="recovery-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="user@attech.com.vn" required className="h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] pl-11 pr-4 font-normal text-[var(--text-primary)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20" /></span>
                 </label>
                 <FieldMessage result={result} />
                 <button type="submit" disabled={pending} className="inline-flex h-12 items-center justify-center rounded-xl bg-[var(--accent)] px-5 text-sm font-bold text-white hover:bg-[var(--accent-hover)] active:scale-[0.98] disabled:opacity-60">

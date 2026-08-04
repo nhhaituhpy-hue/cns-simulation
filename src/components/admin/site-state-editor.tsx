@@ -108,7 +108,7 @@ export function SiteStateEditor({
           type="button"
           onClick={addSite}
           disabled={sites.length >= 8}
-          className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded border border-[var(--border-strong)] bg-white px-3 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Plus aria-hidden size={18} weight="regular" />
           Thêm site
@@ -130,7 +130,7 @@ export function SiteStateEditor({
         {sites.map((site, siteIndex) => (
           <fieldset
             key={site.id}
-            className="rounded-lg border border-[var(--border)] bg-white p-4 sm:p-5"
+            className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5"
           >
             <legend className="px-2 text-sm font-semibold text-[var(--text-primary)]">
               Site {siteIndex + 1}
@@ -210,7 +210,7 @@ export function SiteStateEditor({
                             },
                           })
                         }
-                        className="mt-3 inline-flex h-10 items-center gap-2 rounded border border-[var(--border-strong)] bg-white px-3 text-sm font-semibold text-[var(--text-primary)] hover:border-[var(--accent)] hover:text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                        className="mt-3 inline-flex h-10 items-center gap-2 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm font-semibold text-[var(--text-primary)] hover:border-[var(--accent)] hover:text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                       >
                         <Plus aria-hidden size={17} weight="regular" />
                         Thêm Sensor {sensorLabel}
@@ -229,7 +229,7 @@ export function SiteStateEditor({
                       Sensor {sensor.sensorLabel}
                     </legend>
 
-                    <label className="mb-4 flex cursor-pointer items-center gap-2 rounded border border-[var(--border)] bg-white px-3 py-2 text-sm font-medium text-[var(--text-primary)] focus-within:ring-2 focus-within:ring-[var(--accent)]">
+                    <label className="mb-4 flex cursor-pointer items-center gap-2 rounded border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-medium text-[var(--text-primary)] focus-within:ring-2 focus-within:ring-[var(--accent)]">
                       <input
                         type="radio"
                         name="target-sensor"
@@ -265,7 +265,7 @@ export function SiteStateEditor({
                               ? `sensor-name-error-${sensor.id}`
                               : undefined
                           }
-                          className="h-10 rounded border border-[var(--border-strong)] bg-white px-3 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
+                          className="h-10 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
                         />
                         {errors[`sensor.${sensor.id}.name`] ? (
                           <p
@@ -303,7 +303,7 @@ export function SiteStateEditor({
                               ? `sensor-ip-error-${sensor.id}`
                               : undefined
                           }
-                          className="h-10 rounded border border-[var(--border-strong)] bg-white px-3 font-mono text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
+                          className="h-10 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 font-mono text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
                         />
                         {errors[`sensor.${sensor.id}.ipAddress`] ? (
                           <p
@@ -339,7 +339,7 @@ export function SiteStateEditor({
                                 status: event.target.value as SensorState["status"],
                               })
                             }
-                            className="h-10 w-full rounded border border-[var(--border-strong)] bg-white pl-8 pr-3 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
+                            className="h-10 w-full rounded border border-[var(--border-strong)] bg-[var(--surface)] pl-8 pr-3 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
                           >
                             {SENSOR_STATUSES.map((status) => (
                               <option key={status} value={status}>

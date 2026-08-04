@@ -54,7 +54,7 @@ export function GradingResult({
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
         <Link
           href={backHref}
-          className="inline-flex min-h-11 items-center justify-center rounded border border-[var(--border-strong)] bg-white px-4 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+          className="inline-flex min-h-11 items-center justify-center rounded border border-[var(--border-strong)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
         >
           Về danh sách bài thực hành
         </Link>

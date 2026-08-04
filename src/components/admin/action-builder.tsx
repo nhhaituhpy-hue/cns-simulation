@@ -295,7 +295,7 @@ export function ActionBuilder({
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(22rem,0.9fr)]">
         <section
           aria-labelledby="menu-explorer-title"
-          className="rounded-lg border border-[var(--border)] bg-white p-4 sm:p-5"
+          className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5"
         >
           <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--border)] pb-4">
             <div>
@@ -347,7 +347,7 @@ export function ActionBuilder({
                       key={nextLoginUser}
                       type="button"
                       onClick={() => startSessionAs(nextLoginUser)}
-                      className="min-h-11 rounded border border-[var(--border-strong)] bg-white px-4 text-left text-sm font-semibold text-[var(--text-primary)] hover:border-[var(--accent)] hover:bg-[var(--accent-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                      className="min-h-11 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-4 text-left text-sm font-semibold text-[var(--text-primary)] hover:border-[var(--accent)] hover:bg-[var(--accent-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                     >
                       Đăng nhập{" "}
                       <span className="font-mono text-[var(--accent)]">
@@ -377,7 +377,7 @@ export function ActionBuilder({
                   <button
                     type="button"
                     onClick={exitCurrentSession}
-                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded border border-[var(--border-strong)] bg-white px-4 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                   >
                     <SignOut aria-hidden size={17} weight="regular" />
                     X · Đăng xuất
@@ -397,7 +397,7 @@ export function ActionBuilder({
                         key={option.number}
                         type="button"
                         onClick={() => completePending(String(option.number))}
-                        className="flex min-h-10 items-center gap-3 rounded border border-[var(--border-strong)] bg-white px-3 text-left text-sm text-[var(--text-primary)] hover:border-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                        className="flex min-h-10 items-center gap-3 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-left text-sm text-[var(--text-primary)] hover:border-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                       >
                         <code className="font-mono text-xs font-semibold text-[var(--accent)]">
                           {option.number}
@@ -435,7 +435,7 @@ export function ActionBuilder({
                         }
                       }}
                       autoComplete="off"
-                      className="h-10 min-w-0 flex-1 rounded border border-[var(--border-strong)] bg-white px-3 font-mono text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
+                      className="h-10 min-w-0 flex-1 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 font-mono text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
                     />
                     <button
                       type="button"
@@ -470,7 +470,7 @@ export function ActionBuilder({
                             onClick={() =>
                               completePending(String(option.number))
                             }
-                            className="flex min-h-10 items-center gap-3 rounded border border-[var(--border-strong)] bg-white px-3 text-left text-sm text-[var(--text-primary)] hover:border-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                            className="flex min-h-10 items-center gap-3 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-left text-sm text-[var(--text-primary)] hover:border-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                           >
                             <code className="font-mono text-xs font-semibold text-[var(--accent)]">
                               {option.number}
@@ -505,7 +505,7 @@ export function ActionBuilder({
                           }
                         }}
                         autoComplete="off"
-                        className="h-10 min-w-0 flex-1 rounded border border-[var(--border-strong)] bg-white px-3 font-mono text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
+                        className="h-10 min-w-0 flex-1 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 font-mono text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
                       />
                       <button
                         type="button"
@@ -598,7 +598,7 @@ export function ActionBuilder({
         </div>
 
         {actions.length === 0 ? (
-          <div className="mt-4 rounded-lg border border-dashed border-[var(--border-strong)] bg-white px-4 py-8 text-center">
+          <div className="mt-4 rounded-lg border border-dashed border-[var(--border-strong)] bg-[var(--surface)] px-4 py-8 text-center">
             <p className="text-sm font-medium text-[var(--text-primary)]">
               Chưa có thao tác chuẩn
             </p>
@@ -611,7 +611,7 @@ export function ActionBuilder({
             {actions.map((action, index) => (
               <li
                 key={`${action.timestamp}-${index}`}
-                className="grid gap-3 rounded border border-[var(--border)] bg-white p-3 sm:grid-cols-[2rem_minmax(0,1fr)_auto] sm:items-center"
+                className="grid gap-3 rounded border border-[var(--border)] bg-[var(--surface)] p-3 sm:grid-cols-[2rem_minmax(0,1fr)_auto] sm:items-center"
               >
                 <span className="flex size-8 items-center justify-center rounded bg-[var(--surface-muted)] font-mono text-xs font-semibold tabular-nums text-[var(--text-primary)]">
                   {index + 1}

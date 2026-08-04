@@ -287,7 +287,7 @@ export function ExamSetEditor({
         </div>
       ) : null}
 
-      <section className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
         <h2 className="text-base font-semibold text-[var(--text-primary)]">Thông tin bộ đề</h2>
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <Field label="Tên bộ đề thi" htmlFor="exam-set-name" required>
@@ -316,7 +316,7 @@ export function ExamSetEditor({
       </section>
 
       {!readOnly ? (
-        <section className="rounded-xl border border-[var(--border)] bg-white p-4 shadow-[var(--shadow-card)] sm:p-5">
+        <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <Field label="Thêm môn thi vào bộ đề" htmlFor="exam-set-subject">
               <div className="relative">
@@ -348,7 +348,7 @@ export function ExamSetEditor({
         const availableScenarios = scenarios.filter((scenario) => subject.modules.includes(scenario.moduleCode));
 
         return (
-          <section key={selectedSubject.subjectId} className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-[var(--shadow-card)]">
+          <section key={selectedSubject.subjectId} className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--surface-subtle)] px-4 py-3 sm:px-5">
               <div>
                 <h2 className="text-base font-semibold text-[var(--text-primary)]">{subject.name}</h2>
@@ -403,7 +403,7 @@ export function ExamSetEditor({
                     ) : null}
                   </div>
 
-                  <div className="mt-4 overflow-x-auto rounded-md border border-[var(--border)] bg-white">
+                  <div className="mt-4 overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--surface)]">
                     <table className="w-full min-w-[720px] border-collapse text-left">
                       <caption className="sr-only">Danh sách kịch bản của {paper.title}</caption>
                       <thead className="bg-[var(--surface-muted)] text-[11px] font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">

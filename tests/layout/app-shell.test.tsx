@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -21,10 +21,12 @@ const adminUser = {
 
 beforeEach(() => {
   mockUsePathname.mockReturnValue("/admin/dme");
+  document.documentElement.dataset.theme = "light";
+  window.localStorage.clear();
 });
 
 describe("AppShell", () => {
-  it("shows three compact desktop destinations and marks the current route", () => {
+  it("shows the admin destinations and marks Tạo kịch bản as the current workspace", () => {
     render(
       <AppShell currentUser={adminUser}>
         <p>Nội dung kiểm thử</p>
@@ -38,39 +40,26 @@ describe("AppShell", () => {
       .getAllByRole("link")
       .filter((link) => link.hasAttribute("aria-label"));
 
-    expect(links).toHaveLength(3);
+    expect(links).toHaveLength(6);
     expect(links.map((link) => link.getAttribute("aria-label"))).toEqual([
       "Trang chủ",
+      "Simulator",
+      "Tạo kịch bản",
+      "Ôn tập",
       "Giám khảo",
       "Thí sinh",
     ]);
-    expect(within(navigation).getByRole("link", { name: "Giám khảo" })).toHaveAttribute(
+    expect(within(navigation).getByRole("link", { name: "Tạo kịch bản" })).toHaveAttribute(
       "aria-current",
       "page",
     );
-    const moduleTabs = screen.getByRole("group", { name: "Phân hệ Giám khảo" });
+    const moduleTabs = screen.getByRole("group", { name: "Phân hệ Tạo kịch bản" });
     expect(
       within(moduleTabs).getAllByRole("link").map((link) => link.textContent),
-    ).toEqual(["Kỳ thi", "VOR", "DME", "ADS-B", "Tạo đề thi"]);
-    expect(within(moduleTabs).getByRole("link", { name: "Kỳ thi" })).toHaveAttribute(
-      "href",
-      "/admin/exams",
-    );
-    expect(within(moduleTabs).getByRole("link", { name: "VOR" })).toHaveAttribute(
-      "href",
-      "/admin/vor",
-    );
-    expect(within(moduleTabs).getByRole("link", { name: "DME" })).toHaveAttribute(
+    ).toEqual(["DVOR 1150", "DVOR 1150A", "DME 1119A", "DVOR 220", "DME 320", "ADS-B", "VHF", "VSAT"]);
+    expect(within(moduleTabs).getByRole("link", { name: "DME 1119A" })).toHaveAttribute(
       "aria-current",
       "page",
-    );
-    expect(within(moduleTabs).getByRole("link", { name: "ADS-B" })).toHaveAttribute(
-      "href",
-      "/admin/ads-b",
-    );
-    expect(within(moduleTabs).getByRole("link", { name: "Tạo đề thi" })).toHaveAttribute(
-      "href",
-      "/admin/exam-sets",
     );
     const sidebar = navigation.closest("aside");
     const header = screen.getByRole("banner");
@@ -93,7 +82,7 @@ describe("AppShell", () => {
     links.forEach((link) => expect(link).toHaveClass("rounded-lg"));
   });
 
-  it("shows student module sub-tabs under the active student destination", () => {
+  it("shows the review modules under the active Ôn tập destination", () => {
     mockUsePathname.mockReturnValue("/student/ads-b");
 
     render(
@@ -102,22 +91,10 @@ describe("AppShell", () => {
       </AppShell>,
     );
 
-    const moduleTabs = screen.getByRole("group", { name: "Phân hệ Thí sinh" });
+    const moduleTabs = screen.getByRole("group", { name: "Phân hệ Ôn tập" });
     expect(
       within(moduleTabs).getAllByRole("link").map((link) => link.textContent),
-    ).toEqual(["Vào thi", "VOR", "DME", "ADS-B"]);
-    expect(within(moduleTabs).getByRole("link", { name: "Vào thi" })).toHaveAttribute(
-      "href",
-      "/student/exams",
-    );
-    expect(within(moduleTabs).getByRole("link", { name: "VOR" })).toHaveAttribute(
-      "href",
-      "/student/vor",
-    );
-    expect(within(moduleTabs).getByRole("link", { name: "DME" })).toHaveAttribute(
-      "href",
-      "/student/dme",
-    );
+    ).toEqual(["DVOR 1150", "DVOR 1150A", "DME 1119A", "DVOR 220", "DME 320", "ADS-B", "VHF", "VSAT"]);
     expect(within(moduleTabs).getByRole("link", { name: "ADS-B" })).toHaveAttribute(
       "aria-current",
       "page",
@@ -134,15 +111,85 @@ describe("AppShell", () => {
     );
 
     const moduleTabs = screen.getByRole("group", { name: "Phân hệ Giám khảo" });
-    expect(within(moduleTabs).getByRole("link", { name: "Kỳ thi" })).toHaveAttribute(
+    expect(within(moduleTabs).getByRole("link", { name: "Quản lý kỳ thi" })).toHaveAttribute(
       "aria-current",
       "page",
     );
-    expect(within(moduleTabs).getByRole("link", { name: "Tạo đề thi" })).not.toHaveAttribute(
+    expect(within(moduleTabs).getByRole("link", { name: "Quản lý đề thi" })).not.toHaveAttribute(
       "aria-current",
     );
-    expect(within(moduleTabs).getByRole("link", { name: "ADS-B" })).not.toHaveAttribute(
-      "aria-current",
+  });
+
+  it("collapses and expands the active submenu when its parent is clicked again", () => {
+    render(
+      <AppShell currentUser={adminUser}>
+        <p>Nội dung kiểm thử</p>
+      </AppShell>,
     );
+
+    const parent = screen.getByRole("link", { name: "Tạo kịch bản" });
+    expect(screen.getByRole("group", { name: "Phân hệ Tạo kịch bản" })).toBeInTheDocument();
+
+    fireEvent.click(parent);
+    expect(screen.queryByRole("group", { name: "Phân hệ Tạo kịch bản" })).not.toBeInTheDocument();
+
+    fireEvent.click(parent);
+    expect(screen.getByRole("group", { name: "Phân hệ Tạo kịch bản" })).toBeInTheDocument();
+  });
+
+  it("toggles and stores the selected global theme", () => {
+    render(
+      <AppShell currentUser={adminUser}>
+        <p>Nội dung kiểm thử</p>
+      </AppShell>,
+    );
+
+    const themeToggle = screen.getByRole("button", { name: "Chuyển chế độ sáng/tối" });
+    fireEvent.click(themeToggle);
+
+    expect(document.documentElement).toHaveAttribute("data-theme", "dark");
+    expect(window.localStorage.getItem("cns-app-theme")).toBe("dark");
+
+    fireEvent.click(themeToggle);
+
+    expect(document.documentElement).toHaveAttribute("data-theme", "light");
+    expect(window.localStorage.getItem("cns-app-theme")).toBe("light");
+  });
+
+  it("shows the simulator software name in the submenu header", () => {
+    mockUsePathname.mockReturnValue("/simulator/dvor-1150a");
+
+    render(
+      <AppShell currentUser={adminUser}>
+        <p>Nội dung kiểm thử</p>
+      </AppShell>,
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "DVOR 1150A PMDT Simulator" }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows contextual header titles for the remaining workspace menus", () => {
+    mockUsePathname.mockReturnValue("/admin/exams");
+
+    const { rerender } = render(
+      <AppShell currentUser={adminUser}>
+        <p>Nội dung kiểm thử</p>
+      </AppShell>,
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Quản lý kỳ thi" }),
+    ).toBeInTheDocument();
+
+    mockUsePathname.mockReturnValue("/student/ads-b");
+    rerender(
+      <AppShell currentUser={adminUser}>
+        <p>Nội dung kiểm thử</p>
+      </AppShell>,
+    );
+
+    expect(screen.getByRole("heading", { name: "ADS-B" })).toBeInTheDocument();
   });
 });

@@ -53,7 +53,7 @@ export function DmeAdminDashboard() {
   return (
     <>
       <ModuleSummary
-        title="PMDT Simulator - DME 1118A/1119A"
+        title="PMDT Simulator - DME 1119A"
         description="Cấu hình dữ liệu sự cố và xây dựng các bước kiểm tra trực tiếp trên giao diện PMDT mô phỏng."
         icon={Ruler}
         actions={
@@ -71,7 +71,7 @@ export function DmeAdminDashboard() {
               ) : null}
             </Link>
             <Link
-              href="/admin/dme-pmdt"
+              href="/simulator/dme-1119a"
               className="inline-flex min-h-10 items-center rounded-md border border-[var(--border-strong)] bg-white px-3.5 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
             >
               Mở PMDT Simulator

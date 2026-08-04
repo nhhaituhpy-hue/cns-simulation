@@ -22,7 +22,7 @@ function formatDate(value: string) {
 export function StudentExamList({ items }: { items: StudentExamListItem[] }) {
   if (items.length === 0) {
     return (
-      <div className="mt-6 rounded-xl border border-[var(--border)] bg-white px-5 py-14 text-center shadow-[var(--shadow-card)]">
+      <div className="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-14 text-center shadow-[var(--shadow-card)]">
         <CalendarBlank aria-hidden size={36} weight="duotone" className="mx-auto text-[var(--text-muted)]" />
         <h2 className="mt-4 text-base font-semibold text-[var(--text-primary)]">Chưa có kỳ thi khả dụng</h2>
         <p className="mx-auto mt-2 max-w-[56ch] text-sm leading-6 text-[var(--text-secondary)]">Kỳ thi sẽ xuất hiện khi hội đồng mở quyền vào thi hoặc khi bạn có lượt thi cần tiếp tục/xem kết quả.</p>
@@ -31,7 +31,7 @@ export function StudentExamList({ items }: { items: StudentExamListItem[] }) {
   }
 
   return (
-    <div className="mt-6 overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-[var(--shadow-card)]">
+    <div className="mt-6 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
       <div className="overflow-x-auto">
       <table className="w-full min-w-[760px] border-collapse text-left">
         <caption className="sr-only">Danh sách kỳ thi đang mở</caption>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { VorSubmissionReview } from "@/components/vor/admin/vor-submission-review";
+import { Dvor1150aSubmissionReview } from "@/modules/devices/dvor-1150a";
 
 export const metadata: Metadata = { title: "Chấm bài VOR" };
 
@@ -9,5 +9,5 @@ interface VorSubmissionReviewPageProps {
 
 export default async function VorSubmissionReviewPage({ params }: VorSubmissionReviewPageProps) {
   const { id } = await params;
-  return <VorSubmissionReview submissionId={id} />;
+  return <Dvor1150aSubmissionReview submissionId={id} />;
 }

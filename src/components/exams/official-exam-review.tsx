@@ -38,7 +38,7 @@ function displayValue(value: string | number | boolean | null | undefined) {
 
 function ReviewCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[var(--shadow-card)]">
+    <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
       <h3 className="text-base font-semibold text-[var(--text-primary)]">{title}</h3>
       <div className="mt-4">{children}</div>
     </section>
@@ -192,7 +192,7 @@ export function OfficialExamReview({ detail }: { detail: AdminCandidateSubjectRe
   return (
     <div className="mx-auto w-full max-w-[1480px] px-4 py-7 sm:px-6 lg:px-8">
       <Link href={`/admin/exams/${detail.examId}`} className="inline-flex min-h-9 items-center gap-2 text-sm font-semibold text-[var(--accent)] hover:underline"><ArrowLeft aria-hidden size={17} />Quay lại kỳ thi</Link>
-      <header className="mt-4 rounded-xl border border-[var(--border)] bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
+      <header className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div><p className="text-xs font-bold uppercase tracking-[0.08em] text-[var(--accent)]">Bài thi chính thức</p><h1 className="mt-2 text-2xl font-bold text-[var(--text-primary)]">{detail.candidateName}</h1><p className="mt-2 text-sm text-[var(--text-secondary)]">{detail.candidateWorkUnit} · {detail.candidateEmail}</p></div>
           <dl className="grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2"><div><dt className="text-xs font-semibold text-[var(--text-muted)]">Kỳ thi</dt><dd className="mt-1 font-semibold text-[var(--text-primary)]">{detail.examName}</dd></div><div><dt className="text-xs font-semibold text-[var(--text-muted)]">Môn / đề</dt><dd className="mt-1 font-semibold text-[var(--text-primary)]">{detail.subjectName} · {detail.paperTitle}</dd></div><div><dt className="text-xs font-semibold text-[var(--text-muted)]">Bắt đầu môn</dt><dd className="mt-1 font-mono text-xs text-[var(--text-secondary)]">{formatDateTime(attempt?.startedAt ?? null)}</dd></div><div><dt className="text-xs font-semibold text-[var(--text-muted)]">Nộp môn</dt><dd className="mt-1 font-mono text-xs text-[var(--text-secondary)]">{formatDateTime(attempt?.submittedAt ?? null)}</dd></div></dl>
@@ -204,7 +204,7 @@ export function OfficialExamReview({ detail }: { detail: AdminCandidateSubjectRe
         {attempt?.items.map((item) => <AttemptItemReview key={item.id} item={item} />)}
       </div>
 
-      <section className="mt-6 rounded-xl border border-[var(--accent-border)] bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
+      <section className="mt-6 rounded-xl border border-[var(--accent-border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
         <div className="mb-4"><h2 className="text-lg font-semibold text-[var(--text-primary)]">Kết quả chính thức</h2><p className="mt-1 text-sm text-[var(--text-secondary)]">Nhập điểm sau khi đã đối chiếu toàn bộ bằng chứng phía trên.</p></div>
         <CandidateResultEditor candidateSubjectId={detail.id} status={detail.status} officialScore={detail.officialScore} examinerComment={detail.examinerComment ?? ""} />
       </section>

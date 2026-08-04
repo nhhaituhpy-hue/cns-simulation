@@ -1,19 +1,14 @@
 "use client";
 
-import { ScenarioMonitorView } from "@/components/qcms/scenario-monitor-view";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { AdsbScenarioMonitorView } from "@/modules/devices/adsb";
 
 function SimulationContent() {
   const searchParams = useSearchParams();
   const scenarioId = searchParams.get("id") || "";
   const autoOpenHardware = searchParams.get("stage") === "hardware";
-  return (
-    <ScenarioMonitorView
-      scenarioId={scenarioId}
-      autoOpenHardware={autoOpenHardware}
-    />
-  );
+  return <AdsbScenarioMonitorView scenarioId={scenarioId} autoOpenHardware={autoOpenHardware} />;
 }
 
 export default function StudentScenarioPage() {

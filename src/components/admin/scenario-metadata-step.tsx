@@ -111,7 +111,7 @@ export function ScenarioMetadataStep({
               className={`cursor-pointer rounded-lg border p-4 transition-[border-color,background-color,box-shadow] focus-within:ring-2 focus-within:ring-[var(--accent)] focus-within:ring-offset-2 ${
                 draft.difficulty === difficulty.value
                   ? "border-[var(--accent)] bg-[var(--accent-muted)]"
-                  : "border-[var(--border)] bg-white hover:border-[var(--border-strong)]"
+                  : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-strong)]"
               }`}
             >
               <span className="flex items-center gap-2 text-sm font-semibold text-[var(--text-primary)]">

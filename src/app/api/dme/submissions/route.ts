@@ -3,8 +3,8 @@ import {
   isDmeSubmission,
   mapRowToDmeSubmission,
   dmeSubmissionToRow,
-} from "@/lib/dme-submission-storage";
-import type { DmeSubmissionStatus } from "@/lib/dme-types";
+} from "@/modules/devices/dme-1119a/server";
+import type { DmeSubmissionStatus } from "@/modules/devices/dme-1119a/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
 

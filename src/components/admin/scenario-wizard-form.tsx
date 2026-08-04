@@ -223,7 +223,7 @@ export function ScenarioWizardForm({
         </ol>
       </nav>
 
-      <section className="rounded-lg border border-[var(--border)] bg-white p-4 shadow-[var(--shadow-card)] sm:p-6 lg:p-8">
+      <section className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] sm:p-6 lg:p-8">
         <header className="mb-7 border-b border-[var(--border)] pb-5">
           <p className="text-sm font-medium text-[var(--accent)]">
             Bước {currentStep} trong 5
@@ -304,7 +304,7 @@ export function ScenarioWizardForm({
         </p>
       ) : null}
 
-      <footer className="flex flex-col-reverse gap-3 rounded-lg border border-[var(--border)] bg-white p-4 shadow-[var(--shadow-card)] sm:flex-row sm:items-center sm:justify-between">
+      <footer className="flex flex-col-reverse gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] sm:flex-row sm:items-center sm:justify-between">
         <Link
           href="/admin/ads-b"
           className="inline-flex h-10 items-center justify-center rounded px-4 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
@@ -318,7 +318,7 @@ export function ScenarioWizardForm({
               type="button"
               onClick={goBack}
               disabled={isSaving}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded border border-[var(--border-strong)] bg-white px-4 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <CaretLeft aria-hidden size={17} weight="regular" />
               Quay lại

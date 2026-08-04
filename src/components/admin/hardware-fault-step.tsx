@@ -236,7 +236,7 @@ export function HardwareFaultStep({
             />
           </div>
 
-          <section className="grid gap-4 rounded border border-[var(--border)] bg-white p-4 lg:grid-cols-2">
+          <section className="grid gap-4 rounded border border-[var(--border)] bg-[var(--surface)] p-4 lg:grid-cols-2">
             <label className="text-sm font-semibold text-[var(--text-primary)]">
               Loại sự cố
               <select
@@ -244,7 +244,7 @@ export function HardwareFaultStep({
                 onChange={(event) =>
                   changeFaultType(event.target.value as HardwareFaultType)
                 }
-                className="mt-1.5 block h-11 w-full rounded border border-[var(--border-strong)] bg-white px-3 font-mono text-sm"
+                className="mt-1.5 block h-11 w-full rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 font-mono text-sm"
               >
                 {FAULT_TYPES.map((faultType) => (
                   <option key={faultType.value} value={faultType.value}>
@@ -263,7 +263,7 @@ export function HardwareFaultStep({
                     expectedSensorStatus: event.target.value as SensorStatus,
                   })
                 }
-                className="mt-1.5 block h-11 w-full rounded border border-[var(--border-strong)] bg-white px-3 text-sm"
+                className="mt-1.5 block h-11 w-full rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm"
               >
                 {SENSOR_STATUSES.map((status) => (
                   <option key={status} value={status}>

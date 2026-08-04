@@ -1,0 +1,17 @@
+import type { SimulatorModuleDefinition } from "@/modules/core/types";
+
+export const DVOR_220_SOFTWARE_MODULE = {
+  id: "dvor-220",
+  category: "operations-software",
+  status: "planned",
+  name: "Phần mềm khai thác DVOR 220",
+  shortName: "DVOR 220",
+  description: "Khung mô phỏng phần mềm vận hành và bảo dưỡng DVOR 220.",
+  routes: {
+    admin: "/admin/software/dvor-220",
+    student: "/student/software/dvor-220",
+    simulator: "/simulator/software/dvor-220",
+    authoring: "/authoring/dvor-220",
+    review: "/review/dvor-220",
+  },
+} as const satisfies SimulatorModuleDefinition<"dvor-220">;

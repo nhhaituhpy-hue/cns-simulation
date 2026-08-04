@@ -42,7 +42,7 @@ export function DeleteScenarioDialog({
         event.preventDefault();
         onCancel();
       }}
-      className="m-auto w-[min(30rem,calc(100%-2rem))] rounded-lg border border-[var(--border)] bg-white p-0 text-[var(--text-primary)] shadow-[var(--shadow-panel)] backdrop:bg-[#171717]/30"
+      className="m-auto w-[min(30rem,calc(100%-2rem))] rounded-lg border border-[var(--border)] bg-[var(--surface)] p-0 text-[var(--text-primary)] shadow-[var(--shadow-panel)] backdrop:bg-[#171717]/30"
     >
       <div className="p-5 sm:p-6">
         <span className="inline-flex size-10 items-center justify-center rounded bg-[#fef2f2] text-[#b91c1c]">
@@ -66,7 +66,7 @@ export function DeleteScenarioDialog({
           type="button"
           autoFocus
           onClick={onCancel}
-          className="h-10 rounded border border-[var(--border-strong)] bg-white px-4 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+          className="h-10 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
         >
           Giữ lại
         </button>

@@ -35,14 +35,14 @@ export function StudentExamDetail({ examId, candidate }: { examId: string; candi
 
   return (
     <div className="mt-6 grid gap-5">
-      <section className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[var(--shadow-card)]">
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
         <div className="flex items-start gap-4">
           <span className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-muted)] text-[var(--accent)]"><IdentificationCard aria-hidden size={24} weight="duotone" /></span>
           <div><h2 className="text-base font-semibold text-[var(--text-primary)]">{candidate.fullName}</h2><p className="mt-1 text-sm text-[var(--text-secondary)]">{candidate.workUnit}</p><p className="mt-1 font-mono text-xs text-[var(--text-muted)]">{candidate.email}</p></div>
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-[var(--shadow-card)]">
+      <section className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
         <div className="border-b border-[var(--border)] px-5 py-4"><h2 className="text-base font-semibold text-[var(--text-primary)]">Môn thi được phân</h2><p className="mt-1 text-sm text-[var(--text-secondary)]">Chọn môn muốn thực hiện. Đề thi đã được hội đồng phân sẵn.</p></div>
         <div className="divide-y divide-[var(--border)]">
           {candidate.subjects.map((subject) => (

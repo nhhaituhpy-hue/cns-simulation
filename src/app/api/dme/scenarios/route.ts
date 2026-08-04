@@ -3,7 +3,7 @@ import {
   isDmeScenario,
   mapRowToDmeScenario,
   dmeScenarioToRow,
-} from "@/lib/dme-scenario-storage";
+} from "@/modules/devices/dme-1119a/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
 

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { DmeStudentSession } from "@/components/dme/student/dme-student-session";
-import { ScenarioMonitorView } from "@/components/qcms/scenario-monitor-view";
-import { VorStudentSession } from "@/components/vor/student/vor-student-session";
+import { AdsbScenarioMonitorView } from "@/modules/devices/adsb";
+import { Dme1119aStudentSession } from "@/modules/devices/dme-1119a";
+import { Dvor1150aStudentSession } from "@/modules/devices/dvor-1150a";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { getOfficialExamScenario, getStudentAttemptItem } from "@/lib/exams/queries";
 
@@ -39,14 +39,14 @@ export default async function OfficialExamScenarioPage({
   const identity = { userId: profile.id, studentName: item.candidateName, workUnit: item.candidateWorkUnit };
 
   if (item.moduleCode === "vor" && officialScenario.moduleCode === "vor") {
-    return <VorStudentSession scenarioId={item.scenarioId} identity={identity} officialExam={officialExam} officialScenario={officialScenario.scenario} />;
+    return <Dvor1150aStudentSession scenarioId={item.scenarioId} identity={identity} officialExam={officialExam} officialScenario={officialScenario.scenario} />;
   }
   if (item.moduleCode === "dme" && officialScenario.moduleCode === "dme") {
-    return <DmeStudentSession scenarioId={item.scenarioId} identity={identity} officialExam={officialExam} officialScenario={officialScenario.scenario} />;
+    return <Dme1119aStudentSession scenarioId={item.scenarioId} identity={identity} officialExam={officialExam} officialScenario={officialScenario.scenario} />;
   }
   const stage = Array.isArray(query.stage) ? query.stage[0] : query.stage;
   if (item.moduleCode === "ads-b" && officialScenario.moduleCode === "ads-b") {
-    return <ScenarioMonitorView scenarioId={item.scenarioId} autoOpenHardware={stage === "hardware"} officialExam={officialExam} officialScenario={officialScenario.scenario} />;
+    return <AdsbScenarioMonitorView scenarioId={item.scenarioId} autoOpenHardware={stage === "hardware"} officialExam={officialExam} officialScenario={officialScenario.scenario} />;
   }
   notFound();
 }

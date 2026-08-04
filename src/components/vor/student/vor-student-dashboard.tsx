@@ -63,7 +63,7 @@ export function VorStudentDashboard() {
 
       <ScenarioSectionHeader
         id="vor-practice-title"
-        title="Thực hành xử lý sự cố VOR"
+        title="Thực hành xử lý sự cố DVOR 1150A"
         description="Kiểm tra PMDT mô phỏng, ghi chú từng thao tác và nộp kết luận để giám khảo chấm."
         count={isHydrated && !isLoading ? scenarios.length : undefined}
         countLabel="bài"

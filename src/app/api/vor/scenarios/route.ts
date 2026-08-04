@@ -3,7 +3,7 @@ import {
   isVorScenario,
   mapRowToVorScenario,
   vorScenarioToRow,
-} from "@/lib/vor-scenario-storage";
+} from "@/modules/devices/dvor-1150a/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
 

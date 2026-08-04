@@ -1,5 +1,5 @@
-import { AdsbSimulatorLab } from "@/components/admin/adsb-simulator-lab";
+import { redirect } from "next/navigation";
 
-export default function AdsbSimulatorPage() {
-  return <AdsbSimulatorLab />;
+export default function LegacyAdsbSimulatorPage() {
+  redirect("/simulator/ads-b");
 }

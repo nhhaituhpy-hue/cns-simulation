@@ -2,7 +2,7 @@ import { Plus } from "@phosphor-icons/react/dist/ssr/Plus";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ExamList } from "@/components/exams/exam-list";
-import { ExamPageFrame, ExamPageHeader, primaryButtonClassName } from "@/components/exams/shared";
+import { ExamPageFrame, primaryButtonClassName } from "@/components/exams/shared";
 import { listAdminExams } from "@/lib/exams/queries";
 
 export const metadata: Metadata = { title: "Quản lý kỳ thi" };
@@ -13,11 +13,9 @@ export default async function ExamsPage() {
   const exams = await listAdminExams();
   return (
     <ExamPageFrame>
-      <ExamPageHeader
-        title="Quản lý kỳ thi"
-        description="Tạo kỳ thi, cấu hình hội đồng, phân thí sinh vào môn và đề thi, sau đó nhập kết quả chính thức."
-        actions={<Link href="/admin/exams/new" className={primaryButtonClassName}><Plus aria-hidden size={18} /> Tạo kỳ thi</Link>}
-      />
+      <div className="flex justify-end print:hidden">
+        <Link href="/admin/exams/new" className={primaryButtonClassName}><Plus aria-hidden size={18} /> Tạo kỳ thi</Link>
+      </div>
       <ExamList items={exams.map((exam) => ({
         id: exam.id,
         name: exam.name,

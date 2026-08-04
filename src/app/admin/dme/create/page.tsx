@@ -1,11 +1,8 @@
-﻿import type { Metadata } from "next";
-import { DmeScenarioAuthor } from "@/components/dme/admin/dme-scenario-author";
+import type { Metadata } from "next";
+import { Dme1119aScenarioAuthor } from "@/modules/devices/dme-1119a";
 
-export const metadata: Metadata = {
-  title: "Tạo kịch bản DME",
-};
+export const metadata: Metadata = { title: "Tạo kịch bản DME 1119A" };
 
 export default function CreateDmeScenarioPage() {
-  return <DmeScenarioAuthor />;
+  return <Dme1119aScenarioAuthor />;
 }
-

@@ -6,11 +6,11 @@ export type ExamStatus = "open" | "locked" | "archived";
 const STATUS_STYLES: Record<ExamStatus, { label: string; className: string }> = {
   open: {
     label: "Đang mở",
-    className: "border-[#bbf7d0] bg-[#f0fdf4] text-[#166534]",
+    className: "border-[var(--color-success-border)] bg-[var(--color-success-muted)] text-[var(--color-success)]",
   },
   locked: {
     label: "Đã khóa",
-    className: "border-[#fde68a] bg-[#fffbeb] text-[#92400e]",
+    className: "border-[var(--color-warning-border)] bg-[var(--color-warning-muted)] text-[var(--color-warning)]",
   },
   archived: {
     label: "Đã lưu trữ",
@@ -67,7 +67,7 @@ export function DataUnavailable({
   description: string;
 }) {
   return (
-    <div role="alert" className="mt-6 rounded-xl border border-[#fecaca] bg-[#fef2f2] px-5 py-8 text-center text-[#7f1d1d]">
+    <div role="alert" className="mt-6 rounded-xl border border-[var(--color-danger-border)] bg-[var(--color-danger-muted)] px-5 py-8 text-center text-[var(--color-danger)]">
       <WarningCircle aria-hidden size={30} weight="duotone" className="mx-auto" />
       <h2 className="mt-3 text-base font-semibold">{title}</h2>
       <p className="mx-auto mt-2 max-w-[64ch] text-sm leading-6">{description}</p>
@@ -122,18 +122,18 @@ export function Field({
 }
 
 export const inputClassName =
-  "h-10 w-full rounded-md border border-[var(--border-strong)] bg-white px-3 text-sm font-normal text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-muted)] disabled:cursor-not-allowed disabled:bg-[var(--surface-muted)] disabled:text-[var(--text-muted)]";
+  "h-10 w-full rounded-md border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm font-normal text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-muted)] disabled:cursor-not-allowed disabled:bg-[var(--surface-muted)] disabled:text-[var(--text-muted)]";
 
 export const selectClassName = inputClassName;
 
 export const textareaClassName =
-  "min-h-24 w-full resize-y rounded-md border border-[var(--border-strong)] bg-white px-3 py-2.5 text-sm font-normal leading-6 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-muted)] disabled:cursor-not-allowed disabled:bg-[var(--surface-muted)]";
+  "min-h-24 w-full resize-y rounded-md border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2.5 text-sm font-normal leading-6 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-muted)] disabled:cursor-not-allowed disabled:bg-[var(--surface-muted)]";
 
 export const primaryButtonClassName =
   "inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white transition-[background-color,transform] hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transform-none";
 
 export const secondaryButtonClassName =
-  "inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-[var(--border-strong)] bg-white px-4 text-sm font-semibold text-[var(--text-secondary)] transition-[background-color,color,transform] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transform-none";
+  "inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-[var(--border-strong)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--text-secondary)] transition-[background-color,color,transform] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transform-none";
 
 export const dangerButtonClassName =
-  "inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-[#fecaca] bg-white px-4 text-sm font-semibold text-[var(--danger)] transition-[background-color,transform] hover:bg-[var(--danger-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger)] focus-visible:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transform-none";
+  "inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-[var(--color-danger-border)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--danger)] transition-[background-color,transform] hover:bg-[var(--danger-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger)] focus-visible:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transform-none";

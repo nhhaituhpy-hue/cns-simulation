@@ -88,7 +88,7 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
               setRequestedPage(1);
             }}
             placeholder="Tìm theo tiêu đề kịch bản..."
-            className="h-10 w-full rounded-md border border-[var(--border-strong)] bg-white pl-9 pr-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-muted)]"
+            className="h-10 w-full rounded-md border border-[var(--border-strong)] bg-[var(--surface)] pl-9 pr-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-muted)]"
           />
         </label>
 
@@ -156,7 +156,7 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
             disabled={currentPage === 1}
             aria-label="Trang trước"
             title="Trang trước"
-            className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-white text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-45"
+            className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-45"
           >
             <CaretLeft aria-hidden size={16} weight="bold" />
           </button>
@@ -172,7 +172,7 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
                 className={`inline-flex size-9 items-center justify-center rounded-md border font-mono text-xs font-semibold tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
                   pageNumber === currentPage
                     ? "border-[var(--accent)] bg-[var(--accent)] text-white"
-                    : "border-[var(--border-strong)] bg-white text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+                    : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
                 }`}
               >
                 {pageNumber}
@@ -188,7 +188,7 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
             disabled={currentPage === totalPages}
             aria-label="Trang sau"
             title="Trang sau"
-            className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-white text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-45"
+            className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-45"
           >
             <CaretRight aria-hidden size={16} weight="bold" />
           </button>

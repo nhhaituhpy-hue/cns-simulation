@@ -62,7 +62,7 @@ export function HardwareGradingResult({
       role="dialog"
       aria-modal="true"
       aria-labelledby="hardware-result-title"
-      className="w-full max-w-3xl overflow-hidden rounded-lg border border-[#40566b] bg-white shadow-[0_22px_65px_rgb(15_23_42/0.38)]"
+      className="w-full max-w-3xl overflow-hidden rounded-lg border border-[#40566b] bg-[var(--surface)] shadow-[0_22px_65px_rgb(15_23_42/0.38)]"
     >
       <header className="border-b border-[#172033] bg-[#263746] px-5 py-4 text-white">
         <p className="text-xs text-[#cbd5e1]">Kết quả bài thực hành</p>
@@ -79,13 +79,13 @@ export function HardwareGradingResult({
               {result.score}/100
             </p>
           </div>
-          <div className="rounded border border-[#b8c4ce] bg-white p-4">
+          <div className="rounded border border-[#b8c4ce] bg-[var(--surface)] p-4">
             <p className="text-xs font-bold uppercase text-[#475569]">Terminal</p>
             <p className="mt-1 font-mono text-2xl font-bold text-[#172033]">
               {result.terminalScore}/70
             </p>
           </div>
-          <div className="rounded border border-[#b8c4ce] bg-white p-4">
+          <div className="rounded border border-[#b8c4ce] bg-[var(--surface)] p-4">
             <p className="text-xs font-bold uppercase text-[#475569]">Phần cứng</p>
             <p className="mt-1 font-mono text-2xl font-bold text-[#172033]">
               {hardware.score}/30
@@ -143,7 +143,7 @@ export function HardwareGradingResult({
           <button
             type="button"
             onClick={onRetry}
-            className="inline-flex min-h-10 items-center justify-center gap-2 rounded border border-[#94a3b8] bg-white px-4 text-sm font-bold text-[#334155] hover:bg-[#f8fafc]"
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded border border-[#94a3b8] bg-[var(--surface)] px-4 text-sm font-bold text-[#334155] hover:bg-[#f8fafc]"
           >
             <ArrowLeft aria-hidden size={17} />
             Làm lại

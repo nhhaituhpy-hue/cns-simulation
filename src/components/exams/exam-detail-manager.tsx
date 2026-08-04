@@ -214,7 +214,7 @@ function CandidateForm({
         </Field>
       </div>
 
-      <div className="mt-5 overflow-x-auto rounded-md border border-[var(--border)] bg-white">
+      <div className="mt-5 overflow-x-auto rounded-md border border-[var(--border)] bg-[var(--surface)]">
         <table className="w-full min-w-[620px] border-collapse text-left">
           <caption className="sr-only">Phân môn và đề thi cho thí sinh</caption>
           <thead className="bg-[var(--surface-muted)] text-[11px] font-semibold uppercase tracking-[0.05em] text-[var(--text-secondary)]">
@@ -358,7 +358,7 @@ export function ExamDetailManager({
   return (
     <>
       <div className="mt-6 grid gap-6 print:hidden">
-      <section className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[var(--shadow-card)]">
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-base font-semibold text-[var(--text-primary)]">Danh sách giám khảo</h2>
@@ -386,7 +386,7 @@ export function ExamDetailManager({
         {!rosterReadOnly ? <div className="mt-4 flex justify-end"><button type="button" onClick={saveExaminers} disabled={isPending} className={primaryButtonClassName}><FloppyDisk aria-hidden size={17} /> {isPending ? "Đang lưu..." : "Lưu danh sách giám khảo"}</button></div> : null}
       </section>
 
-      <section className="rounded-xl border border-[var(--border)] bg-white p-5 shadow-[var(--shadow-card)]">
+      <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div><h2 className="text-base font-semibold text-[var(--text-primary)]">Danh sách thí sinh</h2><p className="mt-1 text-sm text-[var(--text-secondary)]">Phân môn, đề thi và nhập kết quả chính thức cho từng thí sinh.</p></div>
           {!rosterReadOnly ? <button type="button" onClick={() => setCandidateEditing("new")} className={primaryButtonClassName}><Plus aria-hidden size={17} /> Thêm thí sinh</button> : null}
@@ -467,12 +467,12 @@ export function ExamDetailManager({
           <p className="text-xs tabular-nums text-[var(--text-secondary)]">Trang {currentPage}/{Math.max(1, totalPages)} - {totalCandidates} thí sinh - 20 người/trang</p>
           <nav aria-label="Phân trang danh sách thí sinh" className="flex items-center gap-1">
             {currentPage <= 1
-              ? <span aria-hidden className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-white opacity-40"><CaretLeft aria-hidden size={16} /></span>
-              : <Link href={`/admin/exams/${examId}?page=${currentPage - 1}`} aria-label="Trang trước" title="Trang trước" className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-white text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]"><CaretLeft aria-hidden size={16} /></Link>}
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => <Link key={page} href={`/admin/exams/${examId}?page=${page}`} aria-current={page === currentPage ? "page" : undefined} className={`inline-flex size-9 items-center justify-center rounded-md border font-mono text-xs font-semibold ${page === currentPage ? "border-[var(--accent)] bg-[var(--accent)] text-white" : "border-[var(--border-strong)] bg-white text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]"}`}>{page}</Link>)}
+              ? <span aria-hidden className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--surface)] opacity-40"><CaretLeft aria-hidden size={16} /></span>
+              : <Link href={`/admin/exams/${examId}?page=${currentPage - 1}`} aria-label="Trang trước" title="Trang trước" className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]"><CaretLeft aria-hidden size={16} /></Link>}
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => <Link key={page} href={`/admin/exams/${examId}?page=${page}`} aria-current={page === currentPage ? "page" : undefined} className={`inline-flex size-9 items-center justify-center rounded-md border font-mono text-xs font-semibold ${page === currentPage ? "border-[var(--accent)] bg-[var(--accent)] text-white" : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]"}`}>{page}</Link>)}
             {currentPage >= totalPages
-              ? <span aria-hidden className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-white opacity-40"><CaretRight aria-hidden size={16} /></span>
-              : <Link href={`/admin/exams/${examId}?page=${currentPage + 1}`} aria-label="Trang sau" title="Trang sau" className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-white text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]"><CaretRight aria-hidden size={16} /></Link>}
+              ? <span aria-hidden className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--surface)] opacity-40"><CaretRight aria-hidden size={16} /></span>
+              : <Link href={`/admin/exams/${examId}?page=${currentPage + 1}`} aria-label="Trang sau" title="Trang sau" className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]"><CaretRight aria-hidden size={16} /></Link>}
           </nav>
         </div>
       </section>
@@ -480,7 +480,7 @@ export function ExamDetailManager({
 
       {printData ? (
         <div 
-          className="hidden print:block print:bg-white print:text-black print:leading-relaxed max-w-[190mm] mx-auto print:p-0"
+          className="hidden print:block print:bg-[var(--surface)] print:text-black print:leading-relaxed max-w-[190mm] mx-auto print:p-0"
           style={{ fontFamily: "'Times New Roman', Times, serif", fontSize: "12pt" }}
         >
           {/* Header */}

@@ -73,7 +73,7 @@ export function ExamList({ items }: { items: ExamListItem[] }) {
   }
 
   return (
-    <div className="mt-6 overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-[var(--shadow-card)]">
+    <div className="mt-6 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]">
       <div className="flex flex-col gap-3 border-b border-[var(--border)] bg-[var(--surface-subtle)] p-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
         <label className="relative block w-full sm:max-w-md">
           <span className="sr-only">Tìm kỳ thi</span>

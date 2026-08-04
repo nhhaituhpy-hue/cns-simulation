@@ -89,7 +89,7 @@ export function ExamEditor({
   }
 
   return (
-    <div className="mt-6 rounded-xl border border-[var(--border)] bg-white p-5 shadow-[var(--shadow-card)] sm:p-6">
+    <div className="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
       <div className="grid gap-5 lg:grid-cols-2">
         <Field label="Tên kỳ thi" htmlFor="exam-name" required>
           <input

@@ -67,7 +67,7 @@ export function LoginRoleStep({
               className={`cursor-pointer rounded-lg border p-5 transition-[border-color,background-color,box-shadow] focus-within:ring-2 focus-within:ring-[var(--accent)] focus-within:ring-offset-2 ${
                 selected
                   ? "border-[var(--accent)] bg-[var(--accent-muted)]"
-                  : "border-[var(--border)] bg-white hover:border-[var(--border-strong)]"
+                  : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--border-strong)]"
               }`}
             >
               <span className="flex items-start gap-3">
@@ -84,7 +84,7 @@ export function LoginRoleStep({
                     <RoleIcon aria-hidden size={21} weight="regular" />
                     {role.label}
                   </span>
-                  <code className="mt-2 inline-block rounded bg-white px-2 py-1 font-mono text-xs text-[var(--accent)]">
+                  <code className="mt-2 inline-block rounded bg-[var(--surface)] px-2 py-1 font-mono text-xs text-[var(--accent)]">
                     {role.account}
                   </code>
                   <span className="mt-3 block text-sm leading-6 text-[var(--text-secondary)]">

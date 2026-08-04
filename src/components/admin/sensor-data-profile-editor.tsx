@@ -42,7 +42,7 @@ function ProfileField({
         autoComplete="off"
         onChange={(event) => onChange(event.target.value)}
         className={
-          "h-10 rounded border border-[var(--border-strong)] bg-white px-3 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 " +
+          "h-10 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 " +
           (mono ? "font-mono" : "")
         }
       />
@@ -148,7 +148,7 @@ export function SensorDataProfileEditor({
           id={"sensor-profile-" + sensor.id}
           value={selection}
           onChange={(event) => handleSelection(event.target.value)}
-          className="h-10 w-full rounded border border-[var(--border-strong)] bg-white px-3 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
+          className="h-10 w-full rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
         >
           <option value="default">{"M\u1eb7c \u0111\u1ecbnh"}</option>
           {Object.entries(PRESET_LABELS).map(([key, label]) => (
@@ -161,7 +161,7 @@ export function SensorDataProfileEditor({
       </div>
 
       {selection === "custom" && profile ? (
-        <div className="grid gap-3 rounded border border-[var(--border)] bg-white p-3">
+        <div className="grid gap-3 rounded border border-[var(--border)] bg-[var(--surface)] p-3">
           <p className="text-xs leading-5 text-[var(--text-secondary)]">
             {
               "Ch\u1ec9nh c\u00e1c th\u00f4ng s\u1ed1 terminal c\u01a1 b\u1ea3n. IP v\u00e0 t\u00ean \u0111\u01b0\u1ee3c \u0111\u1ed3ng b\u1ed9 v\u1edbi sensor."

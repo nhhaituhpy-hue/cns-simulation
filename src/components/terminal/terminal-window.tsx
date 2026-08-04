@@ -12,6 +12,7 @@ export interface TerminalWindowProps {
   pendingSensitive: boolean;
   isExited: boolean;
   onSubmit: (input: string) => void;
+  variant?: "panel" | "workspace";
 }
 
 export function TerminalWindow({
@@ -21,11 +22,16 @@ export function TerminalWindow({
   pendingSensitive,
   isExited,
   onSubmit,
+  variant = "panel",
 }: TerminalWindowProps) {
   return (
     <section
       aria-label={`Terminal SSH mô phỏng đến ${ipAddress}`}
-      className="terminal-surface flex min-h-[560px] min-w-0 flex-col overflow-hidden rounded-lg border border-[#333333] shadow-[0_18px_45px_rgb(0_0_0/0.26)] lg:min-h-[640px]"
+      className={`terminal-surface flex min-w-0 flex-col overflow-hidden border border-[#333333] ${
+        variant === "workspace"
+          ? "min-h-[calc(100dvh-10.25rem)] rounded-none border-x-0 border-b-0 shadow-none"
+          : "min-h-[560px] rounded-lg shadow-[0_18px_45px_rgb(0_0_0/0.26)] lg:min-h-[640px]"
+      }`}
     >
       <div className="flex min-h-11 items-center gap-2 border-b border-[#333333] bg-[#1a1a1a] px-4">
         <span aria-hidden className="size-3 rounded-full bg-[#ff5f57]" />

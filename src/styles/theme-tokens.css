@@ -1,0 +1,158 @@
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Application canvas and elevation */
+  --color-canvas: #f5f7f9;
+  --color-surface-1: #ffffff;
+  --color-surface-2: #f8fafb;
+  --color-surface-3: #edf2f5;
+  --color-sidebar-background: #edf2f5;
+  --color-sidebar-text: #536978;
+  --color-sidebar-text-active: #0369a1;
+  --color-sidebar-text-hover: #16242f;
+  --color-surface-selected: #e8f3f8;
+  --color-overlay: rgb(22 36 47 / 0.28);
+  --color-surface-overlay: rgb(255 255 255 / 0.78);
+
+  /* Content and boundaries */
+  --color-content-primary: #16242f;
+  --color-content-secondary: #50616f;
+  --color-content-muted: #60717e;
+  --color-content-inverse: #ffffff;
+  --color-border-default: #dce4e9;
+  --color-border-strong: #c5d1d9;
+
+  /* Brand and interaction */
+  --color-accent: #0369a1;
+  --color-accent-hover: #075985;
+  --color-accent-pressed: #0c4a6e;
+  --color-accent-muted: #e3f1f8;
+  --color-accent-border: #b9dbe9;
+  --color-focus-ring: #0284c7;
+
+  /* Semantic states */
+  --color-success: #166534;
+  --color-success-muted: #f0fdf4;
+  --color-success-border: #bbf7d0;
+  --color-warning: #92400e;
+  --color-warning-muted: #fffbeb;
+  --color-warning-border: #fde68a;
+  --color-danger: #b42318;
+  --color-danger-muted: #fef3f2;
+  --color-danger-border: #fecaca;
+  --color-info: #075985;
+  --color-info-muted: #f0f9ff;
+  --color-info-border: #bae6fd;
+
+  /* Elevation */
+  --theme-shadow-sm: 0 1px 2px rgb(22 36 47 / 0.06);
+  --theme-shadow-card: 0 1px 2px rgb(22 36 47 / 0.04), 0 8px 24px rgb(22 36 47 / 0.035);
+  --theme-shadow-card-hover: 0 2px 4px rgb(3 105 161 / 0.06), 0 16px 36px rgb(3 105 161 / 0.1);
+  --theme-shadow-panel: 0 20px 50px rgb(22 36 47 / 0.14);
+  --theme-glass: rgb(244 247 249 / 0.94);
+  --theme-glass-highlight: rgb(255 255 255 / 0.28);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-canvas: #141f29;
+  --color-surface-1: #111a23;
+  --color-surface-2: #17222d;
+  --color-surface-3: #1d2a35;
+  --color-sidebar-background: #0b1118;
+  --color-sidebar-text: #b2c1cc;
+  --color-sidebar-text-active: #38a3dc;
+  --color-sidebar-text-hover: #f1f5f9;
+  --color-surface-selected: #12344a;
+  --color-overlay: rgb(0 0 0 / 0.58);
+  --color-surface-overlay: rgb(17 26 35 / 0.84);
+
+  --color-content-primary: #e6edf3;
+  --color-content-secondary: #b5c2cc;
+  --color-content-muted: #8fa1ae;
+  --color-content-inverse: #ffffff;
+  --color-border-default: #263746;
+  --color-border-strong: #3a5061;
+
+  --color-accent: #0369a1;
+  --color-accent-hover: #075985;
+  --color-accent-pressed: #0c4a6e;
+  --color-accent-muted: #12344a;
+  --color-accent-border: #245d7a;
+  --color-focus-ring: #38a3dc;
+
+  --color-success: #86d99b;
+  --color-success-muted: #163625;
+  --color-success-border: #285d3d;
+  --color-warning: #f3c76b;
+  --color-warning-muted: #3b3017;
+  --color-warning-border: #6d5724;
+  --color-danger: #ff9b91;
+  --color-danger-muted: #411f22;
+  --color-danger-border: #75363a;
+  --color-info: #8ccbea;
+  --color-info-muted: #153247;
+  --color-info-border: #285d7a;
+
+  --theme-shadow-sm: 0 1px 2px rgb(0 0 0 / 0.24);
+  --theme-shadow-card: 0 1px 2px rgb(0 0 0 / 0.2), 0 10px 28px rgb(0 0 0 / 0.2);
+  --theme-shadow-card-hover: 0 2px 4px rgb(0 0 0 / 0.28), 0 18px 40px rgb(0 0 0 / 0.3);
+  --theme-shadow-panel: 0 20px 50px rgb(0 0 0 / 0.42);
+  --theme-glass: rgb(11 17 24 / 0.94);
+  --theme-glass-highlight: rgb(255 255 255 / 0.06);
+}
+
+:root {
+  /* Compatibility aliases for existing components. */
+  --background: var(--color-canvas);
+  --foreground: var(--color-content-primary);
+  --surface: var(--color-surface-1);
+  --surface-muted: var(--color-surface-3);
+  --surface-subtle: var(--color-surface-2);
+  --surface-selected: var(--color-surface-selected);
+  --border: var(--color-border-default);
+  --border-strong: var(--color-border-strong);
+  --text-primary: var(--color-content-primary);
+  --text-secondary: var(--color-content-secondary);
+  --text-muted: var(--color-content-muted);
+  --accent: var(--color-accent);
+  --accent-hover: var(--color-accent-hover);
+  --accent-active: var(--color-accent-pressed);
+  --accent-muted: var(--color-accent-muted);
+  --accent-border: var(--color-accent-border);
+  --danger: var(--color-danger);
+  --danger-muted: var(--color-danger-muted);
+  --shadow-sm: var(--theme-shadow-sm);
+  --shadow-card: var(--theme-shadow-card);
+  --shadow-card-hover: var(--theme-shadow-card-hover);
+  --shadow-panel: var(--theme-shadow-panel);
+
+  /* Simulator colors are intentionally fixed and do not change with the app theme. */
+  --simulator-canvas: #070a12;
+  --simulator-surface: #0a0e1a;
+  --simulator-panel: #111827;
+  --simulator-border: #334155;
+  --simulator-text: #e2e8f0;
+  --simulator-normal: #22c55e;
+  --simulator-warning: #eab308;
+  --simulator-alarm: #ef4444;
+}
+
+.simulator-skin {
+  color-scheme: dark;
+  isolation: isolate;
+}
+
+.theme-toggle-moon {
+  display: none;
+}
+
+[data-theme="dark"] .theme-toggle-sun {
+  display: none;
+}
+
+[data-theme="dark"] .theme-toggle-moon {
+  display: block;
+}

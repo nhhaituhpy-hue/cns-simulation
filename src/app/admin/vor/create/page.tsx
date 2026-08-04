@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import { VorScenarioAuthor } from "@/components/vor/admin/vor-scenario-author";
+import { Dvor1150aScenarioAuthor } from "@/modules/devices/dvor-1150a";
 
-export const metadata: Metadata = {
-  title: "Tạo kịch bản VOR",
-};
+export const metadata: Metadata = { title: "Tạo kịch bản DVOR 1150A" };
 
 export default function CreateVorScenarioPage() {
-  return <VorScenarioAuthor />;
+  return <Dvor1150aScenarioAuthor />;
 }

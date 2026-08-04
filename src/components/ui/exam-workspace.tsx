@@ -3,8 +3,9 @@ import { GearSix } from "@phosphor-icons/react/dist/csr/GearSix";
 import { Student } from "@phosphor-icons/react/dist/csr/Student";
 import type { Icon } from "@phosphor-icons/react/dist/lib/types";
 import type { ReactNode } from "react";
+import type { LegacyCnsModuleId } from "@/modules/core/types";
 
-export type CnsModule = "vor" | "dme" | "ads-b";
+export type CnsModule = LegacyCnsModuleId;
 export type WorkspaceRole = "admin" | "student";
 
 const roleDetails: Record<

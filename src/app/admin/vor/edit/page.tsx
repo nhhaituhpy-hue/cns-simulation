@@ -2,16 +2,16 @@
 
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { VorScenarioAuthor } from "@/components/vor/admin/vor-scenario-author";
+import { Dvor1150aScenarioAuthor } from "@/modules/devices/dvor-1150a";
 
 function EditVorScenarioContent() {
   const searchParams = useSearchParams();
-  return <VorScenarioAuthor scenarioId={searchParams.get("id") ?? ""} />;
+  return <Dvor1150aScenarioAuthor scenarioId={searchParams.get("id") ?? ""} />;
 }
 
 export default function EditVorScenarioPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-[var(--text-secondary)]">Đang tải trình chỉnh sửa VOR...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-[var(--text-secondary)]">Đang tải trình chỉnh sửa DVOR 1150A...</div>}>
       <EditVorScenarioContent />
     </Suspense>
   );
