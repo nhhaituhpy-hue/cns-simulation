@@ -1,87 +1,119 @@
 "use client";
 
+import { useState } from "react";
+
 import { resolveDmeField, useDmePmdtStore } from "@/stores/dme-pmdt-store";
 import { PmdtToolbar } from "../pmdt-toolbar";
+import { DmeIndicator, ScreenTabs, dmeFieldMetadata } from "./screen-primitives";
+
+const selfCalibratedParameters = [
+  ["+32 dB Amplifier", 34.2],
+  ["-32 dB Attenuator", -32.0],
+  ["-16 dB Attenuator", -16.0],
+  ["-8 dB Attenuator", -8.0],
+  ["-4 dB Attenuator", -4.0],
+  ["-2 dB Attenuator", -2.0],
+  ["-1 dB Attenuator", -1.0],
+  ["Signal Generator Reference", -28.4],
+  ["Integral Tx Power Scale", 114.0],
+] as const;
+
+function CalibrationInput({ fieldId, label, value }: { fieldId: string; label: string; value: number }) {
+  const overrides = useDmePmdtStore((state) => state.overrides);
+  const resolved = resolveDmeField(value, fieldId, overrides);
+  const formattedValue = Number(resolved).toFixed(1);
+  return (
+    <input
+      id={`dme-calibration-${fieldId.replace(/[^A-Za-z0-9_-]/g, "-")}`}
+      name={fieldId}
+      {...dmeFieldMetadata(fieldId, label, resolved, "gray")}
+      type="number"
+      value={formattedValue}
+      readOnly
+      aria-label={label}
+    />
+  );
+}
 
 export function MonitorCalibration({ monitorNumber }: { monitorNumber: 1 | 2 }) {
-  const data = useDmePmdtStore((state) => state.data);
-  const overrides = useDmePmdtStore((state) => state.overrides);
+  const timestamp = useDmePmdtStore((state) => state.data.timestamp);
+  const openView = useDmePmdtStore((state) => state.openView);
+  const securityLevel = useDmePmdtStore((state) => state.securityLevel);
+  const loginDialogOpen = useDmePmdtStore((state) => state.loginDialogOpen);
+  const local = useDmePmdtStore((state) => state.data.local);
+  const [selfCalibrationRunning, setSelfCalibrationRunning] = useState(false);
+  const [calibrationParametersEnabled, setCalibrationParametersEnabled] = useState(true);
+  const prefix = `monitorCalibrationData.monitor${monitorNumber}`;
+  const canOperate = securityLevel >= 3 && !loginDialogOpen && local;
 
-  const monitorKey = monitorNumber === 1 ? "monitor1" : "monitor2";
-  const rows = data.monitorCalibrationData[monitorKey];
+  function saveCalibration() {
+    if (typeof window === "undefined") return;
+    const payload = {
+      device: "DME 1119A",
+      monitor: monitorNumber,
+      timestamp,
+      calibrationParameters: selfCalibratedParameters.map(([label, value]) => ({ label, value })),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `dme-1119a-monitor-${monitorNumber}-calibration.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
 
   return (
-    <section className="flex min-h-full flex-col font-mono text-[11px]" aria-label={`Monitor ${monitorNumber} Calibration`}>
-      <PmdtToolbar title={`Monitor ${monitorNumber} Calibration`} />
-      <div className="min-h-0 flex-1 overflow-auto bg-[#0a0e1a] p-3">
-        <div className="border border-[#334155] bg-[#111827] max-w-2xl mx-auto">
-          <h3 className="border-b border-[#334155] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[#e2e8f0]">
-            Monitor Calibration parameters
-          </h3>
-          <table className="w-full text-left">
-            <thead className="bg-[#172033] text-[#94a3b8] text-[10px]">
-              <tr>
-                <th className="px-3 py-1.5">Parameter</th>
-                <th className="px-2 py-1.5 text-right w-24">Baseline</th>
-                <th className="px-3 py-1.5 text-right w-24 font-semibold text-[#cbd5e1]">Actual</th>
-                <th className="px-3 py-1.5 text-right w-24 font-semibold text-[#cbd5e1]">Offset</th>
-                <th className="px-3 py-1.5 text-right w-24 font-semibold text-[#cbd5e1]">Scale</th>
-                <th className="px-2 py-1.5 text-center w-16">Unit</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, index) => {
-                const prefix = `monitorCalibrationData.${monitorKey}.${index}`;
-                const resolvedBaseline = resolveDmeField(row.baseline, `${prefix}.baseline`, overrides);
-                const resolvedActual = resolveDmeField(row.actual, `${prefix}.actual`, overrides);
-                const resolvedOffset = resolveDmeField(row.offset, `${prefix}.offset`, overrides);
-                const resolvedScale = resolveDmeField(row.scale, `${prefix}.scale`, overrides);
-
-                return (
-                  <tr key={row.parameter} className="border-t border-[#273449] text-[#cbd5e1] hover:bg-[#1e293b]/50">
-                    <th scope="row" className="px-3 py-1.5 font-medium">{row.parameter}</th>
-                    <td
-                      data-dme-field-id={`${prefix}.baseline`}
-                      data-dme-field-value={row.baseline}
-                      data-dme-field-type="number"
-                      data-dme-field-label={`${row.parameter} Baseline`}
-                      className="px-2 py-1.5 text-right font-mono text-gray-400"
-                    >
-                      {typeof resolvedBaseline === "number" ? resolvedBaseline.toFixed(2) : resolvedBaseline}
-                    </td>
-                    <td
-                      data-dme-field-id={`${prefix}.actual`}
-                      data-dme-field-value={row.actual}
-                      data-dme-field-type="number"
-                      data-dme-field-label={`${row.parameter} Actual`}
-                      className="px-3 py-1.5 text-right font-mono text-emerald-400 bg-emerald-950/10"
-                    >
-                      {typeof resolvedActual === "number" ? resolvedActual.toFixed(2) : resolvedActual}
-                    </td>
-                    <td
-                      data-dme-field-id={`${prefix}.offset`}
-                      data-dme-field-value={row.offset}
-                      data-dme-field-type="number"
-                      data-dme-field-label={`${row.parameter} Offset`}
-                      className="px-3 py-1.5 text-right font-mono text-emerald-400 bg-emerald-950/10"
-                    >
-                      {typeof resolvedOffset === "number" ? resolvedOffset.toFixed(2) : resolvedOffset}
-                    </td>
-                    <td
-                      data-dme-field-id={`${prefix}.scale`}
-                      data-dme-field-value={row.scale}
-                      data-dme-field-type="number"
-                      data-dme-field-label={`${row.parameter} Scale`}
-                      className="px-3 py-1.5 text-right font-mono text-sky-400 bg-sky-950/10"
-                    >
-                      {typeof resolvedScale === "number" ? resolvedScale.toFixed(3) : resolvedScale}
-                    </td>
-                    <td className="px-2 py-1.5 text-center text-gray-400">{row.unit}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+    <section className="dme-pmdt-calibration-screen flex min-h-full flex-col" aria-label={`Monitor ${monitorNumber} Calibration`}>
+      <PmdtToolbar title={`Monitor ${monitorNumber} Offsets and Scale Factors`} />
+      <ScreenTabs tabs={[
+        {
+          id: "offsets",
+          label: "Offsets and Scale Factors",
+          active: false,
+          onSelect: () => openView(
+            `monitor-${monitorNumber}-offsets`,
+            `monitor-${monitorNumber}-offsets`,
+            [`Monitor ${monitorNumber}`, "Offsets and Scale Factors"],
+            "Offsets and Scale Factors",
+          ),
+        },
+        { id: "calibration", label: "Calibration", active: true },
+      ]} />
+      <div className="dme-pmdt-calibration-content">
+        <time>{timestamp}</time>
+        <div className="dme-pmdt-calibration-grid">
+          <div>
+            <fieldset>
+              <legend>Calibration</legend>
+              <label><span>Interrogator Nominal Power</span><CalibrationInput fieldId={`${prefix}.interrogatorNominalPower`} label="Interrogator Nominal Power" value={-13.2} /><small>dBm</small></label>
+              <label><span>Integral Tx Power Offset</span><CalibrationInput fieldId={`${prefix}.integralTxPowerOffset`} label="Integral Tx Power Offset" value={-3.0} /><small>dB</small></label>
+            </fieldset>
+            <fieldset className="dme-pmdt-self-calibration">
+              <legend>Self-Calibrated Parameters</legend>
+              <button type="button" disabled={!canOperate} onClick={() => setSelfCalibrationRunning((running) => !running)}>
+                {selfCalibrationRunning ? "Stop Self Calibration" : "Run Self Calibration"}
+              </button>
+              {selfCalibratedParameters.map(([label, value], index) => (
+                <label key={label}>
+                  <span>{label}</span>
+                  <CalibrationInput fieldId={`${prefix}.selfCalibrated.${index}`} label={label} value={value} />
+                  <small>{label === "Integral Tx Power Scale" ? "%" : "dB"}</small>
+                </label>
+              ))}
+            </fieldset>
+          </div>
+          <fieldset className="dme-pmdt-calibration-status">
+            <legend>Status</legend>
+            <DmeIndicator color={calibrationParametersEnabled ? "green" : "yellow"} />
+            <button type="button" disabled={!canOperate} onClick={() => setCalibrationParametersEnabled((enabled) => !enabled)}>
+              {calibrationParametersEnabled ? "Disable Calibration Parameters" : "Enable Calibration Parameters"}
+            </button>
+          </fieldset>
+          <div className="dme-pmdt-calibration-file-actions">
+            <button type="button" disabled title="File loading is not available in the PMDT simulator">Load...</button>
+            <button type="button" onClick={saveCalibration}>Save...</button>
+          </div>
         </div>
       </div>
     </section>

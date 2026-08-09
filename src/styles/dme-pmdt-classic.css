@@ -1,0 +1,3285 @@
+/*
+ * DME 1119A PMDT skin.
+ *
+ * The DME simulator shares the 900 x 693 Windows desktop shell introduced by
+ * the DVOR redesign. Everything below is scoped to .dme-pmdt-window so the
+ * training application and the DVOR implementation keep their own layouts.
+ */
+
+.dme-pmdt-page {
+  height: 100dvh;
+  min-height: 0;
+  overflow: auto;
+}
+
+.dme-pmdt-window {
+  width: 900px;
+  height: 693px;
+  min-height: 693px;
+  /* Nested PMDT menus must be able to paint outside the fixed client frame. */
+  overflow: visible;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  font-size: 10px;
+}
+
+.dme-pmdt-window.pmdt-classic-window--standard {
+  grid-template-columns: 140px minmax(0, 1fr);
+}
+
+.dme-pmdt-window.pmdt-classic-window--with-inspector {
+  grid-template-columns: 140px minmax(0, 1fr) 280px;
+}
+
+.dme-pmdt-window .font-mono {
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif !important;
+}
+
+.dme-pmdt-window .pmdt-titlebar-heading {
+  font-weight: 400;
+}
+
+.dme-pmdt-window .pmdt-menu-root {
+  padding-inline: 6px;
+}
+
+.dme-pmdt-window .pmdt-menu-dropdown,
+.dme-pmdt-window .pmdt-submenu,
+.dme-pmdt-window .pmdt-menu-item {
+  min-width: 190px;
+}
+
+.dme-pmdt-window .pmdt-submenu {
+  left: 100%;
+  right: auto;
+}
+
+/* Each nested menu owns its own hover/focus state.  A shared Tailwind
+ * `group/item` name made an ancestor hover reveal every descendant submenu at
+ * once, which stacked the three-level Commands columns on top of each other. */
+.dme-pmdt-window .pmdt-dme-menu-item-row {
+  position: relative;
+}
+
+.dme-pmdt-window .pmdt-dme-menu-item-row > .pmdt-submenu {
+  display: none;
+}
+
+.dme-pmdt-window .pmdt-dme-menu-item-row:hover > .pmdt-submenu,
+.dme-pmdt-window .pmdt-dme-menu-item-row:focus-within > .pmdt-submenu {
+  display: block;
+}
+
+.dme-pmdt-window .pmdt-menu-item {
+  min-height: 20px;
+  padding: 1px 7px;
+  font-size: 10px;
+}
+
+.dme-pmdt-window .pmdt-toolbar {
+  height: 40px;
+  min-height: 40px;
+  padding: 8px 19px 8px 14px;
+}
+
+.dme-pmdt-window .pmdt-toolbar-title {
+  height: 21px;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.dme-pmdt-window .pmdt-toolbar-actions {
+  height: 21px;
+  gap: 9px;
+  margin-left: 6px;
+}
+
+.dme-pmdt-window .pmdt-toolbar-actions button {
+  min-width: 23px;
+  padding-inline: 4px;
+  font-size: 9px;
+}
+
+.dme-pmdt-sidebar {
+  box-sizing: border-box;
+  padding: 7px 2px 4px 12px;
+}
+
+.dme-pmdt-sidebar .pmdt-sidebar-section {
+  box-sizing: border-box;
+  margin-bottom: 4px;
+  padding: 2px;
+}
+
+.dme-pmdt-sidebar .pmdt-connection-badge {
+  min-height: 20px;
+}
+
+.dme-pmdt-sidebar .pmdt-sidebar-spacer {
+  min-height: 21px;
+  margin-top: 7px;
+}
+
+.dme-pmdt-sidebar .pmdt-sidebar-section[aria-label="Connection"] > .mt-2 {
+  margin-top: 3px !important;
+}
+
+.dme-pmdt-sidebar > .pmdt-sidebar-section:nth-of-type(2) {
+  margin-bottom: 9px;
+}
+
+.dme-pmdt-sidebar > .pmdt-sidebar-section:nth-of-type(3) {
+  margin-bottom: 19px;
+}
+
+.dme-pmdt-monitor-grid {
+  box-sizing: border-box;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 14px 16px minmax(0, 1fr) 16px 14px;
+  grid-template-rows: 16px repeat(4, 18px);
+  font-size: 9px;
+}
+
+.dme-pmdt-monitor-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  font-size: 9px;
+  letter-spacing: -0.15px;
+  white-space: nowrap;
+}
+
+.dme-pmdt-monitor-heading--integral {
+  grid-column: 1 / 3;
+}
+
+.dme-pmdt-monitor-heading--standby {
+  grid-column: 4 / 6;
+}
+
+.dme-pmdt-monitor-cell {
+  display: flex;
+  min-width: 0;
+  min-height: 18px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #d0d0d0;
+  background: #f7f7f7;
+}
+
+.dme-pmdt-sidebar .pmdt-transmitter-grid {
+  box-sizing: border-box;
+  width: 100%;
+  grid-template-rows: 18px repeat(4, 18px);
+}
+
+.dme-pmdt-sidebar .pmdt-indicator,
+.dme-pmdt-sidebar .pmdt-indicator-wrap {
+  width: 13px;
+  min-width: 13px;
+  height: 13px;
+  min-height: 13px;
+  line-height: 11px;
+}
+
+.dme-pmdt-window .pmdt-indicator--green,
+.dme-pmdt-window .pmdt-state-lamp.pmdt-indicator--green {
+  border-color: #00b900;
+  background: #00ff00;
+  color: #006000;
+  font-weight: 700;
+}
+
+.dme-pmdt-window .pmdt-indicator--yellow,
+.dme-pmdt-window .pmdt-state-lamp.pmdt-indicator--yellow {
+  border-color: #c9a000;
+  background: #ffff00;
+  color: #5b4b00;
+  font-weight: 700;
+}
+
+.dme-pmdt-window .pmdt-indicator--red,
+.dme-pmdt-window .pmdt-state-lamp.pmdt-indicator--red {
+  border-color: #c00000;
+  background: #ff0000;
+  color: #fff;
+  font-weight: 700;
+}
+
+.dme-pmdt-window .pmdt-indicator--gray,
+.dme-pmdt-window .pmdt-state-lamp.pmdt-indicator--gray {
+  border-color: #c8c8c8;
+  background: #f7f7f7;
+  color: #808080;
+}
+
+.dme-pmdt-sidebar .pmdt-parameter {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 18px;
+  grid-template-columns: minmax(0, 1fr) 38px;
+  font-size: 9px;
+}
+
+.dme-pmdt-sidebar #dme-sidebar-parameters {
+  margin-bottom: 0;
+  padding-bottom: 1px;
+}
+
+.dme-pmdt-home-screen {
+  position: relative;
+  display: block;
+}
+
+.dme-pmdt-home-screen .pmdt-selex-logo {
+  position: absolute;
+  top: 230px;
+  left: 156px;
+  width: 313px;
+  height: 160px;
+  transform: none;
+}
+
+.dme-pmdt-window .pmdt-statusbar {
+  padding-inline: 1px;
+}
+
+.dme-pmdt-window .pmdt-statusbar-path {
+  flex: 0 0 512px;
+}
+
+.dme-pmdt-window .dme-pmdt-status-cap {
+  display: none;
+}
+
+.dme-pmdt-window .dme-pmdt-status-num {
+  flex: 0 0 38px;
+  padding-inline: 3px;
+  white-space: nowrap;
+}
+
+.dme-pmdt-window .dme-pmdt-status-level {
+  flex: 0 0 44px;
+  padding-inline: 3px;
+  white-space: nowrap;
+}
+
+.dme-pmdt-window .dme-pmdt-status-security {
+  flex: 0 0 38px;
+  padding-inline: 3px;
+  white-space: nowrap;
+}
+
+.dme-pmdt-window .dme-pmdt-status-spacer {
+  min-width: 0;
+  flex: 1;
+  align-self: stretch;
+  border-left: 1px solid #fff;
+}
+
+.dme-pmdt-window .dme-pmdt-status-time {
+  flex: 0 0 124px;
+  padding-inline: 3px;
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* Compatibility reset for the pre-redesign DME screen markup. */
+.dme-pmdt-window .pmdt-classic-main > section,
+.dme-pmdt-window .pmdt-classic-main > section > div,
+.dme-pmdt-window .pmdt-classic-main [class*="bg-[#0a0e1a]"],
+.dme-pmdt-window .pmdt-classic-main [class*="bg-[#0f172a]"],
+.dme-pmdt-window .pmdt-classic-main [class*="bg-[#111827]"],
+.dme-pmdt-window .pmdt-classic-main [class*="bg-[#172033]"],
+.dme-pmdt-window .pmdt-classic-main [class*="bg-[#1e293b]"] {
+  background-color: #f0f0f0 !important;
+}
+
+.dme-pmdt-window .pmdt-classic-main [class*="text-[#"],
+.dme-pmdt-window .pmdt-classic-main [class*="text-gray"],
+.dme-pmdt-window .pmdt-classic-main [class*="text-white"] {
+  color: #000 !important;
+}
+
+.dme-pmdt-window .pmdt-classic-main [class*="border-[#"] {
+  border-color: #b8b8b8 !important;
+}
+
+.dme-pmdt-window .pmdt-classic-main [class*="hover:bg-"]:hover {
+  background: #e8f1fb !important;
+}
+
+.dme-pmdt-window .pmdt-classic-main {
+  color: #000;
+  font-size: 10px;
+}
+
+.dme-pmdt-window .pmdt-classic-main > section {
+  min-height: 100%;
+  background: #f0f0f0;
+  color: #000;
+}
+
+.dme-pmdt-window .pmdt-classic-main input,
+.dme-pmdt-window .pmdt-classic-main select,
+.dme-pmdt-window .pmdt-classic-main textarea,
+.dme-pmdt-window .pmdt-classic-main button {
+  font: inherit;
+}
+
+.dme-pmdt-window .pmdt-classic-main input[type="text"],
+.dme-pmdt-window .pmdt-classic-main input[type="number"],
+.dme-pmdt-window .pmdt-classic-main select,
+.dme-pmdt-window .pmdt-classic-main textarea {
+  border: 1px inset #fff !important;
+  border-radius: 0;
+  background: #fff !important;
+  color: #000 !important;
+  box-shadow: none;
+}
+
+.dme-pmdt-window .pmdt-classic-main input[type="checkbox"],
+.dme-pmdt-window .pmdt-classic-main input[type="radio"] {
+  width: 12px;
+  height: 12px;
+  margin: 0 3px 0 0;
+  accent-color: #333;
+}
+
+.dme-pmdt-window .pmdt-classic-main input:disabled,
+.dme-pmdt-window .pmdt-classic-main select:disabled {
+  color: #5f5f5f !important;
+  opacity: 1;
+}
+
+.dme-pmdt-window .pmdt-classic-main table {
+  border-collapse: collapse;
+  border-spacing: 0 !important;
+  color: #000;
+  font-size: 9px;
+}
+
+.dme-pmdt-window .pmdt-classic-main thead,
+.dme-pmdt-window .pmdt-classic-main thead tr,
+.dme-pmdt-window .pmdt-classic-main thead th {
+  background: #f0f0f0 !important;
+  color: #000 !important;
+  font-weight: 400 !important;
+}
+
+.dme-pmdt-window .pmdt-classic-main tbody th,
+.dme-pmdt-window .pmdt-classic-main tbody td {
+  height: 18px;
+  padding: 2px 4px !important;
+  border: 1px solid #d2d2d2 !important;
+  background: #f7f7f7 !important;
+  color: #000 !important;
+  font-weight: 400;
+}
+
+.dme-pmdt-window .pmdt-classic-main tbody th {
+  text-align: left;
+}
+
+.dme-pmdt-window .pmdt-classic-main [data-dme-field-id][class*="text-emerald"],
+.dme-pmdt-window .pmdt-classic-main [data-dme-field-id][class*="text-sky"] {
+  border-color: #00b900 !important;
+  background: #00ff00 !important;
+  color: #006000 !important;
+}
+
+.dme-pmdt-tabs,
+.dme-pmdt-inner-tabs,
+.dme-pmdt-window .pmdt-classic-main > section > [role="tablist"] {
+  display: flex;
+  height: 20px;
+  min-height: 20px;
+  align-items: flex-end;
+  gap: 0 !important;
+  padding: 0 16px !important;
+  border-bottom: 1px solid #808080 !important;
+  background: #f0f0f0 !important;
+}
+
+.dme-pmdt-tab,
+.dme-pmdt-inner-tabs button,
+.dme-pmdt-window .pmdt-classic-main > section > [role="tablist"] > button {
+  height: 20px !important;
+  min-height: 20px !important;
+  padding: 1px 7px !important;
+  border: 1px solid transparent !important;
+  border-bottom: 0 !important;
+  border-radius: 0;
+  background: transparent !important;
+  color: #000 !important;
+  font-size: 9px !important;
+  font-weight: 400 !important;
+  opacity: 1 !important;
+}
+
+.dme-pmdt-tab--active,
+.dme-pmdt-inner-tabs button[aria-selected="true"],
+.dme-pmdt-window .pmdt-classic-main > section > [role="tablist"] > button[aria-selected="true"] {
+  border-color: #808080 !important;
+  background: #f7f7f7 !important;
+}
+
+.dme-pmdt-tab--disabled {
+  color: #808080 !important;
+  cursor: not-allowed;
+}
+
+.dme-pmdt-tab:focus-visible,
+.dme-pmdt-inner-tabs button:focus-visible {
+  outline: 1px dotted #000;
+  outline-offset: -3px;
+}
+
+.dme-pmdt-value {
+  display: inline-flex;
+  min-width: 54px;
+  min-height: 17px;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 4px;
+  border: 1px solid #c8c8c8;
+  background: #fff;
+  color: #000;
+  font-family: Tahoma, Arial, sans-serif;
+  font-size: 9px;
+  font-weight: 400;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dme-pmdt-value--green {
+  border-color: #00b900;
+  background: #00ff00;
+  color: #006000;
+}
+
+.dme-pmdt-value--yellow {
+  border-color: #c9a000;
+  background: #ffff00;
+  color: #5b4b00;
+}
+
+.dme-pmdt-value--red {
+  border-color: #c00000;
+  background: #ff0000;
+  color: #fff;
+}
+
+.dme-pmdt-value--gray {
+  border-color: #c8c8c8;
+  background: #f7f7f7;
+  color: #000;
+}
+
+.dme-pmdt-panel {
+  position: relative;
+  padding: 13px 7px 7px !important;
+  border: 1px solid #a8a8a8 !important;
+  background: #f7f7f7 !important;
+  color: #000;
+}
+
+.dme-pmdt-panel-title {
+  position: absolute;
+  top: -6px;
+  left: 7px;
+  margin: 0;
+  padding: 0 3px;
+  background: #f7f7f7;
+  color: #000;
+  font-size: 9px;
+  font-weight: 400;
+}
+
+.dme-pmdt-screen-frame {
+  min-height: 100%;
+  padding: 7px;
+  background: #f0f0f0;
+  color: #000;
+  font-size: 10px;
+}
+
+/* Existing DME screens: compact the utility-driven layouts into PMDT scale. */
+.dme-pmdt-window .pmdt-classic-main > section > div:last-child:not([role="tablist"]),
+.dme-pmdt-window .pmdt-classic-main > section > div:nth-last-child(2):not([role="tablist"]) {
+  scrollbar-color: #b8b8b8 #f0f0f0;
+}
+
+.dme-pmdt-window .pmdt-classic-main .p-4,
+.dme-pmdt-window .pmdt-classic-main .p-3 {
+  padding: 8px !important;
+}
+
+.dme-pmdt-window .pmdt-classic-main .gap-4 {
+  gap: 9px !important;
+}
+
+.dme-pmdt-window .pmdt-classic-main .gap-3 {
+  gap: 6px !important;
+}
+
+.dme-pmdt-window .pmdt-classic-main h3[class] {
+  padding: 3px 5px !important;
+  border-color: #b8b8b8 !important;
+  background: #e8e8e8 !important;
+  color: #000 !important;
+  font-size: 9px !important;
+  font-weight: 400 !important;
+}
+
+.dme-pmdt-window [aria-label="RMS Status"] > div:last-child {
+  padding: 7px;
+}
+
+.dme-pmdt-window [aria-label="RMS Status"] .dme-pmdt-panel {
+  align-self: start;
+}
+
+.dme-pmdt-window [aria-label="RMS Status"] .dme-pmdt-value {
+  min-width: 62px;
+}
+
+.dme-pmdt-window [aria-label="All Monitor Data"] table,
+.dme-pmdt-window [aria-label^="Monitor "][aria-label$="Test Results"] table,
+.dme-pmdt-window [aria-label^="Monitor "][aria-label$="Offsets and Scale Factors"] table {
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+.dme-pmdt-window [aria-label="Monitor Configuration"] table,
+.dme-pmdt-window [aria-label="Transmitter Data"] table {
+  min-width: 0 !important;
+}
+
+.dme-pmdt-window [aria-label="Monitor Configuration"] .dme-pmdt-panel:first-child table {
+  width: 626px !important;
+}
+
+.dme-pmdt-window [aria-label="Transmitter Data"] .dme-pmdt-tx-main > .dme-pmdt-panel:first-child table {
+  width: 576px !important;
+}
+
+.dme-pmdt-window [aria-label="Monitor Configuration"] > div:last-child {
+  margin: 0 20px 12px 12px;
+  border: 1px solid #d0d0d0;
+  background: #fff !important;
+}
+
+.dme-pmdt-monitor-routing {
+  width: 550px;
+  min-height: 434px;
+  margin: 0 14px 14px 16px;
+  padding: 7px 9px;
+  border: 1px solid #c8c8c8;
+  background: #fff;
+}
+
+.dme-pmdt-monitor-routing legend,
+.dme-pmdt-monitor-settings legend {
+  padding-inline: 3px;
+}
+
+.dme-pmdt-monitor-routing table {
+  width: 510px !important;
+  table-layout: fixed;
+  margin-top: -2px;
+  margin-left: 20px;
+}
+
+.dme-pmdt-monitor-routing table th:first-child { width: 140px; }
+.dme-pmdt-monitor-routing table th:not(:first-child) { width: 92px; text-align: center; }
+.dme-pmdt-monitor-routing table td { text-align: center; }
+
+.dme-pmdt-monitor-alarm-limits {
+  padding: 5px 18px 14px 34px;
+  background: #fff !important;
+}
+
+.dme-pmdt-monitor-range-table {
+  width: 626px !important;
+  table-layout: fixed;
+  margin-bottom: 29px;
+}
+
+.dme-pmdt-monitor-range-table th:first-child { width: 310px; }
+.dme-pmdt-monitor-range-table th:nth-child(2) { width: 78px; text-align: center; }
+.dme-pmdt-monitor-range-table th:nth-child(3),
+.dme-pmdt-monitor-range-table th:nth-child(4) { width: 94px; text-align: center; }
+.dme-pmdt-monitor-range-table th:last-child { width: 35px; }
+
+.dme-pmdt-monitor-range-table td {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dme-pmdt-monitor-limit-table {
+  width: 626px !important;
+  table-layout: fixed;
+}
+
+.dme-pmdt-monitor-limit-table th:first-child { width: 145px; }
+.dme-pmdt-monitor-limit-table th:nth-child(n + 2):nth-child(-n + 6) { width: 84px; text-align: center; }
+.dme-pmdt-monitor-limit-table th:last-child { width: 40px; }
+.dme-pmdt-monitor-limit-table td { text-align: center; }
+.dme-pmdt-monitor-limit-table tr { height: 22.5px; }
+
+.dme-pmdt-monitor-range-table .dme-pmdt-value,
+.dme-pmdt-monitor-limit-table .dme-pmdt-value {
+  width: 52px;
+  min-width: 52px;
+}
+
+.dme-pmdt-monitor-settings {
+  display: grid;
+  width: 624px;
+  grid-template-columns: 290px 285px;
+  gap: 49px;
+  margin-top: 12px;
+}
+
+.dme-pmdt-monitor-settings fieldset {
+  padding: 7px 9px;
+  border: 1px solid #c8c8c8;
+  background: #f7f7f7;
+}
+
+.dme-pmdt-monitor-settings label {
+  display: grid;
+  min-height: 22px;
+  grid-template-columns: minmax(0, 1fr) 58px 54px;
+  align-items: center;
+  border-bottom: 1px solid #c8c8c8;
+}
+
+.dme-pmdt-monitor-settings .dme-pmdt-value {
+  width: 54px;
+  min-width: 54px;
+}
+
+.dme-pmdt-monitor-settings small {
+  padding-left: 5px;
+  font-size: 9px;
+}
+
+.dme-pmdt-window [aria-label="All Monitor Data"] > div:last-child > div {
+  width: 495px;
+  padding: 12px 14px 12px 15px !important;
+}
+
+.dme-pmdt-window [aria-label="All Monitor Data"] .dme-pmdt-value {
+  width: 64px !important;
+  min-width: 64px !important;
+}
+
+.dme-pmdt-window [aria-label="All Monitor Data"] .dme-pmdt-value--gray {
+  width: 78px !important;
+  min-width: 78px !important;
+}
+
+.dme-pmdt-window [aria-label="Monitor Configuration"] > div:last-child,
+.dme-pmdt-window [aria-label="RMS Data"] > div:last-child,
+.dme-pmdt-window [aria-label="RMS Configuration"] > div:last-child,
+.dme-pmdt-window [aria-label="RMS Logs"] > div:last-child,
+.dme-pmdt-window [aria-label="Transmitter Data"] > div:last-child,
+.dme-pmdt-window [aria-label="Transmitter Configuration"] > div:last-child {
+  background: #f0f0f0 !important;
+}
+
+.dme-pmdt-window [aria-label="RMS Logs"] table {
+  width: 100%;
+}
+
+.dme-pmdt-window [aria-label="RMS Logs"] tbody tr:nth-child(even) td,
+.dme-pmdt-window [aria-label="RMS Logs"] tbody tr:nth-child(even) th {
+  background: #fff !important;
+}
+
+.dme-pmdt-window [aria-label="Transmitter Data"] .dme-pmdt-tx-main {
+  gap: 13px !important;
+  margin-top: -12px;
+  padding: 8px 15px !important;
+}
+
+.dme-pmdt-window [aria-label="Transmitter Data"] .dme-pmdt-tx-main > .dme-pmdt-panel:first-child {
+  width: 625px;
+  height: 205px;
+  padding-top: 7px !important;
+}
+
+.dme-pmdt-window [aria-label="Transmitter Data"] .dme-pmdt-tx-main > .dme-pmdt-panel:first-child thead th {
+  padding: 4px 6px !important;
+}
+
+.dme-pmdt-window [aria-label="Transmitter Data"] .dme-pmdt-tx-main > .dme-pmdt-panel:last-child {
+  width: 249px;
+  height: 78px;
+  margin-left: 8px;
+  padding-top: 7px !important;
+}
+
+.dme-pmdt-window [aria-label="Transmitter Data"] .dme-pmdt-tx-main > .dme-pmdt-panel:last-child thead th {
+  padding: 5px 6px !important;
+}
+
+.dme-pmdt-window [aria-label="Transmitter Data"] .dme-pmdt-tx-main > .dme-pmdt-panel:last-child tbody th,
+.dme-pmdt-window [aria-label="Transmitter Data"] .dme-pmdt-tx-main > .dme-pmdt-panel:last-child tbody td {
+  padding-block: 3px !important;
+}
+
+.dme-pmdt-window [aria-label="Transmitter Data"] .dme-pmdt-tx-main > .dme-pmdt-panel:last-child .pmdt-indicator,
+.dme-pmdt-window [aria-label="Transmitter Data"] .dme-pmdt-tx-main > .dme-pmdt-panel:last-child .pmdt-indicator-wrap {
+  width: 14px;
+  min-width: 14px;
+  height: 14px;
+}
+
+.dme-pmdt-window [aria-label="Transmitter Data"] .dme-pmdt-rtc-data {
+  display: grid !important;
+  grid-template-columns: 257px 369px !important;
+  align-items: start;
+  gap: 14px !important;
+  margin-top: -1px;
+  padding: 0 15px !important;
+}
+
+.dme-pmdt-rtc-data > .dme-pmdt-panel {
+  width: 257px;
+  height: 278px;
+  padding: 7px !important;
+}
+
+.dme-pmdt-window .pmdt-classic-main .dme-pmdt-rtc-column {
+  display: grid;
+  width: 369px;
+  gap: 13px !important;
+}
+
+.dme-pmdt-rtc-column > .dme-pmdt-panel {
+  width: 369px;
+  padding: 7px 10px !important;
+}
+
+.dme-pmdt-rtc-column > .dme-pmdt-panel:nth-child(1) { height: 143px; }
+.dme-pmdt-rtc-column > .dme-pmdt-panel:nth-child(2) { height: 193px; }
+.dme-pmdt-rtc-column > .dme-pmdt-panel:nth-child(3) { height: 94px; margin-top: 5px; }
+
+.dme-pmdt-rtc-data table {
+  width: 100% !important;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.dme-pmdt-rtc-data th,
+.dme-pmdt-rtc-data td {
+  height: 22px;
+  padding: 1px 3px !important;
+  border-bottom: 1px solid #c8c8c8;
+  color: #000 !important;
+  font-weight: 400;
+}
+
+.dme-pmdt-rtc-data th { text-align: left; }
+.dme-pmdt-rtc-data thead th:not(:first-child),
+.dme-pmdt-rtc-data td { text-align: center; }
+
+.dme-pmdt-rtc-data > .dme-pmdt-panel th:first-child { width: 126px; }
+.dme-pmdt-rtc-data > .dme-pmdt-panel th:not(:first-child) { width: 49px; }
+
+.dme-pmdt-rtc-data > .dme-pmdt-panel thead th,
+.dme-pmdt-rtc-column > .dme-pmdt-panel:nth-child(-n + 2) thead th {
+  height: 16px;
+  padding-block: 0 !important;
+}
+
+.dme-pmdt-rtc-column > .dme-pmdt-panel:nth-child(1) th:first-child { width: 145px; }
+.dme-pmdt-rtc-column > .dme-pmdt-panel:nth-child(1) th:not(:first-child) { width: 99px; }
+
+.dme-pmdt-rtc-column > .dme-pmdt-panel:nth-child(1) tbody th,
+.dme-pmdt-rtc-column > .dme-pmdt-panel:nth-child(1) tbody td {
+  padding-block: 0 !important;
+}
+
+.dme-pmdt-rtc-column > .dme-pmdt-panel:nth-child(2) th:first-child { width: 145px; }
+.dme-pmdt-rtc-column > .dme-pmdt-panel:nth-child(2) th:not(:first-child) { width: 99px; }
+
+.dme-pmdt-rtc-data .dme-pmdt-value {
+  width: 44px;
+  min-width: 44px;
+  height: 18px;
+}
+
+.dme-pmdt-rtc-column > .dme-pmdt-panel:nth-child(1) .dme-pmdt-value {
+  width: 106px;
+  min-width: 106px;
+}
+
+.dme-pmdt-rtc-column > .dme-pmdt-panel:nth-child(3) table th:nth-child(1) { width: 69px; }
+.dme-pmdt-rtc-column > .dme-pmdt-panel:nth-child(3) table th:nth-child(2),
+.dme-pmdt-rtc-column > .dme-pmdt-panel:nth-child(3) table th:nth-child(4) { width: 54px; }
+.dme-pmdt-rtc-column > .dme-pmdt-panel:nth-child(3) table th:nth-child(3) { width: 67px; }
+.dme-pmdt-rtc-column > .dme-pmdt-panel:nth-child(3) table th:nth-child(5) { width: 26px; }
+.dme-pmdt-rtc-column > .dme-pmdt-panel:nth-child(3) table th:nth-child(6) { width: 67px; }
+
+.dme-pmdt-rtc-data .pmdt-indicator,
+.dme-pmdt-rtc-data .pmdt-indicator-wrap {
+  width: 15px;
+  min-width: 15px;
+  height: 18px;
+}
+
+.dme-pmdt-tx-nominal {
+  display: grid;
+  grid-template-columns: 309px 273px;
+  align-items: start;
+  gap: 55px;
+  padding: 5px 15px 0;
+}
+
+.dme-pmdt-tx-nominal-left {
+  display: grid;
+  grid-template-rows: 296px 161px;
+  gap: 21px;
+}
+
+.dme-pmdt-tx-nominal-right {
+  display: grid;
+  grid-template-rows: 112px 279px;
+  gap: 87px;
+}
+
+.dme-pmdt-tx-nominal .dme-pmdt-panel {
+  width: 100%;
+  height: 100%;
+}
+
+.dme-pmdt-tx-rtc-parameters {
+  padding: 9px !important;
+}
+
+.dme-pmdt-tx-rtc-parameters dl {
+  margin: 0;
+}
+
+.dme-pmdt-tx-rtc-parameters dl > div {
+  display: grid;
+  height: 23px;
+  grid-template-columns: 156px 72px 45px;
+  align-items: center;
+  border-bottom: 1px solid #c8c8c8;
+}
+
+.dme-pmdt-tx-rtc-parameters dt,
+.dme-pmdt-tx-rtc-parameters dd {
+  min-width: 0;
+  margin: 0;
+}
+
+.dme-pmdt-tx-rtc-parameters dt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 4px;
+}
+
+.dme-pmdt-tx-rtc-parameters dd:last-child {
+  padding-left: 20px;
+}
+
+.dme-pmdt-spin-value {
+  display: inline-grid;
+  width: 72px;
+  height: 20px;
+  grid-template-columns: 57px 15px;
+  vertical-align: middle;
+}
+
+.dme-pmdt-spin-value .dme-pmdt-value {
+  width: 57px;
+  min-width: 57px;
+  height: 20px;
+  border-right: 0;
+  background: #fff;
+}
+
+.dme-pmdt-spin-buttons {
+  display: grid;
+  height: 20px;
+  grid-template-rows: 10px 10px;
+  border: 1px solid #999;
+  background: #d4d0c8;
+  font-size: 6px;
+  line-height: 9px;
+  text-align: center;
+}
+
+.dme-pmdt-spin-buttons span:first-child {
+  border-bottom: 1px solid #999;
+}
+
+.dme-pmdt-config-check,
+.dme-pmdt-config-radio {
+  display: flex;
+  min-height: 22px;
+  align-items: center;
+  gap: 5px;
+  color: #000;
+}
+
+.dme-pmdt-config-check input,
+.dme-pmdt-config-radio input {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+}
+
+.dme-pmdt-config-check--disabled {
+  color: #888;
+}
+
+.dme-pmdt-tx-power-amplifiers {
+  padding: 9px !important;
+}
+
+.dme-pmdt-pa-limit-row {
+  display: grid;
+  height: 23px;
+  grid-template-columns: 156px 72px 34px;
+  align-items: center;
+  border-bottom: 1px solid #c8c8c8;
+}
+
+.dme-pmdt-pa-limit-row > span:last-child {
+  padding-left: 20px;
+}
+
+.dme-pmdt-tx-operation {
+  padding: 7px 10px !important;
+}
+
+.dme-pmdt-timing-row {
+  display: grid;
+  height: 22px;
+  grid-template-columns: 50px 100px 100px;
+  align-items: center;
+  border-bottom: 1px solid #c8c8c8;
+}
+
+.dme-pmdt-tx-operation > .dme-pmdt-config-check {
+  border-bottom: 1px solid #c8c8c8;
+}
+
+.dme-pmdt-tx-ident {
+  padding: 10px !important;
+}
+
+.dme-pmdt-keyer-io-row {
+  display: grid;
+  height: 24px;
+  grid-template-columns: 102px 149px;
+  align-items: center;
+  border-bottom: 1px solid #c8c8c8;
+}
+
+.dme-pmdt-keyer-io-row .dme-pmdt-value {
+  width: 149px;
+  min-width: 149px;
+  height: 20px;
+  justify-content: flex-start;
+  padding-left: 5px;
+}
+
+.dme-pmdt-tx-ident > .dme-pmdt-config-check {
+  border-bottom: 1px solid #c8c8c8;
+}
+
+.dme-pmdt-keyer-source-label {
+  height: 20px;
+  padding-top: 4px;
+}
+
+.dme-pmdt-key-loss-options {
+  margin-left: 15px;
+}
+
+.dme-pmdt-key-loss-options .dme-pmdt-config-check {
+  min-height: 22px;
+  border-bottom: 1px solid #c8c8c8;
+}
+
+.dme-pmdt-ident-codes {
+  margin: 3px -10px -10px;
+  padding: 6px 10px 5px;
+  border-top: 1px solid #c8c8c8;
+}
+
+.dme-pmdt-ident-codes > div {
+  display: grid;
+  height: 23px;
+  grid-template-columns: 102px 149px;
+  align-items: center;
+  border-bottom: 1px solid #c8c8c8;
+}
+
+.dme-pmdt-ident-codes > div:not(:last-child) {
+  grid-template-columns: 190px 61px;
+}
+
+.dme-pmdt-ident-codes .dme-pmdt-config-check {
+  min-height: 22px;
+}
+
+.dme-pmdt-ident-codes > div:not(:last-child) .dme-pmdt-value {
+  width: 61px;
+  min-width: 61px;
+}
+
+.dme-pmdt-ident-codes > div:last-child .dme-pmdt-value {
+  width: 149px;
+  min-width: 149px;
+  height: 20px;
+  background: #fff;
+}
+
+.dme-pmdt-tx-offsets {
+  padding: 5px 15px 0;
+}
+
+.dme-pmdt-tx-offsets > .dme-pmdt-panel {
+  width: 455px;
+  height: 93px;
+  padding: 1px 7px !important;
+}
+
+.dme-pmdt-tx-offsets table {
+  width: 439px !important;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.dme-pmdt-tx-offsets th,
+.dme-pmdt-tx-offsets td {
+  height: 22px;
+  padding: 1px 3px !important;
+  border-bottom: 1px solid #c8c8c8;
+  color: #000 !important;
+  font-weight: 400;
+  text-align: center;
+}
+
+.dme-pmdt-tx-offsets tbody td {
+  padding-block: 0 !important;
+}
+
+.dme-pmdt-tx-offsets th:first-child {
+  width: 157px;
+  text-align: left;
+}
+
+.dme-pmdt-tx-offsets th:nth-child(2) {
+  width: 84px;
+}
+
+.dme-pmdt-tx-offsets th:nth-child(3) {
+  width: 34px;
+}
+
+.dme-pmdt-tx-offsets th:nth-child(4) {
+  width: 97px;
+}
+
+.dme-pmdt-tx-offsets th:nth-child(5) {
+  width: 67px;
+}
+
+.dme-pmdt-tx-offsets .dme-pmdt-spin-value {
+  margin-inline: auto;
+}
+
+.dme-pmdt-tx-offsets .dme-pmdt-spin-value,
+.dme-pmdt-tx-offsets .dme-pmdt-spin-value .dme-pmdt-value,
+.dme-pmdt-tx-offsets .dme-pmdt-spin-buttons {
+  height: 18px;
+}
+
+.dme-pmdt-tx-offsets .dme-pmdt-spin-value {
+  grid-template-rows: 18px;
+}
+
+.dme-pmdt-tx-offsets .dme-pmdt-spin-buttons {
+  grid-template-rows: 9px 9px;
+  line-height: 8px;
+}
+
+.dme-pmdt-select-readout::after {
+  content: "▼";
+  margin-left: auto;
+  padding: 0 4px;
+  border-left: 1px solid #aaa;
+  background: #d4d0c8;
+  font-size: 7px;
+  line-height: 18px;
+}
+
+/* Special tests */
+.dme-pmdt-special-content {
+  flex: 0 0 515px;
+  height: 515px;
+  min-height: 515px !important;
+  margin: 20px 20px 12px 0;
+  overflow: hidden;
+  padding: 11px 14px;
+  border: 1px solid #d0d0d0;
+  background: #fff !important;
+}
+
+.dme-pmdt-special-content > .pmdt-monitor-date {
+  display: none;
+}
+
+.dme-pmdt-special-grid {
+  display: grid;
+  grid-template-columns: 226px 226px 218px;
+  align-items: start;
+  gap: 10px;
+  margin-top: 0;
+}
+
+.dme-pmdt-special-monitor,
+.dme-pmdt-special-actions fieldset {
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 8px 7px 6px;
+  border: 1px solid #aaa;
+  background: #f7f7f7;
+}
+
+.dme-pmdt-special-monitor {
+  height: 462px;
+}
+
+.dme-pmdt-special-monitor legend,
+.dme-pmdt-special-actions legend {
+  padding-inline: 3px;
+}
+
+.dme-pmdt-special-monitor h3 {
+  margin: 4px 0 2px;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  font-size: 9px !important;
+}
+
+.dme-pmdt-special-number {
+  display: grid;
+  min-height: 22px;
+  grid-template-columns: minmax(0, 1fr) 62px 31px;
+  align-items: center;
+  gap: 3px;
+}
+
+.dme-pmdt-special-number input {
+  width: 62px;
+  height: 18px;
+  padding: 1px 3px;
+  text-align: right;
+}
+
+.dme-pmdt-special-number input::-webkit-inner-spin-button {
+  opacity: 1;
+}
+
+.dme-pmdt-special-number small {
+  font-size: 9px;
+}
+
+.dme-pmdt-special-inline-options {
+  display: flex;
+  min-height: 21px;
+  gap: 7px;
+  margin: 2px 0;
+}
+
+.dme-pmdt-special-inline-options label,
+.dme-pmdt-special-checkbox {
+  display: flex;
+  min-height: 21px;
+  align-items: center;
+}
+
+.dme-pmdt-special-select {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 85px;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.dme-pmdt-special-select select {
+  height: 19px;
+}
+
+.dme-pmdt-special-actions {
+  display: grid;
+  width: 210px;
+  margin-left: 8px;
+  gap: 7px;
+}
+
+.dme-pmdt-special-actions > button:first-child {
+  width: 73px;
+}
+
+.dme-pmdt-special-actions > button:last-child {
+  width: 101px;
+  justify-self: center;
+}
+
+.dme-pmdt-special-actions > button,
+.dme-pmdt-trend-controls button {
+  min-height: 21px;
+  border: 1px solid #fff;
+  background: #d4d0c8;
+  box-shadow: inset -1px -1px #808080, inset 1px 1px #fff;
+}
+
+.dme-pmdt-special-actions > label {
+  display: grid;
+  gap: 3px;
+}
+
+.dme-pmdt-special-actions select {
+  height: 20px;
+}
+
+.dme-pmdt-special-actions fieldset div {
+  display: grid;
+  grid-template-columns: 1fr 20px 20px;
+  align-items: center;
+}
+
+.dme-pmdt-special-actions strong {
+  display: grid;
+  width: 15px;
+  height: 15px;
+  place-items: center;
+  background: #00ff00;
+  color: #006000;
+  font-weight: 400;
+}
+
+/* Fault history */
+.dme-pmdt-fault-content {
+  flex: 0 0 536px;
+  height: 536px;
+  min-height: 536px !important;
+  margin: 0 20px 12px 0;
+  overflow: hidden;
+  padding: 11px 14px;
+  border: 1px solid #d0d0d0;
+  background: #fff !important;
+}
+
+.dme-pmdt-fault-data table,
+.dme-pmdt-fault-trend table {
+  width: 100% !important;
+  table-layout: fixed;
+}
+
+.dme-pmdt-fault-data thead th:first-child,
+.dme-pmdt-fault-trend thead th:first-child {
+  width: 135px;
+}
+
+.dme-pmdt-fault-data thead th {
+  height: 36px !important;
+  padding: 1px 4px !important;
+  vertical-align: top;
+}
+
+.dme-pmdt-fault-data tbody th,
+.dme-pmdt-fault-data tbody td {
+  height: 23.4px !important;
+  padding: 1px 4px !important;
+}
+
+.dme-pmdt-fault-data thead th span,
+.dme-pmdt-fault-data thead th time,
+.dme-pmdt-fault-lcu thead th span,
+.dme-pmdt-fault-lcu thead th time {
+  display: block;
+}
+
+.dme-pmdt-fault-value {
+  display: block;
+  width: 48px;
+  min-width: 48px;
+  min-height: 15px;
+  margin: 0 auto;
+  padding: 1px 3px;
+  border: 1px solid #c8c8c8;
+  text-align: center;
+}
+
+.dme-pmdt-fault-value--green {
+  border-color: #00b900;
+  background: #00ff00;
+  color: #006000;
+}
+
+.dme-pmdt-fault-value--yellow {
+  border-color: #c9a000;
+  background: #ffff00;
+  color: #5b4b00;
+}
+
+.dme-pmdt-fault-value--red {
+  border-color: #c00000;
+  background: #ff0000;
+  color: #fff;
+}
+
+.dme-pmdt-fault-value--gray {
+  background: #f7f7f7;
+}
+
+.dme-pmdt-fault-footer {
+  display: grid;
+  grid-template-columns: 135px repeat(3, 174px) 1fr;
+  align-items: end;
+  column-gap: 8px;
+  margin-top: 15px;
+}
+
+.dme-pmdt-fault-footer fieldset,
+.dme-pmdt-failed-lrus,
+.dme-pmdt-fault-transmitter {
+  box-sizing: border-box;
+  padding: 6px;
+  border: 1px solid #aaa;
+  background: #f7f7f7;
+}
+
+.dme-pmdt-fault-footer fieldset {
+  width: 174px;
+}
+
+.dme-pmdt-fault-history-label {
+  display: none;
+}
+
+.dme-pmdt-fault-footer output,
+.dme-pmdt-failed-lrus output {
+  display: block;
+  width: 165px;
+  min-height: 55px;
+  padding: 5px;
+  border: 1px inset #fff;
+  background: #fff;
+}
+
+.dme-pmdt-fault-lcu {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: start;
+  gap: 8px;
+  padding-top: 6px;
+}
+
+.dme-pmdt-fault-lcu > table {
+  width: 100% !important;
+  table-layout: fixed;
+}
+
+.dme-pmdt-fault-lcu > table th:first-child {
+  width: 135px;
+}
+
+.dme-pmdt-fault-lcu > table thead th {
+  height: 36px !important;
+  padding: 1px 4px !important;
+  vertical-align: top;
+}
+
+.dme-pmdt-fault-lcu > table tbody th,
+.dme-pmdt-fault-lcu > table tbody td {
+  height: 23.4px !important;
+  padding: 1px 4px !important;
+}
+
+.dme-pmdt-fault-lcu .dme-pmdt-fault-transmitter {
+  grid-column: 1 / -1;
+}
+
+.dme-pmdt-fault-subheading td {
+  text-align: center;
+}
+
+.dme-pmdt-fault-transmitter > div {
+  display: grid;
+  grid-template-columns: 135px repeat(6, 86px);
+  min-height: 30px;
+  align-items: center;
+}
+
+.dme-pmdt-fault-lcu-failed {
+  display: grid;
+  grid-template-columns: 135px repeat(3, 174px);
+  column-gap: 8px;
+  align-items: end;
+  margin-top: -8px;
+}
+
+.dme-pmdt-fault-lcu-failed .dme-pmdt-failed-lrus {
+  width: 174px;
+  height: 136px;
+}
+
+.dme-pmdt-fault-lcu-failed .dme-pmdt-failed-lrus output {
+  min-height: 116px;
+}
+
+.dme-pmdt-fault-trend table thead th:not(:first-child) {
+  text-align: center;
+}
+
+.dme-pmdt-fault-trend table {
+  width: 100% !important;
+  table-layout: fixed;
+}
+
+.dme-pmdt-fault-trend table thead th {
+  padding: 1px 4px !important;
+  vertical-align: top;
+}
+
+.dme-pmdt-fault-trend table thead tr:first-child th {
+  height: 14px !important;
+}
+
+.dme-pmdt-fault-trend table thead tr:nth-child(2) th {
+  height: 20px !important;
+}
+
+.dme-pmdt-fault-trend table thead tr:nth-child(3) th {
+  height: 18px !important;
+}
+
+.dme-pmdt-fault-trend table thead th time {
+  display: block;
+  white-space: nowrap;
+}
+
+.dme-pmdt-fault-trend table tbody th,
+.dme-pmdt-fault-trend table tbody td {
+  height: 23.4px !important;
+  padding: 1px 4px !important;
+}
+
+.dme-pmdt-fault-trend .dme-pmdt-fault-value {
+  width: 48px;
+  min-width: 48px;
+  margin: 0 auto;
+}
+
+.dme-pmdt-trend-footer {
+  display: grid;
+  grid-template-columns: 363px 1fr;
+  align-items: start;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.dme-pmdt-trend-footer .dme-pmdt-failed-lrus {
+  width: 363px;
+  height: 80px;
+}
+
+.dme-pmdt-trend-footer .dme-pmdt-failed-lrus output {
+  width: 350px;
+  min-height: 55px;
+}
+
+.dme-pmdt-trend-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  margin: 24px 0 0;
+}
+
+.dme-pmdt-trend-controls button {
+  min-width: 64px;
+}
+
+/* Diagnostics additions specific to the DME reference screens. */
+.dme-pmdt-window .pmdt-diagnostics-content {
+  flex: 0 0 536px;
+  width: 546px;
+  height: 536px;
+  min-height: 536px !important;
+  margin: 0 20px 12px 0;
+  overflow: hidden;
+  border: 1px solid #d0d0d0;
+  background: #fff !important;
+}
+
+.dme-pmdt-window .pmdt-diagnostics-power-up {
+  padding: 10px 14px;
+  background: #fff !important;
+}
+
+.dme-pmdt-window .pmdt-diagnostics-power-up > time {
+  display: block;
+  width: 108px;
+  min-width: 108px;
+  white-space: nowrap;
+}
+
+.dme-pmdt-window .pmdt-diagnostics-power-table {
+  margin-top: 66px;
+}
+
+.dme-pmdt-window .pmdt-diagnostics-fault-isolation {
+  padding-top: 29px;
+}
+
+.dme-pmdt-window .pmdt-diagnostics-fault-table tbody th,
+.dme-pmdt-window .pmdt-diagnostics-fault-table tbody td {
+  height: 20px !important;
+}
+
+.dme-pmdt-window .pmdt-diagnostics-fault-results {
+  margin-top: -10px;
+}
+
+.dme-pmdt-periodic-results {
+  display: grid;
+  gap: 0;
+  height: 93px;
+  margin-top: 16px;
+  padding: 0 6px 6px;
+  border: 1px solid #aaa;
+  background: #f7f7f7;
+}
+
+.dme-pmdt-periodic-results output {
+  display: block;
+  min-height: 70px;
+  padding: 4px;
+  border: 1px inset #fff;
+  background: #fff;
+}
+
+/* DME RMS status and data screens. All selectors remain DME-scoped. */
+.dme-pmdt-window .dme-pmdt-rms-status > div:last-child,
+.dme-pmdt-window .dme-pmdt-rms-data-content {
+  margin: 0 20px 12px 14px;
+  padding: 0 !important;
+  border: 1px solid #d0d0d0;
+  background: #fff !important;
+}
+
+.dme-pmdt-screen-time {
+  display: block;
+  width: max-content;
+  min-width: 104px;
+  margin: 12px 14px 10px;
+  padding: 3px 6px;
+  border: 1px solid #d0d0d0;
+  background: #fff;
+  text-align: center;
+}
+
+.dme-pmdt-rms-status-content,
+.dme-pmdt-rms-monitor-content {
+  min-height: 480px;
+  background: #fff !important;
+}
+
+.dme-pmdt-window .dme-pmdt-rms-status > div:last-child {
+  height: 493px;
+  min-height: 493px;
+  flex: 0 0 493px;
+  overflow: hidden !important;
+}
+
+.dme-pmdt-rms-status-main {
+  display: grid;
+  width: 650px;
+  grid-template-columns: 220px 345px;
+  align-items: start;
+  gap: 80px;
+  padding: 0 14px 14px;
+}
+
+.dme-pmdt-rms-status-main fieldset,
+.dme-pmdt-rms-monitor-top fieldset,
+.dme-pmdt-rms-transmitter-status,
+.dme-pmdt-rms-selection,
+.dme-pmdt-maintenance-alerts fieldset,
+.dme-pmdt-digital-io fieldset {
+  min-width: 0;
+  margin: 0 0 10px;
+  padding: 7px 9px;
+  border: 1px solid #c8c8c8;
+  background: #f7f7f7;
+}
+
+.dme-pmdt-rms-status-main > div > fieldset:first-child {
+  margin-bottom: 17px;
+}
+
+.dme-pmdt-rms-status-main > div > fieldset:nth-child(2) {
+  min-height: 95px;
+}
+
+.dme-pmdt-rms-status-main legend,
+.dme-pmdt-rms-monitor-top legend,
+.dme-pmdt-rms-transmitter-status legend,
+.dme-pmdt-rms-selection legend,
+.dme-pmdt-maintenance-alerts legend,
+.dme-pmdt-digital-io legend {
+  padding-inline: 3px;
+}
+
+.dme-pmdt-rms-status-row {
+  display: flex;
+  min-height: 24.5px;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid #c8c8c8;
+}
+
+.dme-pmdt-rms-readout {
+  display: grid;
+  min-height: 24.5px;
+  grid-template-columns: minmax(0, 1fr) 82px;
+  align-items: center;
+  border-bottom: 1px solid #c8c8c8;
+}
+
+.dme-pmdt-rms-readout output,
+.dme-pmdt-rms-readout .dme-pmdt-value {
+  width: 82px;
+  min-width: 82px;
+  min-height: 18px;
+  box-sizing: border-box;
+  padding: 2px 4px;
+  border: 1px inset #fff;
+  background: #f0f0f0;
+  text-align: center;
+}
+
+.dme-pmdt-rms-revision-table {
+  width: 345px !important;
+  table-layout: fixed;
+  margin-top: -20px;
+}
+
+.dme-pmdt-rms-revision-table th,
+.dme-pmdt-rms-revision-table td {
+  height: 21px !important;
+  padding-top: 1px !important;
+  padding-bottom: 1px !important;
+}
+
+.dme-pmdt-rms-revision-table .dme-pmdt-rms-resource-heading th {
+  border-color: transparent !important;
+  background: #fff !important;
+  text-align: center;
+}
+
+.dme-pmdt-rms-revision-table col:nth-child(1) { width: 63px; }
+.dme-pmdt-rms-revision-table col:nth-child(2) { width: 92px; }
+.dme-pmdt-rms-revision-table col:nth-child(3),
+.dme-pmdt-rms-revision-table col:nth-child(4) { width: 63px; }
+.dme-pmdt-rms-revision-table col:nth-child(5) { width: 64px; }
+.dme-pmdt-rms-revision-table th:nth-child(n + 3) { text-align: center; }
+.dme-pmdt-rms-revision-table td { text-align: center; }
+
+.dme-pmdt-rms-monitor-content {
+  padding-bottom: 14px;
+}
+
+.dme-pmdt-rms-monitor-top {
+  position: relative;
+  display: grid;
+  grid-template-columns: 395px 105px;
+  align-items: start;
+  gap: 8px 22px;
+  padding: 0 14px;
+}
+
+.dme-pmdt-rms-monitor-top > fieldset:first-child {
+  grid-row: 1 / span 2;
+}
+
+.dme-pmdt-rms-monitor-top > .dme-pmdt-enabled-monitors {
+  min-height: 107px;
+}
+
+.dme-pmdt-rms-monitor-top > .dme-pmdt-rms-status-row {
+  position: absolute;
+  top: -30px;
+  left: 380px;
+  width: 151px;
+  align-self: auto;
+}
+
+.dme-pmdt-rms-monitor-top table {
+  width: 375px !important;
+  table-layout: fixed;
+}
+
+.dme-pmdt-rms-monitor-top table th:first-child { width: 68px; }
+.dme-pmdt-rms-monitor-top table th:not(:first-child) { width: 61px; text-align: center; }
+.dme-pmdt-rms-monitor-top table td { text-align: center; }
+
+.dme-pmdt-rms-monitor-top table th,
+.dme-pmdt-rms-monitor-top table td {
+  height: 28px !important;
+}
+
+.dme-pmdt-enabled-monitors > div,
+.dme-pmdt-rms-selection > div {
+  display: flex;
+  min-height: 23px;
+  align-items: center;
+  gap: 5px;
+  border-bottom: 1px solid #c8c8c8;
+}
+
+.dme-pmdt-rms-transmitter-status {
+  display: flex;
+  width: 395px;
+  gap: 33px;
+  margin: 6px 14px 0;
+}
+
+.dme-pmdt-rms-transmitter-status > fieldset {
+  width: 102px;
+  margin: 0;
+}
+
+.dme-pmdt-maintenance-alerts,
+.dme-pmdt-power-supply,
+.dme-pmdt-ad-data,
+.dme-pmdt-digital-io {
+  padding: 0 14px 14px !important;
+  background: #fff !important;
+}
+
+.dme-pmdt-maintenance-alerts > fieldset:first-child {
+  width: 530px;
+}
+
+.dme-pmdt-general-alert-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.dme-pmdt-general-alert-grid > div > div {
+  display: flex;
+  min-height: 23px;
+  align-items: center;
+  gap: 5px;
+  border-bottom: 1px solid #c8c8c8;
+}
+
+.dme-pmdt-maintenance-alerts > fieldset:nth-child(2) {
+  width: 530px;
+}
+
+.dme-pmdt-maintenance-alerts table {
+  width: 510px !important;
+  table-layout: fixed;
+}
+
+.dme-pmdt-maintenance-alerts table th:first-child { width: 220px; }
+.dme-pmdt-maintenance-alerts table th:not(:first-child) { width: 72px; text-align: center; }
+.dme-pmdt-maintenance-alerts table td { position: relative; text-align: center; }
+.dme-pmdt-maintenance-alerts table small { position: absolute; top: 2px; right: 4px; }
+.dme-pmdt-maintenance-alerts > p { margin: 12px 0 0 310px; }
+
+.dme-pmdt-power-tables {
+  position: relative;
+  width: 700px;
+}
+
+.dme-pmdt-power-supply table {
+  table-layout: fixed;
+}
+
+.dme-pmdt-power-supply .dme-pmdt-voltage-table {
+  width: 376px !important;
+}
+
+.dme-pmdt-power-supply .dme-pmdt-voltage-table th:first-child { width: 100px; }
+.dme-pmdt-power-supply .dme-pmdt-voltage-table th:not(:first-child) { width: 55px; text-align: center; }
+
+.dme-pmdt-power-supply .dme-pmdt-current-table {
+  position: absolute;
+  top: 187px;
+  left: 400px;
+  width: 300px !important;
+}
+
+.dme-pmdt-power-supply .dme-pmdt-current-table th { width: 60px; text-align: center; }
+.dme-pmdt-power-supply table td { text-align: center; }
+
+.dme-pmdt-power-supply .dme-pmdt-power-spacer {
+  height: 20.8px;
+}
+
+.dme-pmdt-power-supply .dme-pmdt-power-spacer > td {
+  border: 0;
+}
+
+.dme-pmdt-data-readout {
+  display: inline-block;
+  min-width: 44px;
+  min-height: 16px;
+  box-sizing: border-box;
+  padding: 1px 3px;
+  border: 1px inset #fff;
+  background: #f0f0f0;
+  text-align: right;
+}
+
+.dme-pmdt-bcps-status {
+  display: grid;
+  width: 150px;
+  margin-top: 15px;
+}
+
+.dme-pmdt-bcps-status > div {
+  display: grid;
+  min-height: 21px;
+  grid-template-columns: 1fr 18px;
+  align-items: center;
+  border-bottom: 1px solid #c8c8c8;
+}
+
+.dme-pmdt-ad-data {
+  margin-top: -26px;
+}
+
+.dme-pmdt-ad-data table {
+  width: 412px !important;
+  table-layout: fixed;
+}
+
+.dme-pmdt-ad-data .dme-pmdt-ad-input-table { margin-bottom: 15px; }
+.dme-pmdt-ad-data table th:first-child { width: 112px; }
+.dme-pmdt-ad-data table th:not(:first-child) { width: 60px; text-align: center; }
+.dme-pmdt-ad-data table td { text-align: center; }
+
+.dme-pmdt-temperature-spacer {
+  height: 68px;
+}
+
+.dme-pmdt-digital-top {
+  display: grid;
+  grid-template-columns: 242px 220px 145px;
+  align-items: start;
+  gap: 14px;
+}
+
+.dme-pmdt-digital-io fieldset {
+  padding: 6px 8px;
+}
+
+.dme-pmdt-digital-top > fieldset {
+  height: 210px;
+  margin-bottom: 15px;
+}
+
+.dme-pmdt-digital-io table {
+  width: 100% !important;
+  table-layout: fixed;
+}
+
+.dme-pmdt-digital-top > fieldset:first-child table th:first-child { width: 96px; }
+.dme-pmdt-digital-top > fieldset:first-child table th:nth-child(2) { width: 104px; }
+.dme-pmdt-digital-top > fieldset:first-child table th:nth-child(3) { width: 24px; }
+
+.dme-pmdt-digital-io table td:last-child {
+  text-align: center;
+}
+
+.dme-pmdt-system-power {
+  width: 242px;
+  height: 251px;
+  margin-top: 2px !important;
+}
+
+.dme-pmdt-system-power table th:first-child { width: 118px; }
+.dme-pmdt-system-power table th:not(:first-child) { width: 52px; text-align: center; }
+.dme-pmdt-system-power .dme-pmdt-value { min-width: 50px; width: 50px; }
+.dme-pmdt-system-power .dme-pmdt-system-centered { text-align: center; }
+
+/* RMS logs */
+.dme-pmdt-window .dme-pmdt-log-actions {
+  display: flex;
+  min-height: 47px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 20px 0 12px;
+  padding: 5px 14px;
+  border-right: 1px solid #d0d0d0;
+  border-left: 1px solid #d0d0d0;
+  background: #fff !important;
+}
+
+.dme-pmdt-window .dme-pmdt-log-actions button,
+.dme-pmdt-operational-summary button,
+.dme-pmdt-calibration-screen button {
+  min-width: 74px;
+  min-height: 21px;
+  padding: 1px 9px;
+  border: 1px solid #fff;
+  border-radius: 0;
+  background: #d4d0c8;
+  color: #000;
+  box-shadow: inset -1px -1px #808080, inset 1px 1px #fff;
+}
+
+.dme-pmdt-window .dme-pmdt-log-actions button:focus-visible,
+.dme-pmdt-operational-summary button:focus-visible,
+.dme-pmdt-calibration-screen button:focus-visible {
+  outline: 1px dotted #000;
+  outline-offset: -3px;
+}
+
+.dme-pmdt-log-actions > span {
+  flex: 1;
+  text-align: center;
+}
+
+.dme-pmdt-calibration-screen button:disabled {
+  color: #808080;
+}
+
+.dme-pmdt-logs-screen > div:last-child {
+  margin: 0 20px 12px 12px;
+  border: 1px solid #d0d0d0;
+  background: #fff !important;
+}
+
+.dme-pmdt-logs-screen .dme-pmdt-log-actions + div:last-child {
+  border-top: 0;
+}
+
+.dme-pmdt-operational-summary {
+  position: relative;
+  min-height: 480px;
+  padding: 16px 14px;
+  background: #fff !important;
+}
+
+.dme-pmdt-operational-summary table {
+  width: 370px !important;
+}
+
+.dme-pmdt-operational-summary table th:first-child {
+  width: 145px;
+}
+
+.dme-pmdt-operational-summary table td:nth-child(2),
+.dme-pmdt-operational-summary table td:nth-child(3) {
+  width: 82px;
+  text-align: center;
+}
+
+.dme-pmdt-operational-summary table td:last-child {
+  width: 54px;
+  border-right-color: transparent !important;
+}
+
+.dme-pmdt-operational-summary table tbody th,
+.dme-pmdt-operational-summary table tbody td {
+  height: 22px !important;
+  padding: 2px 5px !important;
+}
+
+.dme-pmdt-operational-summary .dme-pmdt-summary-spacer td {
+  height: 98px !important;
+  border-color: transparent !important;
+  background: #fff !important;
+}
+
+.dme-pmdt-summary-period {
+  position: absolute;
+  top: 191px;
+  left: 414px;
+  width: 190px;
+}
+
+.dme-pmdt-summary-period dl {
+  margin: 0 0 8px;
+}
+
+.dme-pmdt-summary-period dl > div {
+  display: grid;
+  min-height: 22px;
+  grid-template-columns: 85px 1fr;
+}
+
+.dme-pmdt-summary-period dt,
+.dme-pmdt-summary-period dd {
+  margin: 0;
+  padding: 3px 5px;
+  border: 1px solid #c8c8c8;
+  background: #f7f7f7;
+}
+
+.dme-pmdt-summary-period dd {
+  text-align: center;
+}
+
+.dme-pmdt-summary-period button {
+  width: 190px;
+}
+
+.dme-pmdt-download-button {
+  margin-top: 36px;
+}
+
+.dme-pmdt-log-scroll {
+  height: 462px;
+  overflow: auto;
+  padding: 0 14px 12px;
+  background: #fff !important;
+}
+
+.dme-pmdt-trend-scroll {
+  height: 468px;
+  margin-right: 14px;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  padding: 0 14px 12px 16px;
+  background: #fff !important;
+}
+
+.dme-pmdt-trend-table {
+  width: 350px !important;
+  table-layout: fixed;
+  border-collapse: collapse;
+  background: #fff !important;
+  color: #000 !important;
+  text-align: left;
+}
+
+.dme-pmdt-trend-table th:nth-child(1) { width: 105px; }
+.dme-pmdt-trend-table th:nth-child(2) { width: 58px; }
+.dme-pmdt-trend-table th:nth-child(3) { width: 108px; }
+.dme-pmdt-trend-table th:nth-child(4) { width: 79px; }
+
+.dme-pmdt-trend-table--maintenance {
+  width: 387px !important;
+}
+
+.dme-pmdt-trend-table--maintenance th:nth-child(2) { width: 95px; }
+
+.dme-pmdt-trend-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: 28px;
+  padding: 3px 8px;
+  border-right: 1px solid #d0d0d0;
+  background: #fff !important;
+  color: #000 !important;
+  font-weight: 400;
+}
+
+.dme-pmdt-trend-table tbody td {
+  height: 18px !important;
+  padding: 1px 8px !important;
+  overflow: hidden;
+  border: 0 !important;
+  background: #fff !important;
+  color: #000 !important;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+/* All Monitor Data follows the wider PMDT DME matrix, including the visual
+   separation between the two independent monitor channels. */
+.dme-pmdt-monitor-data-shell {
+  width: 606px;
+  height: 493px;
+  min-height: 493px !important;
+  flex: 0 0 493px !important;
+  margin: 0 0 12px 0;
+  overflow: hidden !important;
+  border: 1px solid #d0d0d0;
+  background: #fff !important;
+}
+
+.dme-pmdt-all-monitor-data {
+  width: 494px;
+  padding: 16px 14px 12px 15px;
+  background: #fff !important;
+  color: #000 !important;
+}
+
+.dme-pmdt-monitor-dates {
+  display: grid;
+  width: 465px;
+  grid-template-columns: 168px 92px 28px 92px 85px;
+  align-items: start;
+  margin-bottom: 14px;
+}
+
+.dme-pmdt-monitor-dates time {
+  display: block;
+  width: 102px;
+  min-height: 21px;
+  transform: translateX(-8px);
+  padding: 3px 5px;
+  border: 1px solid #808080;
+  background: #fff;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dme-pmdt-monitor-dates time:nth-of-type(2) {
+  transform: translateX(-6px);
+}
+
+.dme-pmdt-monitor-data-table {
+  width: 465px !important;
+  table-layout: fixed;
+  border-collapse: collapse;
+  background: #fff !important;
+  color: #000 !important;
+  text-align: left;
+}
+
+.dme-pmdt-monitor-parameter-col { width: 168px; }
+.dme-pmdt-monitor-value-col { width: 92px; }
+.dme-pmdt-monitor-separator-col { width: 28px; }
+.dme-pmdt-monitor-unit-col { width: 85px; }
+
+.dme-pmdt-monitor-data-table thead th {
+  height: 12px;
+  padding: 0 4px;
+  border-right: 1px solid #c8c8c8;
+  border-bottom: 1px solid #c8c8c8;
+  background: #fff !important;
+  color: #000 !important;
+  font-weight: 400;
+  text-align: center;
+}
+
+.dme-pmdt-monitor-data-table thead th:first-child,
+.dme-pmdt-monitor-data-table tbody th {
+  text-align: left;
+}
+
+.dme-pmdt-monitor-data-table tbody th,
+.dme-pmdt-monitor-data-table tbody td {
+  height: 23.4px !important;
+  padding: 1px 4px !important;
+  border-right: 1px solid #c8c8c8 !important;
+  border-bottom: 1px solid #c8c8c8 !important;
+  background: #fff !important;
+  color: #000 !important;
+  font-weight: 400;
+}
+
+.dme-pmdt-monitor-data-table tbody td {
+  text-align: center;
+}
+
+.dme-pmdt-monitor-data-table thead th:nth-child(3),
+.dme-pmdt-monitor-data-table tbody td:nth-child(3) {
+  border: 0 !important;
+  background: #fff !important;
+}
+
+.dme-pmdt-monitor-data-table tbody td:last-child {
+  text-align: left;
+}
+
+.dme-pmdt-monitor-data-table .dme-pmdt-value {
+  display: block;
+  width: 64px !important;
+  min-width: 64px !important;
+  min-height: 18px;
+  margin: 0 auto;
+  padding: 1px 4px;
+}
+
+.dme-pmdt-monitor-data-table .dme-pmdt-value--gray {
+  width: 78px !important;
+  min-width: 78px !important;
+}
+
+.dme-pmdt-monitor-data-spacer > td {
+  height: 23.4px !important;
+  border: 0 !important;
+  background: #fff !important;
+}
+
+.dme-pmdt-log-table {
+  width: 100% !important;
+}
+
+.dme-pmdt-log-table th:first-child { width: 105px; }
+.dme-pmdt-log-table th:nth-child(2) { width: 65px; }
+
+.dme-pmdt-log-table tbody td,
+.dme-pmdt-log-table tbody th,
+.dme-pmdt-logs-screen tbody td,
+.dme-pmdt-logs-screen tbody th {
+  height: 18px !important;
+  padding: 1px 5px !important;
+}
+
+.dme-pmdt-logs-screen .max-h-\[calc\(100dvh-15rem\)\] {
+  max-height: none !important;
+  padding: 0 14px 12px !important;
+}
+
+/* Individual monitor data */
+.dme-pmdt-monitor-detail > div:last-child,
+.dme-pmdt-test-results > .dme-pmdt-results-content,
+.dme-pmdt-offsets-screen > .dme-pmdt-offsets-content,
+.dme-pmdt-calibration-screen > .dme-pmdt-calibration-content {
+  margin: 0 20px 12px 0;
+  border: 1px solid #d0d0d0;
+  background: #fff !important;
+}
+
+.dme-pmdt-monitor-detail > div:last-child {
+  flex: 0 0 493px !important;
+  min-height: 493px !important;
+  height: 493px !important;
+  overflow: hidden !important;
+}
+
+.dme-pmdt-detail-data,
+.dme-pmdt-detail-alerts,
+.dme-pmdt-detail-status,
+.dme-pmdt-results-content,
+.dme-pmdt-offsets-content,
+.dme-pmdt-calibration-content {
+  padding: 12px 14px;
+  background: #fff !important;
+}
+
+.dme-pmdt-detail-data > time,
+.dme-pmdt-detail-alerts > time,
+.dme-pmdt-detail-status > time,
+.dme-pmdt-results-content > time,
+.dme-pmdt-offsets-content > time,
+.dme-pmdt-calibration-content > time {
+  display: block;
+  width: max-content;
+  min-width: 104px;
+  margin-bottom: 10px;
+  padding: 3px 6px;
+  border: 1px solid #d0d0d0;
+  background: #fff;
+  text-align: center;
+}
+
+.dme-pmdt-detail-data table {
+  width: 710px !important;
+  table-layout: fixed;
+}
+
+.dme-pmdt-detail-data table th:first-child { width: 153px; }
+.dme-pmdt-detail-data table th:nth-child(2) { width: 92px; text-align: center; }
+.dme-pmdt-detail-data table th:nth-child(3) { width: 8px; }
+.dme-pmdt-detail-data table th:nth-child(4) { width: 92px; text-align: center; }
+.dme-pmdt-detail-data table th:nth-child(5) { width: 9px; }
+.dme-pmdt-detail-data table th:nth-child(6) { width: 92px; text-align: center; }
+.dme-pmdt-detail-data table th:nth-child(7) { width: 8px; }
+.dme-pmdt-detail-data table th:nth-child(8) { width: 92px; text-align: center; }
+.dme-pmdt-detail-data table th:nth-child(9) { width: 9px; }
+.dme-pmdt-detail-data table th:nth-child(10) { width: 92px; text-align: center; }
+.dme-pmdt-detail-data table th:nth-child(11) { width: 63px; }
+.dme-pmdt-detail-data table td { text-align: center; }
+.dme-pmdt-detail-data table tbody th,
+.dme-pmdt-detail-data table tbody td {
+  height: 23.4px !important;
+  padding-block: 1px !important;
+}
+.dme-pmdt-detail-data table th:nth-child(3),
+.dme-pmdt-detail-data table th:nth-child(5),
+.dme-pmdt-detail-data table th:nth-child(7),
+.dme-pmdt-detail-data table th:nth-child(9),
+.dme-pmdt-detail-data table td:nth-child(3),
+.dme-pmdt-detail-data table td:nth-child(5),
+.dme-pmdt-detail-data table td:nth-child(7),
+.dme-pmdt-detail-data table td:nth-child(9) {
+  border: 0 !important;
+  background: #fff !important;
+}
+.dme-pmdt-detail-data .dme-pmdt-value { width: 48px; min-width: 48px; }
+.dme-pmdt-detail-data .dme-pmdt-value--gray { width: 78px; min-width: 78px; }
+
+.dme-pmdt-detail-alerts > time {
+  margin-bottom: 15px;
+}
+
+.dme-pmdt-detail-alerts > div {
+  width: 240px;
+}
+
+.dme-pmdt-detail-alerts > div > div,
+.dme-pmdt-detail-status-row {
+  display: flex;
+  min-height: 23px;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid #c8c8c8;
+}
+
+.dme-pmdt-detail-status-grid {
+  display: grid;
+  width: 548px;
+  grid-template-columns: 268px 260px;
+  grid-template-rows: 112px 272px;
+  align-items: start;
+  gap: 11px 10px;
+}
+
+.dme-pmdt-detail-status-grid fieldset:nth-child(1) { height: 112px; }
+.dme-pmdt-detail-status-grid fieldset:nth-child(2) { height: 68px; }
+.dme-pmdt-detail-status-grid fieldset:nth-child(3) { height: 272px; }
+.dme-pmdt-detail-status-grid fieldset:nth-child(4) { height: 96px; }
+
+.dme-pmdt-detail-status > time {
+  margin-bottom: 16px;
+}
+
+.dme-pmdt-detail-status-grid fieldset,
+.dme-pmdt-calibration-grid fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 7px 9px;
+  border: 1px solid #c8c8c8;
+  background: #f7f7f7;
+}
+
+.dme-pmdt-detail-status-grid legend,
+.dme-pmdt-calibration-grid legend {
+  padding-inline: 3px;
+}
+
+.dme-pmdt-detail-status-grid fieldset:nth-child(3) {
+  grid-row: 2 / span 2;
+}
+
+.dme-pmdt-detail-status-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.dme-pmdt-detail-readout {
+  display: grid;
+  min-height: 23px;
+  grid-template-columns: 1fr 132px auto;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid #c8c8c8;
+}
+
+.dme-pmdt-detail-readout output {
+  min-height: 18px;
+  padding: 2px 5px;
+  border: 1px inset #fff;
+  background: #f0f0f0;
+  text-align: center;
+}
+
+.dme-pmdt-detail-trigger {
+  margin-top: 42px;
+}
+
+/* Monitor test results */
+.dme-pmdt-results-content {
+  min-height: 470px;
+  overflow: auto;
+}
+
+.dme-pmdt-test-results > .dme-pmdt-results-content {
+  flex: 0 0 493px !important;
+  min-height: 493px;
+  height: 493px;
+  margin: 0 41px 12px 0 !important;
+}
+
+.dme-pmdt-results-content > time {
+  margin-bottom: 26px;
+}
+
+.dme-pmdt-results-content table {
+  table-layout: fixed;
+}
+
+.dme-pmdt-results-content tbody th,
+.dme-pmdt-results-content tbody td {
+  height: 21px !important;
+}
+
+.dme-pmdt-results-content td {
+  text-align: center;
+}
+
+.dme-pmdt-results-content .dme-pmdt-value {
+  width: 50px;
+}
+
+.dme-pmdt-alarm-test-table {
+  width: 620px !important;
+}
+
+.dme-pmdt-alarm-test-table th:first-child { width: 114px; }
+.dme-pmdt-alarm-test-table th:nth-child(n + 2):nth-child(-n + 7) { width: 65px; text-align: center; }
+.dme-pmdt-alarm-test-table th:last-child { width: 40px; }
+
+.dme-pmdt-three-result-table {
+  width: 520px !important;
+}
+
+.dme-pmdt-three-result-table th:first-child { width: 215px; }
+.dme-pmdt-three-result-table th:nth-child(n + 2):nth-child(-n + 4) { width: 93px; text-align: center; }
+.dme-pmdt-three-result-table th:last-child { width: 45px; }
+
+.dme-pmdt-decoder-result-table {
+  width: 625px !important;
+}
+
+.dme-pmdt-decoder-result-table th:first-child { width: 230px; }
+.dme-pmdt-decoder-result-table th:nth-child(2),
+.dme-pmdt-decoder-result-table th:nth-child(3),
+.dme-pmdt-decoder-result-table th:nth-child(4) { width: 90px; text-align: center; }
+.dme-pmdt-decoder-result-table th:nth-child(5) { width: 42px; }
+.dme-pmdt-decoder-result-table th:last-child { width: 84px; }
+.dme-pmdt-decoder-result-table td:last-child .dme-pmdt-value { width: 70px; }
+
+.dme-pmdt-window [aria-label^="Monitor "][aria-label$="Test Results"] table.dme-pmdt-alarm-test-table {
+  width: 620px !important;
+  min-width: 0 !important;
+}
+
+.dme-pmdt-window [aria-label^="Monitor "][aria-label$="Test Results"] table.dme-pmdt-three-result-table {
+  width: 520px !important;
+  min-width: 0 !important;
+}
+
+.dme-pmdt-window [aria-label^="Monitor "][aria-label$="Test Results"] table.dme-pmdt-decoder-result-table {
+  width: 625px !important;
+  min-width: 0 !important;
+}
+
+/* Monitor offsets and calibration */
+.dme-pmdt-offsets-content,
+.dme-pmdt-calibration-content {
+  min-height: 470px;
+}
+
+.dme-pmdt-offsets-content table {
+  width: 467px !important;
+  table-layout: fixed;
+}
+
+.dme-pmdt-offsets-content table th:first-child { width: 136px; }
+.dme-pmdt-offsets-content table th:nth-child(2) { width: 82px; }
+.dme-pmdt-offsets-content table th:nth-child(3) { width: 49px; }
+.dme-pmdt-offsets-content table th:nth-child(4) { width: 69px; }
+.dme-pmdt-offsets-content table th:nth-child(5) { width: 82px; }
+.dme-pmdt-offsets-content table th:nth-child(6) { width: 49px; }
+.dme-pmdt-offsets-content table col:nth-child(1) { width: 136px; }
+.dme-pmdt-offsets-content table col:nth-child(2) { width: 82px; }
+.dme-pmdt-offsets-content table col:nth-child(3) { width: 49px; }
+.dme-pmdt-offsets-content table col:nth-child(4) { width: 69px; }
+.dme-pmdt-offsets-content table col:nth-child(5) { width: 82px; }
+.dme-pmdt-offsets-content table col:nth-child(6) { width: 49px; }
+.dme-pmdt-offsets-content td { text-align: left; }
+.dme-pmdt-offsets-content td:nth-child(2),
+.dme-pmdt-offsets-content td:nth-child(5) { padding: 1px 7px !important; }
+
+.dme-pmdt-offsets-screen > .dme-pmdt-offsets-content {
+  flex: 0 0 493px !important;
+  min-height: 493px;
+  height: 493px;
+  margin: 0 20px 12px 0 !important;
+}
+
+.dme-pmdt-offsets-content > time {
+  margin-bottom: 15px;
+}
+
+.dme-pmdt-window [aria-label^="Monitor "][aria-label$="Offsets and Scale Factors"] .dme-pmdt-offsets-content table {
+  width: 467px !important;
+  min-width: 0 !important;
+}
+.dme-pmdt-offsets-content input,
+.dme-pmdt-calibration-content input {
+  box-sizing: border-box;
+  width: 66px;
+  height: 18px;
+  padding: 1px 3px;
+  text-align: right;
+}
+
+.dme-pmdt-calibration-grid {
+  position: relative;
+  display: grid;
+  width: 590px;
+  grid-template-columns: 330px 225px;
+  align-items: start;
+  gap: 12px 24px;
+}
+
+.dme-pmdt-calibration-grid fieldset + fieldset {
+  margin-top: 12px;
+}
+
+.dme-pmdt-calibration-grid label {
+  display: grid;
+  min-height: 22px;
+  grid-template-columns: minmax(0, 1fr) 66px 34px;
+  align-items: center;
+  gap: 5px;
+  border-bottom: 1px solid #c8c8c8;
+}
+
+.dme-pmdt-calibration-grid small {
+  font-size: 9px;
+}
+
+.dme-pmdt-self-calibration {
+  position: relative;
+  padding-top: 32px !important;
+}
+
+.dme-pmdt-self-calibration > button {
+  position: absolute;
+  top: 7px;
+  right: 9px;
+}
+
+.dme-pmdt-calibration-status {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.dme-pmdt-calibration-file-actions {
+  position: absolute;
+  top: 284px;
+  left: 511px;
+  display: grid;
+  width: 76px;
+  gap: 4px;
+  margin-top: 0;
+}
+
+.dme-pmdt-calibration-screen > .dme-pmdt-calibration-content {
+  flex: 0 0 493px !important;
+  min-height: 493px;
+  height: 493px;
+  margin: 0 20px 12px 0 !important;
+  overflow: hidden;
+}
+
+.dme-pmdt-calibration-content > time {
+  margin-bottom: 15px;
+}
+
+/* Transmitter configuration monitor tabs reuse the live all-monitor table. */
+.dme-pmdt-tx-monitor-data {
+  min-height: 540px;
+  height: 540px;
+  margin: 0 20px 0 0;
+  padding: 0;
+  border: 1px solid #d0d0d0;
+  background: #fff !important;
+}
+
+.dme-pmdt-tx-monitor-data > div {
+  width: 495px;
+  padding: 12px 14px !important;
+  background: #fff !important;
+}
+
+.dme-pmdt-tx-monitor-data table {
+  width: 467px !important;
+  min-width: 0 !important;
+}
+
+.dme-pmdt-tx-monitor-data .dme-pmdt-monitor-data-table tbody th,
+.dme-pmdt-tx-monitor-data .dme-pmdt-monitor-data-table tbody td,
+.dme-pmdt-tx-monitor-data .dme-pmdt-monitor-data-spacer > td {
+  height: 20.5px !important;
+  padding-block: 0 !important;
+}
+
+.dme-pmdt-tx-monitor-data .dme-pmdt-value {
+  width: 48px !important;
+  min-width: 48px !important;
+}
+
+.dme-pmdt-tx-monitor-data .dme-pmdt-value--gray {
+  width: 78px !important;
+  min-width: 78px !important;
+}
+
+/* DME parameter editor: channel assignment is the source of RX/TX/INT/RX LO values. */
+.dme-pmdt-config-panel .dme-pmdt-channel-summary {
+  gap: 3px;
+  padding: 5px 6px 4px;
+}
+
+.dme-pmdt-parameter-meta {
+  display: flex;
+  min-height: 14px;
+  align-items: center;
+  gap: 10px;
+  color: #333;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.dme-pmdt-config-panel .dme-pmdt-channel-summary table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 9px;
+}
+
+.dme-pmdt-config-panel .dme-pmdt-channel-summary th,
+.dme-pmdt-config-panel .dme-pmdt-channel-summary td {
+  padding: 2px 3px;
+  border: 1px solid #aaa;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dme-pmdt-config-panel .dme-pmdt-channel-summary th {
+  background: #dedede;
+  font-size: 8px;
+  font-weight: 400;
+}
+
+.dme-pmdt-config-panel .dme-pmdt-channel-summary td {
+  background: #fff;
+  font-family: "Courier New", monospace;
+  font-size: 9px;
+}
+
+.dme-pmdt-config-panel .dme-pmdt-channel-summary th:first-child,
+.dme-pmdt-config-panel .dme-pmdt-channel-summary td:first-child {
+  width: 52px;
+  font-weight: 700;
+}
+
+.dme-pmdt-channel-meta {
+  min-height: 14px;
+  color: #333;
+  font-size: 8px;
+  line-height: 14px;
+  letter-spacing: -0.05px;
+  white-space: nowrap;
+}
+
+.dme-pmdt-config-panel .pmdt-config-field[data-read-only="true"] {
+  color: #4f4f4f;
+}
+
+.dme-pmdt-config-panel .pmdt-config-field[data-read-only="true"] input {
+  background: #e4e4e4;
+  color: #3f3f3f;
+}
+
+/* RMS Configuration follows the compact proportions of Figures 3-19 to 3-21. */
+.dme-pmdt-rms-config-general {
+  position: relative;
+  display: grid !important;
+  width: 726px;
+  height: 492px;
+  margin: -42px 0 0 14px !important;
+  grid-template-columns: 258px 353px !important;
+  gap: 27px !important;
+  padding: 56px 0 0 15px !important;
+  box-sizing: border-box;
+  overflow: hidden;
+  background: #fff !important;
+}
+
+.dme-pmdt-rms-config-general > div {
+  min-width: 0;
+}
+
+.dme-pmdt-rms-config-general > div:first-child,
+.dme-pmdt-rms-config-general > div:last-child {
+  position: relative;
+  display: block !important;
+  height: 392px;
+}
+
+.dme-pmdt-rms-config-general > div:first-child > .dme-pmdt-rms-section-box,
+.dme-pmdt-rms-config-general > div:last-child > .dme-pmdt-rms-section-box {
+  position: absolute;
+  left: 0;
+  box-sizing: border-box;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 8px 6px !important;
+  overflow: hidden;
+  border-color: #aaa !important;
+  background: #f7f7f7 !important;
+  color: #000 !important;
+}
+
+.dme-pmdt-rms-config-general > div:first-child > .dme-pmdt-rms-section-box:nth-child(1) {
+  top: 0;
+  height: 112px;
+}
+
+.dme-pmdt-rms-config-general > div:first-child > .dme-pmdt-rms-section-box:nth-child(2) {
+  top: 199px;
+  height: 88px;
+}
+
+.dme-pmdt-rms-config-general > div:first-child > .dme-pmdt-rms-section-box:nth-child(3) {
+  top: 298px;
+  height: 93px;
+}
+
+.dme-pmdt-rms-config-general > div:last-child > .dme-pmdt-rms-section-box:nth-child(1) {
+  top: 0;
+  height: 186px;
+}
+
+.dme-pmdt-rms-config-general > div:last-child > .dme-pmdt-rms-section-box:nth-child(2) {
+  top: 253px;
+  height: 139px;
+}
+
+.dme-pmdt-rms-config-general .dme-pmdt-rms-section-title {
+  height: 18px;
+  margin: 0 0 0 !important;
+  padding: 0 0 3px !important;
+  border-color: #aaa !important;
+  color: #000 !important;
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  line-height: 15px;
+}
+
+.dme-pmdt-rms-config-general .dme-pmdt-rms-section-box > div {
+  box-sizing: border-box;
+  gap: 0 !important;
+}
+
+.dme-pmdt-rms-config-general .dme-pmdt-rms-section-box input[type="text"],
+.dme-pmdt-rms-config-general .dme-pmdt-rms-section-box input[type="number"] {
+  box-sizing: border-box;
+  height: 20px !important;
+}
+
+/* The General tab intentionally leaves the same vertical service gaps as PMDT. */
+.dme-pmdt-rms-config-general > div:first-child > .dme-pmdt-rms-section-box:nth-child(1) > div {
+  display: grid !important;
+  grid-template-rows: 22px 24px 30px;
+  height: 76px;
+}
+
+.dme-pmdt-rms-config-general > div:first-child > .dme-pmdt-rms-section-box:nth-child(1) > div > div:last-child {
+  margin-top: 18px !important;
+}
+
+.dme-pmdt-rms-config-general > div:first-child > .dme-pmdt-rms-section-box:nth-child(2) > div,
+.dme-pmdt-rms-config-general > div:first-child > .dme-pmdt-rms-section-box:nth-child(3) > div {
+  display: grid !important;
+  grid-template-rows: 22px 22px 22px;
+  height: 66px;
+}
+
+.dme-pmdt-rms-config-general > div:last-child > .dme-pmdt-rms-section-box:nth-child(1) > div {
+  display: grid !important;
+  grid-template-rows: 22px 22px 22px 88px;
+  height: 154px;
+}
+
+.dme-pmdt-rms-config-general > div:last-child > .dme-pmdt-rms-section-box:nth-child(1) > div > div:nth-child(3) {
+  margin-top: 0 !important;
+}
+
+.dme-pmdt-rms-config-general > div:last-child > .dme-pmdt-rms-section-box:nth-child(1) > div > div:last-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.dme-pmdt-rms-config-general > div:last-child > .dme-pmdt-rms-section-box:nth-child(1) > div > div:last-child > div {
+  height: 22px;
+}
+
+.dme-pmdt-rms-config-general > div:last-child > .dme-pmdt-rms-section-box:nth-child(2) > div {
+  display: grid !important;
+  grid-template-rows: repeat(4, 22px);
+  height: 88px;
+}
+
+.dme-pmdt-rms-config-content > .dme-pmdt-screen-time {
+  position: relative;
+  z-index: 2;
+}
+
+.dme-pmdt-rms-config-content {
+  position: relative;
+}
+
+.dme-pmdt-rms-config-content::before {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: 14px;
+  width: 726px;
+  height: 492px;
+  background: #fff;
+  content: "";
+}
+
+.dme-pmdt-rms-config-content > * {
+  position: relative;
+  z-index: 1;
+}
+
+.dme-pmdt-rms-power-limits,
+.dme-pmdt-rms-ad-limits {
+  box-sizing: border-box;
+  width: 726px;
+  margin-left: 14px !important;
+  padding: 8px 0 14px 15px !important;
+  background: #fff !important;
+  color: #000;
+  font-size: 10px;
+}
+
+.dme-pmdt-rms-power-limits {
+  margin-top: -19px;
+  padding-top: 0 !important;
+}
+
+.dme-pmdt-rms-power-limits > .dme-pmdt-limit-table-wrap:first-child h3 {
+  height: 15px;
+}
+
+.dme-pmdt-limit-table-wrap {
+  width: 392px;
+  margin: 0;
+}
+
+.dme-pmdt-limit-table-wrap h3 {
+  height: 10px;
+  margin: 0;
+  padding: 1px 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #000 !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  text-align: center;
+}
+
+.dme-pmdt-limit-table-wrap table,
+.dme-pmdt-rms-ad-limits table {
+  width: 100% !important;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.dme-pmdt-limit-table-wrap th,
+.dme-pmdt-limit-table-wrap td,
+.dme-pmdt-rms-ad-limits th,
+.dme-pmdt-rms-ad-limits td {
+  height: 22px !important;
+  padding: 0 3px !important;
+  border: 1px solid #d0d0d0 !important;
+  background: #f7f7f7 !important;
+  color: #000 !important;
+  font-size: 9px !important;
+  font-weight: 400 !important;
+  white-space: nowrap;
+}
+
+.dme-pmdt-limit-table-wrap thead th,
+.dme-pmdt-rms-ad-limits thead th {
+  height: 20px !important;
+}
+
+.dme-pmdt-limit-table-wrap th:first-child,
+.dme-pmdt-rms-ad-limits th:first-child {
+  width: 142px;
+  text-align: left;
+}
+
+.dme-pmdt-limit-table-wrap th:not(:first-child),
+.dme-pmdt-rms-ad-limits th:not(:first-child):not(:last-child) {
+  width: 62px;
+  text-align: center;
+}
+
+.dme-pmdt-limit-table-wrap td:not(:first-child),
+.dme-pmdt-rms-ad-limits td:not(:first-child) {
+  text-align: center;
+}
+
+.dme-pmdt-limit-table-wrap label,
+.dme-pmdt-rms-ad-limits label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dme-pmdt-limit-table-wrap input[type="checkbox"],
+.dme-pmdt-rms-ad-limits input[type="checkbox"] {
+  flex: 0 0 auto;
+  width: 13px !important;
+  height: 13px !important;
+  margin: 0 !important;
+}
+
+.dme-pmdt-limit-table-wrap input[type="number"],
+.dme-pmdt-rms-ad-limits input[type="number"] {
+  display: block;
+  box-sizing: border-box;
+  width: 100% !important;
+  height: 20px !important;
+  min-width: 0;
+  padding: 1px 2px !important;
+  text-align: right;
+}
+
+.dme-pmdt-rms-power-bottom-grid {
+  display: grid;
+  grid-template-columns: 286px 286px;
+  gap: 33px;
+  margin: 40px 0 0 95px;
+}
+
+.dme-pmdt-rms-power-bottom-grid .dme-pmdt-limit-table-wrap {
+  width: 286px !important;
+}
+
+.dme-pmdt-rms-power-bottom-grid .dme-pmdt-limit-table-wrap table {
+  width: 286px !important;
+}
+
+.dme-pmdt-rms-power-bottom-grid .dme-pmdt-limit-table-wrap th:first-child {
+  width: 95px;
+}
+
+.dme-pmdt-rms-power-bottom-grid .dme-pmdt-limit-table-wrap th:not(:first-child) {
+  width: 47px;
+}
+
+.dme-pmdt-rms-ad-limits {
+  position: relative;
+  width: 726px;
+  padding-top: 5px !important;
+}
+
+.dme-pmdt-rms-ad-headings {
+  position: absolute;
+  top: -11px;
+  left: 15px;
+  display: grid;
+  width: 492px;
+  height: 12px;
+  grid-template-columns: 151px 69px 72px 72px 72px 56px;
+  align-items: center;
+  color: #000;
+  font-size: 10px;
+  line-height: 12px;
+  text-align: center;
+}
+
+.dme-pmdt-rms-ad-limits table {
+  width: 492px !important;
+  margin: 0;
+}
+
+.dme-pmdt-rms-ad-limits th:first-child {
+  width: 151px;
+}
+
+.dme-pmdt-rms-ad-limits th:nth-child(2) {
+  width: 69px;
+}
+
+.dme-pmdt-rms-ad-limits th:nth-child(n + 3):nth-child(-n + 5) {
+  width: 72px;
+}
+
+.dme-pmdt-rms-ad-limits th:last-child,
+.dme-pmdt-rms-ad-limits td:last-child {
+  width: 56px;
+  text-align: left;
+}
+
+/* The classic-main compatibility reset has higher specificity; keep these
+   rows compact so the PMDT table rhythm remains 22px instead of 25px. */
+.dme-pmdt-window .pmdt-classic-main .dme-pmdt-limit-table-wrap th,
+.dme-pmdt-window .pmdt-classic-main .dme-pmdt-limit-table-wrap td,
+.dme-pmdt-window .pmdt-classic-main .dme-pmdt-rms-ad-limits th,
+.dme-pmdt-window .pmdt-classic-main .dme-pmdt-rms-ad-limits td {
+  height: 22px !important;
+  padding: 0 3px !important;
+}
+
+.dme-pmdt-window .pmdt-classic-main .dme-pmdt-limit-table-wrap thead th,
+.dme-pmdt-window .pmdt-classic-main .dme-pmdt-rms-ad-limits thead th {
+  height: 20px !important;
+}
+
+/* Station Configuration follows manual Figure 3-19, not the DVOR station form. */
+.dme-pmdt-rms-config-station {
+  position: relative;
+  display: block !important;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 493px;
+  padding: 0 14px 12px !important;
+  background: transparent !important;
+}
+
+.dme-pmdt-station-dates {
+  position: absolute;
+  top: -30px;
+  left: 274px;
+  display: grid;
+  width: 430px;
+  height: 20px;
+  grid-template-columns: repeat(3, 112px);
+  align-items: center;
+  gap: 25px;
+  margin: 0;
+}
+
+.dme-pmdt-station-dates time {
+  box-sizing: border-box;
+  height: 19px;
+  padding: 2px;
+  border: 1px inset #fff;
+  background: #fff;
+  color: #333;
+  font-size: 9px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dme-pmdt-station-columns {
+  display: grid !important;
+  width: 666px;
+  grid-template-columns: 254px 402px !important;
+  gap: 10px !important;
+  margin-left: 21px;
+  transform: translateY(-9px);
+}
+
+.dme-pmdt-rms-config-content--station > .dme-pmdt-screen-time {
+  margin-left: 29px;
+}
+
+.dme-pmdt-station-columns > div {
+  position: relative;
+  box-sizing: border-box;
+  min-height: 405px;
+  padding: 10px 8px 8px !important;
+  border: 1px solid #b8b8b8 !important;
+  background: #f7f7f7 !important;
+}
+
+.dme-pmdt-station-columns > div > h4 {
+  position: absolute;
+  top: -7px;
+  left: 7px;
+  z-index: 1;
+  margin: 0 !important;
+  padding: 0 3px !important;
+  border: 0 !important;
+  background: #f0f0f0 !important;
+  color: #000 !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+}
+
+.dme-pmdt-station-user-config {
+  gap: 0 !important;
+}
+
+.dme-pmdt-station-choice-row {
+  min-height: 36px;
+  display: grid !important;
+  grid-template-columns: 132px 1fr;
+  gap: 0 !important;
+  padding: 0 12px !important;
+  border: 0 !important;
+}
+
+.dme-pmdt-station-hot-standby {
+  min-height: 25px;
+  padding-left: 12px;
+}
+
+.dme-pmdt-station-integrated-pa {
+  min-height: 21px;
+  padding-left: 12px;
+  color: #777;
+}
+
+.dme-pmdt-station-channel-choice {
+  display: grid !important;
+  min-height: 29px;
+  grid-template-columns: 132px 1fr;
+  gap: 0 !important;
+  margin-top: 82px;
+  padding: 0 12px !important;
+  border: 0 !important;
+}
+
+.dme-pmdt-station-channel-number,
+.dme-pmdt-station-frequency {
+  min-height: 23px;
+  grid-template-columns: 128px 1fr !important;
+  gap: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+.dme-pmdt-station-channel-number > span,
+.dme-pmdt-station-frequency > span {
+  box-sizing: border-box;
+  height: 22px;
+  padding: 4px 6px;
+  border: 1px solid #c8c8c8;
+  background: #f0f0f0;
+}
+
+.dme-pmdt-station-channel-number input,
+.dme-pmdt-station-frequency input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 22px !important;
+  padding: 2px 6px !important;
+  text-align: right;
+}
+
+.dme-pmdt-station-user-config > button {
+  width: 180px;
+  height: 22px !important;
+  margin: 10px auto 0 !important;
+  border: 1px solid #808080 !important;
+  background: #f0f0f0 !important;
+  color: #000 !important;
+}
+
+.dme-pmdt-station-reference {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.dme-pmdt-station-reference th {
+  height: 25px;
+  padding: 2px 3px !important;
+  text-align: center;
+}
+
+.dme-pmdt-station-reference td {
+  height: 25px !important;
+  padding: 2px 3px !important;
+  border: 0 !important;
+  background: transparent !important;
+  text-align: center;
+}
+
+.dme-pmdt-station-reference td > span {
+  display: block;
+  box-sizing: border-box;
+  min-height: 20px;
+  padding: 3px 2px;
+  border: 1px inset #fff;
+  background: #fff;
+  color: #555;
+  white-space: nowrap;
+}
+
+.dme-pmdt-station-reference tbody tr:nth-child(5) td {
+  height: 141px !important;
+  vertical-align: top;
+}
+
+.dme-pmdt-station-reference td > span:empty {
+  border-color: transparent;
+  background: transparent;
+}
+
+.dme-pmdt-station-description {
+  display: grid !important;
+  width: 666px;
+  height: 23px;
+  grid-template-columns: 254px 1fr;
+  gap: 0 !important;
+  margin-top: 9px;
+  margin-left: 21px;
+  transform: translateY(-9px);
+  padding: 0 !important;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0 !important;
+}
+
+.dme-pmdt-station-description > span {
+  box-sizing: border-box;
+  padding: 4px 7px;
+}
+
+.dme-pmdt-station-description > input {
+  width: 100% !important;
+  max-width: none !important;
+  height: 22px !important;
+  box-sizing: border-box;
+  padding: 2px 6px !important;
+}
+
+/* Final DME Station frame alignment (kept after the base station rules). */
+.dme-pmdt-station-columns {
+  transform: translateY(-4px) !important;
+}
+
+.dme-pmdt-rms-config-station .dme-pmdt-station-description {
+  transform: translateY(5px) !important;
+}
+
+.dme-pmdt-station-columns > div:first-child .dme-pmdt-station-user-config > button {
+  transform: translateY(-14px);
+}
+
+@media (max-width: 899px) {
+  .dme-pmdt-viewport {
+    justify-content: flex-start;
+  }
+}

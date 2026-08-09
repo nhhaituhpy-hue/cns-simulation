@@ -1,36 +1,43 @@
-﻿"use client";
+"use client";
 
 import type { DmeViewId } from "@/lib/dme-types";
 import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
 import { PmdtToolbar } from "../pmdt-toolbar";
+import { MonitorDataTable } from "./monitor-integral";
+import { ScreenTabs } from "./screen-primitives";
 import { TxConfigNominal } from "./tx-config-nominal";
 import { TxConfigOffsets } from "./tx-config-offsets";
 
-const tabs: readonly { id: string; label: string; enabled: boolean; viewId?: DmeViewId }[] = [
-  { id: "nominal", label: "Nominal", enabled: true, viewId: "tx-config-nominal" },
-  { id: "offsets", label: "Offsets & Scale Factors", enabled: true, viewId: "tx-config-offsets" },
-  { id: "integral", label: "Integral Monitor Data", enabled: false },
-  { id: "standby", label: "Standby Monitor Data", enabled: false },
+const tabs: readonly { id: string; label: string; viewId: DmeViewId }[] = [
+  { id: "nominal", label: "Nominal", viewId: "tx-config-nominal" },
+  { id: "offsets", label: "Offsets and Scale Factors", viewId: "tx-config-offsets" },
+  { id: "integral", label: "Integral Monitor Data", viewId: "tx-config-integral-monitor" },
+  { id: "standby", label: "Standby Monitor Data", viewId: "tx-config-standby-monitor" },
 ];
 
 export function TxConfigLayout() {
   const activeView = useDmePmdtStore((state) => state.activeView);
   const openView = useDmePmdtStore((state) => state.openView);
+  const timestamp = useDmePmdtStore((state) => state.data.timestamp);
 
   return (
-    <section className="flex min-h-full flex-col" aria-label="Transmitter Configuration">
+    <section className="dme-pmdt-tx-config flex min-h-full flex-col" aria-label="Transmitter Configuration">
       <PmdtToolbar title="Transmitter Configuration" />
-      <div className="flex gap-1 border-b border-[#334155] bg-[#0f172a] px-3 pt-2" role="tablist" aria-label="Transmitter Configuration tabs">
-        {tabs.map((tab) => {
-          const active = tab.viewId === activeView;
-          return <button key={tab.id} type="button" role="tab" aria-selected={active} aria-disabled={!tab.enabled || undefined} title={!tab.enabled ? "Chưa khả dụng" : undefined} onClick={() => {
-            if (!tab.enabled || !tab.viewId) return;
-            openView("tx-config", tab.viewId, ["Transmitters", "Configuration", tab.label], tab.label);
-          }} className={`min-h-8 border border-b-0 px-3 text-[11px] font-medium ${!tab.enabled ? "cursor-not-allowed border-[#273449] text-[#64748b] opacity-50" : active ? "border-[#475569] bg-[#1e293b] text-white" : "border-[#334155] bg-[#111827] text-[#94a3b8] hover:text-white"}`}>{tab.label}</button>;
-        })}
+      <ScreenTabs
+        tabs={tabs.map((tab) => ({
+          id: tab.id,
+          label: tab.label,
+          active: tab.viewId === activeView,
+          onSelect: () => openView("tx-config", tab.viewId, ["Transmitters", "Configuration", tab.label], tab.label),
+        }))}
+      />
+      <div className="min-h-0 flex-1 overflow-auto">
+        {activeView === "tx-config-nominal" || activeView === "tx-config-offsets" ? <time className="dme-pmdt-screen-time">{timestamp}</time> : null}
+        {activeView === "tx-config-nominal" ? <TxConfigNominal /> : null}
+        {activeView === "tx-config-offsets" ? <TxConfigOffsets /> : null}
+        {activeView === "tx-config-integral-monitor" ? <div className="dme-pmdt-tx-monitor-data"><MonitorDataTable kind="integral" /></div> : null}
+        {activeView === "tx-config-standby-monitor" ? <div className="dme-pmdt-tx-monitor-data"><MonitorDataTable kind="standby" /></div> : null}
       </div>
-      <div className="min-h-0 flex-1 overflow-auto">{activeView === "tx-config-offsets" ? <TxConfigOffsets /> : <TxConfigNominal />}</div>
     </section>
   );
 }
-

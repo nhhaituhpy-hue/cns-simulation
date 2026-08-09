@@ -10,7 +10,6 @@ import { PmdtToolbar } from "../pmdt-toolbar";
 import {
   DmeIndicator,
   DmeValueCell,
-  PmdtPanel,
   ScreenTabs,
   dmeFieldMetadata,
 } from "./screen-primitives";
@@ -19,7 +18,7 @@ function StatusFlag({
   fieldId,
   label,
   value,
-  activeColor = "yellow",
+  activeColor = "green",
 }: {
   fieldId: string;
   label: string;
@@ -30,86 +29,125 @@ function StatusFlag({
   const resolved = resolveDmeField(value, fieldId, overrides);
   const status = resolveDmeStatus(resolved ? activeColor : "gray", fieldId, overrides);
   return (
-    <div {...dmeFieldMetadata(fieldId, label, resolved, status)} className="flex min-h-7 items-center justify-between gap-3 border-b border-[#263247] px-2 last:border-0">
-      <span>{label}</span>
+    <div {...dmeFieldMetadata(fieldId, label, resolved, status)} className="dme-pmdt-rms-status-row">
       <DmeIndicator color={status} />
+      <span>{label}</span>
     </div>
   );
 }
 
 function RmsStatusMain() {
   const data = useDmePmdtStore((state) => state.data);
-  const revisionLabels = {
-    rms: "RMS",
-    monitor1: "Monitor 1",
-    monitor2: "Monitor 2",
-    rtc1: "RTC 1",
-    rtc2: "RTC 2",
-    bcps1: "BCPS 1",
-    bcps2: "BCPS 2",
-    lcu: "LCU",
-  } as const;
+  const revisionRows = [
+    ["RMS", data.revisionLevels.rms, "5", "46", "21"],
+    ["Monitor 1", data.revisionLevels.monitor1, "1", "27", "1"],
+    ["Monitor 2", data.revisionLevels.monitor2, "1", "27", "1"],
+    ["RTC 1", data.revisionLevels.rtc1, "1", "20", "1"],
+    ["RTC 2", data.revisionLevels.rtc2, "1", "20", "1"],
+    ["BCPS 1", data.revisionLevels.bcps1, "86", "56", "0"],
+    ["BCPS 2", data.revisionLevels.bcps2, "86", "56", "0"],
+    ["LCU", data.revisionLevels.lcu, "", "", ""],
+  ] as const;
 
   return (
-    <div className="grid gap-4 p-4 lg:grid-cols-2">
-      <div className="grid gap-4">
-        <PmdtPanel title="System">
-          <div className="grid gap-1">
-            <div className="flex min-h-7 items-center justify-between border-b border-[#263247] px-2">
-              <span>PMDT Logon Level</span>
-              <DmeValueCell fieldId="rmsStatus.logonLevel" label="PMDT Logon Level" value={data.rmsStatus.logonLevel} />
-            </div>
+    <div className="dme-pmdt-rms-status-content">
+      <time className="dme-pmdt-screen-time">{data.timestamp}</time>
+      <div className="dme-pmdt-rms-status-main">
+        <div>
+          <fieldset>
+            <legend>System</legend>
+            <div className="dme-pmdt-rms-readout"><span>PMDT Logon Level</span><DmeValueCell fieldId="rmsStatus.logonLevel" label="PMDT Logon Level" value={data.rmsStatus.logonLevel} status="gray" /></div>
+            <div className="dme-pmdt-rms-readout"><span>User Sessions</span><output>1</output></div>
+            <div className="dme-pmdt-rms-readout"><span>Audio Select</span><output>TX{data.rmsStatus.audioSelect === "tx1" ? "1" : "2"}</output></div>
+            <div className="dme-pmdt-rms-readout"><span>System Fan</span><output>{data.rmsStatus.fanControl}</output></div>
             <StatusFlag fieldId="rmsStatus.localControlMode" label="Local Control Mode" value={data.rmsStatus.localControlMode} />
-            <StatusFlag fieldId="rmsStatus.maintenanceAlert" label="Maintenance Alert" value={data.rmsStatus.maintenanceAlert} />
-            <StatusFlag fieldId="rmsStatus.onBattery" label="On Battery" value={data.rmsStatus.onBattery} />
+            <StatusFlag fieldId="rmsStatus.maintenanceAlert" label="Maintenance Alert" value={data.rmsStatus.maintenanceAlert} activeColor="yellow" />
+            <StatusFlag fieldId="rmsStatus.onBattery" label="On Battery" value={data.rmsStatus.onBattery} activeColor="yellow" />
             <StatusFlag fieldId="rmsStatus.acFailure" label="AC Failure" value={data.rmsStatus.acFailure} activeColor="red" />
-            <StatusFlag fieldId="rmsStatus.remoteControlEnabled" label="Remote Control Enabled" value={data.rmsStatus.remoteControlEnabled} activeColor="green" />
-            <StatusFlag fieldId="rmsStatus.interlocked" label="Interlocked" value={data.rmsStatus.interlocked} activeColor="red" />
-          </div>
-        </PmdtPanel>
-        <PmdtPanel title="RCSU Connection">
-          <StatusFlag fieldId="rmsStatus.rcsuConnectionEnabled" label="RCSU Connection Enabled" value={data.rmsStatus.rcsuConnectionEnabled} activeColor="green" />
-          <StatusFlag fieldId="rmsStatus.rcsuCommunicationError" label="RCSU Communication Error" value={data.rmsStatus.rcsuCommunicationError} activeColor="red" />
-          <div className="mt-2 flex items-center justify-between px-2">
-            <span>Approach Type</span>
-            <DmeValueCell fieldId="rmsStatus.approachType" label="Approach Type" value={data.rmsStatus.approachType} status="gray" />
-          </div>
-        </PmdtPanel>
+            <StatusFlag fieldId="rmsStatus.remoteControlEnabled" label="Remote Control Enabled" value={data.rmsStatus.remoteControlEnabled} />
+            <StatusFlag fieldId="rmsStatus.interlocked" label="Interlocked Off" value={data.rmsStatus.interlocked} activeColor="red" />
+            <StatusFlag fieldId="rmsStatus.trendDataFlashBusy" label="Trend Data Flash Busy" value={false} activeColor="yellow" />
+          </fieldset>
+          <fieldset>
+            <legend>RCSU Connection</legend>
+            <StatusFlag fieldId="rmsStatus.rcsuConnectionEnabled" label="RCSU Connection Enabled" value={data.rmsStatus.rcsuConnectionEnabled} />
+            <StatusFlag fieldId="rmsStatus.rcsuCommunicationError" label="RCSU Communication Error" value={data.rmsStatus.rcsuCommunicationError} activeColor="red" />
+            <div className="dme-pmdt-rms-readout"><span>Approach Type</span><DmeValueCell fieldId="rmsStatus.approachType" label="Approach Type" value={data.rmsStatus.approachType} status="gray" /></div>
+          </fieldset>
+        </div>
+        <table className="dme-pmdt-rms-revision-table">
+          <caption className="sr-only">Revision and resource utilization</caption>
+          <colgroup><col /><col /><col /><col /><col /></colgroup>
+          <thead>
+            <tr className="dme-pmdt-rms-resource-heading"><th /><th /><th colSpan={3}>Resource Utilization (%)</th></tr>
+            <tr><th /><th>Revision</th><th>RAM</th><th>Flash</th><th>NVRAM</th></tr>
+          </thead>
+          <tbody>{revisionRows.map(([name, revision, ram, flash, nvram]) => <tr key={name}><th scope="row">{name}</th><td>{revision}</td><td>{ram}</td><td>{flash}</td><td>{nvram}</td></tr>)}</tbody>
+        </table>
       </div>
-      <PmdtPanel title="Revision Levels">
-        <dl className="grid gap-1">
-          {(Object.keys(revisionLabels) as Array<keyof typeof revisionLabels>).map((key) => (
-            <div key={key} className="flex min-h-8 items-center justify-between border-b border-[#263247] px-2 last:border-0">
-              <dt>{revisionLabels[key]}</dt>
-              <dd><DmeValueCell fieldId={`revisionLevels.${key}`} label={`${revisionLabels[key]} Revision`} value={data.revisionLevels[key]} status="gray" /></dd>
-            </div>
-          ))}
-        </dl>
-      </PmdtPanel>
     </div>
+  );
+}
+
+function SelectionRows({
+  label,
+  selected,
+}: {
+  label: string;
+  selected: 1 | 2;
+}) {
+  return (
+    <fieldset className="dme-pmdt-rms-selection">
+      <legend>{label}</legend>
+      <div><DmeIndicator color={selected === 1 ? "green" : "gray"} /><span>Tx 1</span></div>
+      <div><DmeIndicator color={selected === 2 ? "green" : "gray"} /><span>Tx 2</span></div>
+    </fieldset>
   );
 }
 
 function MonitorTransmitterStatus() {
   const data = useDmePmdtStore((state) => state.data);
   const status = data.monitorTransmitterStatus;
+  const monitorColumns = ["Bypass", "Primary Alarm", "Secondary Alarm", "Primary Mismatch", "Secondary Mismatch"] as const;
   return (
-    <div className="grid gap-4 p-4 lg:grid-cols-2">
-      <PmdtPanel title="Monitors">
+    <div className="dme-pmdt-rms-monitor-content">
+      <time className="dme-pmdt-screen-time">{data.timestamp}</time>
+      <div className="dme-pmdt-rms-monitor-top">
+        <fieldset>
+          <legend>Monitors</legend>
+          <table>
+            <thead><tr><th />{monitorColumns.map((column) => <th key={column}>{column}</th>)}</tr></thead>
+            <tbody>
+              {(["integral", "standby"] as const).map((monitor) => (
+                <tr key={monitor}>
+                  <th scope="row">{monitor === "integral" ? "Integral" : "Standby"}</th>
+                  <td><DmeIndicator color={data.monitors[monitor].bypass ? "yellow" : "gray"} /></td>
+                  <td><DmeIndicator color={data.monitors[monitor].priAlarm ? "red" : "gray"} /></td>
+                  <td><DmeIndicator color={data.monitors[monitor].secAlarm ? "yellow" : "gray"} /></td>
+                  <td><DmeIndicator color="gray" /></td>
+                  <td><DmeIndicator color="gray" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </fieldset>
         <StatusFlag fieldId="monitorTransmitterStatus.monitorAlarmShutdown" label="Monitor Alarm Shutdown" value={status.monitorAlarmShutdown} activeColor="red" />
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <StatusFlag fieldId="monitorTransmitterStatus.enabledMonitors.monitor1" label="Monitor 1 Enabled" value={status.enabledMonitors.monitor1} activeColor="green" />
-          <StatusFlag fieldId="monitorTransmitterStatus.enabledMonitors.monitor2" label="Monitor 2 Enabled" value={status.enabledMonitors.monitor2} activeColor="green" />
-        </div>
-      </PmdtPanel>
-      <PmdtPanel title="Transmitters">
-        <div className="grid gap-3">
-          <div className="flex items-center justify-between"><span>Antenna Select</span><DmeValueCell fieldId="monitorTransmitterStatus.antennaSelect" label="Antenna Select" value={`Tx ${status.antennaSelect}`} /></div>
-          <div className="flex items-center justify-between"><span>Main Select</span><DmeValueCell fieldId="monitorTransmitterStatus.mainSelect" label="Main Select" value={`Tx ${status.mainSelect}`} /></div>
-          <StatusFlag fieldId="monitorTransmitterStatus.transmitterOn.tx1" label="Transmitter 1 On" value={status.transmitterOn.tx1} activeColor="green" />
-          <StatusFlag fieldId="monitorTransmitterStatus.transmitterOn.tx2" label="Transmitter 2 On" value={status.transmitterOn.tx2} activeColor="green" />
-        </div>
-      </PmdtPanel>
+        <fieldset className="dme-pmdt-enabled-monitors">
+          <legend>Enabled Monitors</legend>
+          <div><DmeIndicator color={status.enabledMonitors.monitor1 ? "green" : "gray"} /><span>Monitor 1</span></div>
+          <div><DmeIndicator color={status.enabledMonitors.monitor2 ? "green" : "gray"} /><span>Monitor 2</span></div>
+        </fieldset>
+      </div>
+      <fieldset className="dme-pmdt-rms-transmitter-status">
+        <legend>Transmitters</legend>
+        <SelectionRows label="Antenna Select" selected={status.antennaSelect} />
+        <SelectionRows label="Main Select" selected={status.mainSelect} />
+        <fieldset className="dme-pmdt-rms-selection">
+          <legend>Transmitter On</legend>
+          <div><DmeIndicator color={status.transmitterOn.tx1 ? "green" : "gray"} /><span>Tx 1</span></div>
+          <div><DmeIndicator color={status.transmitterOn.tx2 ? "green" : "gray"} /><span>Tx 2</span></div>
+        </fieldset>
+      </fieldset>
     </div>
   );
 }
@@ -118,7 +156,7 @@ export function RmsStatusLayout() {
   const activeView = useDmePmdtStore((state) => state.activeView);
   const openView = useDmePmdtStore((state) => state.openView);
   return (
-    <section className="flex min-h-full flex-col" aria-label="RMS Status">
+    <section className="dme-pmdt-rms-status flex min-h-full flex-col" aria-label="RMS Status">
       <PmdtToolbar title="RMS Status" />
       <ScreenTabs tabs={[
         { id: "rms-status-main", label: "RMS Status", active: activeView === "rms-status-main", onSelect: () => openView("rms-status", "rms-status-main", ["RMS", "Status", "RMS Status"], "RMS Status") },

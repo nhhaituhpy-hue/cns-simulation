@@ -1,91 +1,44 @@
 "use client";
 
-import { resolveDmeField, resolveDmeStatus, useDmePmdtStore } from "@/stores/dme-pmdt-store";
-import type { DmeIndicatorColor } from "@/lib/dme-types";
-
-const accentClasses: Record<DmeIndicatorColor, string> = {
-  green: "accent-[#22c55e]",
-  yellow: "accent-[#eab308]",
-  red: "accent-[#ef4444]",
-  gray: "accent-[#475569]",
-};
+import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
+import { dmeFieldMetadata } from "./screen-primitives";
 
 export function MonitorConfigGeneral() {
-  const data = useDmePmdtStore((state) => state.data);
-  const overrides = useDmePmdtStore((state) => state.overrides);
+  const rows = useDmePmdtStore((state) => state.configDraft.monitorConfigGeneral)
+    .map((row, sourceIndex) => ({ row, sourceIndex }))
+    .filter(({ row }) => row.parameter !== "Delay")
+    .slice(0, 9);
+  const securityLevel = useDmePmdtStore((state) => state.securityLevel);
+  const loginDialogOpen = useDmePmdtStore((state) => state.loginDialogOpen);
+  const local = useDmePmdtStore((state) => state.data.local);
+  const setParameterValue = useDmePmdtStore((state) => state.setParameterValue);
+  const canEdit = securityLevel >= 3 && !loginDialogOpen && local;
 
   return (
-    <div className="p-3 text-[11px]">
-      <section className="border border-[#334155] bg-[#111827] max-w-2xl mx-auto">
-        <h3 className="border-b border-[#334155] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[#e2e8f0]">
-          Parameter Monitoring Routing
-        </h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-[#172033] text-[#94a3b8] text-[10px]">
-              <tr>
-                <th className="px-3 py-2">Parameter</th>
-                <th className="px-3 py-2 text-center w-28">Primary Monitor</th>
-                <th className="px-3 py-2 text-center w-28">Secondary Monitor</th>
+    <fieldset className="dme-pmdt-monitor-routing">
+      <legend>Executive Alarms</legend>
+      <table>
+        <caption className="sr-only">Primary and secondary monitor routing</caption>
+        <thead>
+          <tr><th rowSpan={2} /><th colSpan={2}>Integral Monitor</th><th colSpan={2}>Standby Monitor</th></tr>
+          <tr><th>Primary</th><th>Secondary</th><th>Primary</th><th>Secondary</th></tr>
+        </thead>
+        <tbody>
+          {rows.map(({ row, sourceIndex }, index) => {
+            const frequencyRow = row.parameter.includes("Frequency Error");
+            const standbyDisabled = row.parameter === "ERP";
+            return (
+              <tr key={row.parameter}>
+                <th scope="row">{row.parameter}</th>
+                <td {...dmeFieldMetadata(`monitorConfigGeneral.${sourceIndex}.integralPrimary`, `${row.parameter} Integral Primary`, row.primary)}><input id={`dme-monitor-routing-${index}-integral-primary`} type="radio" name={`integral-${index}`} checked={row.primary} disabled={!canEdit} onChange={() => setParameterValue(`monitorConfigGeneral.${sourceIndex}.primary`, true)} /></td>
+                <td {...dmeFieldMetadata(`monitorConfigGeneral.${sourceIndex}.integralSecondary`, `${row.parameter} Integral Secondary`, row.secondary)}><input id={`dme-monitor-routing-${index}-integral-secondary`} type="radio" name={`integral-${index}`} checked={row.secondary} disabled={!canEdit} onChange={() => setParameterValue(`monitorConfigGeneral.${sourceIndex}.secondary`, true)} /></td>
+                <td {...dmeFieldMetadata(`monitorConfigGeneral.${sourceIndex}.standbyPrimary`, `${row.parameter} Standby Primary`, row.primary && !standbyDisabled)}><input id={`dme-monitor-routing-${index}-standby-primary`} type="radio" name={`standby-${index}`} checked={row.primary && !standbyDisabled} disabled={!canEdit || standbyDisabled} onChange={() => setParameterValue(`monitorConfigGeneral.${sourceIndex}.primary`, true)} /></td>
+                <td {...dmeFieldMetadata(`monitorConfigGeneral.${sourceIndex}.standbySecondary`, `${row.parameter} Standby Secondary`, row.secondary)}><input id={`dme-monitor-routing-${index}-standby-secondary`} type="radio" name={`standby-${index}`} checked={row.secondary} disabled={!canEdit || standbyDisabled} onChange={() => setParameterValue(`monitorConfigGeneral.${sourceIndex}.secondary`, true)} /></td>
               </tr>
-            </thead>
-            <tbody>
-              {data.monitorConfigGeneral.map((row, index) => {
-                const prefix = `monitorConfigGeneral.${index}`;
-                const isEnabled = row.isCheckbox ? resolveDmeField(row.checked ?? false, `${prefix}.checked`, overrides) : true;
-                const resolvedPrimary = resolveDmeField(row.primary, `${prefix}.primary`, overrides);
-                const resolvedSecondary = resolveDmeField(row.secondary, `${prefix}.secondary`, overrides);
-
-                return (
-                  <tr key={row.parameter} className="border-t border-[#273449] text-[#cbd5e1] hover:bg-[#1e293b]/50">
-                    <th scope="row" className="px-3 py-2 font-medium">
-                      {row.isCheckbox ? (
-                        <label className="flex items-center gap-1.5 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            data-dme-field-id={`${prefix}.checked`}
-                            data-dme-field-value={Boolean(row.checked)}
-                            data-dme-field-type="boolean"
-                            data-dme-field-label={row.parameter}
-                            readOnly
-                            checked={Boolean(isEnabled)}
-                            className={`size-3.5 pointer-events-none ${accentClasses[resolveDmeStatus(isEnabled ? "green" : "gray", `${prefix}.checked`, overrides)]}`}
-                          />
-                          {row.parameter}
-                        </label>
-                      ) : (
-                        <span>{row.parameter}</span>
-                      )}
-                    </th>
-                    <td className="px-3 py-2 text-center">
-                      <input
-                        type="radio"
-                        data-dme-field-id={`${prefix}.primary`}
-                        name={`param-routing-${index}`}
-                        disabled={!isEnabled}
-                        checked={Boolean(resolvedPrimary)}
-                        className="accent-[#22c55e] disabled:opacity-30 cursor-pointer"
-                        onChange={() => {}}
-                      />
-                    </td>
-                    <td className="px-3 py-2 text-center">
-                      <input
-                        type="radio"
-                        data-dme-field-id={`${prefix}.secondary`}
-                        name={`param-routing-${index}`}
-                        disabled={!isEnabled}
-                        checked={Boolean(resolvedSecondary)}
-                        className="accent-[#22c55e] disabled:opacity-30 cursor-pointer"
-                        onChange={() => {}}
-                      />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </div>
+            );
+          })}
+        </tbody>
+      </table>
+    </fieldset>
   );
 }

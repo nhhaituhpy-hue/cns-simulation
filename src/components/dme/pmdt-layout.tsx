@@ -7,12 +7,19 @@ import { PmdtMenuBar } from "./pmdt-menu-bar";
 import { PmdtSidebar } from "./pmdt-sidebar";
 import { PmdtStatusBar } from "./pmdt-status-bar";
 import { PmdtTitleBar } from "./pmdt-title-bar";
+import { DmeConfigPanel } from "./dme-config-panel";
+import { AboutPmdtDialog } from "./about-pmdt-dialog";
+import { DmePmdtLoginDialog } from "./pmdt-login-dialog";
+import { DmePmdtPasswordDialog } from "./pmdt-password-dialog";
+import { DiagnosticsWorkspace } from "./screens/diagnostics-workspace";
 import { DisabledScreen } from "./screens/disabled-screen";
 import { HomeScreen } from "./screens/home-screen";
 import { MonitorConfigLayout } from "./screens/monitor-config-layout";
 import { MonitorDataLayout } from "./screens/monitor-data-layout";
 import { MonitorDecoderResults } from "./screens/monitor-decoder-results";
+import { MonitorFaultHistory } from "./screens/monitor-fault-history";
 import { MonitorOffsets } from "./screens/monitor-offsets";
+import { MonitorSpecialTests } from "./screens/monitor-special-tests";
 import { RmsLogsLayout } from "./screens/rms-logs-layout";
 import { RmsStatusLayout } from "./screens/rms-status-layout";
 import { RmsDataLayout } from "./screens/rms-data-layout";
@@ -37,6 +44,8 @@ function PmdtScreenRouter() {
   if (activeScreen === "rms-logs") return <RmsLogsLayout />;
   if (activeScreen === "monitor-data") return <MonitorDataLayout />;
   if (activeScreen === "monitor-config") return <MonitorConfigLayout />;
+  if (activeScreen === "monitor-special-tests") return <MonitorSpecialTests />;
+  if (activeScreen === "monitor-fault-history") return <MonitorFaultHistory />;
   if (activeScreen === "monitor-1-test-results") return <MonitorDecoderResults monitorNumber={1} />;
   if (activeScreen === "monitor-2-test-results") return <MonitorDecoderResults monitorNumber={2} />;
   if (activeScreen === "monitor-1-offsets") return <MonitorOffsets monitorNumber={1} />;
@@ -47,6 +56,7 @@ function PmdtScreenRouter() {
   if (activeScreen === "monitor-2-calibration") return <MonitorCalibration monitorNumber={2} />;
   if (activeScreen === "tx-data") return <TxDataLayout />;
   if (activeScreen === "tx-config") return <TxConfigLayout />;
+  if (activeScreen === "diagnostics") return <DiagnosticsWorkspace />;
   if (activeScreen === "disabled") return <DisabledScreen />;
   return <HomeScreen />;
 }
@@ -57,39 +67,92 @@ export function PmdtLayout({
   sidePanel,
 }: PmdtLayoutProps) {
   const setMode = useDmePmdtStore((state) => state.setMode);
+  const configPanelOpen = useDmePmdtStore((state) => state.configPanelOpen);
+  const aboutDialogOpen = useDmePmdtStore((state) => state.aboutDialogOpen);
+  const loginDialogOpen = useDmePmdtStore((state) => state.loginDialogOpen);
+  const passwordDialogOpen = useDmePmdtStore((state) => state.passwordDialogOpen);
+  const applyConfigChanges = useDmePmdtStore((state) => state.applyConfigChanges);
+  const restoreDefaultConfig = useDmePmdtStore((state) => state.restoreDefaultConfig);
+  const nextView = useDmePmdtStore((state) => state.nextView);
+  const closeScreen = useDmePmdtStore((state) => state.closeScreen);
+  const recordActivity = useDmePmdtStore((state) => state.recordActivity);
+  const checkActivity = useDmePmdtStore((state) => state.checkActivity);
+  const refreshClock = useDmePmdtStore((state) => state.refreshClock);
 
   useEffect(() => {
     setMode(mode);
   }, [mode, setMode]);
 
+  useEffect(() => {
+    refreshClock();
+    const timer = window.setInterval(refreshClock, 1000);
+    return () => window.clearInterval(timer);
+  }, [refreshClock]);
+
+  useEffect(() => {
+    function handleFunctionKey(event: KeyboardEvent) {
+      if (event.key === "F5") {
+        event.preventDefault();
+        nextView();
+      } else if (event.key === "F6") {
+        event.preventDefault();
+        closeScreen();
+      } else if (event.key === "F7") {
+        event.preventDefault();
+        applyConfigChanges();
+      } else if (event.key === "F8") {
+        event.preventDefault();
+        restoreDefaultConfig();
+      }
+    }
+    document.addEventListener("keydown", handleFunctionKey);
+    return () => document.removeEventListener("keydown", handleFunctionKey);
+  }, [applyConfigChanges, restoreDefaultConfig, nextView, closeScreen]);
+
+  useEffect(() => {
+    const handleActivity = () => recordActivity();
+    document.addEventListener("mousedown", handleActivity, true);
+    document.addEventListener("keydown", handleActivity, true);
+    const timer = window.setInterval(checkActivity, 30_000);
+    return () => {
+      document.removeEventListener("mousedown", handleActivity, true);
+      document.removeEventListener("keydown", handleActivity, true);
+      window.clearInterval(timer);
+    };
+  }, [checkActivity, recordActivity]);
+
   return (
-    <div className="simulator-skin min-h-[calc(100dvh-4rem)] overflow-auto bg-[var(--simulator-canvas)]">
+    <div className="pmdt-classic-viewport dme-pmdt-viewport">
       <section
         aria-label="DME PMDT Simulator"
-        className={`grid h-[calc(100dvh-4rem)] min-h-[720px] min-w-[1024px] grid-rows-[2rem_2.25rem_minmax(0,1fr)_1.75rem] bg-[var(--simulator-surface)] text-[var(--simulator-text)] ${
+        className={`pmdt-classic-window dme-pmdt-window ${
           sidePanel
-            ? "grid-cols-[11rem_minmax(0,1fr)_20rem]"
-            : "grid-cols-[11rem_minmax(0,1fr)]"
+            ? "pmdt-classic-window--with-inspector"
+            : "pmdt-classic-window--standard"
         }`}
       >
-        <div className={sidePanel ? "col-span-3" : "col-span-2"}>
+        <div className="pmdt-titlebar-row">
           <PmdtTitleBar />
         </div>
-        <div className={sidePanel ? "col-span-3" : "col-span-2"}>
+        <div className="pmdt-menubar-row">
           <PmdtMenuBar />
         </div>
         <PmdtSidebar />
-        <main className="min-h-0 overflow-auto bg-[var(--simulator-surface)]">
-          {children ?? <PmdtScreenRouter />}
+        <main className="pmdt-classic-main">
+          {loginDialogOpen ? <div className="pmdt-prelogin-workspace" aria-hidden="true" /> : (children ?? <PmdtScreenRouter />)}
         </main>
         {sidePanel ? (
-          <aside aria-label={mode === "author" ? "Bảng xây dựng kịch bản" : "Nhật ký học viên"} className="min-h-0 overflow-y-auto overscroll-contain border-l border-[var(--simulator-border)] bg-[var(--simulator-panel)]">
+          <aside aria-label={mode === "author" ? "Bảng xây dựng kịch bản" : "Nhật ký học viên"} className="pmdt-classic-inspector">
             {sidePanel}
           </aside>
         ) : null}
-        <div className={sidePanel ? "col-span-3" : "col-span-2"}>
+        <div className="pmdt-statusbar-row">
           <PmdtStatusBar />
         </div>
+        {configPanelOpen ? <DmeConfigPanel /> : null}
+        {aboutDialogOpen ? <AboutPmdtDialog /> : null}
+        {passwordDialogOpen ? <DmePmdtPasswordDialog /> : null}
+        {loginDialogOpen ? <DmePmdtLoginDialog /> : null}
       </section>
     </div>
   );

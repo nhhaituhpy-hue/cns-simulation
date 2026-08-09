@@ -1,125 +1,107 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { DmeIndicatorColor } from "@/lib/dme-types";
-import {
-  resolveDmeField,
-  resolveDmeStatus,
-  useDmePmdtStore,
-} from "@/stores/dme-pmdt-store";
+import { resolveDmeField, resolveDmeStatus, useDmePmdtStore } from "@/stores/dme-pmdt-store";
+import { DmeIndicator, DmeValueCell, dmeFieldMetadata } from "./screen-primitives";
 
-const indicatorClasses: Record<DmeIndicatorColor, string> = {
-  green: "bg-[#22c55e]",
-  yellow: "bg-[#eab308]",
-  red: "bg-[#ef4444]",
-  gray: "bg-[#6b7280]",
-};
-
-function Indicator({ color, label }: { color: DmeIndicatorColor; label: string }) {
-  return (
-    <span className="inline-flex items-center gap-1.5" title={`${label}: ${color}`}>
-      <span aria-hidden className={`size-3 rounded-full border border-black/40 ${indicatorClasses[color]}`} />
-      <span className="sr-only">{label}: {color}</span>
-    </span>
-  );
-}
-
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="min-w-0 border border-[#334155] bg-[#111827]">
-      <h3 className="border-b border-[#334155] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[#e2e8f0]">{title}</h3>
-      {children}
-    </section>
-  );
+function DataPanel({ title, children, className = "" }: { title: string; children: ReactNode; className?: string }) {
+  return <fieldset className={className}><legend>{title}</legend>{children}</fieldset>;
 }
 
 export function RmsDigitalIo() {
   const data = useDmePmdtStore((state) => state.data);
   const overrides = useDmePmdtStore((state) => state.overrides);
+  const fanOutputIndex = data.digitalOutputs.findIndex((row) => row.name === "Fan Control");
+  const fanOutput = fanOutputIndex >= 0 ? data.digitalOutputs[fanOutputIndex] : undefined;
+  const systemRows: Array<{ label: string; tx1: DmeIndicatorColor | "Trickle"; tx2: DmeIndicatorColor | "Trickle" }> = [
+    { label: "Battery Fault", tx1: "green", tx2: "green" },
+    { label: "On Battery", tx1: "green", tx2: "green" },
+    { label: "Monitor Power", tx1: "green", tx2: "green" },
+    { label: "RTC Power", tx1: "green", tx2: "green" },
+    { label: "RMS Power", tx1: "green", tx2: "gray" },
+    { label: "Facilities Power", tx1: "green", tx2: "gray" },
+    { label: "LCU Power", tx1: "green", tx2: "gray" },
+    { label: "Battery Charger", tx1: "Trickle", tx2: "Trickle" },
+    { label: "48 V PS", tx1: "green", tx2: "green" },
+    { label: "BCPS PS", tx1: "green", tx2: "green" },
+    { label: "BCPS DC/DC", tx1: "green", tx2: "green" },
+  ];
+  const centeredSystemRows = new Set(["RMS Power", "Facilities Power", "LCU Power"]);
 
   return (
-    <div className="grid gap-3 p-3 lg:grid-cols-2 text-[11px]">
-      <Panel title="Digital Inputs">
-        <table className="w-full text-left">
-          <thead className="bg-[#172033] text-[#94a3b8] text-[10px]">
-            <tr>
-              <th className="px-3 py-2">Input</th>
-              <th className="px-3 py-2">Configuration</th>
-              <th className="px-3 py-2">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.digitalInputs.map((row, index) => (
-              <tr key={row.name} className="border-t border-[#273449] text-[#cbd5e1] hover:bg-[#1e293b]/50">
-                <th scope="row" className="px-3 py-2 font-medium">{row.name}</th>
-                <td data-dme-field-id={`digitalInputs.${index}.configuration`} className="px-3 py-2 font-mono">
-                  {resolveDmeField(row.configuration, `digitalInputs.${index}.configuration`, overrides)}
-                </td>
-                <td data-dme-field-id={`digitalInputs.${index}.status`} className="px-3 py-2 font-mono">
-                  {resolveDmeField(row.status, `digitalInputs.${index}.status`, overrides) || "-"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Panel>
-
-      <Panel title="Digital Outputs">
-        <table className="w-full text-left">
-          <thead className="bg-[#172033] text-[#94a3b8] text-[10px]">
-            <tr>
-              <th className="px-3 py-2">Output</th>
-              <th className="px-3 py-2">Status</th>
-              <th className="px-3 py-2">Alternate</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.digitalOutputs.map((row, index) => (
-              <tr key={row.name} className="border-t border-[#273449] text-[#cbd5e1] hover:bg-[#1e293b]/50">
-                <th scope="row" className="px-3 py-2 font-medium">{row.name}</th>
-                <td data-dme-field-id={`digitalOutputs.${index}.status`} className="px-3 py-2 font-mono">
-                  {resolveDmeField(row.status, `digitalOutputs.${index}.status`, overrides)}
-                </td>
-                <td data-dme-field-id={`digitalOutputs.${index}.altStatus`} className="px-3 py-2 font-mono">
-                  {resolveDmeField(row.altStatus ?? "", `digitalOutputs.${index}.altStatus`, overrides) || "-"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </Panel>
-
-      {[
-        ["System Power Status", "systemPowerStatus", data.systemPowerStatus],
-        ["Transmitter Alerts", "txAlerts", data.txAlerts],
-      ].map(([title, prefix, rows]) => (
-        <Panel key={String(prefix)} title={String(title)}>
-          <table className="w-full text-left">
-            <thead className="bg-[#172033] text-[#94a3b8] text-[10px]">
-              <tr>
-                <th className="px-3 py-2">Status</th>
-                <th className="w-20 px-3 py-2 text-center">Tx #1</th>
-                <th className="w-20 px-3 py-2 text-center">Tx #2</th>
-              </tr>
-            </thead>
+    <div className="dme-pmdt-digital-io">
+      <div className="dme-pmdt-digital-top">
+        <DataPanel title="Digital Inputs">
+          <table>
+            <thead><tr><th /><th>Configuration</th><th>Status</th></tr></thead>
             <tbody>
-              {(rows as typeof data.txAlerts).map((row, index) => (
-                <tr key={row.name} className="border-t border-[#273449] text-[#cbd5e1] hover:bg-[#1e293b]/50">
-                  <th scope="row" className="px-3 py-2 font-medium">{row.name}</th>
-                  {(["tx1", "tx2"] as const).map((tx) => {
-                    const fieldId = `${prefix}.${index}.${tx}`;
-                    const color = resolveDmeStatus(row[tx], fieldId, overrides);
-                    return (
-                      <td key={tx} data-dme-field-id={fieldId} className="px-3 py-2 text-center">
-                        <Indicator color={color} label={`${row.name} ${tx}`} />
-                      </td>
-                    );
-                  })}
+              {data.digitalInputs.map((row, index) => (
+                <tr key={row.name}>
+                  <th scope="row">{row.name}</th>
+                  <td {...dmeFieldMetadata(`digitalInputs.${index}.configuration`, `${row.name} Configuration`, row.configuration)}>{resolveDmeField(row.configuration, `digitalInputs.${index}.configuration`, overrides)}</td>
+                  <td {...dmeFieldMetadata(`digitalInputs.${index}.status`, `${row.name} Status`, row.status)}><DmeIndicator color={row.status === "Alarm" ? "red" : row.status ? "green" : "gray"} /></td>
                 </tr>
               ))}
+              <tr><th scope="row">SPI Bus Fault</th><td /><td><DmeIndicator color="green" /></td></tr>
+              <tr><th scope="row">System Fan Fault</th><td /><td><DmeIndicator color="green" /></td></tr>
             </tbody>
           </table>
-        </Panel>
-      ))}
+        </DataPanel>
+
+        <DataPanel title="Digital Outputs">
+          <table>
+            <thead><tr><th /><th>Status</th></tr></thead>
+            <tbody>
+              {data.digitalOutputs.filter((row) => row.name.startsWith("Spare Output")).map((row, index) => (
+                <tr key={row.name}><th scope="row">{row.name}</th><td {...dmeFieldMetadata(`digitalOutputs.${index + 1}.status`, `${row.name} Status`, row.status)}>{resolveDmeField(row.status, `digitalOutputs.${index + 1}.status`, overrides)}</td></tr>
+              ))}
+              <tr>
+                <th scope="row">Fan Control</th>
+                <td {...dmeFieldMetadata(
+                  fanOutputIndex >= 0 ? `digitalOutputs.${fanOutputIndex}.status` : "digitalOutputs.fanControl.status",
+                  "Fan Control Status",
+                  fanOutput?.status ?? "Automatic - Off",
+                )}>
+                  {resolveDmeField(fanOutput?.status ?? "Automatic - Off", fanOutputIndex >= 0 ? `digitalOutputs.${fanOutputIndex}.status` : "digitalOutputs.fanControl.status", overrides)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </DataPanel>
+
+        <DataPanel title="PA Power Status">
+          <table>
+            <tbody>
+              {data.paStatus.map((row, index) => {
+                const fieldId = `paStatus.${index}.outputPower`;
+                const color = resolveDmeStatus(row.outputPower, fieldId, overrides);
+                return <tr key={row.name}><th scope="row">{row.name}</th><td {...dmeFieldMetadata(fieldId, `${row.name} Power`, color, color)}><DmeIndicator color={color} /></td></tr>;
+              })}
+            </tbody>
+          </table>
+        </DataPanel>
+      </div>
+
+      <DataPanel title="System Power Status" className="dme-pmdt-system-power">
+        <table>
+          <thead><tr><th /><th>Tx 1</th><th>Tx 2</th></tr></thead>
+          <tbody>
+            {systemRows.map((row, index) => (
+              <tr key={row.label}>
+                <th scope="row">{row.label}</th>
+                {centeredSystemRows.has(row.label) ? (
+                  <td colSpan={2} className="dme-pmdt-system-centered"><DmeIndicator color="green" /></td>
+                ) : ([row.tx1, row.tx2] as const).map((status, txIndex) => (
+                    <td key={txIndex}>
+                      {status === "Trickle" ? <DmeValueCell fieldId={`systemPowerStatus.${index}.tx${txIndex + 1}`} label={`${row.label} Tx ${txIndex + 1}`} value="Trickle" /> : <DmeIndicator color={status} />}
+                    </td>
+                  ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </DataPanel>
     </div>
   );
 }

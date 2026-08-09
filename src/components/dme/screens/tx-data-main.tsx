@@ -25,8 +25,8 @@ export function TxDataMain() {
   const data = useDmePmdtStore((state) => state.data);
   const overrides = useDmePmdtStore((state) => state.overrides);
   return (
-    <div className="grid gap-4 p-4">
-      <PmdtPanel title="Power Amplifiers">
+    <div className="dme-pmdt-tx-main grid gap-4 p-4">
+      <PmdtPanel title="Power Amplifier">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[54rem] text-center text-[10px]">
             <thead className="text-[#94a3b8]"><tr><th className="px-2 py-2 text-left">Power Amplifier</th>{paColumns.map(([, label]) => <th key={label} className="px-2 py-2">{label}</th>)}<th className="px-2 py-2">Control</th></tr></thead>
@@ -57,9 +57,23 @@ export function TxDataMain() {
             {(["commFault", "maintenanceAlert"] as const).map((key) => (
               <tr key={key} className="border-t border-[#263247]">
                 <th scope="row" className="px-2 py-2 text-left font-medium">{key === "commFault" ? "Comm Fault" : "Maintenance Alert"}</th>
-                {(["tx1", "tx2"] as const).map((tx) => (
-                  <td key={tx} className="p-1 text-center"><DmeValueCell fieldId={`txStatus.${key}.${tx}`} label={`${key} ${tx}`} value={data.txStatus[key][tx]} status={data.txStatus[key][tx] ? "alarm" : "normal"} className="w-full" /></td>
-                ))}
+                {(["tx1", "tx2"] as const).map((tx) => {
+                  const fieldId = `txStatus.${key}.${tx}`;
+                  const color = resolveDmeStatus(
+                    data.txStatus[key][tx] ? "red" : "gray",
+                    fieldId,
+                    overrides,
+                  );
+                  return (
+                    <td
+                      key={tx}
+                      {...dmeFieldMetadata(fieldId, `${key} ${tx}`, color, color)}
+                      className="p-1 text-center"
+                    >
+                      <DmeIndicator color={color} />
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>

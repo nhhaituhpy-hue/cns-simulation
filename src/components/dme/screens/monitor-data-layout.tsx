@@ -15,7 +15,7 @@ export function MonitorDataLayout() {
         { id: "integral", label: "Integral", active: activeView === "monitor-integral", onSelect: () => openView("monitor-data", "monitor-integral", ["Monitors", "Data", "Integral"], "Integral") },
         { id: "standby", label: "Standby", active: activeView === "monitor-standby", onSelect: () => openView("monitor-data", "monitor-standby", ["Monitors", "Data", "Standby"], "Standby") },
       ]} />
-      <div className="min-h-0 flex-1 overflow-auto">
+      <div className="dme-pmdt-monitor-data-shell min-h-0 flex-1 overflow-auto">
         <MonitorDataTable kind={activeView === "monitor-standby" ? "standby" : "integral"} />
       </div>
     </section>

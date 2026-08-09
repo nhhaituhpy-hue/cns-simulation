@@ -27,7 +27,21 @@ Bản redesigner DVOR 1150A được triển khai theo giao diện PMDT cổ đi
 - VSWR được giữ ở miền vật lý hợp lệ (≥ 1), đi theo transmitter đang phát và anten/monitor tương ứng; dữ liệu Monitor 2 không bị gán nhầm vào cột phát chính.
 - Trạng thái mô phỏng và bài thực hành được cô lập trong Zustand store của từng phiên trình duyệt; scenario/submission có lớp lưu cục bộ và API/Supabase khi cấu hình cloud. Quy trình chi tiết được lưu trong skill `dvor-1150a-pmdt-simulator` của Codex.
 
-Quality gate cho bản DVOR này: **9 file test, 45/45 test đạt**; `npm run typecheck` và `npm run build` đã compile phần DVOR nhưng vẫn bị chặn bởi 2 lỗi TypeScript trong phần DME đang được SOL phát triển (`src/components/dme/screens/monitor-decoder-results.tsx`).
+Quality gate cho bản DVOR này: **9 file test, 45/45 test đạt**. Phần DME có quality gate và phạm vi kiểm thử riêng ở mục dưới; các derived engine được giữ tách biệt để hai simulator chạy song song.
+
+### DME 1119A — CONFIG → MONITOR derivation
+
+Engine DME nằm riêng trong `src/lib/dme1119a/` và được gọi bởi store DME, không sửa engine DVOR 1150A. Bảng truy vết đầy đủ từ từng trường cấu hình đến màn hình/row bị ảnh hưởng được export bởi `dmeConfigDerivationMap` trong `src/lib/dme1119a/config.ts` và hiển thị trong panel **System → Simulation Parameters…**.
+
+- Table 9-5 là nguồn cho channel X/Y: RX/INT `1024+n`, RX LO `899+n`, TX theo dải X/Y, spacing và reply delay 50/56 us. Đổi channel rebases monitor, decoder, calibration và Delay/Spacing nominal/alarm.
+- `Power Output` là target RTC chung; `TX1 Power Output Scale` và `TX2 Power Output Scale` là hai hệ số độc lập. Target từng máy = baseline trạm × RTC dB ratio × scale máy / scale factory. Monitor Tx Power tiếp tục áp dụng scale/offset của monitor; ERP theo active-TX path và VSWR luôn được clamp ≥ 1. Sửa TX1 không đổi TX2 và ngược lại; relay transfer đổi đúng Integral/Standby/sidebar.
+- PRF dùng Minimum Squitter, Maximum PRF, dead-time và trần phần cứng 5500 ppps; gain reduction bắt đầu tại 90% capacity và target 95%. SDES/LDES, traffic bands, Total/Monitor Replies và LDES Triggers được tính lại xác định.
+- Delay/Spacing dùng limits dạng offset so với nominal. Integrity test dùng Low Low/Low High/High Low/High High theo bốn công thức §3.6.9.2.1. Tắt integrity không xóa lỗi: row chuyển cảnh báo vàng và station alert vẫn quan sát được.
+- Decoder giữ usable range Rx Sensitivity −94…−72 dBm và limits ±3 dB. Baseline mặc định của bản training là −94 dBm để khớp capture PMDT; manual §6.4.5.1 nêu thêm default site −82/−87 dBm theo mức công suất, có thể nhập trong cùng range.
+- LDES manual formulas được export (`SRE×12.36+10`, `−0.385×FUD−20`). Bản PMDT này không có input SRE/FUD, nên Window/Threshold do operator cấu hình là assumption huấn luyện được ghi rõ trong `DME_LDES_TRAINING_MODEL`; không giả lập giá trị site ngẫu nhiên.
+- Apply (F7) recompute toàn bộ derived data, có thể thực hiện transfer dual hot-standby theo alarm và đặt **Need Backup**; RMS → Config Backup xóa Need Backup; Restore/Reset xóa trạng thái này. Transfer TX1↔TX2 yêu cầu SEC2+ nhưng không yêu cầu Local/Bypass, còn chỉnh cấu hình vẫn yêu cầu Local + SEC3/4.
+
+Quality gate DME hiện tại: `tests/dme/dme1119a-derivation.test.ts`, `tests/dme/dme1119a-channel.test.ts`, `tests/dme/pmdt-shell.test.tsx` và `tests/state/dme-pmdt-store.test.ts` đạt **56/56 test**; `npm run typecheck` và `npm run build` đã pass. Đây là mô hình đào tạo xác định, không thay thế phép đo RF/hiệu chuẩn phần cứng thật.
 
 Mốc xác minh gần nhất được ghi nhận ngày **20/07/2026**: 217 bài kiểm thử Vitest vượt qua và production build thành công. README không thay thế kết quả kiểm tra hiện tại; hãy chạy các quality gate trước khi phát hành thay đổi mới.
 
@@ -332,6 +346,8 @@ Khi kế hoạch nội bộ và manual nhà sản xuất khác nhau, manual là 
 - Mở rộng kiểm thử E2E, accessibility, hiệu năng và quan sát lỗi production.
 
 ## Session Log
+- [2026-08-09] Hoàn thiện luồng chỉnh sửa CONFIG trực tiếp trên các màn hình DME 1119A: giá trị có thể xoá/nhập lại, stage vào `configDraft`, Apply (F7) áp dụng và phát sinh Need Backup. Bổ sung Reset (F8) khôi phục factory default tương tự DVOR, còn RMS > Config Restore khôi phục bản Config Backup; cả hai thao tác khôi phục đều xoá Need Backup.
+- [2026-08-09] Hoàn thiện mapping CONFIG → MONITOR cho DME 1119A theo `doc/DME1119A/1119A-0001M.pdf`: channel Table 9-5, delay/spacing integrity, PRF/dead-time/SDES-LDES, propagation, PA/ident, monitor offsets/ERP/VSWR và voting/transfer. Tách độc lập `TX1 Power Output Scale`/`TX2 Power Output Scale`, kiểm tra Apply/Need Backup/Config Backup và transfer sau khi đổi từng máy; giữ nguyên engine DVOR 1150A.
 - [2026-07-20] Hoàn thành tích hợp toàn bộ các màn hình PMDT của VOR và DME còn thiếu theo tài liệu `PMDT Capture.docx`.
 - [2026-07-20] Khắc phục lỗi crash runtime trên trình duyệt khi giám khảo nhấn "Áp dụng" (Apply) ghi đè trị đo lường bằng cách bổ sung metadata data attributes và lập trình phòng thủ `Number(value).toFixed(...)`.
 - [2026-07-20] Tinh gọn lựa chọn màu/trạng thái sự cố trong Author Panel của VOR và DME chỉ còn: Giữ nguyên, Màu xanh, Màu vàng, Màu đỏ, Màu xám. Tích hợp bộ map tự động thông minh trong Store giúp tương thích ngược hoàn toàn và loại bỏ khả năng lỗi crash.

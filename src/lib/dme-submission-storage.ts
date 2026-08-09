@@ -21,22 +21,30 @@ interface DmeSubmissionEnvelope {
 const validStatuses: readonly DmeSubmissionStatus[] = ["draft", "submitted", "reviewed"];
 const validScreens: readonly DmeScreenId[] = [
   "home", "rms-status", "rms-data", "rms-logs", "rms-config", "monitor-data", "monitor-config",
+  "monitor-special-tests", "monitor-fault-history",
   "monitor-1-test-results", "monitor-2-test-results", "monitor-1-offsets",
   "monitor-2-offsets", "monitor-1-data", "monitor-2-data", "monitor-1-calibration", "monitor-2-calibration",
-  "tx-data", "tx-config", "disabled",
+  "tx-data", "tx-config", "diagnostics", "disabled",
 ];
 const validViews: readonly DmeViewId[] = [
-  "home", "rms-status-main", "rms-status-monitor-tx",
+  "home", "rms-status-main", "rms-status-monitor-tx", "rms-maintenance-alerts",
   "rms-power-supply", "rms-ad-data", "rms-digital-io",
-  "rms-logs-alarms", "rms-logs-maintenance",
+  "rms-logs-alarms", "rms-logs-maintenance", "rms-logs-operational-summary",
+  "rms-logs-command-activity", "rms-logs-parameter-change",
   "rms-config-general", "rms-config-station", "rms-config-power-limits", "rms-config-ad-limits",
   "monitor-integral", "monitor-standby", "monitor-config-general", "monitor-alarm-limits",
-  "monitor-1-decoder-results", "monitor-2-decoder-results",
+  "monitor-special-tests", "monitor-fault-history",
+  "monitor-1-test-alarm-limits", "monitor-1-test-interrogator", "monitor-1-test-transponder", "monitor-1-decoder-results",
+  "monitor-2-test-alarm-limits", "monitor-2-test-interrogator", "monitor-2-test-transponder", "monitor-2-decoder-results",
   "monitor-1-offsets", "monitor-2-offsets",
   "monitor-1-data-detail-integral", "monitor-1-data-detail-standby",
+  "monitor-1-data-detail-maintenance", "monitor-1-data-detail-status",
   "monitor-2-data-detail-integral", "monitor-2-data-detail-standby",
+  "monitor-2-data-detail-maintenance", "monitor-2-data-detail-status",
   "monitor-1-calibration", "monitor-2-calibration",
   "tx-data-main", "tx-rtc-data", "tx-config-nominal", "tx-config-offsets",
+  "tx-config-integral-monitor", "tx-config-standby-monitor",
+  "diagnostics-power-up", "diagnostics-fault-isolation",
   "disabled",
 ];
 

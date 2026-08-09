@@ -14,13 +14,13 @@ import {
 export type DmeVisualStatus = DmeIndicatorColor | DmeParameterStatus;
 
 const statusClasses: Record<DmeVisualStatus, string> = {
-  green: "border-[#166534] bg-[#22c55e] text-[#052e16]",
-  yellow: "border-[#854d0e] bg-[#eab308] text-[#422006]",
-  red: "border-[#991b1b] bg-[#ef4444] text-white",
-  gray: "border-[#475569] bg-[#64748b] text-white",
-  normal: "border-[#1d6837] bg-[#0f3a1f] text-[#bbf7d0]",
-  warning: "border-[#745f17] bg-[#3a2f0f] text-[#fef08a]",
-  alarm: "border-[#7f1d1d] bg-[#3a0f0f] text-[#fecaca]",
+  green: "dme-pmdt-value--green",
+  yellow: "dme-pmdt-value--yellow",
+  red: "dme-pmdt-value--red",
+  gray: "dme-pmdt-value--gray",
+  normal: "dme-pmdt-value--green",
+  warning: "dme-pmdt-value--yellow",
+  alarm: "dme-pmdt-value--red",
 };
 
 const statusLabels: Record<DmeVisualStatus, string> = {
@@ -49,12 +49,10 @@ export function dmeFieldMetadata(
 }
 
 export function DmeIndicator({ color }: { color: DmeIndicatorColor }) {
+  const label = color === "green" ? "G" : color === "yellow" ? "Y" : color === "red" ? "R" : "";
   return (
-    <span className="inline-flex items-center justify-center gap-1.5">
-      <span
-        aria-hidden
-        className={`inline-block size-3 rounded-sm border border-black/30 ${statusClasses[color]}`}
-      />
+    <span className="pmdt-indicator-wrap">
+      <span aria-hidden className={`pmdt-indicator pmdt-indicator--${color}`}>{label}</span>
       <span className="sr-only">{statusLabels[color]}</span>
     </span>
   );
@@ -66,12 +64,14 @@ export function DmeValueCell({
   value,
   status = "normal",
   className = "",
+  formatValue,
 }: {
   fieldId: string;
   label: string;
   value: DmeEditableValue;
   status?: DmeVisualStatus;
   className?: string;
+  formatValue?: (value: DmeEditableValue) => string;
 }) {
   const overrides = useDmePmdtStore((state) => state.overrides);
   const resolvedValue = resolveDmeField(value, fieldId, overrides);
@@ -80,9 +80,9 @@ export function DmeValueCell({
   return (
     <span
       {...dmeFieldMetadata(fieldId, label, resolvedValue, resolvedStatus)}
-      className={`inline-flex min-h-6 min-w-16 items-center justify-center border px-2 font-mono text-[11px] font-semibold tabular-nums ${statusClasses[resolvedStatus]} ${className}`}
+      className={`dme-pmdt-value ${statusClasses[resolvedStatus]} ${className}`}
     >
-      {String(resolvedValue)}
+      {resolvedValue === null ? "" : formatValue ? formatValue(resolvedValue) : String(resolvedValue)}
       <span className="sr-only">, {statusLabels[resolvedStatus]}</span>
     </span>
   );
@@ -100,7 +100,7 @@ export function ScreenTabs({
   }>;
 }) {
   return (
-    <div role="tablist" className="flex flex-wrap gap-1 border-b border-[#334155] bg-[#0f172a] px-3 pt-2">
+    <div role="tablist" className="dme-pmdt-tabs">
       {tabs.map((tab) => (
         <button
           key={tab.id}
@@ -111,12 +111,12 @@ export function ScreenTabs({
           disabled={tab.disabled}
           title={tab.disabled ? "Chưa khả dụng" : undefined}
           onClick={tab.onSelect}
-          className={`min-h-8 border border-b-0 px-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60a5fa] ${
+          className={`dme-pmdt-tab ${
             tab.disabled
-              ? "cursor-not-allowed border-[#334155] text-[#64748b] opacity-50"
+              ? "dme-pmdt-tab--disabled"
               : tab.active
-                ? "border-[#475569] bg-[#1e293b] text-white"
-                : "border-[#334155] bg-[#111827] text-[#94a3b8] hover:bg-[#1e293b]"
+                ? "dme-pmdt-tab--active"
+                : "dme-pmdt-tab--idle"
           }`}
         >
           {tab.label}
@@ -134,7 +134,7 @@ export function ScreenFrame({
   children: React.ReactNode;
 }) {
   return (
-    <section aria-label={title} className="min-h-full bg-[#0a0e1a] p-4 text-xs text-[#cbd5e1]">
+    <section aria-label={title} className="dme-pmdt-screen-frame">
       {children}
     </section>
   );
@@ -150,8 +150,8 @@ export function PmdtPanel({
   className?: string;
 }) {
   return (
-    <section className={`border border-[#334155] bg-[#111827] p-3 ${className}`}>
-      <h2 className="mb-3 text-xs font-bold text-[#93c5fd]">{title}</h2>
+    <section className={`dme-pmdt-panel ${className}`}>
+      <h2 className="dme-pmdt-panel-title">{title}</h2>
       {children}
     </section>
   );

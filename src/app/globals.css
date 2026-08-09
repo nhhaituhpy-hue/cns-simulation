@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "../styles/theme-tokens.css";
 @import "../styles/pmdt-classic.css";
+@import "../styles/dme-pmdt-classic.css";
 
 :root {
   --terminal-bg: #000000;

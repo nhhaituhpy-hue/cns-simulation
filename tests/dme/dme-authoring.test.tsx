@@ -24,19 +24,21 @@ describe("DME scenario authoring", () => {
   it("edits an RMS alarm state using the allowed State values", async () => {
     const user = userEvent.setup();
     render(<DmeScenarioAuthor />);
+    await loginAs(user);
 
     expect(screen.getByRole("complementary", { name: "Bảng xây dựng kịch bản" })).toHaveClass(
-      "overflow-y-auto",
-      "overscroll-contain",
+      "pmdt-classic-inspector",
     );
     expect(screen.getByRole("region", { name: "DME PMDT Simulator" })).toHaveClass(
-      "h-[calc(100dvh-4rem)]",
+      "pmdt-classic-window",
+      "dme-pmdt-window",
     );
 
     await user.click(screen.getByRole("button", { name: "RMS" }));
     await user.click(screen.getByRole("menuitem", { name: "Logs" }));
+    await user.click(screen.getByRole("tab", { name: "Alarms" }));
     fireEvent.pointerDown(
-      screen.getByText("Normal", {
+      screen.getByText("Primary Alarm Low", {
         selector: '[data-dme-field-id="alarmLogs.0.state"]',
       }),
     );
@@ -54,6 +56,7 @@ describe("DME scenario authoring", () => {
   it("opens the DME hardware diagnosis configuration", async () => {
     const user = userEvent.setup();
     render(<DmeScenarioAuthor />);
+    await loginAs(user);
 
     await user.click(screen.getByRole("button", { name: "Cấu hình" }));
     await user.click(screen.getByRole("checkbox", { name: "Bật bước xác định phần cứng cho kịch bản này" }));
@@ -62,3 +65,9 @@ describe("DME scenario authoring", () => {
     expect(screen.getByText("Đã chọn 1 block phần cứng.")).toBeInTheDocument();
   });
 });
+
+async function loginAs(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(screen.getByLabelText("User ID"), "SEC3");
+  await user.type(screen.getByLabelText("Password"), "THREE");
+  await user.click(screen.getByRole("button", { name: "OK" }));
+}
