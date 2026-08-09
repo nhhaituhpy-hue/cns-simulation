@@ -494,7 +494,10 @@ export function AppShell({ children, currentUser }: AppShellProps) {
   const [signingOut, setSigningOut] = useState(false);
   const pageHeader = getPageHeader(pathname);
 
-  if (pathname === "/login") {
+  // The reference DVOR PMDT is a standalone 900 px desktop application. Keep
+  // the global CNS navigation outside it so the client area retains the
+  // coordinates shown in the supplied captures.
+  if (pathname === "/login" || pathname === "/simulator/dvor-1150a") {
     return <>{children}</>;
   }
 

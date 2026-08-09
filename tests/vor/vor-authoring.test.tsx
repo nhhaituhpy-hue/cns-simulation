@@ -26,18 +26,18 @@ describe("VOR scenario authoring", () => {
   it("configures a fault and expected checkpoint on the shared PMDT", async () => {
     const user = userEvent.setup();
     render(<VorScenarioAuthor />);
+    await loginAs(user);
 
     expect(screen.getByRole("complementary", { name: "Bảng xây dựng kịch bản" })).toHaveClass(
-      "overflow-y-auto",
-      "overscroll-contain",
+      "pmdt-classic-inspector",
     );
     expect(screen.getByRole("region", { name: "VOR PMDT Simulator" })).toHaveClass(
-      "h-[calc(100dvh-4rem)]",
+      "pmdt-classic-window",
     );
 
     await user.click(screen.getByRole("button", { name: "Transmitters" }));
     await user.click(screen.getByRole("menuitem", { name: "Data" }));
-    fireEvent.pointerDown(screen.getByText("98.8"));
+    fireEvent.pointerDown(screen.getByText("70.8"));
     expect(screen.getByText("txPower.0.tx1")).toBeInTheDocument();
 
     const valueInput = screen.getByText("Giá trị").closest("label")?.querySelector("input");
@@ -73,6 +73,7 @@ describe("VOR scenario authoring", () => {
   it("configures Local and Bypass as yellow student interaction targets", async () => {
     const user = userEvent.setup();
     render(<VorScenarioAuthor />);
+    await loginAs(user);
 
     fireEvent.pointerDown(screen.getByRole("button", { name: "Local" }));
     expect(screen.getByText("local")).toBeInTheDocument();
@@ -96,11 +97,13 @@ describe("VOR scenario authoring", () => {
   it("edits an RMS alarm state using the allowed State values", async () => {
     const user = userEvent.setup();
     render(<VorScenarioAuthor />);
+    await loginAs(user);
 
     await user.click(screen.getByRole("button", { name: "RMS" }));
     await user.click(screen.getByRole("menuitem", { name: "Logs" }));
+    await user.click(screen.getByRole("tab", { name: "Alarms" }));
     fireEvent.pointerDown(
-      screen.getByText("Normal", {
+      screen.getByText("Alarm", {
         selector: '[data-vor-field-id="alarmLogs.0.state"]',
       }),
     );
@@ -118,6 +121,7 @@ describe("VOR scenario authoring", () => {
   it("configures an expected faulty block for the optional second step", async () => {
     const user = userEvent.setup();
     render(<VorScenarioAuthor />);
+    await loginAs(user);
 
     await user.click(screen.getByRole("button", { name: "Cấu hình" }));
     await user.click(screen.getByRole("checkbox", { name: "Bật bước xác định phần cứng cho kịch bản này" }));
@@ -129,3 +133,9 @@ describe("VOR scenario authoring", () => {
     expect(screen.getByText("1 block đã chọn · Suy giảm")).toBeInTheDocument();
   });
 });
+
+async function loginAs(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(screen.getByLabelText("User ID"), "SEC3");
+  await user.type(screen.getByLabelText("Password"), "THREE");
+  await user.click(screen.getByRole("button", { name: "OK" }));
+}

@@ -8,19 +8,27 @@ import {
 } from "@/stores/vor-pmdt-store";
 
 const indicatorClasses: Record<VorIndicatorColor, string> = {
-  green: "bg-[#22c55e]",
-  yellow: "bg-[#eab308]",
-  red: "bg-[#ef4444]",
-  gray: "bg-[#6b7280]",
+  green: "pmdt-rms-indicator--green",
+  yellow: "pmdt-rms-indicator--yellow",
+  red: "pmdt-rms-indicator--red",
+  gray: "pmdt-rms-indicator--gray",
 };
 
 function Indicator({ color, label }: { color: VorIndicatorColor; label: string }) {
+  const letter = color === "green" ? "G" : color === "yellow" ? "Y" : color === "red" ? "R" : "";
   return (
-    <span className="inline-flex items-center gap-1.5" title={`${label}: ${color}`}>
-      <span aria-hidden className={`size-3 rounded-full border border-black/40 ${indicatorClasses[color]}`} />
-      <span className="sr-only">{label}: {color}</span>
+    <span aria-label={`${label}: ${color}`} className={`pmdt-rms-indicator ${indicatorClasses[color]}`} title={`${label}: ${color}`}>
+      {letter}
     </span>
   );
+}
+
+function formatVoltage(value: number, rowIndex: number) {
+  return Number(value).toFixed(rowIndex < 8 ? 2 : 1);
+}
+
+function formatCurrent(value: number) {
+  return Number(value).toFixed(1);
 }
 
 export function RmsPowerSupply() {
@@ -34,10 +42,10 @@ export function RmsPowerSupply() {
   const bcps2Color = resolveVorStatus(bcps2Val ? "red" : "green", "bcpsCommFaults.bcps2", overrides);
 
   return (
-    <div className="flex flex-col gap-4 p-3 text-[11px]">
-      <div className="grid gap-3 lg:grid-cols-2">
+    <div className="pmdt-rms-power-screen flex flex-col gap-4 p-3 text-[11px]">
+      <div className="pmdt-rms-power-grid grid gap-3 lg:grid-cols-2">
         {/* Voltage Table */}
-        <section className="border border-[#334155] bg-[#111827]">
+        <section className="pmdt-rms-flat-panel border border-[#334155] bg-[#111827]">
           <h3 className="border-b border-[#334155] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[#e2e8f0]">Voltages</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
@@ -57,13 +65,13 @@ export function RmsPowerSupply() {
                   return (
                     <tr key={row.parameter} className="border-t border-[#273449] text-[#cbd5e1] hover:bg-[#1e293b]/50">
                       <th scope="row" className="px-3 py-1.5 font-medium">{row.parameter}</th>
-                      <td className="px-2 py-1.5 text-right font-mono text-gray-400">{resolveVorField(row.low, `${prefix}.low`, overrides)}</td>
-                      <td className="px-2 py-1.5 text-right font-mono text-gray-400">{resolveVorField(row.preLow, `${prefix}.preLow`, overrides)}</td>
+                      <td className="px-2 py-1.5 text-right font-mono text-gray-400">{formatVoltage(resolveVorField(row.low, `${prefix}.low`, overrides), index)}</td>
+                      <td className="px-2 py-1.5 text-right font-mono text-gray-400">{formatVoltage(resolveVorField(row.preLow, `${prefix}.preLow`, overrides), index)}</td>
                       <td data-vor-field-id={`${prefix}.volts`} className="px-3 py-1.5 text-right font-mono font-semibold text-emerald-400 bg-emerald-950/20">
-                        {Number(resolveVorField(row.volts, `${prefix}.volts`, overrides)).toFixed(2)}
+                        {formatVoltage(resolveVorField(row.volts, `${prefix}.volts`, overrides), index)}
                       </td>
-                      <td className="px-2 py-1.5 text-right font-mono text-gray-400">{resolveVorField(row.preHigh, `${prefix}.preHigh`, overrides)}</td>
-                      <td className="px-2 py-1.5 text-right font-mono text-gray-400">{resolveVorField(row.high, `${prefix}.high`, overrides)}</td>
+                      <td className="px-2 py-1.5 text-right font-mono text-gray-400">{formatVoltage(resolveVorField(row.preHigh, `${prefix}.preHigh`, overrides), index)}</td>
+                      <td className="px-2 py-1.5 text-right font-mono text-gray-400">{formatVoltage(resolveVorField(row.high, `${prefix}.high`, overrides), index)}</td>
                     </tr>
                   );
                 })}
@@ -73,7 +81,7 @@ export function RmsPowerSupply() {
         </section>
 
         {/* Currents Table */}
-        <section className="border border-[#334155] bg-[#111827]">
+        <section className="pmdt-rms-flat-panel border border-[#334155] bg-[#111827]">
           <h3 className="border-b border-[#334155] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[#e2e8f0]">Currents</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
@@ -98,13 +106,13 @@ export function RmsPowerSupply() {
                           {row.parameter}
                         </label>
                       </th>
-                      <td className="px-2 py-1.5 text-right font-mono text-gray-400">{resolveVorField(row.low, `${prefix}.low`, overrides)}</td>
-                      <td className="px-2 py-1.5 text-right font-mono text-gray-400">{resolveVorField(row.preLow, `${prefix}.preLow`, overrides)}</td>
+                      <td className="px-2 py-1.5 text-right font-mono text-gray-400">{formatCurrent(resolveVorField(row.low, `${prefix}.low`, overrides))}</td>
+                      <td className="px-2 py-1.5 text-right font-mono text-gray-400">{formatCurrent(resolveVorField(row.preLow, `${prefix}.preLow`, overrides))}</td>
                       <td data-vor-field-id={`${prefix}.amps`} className="px-3 py-1.5 text-right font-mono font-semibold text-sky-400 bg-sky-950/20">
-                        {Number(resolveVorField(row.amps, `${prefix}.amps`, overrides)).toFixed(1)}
+                        {formatCurrent(resolveVorField(row.amps, `${prefix}.amps`, overrides))}
                       </td>
-                      <td className="px-2 py-1.5 text-right font-mono text-gray-400">{resolveVorField(row.preHigh, `${prefix}.preHigh`, overrides)}</td>
-                      <td className="px-2 py-1.5 text-right font-mono text-gray-400">{resolveVorField(row.high, `${prefix}.high`, overrides)}</td>
+                      <td className="px-2 py-1.5 text-right font-mono text-gray-400">{formatCurrent(resolveVorField(row.preHigh, `${prefix}.preHigh`, overrides))}</td>
+                      <td className="px-2 py-1.5 text-right font-mono text-gray-400">{formatCurrent(resolveVorField(row.high, `${prefix}.high`, overrides))}</td>
                     </tr>
                   );
                 })}

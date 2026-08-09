@@ -11,7 +11,8 @@ export function RmsLogsMaintenance() {
   const overrides = useVorPmdtStore((state) => state.overrides);
 
   return (
-    <div className="max-h-[calc(100dvh-15rem)] overflow-auto p-3">
+    <div className="pmdt-rms-log-screen max-h-[calc(100dvh-15rem)] overflow-auto p-3">
+      <div className="pmdt-rms-log-controls"><button type="button">Update</button><span>Available Trend Records: 0, Remaining: 0</span><button type="button">Reset</button></div>
       <table className="w-full min-w-[42rem] border-collapse text-left text-[11px]">
         <caption className="sr-only">Maintenance alert log, tối đa 100 bản ghi</caption>
         <thead className="sticky top-0 z-10 bg-[#1e293b] text-[#cbd5e1]">

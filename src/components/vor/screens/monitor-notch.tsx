@@ -5,74 +5,56 @@ import { resolveVorField, useVorPmdtStore } from "@/stores/vor-pmdt-store";
 export function MonitorNotch() {
   const data = useVorPmdtStore((state) => state.data);
   const overrides = useVorPmdtStore((state) => state.overrides);
-
-  // Divide 48 antennas into 3 sub-arrays for a 3-column layout
-  const cols = [
+  const notchRouting = data.monitorConfigGeneral.find((row) => row.parameter === "Notch Monitor");
+  const monitorValuesEnabled = Boolean(notchRouting?.primary || notchRouting?.secondary);
+  const columns = [
     data.notchData.slice(0, 16),
     data.notchData.slice(16, 32),
     data.notchData.slice(32, 48),
   ];
 
   return (
-    <div className="grid gap-3 p-3 text-[11px] md:grid-cols-3">
-      {cols.map((colData, colIdx) => (
-        <section key={colIdx} className="border border-[#334155] bg-[#111827]">
-          <table className="w-full text-left">
-            <thead className="bg-[#172033] text-[#94a3b8] text-[10px]">
-              <tr>
-                <th className="px-2 py-1.5 text-center">Ant</th>
-                <th className="px-2 py-1.5 text-right">Baseline</th>
-                <th className="px-2 py-1.5 text-right font-semibold text-[#cbd5e1]">Mon 1</th>
-                <th className="px-2 py-1.5 text-right font-semibold text-[#cbd5e1]">Mon 2</th>
-              </tr>
-            </thead>
+    <section className="pmdt-monitor-notch" aria-label="Notch monitor">
+      <div className="pmdt-notch-toolbar">
+        <input aria-label="Notch baseline command" readOnly value="" />
+        <span />
+        <button type="button" disabled>Record Baseline</button>
+        <time className="pmdt-monitor-date">{data.timestamp}</time>
+      </div>
+      <div className="pmdt-notch-columns">
+        {columns.map((column, columnIndex) => (
+          <table key={columnIndex}>
+            <colgroup>
+              <col className="pmdt-notch-antenna-col" />
+              <col className="pmdt-notch-value-col" />
+              <col className="pmdt-notch-value-col" />
+              <col className="pmdt-notch-value-col" />
+            </colgroup>
+            <thead><tr><th scope="col">Antenna</th><th scope="col">Baseline</th><th scope="col">Mon 1</th><th scope="col">Mon 2</th></tr></thead>
             <tbody>
-              {colData.map((row) => {
-                // Calculate absolute index in the main 48-item array
-                const index = colIdx * 16 + (row.antenna - 1);
+              {column.map((row, rowIndex) => {
+                const index = columnIndex * 16 + rowIndex;
                 const prefix = `notchData.${index}`;
-
-                const resolvedBaseline = resolveVorField(row.baseline, `${prefix}.baseline`, overrides);
-                const resolvedMon1 = resolveVorField(row.mon1, `${prefix}.mon1`, overrides);
-                const resolvedMon2 = resolveVorField(row.mon2, `${prefix}.mon2`, overrides);
-
+                const baseline = resolveVorField(row.baseline, `${prefix}.baseline`, overrides);
+                const mon1 = monitorValuesEnabled
+                  ? resolveVorField(row.mon1, `${prefix}.mon1`, overrides)
+                  : null;
+                const mon2 = monitorValuesEnabled
+                  ? resolveVorField(row.mon2, `${prefix}.mon2`, overrides)
+                  : null;
                 return (
-                  <tr key={row.antenna} className="border-t border-[#273449] text-[#cbd5e1] hover:bg-[#1e293b]/50">
-                    <td className="px-2 py-1.5 text-center font-medium text-gray-400 bg-[#0f172a]/40">{row.antenna}</td>
-                    <td
-                      data-vor-field-id={`${prefix}.baseline`}
-                      data-vor-field-value={row.baseline}
-                      data-vor-field-type="number"
-                      data-vor-field-label={`Antenna ${row.antenna} Baseline`}
-                      className="px-2 py-1.5 text-right font-mono text-gray-400"
-                    >
-                      {Number(resolvedBaseline).toFixed(2)}
-                    </td>
-                    <td
-                      data-vor-field-id={`${prefix}.mon1`}
-                      data-vor-field-value={row.mon1}
-                      data-vor-field-type="number"
-                      data-vor-field-label={`Antenna ${row.antenna} Mon 1`}
-                      className="px-2 py-1.5 text-right font-mono text-emerald-400 bg-emerald-950/10"
-                    >
-                      {Number(resolvedMon1).toFixed(2)}
-                    </td>
-                    <td
-                      data-vor-field-id={`${prefix}.mon2`}
-                      data-vor-field-value={row.mon2}
-                      data-vor-field-type="number"
-                      data-vor-field-label={`Antenna ${row.antenna} Mon 2`}
-                      className="px-2 py-1.5 text-right font-mono text-emerald-400 bg-emerald-950/10"
-                    >
-                      {Number(resolvedMon2).toFixed(2)}
-                    </td>
+                  <tr key={row.antenna}>
+                    <th scope="row">{row.antenna}</th>
+                    <td><input aria-label={`${prefix}.baseline`} readOnly value={Number(baseline).toFixed(1)} /></td>
+                    <td><input aria-label={`${prefix}.mon1`} readOnly value={mon1 === null ? "" : Number(mon1).toFixed(1)} /></td>
+                    <td><input aria-label={`${prefix}.mon2`} readOnly value={mon2 === null ? "" : Number(mon2).toFixed(1)} /></td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
-        </section>
-      ))}
-    </div>
+        ))}
+      </div>
+    </section>
   );
 }

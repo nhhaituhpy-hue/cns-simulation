@@ -20,16 +20,18 @@ interface VorSubmissionEnvelope {
 
 const validStatuses: readonly VorSubmissionStatus[] = ["draft", "submitted", "reviewed"];
 const validScreens: readonly VorScreenId[] = [
-  "home", "rms-data", "rms-logs", "rms-config", "monitor-data", "monitor-config",
-  "monitor-1-offsets", "monitor-2-offsets", "tx-data", "tx-config", "disabled",
+  "home", "rms-status", "rms-data", "rms-logs", "rms-config", "monitor-data", "monitor-config",
+  "monitor-test-results", "monitor-fault-history", "monitor-1-offsets", "monitor-2-offsets", "tx-data", "tx-config", "diagnostics", "disabled",
 ];
 const validViews: readonly VorViewId[] = [
-  "home", "rms-maintenance-alerts", "rms-digital-io", "rms-power-supply",
+  "home", "rms-status-main", "rms-status-monitor-tx", "rms-status-software", "rms-status-hardware",
+  "rms-logs-operational-summary", "rms-logs-commands", "rms-logs-parameters",
+  "rms-maintenance-alerts", "rms-digital-io", "rms-power-supply",
   "rms-temperature", "rms-ad-data", "rms-logs-alarms", "rms-logs-maintenance",
   "rms-config-general", "rms-config-station", "rms-config-power-limits", "rms-config-ad-limits",
-  "monitor-integral", "monitor-sideband-vswr", "monitor-notch", "monitor-alarm-limits",
+  "monitor-integral", "monitor-status", "monitor-sideband-vswr", "monitor-notch", "monitor-alarm-limits", "monitor-test-results", "monitor-fault-history",
   "monitor-config-general", "monitor-1-offsets", "monitor-2-offsets",
-  "tx-data-main", "tx-status-1", "tx-status-2", "tx-config-nominal", "tx-config-offsets",
+  "tx-data-main", "tx-ground-check-1", "tx-ground-check-2", "tx-status-1", "tx-status-2", "tx-config-nominal", "tx-config-offsets", "diagnostics-power-up", "diagnostics-fault-isolation",
   "disabled",
 ];
 

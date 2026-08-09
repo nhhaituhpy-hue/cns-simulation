@@ -71,6 +71,7 @@ describe("VOR student workflow", () => {
         identity={{ userId: "student-user", studentName: "Nguyễn Văn A", workUnit: "Đội TSS" }}
       />,
     );
+    await loginAs(user);
 
     const localButton = screen.getByRole("button", { name: "Local" });
     const bypassButton = screen.getByRole("button", { name: "Bypass" });
@@ -118,3 +119,9 @@ describe("VOR student workflow", () => {
     });
   }, 15000);
 });
+
+async function loginAs(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(screen.getByLabelText("User ID"), "SEC3");
+  await user.type(screen.getByLabelText("Password"), "THREE");
+  await user.click(screen.getByRole("button", { name: "OK" }));
+}

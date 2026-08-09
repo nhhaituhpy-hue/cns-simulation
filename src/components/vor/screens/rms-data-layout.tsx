@@ -28,9 +28,9 @@ export function RmsDataLayout() {
   const openView = useVorPmdtStore((state) => state.openView);
 
   return (
-    <section className="flex min-h-full flex-col" aria-label="RMS Data">
+    <section className="pmdt-rms-data-layout flex min-h-full flex-col" aria-label="RMS Data">
       <PmdtToolbar title="RMS Data" />
-      <div className="flex items-end gap-1 border-b border-[#334155] bg-[#0f172a] px-3 pt-2">
+      <div className="pmdt-rms-tabbar flex items-end gap-1 border-b border-[#334155] bg-[#0f172a] px-3 pt-2">
         <div className="flex min-w-0 flex-1 items-end gap-1" role="tablist" aria-label="RMS Data tabs">
           {tabs.map((tab) => {
             const active = tab.viewId === activeView;
@@ -59,9 +59,9 @@ export function RmsDataLayout() {
             );
           })}
         </div>
-        <time className="pb-2 font-mono text-[10px] tabular-nums text-[#94a3b8]">{timestamp}</time>
       </div>
-      <div className="min-h-0 flex-1 overflow-auto">
+      <div className="pmdt-rms-data-content min-h-0 flex-1 overflow-auto">
+        <time className="pmdt-monitor-date">{timestamp}</time>
         {activeView === "rms-digital-io" ? (
           <RmsDigitalIo />
         ) : activeView === "rms-power-supply" ? (

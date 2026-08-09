@@ -12,20 +12,7 @@ export function MonitorConfigLayout() {
   return (
     <section className="flex min-h-full flex-col" aria-label="Monitor Configuration">
       <PmdtToolbar title="Monitor Configuration" />
-      <div className="flex gap-1 border-b border-[#334155] bg-[#0f172a] px-3 pt-2" role="tablist" aria-label="Monitor Configuration tabs">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={activeView === "monitor-alarm-limits"}
-          onClick={() => openView("monitor-config", "monitor-alarm-limits", ["Monitors", "Configuration", "Alarm Limits"], "Alarm Limits")}
-          className={`min-h-8 border border-b-0 px-3 text-[11px] font-medium transition-colors ${
-            activeView === "monitor-alarm-limits"
-              ? "border-[#475569] bg-[#1e293b] text-white"
-              : "border-[#334155] bg-[#111827] text-[#94a3b8] hover:text-white"
-          }`}
-        >
-          Alarm Limits
-        </button>
+      <div className="pmdt-monitor-tabbar flex gap-1 border-b border-[#334155] bg-[#0f172a] px-3 pt-2" role="tablist" aria-label="Monitor Configuration tabs">
         <button
           type="button"
           role="tab"
@@ -39,8 +26,21 @@ export function MonitorConfigLayout() {
         >
           General
         </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeView === "monitor-alarm-limits"}
+          onClick={() => openView("monitor-config", "monitor-alarm-limits", ["Monitors", "Configuration", "Alarm Limits"], "Alarm Limits")}
+          className={`min-h-8 border border-b-0 px-3 text-[11px] font-medium transition-colors ${
+            activeView === "monitor-alarm-limits"
+              ? "border-[#475569] bg-[#1e293b] text-white"
+              : "border-[#334155] bg-[#111827] text-[#94a3b8] hover:text-white"
+          }`}
+        >
+          Alarm Limits
+        </button>
       </div>
-      <div className="min-h-0 flex-1 overflow-auto bg-[#0a0e1a]">
+      <div className="pmdt-monitor-config-content min-h-0 flex-1 overflow-auto bg-[#0a0e1a]">
         {activeView === "monitor-config-general" ? <MonitorConfigGeneral /> : <MonitorAlarmLimits />}
       </div>
     </section>

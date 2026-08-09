@@ -1,8 +1,10 @@
 "use client";
 
 import { Minus } from "@phosphor-icons/react/dist/csr/Minus";
+import { Broadcast } from "@phosphor-icons/react/dist/csr/Broadcast";
 import { Square } from "@phosphor-icons/react/dist/csr/Square";
 import { X } from "@phosphor-icons/react/dist/csr/X";
+import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
 
 const windowButtons = [
   { label: "Thu nhỏ cửa sổ mô phỏng", icon: Minus },
@@ -11,27 +13,30 @@ const windowButtons = [
 ] as const;
 
 export function PmdtTitleBar() {
+  const stationDescription = useVorPmdtStore((state) => state.data.rmsConfigStation.stationDescription);
+  const frequencyMHz = useVorPmdtStore((state) => state.config.station.frequencyMHz);
+  const stationName = stationDescription.replace(/\s+\d+(?:\.\d+)?\s*MHz\s*$/i, "").trim() || stationDescription;
+  const titleStation = `${stationName} ${frequencyMHz.toFixed(1)} MHz`;
+
   return (
-    <header className="flex h-8 items-center border-b border-[#29496a] bg-gradient-to-r from-[#1e3a5f] to-[#0f2847] px-2 text-[#f8fafc] shadow-sm">
+    <header className="pmdt-titlebar">
       <span
         aria-hidden
-        className="mr-2 grid size-5 place-items-center border border-[#7392b1] bg-[#e5edf5] text-[10px] font-black text-[#1e40af]"
+        className="pmdt-titlebar-icon"
       >
-        A
+        <Broadcast aria-hidden size={13} weight="bold" />
       </span>
-      <h1 className="min-w-0 flex-1 truncate text-xs font-semibold tracking-wide">
-        - Dual DVOR - SELEX Systems Integration Inc. PMDT
+      <h1 className="pmdt-titlebar-heading">
+        {titleStation} - Dual DVOR - SELEX ES Inc. PMDT
       </h1>
-      <div className="ml-3 flex h-full items-stretch" aria-label="Điều khiển cửa sổ mô phỏng">
+      <div className="pmdt-window-buttons" aria-label="Điều khiển cửa sổ mô phỏng">
         {windowButtons.map(({ label, icon: WindowIcon }, index) => (
           <button
             key={label}
             type="button"
             title="Chỉ mang tính mô phỏng"
             aria-label={label}
-            className={`grid w-9 place-items-center border-l border-white/10 text-[#dbeafe] hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#93c5fd] ${
-              index === windowButtons.length - 1 ? "hover:bg-[#b91c1c]" : ""
-            }`}
+            className={`pmdt-window-button ${index === windowButtons.length - 1 ? "pmdt-window-button--close" : ""}`}
           >
             <WindowIcon aria-hidden size={13} weight="bold" />
           </button>

@@ -28,42 +28,54 @@ export function RmsMaintenanceAlerts() {
   const data = useVorPmdtStore((state) => state.data);
   const overrides = useVorPmdtStore((state) => state.overrides);
 
+  const renderGeneralAlert = (alert: (typeof data.generalAlerts)[number]) => {
+    const fieldId = `generalAlerts.${alert.id}.checked`;
+    const checked = resolveVorField(alert.checked, fieldId, overrides);
+    const status = resolveVorStatus(checked ? "red" : "gray", fieldId, overrides);
+    return (
+      <label
+        key={alert.id}
+        data-vor-field-id={fieldId}
+        data-vor-field-value={alert.checked}
+        data-vor-field-type="boolean"
+        data-vor-field-label={alert.label}
+        className="pmdt-rms-general-alert-row"
+      >
+        <input
+          type="checkbox"
+          checked={checked}
+          readOnly
+          className={`size-3.5 pointer-events-none ${accentClasses[status]}`}
+        />
+        <span className={status === "gray" ? "" : textClasses[status]}>{alert.label}</span>
+      </label>
+    );
+  };
+
+  const generalAlertColumns = [
+    data.generalAlerts.slice(0, 6),
+    data.generalAlerts.slice(6, 11),
+    data.generalAlerts.slice(11),
+  ];
+
   return (
-    <div className="grid gap-3 p-3 lg:grid-cols-[minmax(15rem,0.8fr)_minmax(28rem,1.5fr)]">
-      <section className="border border-[#334155] bg-[#111827]" aria-labelledby="general-alerts-title">
+    <div className="pmdt-rms-maintenance-screen grid gap-3 p-3 lg:grid-cols-[minmax(15rem,0.8fr)_minmax(28rem,1.5fr)]">
+      <section className="pmdt-rms-panel pmdt-rms-general-alert-panel border border-[#334155] bg-[#111827]" aria-labelledby="general-alerts-title">
         <h3 id="general-alerts-title" className="border-b border-[#334155] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[#e2e8f0]">
-          General Alerts
+          General Alerts and Alarms
         </h3>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 p-3">
-          {data.generalAlerts.map((alert) => {
-            const fieldId = `generalAlerts.${alert.id}.checked`;
-            const checked = resolveVorField(alert.checked, fieldId, overrides);
-            const status = resolveVorStatus(checked ? "red" : "gray", fieldId, overrides);
-            return (
-              <label
-                key={alert.id}
-                data-vor-field-id={fieldId}
-                data-vor-field-value={alert.checked}
-                data-vor-field-type="boolean"
-                data-vor-field-label={alert.label}
-                className="flex min-h-7 items-center gap-2 border border-transparent px-1 text-[11px] text-[#cbd5e1] hover:border-[#334155] cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  readOnly
-                  className={`size-3.5 pointer-events-none ${accentClasses[status]}`}
-                />
-                <span className={status === "gray" ? "" : textClasses[status]}>{alert.label}</span>
-              </label>
-            );
-          })}
+        <div className="pmdt-rms-general-alert-grid">
+          {generalAlertColumns.map((column, index) => (
+            <div key={index} className="pmdt-rms-general-alert-column">
+              {column.map(renderGeneralAlert)}
+            </div>
+          ))}
         </div>
       </section>
 
-      <section className="min-w-0 border border-[#334155] bg-[#111827]" aria-labelledby="monitor-alerts-title">
+      <section className="pmdt-rms-panel pmdt-rms-monitor-alert-panel min-w-0 border border-[#334155] bg-[#111827]" aria-labelledby="monitor-alerts-title">
         <h3 id="monitor-alerts-title" className="border-b border-[#334155] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[#e2e8f0]">
-          Monitor / Audio Generator Alerts
+          Monitor/Audio Generator Alerts and Alarms
         </h3>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[34rem] border-collapse text-left text-[11px]">
@@ -110,6 +122,7 @@ export function RmsMaintenanceAlerts() {
           </table>
         </div>
       </section>
+      <p className="pmdt-rms-maintenance-footnote">* Indicates this parameter can disable a monitor</p>
     </div>
   );
 }

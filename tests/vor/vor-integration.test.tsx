@@ -24,15 +24,16 @@ describe("VOR integration", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Mở PMDT Simulator" })).toHaveAttribute(
       "href",
-      "/admin/vor-pmdt",
+      "/simulator/dvor-1150a",
     );
   });
 
   it("routes PMDT menu selections to the complete screen content", async () => {
     const user = userEvent.setup();
+    expect(useVorPmdtStore.getState().login("GUEST", "")).toBe(true);
     render(<PmdtLayout />);
 
-    expect(screen.getByText("Dual DVOR Model 1150A")).toBeInTheDocument();
+    expect(screen.getByAltText("Selex ES")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Transmitters" }));
     await user.click(screen.getByRole("menuitem", { name: "Data" }));
     expect(screen.getByRole("heading", { name: "Power" })).toBeInTheDocument();

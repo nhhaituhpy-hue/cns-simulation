@@ -1,6 +1,5 @@
 "use client";
 
-import { CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -14,40 +13,117 @@ interface MenuItemRowProps {
   group: VorMenuGroup;
   item: VorMenuItem;
   closeMenu: () => void;
-  depth?: number;
 }
 
 function MenuItemRow({
   group,
   item,
   closeMenu,
-  depth = 0,
 }: MenuItemRowProps) {
   const openScreen = useVorPmdtStore((state) => state.openScreen);
-  const unavailable = !item.enabled;
+  const openView = useVorPmdtStore((state) => state.openView);
+  const setConfigPanelOpen = useVorPmdtStore((state) => state.setConfigPanelOpen);
+  const setAboutDialogOpen = useVorPmdtStore((state) => state.setAboutDialogOpen);
+  const openLogin = useVorPmdtStore((state) => state.openLogin);
+  const logout = useVorPmdtStore((state) => state.logout);
+  const restoreDefaultConfig = useVorPmdtStore((state) => state.restoreDefaultConfig);
+  const backupConfig = useVorPmdtStore((state) => state.backupConfig);
+  const setTransmitterMode = useVorPmdtStore((state) => state.setTransmitterMode);
+  const securityLevel = useVorPmdtStore((state) => state.securityLevel);
+  const local = useVorPmdtStore((state) => state.config.simulation.local);
+  const bypass = useVorPmdtStore((state) => state.config.simulation.integralMonitorBypass);
+  const needBackup = useVorPmdtStore((state) => state.needBackup);
+  const isTransmitterCommand = item.action === "set-transmitter-mode";
+  const isMainTransmitterCommand = isTransmitterCommand && item.transmitterMode === "main";
+  const isMaintenanceTransmitterCommand = isTransmitterCommand && !isMainTransmitterCommand;
+  const canOperateTransmitter = securityLevel >= 3
+    && (isMainTransmitterCommand || (local && bypass));
+  const isRestoreCommand = item.action === "config-restore";
+  const isBackupCommand = item.action === "config-backup";
+  const unavailable = !item.enabled
+    || (isTransmitterCommand && !canOperateTransmitter)
+    || (isRestoreCommand && (securityLevel < 3 || !local || !bypass))
+    || (isBackupCommand && (securityLevel < 3 || !needBackup));
   const hasChildren = Boolean(item.children?.length);
 
   function selectItem() {
-    if (unavailable || hasChildren || !item.screenId) return;
-    openScreen(item.screenId, [group.label, item.label], item.label);
+    if (unavailable || hasChildren) return;
+    if (item.action === "open-config") {
+      setAboutDialogOpen(false);
+      setConfigPanelOpen(true);
+      closeMenu();
+      return;
+    }
+    if (item.action === "open-about") {
+      setConfigPanelOpen(false);
+      setAboutDialogOpen(true);
+      closeMenu();
+      return;
+    }
+    if (item.action === "open-login") {
+      openLogin();
+      closeMenu();
+      return;
+    }
+    if (item.action === "logoff") {
+      logout();
+      closeMenu();
+      return;
+    }
+    if (item.action === "config-restore") {
+      if (restoreDefaultConfig()) closeMenu();
+      return;
+    }
+    if (item.action === "config-backup") {
+      if (backupConfig()) closeMenu();
+      return;
+    }
+    if (item.action === "set-transmitter-mode") {
+      if (!item.transmitterId || !item.transmitterMode) return;
+      if (setTransmitterMode(item.transmitterId, item.transmitterMode)) closeMenu();
+      return;
+    }
+    if (!item.screenId) return;
+    if (item.viewId) {
+      openView(item.screenId, item.viewId, [group.label, item.label], item.label);
+    } else {
+      openScreen(item.screenId, [group.label, item.label], item.label);
+    }
     closeMenu();
   }
 
   return (
-    <li className="group/item relative" role="none">
+    <li className="pmdt-vor-menu-item-row" role="none">
       <button
         type="button"
         role="menuitem"
         aria-disabled={unavailable || undefined}
         aria-haspopup={hasChildren ? "menu" : undefined}
-        title={unavailable ? disabledMenuTooltip : undefined}
+        title={
+          !item.enabled
+            ? disabledMenuTooltip
+            : isRestoreCommand && securityLevel < 3
+              ? "Yêu cầu đăng nhập SEC3 hoặc SEC4"
+              : isRestoreCommand && (!local || !bypass)
+                ? "Bật Local rồi Bypass để khôi phục cấu hình"
+            : isBackupCommand && securityLevel < 3
+              ? "Yêu cầu đăng nhập SEC3 hoặc SEC4"
+              : isBackupCommand && !needBackup
+                ? "Chưa có cấu hình cần backup"
+                : isTransmitterCommand && securityLevel < 3
+                  ? "GUEST chỉ được xem tham số"
+                  : isMaintenanceTransmitterCommand && (!local || !bypass)
+                    ? "Bật Local rồi Bypass để điều khiển transmitter"
+              : undefined
+        }
         onClick={selectItem}
-        className={`flex min-h-8 w-full min-w-52 items-center gap-3 px-3 text-left text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#60a5fa] ${
+        className={`pmdt-menu-item ${
           unavailable
-            ? "cursor-not-allowed text-[#94a3b8] opacity-50"
-            : "cursor-default text-[#e2e8f0] hover:bg-[#1e40af]"
+            ? "pmdt-menu-item--disabled"
+            : "pmdt-menu-item--enabled"
         }`}
       >
+        <span className="pmdt-menu-check" aria-hidden>{item.checked ? "•" : ""}</span>
         <span className="min-w-0 flex-1 truncate">{item.label}</span>
         {hasChildren ? <CaretRight aria-hidden size={12} /> : null}
       </button>
@@ -56,9 +132,7 @@ function MenuItemRow({
         <ul
           role="menu"
           aria-label={item.label}
-          className={`absolute top-0 z-50 hidden border border-[#475569] bg-[#0f172a] py-1 shadow-xl group-hover/item:block group-focus-within/item:block ${
-            depth === 0 ? "left-full" : "right-full"
-          }`}
+          className="pmdt-submenu absolute top-0 left-full z-50"
         >
           {item.children?.map((child) => (
             <MenuItemRow
@@ -66,7 +140,6 @@ function MenuItemRow({
               group={group}
               item={child}
               closeMenu={closeMenu}
-              depth={depth + 1}
             />
           ))}
         </ul>
@@ -105,7 +178,7 @@ export function PmdtMenuBar() {
   return (
     <div
       ref={containerRef}
-      className="relative z-40 flex h-9 items-stretch border-b border-[#334155] bg-[#1e293b] px-1"
+      className="pmdt-menubar"
     >
       <nav aria-label="Menu PMDT" className="flex items-stretch">
         {vorMenuStructure.map((group) => {
@@ -125,19 +198,16 @@ export function PmdtMenuBar() {
                 aria-expanded={open}
                 aria-haspopup="menu"
                 onClick={() => setOpenGroupId(open ? null : group.id)}
-                className={`flex h-full items-center gap-1 px-3 text-xs font-medium text-[#e2e8f0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#93c5fd] ${
-                  open ? "bg-[#1e40af]" : "hover:bg-[#334155]"
-                }`}
+                className={`pmdt-menu-root ${open ? "pmdt-menu-root--open" : ""}`}
               >
                 {group.label}
-                <CaretDown aria-hidden size={10} />
               </button>
 
               {open ? (
                 <ul
                   role="menu"
                   aria-label={group.label}
-                  className="absolute left-0 top-full z-50 border border-[#475569] bg-[#0f172a] py-1 shadow-xl"
+                  className="pmdt-menu-dropdown absolute left-0 top-full z-50"
                 >
                   {group.items.map((item) => (
                     <MenuItemRow

@@ -13,38 +13,39 @@ describe("Transmitter screens", () => {
     useVorPmdtStore.getState().openScreen("tx-data", ["Transmitters", "Data"], "Data");
     render(<TxDataLayout />);
 
-    expect(screen.getByText("98.8")).toBeInTheDocument();
-    expect(screen.getByText("113.0001")).toBeInTheDocument();
-    await user.click(screen.getByRole("tab", { name: "Status Tx #1" }));
+    expect(screen.getByText("70.8")).toBeInTheDocument();
+    expect(screen.getByText("117.0006")).toBeInTheDocument();
+    await user.click(screen.getByRole("tab", { name: "Status - Tx #1" }));
     expect(screen.getByText("Sideband 1 Phase").closest("li")).toHaveTextContent(
-      "red",
+      "green",
     );
-    expect(screen.getByRole("tab", { name: "Status Tx #2" })).not.toHaveAttribute(
+    expect(screen.getByRole("tab", { name: "Status - Tx #2" })).not.toHaveAttribute(
       "aria-disabled",
       "true",
     );
   });
 
-  it("switches between nominal configuration and all 18 offsets", async () => {
+  it("switches between nominal configuration and all transmitter offsets", async () => {
     const user = userEvent.setup();
     useVorPmdtStore.getState().openScreen(
       "tx-config",
       ["Transmitters", "Configuration"],
       "Configuration",
     );
+    expect(useVorPmdtStore.getState().login("SEC3", "THREE")).toBe(true);
+    useVorPmdtStore.getState().setConfigValue("simulation.local", true);
+    useVorPmdtStore.getState().setConfigValue("simulation.integralMonitorBypass", true);
     render(<TxConfigLayout />);
 
-    const outputPowerInput = screen
-      .getByText("Output Power")
-      .closest("label")
-      ?.querySelector("input");
-    expect(outputPowerInput).toHaveValue("100");
-    expect(screen.getByDisplayValue("FLR")).toHaveAttribute("readonly");
+    const outputPowerInput = screen.getByLabelText("txConfigNominal.audioGenParams.outputPower");
+    expect(outputPowerInput).toHaveValue("70.0");
+    expect(outputPowerInput).not.toBeDisabled();
+    expect(screen.getByDisplayValue("TUH")).not.toBeDisabled();
     await user.click(
-      screen.getByRole("tab", { name: "Offsets & Scale Factors" }),
+      screen.getByRole("tab", { name: "Offsets and Scale Factors" }),
     );
     expect(screen.getByText("Carrier PLL Control")).toBeInTheDocument();
-    expect(screen.getByText("Sideband VSWR Offset")).toBeInTheDocument();
+    expect(screen.getByText("Sideband 1 VSWR Offset")).toBeInTheDocument();
     expect(
       screen.getByRole("tab", { name: "Integral Monitor Data" }),
     ).toHaveAttribute("aria-disabled", "true");

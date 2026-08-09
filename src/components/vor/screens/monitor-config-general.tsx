@@ -1,7 +1,8 @@
 "use client";
 
-import { resolveVorField, resolveVorStatus, useVorPmdtStore } from "@/stores/vor-pmdt-store";
 import type { VorIndicatorColor } from "@/lib/vor-types";
+import { resolveVorField, resolveVorStatus, useVorPmdtStore } from "@/stores/vor-pmdt-store";
+import { PmdtConfigControl } from "../pmdt-config-control";
 
 const accentClasses: Record<VorIndicatorColor, string> = {
   green: "accent-[#22c55e]",
@@ -10,82 +11,99 @@ const accentClasses: Record<VorIndicatorColor, string> = {
   gray: "accent-[#475569]",
 };
 
+const routingParameterKeys: Record<string, string> = {
+  "30 Hz Modulation": "hz30Modulation",
+  "9960 Hz Modulation": "hz9960Modulation",
+  "9960 Hz Deviation": "deviation",
+  "RF Level": "rfLevel",
+  "Ident Modulation": "identModulation",
+  "Ident Status": "identStatus",
+  "Ident Code": "identCode",
+  "Tx Power": "txPower",
+  "Tx Frequency Error": "txFrequencyError",
+  "Notch Monitor": "notchMonitor",
+  "Sideband VSWR": "sidebandVswr",
+};
+
 export function MonitorConfigGeneral() {
   const data = useVorPmdtStore((state) => state.data);
   const overrides = useVorPmdtStore((state) => state.overrides);
 
   return (
-    <div className="p-3 text-[11px]">
-      <section className="border border-[#334155] bg-[#111827] max-w-2xl mx-auto">
-        <h3 className="border-b border-[#334155] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[#e2e8f0]">
-          Parameter Monitoring Routing
-        </h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-[#172033] text-[#94a3b8] text-[10px]">
-              <tr>
-                <th className="px-3 py-2">Parameter</th>
-                <th className="px-3 py-2 text-center w-28">Primary Monitor</th>
-                <th className="px-3 py-2 text-center w-28">Secondary Monitor</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.monitorConfigGeneral.map((row, index) => {
-                const prefix = `monitorConfigGeneral.${index}`;
-                const isEnabled = row.isCheckbox ? resolveVorField(row.checked ?? false, `${prefix}.checked`, overrides) : true;
-                const resolvedPrimary = resolveVorField(row.primary, `${prefix}.primary`, overrides);
-                const resolvedSecondary = resolveVorField(row.secondary, `${prefix}.secondary`, overrides);
+    <section className="pmdt-monitor-routing" aria-label="Monitor configuration general">
+      <time className="pmdt-monitor-date">{data.timestamp}</time>
+      <fieldset>
+        <legend>Executive Alarms</legend>
+        <table>
+          <colgroup>
+            <col className="pmdt-monitor-routing-label-col" />
+            <col className="pmdt-monitor-routing-value-col" />
+            <col className="pmdt-monitor-routing-value-col" />
+            <col className="pmdt-monitor-routing-spacer-col" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col" rowSpan={2} />
+              <th scope="col" colSpan={2}>Integral Monitor</th>
+              <th scope="col" rowSpan={2} />
+            </tr>
+            <tr>
+              <th scope="col">Primary</th>
+              <th scope="col">Secondary</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.monitorConfigGeneral.map((row, index) => {
+              const prefix = `monitorConfigGeneral.${index}`;
+              const displayParameter = row.parameter === "Ident Modulation" ? "Ident Mod %" : row.parameter;
+              const enabled = row.isCheckbox
+                ? Boolean(resolveVorField(row.checked ?? false, `${prefix}.checked`, overrides))
+                : true;
+              const checkboxStatus = resolveVorStatus(enabled ? "green" : "gray", `${prefix}.checked`, overrides);
+              const routingKey = routingParameterKeys[row.parameter];
 
-                return (
-                  <tr key={row.parameter} className="border-t border-[#273449] text-[#cbd5e1] hover:bg-[#1e293b]/50">
-                    <th scope="row" className="px-3 py-2 font-medium">
-                      {row.isCheckbox ? (
-                        <label className="flex items-center gap-1.5 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            data-vor-field-id={`${prefix}.checked`}
-                            data-vor-field-value={Boolean(row.checked)}
-                            data-vor-field-type="boolean"
-                            data-vor-field-label={row.parameter}
-                            readOnly
-                            checked={Boolean(isEnabled)}
-                            className={`size-3.5 pointer-events-none ${accentClasses[resolveVorStatus(isEnabled ? "green" : "gray", `${prefix}.checked`, overrides)]}`}
-                          />
-                          {row.parameter}
-                        </label>
-                      ) : (
-                        <span>{row.parameter}</span>
-                      )}
-                    </th>
-                    <td className="px-3 py-2 text-center">
-                      <input
-                        type="radio"
-                        data-vor-field-id={`${prefix}.primary`}
-                        name={`param-routing-${index}`}
-                        disabled={!isEnabled}
-                        checked={Boolean(resolvedPrimary)}
-                        className="accent-[#22c55e] disabled:opacity-30 cursor-pointer"
-                        onChange={() => {}}
-                      />
-                    </td>
-                    <td className="px-3 py-2 text-center">
-                      <input
-                        type="radio"
-                        data-vor-field-id={`${prefix}.secondary`}
-                        name={`param-routing-${index}`}
-                        disabled={!isEnabled}
-                        checked={Boolean(resolvedSecondary)}
-                        className="accent-[#22c55e] disabled:opacity-30 cursor-pointer"
-                        onChange={() => {}}
-                      />
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </div>
+              return (
+                <tr key={row.parameter}>
+                  <th scope="row">
+                    {row.isCheckbox ? (
+                      <label className="pmdt-monitor-routing-label">
+                        <input
+                          type="checkbox"
+                          aria-label={`${row.parameter} enabled`}
+                          data-vor-field-id={`${prefix}.checked`}
+                          checked={enabled}
+                          readOnly
+                          className={accentClasses[checkboxStatus]}
+                        />
+                        <span>{displayParameter}</span>
+                      </label>
+                    ) : displayParameter}
+                  </th>
+                  <td>
+                    <PmdtConfigControl
+                      displayFieldId={`${prefix}.primary`}
+                      configFieldId={routingKey ? `monitor.routing.${routingKey}.primary` : "monitor.routing.azimuth.primary"}
+                      type="boolean"
+                      disabled={!enabled}
+                      className="accent-[#22c55e]"
+                    />
+                  </td>
+                  <td>
+                    <PmdtConfigControl
+                      displayFieldId={`${prefix}.secondary`}
+                      configFieldId={routingKey ? `monitor.routing.${routingKey}.secondary` : "monitor.routing.azimuth.secondary"}
+                      type="boolean"
+                      disabled={!enabled}
+                      className="accent-[#22c55e]"
+                    />
+                  </td>
+                  <td />
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </fieldset>
+    </section>
   );
 }

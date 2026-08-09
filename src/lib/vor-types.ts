@@ -7,24 +7,36 @@ export const VOR_PARAMETER_STATUSES = ["normal", "warning", "alarm"] as const;
 export type VorParameterStatus = (typeof VOR_PARAMETER_STATUSES)[number];
 
 export type VorPmdtMode = "preview" | "author" | "student";
+export type VorSecurityLevel = 0 | 1 | 3 | 4;
 export type VorEditableValue = string | number | boolean | null;
 export type VorSubmissionStatus = "draft" | "submitted" | "reviewed";
 
 export type VorScreenId =
   | "home"
+  | "rms-status"
   | "rms-data"
   | "rms-logs"
   | "rms-config"
   | "monitor-data"
   | "monitor-config"
+  | "monitor-test-results"
+  | "monitor-fault-history"
   | "monitor-1-offsets"
   | "monitor-2-offsets"
   | "tx-data"
   | "tx-config"
+  | "diagnostics"
   | "disabled";
 
 export type VorViewId =
   | "home"
+  | "rms-status-main"
+  | "rms-status-monitor-tx"
+  | "rms-status-software"
+  | "rms-status-hardware"
+  | "rms-logs-operational-summary"
+  | "rms-logs-commands"
+  | "rms-logs-parameters"
   | "rms-maintenance-alerts"
   | "rms-digital-io"
   | "rms-power-supply"
@@ -37,24 +49,36 @@ export type VorViewId =
   | "rms-config-power-limits"
   | "rms-config-ad-limits"
   | "monitor-integral"
+  | "monitor-status"
   | "monitor-sideband-vswr"
   | "monitor-notch"
   | "monitor-alarm-limits"
   | "monitor-config-general"
+  | "monitor-test-results"
+  | "monitor-fault-history"
   | "monitor-1-offsets"
   | "monitor-2-offsets"
   | "tx-data-main"
+  | "tx-ground-check-1"
+  | "tx-ground-check-2"
   | "tx-status-1"
   | "tx-status-2"
   | "tx-config-nominal"
   | "tx-config-offsets"
+  | "diagnostics-power-up"
+  | "diagnostics-fault-isolation"
   | "disabled";
 
 export interface VorMenuItem {
   id: string;
   label: string;
   enabled: boolean;
+  checked?: boolean;
   screenId?: VorScreenId;
+  viewId?: VorViewId;
+  action?: "open-config" | "open-about" | "open-login" | "logoff" | "config-restore" | "config-backup" | "set-transmitter-mode";
+  transmitterId?: "tx1" | "tx2";
+  transmitterMode?: "main" | "load" | "off";
   children?: readonly VorMenuItem[];
 }
 
@@ -154,6 +178,9 @@ export interface VorMonitorAntennaConfig {
   enabled: boolean;
   inputAttenuation: number;
   azimuthAngle: number;
+  secondAntennaEnabled?: boolean;
+  secondInputAttenuation?: number;
+  secondAzimuthAngle?: number;
 }
 
 export interface VorTxDualValueRow {
@@ -165,14 +192,15 @@ export interface VorTxDualValueRow {
 
 export interface VorTxFrequencyRow {
   parameter: string;
-  value1: number;
+  value1: number | null;
   value2: number | null;
   unit: string;
 }
 
 export interface VorTxVswrRow {
   parameter: string;
-  value: number;
+  value1: number | null;
+  value2: number | null;
 }
 
 export interface VorIndicatorAlert {
@@ -270,6 +298,80 @@ export interface VorRmsConfigStation {
   transmitterFrequency: string;
 }
 
+export interface VorRmsStatus {
+  logonLevel: number;
+  softwareRevisionTimestamp: string;
+  hardwareRevisionTimestamp: string;
+  localControlMode: boolean;
+  maintenanceAlert: boolean;
+  onBattery: boolean;
+  acFailure: boolean;
+  remoteControlEnabled: boolean;
+  groundCheckRunning: boolean;
+  holdCommutatorEnabled: boolean;
+  rcsuConnectionEnabled: boolean;
+  rcsuCommunicationError: boolean;
+}
+
+export interface VorRmsMonitorStatusRow {
+  name: "Integral" | "Standby";
+  bypass: boolean;
+  primaryAlarm: boolean;
+  secondaryAlarm: boolean;
+  primaryMismatch: boolean;
+  secondaryMismatch: boolean;
+}
+
+export interface VorRmsMonitorTransmitterStatus {
+  monitorAlarmShutdown: boolean;
+  enabledMonitors: { monitor1: boolean; monitor2: boolean };
+  monitors: VorRmsMonitorStatusRow[];
+  antennaSelect: 1 | 2;
+  mainSelect: 1 | 2;
+  transmitterOn: { tx1: boolean; tx2: boolean };
+}
+
+export interface VorSoftwareRevisionRow {
+  component: string;
+  revision: string;
+}
+
+export interface VorHardwareRevisionRow {
+  module: string;
+  partNumber: string;
+  revision: string;
+  serialNumber: string;
+  notes: string;
+}
+
+export interface VorRmsOperationalSummaryRow {
+  parameter: string;
+  tx1: number;
+  tx2: number;
+  unit: string;
+}
+
+export interface VorRmsOperationalSummary {
+  rows: VorRmsOperationalSummaryRow[];
+  availabilityTx1: number;
+  availabilityTx2: number;
+  startTime: string;
+  endTime: string;
+  hoursElapsed: number;
+}
+
+export interface VorRmsCommandLogEntry {
+  timeTag: string;
+  userName: string;
+  command: string;
+}
+
+export interface VorRmsParameterLogEntry {
+  timeTag: string;
+  userName: string;
+  file: string;
+}
+
 export interface VorMonitorConfigGeneralRow {
   parameter: string;
   primary: boolean;
@@ -338,6 +440,13 @@ export interface VorPmdtData {
   rmsAdData: VorRmsAdDataRow[];
   rmsConfigGeneral: VorRmsConfigGeneral;
   rmsConfigStation: VorRmsConfigStation;
+  rmsStatus: VorRmsStatus;
+  rmsMonitorTransmitterStatus: VorRmsMonitorTransmitterStatus;
+  softwareRevisions: VorSoftwareRevisionRow[];
+  hardwareRevisions: VorHardwareRevisionRow[];
+  rmsOperationalSummary: VorRmsOperationalSummary;
+  rmsCommandLogs: VorRmsCommandLogEntry[];
+  rmsParameterLogs: VorRmsParameterLogEntry[];
   monitorConfigGeneral: VorMonitorConfigGeneralRow[];
   notchData: VorNotchMonitorRow[];
 }

@@ -14,14 +14,28 @@ describe("Monitor screens", () => {
     useVorPmdtStore.getState().openScreen("monitor-data", ["Monitors", "Data"], "Data");
     render(<MonitorDataLayout />);
 
-    expect(screen.getAllByText("113.0000")).toHaveLength(2);
+    expect(screen.getAllByText("117.0006")).toHaveLength(2);
     await user.click(screen.getByRole("tab", { name: "Sideband Antenna VSWR" }));
-    expect(screen.getByText("Antenna 1")).toBeInTheDocument();
-    expect(screen.getByText("Antenna 48")).toBeInTheDocument();
+    expect(screen.getByRole("row", { name: /^1\s+1\.08/ })).toBeInTheDocument();
+    expect(screen.getByRole("row", { name: /^48\s+/ })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Notch Monitor" })).not.toHaveAttribute(
       "aria-disabled",
       "true",
     );
+  });
+
+  it("matches the monitor-specific integral and status screens", async () => {
+    const user = userEvent.setup();
+    useVorPmdtStore.getState().openScreen("monitor-data", ["Monitor 1", "Data"], "Data");
+    render(<MonitorDataLayout />);
+
+    expect(screen.getByRole("heading", { name: "Monitor 1 Data" })).toBeInTheDocument();
+    expect(screen.getByText("Antenna #1 Azimuth")).toBeInTheDocument();
+    expect(screen.getByText("117.0006")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Status" }));
+    expect(screen.getByText("Maintenance Alerts")).toBeInTheDocument();
+    expect(screen.getByText("Remote Mode")).toBeInTheDocument();
   });
 
   it("renders alarm limits, timers, and monitor antennas", () => {
@@ -32,17 +46,17 @@ describe("Monitor screens", () => {
     );
     render(<MonitorConfigLayout />);
 
-    expect(screen.getByText("Parameter Alarm Ranges")).toBeInTheDocument();
+    expect(screen.getByText("Azimuth Angle")).toBeInTheDocument();
     expect(screen.getByText("Continuous Ident")).toBeInTheDocument();
-    expect(screen.getByText("Monitor 2")).toBeInTheDocument();
+    expect(screen.getByText("Monitor 2 Input Attenuation")).toBeInTheDocument();
   });
 
   it("reuses one offsets component for each monitor", () => {
     const { rerender } = render(<MonitorOffsets monitorNumber={1} />);
-    expect(screen.getByText("Monitor 1 Offsets & Scale Factors")).toBeInTheDocument();
-    expect(screen.getByText("Odd Antenna SB Return Loss Offset")).toBeInTheDocument();
+    expect(screen.getByText("Monitor 1 Offsets and Scale Factors")).toBeInTheDocument();
+    expect(screen.getByText("Odd Antenna Sideband Return Loss Offset")).toBeInTheDocument();
 
     rerender(<MonitorOffsets monitorNumber={2} />);
-    expect(screen.getByText("Monitor 2 Offsets & Scale Factors")).toBeInTheDocument();
+    expect(screen.getByText("Monitor 2 Offsets and Scale Factors")).toBeInTheDocument();
   });
 });

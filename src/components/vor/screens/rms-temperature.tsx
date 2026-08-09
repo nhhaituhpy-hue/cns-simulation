@@ -2,13 +2,17 @@
 
 import { resolveVorField, useVorPmdtStore } from "@/stores/vor-pmdt-store";
 
+function formatTemperature(value: number | null) {
+  return value === null ? "" : Number(value).toFixed(0);
+}
+
 export function RmsTemperature() {
   const data = useVorPmdtStore((state) => state.data);
   const overrides = useVorPmdtStore((state) => state.overrides);
 
   return (
-    <div className="p-3 text-[11px]">
-      <section className="border border-[#334155] bg-[#111827]">
+    <div className="pmdt-rms-table-screen pmdt-rms-temperature-screen p-3 text-[11px]">
+      <section className="pmdt-rms-flat-panel border border-[#334155] bg-[#111827]">
         <h3 className="border-b border-[#334155] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[#e2e8f0]">Temperatures</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
@@ -32,23 +36,23 @@ export function RmsTemperature() {
                 const resolvedHigh = resolveVorField(row.high, `${prefix}.high`, overrides);
 
                 return (
-                  <tr key={row.parameter} className="border-t border-[#273449] text-[#cbd5e1] hover:bg-[#1e293b]/50">
-                    <th scope="row" className="px-3 py-2 font-medium">{row.parameter}</th>
-                    <td className="px-2 py-2 text-right font-mono text-gray-400">
-                      {resolvedLow === null || String(resolvedLow) === "" ? "" : resolvedLow}
-                    </td>
-                    <td className="px-2 py-2 text-right font-mono text-gray-400">
-                      {resolvedPreLow === null || String(resolvedPreLow) === "" ? "" : resolvedPreLow}
-                    </td>
-                    <td data-vor-field-id={`${prefix}.value`} className="px-3 py-2 text-right font-mono font-semibold text-orange-400 bg-orange-950/10">
-                      {resolvedValue}
-                    </td>
-                    <td className="px-2 py-2 text-right font-mono text-gray-400">
-                      {resolvedPreHigh}
-                    </td>
-                    <td className="px-2 py-2 text-right font-mono text-gray-400">
-                      {resolvedHigh}
-                    </td>
+                    <tr key={row.parameter} className="border-t border-[#273449] text-[#cbd5e1] hover:bg-[#1e293b]/50">
+                      <th scope="row" className="px-3 py-2 font-medium">{row.parameter}</th>
+                      <td className="px-2 py-2 text-right font-mono text-gray-400">
+                      {formatTemperature(resolvedLow as number | null)}
+                      </td>
+                      <td className="px-2 py-2 text-right font-mono text-gray-400">
+                      {formatTemperature(resolvedPreLow as number | null)}
+                      </td>
+                      <td data-vor-field-id={`${prefix}.value`} className="px-3 py-2 text-right font-mono font-semibold text-orange-400 bg-orange-950/10">
+                      {formatTemperature(resolvedValue as number | null)}
+                      </td>
+                      <td className="px-2 py-2 text-right font-mono text-gray-400">
+                      {formatTemperature(resolvedPreHigh as number | null)}
+                      </td>
+                      <td className="px-2 py-2 text-right font-mono text-gray-400">
+                      {formatTemperature(resolvedHigh as number | null)}
+                      </td>
                   </tr>
                 );
               })}

@@ -1,4 +1,3 @@
-import { cloneDefaultVorPmdtData } from "@/lib/vor-pmdt-defaults";
 import type {
   VorAttemptEvent,
   VorEditableValue,
@@ -8,10 +7,22 @@ import type {
   VorParameterStatus,
   VorPmdtData,
   VorPmdtMode,
+  VorSecurityLevel,
   VorScreenId,
   VorStudentAnswer,
   VorViewId,
 } from "@/lib/vor-types";
+import {
+  applyDvorConfigPatches,
+  buildDvor1150aSnapshot,
+  cloneDvor1150aConfig,
+  createDefaultDvor1150aConfig,
+  type Dvor1150aConfig,
+  type Dvor1150aSnapshot,
+  type DvorConfigValue,
+  type DvorTransmitterMode,
+  type DvorTransmitterId,
+} from "@/lib/dvor1150a";
 import { create, type StoreApi, type UseBoundStore } from "zustand";
 
 const emptyAnswer: VorStudentAnswer = {
@@ -22,15 +33,19 @@ const emptyAnswer: VorStudentAnswer = {
 
 const defaultViews: Record<VorScreenId, VorViewId> = {
   home: "home",
+  "rms-status": "rms-status-main",
   "rms-data": "rms-maintenance-alerts",
-  "rms-logs": "rms-logs-alarms",
+  "rms-logs": "rms-logs-operational-summary",
   "rms-config": "rms-config-general",
   "monitor-data": "monitor-integral",
   "monitor-config": "monitor-alarm-limits",
+  "monitor-test-results": "monitor-test-results",
+  "monitor-fault-history": "monitor-fault-history",
   "monitor-1-offsets": "monitor-1-offsets",
   "monitor-2-offsets": "monitor-2-offsets",
   "tx-data": "tx-data-main",
   "tx-config": "tx-config-nominal",
+  diagnostics: "diagnostics-power-up",
   disabled: "disabled",
 };
 
@@ -47,7 +62,18 @@ export interface VorSessionInitialization {
 
 export interface VorPmdtStoreState {
   mode: VorPmdtMode;
+  configPanelOpen: boolean;
+  aboutDialogOpen: boolean;
+  config: Dvor1150aConfig;
+  configDraft: Dvor1150aConfig;
+  configDirty: boolean;
+  needBackup: boolean;
+  loginDialogOpen: boolean;
+  authenticatedUserId: string | null;
+  securityLevel: VorSecurityLevel;
+  loginError: string | null;
   data: VorPmdtData;
+  derived: Dvor1150aSnapshot;
   activeScreen: VorScreenId;
   activeView: VorViewId;
   activeMenuPath: string[];
@@ -66,6 +92,20 @@ export interface VorPmdtStoreState {
 export interface VorPmdtStoreActions {
   initializeSession: (initialization: VorSessionInitialization) => void;
   setMode: (mode: VorPmdtMode) => void;
+  setConfigPanelOpen: (open: boolean) => void;
+  setAboutDialogOpen: (open: boolean) => void;
+  openLogin: () => void;
+  login: (userId: string, password: string) => boolean;
+  logout: () => void;
+  setConfigValue: (fieldId: string, value: DvorConfigValue) => void;
+  applyConfigChanges: () => boolean;
+  discardConfigChanges: () => void;
+  resetConfigDraft: () => boolean;
+  restoreDefaultConfig: () => boolean;
+  backupConfig: () => boolean;
+  replaceConfig: (config: Dvor1150aConfig) => void;
+  setTransmitterMode: (transmitterId: DvorTransmitterId, mode: DvorTransmitterMode) => boolean;
+  selectMainTransmitter: (transmitterId: DvorTransmitterId) => boolean;
   openScreen: (screenId: VorScreenId, menuPath: readonly string[], title: string) => void;
   openView: (screenId: VorScreenId, viewId: VorViewId, menuPath: readonly string[], title: string) => void;
   setOverride: (
@@ -105,9 +145,22 @@ function defaultId(): string {
 }
 
 function initialState(): VorPmdtStoreState {
+  const config = createDefaultDvor1150aConfig();
+  const derived = buildDvor1150aSnapshot(config);
   return {
     mode: "preview",
-    data: cloneDefaultVorPmdtData(),
+    configPanelOpen: false,
+    aboutDialogOpen: false,
+    config,
+    configDraft: cloneDvor1150aConfig(config),
+    configDirty: false,
+    needBackup: false,
+    loginDialogOpen: true,
+    authenticatedUserId: null,
+    securityLevel: 0,
+    loginError: null,
+    data: derived.data,
+    derived,
     activeScreen: "home",
     activeView: "home",
     activeMenuPath: ["Home"],
@@ -194,8 +247,13 @@ export function createVorPmdtStore(
       ...initialState(),
 
       initializeSession: (initialization) => {
+        const config = createDefaultDvor1150aConfig();
+        const derived = buildDvor1150aSnapshot(config);
         set({
           ...initialState(),
+          config,
+          data: derived.data,
+          derived,
           mode: initialization.mode,
           scenarioId: initialization.scenarioId ?? null,
           sessionKey: initialization.sessionKey ?? initialization.scenarioId ?? null,
@@ -212,6 +270,214 @@ export function createVorPmdtStore(
       },
 
       setMode: (mode) => set({ mode }),
+
+      setConfigPanelOpen: (open) => set({ configPanelOpen: open }),
+
+      setAboutDialogOpen: (open) => set({ aboutDialogOpen: open }),
+
+      openLogin: () => set({
+        loginDialogOpen: true,
+        authenticatedUserId: null,
+        securityLevel: 0,
+        loginError: null,
+      }),
+
+      login: (userId, password) => {
+        const credentials: Array<{ userId: string; password: string; securityLevel: VorSecurityLevel }> = [
+          { userId: "GUEST", password: "", securityLevel: 1 },
+          { userId: "SEC3", password: "THREE", securityLevel: 3 },
+          { userId: "SEC4", password: "FOUR", securityLevel: 4 },
+        ];
+        const identity = credentials.find(
+          (item) => item.userId === userId.trim() && item.password === password,
+        );
+        if (!identity) {
+          set({ loginError: "Invalid User ID or Password." });
+          return false;
+        }
+        set({
+          loginDialogOpen: false,
+          authenticatedUserId: identity.userId,
+          securityLevel: identity.securityLevel,
+          loginError: null,
+        });
+        return true;
+      },
+
+      logout: () => set({
+        loginDialogOpen: true,
+        authenticatedUserId: null,
+        securityLevel: 0,
+        loginError: null,
+        configPanelOpen: false,
+        aboutDialogOpen: false,
+      }),
+
+      setConfigValue: (fieldId, value) => {
+        const state = get();
+        const isLocalModeField = fieldId === "simulation.local";
+        const isBypassField = fieldId === "simulation.integralMonitorBypass";
+
+        if (state.securityLevel < 3) return;
+
+        if (isLocalModeField || isBypassField) {
+          if (isBypassField && value === true && !state.config.simulation.local) return;
+          const patches = [{ fieldId, value }];
+          if (isLocalModeField && value === false) {
+            patches.push({ fieldId: "simulation.integralMonitorBypass", value: false });
+          }
+          const result = applyDvorConfigPatches(state.config, patches);
+          if (!result.ok) return;
+          const draftResult = applyDvorConfigPatches(state.configDraft, patches);
+          set({
+            config: result.config,
+            configDraft: draftResult.ok ? draftResult.config : cloneDvor1150aConfig(result.config),
+            configDirty: state.configDirty,
+            data: result.snapshot.data,
+            derived: result.snapshot,
+          });
+          return;
+        }
+
+        if (!state.config.simulation.local || !state.config.simulation.integralMonitorBypass) return;
+        const result = applyDvorConfigPatches(state.configDraft, [{ fieldId, value }]);
+        if (!result.ok) return;
+        set({
+          configDraft: result.config,
+          configDirty: JSON.stringify(result.config) !== JSON.stringify(state.config),
+        });
+      },
+
+      applyConfigChanges: () => {
+        const state = get();
+        if (
+          !state.configDirty
+          || state.securityLevel < 3
+          || !state.config.simulation.local
+          || !state.config.simulation.integralMonitorBypass
+        ) {
+          return false;
+        }
+        const result = applyDvorConfigPatches(state.configDraft);
+        if (!result.ok) return false;
+        set({
+        config: result.config,
+        configDraft: cloneDvor1150aConfig(result.config),
+        configDirty: false,
+        needBackup: true,
+        data: result.snapshot.data,
+        derived: result.snapshot,
+      });
+        return true;
+      },
+
+      discardConfigChanges: () => {
+        const state = get();
+        set({ configDraft: cloneDvor1150aConfig(state.config), configDirty: false });
+      },
+
+      resetConfigDraft: () => {
+        const state = get();
+        if (
+          state.securityLevel < 3
+          || !state.config.simulation.local
+          || !state.config.simulation.integralMonitorBypass
+        ) {
+          return false;
+        }
+        const defaults = createDefaultDvor1150aConfig();
+        defaults.simulation = { ...state.config.simulation };
+        set({
+          configDraft: defaults,
+          configDirty: JSON.stringify(defaults) !== JSON.stringify(state.config),
+        });
+        return true;
+      },
+
+      restoreDefaultConfig: () => {
+        const state = get();
+        if (
+          state.securityLevel < 3
+          || !state.config.simulation.local
+          || !state.config.simulation.integralMonitorBypass
+        ) {
+          return false;
+        }
+
+        // Restore persistent station/transmitter/monitor parameters while
+        // keeping the live maintenance session available for the operator.
+        const defaults = createDefaultDvor1150aConfig();
+        defaults.simulation = { ...state.config.simulation };
+        const result = applyDvorConfigPatches(defaults);
+        if (!result.ok) return false;
+        set({
+          config: result.config,
+          configDraft: cloneDvor1150aConfig(result.config),
+          configDirty: false,
+          needBackup: false,
+          data: result.snapshot.data,
+          derived: result.snapshot,
+        });
+        return true;
+      },
+
+      backupConfig: () => {
+        const state = get();
+        if (state.securityLevel < 3 || !state.needBackup) return false;
+        set({ needBackup: false });
+        return true;
+      },
+
+      replaceConfig: (config) => {
+        const nextConfig = cloneDvor1150aConfig(config);
+        const derived = buildDvor1150aSnapshot(nextConfig);
+        set({
+          config: nextConfig,
+          configDraft: cloneDvor1150aConfig(nextConfig),
+          configDirty: false,
+          data: derived.data,
+          derived,
+        });
+      },
+
+      setTransmitterMode: (transmitterId, mode) => {
+        const state = get();
+        if (state.securityLevel < 3) return false;
+        if (
+          mode !== "main"
+          && (!state.config.simulation.local || !state.config.simulation.integralMonitorBypass)
+        ) {
+          return false;
+        }
+
+        const target = state.config.transmitters[transmitterId];
+        if (mode !== "off" && (!target.enabled || target.faults.disabled)) return false;
+
+        const patches = mode === "main"
+          ? [
+              { fieldId: "transmitters.tx1.onAir", value: transmitterId === "tx1" },
+              { fieldId: "transmitters.tx1.load", value: false },
+              { fieldId: "transmitters.tx2.onAir", value: transmitterId === "tx2" },
+              { fieldId: "transmitters.tx2.load", value: false },
+            ]
+          : [
+              { fieldId: `transmitters.${transmitterId}.onAir`, value: false },
+              { fieldId: `transmitters.${transmitterId}.load`, value: mode === "load" },
+            ];
+
+        const result = applyDvorConfigPatches(state.config, patches);
+        if (!result.ok) return false;
+        const draftResult = applyDvorConfigPatches(state.configDraft, patches);
+        set({
+          config: result.config,
+          configDraft: draftResult.ok ? draftResult.config : cloneDvor1150aConfig(result.config),
+          data: result.snapshot.data,
+          derived: result.snapshot,
+        });
+        return true;
+      },
+
+      selectMainTransmitter: (transmitterId) => get().setTransmitterMode(transmitterId, "main"),
 
       openScreen: (screenId, menuPath, title) => {
         const viewId = defaultViews[screenId];

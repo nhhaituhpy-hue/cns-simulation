@@ -1,24 +1,20 @@
 "use client";
 
-import { ArrowClockwise } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
-import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/csr/ArrowCounterClockwise";
-import type { Icon } from "@phosphor-icons/react/dist/lib/types";
 import type { VorViewId } from "@/lib/vor-types";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
+import { PmdtToolbar } from "../pmdt-toolbar";
 import { RmsLogsAlarms } from "./rms-logs-alarms";
 import { RmsLogsMaintenance } from "./rms-logs-maintenance";
+import { RmsLogsCommands } from "./rms-logs-commands";
+import { RmsLogsOperationalSummary } from "./rms-logs-operational-summary";
+import { RmsLogsParameters } from "./rms-logs-parameters";
 
 const tabs: readonly { id: string; label: string; enabled: boolean; viewId?: VorViewId }[] = [
-  { id: "summary", label: "Operational Summary", enabled: false },
+  { id: "summary", label: "Operational Summary", enabled: true, viewId: "rms-logs-operational-summary" },
   { id: "alarms", label: "Alarms", enabled: true, viewId: "rms-logs-alarms" },
   { id: "maintenance", label: "Maintenance Alerts", enabled: true, viewId: "rms-logs-maintenance" },
-  { id: "commands", label: "Command Activity", enabled: false },
-  { id: "parameters", label: "Parameter Change", enabled: false },
-];
-
-const logButtons: readonly { label: string; icon: Icon }[] = [
-  { label: "Update", icon: ArrowClockwise },
-  { label: "Reset", icon: ArrowCounterClockwise },
+  { id: "commands", label: "Command Activity", enabled: true, viewId: "rms-logs-commands" },
+  { id: "parameters", label: "Parameter Change", enabled: true, viewId: "rms-logs-parameters" },
 ];
 
 export function RmsLogsLayout() {
@@ -26,16 +22,9 @@ export function RmsLogsLayout() {
   const openView = useVorPmdtStore((state) => state.openView);
 
   return (
-    <section className="flex min-h-full flex-col" aria-label="RMS Logs">
-      <header className="flex min-h-11 items-center gap-2 border-b border-[#334155] bg-[#111827] px-3">
-        <h2 className="mr-auto text-sm font-semibold text-[#e2e8f0]">RMS Logs</h2>
-        {logButtons.map(({ label, icon: ButtonIcon }) => (
-          <button key={label} type="button" title={`${label} chỉ mang tính mô phỏng`} className="inline-flex h-8 items-center gap-1.5 border border-[#475569] bg-[#1e293b] px-3 text-[11px] text-[#cbd5e1] hover:border-[#60a5fa]">
-            <ButtonIcon aria-hidden size={14} />{label}
-          </button>
-        ))}
-      </header>
-      <div className="flex gap-1 border-b border-[#334155] bg-[#0f172a] px-3 pt-2" role="tablist" aria-label="RMS Logs tabs">
+    <section className="pmdt-rms-logs-layout flex min-h-full flex-col" aria-label="RMS Logs">
+      <PmdtToolbar title="RMS Logs" />
+      <div className="pmdt-rms-tabbar flex gap-1 border-b border-[#334155] bg-[#0f172a] px-3 pt-2" role="tablist" aria-label="RMS Logs tabs">
         {tabs.map((tab) => {
           const active = tab.viewId === activeView;
           return (
@@ -48,8 +37,12 @@ export function RmsLogsLayout() {
           );
         })}
       </div>
-      <div className="min-h-0 flex-1 overflow-auto">
-        {activeView === "rms-logs-maintenance" ? <RmsLogsMaintenance /> : <RmsLogsAlarms />}
+      <div className="pmdt-rms-logs-content min-h-0 flex-1 overflow-auto">
+        {activeView === "rms-logs-maintenance" ? <RmsLogsMaintenance />
+          : activeView === "rms-logs-commands" ? <RmsLogsCommands />
+            : activeView === "rms-logs-parameters" ? <RmsLogsParameters />
+              : activeView === "rms-logs-alarms" ? <RmsLogsAlarms />
+                : <RmsLogsOperationalSummary />}
       </div>
     </section>
   );

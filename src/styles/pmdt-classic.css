@@ -1,0 +1,6537 @@
+/*
+ * The reference PMDT screens use the compact, light Windows desktop visual
+ * language. Keep this skin scoped to the DVOR PMDT so the rest of the app can
+ * continue using the modern application theme.
+ */
+
+.pmdt-classic-page {
+  min-height: 100dvh;
+  overflow: auto;
+  background: #f0f0f0;
+}
+
+.pmdt-classic-viewport {
+  display: flex;
+  min-height: 693px;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: visible;
+  padding: 0;
+}
+
+.pmdt-classic-window {
+  position: relative;
+  display: grid;
+  width: 900px;
+  height: 693px;
+  min-height: 693px;
+  grid-template-rows: 26px 25px minmax(0, 1fr) 20px;
+  grid-template-columns: 140px minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid #404040;
+  background: #f0f0f0;
+  color: #000;
+  box-shadow: none;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.pmdt-classic-window--with-inspector {
+  grid-template-columns: 140px minmax(0, 1fr) 280px;
+}
+
+.pmdt-titlebar-row,
+.pmdt-menubar-row,
+.pmdt-statusbar-row {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.pmdt-titlebar-row {
+  grid-row: 1;
+}
+
+.pmdt-menubar-row {
+  grid-row: 2;
+}
+
+.pmdt-statusbar-row {
+  grid-row: 4;
+}
+
+.pmdt-classic-window > .pmdt-sidebar {
+  grid-column: 1;
+  grid-row: 3;
+}
+
+.pmdt-classic-window > .pmdt-classic-main {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.pmdt-classic-window--with-inspector > .pmdt-classic-inspector {
+  grid-column: 3;
+  grid-row: 3;
+}
+
+.pmdt-classic-main {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  background: #f0f0f0;
+}
+
+.pmdt-classic-inspector {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  border-left: 1px solid #808080;
+  background: #ededed;
+}
+
+.pmdt-config-panel {
+  position: absolute;
+  z-index: 60;
+  top: 47px;
+  right: 0;
+  bottom: 20px;
+  display: flex;
+  width: 350px;
+  flex-direction: column;
+  border-left: 1px solid #404040;
+  background: #ececec;
+  color: #000;
+  box-shadow: -3px 0 4px rgb(0 0 0 / 18%);
+}
+
+.pmdt-config-panel-header {
+  display: flex;
+  min-height: 25px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 4px 3px 7px;
+  border-bottom: 1px solid #808080;
+  background: #d4d0c8;
+  font-size: 11px;
+}
+
+.pmdt-config-panel-header button {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #fff;
+  background: #d4d0c8;
+  color: #000;
+  box-shadow: inset -1px -1px #808080, inset 1px 1px #fff;
+}
+
+.pmdt-config-panel-header button:hover,
+.pmdt-config-panel-header button:focus-visible {
+  background: #d8d8d8;
+  outline: 1px dotted #000;
+  outline-offset: -3px;
+}
+
+.pmdt-config-summary {
+  display: grid;
+  gap: 2px;
+  padding: 4px 7px;
+  border-bottom: 1px solid #b5b5b5;
+  background: #f7f7f7;
+  font-size: 10px;
+}
+
+.pmdt-config-summary-warning,
+.pmdt-config-field-error {
+  color: #c00000;
+}
+
+.pmdt-config-panel-body {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  padding: 4px;
+}
+
+.pmdt-config-section {
+  margin-bottom: 4px;
+  border: 1px solid #a6a6a6;
+  background: #f7f7f7;
+}
+
+.pmdt-config-section summary {
+  padding: 3px 5px;
+  background: #dedede;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.pmdt-config-section-body {
+  display: grid;
+  gap: 3px;
+  padding: 4px;
+}
+
+.pmdt-config-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 132px;
+  align-items: center;
+  gap: 4px;
+  min-height: 21px;
+  font-size: 10px;
+}
+
+.pmdt-config-field-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pmdt-config-field-control {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.pmdt-config-field-control input:not([type="checkbox"]),
+.pmdt-config-field-control select {
+  min-width: 0;
+  width: 100%;
+  height: 20px;
+  padding: 1px 3px;
+  border: 1px inset #fff;
+  background: #fff;
+  color: #000;
+  font-size: 10px;
+}
+
+.pmdt-config-field-control input[type="checkbox"] {
+  width: 13px;
+  height: 13px;
+  margin: 0 0 0 3px;
+}
+
+.pmdt-config-field-control small {
+  min-width: 28px;
+  color: #404040;
+  font-size: 9px;
+}
+
+.pmdt-config-field-error {
+  grid-column: 1 / -1;
+  font-size: 9px;
+}
+
+.pmdt-config-panel-footer {
+  display: flex;
+  min-height: 26px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 3px 5px;
+  border-top: 1px solid #808080;
+  background: #d4d0c8;
+  font-size: 9px;
+}
+
+.pmdt-config-panel-footer button {
+  min-height: 19px;
+  padding: 1px 6px;
+  border: 1px solid #fff;
+  background: #d4d0c8;
+  box-shadow: inset -1px -1px #808080, inset 1px 1px #fff;
+  font-size: 10px;
+}
+
+.pmdt-config-panel-footer {
+  justify-content: flex-start;
+}
+
+.pmdt-config-panel-footer button:disabled {
+  color: #808080;
+  cursor: not-allowed;
+}
+
+.pmdt-config-panel-footer span {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.pmdt-login-overlay {
+  position: absolute;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgb(240 240 240 / 58%);
+}
+
+.pmdt-login-dialog {
+  width: 278px;
+  border: 1px solid #808080;
+  background: #ececec;
+  color: #000;
+  box-shadow: 2px 2px 4px rgb(0 0 0 / 30%);
+}
+
+.pmdt-login-dialog-titlebar {
+  display: flex;
+  height: 22px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 3px 2px 5px;
+  border-bottom: 1px solid #808080;
+  background: #d4d0c8;
+  font-size: 11px;
+}
+
+.pmdt-login-dialog-titlebar button {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #fff;
+  background: #d4d0c8;
+  box-shadow: inset -1px -1px #808080, inset 1px 1px #fff;
+  font-size: 14px;
+  line-height: 12px;
+}
+
+.pmdt-login-dialog-body {
+  display: grid;
+  gap: 8px;
+  padding: 10px 10px 4px;
+}
+
+.pmdt-login-dialog-body label {
+  display: grid;
+  grid-template-columns: 50px minmax(0, 1fr);
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+}
+
+.pmdt-login-dialog-body input {
+  width: 100%;
+  height: 21px;
+  padding: 1px 3px;
+  border: 1px inset #fff;
+  background: #fff;
+  color: #000;
+  font-size: 11px;
+}
+
+.pmdt-login-error {
+  grid-column: 1 / -1;
+  margin: -3px 0 0 55px;
+  color: #c00000;
+  font-size: 10px;
+}
+
+.pmdt-login-dialog-actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  padding: 8px 10px 10px;
+}
+
+.pmdt-login-dialog-actions button {
+  min-width: 72px;
+  min-height: 23px;
+  padding: 2px 12px;
+  border: 1px solid #fff;
+  background: #d4d0c8;
+  box-shadow: inset -1px -1px #808080, inset 1px 1px #fff;
+  font-size: 11px;
+}
+
+.pmdt-login-dialog-actions .pmdt-login-primary {
+  border-color: #316ac5;
+  outline: 1px solid #316ac5;
+  outline-offset: -3px;
+}
+
+.pmdt-titlebar {
+  display: flex;
+  height: 26px;
+  align-items: center;
+  padding: 2px 3px 2px 4px;
+  overflow: hidden;
+  border-bottom: 1px solid #808080;
+  background: #fff;
+  color: #000;
+}
+
+.pmdt-titlebar-icon {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  place-items: center;
+  margin-right: 4px;
+  border: 0;
+  background: transparent;
+  color: #555;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.pmdt-titlebar-heading {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pmdt-window-buttons {
+  display: flex;
+  height: 18px;
+  gap: 2px;
+  margin-left: 5px;
+}
+
+.pmdt-window-button {
+  display: grid;
+  width: 17px;
+  height: 17px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #000;
+  box-shadow: none;
+}
+
+.pmdt-window-button:hover,
+.pmdt-window-button:focus-visible {
+  background: #d8d8d8;
+  outline: 1px dotted #000;
+  outline-offset: -2px;
+}
+
+.pmdt-window-button:active {
+  background: #c8c8c8;
+}
+
+.pmdt-window-button--close:hover,
+.pmdt-window-button--close:focus-visible {
+  background: #d8d8d8;
+  color: #000;
+}
+
+.pmdt-menubar {
+  position: relative;
+  z-index: 40;
+  display: flex;
+  height: 25px;
+  align-items: stretch;
+  border-bottom: 1px solid #808080;
+  background: #fff;
+  color: #000;
+}
+
+.pmdt-menu-root {
+  display: flex;
+  height: 24px;
+  align-items: center;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #000;
+  font-size: 11px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.pmdt-menu-root:hover,
+.pmdt-menu-root:focus-visible,
+.pmdt-menu-root--open {
+  border-color: #316ac5;
+  background: #316ac5;
+  color: #fff;
+  outline: none;
+}
+
+.pmdt-menu-dropdown,
+.pmdt-submenu {
+  min-width: 190px;
+  padding: 2px 0;
+  border: 1px solid #404040;
+  background: #fff;
+  box-shadow: 2px 2px 3px rgb(0 0 0 / 35%);
+}
+
+.pmdt-vor-menu-item-row {
+  position: relative;
+}
+
+.pmdt-vor-menu-item-row > .pmdt-submenu {
+  display: none;
+}
+
+.pmdt-vor-menu-item-row:hover > .pmdt-submenu,
+.pmdt-vor-menu-item-row:focus-within > .pmdt-submenu {
+  display: block;
+}
+
+.pmdt-menu-item {
+  display: flex;
+  min-height: 22px;
+  width: 100%;
+  min-width: 190px;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 8px;
+  border: 0;
+  background: #fff;
+  color: #000;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.pmdt-menu-item--enabled:hover,
+.pmdt-menu-item--enabled:focus-visible {
+  background: #316ac5;
+  color: #fff;
+  outline: none;
+}
+
+.pmdt-menu-item--disabled {
+  color: #808080;
+  cursor: not-allowed;
+}
+
+.pmdt-menu-check {
+  display: inline-flex;
+  width: 11px;
+  flex: 0 0 11px;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.pmdt-diagnostics {
+  color: #000;
+  font-size: 10px;
+}
+
+.pmdt-diagnostics-tabs {
+  display: flex;
+  height: 24px;
+  align-items: flex-end;
+  padding-left: 7px;
+  border-bottom: 1px solid #808080;
+  background: #f0f0f0;
+}
+
+.pmdt-diagnostics-tabs button {
+  height: 22px;
+  padding: 2px 7px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  background: transparent;
+  color: #000;
+  font-size: 10px;
+}
+
+.pmdt-diagnostics-tabs button[aria-selected="true"] {
+  border-color: #808080;
+  background: #f0f0f0;
+}
+
+.pmdt-diagnostics-content {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  background: #f0f0f0;
+}
+
+.pmdt-diagnostics-power-up {
+  min-height: 100%;
+  padding: 10px 15px;
+}
+
+.pmdt-diagnostics-power-table {
+  width: 365px;
+  margin: 67px 0 0 123px;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.pmdt-diagnostics-power-table th,
+.pmdt-diagnostics-power-table td {
+  height: 24px;
+  padding: 2px 4px;
+  border: 1px solid #c5c5c5;
+  background: #f0f0f0;
+}
+
+.pmdt-diagnostics-power-table thead th {
+  height: 24px;
+  border-color: transparent;
+  background: transparent;
+  font-weight: 400;
+  text-align: center;
+}
+
+.pmdt-diagnostics-power-table thead th:first-child {
+  width: 143px;
+}
+
+.pmdt-diagnostics-power-table tbody th {
+  width: 143px;
+  text-align: left;
+  font-weight: 400;
+}
+
+.pmdt-diagnostics-power-table td {
+  width: 44px;
+  text-align: center;
+}
+
+.pmdt-diagnostics-mark {
+  display: inline-flex;
+  width: 17px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  background: #00ff00;
+  color: #000;
+  font-size: 12px;
+}
+
+.pmdt-diagnostics-mark--fault {
+  background: #ff0000;
+  color: #fff;
+}
+
+.pmdt-diagnostics-fault-isolation {
+  width: 550px;
+  padding: 20px 15px 10px;
+}
+
+.pmdt-diagnostics-fault-table {
+  width: 520px;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.pmdt-diagnostics-fault-table th,
+.pmdt-diagnostics-fault-table td {
+  height: 22px;
+  padding: 2px 4px;
+  border: 1px solid #c5c5c5;
+  background: #f0f0f0;
+}
+
+.pmdt-diagnostics-fault-table thead th {
+  height: 20px;
+  border-color: transparent;
+  background: transparent;
+  font-weight: 400;
+  text-align: left;
+}
+
+.pmdt-diagnostics-fault-table thead th:first-child,
+.pmdt-diagnostics-fault-table tbody th {
+  width: 140px;
+}
+
+.pmdt-diagnostics-fault-table thead th:nth-child(2),
+.pmdt-diagnostics-fault-table tbody td:nth-child(2) {
+  width: 285px;
+}
+
+.pmdt-diagnostics-fault-table tbody th {
+  font-weight: 400;
+  text-align: left;
+}
+
+.pmdt-diagnostics-progress {
+  display: block;
+  height: 19px;
+  border: 1px solid #c5c5c5;
+  background: #dedede;
+}
+
+.pmdt-diagnostics-fault-results {
+  margin-top: 4px;
+  text-align: center;
+}
+
+.pmdt-diagnostics-results-box {
+  display: flex;
+  height: 142px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+  padding: 0 5px;
+  border: 1px solid #808080;
+  background: #fff;
+  color: #404040;
+  text-align: left;
+}
+
+.pmdt-diagnostics-fault-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+
+.pmdt-diagnostics-fault-actions button {
+  min-width: 88px;
+  min-height: 36px;
+  padding: 2px 7px;
+  font-size: 10px;
+}
+
+.pmdt-about-overlay {
+  position: absolute;
+  z-index: 80;
+  inset: 47px 0 20px;
+  display: grid;
+  place-items: center;
+  background: rgb(0 0 0 / 8%);
+}
+
+.pmdt-about-dialog {
+  width: 280px;
+  height: 268px;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid #404040;
+  background: #f0f0f0;
+  box-shadow: 2px 2px 5px rgb(0 0 0 / 35%);
+  color: #000;
+  font-size: 11px;
+}
+
+.pmdt-about-titlebar {
+  display: flex;
+  height: 22px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 3px 2px 7px;
+  border-bottom: 1px solid #808080;
+  background: #d4d0c8;
+}
+
+.pmdt-about-titlebar button {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid #808080;
+  background: #d4d0c8;
+  font-size: 15px;
+  line-height: 14px;
+}
+
+.pmdt-about-body {
+  position: relative;
+  box-sizing: border-box;
+  height: 246px;
+  padding: 12px 12px 6px;
+  line-height: 16px;
+  text-align: center;
+}
+
+.pmdt-about-body p {
+  margin: 7px 0;
+}
+
+.pmdt-about-body > p:first-of-type {
+  margin-top: 2px;
+}
+
+.pmdt-about-copyright {
+  width: 190px;
+  margin: 7px auto;
+  padding: 2px 4px;
+  border: 1px solid #a6a6a6;
+  background: #f7f7f7;
+  line-height: 12px;
+}
+
+.pmdt-about-ok {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  width: 82px;
+  height: 23px;
+  margin-top: 0;
+  transform: translateX(-50%);
+}
+
+/* The PMDT login reference is a native 280 × 151 px dialog. Keep the
+ * existing authentication actions, but present the initial login view in the
+ * same compact Windows shell as the equipment screenshots. Other auth views
+ * continue using the application login layout. */
+.pmdt-auth-window-titlebar {
+  display: none;
+}
+
+.pmdt-auth-modern-actions {
+  display: contents;
+}
+
+.pmdt-auth-classic {
+  display: grid;
+  min-height: 100dvh;
+  width: 100%;
+  place-items: center;
+  overflow: hidden;
+  background: #f0f0f0;
+  color: #000;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.pmdt-auth-classic > section:first-of-type {
+  display: none;
+}
+
+.pmdt-auth-classic > section:last-of-type {
+  width: 283px;
+  height: 147px;
+  overflow: visible;
+}
+
+.pmdt-auth-classic > section:last-of-type > div {
+  display: block;
+  min-height: 147px;
+  padding: 0 !important;
+}
+
+.pmdt-auth-classic .mb-9 {
+  display: none;
+}
+
+.pmdt-auth-classic .pmdt-auth-card-wrap {
+  perspective: none !important;
+}
+
+.pmdt-auth-classic .pmdt-auth-card {
+  width: 283px;
+  height: 147px;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 0 !important;
+  border: 1px solid #404040 !important;
+  border-radius: 0 !important;
+  background: #f0f0f0 !important;
+  box-shadow: 2px 2px 4px rgb(0 0 0 / 25%) !important;
+  color: #000 !important;
+}
+
+.pmdt-auth-classic .pmdt-auth-window-titlebar {
+  display: flex;
+  height: 22px;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 3px 2px 7px;
+  border-bottom: 1px solid #808080;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.pmdt-auth-classic .pmdt-auth-window-titlebar button {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #808080;
+  border-radius: 0;
+  background: #f0f0f0;
+  color: #000;
+  font-size: 15px;
+  line-height: 14px;
+}
+
+.pmdt-auth-classic .pmdt-auth-heading,
+.pmdt-auth-classic .pmdt-auth-description,
+.pmdt-auth-classic .pmdt-auth-tabs,
+.pmdt-auth-classic .pmdt-auth-forgot {
+  display: none;
+}
+
+.pmdt-auth-classic .pmdt-auth-login-form {
+  display: block;
+  height: 123px;
+  box-sizing: border-box;
+  margin: 0 !important;
+  padding: 13px 10px 4px;
+}
+
+.pmdt-auth-classic .pmdt-auth-username-field,
+.pmdt-auth-classic .pmdt-auth-password-field {
+  display: grid;
+  height: 22px;
+  grid-template-columns: 50px minmax(0, 1fr);
+  align-items: center;
+  gap: 5px;
+  margin: 0 0 8px;
+  color: #000 !important;
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.pmdt-auth-classic .pmdt-auth-field-label {
+  white-space: nowrap;
+}
+
+.pmdt-auth-classic .pmdt-auth-field-icon,
+.pmdt-auth-classic .pmdt-auth-username-suffix,
+.pmdt-auth-classic .pmdt-auth-password-toggle {
+  display: none;
+}
+
+.pmdt-auth-classic .pmdt-auth-username-input,
+.pmdt-auth-classic .pmdt-auth-password-input {
+  width: 205px !important;
+  height: 20px !important;
+  min-height: 20px !important;
+  box-sizing: border-box;
+  padding: 1px 3px !important;
+  border: 1px inset #fff !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  color: #000 !important;
+  font-size: 11px !important;
+  line-height: 17px;
+}
+
+.pmdt-auth-classic .pmdt-auth-login-form [role="alert"],
+.pmdt-auth-classic .pmdt-auth-login-form [role="status"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.pmdt-auth-classic .pmdt-auth-classic-actions {
+  display: flex;
+  gap: 13px;
+  margin: 24px 0 0 51px;
+}
+
+.pmdt-auth-classic .pmdt-auth-classic-actions button {
+  width: 73px;
+  height: 22px;
+  min-height: 22px;
+  padding: 1px 6px;
+  border-radius: 0;
+  background: #e1e1e1;
+  color: #000;
+  font-size: 11px;
+  font-weight: 400;
+  box-shadow: inset -1px -1px #808080, inset 1px 1px #fff;
+}
+
+.pmdt-auth-classic .pmdt-auth-submit svg {
+  display: none;
+}
+
+.pmdt-auth-classic .pmdt-auth-submit:focus-visible,
+.pmdt-auth-classic .pmdt-auth-cancel:focus-visible,
+.pmdt-auth-classic .pmdt-auth-window-titlebar button:focus-visible {
+  outline: 1px dotted #000;
+  outline-offset: -3px;
+}
+
+.pmdt-toolbar {
+  display: flex;
+  min-height: 30px;
+  align-items: center;
+  padding: 4px 7px;
+  border-bottom: 1px solid #808080;
+  background: #ededed;
+}
+
+.pmdt-toolbar-title {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+  height: 22px;
+  padding: 2px 5px;
+  border: 1px inset #fff;
+  background: #f7f7f7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #000;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pmdt-toolbar-actions {
+  display: flex;
+  height: 22px;
+  align-items: stretch;
+  gap: 3px;
+  margin-left: 8px;
+}
+
+.pmdt-toolbar-actions button {
+  display: inline-flex;
+  min-width: 25px;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 1px 5px;
+  border: 1px solid #fff;
+  background: #d4d0c8;
+  color: #000;
+  box-shadow: inset -1px -1px #808080, inset 1px 1px #fff;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.pmdt-toolbar-actions button:hover:not(:disabled),
+.pmdt-toolbar-actions button:focus-visible:not(:disabled) {
+  background: #e8e8e8;
+  outline: 1px dotted #000;
+  outline-offset: -3px;
+}
+
+.pmdt-toolbar-actions button:disabled {
+  color: #808080;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.pmdt-sidebar {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 7px 2px 4px 12px;
+  border-right: 1px solid #808080;
+  background: #f0f0f0;
+  color: #000;
+  font-size: 10px;
+}
+
+.pmdt-sidebar-section {
+  margin-bottom: 4px;
+  padding: 2px 2px;
+  border: 0;
+  background: transparent;
+}
+
+.pmdt-sidebar-heading {
+  margin: 0 0 3px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid #b5b5b5;
+  color: #000;
+  font-size: 10px;
+  font-weight: 400;
+  text-align: center;
+}
+
+.pmdt-connection-badge {
+  display: flex;
+  min-height: 20px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 2px 3px;
+  border: 1px solid #00a000;
+  background: #00ff00;
+  color: #006100;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.pmdt-connection-badge--offline {
+  border-color: #c00000;
+  background: #ffc7ce;
+  color: #c00000;
+}
+
+.pmdt-connection-badge--locked {
+  border-color: #c8c8c8;
+  background: #f0f0f0;
+  color: transparent;
+}
+
+.pmdt-prelogin-workspace {
+  min-height: 100%;
+  background: #f0f0f0;
+}
+
+.pmdt-sidebar-spacer {
+  display: flex;
+  min-height: 21px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 7px;
+  padding: 1px 4px;
+  border: 1px solid #c8c8c8;
+  background: #f7f7f7;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pmdt-sidebar-spacer--local {
+  border-color: #c9a227;
+  background: #fff2cc;
+}
+
+.pmdt-sidebar-spacer--backup {
+  border-color: #c00000;
+  background: #ffc7ce;
+}
+
+.pmdt-sidebar-warning-item {
+  display: inline-flex;
+  min-height: 17px;
+  align-items: center;
+  gap: 3px;
+  padding: 0 3px;
+}
+
+.pmdt-sidebar-warning-item--local {
+  color: #7f6000;
+}
+
+.pmdt-sidebar-warning-item--backup {
+  color: #c00000;
+}
+
+.pmdt-sidebar-state {
+  display: flex;
+  min-height: 18px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 1px 2px;
+  border: 0;
+  background: transparent;
+  color: #000;
+  text-align: left;
+}
+
+.pmdt-sidebar-section[aria-label="Connection"] > .mt-2 {
+  margin-top: 3px !important;
+  gap: 0 !important;
+}
+
+.pmdt-sidebar-section[aria-label="Connection"] .pmdt-sidebar-state {
+  border: 1px solid #d0d0d0;
+  background: #f7f7f7;
+}
+
+.pmdt-sidebar-state--interactive:hover,
+.pmdt-sidebar-state--interactive:focus-visible {
+  background: #d9e8fb;
+  outline: 1px dotted #000;
+  outline-offset: -1px;
+}
+
+.pmdt-indicator,
+.pmdt-state-lamp {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  border: 1px solid #c8c8c8;
+  border-radius: 0;
+  background: #f7f7f7;
+  color: #000;
+  font-size: 10px;
+  line-height: 13px;
+  text-align: center;
+}
+
+.pmdt-state-lamp {
+  width: 11px;
+  height: 11px;
+  flex-basis: 11px;
+}
+
+.pmdt-indicator-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 15px;
+  min-height: 15px;
+}
+
+.pmdt-sidebar-grid-blank,
+.pmdt-transmitter-status-cell,
+.pmdt-transmitter-label,
+.pmdt-monitor-label {
+  min-width: 0;
+  border: 1px solid #d0d0d0;
+  background: #f7f7f7;
+}
+
+.pmdt-transmitter-grid {
+  display: grid;
+  grid-template-columns: 14px 16px minmax(0, 1fr) 16px 14px;
+  grid-template-rows: 16px repeat(4, 19px);
+  font-size: 10px;
+}
+
+.pmdt-transmitter-column-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 400;
+}
+
+.pmdt-transmitter-status-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: #000;
+  font: inherit;
+  text-align: center;
+}
+
+.pmdt-transmitter-status-cell--selectable:not(:disabled):hover,
+.pmdt-transmitter-status-cell--selectable:not(:disabled):focus-visible {
+  background: #d9e8fb;
+  outline: 1px dotted #000;
+  outline-offset: -1px;
+}
+
+.pmdt-transmitter-status-cell:disabled {
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.pmdt-transmitter-label,
+.pmdt-monitor-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.pmdt-monitor-grid {
+  display: grid;
+  grid-template-columns: 14px 16px minmax(0, 1fr);
+  grid-template-rows: 15px repeat(4, 19px);
+  font-size: 10px;
+}
+
+.pmdt-monitor-integral-label {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  padding-left: 1px;
+}
+
+.pmdt-monitor-state {
+  display: contents;
+}
+
+.pmdt-monitor-state .pmdt-sidebar-grid-blank,
+.pmdt-monitor-state .pmdt-indicator-wrap,
+.pmdt-monitor-state .pmdt-monitor-label {
+  min-height: 19px;
+}
+
+.pmdt-monitor-state .pmdt-indicator-wrap {
+  border: 1px solid #d0d0d0;
+  background: #f7f7f7;
+}
+
+.pmdt-indicator--green {
+  color: #008000;
+}
+
+.pmdt-indicator--yellow {
+  color: #9c6500;
+}
+
+.pmdt-indicator--red {
+  color: #c00000;
+}
+
+.pmdt-indicator--gray {
+  color: #808080;
+}
+
+.pmdt-sidebar:not(.dme-pmdt-sidebar) .pmdt-indicator,
+.pmdt-sidebar:not(.dme-pmdt-sidebar) .pmdt-state-lamp {
+  font-weight: 700;
+}
+
+.pmdt-sidebar:not(.dme-pmdt-sidebar) .pmdt-state-lamp {
+  width: 15px;
+  height: 15px;
+  flex-basis: 15px;
+  font-size: 9px;
+}
+
+.pmdt-sidebar:not(.dme-pmdt-sidebar) .pmdt-indicator--green,
+.pmdt-sidebar:not(.dme-pmdt-sidebar) .pmdt-state-lamp.pmdt-indicator--green {
+  border-color: #70ad47;
+  background: #e2f0d9;
+}
+
+.pmdt-sidebar:not(.dme-pmdt-sidebar) .pmdt-indicator--yellow,
+.pmdt-sidebar:not(.dme-pmdt-sidebar) .pmdt-state-lamp.pmdt-indicator--yellow {
+  border-color: #c9a227;
+  background: #fff2cc;
+}
+
+.pmdt-sidebar:not(.dme-pmdt-sidebar) .pmdt-indicator--red,
+.pmdt-sidebar:not(.dme-pmdt-sidebar) .pmdt-state-lamp.pmdt-indicator--red {
+  border-color: #c0504d;
+  background: #ffc7ce;
+}
+
+.pmdt-sidebar:not(.dme-pmdt-sidebar) .pmdt-indicator--gray,
+.pmdt-sidebar:not(.dme-pmdt-sidebar) .pmdt-state-lamp.pmdt-indicator--gray {
+  border-color: #c8c8c8;
+  background: #f7f7f7;
+}
+
+.pmdt-parameter {
+  display: grid;
+  min-height: 19px;
+  grid-template-columns: minmax(0, 1fr) 42px;
+  align-items: center;
+  padding: 0;
+  border: 1px solid;
+  color: #000;
+  font-size: 10px;
+}
+
+.pmdt-sidebar-section:last-child dl {
+  display: grid;
+  gap: 0;
+}
+
+.pmdt-parameter dt,
+.pmdt-parameter dd {
+  min-width: 0;
+  margin: 0;
+  padding: 2px 3px;
+  white-space: nowrap;
+}
+
+.pmdt-parameter dd {
+  border-left: 1px solid #c8c8c8;
+  text-align: center;
+}
+
+.pmdt-parameter--normal {
+  border-color: #c8c8c8;
+  background: #f7f7f7;
+}
+
+.pmdt-parameter--warning {
+  border-color: #c9a227;
+  background: #fff2cc;
+}
+
+.pmdt-parameter--alarm {
+  border-color: #c0504d;
+  background: #ffc7ce;
+}
+
+.pmdt-home-screen {
+  display: grid;
+  min-height: 100%;
+  place-items: center;
+  background: #f0f0f0;
+}
+
+.pmdt-selex-logo {
+  display: block;
+  width: 312px;
+  height: 160px;
+  object-fit: fill;
+  transform: translateX(-69px);
+}
+
+.pmdt-statusbar {
+  display: flex;
+  height: 20px;
+  align-items: center;
+  gap: 0;
+  padding: 1px 3px;
+  border-top: 1px solid #fff;
+  background: #ededed;
+  color: #000;
+  font-size: 10px;
+}
+
+.pmdt-statusbar-path {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  padding: 2px 5px;
+  border: 1px inset #fff;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pmdt-statusbar-segment {
+  min-height: 16px;
+  padding: 2px 6px;
+  border-right: 1px solid #808080;
+  border-left: 1px solid #fff;
+}
+
+.pmdt-status-ok {
+  color: #008000;
+}
+
+.pmdt-status-alarm {
+  color: #c00000;
+}
+
+.pmdt-monitor-integral {
+  padding: 10px 14px;
+  color: #000;
+  font-size: 11px;
+}
+
+.pmdt-monitor-all-integral {
+  padding: 10px 14px;
+  color: #000;
+  font-size: 10px;
+}
+
+.pmdt-monitor-all-integral table {
+  width: 655px;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.pmdt-monitor-all-label {
+  width: 25%;
+}
+
+.pmdt-monitor-all-value {
+  width: 31%;
+}
+
+.pmdt-monitor-all-unit {
+  width: 13%;
+}
+
+.pmdt-monitor-all-integral th,
+.pmdt-monitor-all-integral td {
+  height: 22px;
+  padding: 2px 5px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0;
+  color: #000;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.1;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.pmdt-monitor-all-integral thead th {
+  height: 54px;
+  border-color: transparent !important;
+  background: transparent;
+  text-align: center;
+  vertical-align: bottom;
+}
+
+.pmdt-monitor-all-integral thead th time {
+  display: block;
+  width: max-content;
+  margin: 0 auto 5px;
+  padding: 3px 5px;
+  border: 1px solid #d0d0d0;
+  background: #fff;
+  font-size: 10px;
+}
+
+.pmdt-monitor-all-integral thead th span {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.pmdt-monitor-all-integral tbody th {
+  text-align: left;
+}
+
+.pmdt-monitor-all-integral tbody td:last-child {
+  border-right-color: transparent !important;
+  text-align: left;
+}
+
+.pmdt-monitor-date {
+  display: inline-block;
+  width: 102px;
+  box-sizing: border-box;
+  margin: 0 0 8px 1px;
+  padding: 3px 5px;
+  border: 1px solid #d0d0d0;
+  background: #fff;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  font-size: 10px;
+}
+
+.pmdt-monitor-integral-table {
+  width: 100%;
+  max-width: 710px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  background: #f0f0f0;
+}
+
+.pmdt-monitor-integral-col-label {
+  width: 19%;
+}
+
+.pmdt-monitor-integral-col-range {
+  width: 12%;
+}
+
+.pmdt-monitor-integral-col-data {
+  width: 27%;
+}
+
+.pmdt-monitor-integral-col-unit {
+  width: 8%;
+}
+
+.pmdt-monitor-integral-table th,
+.pmdt-monitor-integral-table td {
+  height: 22px;
+  padding: 2px 5px;
+  border: 1px solid #c5c5c5 !important;
+  color: #000 !important;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.1;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.pmdt-monitor-integral-table thead th {
+  height: 24px;
+  border-color: transparent !important;
+  background: transparent;
+  text-align: center;
+}
+
+.pmdt-monitor-integral-table tbody th {
+  text-align: left;
+}
+
+.pmdt-monitor-integral-table tbody td:last-child {
+  border-right-color: transparent !important;
+  text-align: left;
+}
+
+.pmdt-monitor-current--green,
+.pmdt-monitor-current--yellow,
+.pmdt-monitor-current--red,
+.pmdt-monitor-current--gray {
+  font-weight: 400 !important;
+}
+
+.pmdt-monitor-current--green {
+  background: #00ff00 !important;
+}
+
+.pmdt-monitor-current--yellow {
+  background: #ffff00 !important;
+}
+
+.pmdt-monitor-current--red {
+  background: #ff0000 !important;
+}
+
+.pmdt-monitor-current--gray {
+  background: #d9d9d9 !important;
+}
+
+.pmdt-monitor-sideband-vswr {
+  padding: 10px 14px;
+  color: #000;
+  font-size: 10px;
+}
+
+.pmdt-vswr-columns {
+  display: grid;
+  width: 476px;
+  grid-template-columns: repeat(3, 110px);
+  gap: 73px;
+}
+
+.pmdt-vswr-columns table {
+  width: 110px;
+  table-layout: fixed;
+}
+
+.pmdt-vswr-columns th,
+.pmdt-vswr-columns td {
+  height: 22px;
+  padding: 2px 4px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0;
+  color: #000;
+  font-size: 10px;
+  font-weight: 400;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.pmdt-vswr-columns thead th {
+  height: 24px;
+  border-color: transparent !important;
+  background: transparent;
+  text-align: center;
+}
+
+.pmdt-vswr-columns tbody th {
+  width: 55%;
+  text-align: center;
+}
+
+.pmdt-vswr-columns tbody td {
+  text-align: right;
+}
+
+.pmdt-monitor-notch {
+  padding: 10px 14px;
+  color: #000;
+  font-size: 10px;
+}
+
+.pmdt-notch-toolbar {
+  display: grid;
+  width: 699px;
+  grid-template-columns: 106px 1fr 100px 140px;
+  align-items: center;
+  gap: 5px;
+  min-height: 29px;
+}
+
+.pmdt-notch-toolbar > input {
+  width: 106px;
+  height: 20px;
+}
+
+.pmdt-notch-toolbar button {
+  height: 22px;
+  padding: 1px 6px;
+  border: 1px solid #fff;
+  background: #d4d0c8;
+  color: #000;
+  box-shadow: inset -1px -1px #808080, inset 1px 1px #fff;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  font-size: 10px;
+}
+
+.pmdt-notch-toolbar button:disabled {
+  color: #808080;
+  opacity: 1;
+}
+
+.pmdt-notch-toolbar .pmdt-monitor-date {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.pmdt-notch-columns {
+  display: grid;
+  width: 699px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.pmdt-notch-columns table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.pmdt-notch-columns th,
+.pmdt-notch-columns td {
+  height: 22px;
+  padding: 2px 3px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0;
+  color: #000;
+  font-size: 10px;
+  font-weight: 400;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.pmdt-notch-columns thead th {
+  height: 24px;
+  border-color: transparent !important;
+  background: transparent;
+  text-align: center;
+}
+
+.pmdt-notch-columns tbody th {
+  width: 24%;
+  text-align: center;
+}
+
+.pmdt-notch-columns td input {
+  width: 100%;
+  height: 19px;
+  padding: 1px 2px;
+  border: 1px inset #fff;
+  background: #fff;
+  color: #000;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  font-size: 10px;
+  text-align: right;
+}
+
+.pmdt-monitor-status {
+  padding: 10px 14px;
+  color: #000;
+  font-size: 11px;
+}
+
+.pmdt-classic-window .pmdt-monitor-status > .pmdt-monitor-date {
+  margin-bottom: 15px;
+}
+
+.pmdt-monitor-status-grid {
+  display: grid;
+  width: 510px;
+  grid-template-columns: 270px 210px;
+  gap: 24px;
+}
+
+.pmdt-monitor-status fieldset {
+  min-width: 0;
+  margin: 0 0 6px;
+  padding: 7px 8px 8px;
+  border: 1px solid #d0d0d0;
+  background: #f7f7f7;
+}
+
+.pmdt-monitor-status legend {
+  padding: 0 3px;
+  font-size: 10px;
+}
+
+.pmdt-monitor-status-row {
+  display: grid;
+  min-height: 22px;
+  grid-template-columns: 16px minmax(0, 1fr) 72px;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 3px;
+  border-bottom: 1px solid #d0d0d0;
+  font-size: 10px;
+}
+
+.pmdt-monitor-status-row--split {
+  grid-template-columns: 16px minmax(0, 1fr) 16px minmax(0, 1fr);
+}
+
+.pmdt-monitor-status-row--maintenance {
+  grid-template-columns: minmax(0, 1fr) 16px;
+}
+
+.pmdt-monitor-status-row:last-child {
+  border-bottom: 0;
+}
+
+.pmdt-monitor-status-row--value span:last-child {
+  padding: 2px 4px;
+  border: 1px solid #d0d0d0;
+  background: #fff;
+  text-align: center;
+}
+
+.pmdt-monitor-status-mark {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border: 1px solid #c8c8c8;
+  background: #f7f7f7;
+  font-size: 10px;
+  line-height: 13px;
+  text-align: center;
+}
+
+.pmdt-monitor-status-mark--green {
+  border-color: #00a000;
+  background: #00ff00;
+  color: #000;
+}
+
+.pmdt-monitor-status-mark--yellow {
+  border-color: #c9a227;
+  background: #ffff00;
+  color: #000;
+}
+
+.pmdt-monitor-status-mark--red {
+  border-color: #c00000;
+  background: #ff0000;
+  color: #000;
+}
+
+.pmdt-monitor-status-mark--empty {
+  background: #f7f7f7;
+  color: transparent;
+}
+
+.pmdt-monitor-maintenance {
+  height: 344px;
+}
+
+.pmdt-monitor-config {
+  padding: 10px 14px;
+  color: #000;
+  font-size: 10px;
+}
+
+.pmdt-monitor-routing {
+  padding: 10px 14px;
+  color: #000;
+  font-size: 10px;
+}
+
+.pmdt-monitor-routing fieldset {
+  width: 348px;
+  margin: 0;
+  padding: 7px 8px 8px;
+  border: 1px solid #c5c5c5;
+  background: #f0f0f0;
+}
+
+.pmdt-monitor-routing legend {
+  padding: 0 3px;
+  font-size: 10px;
+}
+
+.pmdt-monitor-routing table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.pmdt-monitor-routing-label-col { width: 147px; }
+.pmdt-monitor-routing-value-col { width: 82px; }
+.pmdt-monitor-routing-spacer-col { width: 18px; }
+
+.pmdt-monitor-routing th,
+.pmdt-monitor-routing td {
+  height: 23px;
+  padding: 2px 4px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.pmdt-monitor-routing thead th {
+  height: 24px;
+  border-color: transparent !important;
+  background: transparent;
+  text-align: center;
+}
+
+.pmdt-monitor-routing thead tr:first-child th {
+  height: 12px;
+  padding: 0;
+  line-height: 12px;
+}
+
+.pmdt-monitor-routing thead tr:first-child th[colspan="2"] {
+  border: 1px solid #d0d0d0 !important;
+  border-bottom: 0 !important;
+}
+
+.pmdt-monitor-routing thead tr:nth-child(2) th {
+  height: 12px;
+  padding: 0;
+  border: 1px solid #d0d0d0 !important;
+  border-bottom: 0 !important;
+  line-height: 12px;
+}
+
+.pmdt-monitor-routing tbody th {
+  width: 52%;
+  text-align: left;
+}
+
+.pmdt-monitor-routing tbody td {
+  width: 20%;
+  text-align: center;
+}
+
+.pmdt-monitor-routing tbody td:last-child {
+  width: 8%;
+  border-right-color: transparent !important;
+}
+
+.pmdt-monitor-routing-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pmdt-monitor-routing input[type="checkbox"],
+.pmdt-monitor-routing input[type="radio"] {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  accent-color: #000;
+}
+
+.pmdt-monitor-config table {
+  border-collapse: collapse;
+}
+
+.pmdt-alarm-limit-summary {
+  width: 620px;
+  margin-bottom: 5px;
+}
+
+.pmdt-alarm-limit-summary table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.pmdt-alarm-limit-summary th,
+.pmdt-alarm-limit-summary td {
+  height: 23px;
+  padding: 2px 5px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0;
+  font-weight: 400;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.pmdt-alarm-limit-summary thead th {
+  border-color: transparent !important;
+  background: transparent;
+  text-align: center;
+}
+
+.pmdt-alarm-limit-summary tbody th {
+  width: 34%;
+  text-align: left;
+}
+
+.pmdt-alarm-limit-summary td:last-child {
+  width: 10%;
+  border-right-color: transparent !important;
+  text-align: left;
+}
+
+.pmdt-alarm-value {
+  display: inline-flex;
+  min-width: 58px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.pmdt-alarm-value input {
+  width: 54px;
+  height: 20px;
+  padding: 1px 3px;
+  border: 1px inset #fff;
+  background: #fff;
+  color: #000;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  font-size: 10px;
+  text-align: right;
+}
+
+.pmdt-alarm-limit-table {
+  width: 690px;
+  table-layout: fixed;
+}
+
+.pmdt-alarm-limit-table th,
+.pmdt-alarm-limit-table td {
+  height: 23px;
+  padding: 2px 5px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0;
+  font-weight: 400;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.pmdt-alarm-limit-table thead th {
+  height: 24px;
+  border-color: transparent !important;
+  background: transparent;
+  text-align: center;
+}
+
+.pmdt-alarm-limit-table tbody th {
+  width: 21%;
+  text-align: left;
+}
+
+.pmdt-alarm-limit-table tbody td:last-child {
+  width: 8%;
+  border-right-color: transparent !important;
+  text-align: left;
+}
+
+.pmdt-alarm-limit-table .pmdt-sideband-limit-row th {
+  color: #808080;
+}
+
+.pmdt-alarm-limit-table .pmdt-sideband-limit-cell {
+  text-align: center;
+}
+
+.pmdt-sideband-limit-cell > span:first-child {
+  margin-right: 4px;
+}
+
+.pmdt-sideband-limit-cell .pmdt-alarm-value input {
+  width: 40px;
+}
+
+.pmdt-alarm-limits-bottom {
+  display: grid;
+  width: 690px;
+  grid-template-columns: 260px 1fr;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.pmdt-alarm-limits-bottom fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 7px 8px 8px;
+  border: 1px solid #d0d0d0;
+}
+
+.pmdt-alarm-limits-bottom legend {
+  padding: 0 3px;
+  font-size: 10px;
+}
+
+.pmdt-alarm-timer-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 58px 48px;
+  align-items: center;
+  gap: 3px;
+  min-height: 26px;
+  border-bottom: 1px solid #d0d0d0;
+}
+
+.pmdt-alarm-timer-row:last-child {
+  border-bottom: 0;
+}
+
+.pmdt-monitor-antennas table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.pmdt-monitor-antennas th,
+.pmdt-monitor-antennas td {
+  height: 23px;
+  padding: 2px 4px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0;
+  font-weight: 400;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.pmdt-monitor-antennas thead th {
+  border-top-color: transparent !important;
+  background: transparent;
+  text-align: center;
+}
+
+.pmdt-monitor-antennas tbody th {
+  width: 46%;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+}
+
+.pmdt-monitor-antennas td:last-child {
+  width: 8%;
+  border-right-color: transparent !important;
+  text-align: left;
+}
+
+.pmdt-tx-config-nominal,
+.pmdt-tx-offsets {
+  padding: 10px 14px;
+  color: #000;
+  font-size: 10px;
+}
+
+.pmdt-tx-config-nominal-grid {
+  display: grid;
+  width: 585px;
+  grid-template-columns: 265px 272px;
+  gap: 48px;
+}
+
+.pmdt-tx-config-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 7px 8px 8px;
+  border: 1px solid #c5c5c5;
+  background: #f0f0f0;
+}
+
+.pmdt-tx-config-fieldset legend {
+  padding: 0 3px;
+  background: #f0f0f0;
+  font-size: 10px;
+}
+
+.pmdt-tx-audio-generator table,
+.pmdt-tx-ident-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.pmdt-tx-audio-generator th,
+.pmdt-tx-audio-generator td,
+.pmdt-tx-ident-table th,
+.pmdt-tx-ident-table td {
+  height: 23px;
+  padding: 2px 4px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0;
+  font-size: 10px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.pmdt-tx-audio-generator th,
+.pmdt-tx-ident-table th {
+  width: 58%;
+  text-align: left;
+}
+
+.pmdt-tx-audio-generator td:nth-child(2) {
+  width: 25%;
+  text-align: right;
+}
+
+.pmdt-tx-audio-generator td:last-child {
+  width: 17%;
+  border-right-color: transparent !important;
+  text-align: left;
+}
+
+.pmdt-classic-control,
+.pmdt-tx-ident-table select,
+.pmdt-tx-disabled-row select {
+  width: 100%;
+  height: 20px;
+  padding: 1px 3px;
+  border: 1px inset #fff;
+  border-radius: 0;
+  background: #fff;
+  color: #000;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  font-size: 10px;
+}
+
+.pmdt-tx-audio-generator .pmdt-classic-control {
+  text-align: right;
+}
+
+.pmdt-tx-ident-table th {
+  width: 60%;
+}
+
+.pmdt-tx-ident-table td {
+  width: 40%;
+  border-right-color: transparent !important;
+}
+
+.pmdt-tx-keyer-section {
+  padding: 7px 3px 5px;
+  border-top: 1px solid #c5c5c5;
+}
+
+.pmdt-tx-keyer-section h3 {
+  margin: 0 0 4px;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.pmdt-tx-radio-lines,
+.pmdt-tx-check-grid {
+  display: grid;
+  gap: 4px;
+}
+
+.pmdt-tx-radio-lines label,
+.pmdt-tx-check-line {
+  display: flex;
+  min-height: 17px;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.pmdt-tx-radio-lines input,
+.pmdt-tx-check-line input {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+}
+
+.pmdt-tx-disabled-row {
+  display: grid;
+  grid-template-columns: 1fr 132px;
+  align-items: center;
+  gap: 5px;
+  min-height: 24px;
+  color: #808080;
+}
+
+.pmdt-tx-disabled-row select:disabled,
+.pmdt-tx-check-line input:disabled {
+  opacity: 0.65;
+}
+
+.pmdt-tx-keyer-output {
+  padding-bottom: 0;
+}
+
+.pmdt-tx-offset-table {
+  width: 445px;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.pmdt-tx-offset-label {
+  width: 46%;
+}
+
+.pmdt-tx-offset-value {
+  width: 18%;
+}
+
+.pmdt-tx-offset-unit {
+  width: 18%;
+}
+
+.pmdt-tx-offset-table th,
+.pmdt-tx-offset-table td {
+  height: 22px;
+  padding: 1px 4px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0;
+  color: #000;
+  font-size: 10px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.pmdt-tx-offset-table thead th {
+  height: 23px;
+  border-color: transparent !important;
+  background: transparent;
+  text-align: center;
+}
+
+.pmdt-tx-offset-table tbody th {
+  text-align: left;
+}
+
+.pmdt-tx-offset-table tbody td {
+  text-align: center;
+}
+
+.pmdt-tx-offset-table tbody td:last-child {
+  border-right-color: transparent !important;
+  text-align: left;
+}
+
+.pmdt-tx-offset-table input {
+  width: 63px;
+  height: 20px;
+  padding: 1px 3px;
+  border: 1px inset #fff;
+  background: #fff;
+  color: #000;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  font-size: 10px;
+  text-align: right;
+}
+
+.pmdt-tx-data {
+  display: block;
+  padding: 10px 14px;
+  color: #000;
+  font-size: 10px;
+}
+
+.pmdt-tx-data-panel {
+  width: 342px;
+  margin-bottom: 10px;
+  border: 1px solid #c5c5c5;
+  background: #f0f0f0;
+}
+
+.pmdt-tx-data-panel h3 {
+  margin: -7px 0 4px 8px;
+  width: max-content;
+  padding: 0 3px;
+  background: #f0f0f0;
+  color: #000;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.pmdt-tx-data-panel table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pmdt-tx-data-panel th,
+.pmdt-tx-data-panel td {
+  height: 22px;
+  padding: 2px 7px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0;
+  color: #000 !important;
+  font-size: 10px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.pmdt-tx-data-panel thead th {
+  border-color: transparent !important;
+  background: transparent;
+  text-align: center;
+}
+
+.pmdt-tx-data-panel tbody th {
+  text-align: left;
+}
+
+.pmdt-tx-data-panel tbody td {
+  text-align: right;
+}
+
+.pmdt-tx-data-panel tbody td:last-child {
+  text-align: left;
+}
+
+.pmdt-tx-status {
+  padding: 10px 14px;
+  color: #000;
+  font-size: 10px;
+}
+
+.pmdt-tx-status-grid {
+  display: grid;
+  width: 648px;
+  grid-template-columns: 200px 200px 200px;
+  grid-template-rows: auto auto;
+  gap: 12px 27px;
+}
+
+.pmdt-tx-alert-group {
+  min-width: 0;
+  margin: 0;
+  padding: 7px 8px 8px;
+  border: 1px solid #c5c5c5;
+  background: #f0f0f0;
+}
+
+.pmdt-tx-alert-group h3 {
+  width: max-content;
+  margin: -7px 0 4px -2px;
+  padding: 0 3px;
+  background: #f0f0f0;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.pmdt-tx-alert-group ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pmdt-tx-alert-group li {
+  display: flex;
+  min-height: 22px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  padding: 2px 0;
+  border-bottom: 1px solid #c5c5c5;
+  white-space: nowrap;
+}
+
+.pmdt-tx-alert-group li:last-child {
+  border-bottom: 0;
+}
+
+.pmdt-tx-system-alerts {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.pmdt-tx-carrier-alerts {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.pmdt-tx-synth-alerts {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.pmdt-tx-sideband-alerts {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+}
+
+.pmdt-tx-cpu-row {
+  display: grid;
+  grid-template-columns: 1fr 82px;
+  min-height: 24px;
+  align-items: center;
+  margin-top: 8px;
+  border: 1px solid #c5c5c5;
+}
+
+.pmdt-tx-cpu-row span {
+  padding: 3px 5px;
+}
+
+.pmdt-tx-cpu-row span:last-child {
+  border-left: 1px solid #c5c5c5;
+  text-align: center;
+}
+
+.pmdt-ground-check {
+  padding: 10px 14px;
+  color: #000;
+  font-size: 10px;
+}
+
+.pmdt-ground-check-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  width: 694px;
+}
+
+.pmdt-ground-check-header button,
+.pmdt-ground-options button {
+  height: 22px;
+  padding: 1px 9px;
+  border: 1px solid #fff;
+  background: #d4d0c8;
+  color: #000;
+  box-shadow: inset -1px -1px #808080, inset 1px 1px #fff;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  font-size: 10px;
+}
+
+.pmdt-ground-check-header button:disabled {
+  color: #808080;
+  opacity: 1;
+}
+
+.pmdt-ground-check-top {
+  display: grid;
+  width: 694px;
+  grid-template-columns: 132px 347px 158px;
+  gap: 27px;
+  align-items: start;
+}
+
+.pmdt-ground-table-panel,
+.pmdt-ground-options {
+  min-width: 0;
+  margin: 0;
+  padding: 7px 8px 8px;
+  border: 1px solid #c5c5c5;
+  background: #f0f0f0;
+}
+
+.pmdt-ground-table-panel legend,
+.pmdt-ground-options legend {
+  padding: 0 3px;
+  font-size: 10px;
+}
+
+.pmdt-ground-table-panel table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.pmdt-ground-table-panel th,
+.pmdt-ground-table-panel td {
+  height: 22px;
+  padding: 2px 4px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0;
+  font-size: 10px;
+  font-weight: 400;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.pmdt-ground-table-panel thead th {
+  border-color: transparent !important;
+  background: transparent;
+  text-align: center;
+}
+
+.pmdt-ground-table-panel tbody td:first-child {
+  text-align: right;
+}
+
+.pmdt-ground-table-panel:nth-child(1) th:first-child,
+.pmdt-ground-table-panel:nth-child(1) td:first-child {
+  width: 55%;
+}
+
+.pmdt-ground-table-panel:nth-child(2) th:first-child,
+.pmdt-ground-table-panel:nth-child(2) td:first-child {
+  width: 46%;
+  text-align: left;
+}
+
+.pmdt-ground-options {
+  position: relative;
+  display: grid;
+  gap: 5px;
+  padding-top: 8px;
+}
+
+.pmdt-ground-options label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 17px;
+  white-space: nowrap;
+}
+
+.pmdt-ground-options input {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+}
+
+.pmdt-ground-options button {
+  position: absolute;
+  top: 7px;
+  right: 5px;
+}
+
+.pmdt-ground-graph {
+  width: 512px;
+  height: 325px;
+  margin: 4px 0 0 174px;
+  border: 1px solid #404040;
+  background: #f0f0f0;
+}
+
+.pmdt-ground-graph svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.pmdt-ground-grid-lines line {
+  stroke: #777;
+  stroke-dasharray: 1 4;
+  stroke-width: 1;
+}
+
+.pmdt-ground-zero-line {
+  stroke: #777;
+  stroke-width: 1;
+}
+
+.pmdt-ground-trace {
+  fill: none;
+  stroke: #ff00ff;
+  stroke-width: 1;
+}
+
+.pmdt-ground-axis-labels {
+  fill: #000;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  font-size: 9px;
+}
+
+.pmdt-ground-legend {
+  fill: #000;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  font-size: 9px;
+}
+
+.pmdt-ground-legend line:nth-of-type(1) { stroke: #f66; }
+.pmdt-ground-legend line:nth-of-type(2) { stroke: #6c6; }
+.pmdt-ground-legend line:nth-of-type(3) { stroke: #66c; }
+.pmdt-ground-legend line:nth-of-type(4) { stroke: #f0c; }
+
+.pmdt-ground-source {
+  display: grid;
+  width: 134px;
+  grid-template-columns: 64px 1fr;
+  align-items: center;
+  margin-top: 5px;
+  border: 1px solid #c5c5c5;
+}
+
+.pmdt-ground-source span,
+.pmdt-ground-source select {
+  height: 21px;
+  padding: 2px 4px;
+  border: 0;
+  background: #f0f0f0;
+  color: #000;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  font-size: 10px;
+}
+
+.pmdt-ground-source select {
+  border-left: 1px solid #c5c5c5;
+  background: #fff;
+}
+
+/* The existing screens already contain the data layout. These scoped color
+ * translations make their panels and tables read like the reference client
+ * while we incrementally replace individual screen markup with classic
+ * controls. */
+
+.pmdt-classic,
+.pmdt-classic-window {
+  color: #000;
+}
+
+.pmdt-classic-window :is(button, input, select, textarea) {
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+}
+
+.pmdt-classic-window input:not([type="checkbox"]):not([type="radio"]),
+.pmdt-classic-window select,
+.pmdt-classic-window textarea {
+  border: 1px inset #fff;
+  border-radius: 0;
+  background: #fff;
+  color: #000;
+}
+
+.pmdt-classic-window button:not(.pmdt-menu-root):not(.pmdt-menu-item):not(.pmdt-window-button) {
+  border-radius: 0;
+  background: #d4d0c8;
+  color: #000;
+  box-shadow: inset -1px -1px #808080, inset 1px 1px #fff;
+}
+
+.pmdt-classic-window button:not(.pmdt-menu-root):not(.pmdt-menu-item):not(.pmdt-window-button):hover,
+.pmdt-classic-window button:not(.pmdt-menu-root):not(.pmdt-menu-item):not(.pmdt-window-button):focus-visible {
+  background: #e8e8e8;
+}
+
+.pmdt-classic-window table {
+  border-collapse: collapse;
+}
+
+.pmdt-classic-window :is(th, td) {
+  border: 1px solid #c8c8c8 !important;
+  border-color: #b5b5b5 !important;
+}
+
+.pmdt-classic-window table.border-separate {
+  border-spacing: 0 !important;
+}
+
+.pmdt-classic-window [role="tablist"] {
+  align-items: flex-end;
+  padding: 2px 4px 0 !important;
+  border-bottom: 1px solid #808080 !important;
+  background: #f0f0f0 !important;
+}
+
+.pmdt-classic-window [role="tab"] {
+  min-height: 23px !important;
+  padding: 3px 8px !important;
+  border: 1px solid #a6a6a6 !important;
+  border-bottom: 0 !important;
+  background: #dedede !important;
+  color: #000 !important;
+  font-size: 10px !important;
+}
+
+.pmdt-classic-window [role="tab"][aria-selected="true"] {
+  position: relative;
+  z-index: 1;
+  margin-bottom: -1px;
+  border-color: #808080 !important;
+  background: #fff !important;
+  font-weight: 700 !important;
+}
+
+/* The reference client uses compact 20 px tab buttons. */
+.pmdt-classic-window [role="tab"] {
+  min-height: 20px !important;
+  padding: 2px 7px !important;
+}
+
+.pmdt-classic-window .pmdt-rms-tabbar {
+  padding: 4px 12px 0 !important;
+}
+
+.pmdt-classic-window .pmdt-tx-tabbar {
+  padding: 4px 12px 0 !important;
+}
+
+.pmdt-classic-window .pmdt-toolbar {
+  padding-right: 20px;
+  padding-left: 12px;
+}
+
+.pmdt-classic-window .pmdt-toolbar-actions {
+  gap: 8px;
+}
+
+.pmdt-classic-window .pmdt-toolbar-actions button {
+  min-width: 0;
+  padding-right: 5px;
+  padding-left: 5px;
+}
+
+.pmdt-classic-window .pmdt-toolbar-actions button:nth-child(1),
+.pmdt-classic-window .pmdt-toolbar-actions button:nth-child(2) {
+  width: 24px;
+}
+
+.pmdt-classic-window .pmdt-toolbar-actions button:nth-child(3) {
+  width: 56px;
+}
+
+.pmdt-classic-window .pmdt-toolbar-actions button:nth-child(4),
+.pmdt-classic-window .pmdt-toolbar-actions button:nth-child(5) {
+  width: 56px;
+}
+
+.pmdt-classic-window .pmdt-toolbar-actions button:nth-child(6) {
+  width: 64px;
+}
+
+.pmdt-classic-window .pmdt-toolbar-actions button:nth-child(n + 4) {
+  gap: 1px;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.pmdt-classic-window .pmdt-toolbar-actions button:nth-child(n + 4) svg {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+}
+
+.pmdt-classic-window [class~="bg-[#070a12]"],
+.pmdt-classic-window [class~="bg-[#0a0e1a]"] {
+  background: #f3f3f3 !important;
+}
+
+.pmdt-classic-window [class~="bg-[#0f172a]"] {
+  background: #f0f0f0 !important;
+}
+
+.pmdt-classic-window [class~="bg-[#111827]"] {
+  background: #f7f7f7 !important;
+}
+
+.pmdt-classic-window [class~="bg-[#172033]"],
+.pmdt-classic-window [class~="bg-[#1e293b]"] {
+  background: #e8e8e8 !important;
+}
+
+.pmdt-classic-window [class*="bg-[#0f172a]"] {
+  background: #f0f0f0 !important;
+}
+
+.pmdt-classic-window [class~="bg-[#1e40af]"] {
+  background: #316ac5 !important;
+}
+
+.pmdt-classic-window [class~="bg-[#0f3a1f]"] {
+  background: #c6efce !important;
+}
+
+.pmdt-classic-window [class~="bg-[#3a2f0f]"] {
+  background: #fff2cc !important;
+}
+
+.pmdt-classic-window [class~="bg-[#3a0f0f]"] {
+  background: #ffc7ce !important;
+}
+
+.pmdt-classic-window [class~="border-[#334155]"],
+.pmdt-classic-window [class~="border-[#475569]"],
+.pmdt-classic-window [class~="border-[#273449]"],
+.pmdt-classic-window [class~="border-[#2d3a4f]"],
+.pmdt-classic-window [class~="border-[#1d6837]"],
+.pmdt-classic-window [class~="border-[#745f17]"],
+.pmdt-classic-window [class~="border-[#7f1d1d]"] {
+  border-color: #808080 !important;
+}
+
+.pmdt-classic-window [class~="text-[#e2e8f0]"],
+.pmdt-classic-window [class~="text-[#cbd5e1]"],
+.pmdt-classic-window [class~="text-[#94a3b8]"],
+.pmdt-classic-window [class~="text-[#64748b]"],
+.pmdt-classic-window [class~="text-gray-400"],
+.pmdt-classic-window [class~="text-[#bbf7d0]"],
+.pmdt-classic-window [class~="text-[#fef08a]"],
+.pmdt-classic-window [class~="text-[#fecaca]"],
+.pmdt-classic-window [class~="text-[#6b7280]"] {
+  color: #000 !important;
+}
+
+.pmdt-classic-window [class~="text-[#bbf7d0]"] {
+  color: #006100 !important;
+}
+
+.pmdt-classic-window [class~="text-[#fef08a]"] {
+  color: #9c6500 !important;
+}
+
+.pmdt-classic-window [class~="text-[#fecaca]"] {
+  color: #9c0006 !important;
+}
+
+.pmdt-classic-window [class~="text-white"] {
+  color: #000 !important;
+}
+
+.pmdt-classic-window [class~="text-[#22c55e]"],
+.pmdt-classic-window [class~="text-emerald-400"] {
+  color: #008000 !important;
+}
+
+.pmdt-classic-window [class~="text-[#eab308]"],
+.pmdt-classic-window [class~="text-amber-400"] {
+  color: #9c6500 !important;
+}
+
+.pmdt-classic-window [class~="text-[#ef4444]"],
+.pmdt-classic-window [class~="text-red-400"] {
+  color: #c00000 !important;
+}
+
+.pmdt-classic-window [class~="text-sky-400"] {
+  color: #0066cc !important;
+}
+
+.pmdt-classic-window [class*="rounded"] {
+  border-radius: 0 !important;
+}
+
+/* Every PMDT tab strip uses the same small native Windows tab treatment. */
+.pmdt-classic-window [role="tablist"] {
+  border-bottom-color: #808080 !important;
+  background: #f0f0f0 !important;
+}
+
+.pmdt-classic-window [role="tab"] {
+  border-color: #a6a6a6 !important;
+  background: #dedede !important;
+  color: #000 !important;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+}
+
+.pmdt-classic-window [role="tab"][aria-selected="true"] {
+  position: relative;
+  z-index: 1;
+  margin-bottom: -1px;
+  border-color: #808080 !important;
+  background: #fff !important;
+  color: #000 !important;
+  font-weight: 700 !important;
+}
+
+.pmdt-classic-window [class*="shadow"] {
+  box-shadow: none !important;
+}
+
+@media (max-width: 900px), (max-height: 700px) {
+  .pmdt-classic-page {
+    align-items: flex-start;
+  }
+
+  .pmdt-classic-viewport {
+    min-height: 693px;
+    justify-content: flex-start;
+  }
+
+  .pmdt-classic-window {
+    flex: 0 0 900px;
+  }
+}
+
+/* Status cells in the reference client use saturated traffic-light fills. */
+.pmdt-classic-window [class~="bg-[#0f3a1f]"] {
+  background: #00ff00 !important;
+  color: #000 !important;
+}
+
+.pmdt-classic-window [class~="bg-[#3a2f0f]"] {
+  background: #ffff00 !important;
+  color: #000 !important;
+}
+
+.pmdt-classic-window [class~="bg-[#3a0f0f]"] {
+  background: #ff0000 !important;
+  color: #000 !important;
+}
+
+.pmdt-classic-window [class~="bg-[#1e293b]"] {
+  background: #e8e8e8 !important;
+  color: #000 !important;
+}
+
+.pmdt-tx-data-panel [class~="bg-[#0f3a1f]"],
+.pmdt-tx-data-panel [class~="bg-[#3a2f0f]"],
+.pmdt-tx-data-panel [class~="bg-[#3a0f0f]"],
+.pmdt-tx-data-panel [class~="bg-[#1e293b]"] {
+  background: #f0f0f0 !important;
+  color: #000 !important;
+}
+
+/* RMS pages use the same flat, fieldset/table language as the reference PMDT. */
+.pmdt-rms-data-content {
+  margin: 0 20px 12px 12px;
+  border: 1px solid #d0d0d0;
+  background: #fff !important;
+  color: #000;
+}
+
+.pmdt-rms-data-content > .pmdt-monitor-date {
+  margin-left: 14px;
+}
+
+.pmdt-rms-logs-content,
+.pmdt-rms-config-content,
+.pmdt-rms-status-content,
+.pmdt-monitor-data-content,
+.pmdt-monitor-config-content,
+.pmdt-monitor-offsets-content,
+.pmdt-tx-data-content,
+.pmdt-tx-config-content,
+.pmdt-diagnostics-content {
+  margin: 0 20px 12px 12px;
+  border: 1px solid #d0d0d0;
+  background: #fff !important;
+}
+
+.pmdt-rms-table-screen {
+  padding: 0 14px 14px !important;
+  color: #000 !important;
+}
+
+.pmdt-rms-flat-panel {
+  width: max-content;
+  min-width: 0;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.pmdt-rms-flat-panel h3 {
+  display: none;
+}
+
+.pmdt-rms-flat-panel table {
+  border-collapse: collapse;
+}
+
+.pmdt-rms-flat-panel th,
+.pmdt-rms-flat-panel td {
+  height: 22px;
+  padding: 2px 5px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0 !important;
+  color: #000 !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  white-space: nowrap;
+}
+
+.pmdt-rms-flat-panel thead th {
+  height: 24px;
+  border-color: transparent !important;
+  background: transparent !important;
+  text-align: center;
+}
+
+.pmdt-rms-flat-panel tbody th {
+  text-align: left;
+}
+
+.pmdt-rms-table-screen table {
+  width: auto !important;
+}
+
+.pmdt-rms-power-screen {
+  padding: 0 14px 14px !important;
+}
+
+.pmdt-rms-power-grid {
+  display: grid !important;
+  grid-template-columns: 378px 300px !important;
+  gap: 22px !important;
+}
+
+.pmdt-rms-power-screen .pmdt-rms-flat-panel:nth-child(2) {
+  margin-top: 176px;
+}
+
+.pmdt-rms-power-screen > section {
+  width: 676px;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.pmdt-rms-power-screen > section h3 {
+  display: none;
+}
+
+.pmdt-rms-power-screen > section > div {
+  border: 1px solid #c5c5c5;
+  background: #f0f0f0;
+}
+
+.pmdt-rms-power-screen > section table {
+  border-collapse: collapse;
+}
+
+.pmdt-rms-power-screen > section th,
+.pmdt-rms-power-screen > section td {
+  height: 22px;
+  padding: 2px 5px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0 !important;
+  color: #000 !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  white-space: nowrap;
+}
+
+.pmdt-rms-power-screen > section thead th {
+  border-color: transparent !important;
+  background: transparent !important;
+  text-align: center;
+}
+
+.pmdt-rms-power-screen > section tbody th {
+  text-align: left;
+}
+
+.pmdt-rms-power-screen > section:last-child {
+  display: flex;
+  width: 190px;
+  flex-direction: column;
+  gap: 0 !important;
+  margin-top: -4px;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.pmdt-rms-power-screen > section:last-child > div {
+  display: flex;
+  min-height: 22px;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  background: transparent !important;
+}
+
+/* Monitor offsets and scale factors — aligned with the compact reference
+ * screen: a tab-shaped caption, timestamp, four value columns and native
+ * Windows-style numeric controls. */
+.pmdt-monitor-offsets {
+  color: #000;
+}
+
+.pmdt-monitor-offsets-content {
+  position: relative;
+  padding: 0 14px 14px;
+  background: #f0f0f0;
+}
+
+.pmdt-monitor-offsets-tab {
+  display: inline-block;
+  min-width: 128px;
+  margin-top: 0;
+  padding: 4px 8px 5px;
+  border: 1px solid #a6a6a6;
+  border-top: 0;
+  background: #fff;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.pmdt-monitor-offsets .pmdt-monitor-date {
+  display: block;
+  width: 102px;
+  box-sizing: border-box;
+  margin: 12px 0 1px 0;
+  text-align: center;
+}
+
+.pmdt-monitor-offsets-table {
+  width: 642px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+
+.pmdt-offset-col-label { width: 224px; }
+.pmdt-offset-col-integral { width: 96px; }
+.pmdt-offset-col-gap { width: 59px; }
+.pmdt-offset-col-standby { width: 96px; }
+.pmdt-offset-col-test { width: 103px; }
+.pmdt-offset-col-unit { width: 64px; }
+
+.pmdt-monitor-offsets-table thead th {
+  position: relative;
+  height: 12px;
+  padding: 0 4px;
+  border: 0 !important;
+  background: transparent;
+  color: #000;
+  font-weight: 400;
+  text-align: center;
+  vertical-align: bottom;
+}
+
+.pmdt-monitor-offsets-table thead th > span {
+  position: absolute;
+  right: 4px;
+  bottom: 0;
+  left: 4px;
+  line-height: 12px;
+  white-space: nowrap;
+}
+
+.pmdt-monitor-offsets-table tbody th,
+.pmdt-monitor-offsets-table tbody td {
+  height: 22px;
+  padding: 1px 4px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0;
+  color: #000;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.pmdt-monitor-offsets-table tbody th {
+  padding-left: 6px;
+  text-align: left;
+}
+
+.pmdt-monitor-offsets-table tbody tr.pmdt-offset-row-group-start td {
+  height: 12px;
+  padding: 0;
+  border: 0 !important;
+  background: #f0f0f0 !important;
+}
+
+.pmdt-offset-value {
+  text-align: center;
+}
+
+.pmdt-offset-value input {
+  box-sizing: border-box;
+  width: 62px;
+  height: 20px;
+  padding: 1px 2px 1px 4px;
+  border: 1px inset #fff;
+  border-radius: 0;
+  background: #fff;
+  color: #000;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  font-size: 10px;
+  text-align: right;
+}
+
+.pmdt-offset-value input:focus {
+  outline: 1px dotted #000;
+  outline-offset: -2px;
+}
+
+.pmdt-offset-empty {
+  display: inline-block;
+  width: 62px;
+  height: 20px;
+  border: 1px inset #fff;
+  background: #f7f7f7;
+  vertical-align: middle;
+}
+
+.pmdt-offset-unit {
+  border-right: 0 !important;
+  border-top-color: transparent !important;
+  border-bottom-color: transparent !important;
+  background: transparent !important;
+  text-align: left;
+}
+
+/* RMS Status reference screens. */
+.pmdt-rms-status,
+.pmdt-rms-status-content {
+  color: #000;
+  background: #f0f0f0;
+}
+
+.pmdt-rms-status-tabbar {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  padding: 2px 4px 0;
+  border-bottom: 1px solid #808080;
+  background: #f0f0f0;
+}
+
+.pmdt-rms-status-tabbar button {
+  min-height: 23px;
+  padding: 3px 8px;
+  border: 1px solid #a6a6a6;
+  border-bottom: 0;
+  background: #dedede;
+  color: #000;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.pmdt-rms-status-tabbar button[aria-selected="true"] {
+  position: relative;
+  z-index: 1;
+  margin-bottom: -1px;
+  border-color: #808080;
+  background: #fff;
+  font-weight: 700;
+}
+
+.pmdt-rms-status-content > .pmdt-monitor-date {
+  margin: 10px 0 6px 14px;
+}
+
+.pmdt-rms-status-vor {
+  display: flex;
+  width: 700px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 14px 14px;
+}
+
+.pmdt-rms-status-vor fieldset,
+.pmdt-rms-monitor-tx-status fieldset,
+.pmdt-rms-revisions fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 7px 8px 8px;
+  border: 1px solid #d0d0d0;
+  background: #f7f7f7;
+}
+
+.pmdt-rms-status-vor legend,
+.pmdt-rms-monitor-tx-status legend,
+.pmdt-rms-revisions legend {
+  padding: 0 3px;
+  font-size: 10px;
+}
+
+.pmdt-rms-status-vor > fieldset {
+  width: 220px;
+}
+
+.pmdt-rms-status-level-row,
+.pmdt-rms-status-row {
+  display: grid;
+  min-height: 22px;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid #d0d0d0;
+  font-size: 10px;
+}
+
+.pmdt-rms-status-level-row {
+  grid-template-columns: minmax(0, 1fr) 76px;
+}
+
+.pmdt-rms-status-row {
+  grid-template-columns: 16px minmax(0, 1fr);
+  padding: 1px 3px;
+}
+
+.pmdt-rms-status-level-row:last-child,
+.pmdt-rms-status-row:last-child {
+  border-bottom: 0;
+}
+
+.pmdt-rms-status-level-row output {
+  display: block;
+  height: 20px;
+  padding: 2px 4px;
+  border: 1px inset #fff;
+  background: #fff;
+  text-align: center;
+}
+
+.pmdt-rms-status-mark {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #c8c8c8;
+  background: #f7f7f7;
+  color: transparent;
+  font-size: 10px;
+  line-height: 14px;
+  text-align: center;
+}
+
+.pmdt-rms-status-mark--green {
+  border-color: #00a000;
+  background: #00ff00;
+  color: #000;
+}
+
+.pmdt-rms-status-mark--yellow {
+  border-color: #c9a227;
+  background: #ffff00;
+  color: #000;
+}
+
+.pmdt-rms-status-mark--red {
+  border-color: #c00000;
+  background: #ff0000;
+  color: #000;
+}
+
+.pmdt-rms-monitor-tx-status {
+  width: 700px;
+  padding: 0 14px 14px;
+  font-size: 10px;
+}
+
+.pmdt-rms-monitor-status-top {
+  position: relative;
+  display: grid;
+  width: 518px;
+  grid-template-columns: 392px 112px;
+  align-items: start;
+  gap: 14px;
+}
+
+.pmdt-rms-monitor-status-table-box {
+  padding: 7px 8px 8px !important;
+}
+
+.pmdt-rms-monitor-status-table-box table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.pmdt-rms-monitor-status-table-box th,
+.pmdt-rms-monitor-status-table-box td {
+  height: 25px;
+  padding: 2px 3px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0;
+  color: #000;
+  font-size: 10px;
+  font-weight: 400;
+  text-align: center;
+}
+
+.pmdt-rms-monitor-status-table-box thead th {
+  height: 31px;
+  border-top-color: transparent !important;
+  border-left-color: transparent !important;
+  border-right-color: transparent !important;
+  background: transparent;
+  font-weight: 400;
+  line-height: 1.1;
+  vertical-align: bottom;
+}
+
+.pmdt-rms-monitor-status-table-box tbody th {
+  width: 75px;
+  text-align: left;
+}
+
+.pmdt-rms-enabled-monitors {
+  min-height: 100px !important;
+}
+
+.pmdt-rms-monitor-shutdown {
+  position: absolute;
+  top: -32px;
+  left: 400px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 20px;
+  padding-top: 2px;
+}
+
+.pmdt-rms-transmitter-selects {
+  width: 405px;
+  margin-top: 6px !important;
+}
+
+.pmdt-rms-select-groups {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 13px;
+}
+
+.pmdt-rms-select-groups fieldset {
+  padding: 7px 7px 6px;
+}
+
+.pmdt-rms-select-row {
+  display: grid;
+  min-height: 22px;
+  grid-template-columns: 16px 1fr;
+  align-items: center;
+  gap: 4px;
+}
+
+.pmdt-rms-revisions {
+  padding: 0 14px 14px;
+}
+
+.pmdt-rms-revisions fieldset {
+  width: 230px;
+}
+
+.pmdt-rms-revisions table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pmdt-rms-revisions th,
+.pmdt-rms-revisions td {
+  height: 22px;
+  padding: 2px 5px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0;
+  color: #000;
+  font-size: 10px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.pmdt-rms-revisions th {
+  text-align: left;
+}
+
+.pmdt-rms-revisions td {
+  width: 78px;
+  text-align: center;
+}
+
+.pmdt-rms-hardware-revisions {
+  padding: 0 14px 14px;
+  font-size: 10px;
+}
+
+.pmdt-rms-hardware-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  height: 34px;
+}
+
+.pmdt-rms-hardware-actions .pmdt-monitor-date {
+  margin: 0;
+}
+
+.pmdt-rms-hardware-actions button {
+  width: 72px;
+  height: 22px;
+}
+
+.pmdt-rms-hardware-revisions > table {
+  width: 700px;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.pmdt-rms-hardware-revisions th,
+.pmdt-rms-hardware-revisions td {
+  height: 22px;
+  padding: 2px 6px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0;
+  color: #000;
+  font-size: 10px;
+  font-weight: 400;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.pmdt-rms-hardware-revisions thead th {
+  height: 24px;
+  border-top-color: transparent !important;
+  background: transparent;
+  font-weight: 400;
+  text-align: left;
+}
+
+.pmdt-rms-hardware-revisions tbody th {
+  width: 95px;
+}
+
+/* RMS Configuration is a native-looking configuration dialog, not a dark
+ * dashboard. Keep the existing component data bindings and only restyle the
+ * layout/controls to the reference dimensions. */
+.pmdt-rms-config,
+.pmdt-rms-config-content {
+  color: #000;
+  background: #f0f0f0 !important;
+}
+
+.pmdt-rms-config-content > div {
+  box-sizing: border-box;
+  min-height: 100%;
+  color: #000 !important;
+}
+
+.pmdt-rms-config-content .pmdt-monitor-date {
+  margin: 10px 0 2px;
+}
+
+.pmdt-rms-config-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 7px 8px 8px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0 !important;
+  color: #000 !important;
+}
+
+.pmdt-rms-config-fieldset legend {
+  padding: 0 3px;
+  color: #000 !important;
+  font-size: 10px;
+}
+
+.pmdt-rms-config-fieldset :is(span, label, div) {
+  color: #000 !important;
+}
+
+.pmdt-rms-config-content input:not([type="checkbox"]):not([type="radio"]),
+.pmdt-rms-config-content select {
+  box-sizing: border-box;
+  height: 21px !important;
+  min-height: 21px !important;
+  padding: 1px 4px !important;
+  border: 1px inset #fff !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  color: #000 !important;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+}
+
+.pmdt-rms-config-content input[type="checkbox"],
+.pmdt-rms-config-content input[type="radio"] {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+}
+
+.pmdt-rms-config-general {
+  display: grid !important;
+  width: 700px;
+  grid-template-columns: 257px 365px !important;
+  gap: 10px 20px !important;
+  padding: 0 14px 14px !important;
+}
+
+.pmdt-rms-config-general > .pmdt-monitor-date {
+  grid-column: 1 / -1;
+}
+
+.pmdt-rms-config-general > div {
+  min-width: 0;
+}
+
+.pmdt-rms-config-general > div:first-of-type,
+.pmdt-rms-config-general > div:nth-of-type(2) {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pmdt-rms-config-general .pmdt-rms-config-fieldset {
+  width: auto;
+}
+
+.pmdt-rms-config-station {
+  display: block !important;
+  width: 700px;
+  padding: 0 14px 14px !important;
+}
+
+.pmdt-rms-config-station > .pmdt-monitor-date {
+  display: block;
+}
+
+.pmdt-rms-config-station > div:first-of-type {
+  display: grid;
+  grid-template-columns: 252px 440px;
+  gap: 12px;
+  margin-top: 0;
+}
+
+.pmdt-rms-config-station > div:first-of-type > .pmdt-rms-config-fieldset:nth-child(2) {
+  padding: 0;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.pmdt-rms-config-station > div:first-of-type > .pmdt-rms-config-fieldset:nth-child(2) > legend {
+  display: none;
+}
+
+.pmdt-rms-config-components-dates {
+  display: grid;
+  width: 440px;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 4px;
+}
+
+.pmdt-rms-config-components-dates time {
+  display: block;
+  height: 21px;
+  box-sizing: border-box;
+  padding: 3px 4px;
+  border: 1px solid #d0d0d0;
+  background: #fff;
+  font-size: 10px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.pmdt-rms-config-components-table {
+  width: 440px;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.pmdt-rms-config-components-table th,
+.pmdt-rms-config-components-table td {
+  height: 22px;
+  padding: 2px 3px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0 !important;
+  color: #000 !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.pmdt-rms-config-components-table thead th {
+  height: 21px;
+  border-color: transparent !important;
+  background: transparent !important;
+}
+
+.pmdt-rms-config-components-table thead th:first-child,
+.pmdt-rms-config-components-table tbody th {
+  width: 0;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.pmdt-rms-config-components-table .pmdt-rms-config-components-gap td,
+.pmdt-rms-config-components-table .pmdt-rms-config-components-gap th {
+  height: 72px;
+  border-color: transparent !important;
+  background: transparent !important;
+}
+
+.pmdt-rms-config-station > div:last-child {
+  display: flex;
+  align-items: center;
+  width: 465px;
+  height: 22px;
+  margin-top: 18px;
+  padding: 0 6px !important;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0 !important;
+}
+
+.pmdt-rms-config-station > div:last-child input {
+  flex: 1;
+  max-width: none !important;
+}
+
+.pmdt-rms-config-limit-screen {
+  display: grid !important;
+  width: 700px;
+  gap: 10px 12px !important;
+  padding: 0 14px 14px !important;
+}
+
+.pmdt-rms-config-power {
+  grid-template-columns: 390px 310px !important;
+  row-gap: 10px !important;
+}
+
+.pmdt-rms-config-power > .pmdt-monitor-date {
+  grid-column: 1 / -1;
+}
+
+.pmdt-rms-config-power > section,
+.pmdt-rms-config-ad > section {
+  min-width: 0;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0 !important;
+}
+
+.pmdt-rms-config-power > section {
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.pmdt-rms-config-power-primary {
+  grid-column: 1;
+  width: 390px;
+}
+
+.pmdt-rms-config-power-primary table {
+  width: 390px;
+}
+
+.pmdt-rms-config-power-primary th:first-child {
+  width: 116px;
+}
+
+.pmdt-rms-config-power-primary th:not(:first-child),
+.pmdt-rms-config-power-primary td {
+  width: 68px;
+}
+
+.pmdt-rms-config-power > section h3,
+.pmdt-rms-config-ad > section h3 {
+  display: none;
+}
+
+.pmdt-rms-config-power-voltage-summary,
+.pmdt-rms-config-power-current-limits {
+  margin-top: 28px;
+}
+
+.pmdt-rms-config-power-voltage-summary {
+  grid-column: 1;
+  width: 390px;
+}
+
+.pmdt-rms-config-power-current-limits {
+  grid-column: 2;
+  width: 310px;
+}
+
+.pmdt-rms-config-power-voltage-summary h3,
+.pmdt-rms-config-power-current-limits h3 {
+  display: block;
+  height: 24px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 3px 0 0;
+  border: 0 !important;
+  background: transparent !important;
+  color: #000 !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  text-align: center;
+}
+
+.pmdt-rms-config-power-voltage-summary table {
+  width: 390px;
+}
+
+.pmdt-rms-config-power-current-limits table {
+  width: 310px;
+}
+
+.pmdt-rms-config-power-voltage-summary th:first-child {
+  width: 116px;
+}
+
+.pmdt-rms-config-power-current-limits th:first-child {
+  width: 92px;
+}
+
+.pmdt-rms-config-power table,
+.pmdt-rms-config-ad table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.pmdt-rms-config-power th,
+.pmdt-rms-config-power td,
+.pmdt-rms-config-ad th,
+.pmdt-rms-config-ad td {
+  height: 22px;
+  padding: 1px 4px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0 !important;
+  color: #000 !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  white-space: nowrap;
+}
+
+.pmdt-rms-config-power thead th,
+.pmdt-rms-config-ad thead th {
+  height: 24px;
+  border-color: transparent !important;
+  background: transparent !important;
+  text-align: center;
+}
+
+.pmdt-rms-config-power tbody th,
+.pmdt-rms-config-ad tbody th {
+  text-align: left;
+}
+
+.pmdt-rms-config-power td input,
+.pmdt-rms-config-ad td input {
+  width: 100% !important;
+  text-align: right;
+}
+
+.pmdt-rms-config-power label,
+.pmdt-rms-config-ad label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pmdt-rms-config-ad {
+  display: block !important;
+}
+
+.pmdt-rms-config-ad > .pmdt-monitor-date {
+  display: block;
+}
+
+.pmdt-rms-config-ad > section {
+  width: 492px;
+  margin-bottom: 8px;
+}
+
+.pmdt-rms-config-ad > section:last-child h3 {
+  display: none;
+}
+
+.pmdt-rms-config-ad-table {
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.pmdt-rms-config-ad-table table {
+  width: 492px;
+}
+
+.pmdt-rms-config-ad-table th:first-child {
+  width: 155px;
+}
+
+.pmdt-rms-config-ad-table th:not(:first-child):not(:last-child),
+.pmdt-rms-config-ad-table td:not(.pmdt-rms-config-unit-cell) {
+  width: 60px;
+}
+
+.pmdt-rms-config-unit-cell {
+  width: 43px;
+  padding-right: 0 !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  text-align: left;
+}
+
+.pmdt-rms-digital-screen {
+  display: grid !important;
+  grid-template-columns: 242px 242px 184px !important;
+  grid-template-rows: auto auto;
+  gap: 12px !important;
+  padding: 0 14px 14px !important;
+}
+
+.pmdt-rms-digital-screen .pmdt-rms-panel {
+  min-width: 0;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0 !important;
+  color: #000 !important;
+}
+
+.pmdt-rms-digital-screen .pmdt-rms-panel--digital-inputs {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.pmdt-rms-digital-screen .pmdt-rms-panel--digital-outputs {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.pmdt-rms-digital-screen .pmdt-rms-panel--system-power-status {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+}
+
+.pmdt-rms-digital-screen .pmdt-rms-panel--transmitter-alerts {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+}
+
+.pmdt-rms-digital-screen .pmdt-rms-panel h3,
+.pmdt-rms-maintenance-screen .pmdt-rms-panel h3 {
+  display: block;
+  width: max-content;
+  margin: -7px 0 4px 7px;
+  padding: 0 3px;
+  background: #f0f0f0 !important;
+  color: #000 !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+}
+
+.pmdt-rms-digital-screen .pmdt-rms-panel table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pmdt-rms-digital-screen .pmdt-rms-panel th,
+.pmdt-rms-digital-screen .pmdt-rms-panel td {
+  height: 22px;
+  padding: 2px 4px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0 !important;
+  color: #000 !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  white-space: nowrap;
+}
+
+.pmdt-rms-digital-screen .pmdt-rms-panel thead th {
+  border-color: transparent !important;
+  background: transparent !important;
+  text-align: center;
+}
+
+.pmdt-rms-digital-screen .pmdt-rms-panel tbody th {
+  text-align: left;
+}
+
+.pmdt-rms-battery-value {
+  display: inline-block;
+  min-width: 52px;
+  margin-right: 0;
+  padding: 1px 4px;
+  background: #00ff00 !important;
+  color: #000 !important;
+  text-align: center;
+}
+
+.pmdt-rms-battery-status {
+  white-space: nowrap;
+}
+
+.pmdt-rms-indicator {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #c5c5c5;
+  font-size: 10px;
+  line-height: 14px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.pmdt-rms-indicator--green {
+  border-color: #00a000;
+  background: #00ff00;
+  color: #000;
+}
+
+.pmdt-rms-indicator--yellow {
+  border-color: #c9a227;
+  background: #ffff00;
+  color: #000;
+}
+
+.pmdt-rms-indicator--red {
+  border-color: #c00000;
+  background: #ff0000;
+  color: #000;
+}
+
+.pmdt-rms-indicator--gray {
+  background: #f0f0f0;
+  color: transparent;
+}
+
+.pmdt-rms-maintenance-screen {
+  display: block !important;
+  padding: 0 14px 14px !important;
+}
+
+.pmdt-rms-maintenance-screen .pmdt-rms-panel {
+  width: 529px;
+  margin-bottom: 12px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0 !important;
+  color: #000 !important;
+}
+
+.pmdt-rms-maintenance-screen .pmdt-rms-general-alert-panel > div {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0 10px;
+  padding: 2px 8px 7px;
+}
+
+.pmdt-rms-maintenance-screen .pmdt-rms-panel label {
+  min-height: 22px;
+  border-bottom: 1px solid #c5c5c5;
+  color: #000 !important;
+  font-size: 10px !important;
+}
+
+.pmdt-rms-maintenance-screen .pmdt-rms-monitor-alert-panel > div {
+  padding: 0 8px 7px;
+}
+
+.pmdt-rms-maintenance-footnote {
+  width: 529px;
+  margin: -3px 0 0;
+  color: #000;
+  font-size: 10px;
+  text-align: center;
+}
+
+.pmdt-rms-maintenance-screen table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pmdt-rms-maintenance-screen th,
+.pmdt-rms-maintenance-screen td {
+  height: 22px;
+  padding: 2px 4px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0 !important;
+  color: #000 !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  white-space: nowrap;
+}
+
+.pmdt-rms-maintenance-screen thead th {
+  border-color: transparent !important;
+  background: transparent !important;
+  text-align: center;
+}
+
+.pmdt-rms-maintenance-screen tbody th {
+  text-align: left;
+}
+
+.pmdt-rms-logs-content {
+  background: #f0f0f0 !important;
+}
+
+.pmdt-rms-log-screen {
+  padding: 10px 14px 14px !important;
+  color: #000 !important;
+}
+
+.pmdt-rms-log-controls {
+  display: grid;
+  width: 694px;
+  grid-template-columns: 74px 1fr 74px;
+  align-items: center;
+  gap: 8px;
+  min-height: 29px;
+  margin-bottom: 5px;
+}
+
+.pmdt-rms-log-controls button {
+  height: 22px;
+  padding: 1px 8px;
+  border: 1px solid #fff;
+  background: #d4d0c8;
+  color: #000;
+  box-shadow: inset -1px -1px #808080, inset 1px 1px #fff;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  font-size: 10px;
+}
+
+.pmdt-rms-log-controls span {
+  text-align: center;
+  font-size: 10px;
+}
+
+.pmdt-rms-log-screen table {
+  width: 694px !important;
+  table-layout: fixed;
+}
+
+.pmdt-rms-log-screen thead th:first-child,
+.pmdt-rms-log-screen tbody td:first-child {
+  width: 106px !important;
+}
+
+.pmdt-rms-log-screen thead th:nth-child(2),
+.pmdt-rms-log-screen tbody td:nth-child(2) {
+  width: 58px !important;
+}
+
+.pmdt-rms-log-screen thead th:nth-child(3),
+.pmdt-rms-log-screen tbody td:nth-child(3) {
+  width: 108px !important;
+}
+
+.pmdt-rms-log-screen thead th:nth-child(4),
+.pmdt-rms-log-screen tbody td:nth-child(4) {
+  width: 45px !important;
+}
+
+.pmdt-rms-log-screen th,
+.pmdt-rms-log-screen td {
+  height: 22px;
+  padding: 2px 5px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0 !important;
+  color: #000 !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  white-space: nowrap;
+}
+
+.pmdt-rms-log-screen thead th {
+  border-color: transparent !important;
+  background: transparent !important;
+  text-align: left;
+}
+
+.pmdt-rms-log-screen tbody td:first-child {
+  width: 106px;
+}
+
+.pmdt-rms-log-screen tbody th,
+.pmdt-rms-log-screen tbody td {
+  text-align: left;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif !important;
+}
+
+.pmdt-rms-operational-summary {
+  display: grid;
+  width: 700px;
+  grid-template-columns: 380px 250px;
+  gap: 20px;
+  padding: 10px 14px 14px;
+  color: #000;
+  font-size: 10px;
+}
+
+.pmdt-rms-operational-summary-left {
+  width: 340px;
+}
+
+.pmdt-rms-operational-table,
+.pmdt-rms-availability-table {
+  width: 340px;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.pmdt-rms-operational-table th,
+.pmdt-rms-operational-table td,
+.pmdt-rms-availability-table th,
+.pmdt-rms-availability-table td {
+  height: 22px;
+  padding: 2px 5px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0;
+  color: #000;
+  font-size: 10px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.pmdt-rms-operational-table thead th {
+  height: 24px;
+  border-color: transparent !important;
+  background: transparent;
+  text-align: center;
+}
+
+.pmdt-rms-operational-table tbody th,
+.pmdt-rms-availability-table th {
+  width: 145px;
+  text-align: left;
+}
+
+.pmdt-rms-operational-table td,
+.pmdt-rms-availability-table td {
+  text-align: right;
+}
+
+.pmdt-rms-operational-table td:last-child,
+.pmdt-rms-availability-table td:last-child {
+  width: 45px;
+  border-right-color: transparent !important;
+  text-align: left;
+}
+
+.pmdt-rms-availability-table {
+  margin-top: 112px;
+}
+
+.pmdt-rms-operational-summary-fields {
+  display: grid;
+  align-content: end;
+  gap: 4px;
+  padding-bottom: 20px;
+}
+
+.pmdt-rms-operational-summary-fields label {
+  display: grid;
+  grid-template-columns: 83px 1fr;
+  align-items: center;
+  gap: 4px;
+  min-height: 22px;
+}
+
+.pmdt-rms-operational-summary-fields output {
+  height: 20px;
+  padding: 2px 4px;
+  border: 1px inset #fff;
+  background: #fff;
+  text-align: left;
+}
+
+.pmdt-rms-operational-summary-fields button {
+  width: 190px;
+  height: 22px;
+  margin-top: 8px;
+  justify-self: start;
+}
+
+.pmdt-rms-log-list table {
+  height: 468px;
+}
+
+.pmdt-rms-log-list th:first-child,
+.pmdt-rms-log-list td:first-child {
+  width: 106px;
+}
+
+.pmdt-rms-log-list th:nth-child(2),
+.pmdt-rms-log-list td:nth-child(2) {
+  width: 58px;
+}
+
+/* Monitor test results and fault history are separate PMDT windows. */
+.pmdt-monitor-inner-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  padding: 2px 4px 0;
+  border-bottom: 1px solid #808080;
+  background: #f0f0f0;
+}
+
+.pmdt-monitor-inner-tabs button {
+  min-height: 23px;
+  padding: 3px 8px;
+  border: 1px solid #a6a6a6;
+  border-bottom: 0;
+  background: #dedede;
+  color: #000;
+  font-size: 10px;
+}
+
+.pmdt-monitor-inner-tabs button[aria-selected="true"] {
+  position: relative;
+  z-index: 1;
+  margin-bottom: -1px;
+  border-color: #808080;
+  background: #fff;
+  font-weight: 700;
+}
+
+.pmdt-monitor-test-content,
+.pmdt-monitor-fault-content {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+  padding: 10px 14px 14px;
+  background: #f0f0f0;
+  color: #000;
+  font-size: 10px;
+}
+
+.pmdt-monitor-test-content > .pmdt-monitor-date {
+  margin-bottom: 8px;
+}
+
+.pmdt-monitor-test-table {
+  width: 640px;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.pmdt-monitor-test-label-col { width: 130px; }
+.pmdt-monitor-test-value-col { width: 63px; }
+.pmdt-monitor-test-spacer-col { width: 39px; }
+.pmdt-monitor-test-unit-col { width: 48px; }
+
+.pmdt-monitor-test-table th,
+.pmdt-monitor-test-table td {
+  height: 22px;
+  padding: 2px 4px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0;
+  color: #000;
+  font-size: 10px;
+  font-weight: 400;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.pmdt-monitor-test-table thead th {
+  height: 24px;
+  border-color: transparent !important;
+  background: transparent;
+  text-align: center;
+}
+
+.pmdt-monitor-test-table tbody th {
+  text-align: left;
+}
+
+.pmdt-monitor-test-table .pmdt-monitor-test-live {
+  background: #00ff00;
+  text-align: center;
+}
+
+.pmdt-monitor-test-table .pmdt-monitor-test-limit {
+  background: #f7f7f7;
+  text-align: center;
+}
+
+.pmdt-monitor-test-table .pmdt-monitor-test-spacer {
+  border-color: transparent !important;
+  background: transparent;
+}
+
+.pmdt-monitor-test-table .pmdt-monitor-test-unit {
+  border-right-color: transparent !important;
+  text-align: left;
+}
+
+.pmdt-monitor-test-generator {
+  display: grid;
+  width: 430px;
+  grid-template-columns: 268px 123px;
+  gap: 32px;
+}
+
+.pmdt-monitor-test-generator fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 7px 8px 8px;
+  border: 1px solid #c5c5c5;
+  background: #f0f0f0;
+}
+
+.pmdt-monitor-test-generator legend {
+  padding: 0 3px;
+}
+
+.pmdt-monitor-test-generator .pmdt-monitor-date {
+  display: block;
+  width: max-content;
+  margin: 0 0 6px;
+}
+
+.pmdt-monitor-test-generator table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pmdt-monitor-test-generator th,
+.pmdt-monitor-test-generator td {
+  height: 22px;
+  padding: 2px 4px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0;
+  color: #000;
+  font-size: 10px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.pmdt-monitor-test-generator th {
+  text-align: left;
+}
+
+.pmdt-monitor-test-generator td:last-child {
+  border-right-color: transparent !important;
+}
+
+.pmdt-monitor-test-generator input {
+  box-sizing: border-box;
+  width: 60px;
+  height: 20px;
+  padding: 1px 3px;
+  border: 1px inset #fff;
+  background: #fff;
+  color: #000;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  font-size: 10px;
+  text-align: right;
+}
+
+.pmdt-monitor-test-updated {
+  display: block;
+  height: 22px;
+  margin-bottom: 3px;
+  padding: 3px 5px;
+  background: #00ff00;
+  color: #000;
+  text-align: center;
+}
+
+.pmdt-monitor-fault-history-header {
+  display: grid;
+  width: 694px;
+  grid-template-columns: 154px 180px 154px 180px 80px;
+  align-items: end;
+  min-height: 53px;
+}
+
+.pmdt-monitor-fault-history-header time {
+  width: max-content;
+  margin: 0 auto 5px;
+  padding: 3px 5px;
+  border: 1px solid #d0d0d0;
+  background: #fff;
+}
+
+.pmdt-monitor-fault-history-header span {
+  grid-row: 2;
+  text-align: center;
+}
+
+.pmdt-monitor-fault-history-header time:first-child { grid-column: 1; }
+.pmdt-monitor-fault-history-header span:nth-of-type(1) { grid-column: 2; }
+.pmdt-monitor-fault-history-header time:nth-of-type(2) { grid-column: 3; }
+.pmdt-monitor-fault-history-header span:nth-of-type(2) { grid-column: 4; }
+
+.pmdt-monitor-fault-history-header button {
+  grid-column: 5;
+  grid-row: 1 / span 2;
+  width: 74px;
+  height: 22px;
+  margin-bottom: 4px;
+}
+
+.pmdt-monitor-fault-table {
+  width: 694px;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.pmdt-monitor-fault-label { width: 164px; }
+.pmdt-monitor-fault-value { width: 160px; }
+.pmdt-monitor-fault-unit { width: 36px; }
+
+.pmdt-monitor-fault-table th,
+.pmdt-monitor-fault-table td,
+.pmdt-monitor-fault-lcu-table th,
+.pmdt-monitor-fault-lcu-table td {
+  height: 22px;
+  padding: 2px 5px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0;
+  color: #000;
+  font-size: 10px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.pmdt-monitor-fault-table thead th,
+.pmdt-monitor-fault-lcu-table thead th {
+  height: 24px;
+  border-color: transparent !important;
+  background: transparent;
+  text-align: center;
+}
+
+.pmdt-monitor-fault-table tbody th,
+.pmdt-monitor-fault-lcu-table tbody th {
+  text-align: left;
+}
+
+.pmdt-monitor-fault-table td {
+  text-align: center;
+}
+
+.pmdt-monitor-fault-table td:last-child {
+  border-right-color: transparent !important;
+  text-align: left;
+}
+
+.pmdt-monitor-fault-live {
+  background: #00ff00 !important;
+}
+
+.pmdt-monitor-fault-live--red {
+  background: #ff0000 !important;
+}
+
+.pmdt-monitor-fault-mark {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #c8c8c8;
+  background: #f7f7f7;
+  color: transparent;
+  font-size: 10px;
+  line-height: 14px;
+  text-align: center;
+}
+
+.pmdt-monitor-fault-mark--green {
+  border-color: #00a000;
+  background: #00ff00;
+  color: #000;
+}
+
+.pmdt-monitor-fault-mark--red {
+  border-color: #c00000;
+  background: #ff0000;
+  color: #000;
+}
+
+.pmdt-monitor-fault-lcu-table {
+  width: 580px;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.pmdt-monitor-fault-lcu-table thead th:first-child { width: 126px; }
+.pmdt-monitor-fault-lcu-table thead th:not(:first-child) { width: 151px; }
+.pmdt-monitor-fault-lcu-table thead time,
+.pmdt-monitor-fault-lcu-table thead span {
+  display: block;
+  font-weight: 400;
+}
+
+.pmdt-monitor-fault-lcu-table thead time {
+  width: max-content;
+  margin: 0 auto 3px;
+  padding: 3px 5px;
+  border: 1px solid #d0d0d0;
+  background: #fff;
+}
+
+.pmdt-monitor-fault-lcu-table td {
+  text-align: center;
+}
+
+.pmdt-monitor-fault-lcu-table .pmdt-monitor-fault-subheader td {
+  border-top-color: transparent !important;
+  border-bottom-color: transparent !important;
+  background: transparent;
+}
+
+.pmdt-monitor-fault-transmitters {
+  width: 580px;
+  margin: 12px 0 0;
+  padding: 7px 8px 8px;
+  border: 1px solid #c5c5c5;
+  background: #f0f0f0;
+}
+
+.pmdt-monitor-fault-transmitters table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.pmdt-monitor-fault-transmitters th,
+.pmdt-monitor-fault-transmitters td {
+  height: 22px;
+  padding: 2px 4px;
+  border: 1px solid #c5c5c5 !important;
+  background: #f0f0f0;
+  text-align: center;
+}
+
+.pmdt-monitor-fault-transmitters tbody th {
+  width: 126px;
+  text-align: left;
+}
+
+/* Content panes sit inside the light-grey PMDT workspace, as in the
+ * reference screenshots. */
+.pmdt-classic-window :is(
+  .pmdt-rms-data-content,
+  .pmdt-rms-logs-content,
+  .pmdt-rms-config-content,
+  .pmdt-rms-status-content,
+  .pmdt-monitor-data-content,
+  .pmdt-monitor-config-content,
+  .pmdt-monitor-offsets-content,
+  .pmdt-tx-data-content,
+  .pmdt-tx-config-content,
+  .pmdt-diagnostics-content
+) {
+  background: #fff !important;
+  margin-bottom: 29px;
+}
+
+.pmdt-classic-window .pmdt-rms-data-content > .pmdt-monitor-date {
+  margin: 12px 0 16px 14px;
+}
+
+.pmdt-classic-window .pmdt-rms-general-alert-panel > .pmdt-rms-general-alert-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  padding: 3px 8px 5px;
+}
+
+.pmdt-classic-window .pmdt-rms-general-alert-column {
+  display: grid;
+  grid-auto-rows: 23px;
+}
+
+.pmdt-classic-window .pmdt-rms-general-alert-row {
+  display: flex;
+  min-width: 0;
+  min-height: 23px;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 4px;
+  border: 0;
+  border-bottom: 1px solid #c5c5c5;
+  color: #000;
+  cursor: default;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.pmdt-classic-window .pmdt-rms-general-alert-row input {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  margin: 0;
+}
+
+.pmdt-classic-window .pmdt-rms-general-alert-panel {
+  margin-bottom: 23px;
+}
+
+.pmdt-classic-window .pmdt-rms-status-tabbar {
+  padding: 7px 12px 0 16px !important;
+}
+
+.pmdt-classic-window .pmdt-rms-status-content > .pmdt-monitor-date {
+  margin: 12px 0 10px 14px;
+}
+
+.pmdt-classic-window .pmdt-rms-status-vor > fieldset {
+  padding: 7px 15px 8px 11px;
+}
+
+.pmdt-classic-window .pmdt-rms-status-vor > fieldset:first-of-type .pmdt-rms-status-level-row,
+.pmdt-classic-window .pmdt-rms-status-vor > fieldset:first-of-type .pmdt-rms-status-row {
+  min-height: 24.25px;
+}
+
+.pmdt-classic-window .pmdt-rms-status-vor > fieldset:nth-of-type(2) .pmdt-rms-status-row {
+  min-height: 23.5px;
+}
+
+.pmdt-classic-window .pmdt-rms-status-vor .pmdt-rms-status-level-row {
+  grid-template-columns: minmax(0, 1fr) 82px;
+}
+
+.pmdt-classic-window .pmdt-rms-status-vor .pmdt-rms-status-row {
+  padding-left: 1px;
+}
+
+.pmdt-classic-window .pmdt-monitor-tabbar[role="tablist"] {
+  padding: 7px 12px 0 16px !important;
+}
+
+.pmdt-classic-window .pmdt-monitor-offsets-tabbar[role="tablist"] {
+  padding-top: 8px !important;
+}
+
+.pmdt-classic-window .pmdt-monitor-all-integral {
+  padding: 10px 14px;
+}
+
+.pmdt-classic-window .pmdt-monitor-all-integral table {
+  width: 655px;
+  height: 384px;
+  table-layout: fixed;
+  background: #fff;
+}
+
+.pmdt-classic-window .pmdt-monitor-all-label {
+  width: 24.75%;
+}
+
+.pmdt-classic-window .pmdt-monitor-all-value {
+  width: 30%;
+}
+
+.pmdt-classic-window .pmdt-monitor-all-gap {
+  width: 4.4%;
+}
+
+.pmdt-classic-window .pmdt-monitor-all-unit {
+  width: 10.85%;
+}
+
+.pmdt-classic-window .pmdt-monitor-all-integral th,
+.pmdt-classic-window .pmdt-monitor-all-integral td {
+  height: 23px;
+  padding: 2px 5px;
+  border-color: #c5c5c5 !important;
+  background: #fff;
+  color: #000;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.pmdt-classic-window .pmdt-monitor-all-integral thead {
+  height: 58px;
+}
+
+.pmdt-classic-window .pmdt-monitor-all-integral thead th {
+  position: relative;
+  height: 58px;
+  border-color: transparent !important;
+  background: transparent !important;
+  text-align: center;
+  vertical-align: top;
+}
+
+.pmdt-classic-window .pmdt-monitor-all-integral thead th:nth-child(2)::after,
+.pmdt-classic-window .pmdt-monitor-all-integral thead th:nth-child(4)::after {
+  position: absolute;
+  z-index: 0;
+  top: 32px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  border: 1px solid #d0d0d0;
+  border-bottom: 0;
+  content: "";
+}
+
+.pmdt-classic-window .pmdt-monitor-all-integral thead th time,
+.pmdt-classic-window .pmdt-monitor-all-integral thead th span {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  display: block;
+  width: 100%;
+}
+
+.pmdt-classic-window .pmdt-monitor-all-integral thead th time {
+  top: 2px;
+  left: 50%;
+  width: 102px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 3px 5px;
+  transform: translateX(-50%);
+  border: 1px solid #d0d0d0;
+  background: #fff;
+  font-size: 10px;
+  text-align: center;
+}
+
+.pmdt-classic-window .pmdt-monitor-all-integral thead th span {
+  top: 30px;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.pmdt-classic-window .pmdt-monitor-all-integral tbody th {
+  text-align: left;
+}
+
+.pmdt-classic-window .pmdt-monitor-all-integral tbody td {
+  text-align: center;
+}
+
+.pmdt-classic-window .pmdt-monitor-all-integral tbody td.pmdt-monitor-all-gap {
+  border-right-color: transparent !important;
+  border-left-color: transparent !important;
+}
+
+.pmdt-classic-window .pmdt-monitor-all-integral tbody td:nth-child(2),
+.pmdt-classic-window .pmdt-monitor-all-integral tbody td:nth-child(4) {
+  border-right-color: #d0d0d0 !important;
+  border-left-color: #d0d0d0 !important;
+}
+
+.pmdt-classic-window .pmdt-monitor-current-value {
+  display: inline-block;
+  min-width: 50px;
+  padding: 2px 5px;
+  text-align: center;
+}
+
+.pmdt-classic-window .pmdt-monitor-current-value--wide {
+  min-width: 70px;
+}
+
+.pmdt-classic-window .pmdt-monitor-current-value--frequency {
+  min-width: 100px;
+}
+
+.pmdt-classic-window .pmdt-monitor-all-integral tbody tr.pmdt-monitor-integral-break th,
+.pmdt-classic-window .pmdt-monitor-all-integral tbody tr.pmdt-monitor-integral-break td {
+  height: 36px;
+}
+
+.pmdt-classic-window .pmdt-monitor-all-integral tbody tr.pmdt-monitor-integral-spacer td {
+  height: 60px;
+  border-top-color: transparent !important;
+}
+
+.pmdt-classic-window .pmdt-monitor-date {
+  margin-left: 0;
+}
+
+.pmdt-classic-window .pmdt-monitor-integral > .pmdt-monitor-date {
+  margin-bottom: 4px;
+}
+
+.pmdt-classic-window .pmdt-monitor-integral-table {
+  width: 710px;
+  max-width: none;
+}
+
+.pmdt-classic-window .pmdt-monitor-integral-col-label { width: 129px; }
+.pmdt-classic-window .pmdt-monitor-integral-col-range { width: 84px; }
+.pmdt-classic-window .pmdt-monitor-integral-col-data { width: 188px; }
+.pmdt-classic-window .pmdt-monitor-integral-col-unit { width: 57px; }
+
+.pmdt-classic-window .pmdt-monitor-integral-table .pmdt-monitor-value-cell {
+  text-align: center;
+}
+
+.pmdt-classic-window .pmdt-monitor-integral-table th,
+.pmdt-classic-window .pmdt-monitor-integral-table td {
+  height: 23px;
+}
+
+.pmdt-classic-window .pmdt-monitor-integral-table tbody tr.pmdt-monitor-integral-azimuth-gap td {
+  height: 45px;
+  padding: 0;
+  border-color: transparent !important;
+  background: #f0f0f0;
+}
+
+.pmdt-classic-window .pmdt-monitor-integral-table tbody tr.pmdt-monitor-integral-tx-gap td {
+  height: 9px;
+  padding: 0;
+  border-color: transparent !important;
+  background: #f0f0f0;
+}
+
+/* The supplied Notch capture uses compact 20px rows and narrow, recessed
+ * value boxes rather than full-width white inputs. */
+.pmdt-classic-window .pmdt-notch-toolbar {
+  width: 689px;
+  grid-template-columns: 106px 1fr 90px 107px;
+}
+
+.pmdt-classic-window .pmdt-notch-toolbar button {
+  width: 90px;
+}
+
+.pmdt-classic-window .pmdt-notch-toolbar .pmdt-monitor-date {
+  width: 107px;
+  margin-left: -5px;
+}
+
+.pmdt-classic-window .pmdt-notch-columns {
+  width: 698px;
+  grid-template-columns: repeat(3, 224px);
+  gap: 13px;
+  margin-top: 15px;
+}
+
+.pmdt-classic-window .pmdt-notch-columns table {
+  width: 224px;
+}
+
+.pmdt-classic-window .pmdt-notch-columns .pmdt-notch-antenna-col {
+  width: 53px;
+}
+
+.pmdt-classic-window .pmdt-notch-columns .pmdt-notch-value-col {
+  width: 57px;
+}
+
+.pmdt-classic-window .pmdt-notch-columns thead th {
+  height: 13px;
+  border: 1px solid #b5b5b5 !important;
+  background: #fff;
+}
+
+.pmdt-classic-window .pmdt-notch-columns th,
+.pmdt-classic-window .pmdt-notch-columns td {
+  height: 18px;
+  padding: 1px 3px;
+  background: #fff;
+}
+
+.pmdt-classic-window .pmdt-notch-columns td input {
+  position: relative;
+  left: 1px;
+  top: -1px;
+  width: 35px;
+  height: 16.75px;
+  background: #f0f0f0;
+}
+
+.pmdt-classic-window .pmdt-notch-columns tbody td {
+  text-align: center;
+}
+
+/* VSWR values are small status readouts inset inside white table cells in
+ * the reference client. */
+.pmdt-classic-window .pmdt-vswr-columns thead th {
+  height: 13px;
+  border: 1px solid #b5b5b5 !important;
+  background: #fff;
+}
+
+.pmdt-classic-window .pmdt-vswr-columns th,
+.pmdt-classic-window .pmdt-vswr-columns td {
+  height: 18px;
+  padding: 1px 4px;
+  background: #fff;
+}
+
+.pmdt-classic-window .pmdt-vswr-columns tbody td {
+  text-align: center;
+}
+
+.pmdt-classic-window .pmdt-vswr-columns {
+  margin-top: 16px;
+}
+
+.pmdt-classic-window .pmdt-vswr-columns tbody td > span {
+  display: inline-block;
+  position: relative;
+  left: 1px;
+  top: -1px;
+  width: 35px;
+  height: 16.5px;
+  box-sizing: border-box;
+  border: 1px inset #fff;
+  padding: 1px 3px;
+  line-height: 13px;
+  text-align: right;
+}
+
+.pmdt-classic-window .pmdt-vswr-columns tbody tr.pmdt-vswr-bottom-spacer td {
+  height: 4px;
+  padding: 0;
+  border-top-color: transparent !important;
+  border-bottom-color: #b5b5b5 !important;
+  background: #fff;
+}
+
+.pmdt-classic-window .pmdt-monitor-config,
+.pmdt-classic-window .pmdt-monitor-routing {
+  padding-top: 12px;
+}
+
+.pmdt-classic-window .pmdt-monitor-config > .pmdt-monitor-date,
+.pmdt-classic-window .pmdt-monitor-routing > .pmdt-monitor-date {
+  margin-bottom: 5px;
+}
+
+.pmdt-classic-window .pmdt-monitor-routing fieldset {
+  min-height: 312px;
+}
+
+.pmdt-classic-window .pmdt-alarm-limit-summary {
+  width: 626px;
+  margin-top: -22px;
+  margin-bottom: 12px;
+}
+
+.pmdt-classic-window .pmdt-alarm-limit-summary th,
+.pmdt-classic-window .pmdt-alarm-limit-summary td {
+  height: 21px;
+  padding: 0 4px;
+}
+
+.pmdt-classic-window .pmdt-alarm-limit-summary thead th {
+  height: 27px;
+}
+
+.pmdt-classic-window .pmdt-alarm-limit-table {
+  width: 626px;
+}
+
+.pmdt-classic-window .pmdt-alarm-limit-table th,
+.pmdt-classic-window .pmdt-alarm-limit-table td {
+  height: 21px;
+  padding: 0 4px;
+}
+
+.pmdt-classic-window .pmdt-alarm-limits-bottom {
+  width: 650px;
+  grid-template-columns: 267px 1fr;
+  gap: 9px;
+  margin-top: 19px;
+}
+
+.pmdt-classic-window .pmdt-alarm-limit-table tbody tr:nth-last-child(2) th,
+.pmdt-classic-window .pmdt-alarm-limit-table tbody tr:nth-last-child(2) td {
+  height: 36px;
+}
+
+/* Tx layouts use the same inset tab strip and timestamp rhythm as the RMS
+ * screens in the supplied client captures. */
+.pmdt-classic-window .pmdt-tx-tabbar[role="tablist"] {
+  padding: 7px 12px 0 16px !important;
+}
+
+.pmdt-classic-window .pmdt-tx-data > .pmdt-monitor-date,
+.pmdt-classic-window .pmdt-tx-config-nominal > .pmdt-monitor-date,
+.pmdt-classic-window .pmdt-tx-offsets > .pmdt-monitor-date,
+.pmdt-classic-window .pmdt-tx-status > .pmdt-monitor-date {
+  margin-left: 0;
+}
+
+.pmdt-classic-window .pmdt-tx-data > .pmdt-monitor-date {
+  margin-bottom: 24px;
+}
+
+.pmdt-classic-window .pmdt-tx-config-nominal > .pmdt-monitor-date {
+  margin-bottom: 16px;
+}
+
+.pmdt-classic-window .pmdt-tx-config-nominal,
+.pmdt-classic-window .pmdt-tx-data {
+  padding-top: 12px;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel {
+  padding-bottom: 4px;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel table {
+  position: relative;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel thead {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 0;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel thead tr {
+  position: absolute;
+  top: -26px;
+  left: 0;
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel thead th {
+  height: 22px;
+  padding: 2px 7px;
+  border: 1px solid #d0d0d0 !important;
+  background: #f0f0f0 !important;
+  color: #000 !important;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel thead th:first-child,
+.pmdt-classic-window .pmdt-tx-data-panel thead th:last-child {
+  border-color: transparent !important;
+  background: transparent !important;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel:nth-of-type(1) thead th:nth-child(1) {
+  width: 35.45%;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel:nth-of-type(1) thead th:nth-child(2),
+.pmdt-classic-window .pmdt-tx-data-panel:nth-of-type(1) thead th:nth-child(3) {
+  width: 22.35%;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel:nth-of-type(1) thead th:nth-child(4) {
+  width: 19.85%;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel:nth-of-type(2) thead th:nth-child(1) {
+  width: 41.30%;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel:nth-of-type(2) thead th:nth-child(2) {
+  width: 25.00%;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel:nth-of-type(2) thead th:nth-child(3) {
+  width: 20.20%;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel:nth-of-type(2) thead th:nth-child(4) {
+  width: 13.50%;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel tbody th,
+.pmdt-classic-window .pmdt-tx-data-panel tbody td {
+  height: 23px;
+}
+
+/* RMS Data voltage/temperature tables use the compact, fixed-width grids from
+ * the PMDT reference client.  These overrides intentionally stay scoped to
+ * the read-only display screens; editable configuration controls keep their
+ * own dimensions. */
+.pmdt-classic-window .pmdt-rms-power-screen,
+.pmdt-classic-window .pmdt-rms-temperature-screen,
+.pmdt-classic-window .pmdt-rms-ad-screen {
+  margin-top: -11px;
+}
+
+.pmdt-classic-window .pmdt-rms-power-grid > .pmdt-rms-flat-panel {
+  width: 100%;
+}
+
+.pmdt-classic-window .pmdt-rms-power-screen .pmdt-rms-flat-panel:nth-child(2) {
+  margin-top: 176px;
+}
+
+.pmdt-classic-window .pmdt-rms-power-screen > section:last-child {
+  margin-top: 12px;
+}
+
+.pmdt-classic-window .pmdt-rms-power-screen .pmdt-rms-flat-panel th,
+.pmdt-classic-window .pmdt-rms-power-screen .pmdt-rms-flat-panel td,
+.pmdt-classic-window .pmdt-rms-temperature-screen .pmdt-rms-flat-panel th,
+.pmdt-classic-window .pmdt-rms-temperature-screen .pmdt-rms-flat-panel td,
+.pmdt-classic-window .pmdt-rms-ad-screen .pmdt-rms-flat-panel th,
+.pmdt-classic-window .pmdt-rms-ad-screen .pmdt-rms-flat-panel td {
+  height: 19.5px;
+  background: #fff !important;
+}
+
+.pmdt-classic-window .pmdt-rms-power-screen .pmdt-rms-flat-panel thead th,
+.pmdt-classic-window .pmdt-rms-temperature-screen .pmdt-rms-flat-panel thead th,
+.pmdt-classic-window .pmdt-rms-ad-screen .pmdt-rms-flat-panel thead th {
+  height: 19px;
+  border-color: transparent !important;
+  background: #fff !important;
+}
+
+.pmdt-classic-window .pmdt-rms-power-screen .pmdt-rms-flat-panel table,
+.pmdt-classic-window .pmdt-rms-temperature-screen .pmdt-rms-flat-panel table,
+.pmdt-classic-window .pmdt-rms-ad-screen .pmdt-rms-flat-panel table {
+  table-layout: fixed;
+}
+
+.pmdt-classic-window .pmdt-rms-temperature-screen .pmdt-rms-flat-panel table,
+.pmdt-classic-window .pmdt-rms-ad-screen .pmdt-rms-flat-panel table {
+  width: 425px !important;
+}
+
+.pmdt-classic-window .pmdt-rms-temperature-screen .pmdt-rms-flat-panel th:first-child,
+.pmdt-classic-window .pmdt-rms-ad-screen .pmdt-rms-flat-panel th:first-child {
+  width: 129px;
+}
+
+.pmdt-classic-window .pmdt-rms-temperature-screen .pmdt-rms-flat-panel th:nth-child(2),
+.pmdt-classic-window .pmdt-rms-temperature-screen .pmdt-rms-flat-panel th:nth-child(3),
+.pmdt-classic-window .pmdt-rms-temperature-screen .pmdt-rms-flat-panel th:nth-child(4),
+.pmdt-classic-window .pmdt-rms-temperature-screen .pmdt-rms-flat-panel th:nth-child(5),
+.pmdt-classic-window .pmdt-rms-ad-screen .pmdt-rms-flat-panel th:nth-child(2),
+.pmdt-classic-window .pmdt-rms-ad-screen .pmdt-rms-flat-panel th:nth-child(3),
+.pmdt-classic-window .pmdt-rms-ad-screen .pmdt-rms-flat-panel th:nth-child(4),
+.pmdt-classic-window .pmdt-rms-ad-screen .pmdt-rms-flat-panel th:nth-child(5) {
+  width: 60px;
+}
+
+.pmdt-classic-window .pmdt-rms-power-screen [data-vor-field-id$=".volts"],
+.pmdt-classic-window .pmdt-rms-power-screen [data-vor-field-id$=".amps"],
+.pmdt-classic-window .pmdt-rms-temperature-screen [data-vor-field-id$=".value"],
+.pmdt-classic-window .pmdt-rms-ad-screen [data-vor-field-id$=".volts"] {
+  background: #f0f0f0 !important;
+  color: #000 !important;
+  box-shadow: inset 1px 1px #fff, inset -1px -1px #808080;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen {
+  margin-top: -3px;
+  padding-left: 12px !important;
+  grid-template-columns: 242px 243px 189px !important;
+  row-gap: 11px !important;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel > table {
+  margin-top: -11px;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel th,
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel td {
+  height: 19.5px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  background: #fff !important;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel th {
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel thead th {
+  height: 19px;
+  border-color: transparent !important;
+  background: #fff !important;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--digital-inputs {
+  padding-bottom: 8px;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--digital-outputs {
+  min-height: 126px;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--system-power-status {
+  min-height: 327px;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-spacer td {
+  height: 19.5px !important;
+  padding: 0 !important;
+  border-color: transparent !important;
+  background: #fff !important;
+}
+
+/* Monitor test results have a white inset work area and tall, empty column
+ * rails in the original PMDT client. */
+.pmdt-classic-window .pmdt-monitor-test-content,
+.pmdt-classic-window .pmdt-monitor-fault-content {
+  position: relative;
+  min-height: 0;
+  flex: 1;
+  box-sizing: border-box;
+  margin: 5px 20px 29px 12px;
+  overflow: hidden;
+  border: 1px solid #d0d0d0;
+  padding: 12px 14px 14px;
+  background: #fff;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-content > .pmdt-monitor-date {
+  display: block;
+  margin: 0 0 10px;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-table-wrap {
+  position: relative;
+  width: 608px;
+  margin-left: 8px;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-table {
+  position: relative;
+  z-index: 1;
+  width: 608px;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-label-col { width: 121px; }
+.pmdt-classic-window .pmdt-monitor-test-value-col { width: 62px; }
+.pmdt-classic-window .pmdt-monitor-test-gap-col { width: 7px; }
+.pmdt-classic-window .pmdt-monitor-test-spacer-col { width: 42px; }
+.pmdt-classic-window .pmdt-monitor-test-unit-col { width: 44px; }
+
+.pmdt-classic-window .pmdt-monitor-test-table th,
+.pmdt-classic-window .pmdt-monitor-test-table td {
+  height: 22px;
+  box-sizing: border-box;
+  padding: 1px 4px;
+  border: 1px solid #c5c5c5 !important;
+  background: #fff;
+  color: #000;
+  font-size: 10px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-table thead th {
+  height: 30px;
+  border-color: transparent !important;
+  background: transparent;
+  text-align: center;
+  vertical-align: bottom;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-table tbody th {
+  text-align: left;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-table .pmdt-monitor-test-gap,
+.pmdt-classic-window .pmdt-monitor-test-table .pmdt-monitor-test-spacer {
+  border-color: transparent !important;
+  background: transparent;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-table .pmdt-monitor-test-live,
+.pmdt-classic-window .pmdt-monitor-test-table .pmdt-monitor-test-limit {
+  padding: 1px 0;
+  text-align: center;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-table .pmdt-monitor-test-live > span,
+.pmdt-classic-window .pmdt-monitor-test-table .pmdt-monitor-test-limit > span {
+  display: inline-flex;
+  width: 44px;
+  height: 19px;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 2px;
+  color: #000;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-table .pmdt-monitor-test-live > span {
+  background: #00ff00;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-table .pmdt-monitor-test-limit > span {
+  border: 1px inset #fff;
+  background: #f0f0f0;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-table .pmdt-monitor-test-unit {
+  border-right-color: transparent !important;
+  text-align: left;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-rails {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  width: 608px;
+  height: 316px;
+  pointer-events: none;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-rails span {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 316px;
+  background: #c5c5c5;
+}
+
+/* Fault history uses two wide value panes with the alarm timestamps aligned
+ * over their centers. */
+.pmdt-classic-window .pmdt-monitor-fault-history-header {
+  position: relative;
+  display: block;
+  width: 654px;
+  height: 32px;
+  min-height: 32px;
+}
+
+.pmdt-classic-window .pmdt-monitor-fault-history-header time {
+  position: absolute;
+  top: 0;
+  margin: 0;
+}
+
+.pmdt-classic-window .pmdt-monitor-fault-history-header time:first-child {
+  left: 208px;
+}
+
+.pmdt-classic-window .pmdt-monitor-fault-history-header time:nth-of-type(2) {
+  left: 435px;
+}
+
+.pmdt-classic-window .pmdt-monitor-fault-history-header span {
+  position: absolute;
+  top: 28px;
+  display: block;
+  text-align: center;
+}
+
+.pmdt-classic-window .pmdt-monitor-fault-history-header span:nth-of-type(1) {
+  left: 163px;
+  width: 196px;
+}
+
+.pmdt-classic-window .pmdt-monitor-fault-history-header span:nth-of-type(2) {
+  left: 387px;
+  width: 198px;
+}
+
+.pmdt-classic-window .pmdt-monitor-fault-history-header button {
+  position: absolute;
+  top: -2px;
+  left: 580px;
+  width: 72px;
+  height: 22px;
+  margin: 0;
+}
+
+.pmdt-classic-window .pmdt-monitor-fault-table {
+  width: 654px;
+}
+
+.pmdt-classic-window .pmdt-monitor-fault-label { width: 163px; }
+.pmdt-classic-window .pmdt-monitor-fault-value { width: 196px; }
+.pmdt-classic-window .pmdt-monitor-fault-unit { width: 28px; }
+.pmdt-classic-window .pmdt-monitor-fault-table col:nth-child(4) { width: 198px; }
+.pmdt-classic-window .pmdt-monitor-fault-table col:nth-child(5) { width: 69px; }
+
+.pmdt-classic-window .pmdt-monitor-fault-table thead th {
+  color: transparent;
+}
+
+.pmdt-classic-window .pmdt-monitor-fault-live {
+  background: #fff !important;
+  text-align: center;
+}
+
+.pmdt-classic-window .pmdt-monitor-fault-live > span {
+  display: inline-flex;
+  width: 52px;
+  height: 19px;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 2px;
+  background: #00ff00;
+  color: #000;
+}
+
+.pmdt-classic-window .pmdt-monitor-fault-live--red > span {
+  background: #ff0000;
+}
+
+.pmdt-classic-window .pmdt-monitor-fault-table th,
+.pmdt-classic-window .pmdt-monitor-fault-table td {
+  box-sizing: border-box;
+  height: 22px;
+}
+
+.pmdt-classic-window .pmdt-monitor-fault-table tr.pmdt-monitor-fault-spacer td {
+  height: 22px;
+  padding: 0;
+  border-color: transparent !important;
+  background: transparent !important;
+}
+
+.pmdt-classic-window .pmdt-monitor-fault-table tr.pmdt-monitor-fault-spacer--sideband td {
+  height: 34px;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-generator {
+  height: 249px;
+  margin-top: 18px;
+  grid-template-columns: 268px 120px;
+  gap: 33px;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-generator fieldset {
+  height: 249px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-generator .pmdt-monitor-date {
+  margin-bottom: 15px;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-generator fieldset:first-child table {
+  table-layout: fixed;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-generator fieldset:first-child table th {
+  width: 121px;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-generator fieldset:first-child table td:nth-child(2) {
+  width: 87px;
+  padding-left: 0;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-generator fieldset:first-child table td:nth-child(3) {
+  width: 42px;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-generator input[type="number"] {
+  background: #f0f0f0;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-generator select {
+  box-sizing: border-box;
+  width: 128px;
+  height: 20px;
+  padding: 1px 3px;
+  border: 1px inset #fff;
+  border-radius: 0;
+  background: #f0f0f0;
+  color: #000;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  font-size: 10px;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-generator fieldset:nth-child(2) table {
+  width: 127px;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-generator fieldset:nth-child(2) table th {
+  width: 72px;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-generator fieldset:nth-child(2) table td:nth-child(2) {
+  width: 35px;
+}
+
+.pmdt-classic-window .pmdt-monitor-test-generator fieldset:nth-child(2) table td:last-child {
+  width: 20px;
+}
+
+/* The Logs and Configuration tab strips occupy the same 28 px band as the
+ * other RMS pages in the reference client. */
+.pmdt-classic-window .pmdt-rms-logs-layout > .pmdt-rms-tabbar,
+.pmdt-classic-window .pmdt-rms-config > [role="tablist"] {
+  min-height: 28px;
+  padding: 7px 12px 0 16px !important;
+}
+
+.pmdt-classic-window .pmdt-rms-operational-summary-left,
+.pmdt-classic-window .pmdt-rms-operational-table,
+.pmdt-classic-window .pmdt-rms-availability-table {
+  width: 374px;
+}
+
+.pmdt-classic-window .pmdt-rms-operational-table th:first-child,
+.pmdt-classic-window .pmdt-rms-availability-table th:first-child {
+  width: 139px;
+}
+
+.pmdt-classic-window .pmdt-rms-operational-table th:nth-child(2),
+.pmdt-classic-window .pmdt-rms-operational-table td:nth-child(2),
+.pmdt-classic-window .pmdt-rms-availability-table td:nth-child(2) {
+  width: 82px;
+}
+
+.pmdt-classic-window .pmdt-rms-operational-table th:nth-child(3),
+.pmdt-classic-window .pmdt-rms-operational-table td:nth-child(3),
+.pmdt-classic-window .pmdt-rms-availability-table td:nth-child(3) {
+  width: 84px;
+}
+
+.pmdt-classic-window .pmdt-rms-operational-table th:last-child,
+.pmdt-classic-window .pmdt-rms-operational-table td:last-child,
+.pmdt-classic-window .pmdt-rms-availability-table td:last-child {
+  width: 69px;
+}
+
+.pmdt-classic-window .pmdt-rms-availability-table {
+  margin-top: 115px;
+}
+
+.pmdt-classic-window .pmdt-rms-operational-summary-fields {
+  transform: translateY(45px);
+}
+
+.pmdt-classic-window .pmdt-rms-operational-summary-fields label {
+  min-height: 20px;
+  grid-template-columns: 81px 1fr;
+}
+
+.pmdt-classic-window .pmdt-rms-operational-summary-fields button {
+  margin-top: 5px;
+}
+
+.pmdt-classic-window .pmdt-rms-config-general {
+  grid-template-columns: 257px 356px !important;
+  column-gap: 29px !important;
+}
+
+.pmdt-classic-window .pmdt-rms-config-general > div:first-of-type {
+  gap: 0;
+}
+
+.pmdt-classic-window .pmdt-rms-config-general > div:first-of-type > .pmdt-rms-config-fieldset:nth-child(1) {
+  height: 118px;
+  box-sizing: border-box;
+}
+
+.pmdt-classic-window .pmdt-rms-config-general > div:first-of-type > .pmdt-rms-config-fieldset:nth-child(2) {
+  height: 97px;
+  margin-top: 10px;
+  box-sizing: border-box;
+}
+
+.pmdt-classic-window .pmdt-rms-config-general > div:first-of-type > .pmdt-rms-config-fieldset:nth-child(3) {
+  height: 75px;
+  margin-top: 15px;
+  box-sizing: border-box;
+}
+
+.pmdt-classic-window .pmdt-rms-config-general > div:first-of-type > .grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 9px;
+}
+
+.pmdt-classic-window .pmdt-rms-config-general > div:first-of-type > .grid > .pmdt-rms-config-fieldset {
+  width: 257px;
+  box-sizing: border-box;
+}
+
+.pmdt-classic-window .pmdt-rms-config-general > div:first-of-type > .grid > .pmdt-rms-config-fieldset:first-child {
+  height: 46px;
+}
+
+.pmdt-classic-window .pmdt-rms-config-general > div:first-of-type > .grid > .pmdt-rms-config-fieldset:last-child {
+  height: 52px;
+}
+
+.pmdt-classic-window .pmdt-rms-config-general > div:nth-of-type(2) {
+  gap: 14px;
+}
+
+.pmdt-classic-window .pmdt-rms-config-general > div:nth-of-type(2) > .pmdt-rms-config-fieldset:first-child {
+  height: 205px;
+  box-sizing: border-box;
+}
+
+.pmdt-classic-window .pmdt-rms-config-general > div:nth-of-type(2) > .pmdt-rms-config-fieldset:last-child {
+  height: 211px;
+  box-sizing: border-box;
+}
+
+.pmdt-classic-window .pmdt-rms-config-general > div:nth-of-type(2) {
+  gap: 9px;
+}
+
+.pmdt-classic-window .pmdt-rms-config-general > div:nth-of-type(2) > .pmdt-rms-config-fieldset:first-child > div > div:last-child > div,
+.pmdt-classic-window .pmdt-rms-config-general > div:nth-of-type(2) > .pmdt-rms-config-fieldset:last-child > div > div {
+  grid-template-columns: 10rem 1fr;
+}
+
+.pmdt-classic-window .pmdt-rms-config-general > div:first-of-type > .pmdt-rms-config-fieldset:nth-child(2) > div > div {
+  grid-template-columns: 1fr 3.5rem;
+}
+
+.pmdt-classic-window .pmdt-rms-config-general > div:first-of-type > .pmdt-rms-config-fieldset:first-child > div > div:last-child {
+  display: grid;
+  grid-template-columns: 82px 1fr;
+}
+
+/* Final pixel pass for the two Monitor 1 pages whose tables use fractional
+ * rows in the reference PMDT client. */
+.pmdt-classic-window .pmdt-monitor-fault-table thead th {
+  height: 23.5px;
+}
+
+.pmdt-classic-window .pmdt-monitor-fault-table tbody th,
+.pmdt-classic-window .pmdt-monitor-fault-table tbody td {
+  height: 22.75px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+.pmdt-classic-window .pmdt-monitor-fault-table tr.pmdt-monitor-fault-spacer td {
+  height: 13px;
+}
+
+.pmdt-classic-window .pmdt-monitor-fault-table tr.pmdt-monitor-fault-spacer--sideband td {
+  height: 36px;
+}
+
+/* Digital I/O panels are white work surfaces; the empty space below the
+ * short tables is part of the original fixed-size layout. */
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel {
+  background: #fff !important;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel h3,
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel thead th {
+  background: #fff !important;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel thead th:first-child {
+  color: transparent !important;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--digital-inputs {
+  height: 168px;
+  padding-bottom: 0;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--digital-outputs {
+  align-self: start;
+  height: 128px;
+  min-height: 128px;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--system-power-status {
+  height: 326px;
+  min-height: 326px;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--tx-alerts {
+  height: 170px;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen {
+  grid-template-rows: 168px 128px !important;
+  row-gap: 9px !important;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel {
+  min-height: 0;
+}
+
+.pmdt-classic-window .pmdt-rms-log-screen {
+  height: 100%;
+  max-height: none !important;
+  box-sizing: border-box;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+.pmdt-classic-window .pmdt-rms-log-screen .pmdt-rms-log-controls {
+  margin-bottom: 10px;
+}
+
+.pmdt-classic-window .pmdt-rms-log-screen {
+  padding-top: 8px !important;
+}
+
+.pmdt-classic-window .pmdt-rms-log-screen > table {
+  width: 317px !important;
+  min-width: 0 !important;
+  table-layout: fixed;
+}
+
+.pmdt-classic-window .pmdt-rms-log-list table {
+  width: 317px !important;
+  min-width: 0 !important;
+  table-layout: fixed;
+}
+
+.pmdt-classic-window .pmdt-rms-log-list table th:first-child,
+.pmdt-classic-window .pmdt-rms-log-list table td:first-child {
+  width: 106px !important;
+}
+
+.pmdt-classic-window .pmdt-rms-log-list table th:nth-child(2),
+.pmdt-classic-window .pmdt-rms-log-list table td:nth-child(2) {
+  width: 68px !important;
+}
+
+.pmdt-classic-window .pmdt-rms-log-list table th:nth-child(3),
+.pmdt-classic-window .pmdt-rms-log-list table td:nth-child(3) {
+  width: 143px !important;
+}
+
+.pmdt-classic-window .pmdt-rms-log-screen [data-vor-field-status] {
+  color: #000 !important;
+  font-weight: 400 !important;
+}
+
+/* Configuration controls use the disabled native widgets visible in the
+ * reference client.  The data screens remain read-only, but keep the native
+ * number spinners and select arrows so their geometry is faithful. */
+.pmdt-classic-window .pmdt-rms-config-content select,
+.pmdt-classic-window .pmdt-rms-config-content input[type="number"] {
+  background: #f0f0f0 !important;
+  color: #000 !important;
+  -webkit-appearance: auto;
+  appearance: auto;
+}
+
+.pmdt-classic-window .pmdt-rms-config-power {
+  grid-template-columns: 390px 290px !important;
+  column-gap: 20px !important;
+}
+
+.pmdt-classic-window .pmdt-rms-config-power-current-limits {
+  width: 290px;
+}
+
+.pmdt-classic-window .pmdt-rms-config-power-current-limits table {
+  width: 290px !important;
+}
+
+.pmdt-classic-window .pmdt-rms-config-number-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 21px;
+}
+
+.pmdt-classic-window .pmdt-rms-config-content .pmdt-rms-config-number-wrap > input {
+  width: 100% !important;
+  height: 21px !important;
+  padding-right: 14px !important;
+  background: #f0f0f0 !important;
+  color: #000 !important;
+}
+
+.pmdt-classic-window .pmdt-rms-config-number-wrap::after {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 12px;
+  height: 19px;
+  box-sizing: border-box;
+  border-left: 1px solid #a0a0a0;
+  background:
+    linear-gradient(135deg, transparent 50%, #333 50%) 3px 3px / 5px 4px no-repeat,
+    linear-gradient(315deg, transparent 50%, #333 50%) 3px 11px / 5px 4px no-repeat,
+    #e0e0e0;
+  content: "";
+  pointer-events: none;
+}
+
+.pmdt-classic-window .pmdt-rms-config-power-primary {
+  position: relative;
+}
+
+.pmdt-classic-window .pmdt-rms-config-power-primary > h3 {
+  display: block !important;
+  position: absolute;
+  top: -29px;
+  left: 0;
+  width: 100%;
+  height: 24px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 3px 0 0;
+  border: 0 !important;
+  background: transparent !important;
+  color: #000 !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  text-align: center;
+}
+
+.pmdt-classic-window .pmdt-rms-config-power-primary table thead th {
+  height: 15px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.pmdt-classic-window .pmdt-rms-config-power-primary table tbody th,
+.pmdt-classic-window .pmdt-rms-config-power-primary table tbody td,
+.pmdt-classic-window .pmdt-rms-config-power-voltage-summary table tbody th,
+.pmdt-classic-window .pmdt-rms-config-power-voltage-summary table tbody td,
+.pmdt-classic-window .pmdt-rms-config-power-current-limits table tbody th,
+.pmdt-classic-window .pmdt-rms-config-power-current-limits table tbody td,
+.pmdt-classic-window .pmdt-rms-config-ad-table table tbody th,
+.pmdt-classic-window .pmdt-rms-config-ad-table table tbody td {
+  height: 22.75px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.pmdt-classic-window .pmdt-rms-config-power-voltage-summary,
+.pmdt-classic-window .pmdt-rms-config-power-current-limits {
+  position: relative;
+}
+
+.pmdt-classic-window .pmdt-rms-config-power-voltage-summary > h3,
+.pmdt-classic-window .pmdt-rms-config-power-current-limits > h3 {
+  display: block !important;
+  position: absolute;
+  top: -15px;
+  left: 0;
+  width: 100%;
+  height: 24px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 3px 0 0;
+  border: 0 !important;
+  background: transparent !important;
+  color: #000 !important;
+  font-size: 10px !important;
+  font-weight: 400 !important;
+  text-align: center;
+}
+
+.pmdt-classic-window .pmdt-rms-config-power-voltage-summary table,
+.pmdt-classic-window .pmdt-rms-config-power-current-limits table {
+  transform: translateY(3px);
+}
+
+.pmdt-classic-window .pmdt-rms-config-ad-table table thead th {
+  height: 12px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.pmdt-classic-window .pmdt-rms-config-station > div:first-of-type {
+  grid-template-columns: 252px 472px;
+}
+
+.pmdt-classic-window .pmdt-rms-config-station > div:first-of-type > .pmdt-rms-config-fieldset:first-child {
+  height: 235px;
+  transform: translateY(10px);
+}
+
+.pmdt-classic-window .pmdt-rms-config-station > div:first-of-type > .pmdt-rms-config-fieldset:first-child > div > div:nth-child(1) {
+  display: grid;
+  grid-template-columns: 132px 1fr;
+  gap: 0;
+  transform: translateY(14px);
+}
+
+.pmdt-classic-window .pmdt-rms-config-station > div:first-of-type > .pmdt-rms-config-fieldset:first-child > div > div:nth-child(2) {
+  display: grid;
+  grid-template-columns: 132px 1fr;
+  gap: 0;
+  min-height: 35px;
+  transform: translateY(14px);
+  white-space: nowrap;
+}
+
+.pmdt-classic-window .pmdt-rms-config-station > div:first-of-type > .pmdt-rms-config-fieldset:first-child > div > div:nth-child(3) {
+  display: grid;
+  grid-template-columns: 132px 1fr;
+  gap: 0;
+  transform: translateY(22px);
+}
+
+.pmdt-classic-window .pmdt-rms-config-station > div:first-of-type > .pmdt-rms-config-fieldset:first-child > div > div:nth-child(4) {
+  grid-template-columns: 118px 1fr;
+  transform: translateY(42px);
+}
+
+.pmdt-classic-window .pmdt-rms-config-station > div:first-of-type > .pmdt-rms-config-fieldset:first-child > div > div:nth-child(4) select {
+  width: 100%;
+}
+
+.pmdt-classic-window .pmdt-rms-config-station > div:first-of-type > .pmdt-rms-config-fieldset:first-child label,
+.pmdt-classic-window .pmdt-rms-config-station > div:first-of-type > .pmdt-rms-config-fieldset:first-child > div > div:nth-child(4) > span,
+.pmdt-classic-window .pmdt-rms-config-station > div:last-child > input {
+  color: #777 !important;
+}
+
+.pmdt-classic-window .pmdt-rms-config-station > div:first-of-type > .pmdt-rms-config-fieldset:first-child select {
+  color: #777 !important;
+}
+
+.pmdt-classic-window .pmdt-rms-config-station > div:first-of-type > .pmdt-rms-config-fieldset:first-child > div > button {
+  transform: translateY(35px);
+  width: 180px;
+  height: 22px;
+  margin-left: 24px;
+}
+
+.pmdt-classic-window .pmdt-rms-config-station > div:first-of-type > .pmdt-rms-config-fieldset:nth-child(2) {
+  width: 472px;
+  transform: translate(-32px, -20px);
+}
+
+.pmdt-classic-window .pmdt-rms-config-components-dates,
+.pmdt-classic-window .pmdt-rms-config-components-table {
+  width: 472px;
+}
+
+.pmdt-classic-window .pmdt-rms-config-components-dates {
+  display: flex;
+  gap: 0;
+}
+
+.pmdt-classic-window .pmdt-rms-config-components-dates time {
+  flex: 0 0 108px;
+}
+
+.pmdt-classic-window .pmdt-rms-config-components-dates time:nth-child(2) {
+  margin-left: 36px;
+}
+
+.pmdt-classic-window .pmdt-rms-config-components-dates time:nth-child(3) {
+  margin-left: 42px;
+}
+
+.pmdt-classic-window .pmdt-rms-config-components-table thead th {
+  height: 18px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.pmdt-classic-window .pmdt-rms-config-components-table tbody tr:nth-child(1) {
+  height: 35px;
+}
+
+.pmdt-classic-window .pmdt-rms-config-components-table tbody tr:nth-child(2) {
+  height: 49px;
+}
+
+.pmdt-classic-window .pmdt-rms-config-components-table tbody tr:nth-child(3) {
+  height: 62px;
+}
+
+.pmdt-classic-window .pmdt-rms-config-components-table tbody tr:nth-child(4) {
+  height: 28px;
+}
+
+.pmdt-classic-window .pmdt-rms-config-components-table thead th:first-child,
+.pmdt-classic-window .pmdt-rms-config-components-table tbody th {
+  width: 25px !important;
+  padding: 0 !important;
+}
+
+.pmdt-classic-window .pmdt-rms-config-components-table tbody td {
+  height: 22px !important;
+  padding: 0 4px !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  vertical-align: top;
+}
+
+.pmdt-classic-window .pmdt-rms-config-components-table tbody td > span {
+  display: block;
+  height: 20px;
+  box-sizing: border-box;
+  padding: 3px 2px 1px;
+  border: 1px inset #fff;
+  background: #f0f0f0;
+  color: #000;
+  text-align: center;
+}
+
+.pmdt-classic-window .pmdt-rms-config-components-table tbody tr.pmdt-rms-config-components-gap th,
+.pmdt-classic-window .pmdt-rms-config-components-table tbody tr.pmdt-rms-config-components-gap td {
+  height: 62px !important;
+}
+
+.pmdt-classic-window .pmdt-rms-config-station > div:last-child {
+  display: grid;
+  grid-template-columns: 134px 1fr;
+  gap: 0;
+  padding: 0 !important;
+  margin-top: 28px;
+  border-color: #c5c5c5 !important;
+  background: #f0f0f0 !important;
+}
+
+.pmdt-classic-window .pmdt-rms-config-station > div:last-child > span {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 2px 8px;
+  border: 1px solid #c5c5c5;
+  border-right: 0;
+  color: #000;
+}
+
+.pmdt-classic-window .pmdt-rms-config-station > div:last-child > input {
+  width: 100% !important;
+  max-width: none !important;
+  height: 22px !important;
+  box-sizing: border-box;
+}
+
+/* RMS Digital I/O uses the legacy client’s horizontal-rule tables.  The two
+ * status tables also reserve a wider label column, with 64/42 px transmitter
+ * columns, so the indicators land on the same visual grid as the reference. */
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel table th,
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel table td {
+  border: 0 !important;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel table tbody tr {
+  border-top: 1px solid #c5c5c5 !important;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--system-power-status td[colspan="2"] .pmdt-rms-indicator {
+  transform: translateX(-2px);
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--system-power-status table {
+  width: 224px !important;
+  margin-left: 9px !important;
+  table-layout: fixed !important;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--system-power-status table th:first-child,
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--system-power-status table td:first-child {
+  width: 96px !important;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--system-power-status table th:nth-child(2),
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--system-power-status table td:nth-child(2),
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--system-power-status table th:nth-child(3),
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--system-power-status table td:nth-child(3) {
+  width: 64px !important;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--tx-alerts table {
+  width: 178px !important;
+  margin-left: 9px !important;
+  table-layout: fixed !important;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--tx-alerts table th:first-child,
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--tx-alerts table td:first-child {
+  width: 94px !important;
+}
+
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--tx-alerts table th:nth-child(2),
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--tx-alerts table td:nth-child(2),
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--tx-alerts table th:nth-child(3),
+.pmdt-classic-window .pmdt-rms-digital-screen .pmdt-rms-panel--tx-alerts table td:nth-child(3) {
+  width: 42px !important;
+}
+
+/* The reference Nominal screen keeps the audio-generator fieldset at its
+   content height instead of stretching it to the taller Identification/Keyer
+   fieldset. */
+.pmdt-classic-window .pmdt-tx-config-nominal-grid {
+  align-items: start;
+  column-gap: 47px;
+  transform: translateY(-6px);
+}
+
+.pmdt-classic-window .pmdt-tx-audio-generator,
+.pmdt-classic-window .pmdt-tx-audio-generator th,
+.pmdt-classic-window .pmdt-tx-audio-generator td,
+.pmdt-classic-window .pmdt-tx-ident-table th,
+.pmdt-classic-window .pmdt-tx-ident-table td {
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
+
+.pmdt-classic-window .pmdt-tx-audio-generator th,
+.pmdt-classic-window .pmdt-tx-audio-generator td,
+.pmdt-classic-window .pmdt-tx-ident-table th,
+.pmdt-classic-window .pmdt-tx-ident-table td {
+  height: 21px;
+}
+
+.pmdt-classic-window .pmdt-tx-audio-generator {
+  padding-bottom: 11px;
+}
+
+.pmdt-classic-window .pmdt-tx-audio-generator table {
+  transform: translateY(6px);
+}
+
+.pmdt-classic-window .pmdt-tx-audio-generator th {
+  width: 57% !important;
+}
+
+.pmdt-classic-window .pmdt-tx-audio-generator td:nth-child(2) {
+  width: 25% !important;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.pmdt-classic-window .pmdt-tx-audio-generator td:last-child {
+  width: 18% !important;
+}
+
+.pmdt-classic-window .pmdt-tx-keyer-section {
+  padding-bottom: 10px;
+}
+
+.pmdt-classic-window .pmdt-tx-keyer-output {
+  padding-bottom: 5px;
+}
+
+.pmdt-classic-window .pmdt-tx-check-grid {
+  gap: 8px;
+}
+
+.pmdt-classic-window .pmdt-rms-config-station > div:first-of-type > .pmdt-rms-config-fieldset:first-child {
+  position: relative;
+  z-index: 2;
+}
+
+.pmdt-classic-window .pmdt-rms-config-station > div:first-of-type > .pmdt-rms-config-fieldset:nth-child(2) {
+  position: relative;
+  z-index: 1;
+}
+
+.pmdt-classic-window .pmdt-rms-config-station > div:first-of-type > .pmdt-rms-config-fieldset:first-child select {
+  background: #d0d0d0 !important;
+  color: #777 !important;
+  border-color: #a0a0a0 !important;
+  opacity: 1;
+}
+
+.pmdt-classic-window .pmdt-rms-config-station > div:first-of-type > .pmdt-rms-config-fieldset:first-child > div > button {
+  background: #f0f0f0 !important;
+  color: #000 !important;
+  border-color: #808080 !important;
+}
+
+.pmdt-classic-window .pmdt-tx-offset-spinner {
+  position: relative;
+  display: inline-block;
+  width: 63px;
+  height: 20px;
+  vertical-align: middle;
+}
+
+.pmdt-classic-window .pmdt-tx-offset-spinner input {
+  width: 63px;
+  height: 20px;
+  padding-right: 14px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.pmdt-classic-window .pmdt-tx-offset-spinner::after {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 12px;
+  height: 18px;
+  box-sizing: border-box;
+  border-left: 1px solid #a0a0a0;
+  background:
+    linear-gradient(135deg, transparent 50%, #333 50%) 3px 3px / 5px 4px no-repeat,
+    linear-gradient(315deg, transparent 50%, #333 50%) 3px 11px / 5px 4px no-repeat,
+    #e0e0e0;
+  content: "";
+  pointer-events: none;
+}
+
+.pmdt-classic-window .pmdt-tx-offset-table {
+  transform: translateY(-20px);
+}
+
+/* The Digital I/O delay row in the supplied RMS dialog is inset and both
+   columns are equal-width.  Keep the long labels on one native dialog line. */
+.pmdt-classic-window .pmdt-rms-config-general > div:nth-of-type(2) > .pmdt-rms-config-fieldset:first-child > div > div:nth-child(1),
+.pmdt-classic-window .pmdt-rms-config-general > div:nth-of-type(2) > .pmdt-rms-config-fieldset:first-child > div > div:nth-child(2) {
+  grid-template-columns: 1fr 1fr;
+}
+
+.pmdt-classic-window .pmdt-rms-config-general > div:nth-of-type(2) > .pmdt-rms-config-fieldset:first-child > div > div:nth-child(3) {
+  margin-left: 16px;
+}
+
+.pmdt-classic-window .pmdt-rms-config-general > div:nth-of-type(2) > .pmdt-rms-config-fieldset:first-child > div > div:nth-child(3) > div > span:first-child {
+  white-space: nowrap;
+}
+
+/* Tx readouts are native PMDT tables: five fixed columns with a narrow blank
+   separator between the two transmitter columns and inset gray readouts. */
+.pmdt-classic-window .pmdt-tx-data-panel {
+  border-color: #dfdfdf;
+  background: #fff;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel h3 {
+  background: #fff;
+  color: #000 !important;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel:nth-of-type(1) {
+  margin-bottom: 6px;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-dual-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-dual-table col:nth-child(1) {
+  width: 35.4%;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-dual-table col:nth-child(2),
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-dual-table col:nth-child(4) {
+  width: 21.7%;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-dual-table col:nth-child(3) {
+  width: 4.7%;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-dual-table col:nth-child(5) {
+  width: 16.5%;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-dual-table thead tr {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-dual-table thead th:nth-child(1) {
+  width: 35.4% !important;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-dual-table thead th:nth-child(2),
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-dual-table thead th:nth-child(4) {
+  width: 21.7% !important;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-dual-table thead th:nth-child(3) {
+  width: 4.7% !important;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-dual-table thead th:nth-child(5) {
+  width: 16.5% !important;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-dual-table thead th:nth-child(3),
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-dual-table thead th:nth-child(5),
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-dual-table tbody .pmdt-tx-spacer-cell,
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-dual-table tbody .pmdt-tx-empty-value-cell {
+  border-color: #dfdfdf !important;
+  background: #fff !important;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-dual-table tbody th,
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-dual-table tbody td {
+  height: 24px;
+  box-sizing: border-box;
+  padding-top: 1px !important;
+  padding-bottom: 1px !important;
+  border-color: #dfdfdf !important;
+  background: #fff !important;
+  color: #000 !important;
+  font-weight: 400 !important;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-dual-table tbody th {
+  padding-left: 8px !important;
+  padding-right: 0 !important;
+  text-align: left;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-dual-table tbody td:not(.pmdt-tx-spacer-cell):not(.pmdt-tx-empty-value-cell):not(.pmdt-tx-unit-cell) {
+  padding-left: 8px !important;
+  padding-right: 0 !important;
+  text-align: right;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-unit-cell {
+  padding-left: 14px !important;
+  padding-right: 0 !important;
+  text-align: left;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel .pmdt-tx-readout {
+  display: block;
+  width: 64px;
+  height: 20px;
+  box-sizing: border-box;
+  padding: 1px 4px;
+  border: 1px inset #fff;
+  background: #f0f0f0 !important;
+  color: #000 !important;
+  line-height: 16px;
+  text-align: right;
+}
+
+.pmdt-classic-window .pmdt-tx-data-panel:nth-of-type(1) .pmdt-tx-dual-table {
+  transform: translateY(-2px);
+}
+
+/* Ground-check layout: the reference client keeps the station table on the
+   left, the graph below the two compact summary panels, and the source
+   selector at the lower-left of the white work area. */
+.pmdt-classic-window .pmdt-ground-check {
+  position: relative;
+  box-sizing: border-box;
+  height: 531px;
+  min-height: 531px;
+}
+
+.pmdt-classic-window .pmdt-ground-check-header button {
+  width: 67px;
+  margin-top: 5px;
+  color: #808080 !important;
+}
+
+.pmdt-classic-window .pmdt-ground-table-panel,
+.pmdt-classic-window .pmdt-ground-options {
+  background: #fff;
+  border-color: #dfdfdf;
+}
+
+.pmdt-classic-window .pmdt-ground-table-panel table {
+  margin-top: -10px;
+}
+
+.pmdt-classic-window .pmdt-ground-table-panel th,
+.pmdt-classic-window .pmdt-ground-table-panel td {
+  height: 20px;
+  padding: 1px 4px;
+  border-color: #dfdfdf !important;
+  background: #fff;
+  color: #000;
+}
+
+.pmdt-classic-window .pmdt-ground-table-panel thead th {
+  height: 20px;
+  padding: 0 3px;
+  border-color: transparent !important;
+  background: transparent;
+  white-space: pre-line;
+  line-height: 10px;
+}
+
+.pmdt-classic-window .pmdt-ground-readout {
+  display: block;
+  height: 17px;
+  box-sizing: border-box;
+  padding: 1px 3px;
+  border: 1px inset #fff;
+  background: #f0f0f0;
+  line-height: 13px;
+}
+
+.pmdt-classic-window .pmdt-ground-unit-cell {
+  background: #fff !important;
+  text-align: center !important;
+}
+
+.pmdt-classic-window .pmdt-ground-options {
+  color: #000;
+}
+
+.pmdt-classic-window .pmdt-ground-options input {
+  accent-color: #000;
+}
+
+.pmdt-classic-window .pmdt-ground-graph {
+  position: absolute;
+  top: 165px;
+  left: 188px;
+  width: 512px;
+  height: 320px;
+  margin: 0;
+  overflow: visible;
+  border-color: #000;
+}
+
+.pmdt-classic-window .pmdt-ground-graph svg {
+  overflow: visible;
+}
+
+.pmdt-classic-window .pmdt-ground-grid-lines line {
+  stroke: #333;
+}
+
+.pmdt-classic-window .pmdt-ground-grid-lines line:nth-child(n + 8) {
+  display: none;
+}
+
+.pmdt-classic-window .pmdt-ground-legend-box {
+  fill: #f0f0f0;
+  stroke: #404040;
+  stroke-width: 1;
+}
+
+.pmdt-classic-window .pmdt-ground-x-axis-labels {
+  fill: #000;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  font-size: 9px;
+}
+
+.pmdt-classic-window .pmdt-ground-source {
+  position: absolute;
+  top: 506px;
+  left: 14px;
+  margin: 0;
+}

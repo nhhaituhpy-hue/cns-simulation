@@ -1,36 +1,37 @@
 "use client";
 
-import { Clock } from "@phosphor-icons/react/dist/csr/Clock";
-import { WifiHigh } from "@phosphor-icons/react/dist/csr/WifiHigh";
-import type { VorPmdtMode } from "@/lib/vor-types";
+import { useEffect, useState } from "react";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
 
-const modeLabels: Record<VorPmdtMode, string> = {
-  preview: "Preview",
-  author: "Authoring",
-  student: "Student session",
-};
+function formatPmdtDateTime(date: Date): string {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${String(date.getFullYear()).slice(-2)} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
 
 export function PmdtStatusBar() {
-  const mode = useVorPmdtStore((state) => state.mode);
-  const connected = useVorPmdtStore((state) => state.data.connected);
-  const timestamp = useVorPmdtStore((state) => state.data.timestamp);
-  const activeMenuPath = useVorPmdtStore((state) => state.activeMenuPath);
+  const alert = useVorPmdtStore((state) => state.data.alert);
+  const securityLevel = useVorPmdtStore((state) => state.securityLevel);
+  const authenticatedUserId = useVorPmdtStore((state) => state.authenticatedUserId);
+  const configuredTimestamp = useVorPmdtStore((state) => state.data.timestamp);
+  const [timestamp, setTimestamp] = useState(configuredTimestamp);
+
+  useEffect(() => {
+    const updateTimestamp = () => setTimestamp(formatPmdtDateTime(new Date()));
+    updateTimestamp();
+    const timer = window.setInterval(updateTimestamp, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   return (
-    <footer className="flex h-7 items-center gap-3 border-t border-[#334155] bg-[#0f172a] px-3 text-[10px] text-[#94a3b8]">
-      <span className="min-w-0 flex-1 truncate text-[#cbd5e1]">
-        {activeMenuPath.join(" > ")}
+    <footer className="pmdt-statusbar">
+      <span className={`pmdt-statusbar-path ${alert ? "pmdt-status-alarm" : "pmdt-status-ok"}`}>
+        {alert ? "Alert" : "Ready"}
       </span>
-      <span className="border-l border-[#334155] pl-3">{modeLabels[mode]}</span>
-      <span className="inline-flex items-center gap-1 border-l border-[#334155] pl-3">
-        <WifiHigh aria-hidden size={12} className={connected ? "text-[#22c55e]" : "text-[#ef4444]"} />
-        {connected ? "RMS connected" : "Disconnected"}
-      </span>
-      <time className="inline-flex items-center gap-1 border-l border-[#334155] pl-3 font-mono tabular-nums text-[#cbd5e1]">
-        <Clock aria-hidden size={12} />
-        {timestamp}
-      </time>
+      <span className="pmdt-statusbar-segment">CAP</span>
+      <span className="pmdt-statusbar-segment">NUM</span>
+      <span className="pmdt-statusbar-segment">{securityLevel ? `Level ${securityLevel}` : ""}</span>
+      <span className="pmdt-statusbar-segment">{authenticatedUserId ?? ""}</span>
+      <time className="pmdt-statusbar-segment font-mono tabular-nums">{timestamp}</time>
     </footer>
   );
 }

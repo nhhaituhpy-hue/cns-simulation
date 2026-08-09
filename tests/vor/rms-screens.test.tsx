@@ -13,8 +13,8 @@ describe("RMS screens", () => {
     useVorPmdtStore.getState().openScreen("rms-data", ["RMS", "Data"], "Data");
     render(<RmsDataLayout />);
 
-    expect(screen.getByText("General Alerts")).toBeInTheDocument();
-    expect(screen.getByLabelText("Local Mode")).not.toBeChecked();
+    expect(screen.getByText("General Alerts and Alarms")).toBeInTheDocument();
+    expect(screen.getByText("Monitor/Audio Generator Alerts and Alarms")).toBeInTheDocument();
     expect(screen.getByLabelText("File System Fault, Mon 2")).toBeChecked();
 
     const powerTab = screen.getByRole("tab", { name: "Power Supply Data" });
@@ -45,6 +45,9 @@ describe("RMS screens", () => {
     useVorPmdtStore.getState().setOverride("maintenanceLogs.0.alert", "Custom VOR maintenance alert");
     useVorPmdtStore.getState().openScreen("rms-logs", ["RMS", "Logs"], "Logs");
     render(<RmsLogsLayout />);
+
+    expect(screen.getByRole("tab", { name: "Operational Summary" })).toBeInTheDocument();
+    await user.click(screen.getByRole("tab", { name: "Alarms" }));
 
     expect(screen.getByText("18/07/2026 09:10:11")).toHaveAttribute("data-vor-field-id", "alarmLogs.0.timeTag");
     expect(screen.getByText("Monitor 1 + 2")).toHaveAttribute("data-vor-field-id", "alarmLogs.0.type");

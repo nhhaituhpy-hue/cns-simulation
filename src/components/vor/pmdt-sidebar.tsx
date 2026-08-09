@@ -12,30 +12,44 @@ import {
 } from "@/stores/vor-pmdt-store";
 
 const indicatorClasses: Record<VorIndicatorColor, string> = {
-  green: "bg-[#22c55e]",
-  yellow: "bg-[#eab308]",
-  red: "bg-[#ef4444]",
-  gray: "bg-[#6b7280]",
+  green: "pmdt-indicator--green",
+  yellow: "pmdt-indicator--yellow",
+  red: "pmdt-indicator--red",
+  gray: "pmdt-indicator--gray",
 };
 
 const indicatorLabels: Record<VorIndicatorColor, string> = {
-  green: "Bình thường",
-  yellow: "Cảnh báo",
-  red: "Báo động",
-  gray: "Không hoạt động",
+  green: "Normal",
+  yellow: "Warning",
+  red: "Alarm",
+  gray: "Not Operating",
 };
 
 const parameterClasses: Record<VorParameterStatus, string> = {
-  normal: "border-[#1d6837] bg-[#0f3a1f] text-[#bbf7d0]",
-  warning: "border-[#745f17] bg-[#3a2f0f] text-[#fef08a]",
-  alarm: "border-[#7f1d1d] bg-[#3a0f0f] text-[#fecaca]",
+  normal: "pmdt-parameter--normal",
+  warning: "pmdt-parameter--warning",
+  alarm: "pmdt-parameter--alarm",
 };
 
-function Indicator({ color }: { color: VorIndicatorColor }) {
+function Indicator({ color, locked = false }: { color: VorIndicatorColor; locked?: boolean }) {
+  const visibleColor = locked ? "gray" : color;
+  const label = visibleColor === "green" ? "G" : visibleColor === "yellow" ? "Y" : visibleColor === "red" ? "R" : "";
+
   return (
-    <span className="inline-flex items-center gap-1.5">
-      <span aria-hidden className={`size-2.5 shrink-0 rounded-full border border-black/30 ${indicatorClasses[color]}`} />
-      <span className="sr-only">{indicatorLabels[color]}</span>
+    <span className="pmdt-indicator-wrap">
+      <span aria-hidden className={`pmdt-indicator ${indicatorClasses[visibleColor]}`}>{label}</span>
+      <span className="sr-only">{indicatorLabels[visibleColor]}</span>
+    </span>
+  );
+}
+
+function StateIndicator({ color, locked = false }: { color: VorIndicatorColor; locked?: boolean }) {
+  const visibleColor = locked ? "gray" : color;
+  const label = visibleColor === "green" ? "G" : visibleColor === "yellow" ? "Y" : visibleColor === "red" ? "R" : "";
+
+  return (
+    <span aria-hidden className={`pmdt-state-lamp ${indicatorClasses[visibleColor]}`}>
+      {label}
     </span>
   );
 }
@@ -70,11 +84,11 @@ const monitorRows = [
 ] as const;
 
 const parameterRows = [
-  { key: "azimuth", label: "Azimuth", digits: 2 },
-  { key: "hz30Mod", label: "30 Hz", digits: 1 },
-  { key: "hz9960Mod", label: "9960 Hz", digits: 1 },
-  { key: "deviation", label: "Dev", digits: 2 },
-  { key: "rfLevel", label: "RF", digits: 1 },
+  { key: "azimuth", label: "Azimuth Angle", digits: 2 },
+  { key: "hz30Mod", label: "30 Hz Mod", digits: 1 },
+  { key: "hz9960Mod", label: "9960 Hz Mod", digits: 1 },
+  { key: "deviation", label: "Deviation", digits: 2 },
+  { key: "rfLevel", label: "RF Level", digits: 1 },
 ] as const;
 
 export function PmdtSidebar() {
@@ -82,7 +96,12 @@ export function PmdtSidebar() {
   const mode = useVorPmdtStore((state) => state.mode);
   const overrides = useVorPmdtStore((state) => state.overrides);
   const studentFieldStates = useVorPmdtStore((state) => state.studentFieldStates);
+  const securityLevel = useVorPmdtStore((state) => state.securityLevel);
+  const needBackup = useVorPmdtStore((state) => state.needBackup);
+  const loginDialogOpen = useVorPmdtStore((state) => state.loginDialogOpen);
   const interactWithSidebar = useVorPmdtStore((state) => state.interactWithSidebar);
+  const setConfigValue = useVorPmdtStore((state) => state.setConfigValue);
+  const selectMainTransmitter = useVorPmdtStore((state) => state.selectMainTransmitter);
 
   const displayInteractiveField = (
     fieldId: string,
@@ -110,17 +129,30 @@ export function PmdtSidebar() {
     currentStatus: VorIndicatorColor,
     activeColor: VorIndicatorColor,
   ) => {
-    if (mode !== "student") return;
+    if (securityLevel < 3) return;
     const target = overrides.find((item) => item.fieldId === fieldId);
     const targetValue = target ? Boolean(target.value) : true;
     const targetStatus = (target?.status ?? activeColor) as VorIndicatorColor;
     const isAtTarget = currentValue === targetValue && currentStatus === targetStatus;
-    interactWithSidebar(
-      fieldId,
-      label,
-      isAtTarget ? false : targetValue,
-      isAtTarget ? "gray" : targetStatus,
-    );
+    const nextValue = isAtTarget ? false : targetValue;
+    if (fieldId === "monitorIntegral.bypass" && nextValue && !data.local) return;
+
+    const configFieldId = fieldId === "local"
+      ? "simulation.local"
+      : fieldId === "monitorIntegral.bypass"
+        ? "simulation.integralMonitorBypass"
+        : null;
+    if (!configFieldId) return;
+    setConfigValue(configFieldId, nextValue);
+
+    if (mode === "student") {
+      interactWithSidebar(
+        fieldId,
+        label,
+        nextValue,
+        isAtTarget ? "gray" : targetStatus,
+      );
+    }
   };
 
   const connected = resolveVorField(data.connected, "connected", overrides);
@@ -128,23 +160,54 @@ export function PmdtSidebar() {
   const alert = resolveVorField(data.alert, "alert", overrides);
   const alertColor = resolveVorStatus(alert ? "yellow" : "gray", "alert", overrides);
   const localState = displayInteractiveField("local", data.local, "yellow");
+  const bypassState = displayInteractiveField(
+    "monitorIntegral.bypass",
+    data.monitorIntegral.bypass,
+    "yellow",
+  );
+  // Main selection is a transmitter transfer command. It is available to
+  // SEC3/SEC4 without forcing the maintenance Local/Bypass state first.
+  const canOperate = securityLevel >= 3;
 
   return (
-    <aside className="min-h-0 overflow-y-auto border-r border-[#334155] bg-[#0f172a] p-2 text-xs text-[#cbd5e1]">
-      <section aria-label="Connection" className="border border-[#334155] bg-[#111827] p-2">
+    <aside className="pmdt-sidebar">
+      <section aria-label="Connection" className="pmdt-sidebar-section">
         <span
           {...fieldMetadata("connected", "Connection", connected, connectedColor)}
-          className="flex items-center justify-center gap-2 border border-[#166534] bg-[#0f3a1f] px-2 py-1.5 text-[10px] font-semibold text-[#bbf7d0]"
+          className={`pmdt-connection-badge ${loginDialogOpen ? "pmdt-connection-badge--locked" : connected ? "" : "pmdt-connection-badge--offline"}`}
         >
-          <Indicator color={connectedColor} />
-          {connected ? "Connected" : "Disconnected"}
+          {loginDialogOpen ? "" : connected ? "Connected" : "Disconnected"}
         </span>
+        <div
+          className={`pmdt-sidebar-spacer ${
+            !loginDialogOpen && needBackup
+              ? "pmdt-sidebar-spacer--backup"
+              : !loginDialogOpen && data.local
+                ? "pmdt-sidebar-spacer--local"
+                : ""
+          }`}
+          aria-live="polite"
+          title={needBackup ? "Configuration đã Apply nhưng chưa Config Backup" : data.local ? "Hệ thống đang ở Local mode" : undefined}
+        >
+          {!loginDialogOpen && data.local ? (
+            needBackup ? null : (
+              <span className="pmdt-sidebar-warning-item pmdt-sidebar-warning-item--local">
+                LOCAL
+              </span>
+            )
+          ) : null}
+          {!loginDialogOpen && needBackup ? (
+            <span className="pmdt-sidebar-warning-item pmdt-sidebar-warning-item--backup">
+              Need Backup
+            </span>
+          ) : null}
+        </div>
         <div className="mt-2 grid grid-cols-2 gap-1">
           <span
             {...fieldMetadata("alert", "Alert", alert, alertColor)}
-            className="inline-flex min-h-7 items-center justify-center gap-1.5 rounded px-1 text-[11px]"
+            className="pmdt-sidebar-state"
           >
-            <span aria-hidden className={`size-3 rounded-sm border border-black/30 ${indicatorClasses[alertColor]}`} />
+            <StateIndicator color={alertColor} locked={loginDialogOpen} />
             Alert
           </span>
           <button
@@ -152,39 +215,82 @@ export function PmdtSidebar() {
             {...fieldMetadata("local", "Local", localState.value, localState.status)}
             onClick={() => toggleInteractiveField("local", "Local", localState.value, localState.status, "yellow")}
             aria-pressed={localState.value}
-            title={mode === "student" ? "Ghi nhận thao tác Local" : undefined}
-            className={`inline-flex min-h-7 items-center justify-center gap-1.5 rounded px-1 text-[11px] ${
-              mode === "student"
-                ? "cursor-pointer hover:bg-[#1e293b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60a5fa]"
-                : "cursor-default"
+            disabled={securityLevel < 3}
+            title={securityLevel < 3 ? "GUEST chỉ được xem tham số" : mode === "student" ? "Ghi nhận thao tác Local" : undefined}
+            className={`pmdt-sidebar-state ${
+              "pmdt-sidebar-state--interactive"
             }`}
           >
-            <span aria-hidden className={`size-3 rounded-sm border border-black/30 ${indicatorClasses[localState.status]}`} />
+            <StateIndicator color={localState.status} locked={loginDialogOpen} />
             Local
           </button>
         </div>
       </section>
 
-      <section aria-labelledby="transmitters-heading" className="mt-2 border border-[#334155] bg-[#111827] p-2">
-        <h2 id="transmitters-heading" className="mb-2 font-semibold text-[#e2e8f0]">Transmitters</h2>
-        <div className="grid grid-cols-[1fr_2.25rem_2.25rem] gap-y-1.5 text-[10px]">
-          <span /><span className="text-center font-semibold">Tx1</span><span className="text-center font-semibold">Tx2</span>
-          {transmitterRows.map((row) => (
-            <div key={row.key} className="contents">
-              <span>{row.label}</span>
-              {(["tx1", "tx2"] as const).map((transmitter) => {
-                const fieldId = `transmitters.${transmitter}.${row.key}`;
-                const color = resolveVorStatus(data.transmitters[transmitter][row.key], fieldId, overrides);
-                return <span key={transmitter} {...fieldMetadata(fieldId, `${row.label} ${transmitter.toUpperCase()}`, color, color)} className="text-center"><Indicator color={color} /></span>;
-              })}
-            </div>
-          ))}
+      <section aria-labelledby="transmitters-heading" className="pmdt-sidebar-section">
+        <h2 id="transmitters-heading" className="pmdt-sidebar-heading">Transmitters</h2>
+        <div className="pmdt-transmitter-grid">
+          <span className="pmdt-sidebar-grid-blank" />
+          <span className="pmdt-transmitter-column-heading">Tx1</span>
+          <span className="pmdt-transmitter-label" />
+          <span className="pmdt-transmitter-column-heading">Tx2</span>
+          <span className="pmdt-sidebar-grid-blank" />
+          {transmitterRows.map((row) => {
+            const renderTransmitterStatus = (transmitter: "tx1" | "tx2") => {
+              const fieldId = `transmitters.${transmitter}.${row.key}`;
+              const color = resolveVorStatus(data.transmitters[transmitter][row.key], fieldId, overrides);
+              const content = <Indicator color={color} locked={loginDialogOpen} />;
+              const metadata = {
+                ...fieldMetadata(fieldId, `${row.label} ${transmitter.toUpperCase()}`, color, color),
+                "aria-label": `${row.label} ${transmitter.toUpperCase()}`,
+              };
+              if (row.key === "main") {
+                return (
+                  <button
+                    type="button"
+                    key={transmitter}
+                    {...metadata}
+                    disabled={!canOperate}
+                    title={canOperate ? `Chọn ${transmitter.toUpperCase()} làm máy phát chính` : "Yêu cầu SEC3 hoặc SEC4 để chuyển máy phát"}
+                    onClick={() => {
+                      if (selectMainTransmitter(transmitter) && mode === "student") {
+                        interactWithSidebar(fieldId, `${row.label} ${transmitter.toUpperCase()}`, true, "green");
+                      }
+                    }}
+                    className={`pmdt-transmitter-status-cell ${canOperate ? "pmdt-transmitter-status-cell--selectable" : ""}`}
+                  >
+                    {content}
+                  </button>
+                );
+              }
+              return (
+                <span
+                  key={transmitter}
+                  {...metadata}
+                  className="pmdt-transmitter-status-cell"
+                >
+                  {content}
+                </span>
+              );
+            };
+
+            return (
+              <div key={row.key} className="contents">
+                <span className="pmdt-sidebar-grid-blank" />
+                {renderTransmitterStatus("tx1")}
+                <span className="pmdt-transmitter-label">{row.label}</span>
+                {renderTransmitterStatus("tx2")}
+                <span className="pmdt-sidebar-grid-blank" />
+              </div>
+            );
+          })}
         </div>
       </section>
 
-      <section aria-labelledby="monitors-heading" className="mt-2 border border-[#334155] bg-[#111827] p-2">
-        <h2 id="monitors-heading" className="mb-2 font-semibold text-[#e2e8f0]">Monitors Integral</h2>
-        <div className="grid gap-1.5 text-[10px]">
+      <section aria-labelledby="monitors-heading" className="pmdt-sidebar-section">
+        <h2 id="monitors-heading" className="pmdt-sidebar-heading">Monitors</h2>
+        <div className="pmdt-monitor-grid">
+          <span className="pmdt-monitor-integral-label">Integral</span>
           {monitorRows.map((row) => {
             const fieldId = `monitorIntegral.${row.key}`;
             const interactive = row.key === "bypass";
@@ -194,18 +300,30 @@ export function PmdtSidebar() {
                   const value = resolveVorField(data.monitorIntegral[row.key], fieldId, overrides);
                   return { value, status: resolveVorStatus(value ? row.activeColor : "gray", fieldId, overrides) };
                 })();
-            const content = <><span>{row.label}</span><Indicator color={state.status} /></>;
+            const content = <><span className="pmdt-sidebar-grid-blank" aria-hidden /><Indicator color={state.status} locked={loginDialogOpen} /><span className="pmdt-monitor-label">{row.label}</span></>;
             return interactive ? (
-              <button key={row.key} type="button" {...fieldMetadata(fieldId, row.label, state.value, state.status)} onClick={() => toggleInteractiveField(fieldId, row.label, state.value, state.status, row.activeColor)} aria-label={row.label} aria-pressed={state.value} title={mode === "student" ? "Ghi nhận thao tác Bypass" : undefined} className={`flex min-h-6 items-center justify-between rounded px-1 ${mode === "student" ? "cursor-pointer hover:bg-[#1e293b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60a5fa]" : "cursor-default"}`}>{content}</button>
+              <button
+                key={row.key}
+                type="button"
+                {...fieldMetadata(fieldId, row.label, state.value, state.status)}
+                onClick={() => toggleInteractiveField(fieldId, row.label, state.value, state.status, row.activeColor)}
+                aria-label={row.label}
+                aria-pressed={state.value}
+                disabled={securityLevel < 3 || (!localState.value && !state.value)}
+                title={securityLevel < 3 ? "GUEST chỉ được xem tham số" : localState.value ? "Bật hoặc tắt Bypass" : "Bật Local trước khi chọn Bypass"}
+                className={`pmdt-monitor-state ${localState.value || state.value ? "pmdt-sidebar-state--interactive" : ""}`}
+              >
+                {content}
+              </button>
             ) : (
-              <div key={row.key} {...fieldMetadata(fieldId, row.label, state.value, state.status)} className="flex min-h-6 items-center justify-between px-1">{content}</div>
+              <div key={row.key} {...fieldMetadata(fieldId, row.label, state.value, state.status)} className="pmdt-monitor-state">{content}</div>
             );
           })}
         </div>
       </section>
 
-      <section aria-labelledby="parameters-heading" className="mt-2 border border-[#334155] bg-[#111827] p-2">
-        <h2 id="parameters-heading" className="mb-2 font-semibold text-[#e2e8f0]">Monitor 1 - Antenna 1</h2>
+      <section aria-labelledby="parameters-heading" className="pmdt-sidebar-section">
+        <h2 id="parameters-heading" className="pmdt-sidebar-heading">Monitor 1 - Antenna 1</h2>
         <dl className="grid gap-1.5">
           {parameterRows.map((row) => {
             const fieldId = `sidebarParams.${row.key}.value`;
@@ -213,8 +331,8 @@ export function PmdtSidebar() {
             const value = resolveVorField(parameter.value, fieldId, overrides);
             const status = resolveVorStatus(parameter.status, fieldId, overrides);
             return (
-              <div key={row.key} {...fieldMetadata(fieldId, row.label, value, status)} className={`flex items-center justify-between border px-2 py-1 ${parameterClasses[status]}`}>
-                <dt>{row.label}</dt><dd className="font-mono font-semibold tabular-nums">{value.toFixed(row.digits)}</dd>
+              <div key={row.key} {...fieldMetadata(fieldId, row.label, value, status)} className={`pmdt-parameter ${parameterClasses[status]}`}>
+                <dt>{row.label}</dt><dd className="font-mono font-semibold tabular-nums">{loginDialogOpen ? "" : value.toFixed(row.digits)}</dd>
               </div>
             );
           })}

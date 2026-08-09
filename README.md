@@ -16,6 +16,19 @@ Dự án đang ở giai đoạn **MVP hoạt động đầy đủ cho đào tạ
 | DME | PMDT Model 1118A/1119A, cấu hình kịch bản, nhật ký, Local/Integral Bypass/Standby Bypass và sơ đồ Dual High Power | Giám khảo xem bằng chứng, đối chiếu checkpoint và nhập điểm thủ công |
 | ADS-B | QCMS, terminal SA/MA, trạng thái site/sensor, sự cố phần cứng, ghi nhận và sắp xếp thao tác | Chấm tự động theo ngữ cảnh menu, thứ tự thao tác và dữ liệu nhập |
 
+### Nhật ký phát triển PMDT DVOR 1150A
+
+Bản redesigner DVOR 1150A được triển khai theo giao diện PMDT cổ điển trong ảnh mẫu và các quy luật vận hành từ manual `doc/DVOR1150A/571150A-0002E.pdf`:
+
+- Route mô phỏng độc lập: `/simulator/dvor-1150a`, cửa sổ PMDT có title bar, menu nhiều tầng, sidebar trạng thái, toolbar F5–F8 và status bar thời gian thực.
+- Trước khi đăng nhập, vùng dữ liệu/Connected/đèn trạng thái bị khóa và để trống. `GUEST` (mật khẩu rỗng) chỉ xem; `SEC3/THREE` và `SEC4/FOUR` được phép thao tác bảo trì.
+- Local phải bật trước Bypass; Local hiển thị màu vàng, Need Backup hiển thị màu đỏ và thay thế LOCAL. Chuyển Main TX1 ↔ TX2 không yêu cầu Local/Bypass; Load và Off loại trừ lẫn nhau.
+- Engine DVOR 1150A cho phép chỉnh tham số cấu hình, giữ draft khi nhập, áp dụng bằng Apply (F7), khôi phục bằng Reset (F8)/RMS > Config Restore, sao lưu bằng RMS > Config Backup và tính lại công suất, tần số, điều chế, monitor, alarm, voting và VSWR.
+- VSWR được giữ ở miền vật lý hợp lệ (≥ 1), đi theo transmitter đang phát và anten/monitor tương ứng; dữ liệu Monitor 2 không bị gán nhầm vào cột phát chính.
+- Trạng thái mô phỏng và bài thực hành được cô lập trong Zustand store của từng phiên trình duyệt; scenario/submission có lớp lưu cục bộ và API/Supabase khi cấu hình cloud. Quy trình chi tiết được lưu trong skill `dvor-1150a-pmdt-simulator` của Codex.
+
+Quality gate cho bản DVOR này: **9 file test, 45/45 test đạt**; `npm run typecheck` và `npm run build` đã compile phần DVOR nhưng vẫn bị chặn bởi 2 lỗi TypeScript trong phần DME đang được SOL phát triển (`src/components/dme/screens/monitor-decoder-results.tsx`).
+
 Mốc xác minh gần nhất được ghi nhận ngày **20/07/2026**: 217 bài kiểm thử Vitest vượt qua và production build thành công. README không thay thế kết quả kiểm tra hiện tại; hãy chạy các quality gate trước khi phát hành thay đổi mới.
 
 ## Chức năng chính
@@ -346,4 +359,3 @@ Khi kế hoạch nội bộ và manual nhà sản xuất khác nhau, manual là 
 - [2026-07-24] Action Builder sử dụng đúng data profile của sensor mục tiêu nên terminal hiển thị chính xác version Nội Bài `1-14-1` hoặc version tùy chỉnh ở bước 2. Kết quả xác nhận cuối: toàn bộ 235 test vượt qua, production build thành công với 40 route trên Next.js 16.2.11 và `npm audit --omit=dev` không còn lỗ hổng; PostCSS/sharp được khóa ở phiên bản đã vá trong phạm vi dependency của Next.
 - [2026-08-04] Nâng cấp hệ thống theme (Theme Switcher, Inline Script chống FOUC), tinh chỉnh App Shell layout, tối ưu giao diện Dashboard/QCMS/Exam và tái cấu trúc các module phần mềm (`src/modules/`, `/software/`). Kiểm tra TypeScript và build tĩnh 63/63 trang thành công 100%.
 - [2026-08-04] Thiết lập cấu hình SSH Key độc lập (`id_ed25519_hainokinguyen`) cho repository `hainokinguyen-coder/cns-simulator.git`, kiểm tra kết nối SSH thành công và đã push toàn bộ mã nguồn lên branch `main` của GitHub.
-

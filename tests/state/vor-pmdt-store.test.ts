@@ -32,8 +32,13 @@ describe("VOR PMDT defaults", () => {
     );
 
     expect(testSignal?.children).toHaveLength(8);
-    expect(commands?.children).toHaveLength(5);
-    expect(commands?.children?.every((item) => !item.enabled)).toBe(true);
+    expect(commands?.children?.map((item) => [item.label, item.enabled])).toEqual([
+      ["Transfer", true],
+      ["Transmitter 1", true],
+      ["Transmitter 2", true],
+      ["Transmitter Ident", true],
+      ["Hold Commutator...", false],
+    ]);
   });
 });
 
