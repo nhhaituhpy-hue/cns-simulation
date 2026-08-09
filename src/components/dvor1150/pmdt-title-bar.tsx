@@ -13,7 +13,7 @@ export function Dvor1150TitleBar() {
     <header className="pmdt-titlebar">
       <span aria-hidden className="pmdt-titlebar-icon"><Broadcast size={13} weight="bold" /></span>
       <h1 className="pmdt-titlebar-heading">
-        {config.station.stationDescription} {config.station.frequencyMHz.toFixed(1)} MHz - Model 1150 {mode} DVOR - AMS (ASI) PMDT
+        {config.station.stationDescription} - Model 1150 {mode} DVOR - AMS(ASI) PMDT
       </h1>
       <div className="pmdt-window-buttons" aria-label="Điều khiển cửa sổ mô phỏng">
         <button type="button" className="pmdt-window-button" aria-label="Thu nhỏ" title="Chỉ mang tính mô phỏng"><Minus size={13} /></button>

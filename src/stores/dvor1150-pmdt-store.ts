@@ -24,11 +24,11 @@ const defaultViews: Record<Dvor1150ScreenId, Dvor1150ViewId> = {
   home: "home",
   "rms-status": "rms-status",
   "rms-data": "rms-maintenance-alerts",
-  "rms-logs": "rms-logs",
+  "rms-logs": "rms-logs-operational-summary",
   "rms-config": "rms-config-general",
   "monitor-data": "monitor-integrity",
   "monitor-config": "monitor-alarm-limits",
-  "tx-data": "tx-data-main",
+  "tx-data": "tx-data-tx1",
   "tx-config": "tx-config-nominal",
   diagnostics: "diagnostics-power-up",
   disabled: "disabled",
@@ -38,11 +38,11 @@ const viewGroups: Record<Dvor1150ScreenId, readonly Dvor1150ViewId[]> = {
   home: ["home"],
   "rms-status": ["rms-status"],
   "rms-data": ["rms-maintenance-alerts", "rms-ad-data"],
-  "rms-logs": ["rms-logs"],
   "rms-config": ["rms-config-general", "rms-config-station", "rms-config-ad-limits"],
-  "monitor-data": ["monitor-integrity", "monitor-sideband-vswr"],
+  "rms-logs": ["rms-logs-operational-summary", "rms-logs-alarms", "rms-logs-maintenance-alerts", "rms-logs-command-activity", "rms-logs-parameter-change"],
+  "monitor-data": ["monitor-integrity", "monitor-ground-check", "monitor-certification", "monitor-test-data", "monitor-notch", "monitor-sideband-vswr"],
   "monitor-config": ["monitor-alarm-limits", "monitor-offsets"],
-  "tx-data": ["tx-data-main"],
+  "tx-data": ["tx-data-tx1", "tx-data-tx2"],
   "tx-config": ["tx-config-nominal", "tx-config-offsets"],
   diagnostics: ["diagnostics-power-up", "diagnostics-fault-isolation"],
   disabled: ["disabled"],
@@ -71,6 +71,7 @@ export interface Dvor1150PmdtStoreState {
   activeScreen: Dvor1150ScreenId;
   activeView: Dvor1150ViewId;
   activeMenuPath: string[];
+  simulationParametersOpen: boolean;
   lastCommand: string | null;
 }
 
@@ -91,6 +92,7 @@ export interface Dvor1150PmdtStoreActions {
   executeCommand: (commandId: string) => boolean;
   openScreen: (screenId: Dvor1150ScreenId, menuPath: readonly string[], title?: string) => void;
   openView: (screenId: Dvor1150ScreenId, viewId: Dvor1150ViewId, menuPath: readonly string[], title?: string) => void;
+  setSimulationParametersOpen: (open: boolean) => void;
   nextView: () => void;
   closeScreen: () => void;
   reset: () => void;
@@ -123,6 +125,7 @@ function buildInitialState(now: () => Date): Dvor1150PmdtStoreState {
     activeScreen: "home",
     activeView: "home",
     activeMenuPath: [],
+    simulationParametersOpen: false,
     lastCommand: null,
   };
 }
@@ -147,7 +150,7 @@ export function createDvor1150PmdtStore(
     return {
       ...initial,
       setMode: (mode) => set({ mode }),
-      openLogin: () => set({ loginDialogOpen: true, loginError: null }),
+      openLogin: () => set({ loginDialogOpen: true, loginError: null, simulationParametersOpen: false }),
       login: (rawUserId, password) => {
         const state = get();
         const currentTime = Date.now();
@@ -201,6 +204,7 @@ export function createDvor1150PmdtStore(
           activeScreen: "home",
           activeView: "home",
           activeMenuPath: [],
+          simulationParametersOpen: false,
         });
       },
       refreshClock: () => {
@@ -225,7 +229,7 @@ export function createDvor1150PmdtStore(
       },
       setMonitorBypass: (_monitor, enabled) => {
         const state = get();
-        if (state.securityLevel < 3 || (enabled && !state.config.simulation.local)) return false;
+        if (state.securityLevel < 3) return false;
         const config = cloneDvor1150Config(state.config);
         config.simulation.integralMonitorBypass = enabled;
         const configDraft = cloneDvor1150Config(state.configDraft);
@@ -235,13 +239,17 @@ export function createDvor1150PmdtStore(
       },
       setConfigValue: (fieldId, value) => {
         const state = get();
-        if (state.securityLevel < 3 || !state.config.simulation.local || !state.config.simulation.integralMonitorBypass || value === null) return;
+        if (state.securityLevel < 3 || !state.config.simulation.integralMonitorBypass) return;
         const configDraft = setDvor1150ConfigValue(state.configDraft, fieldId, value);
         set({ configDraft, configDirty: true });
       },
       applyConfigChanges: () => {
         const state = get();
-        if (!state.configDirty || state.securityLevel < 3 || !state.config.simulation.local || !state.config.simulation.integralMonitorBypass) return false;
+        if (!state.configDirty || state.securityLevel < 3) return false;
+        if (!state.config.simulation.integralMonitorBypass) {
+          set({ lastCommand: "Apply failed: Integral Monitor Bypass must be enabled." });
+          return false;
+        }
         const errors = validateDvor1150Config(state.configDraft);
         if (errors.length > 0) {
           set({ lastCommand: `Apply failed: ${errors[0]}` });
@@ -260,7 +268,7 @@ export function createDvor1150PmdtStore(
       },
       restoreConfig: () => {
         const state = get();
-        if (state.securityLevel < 3 || !state.config.simulation.local || !state.config.simulation.integralMonitorBypass) return false;
+        if (state.securityLevel < 3) return false;
         const restored = preserveLiveSimulation(cloneDvor1150Config(state.configurationBackup ?? defaultDvor1150Config), state.config);
         const derived = recompute(restored, state.derived);
         set({ config: restored, configDraft: cloneDvor1150Config(restored), derived, configDirty: false, needBackup: false, lastCommand: "RMS Config Restore" });
@@ -268,25 +276,28 @@ export function createDvor1150PmdtStore(
       },
       backupConfig: () => {
         const state = get();
-        if (state.securityLevel < 3 || !state.needBackup || !state.config.simulation.local || !state.config.simulation.integralMonitorBypass) return false;
+        if (state.securityLevel < 3 || !state.needBackup) return false;
         set({ configurationBackup: cloneDvor1150Config(state.config), needBackup: false, lastCommand: "RMS Config Backup" });
         return true;
       },
       setTransmitterMode: (transmitterId, mode) => {
         const state = get();
         if (state.securityLevel < 3) return false;
-        if (mode !== "main" && (!state.config.simulation.local || !state.config.simulation.integralMonitorBypass)) return false;
         if (mode === "main" && state.config.station.transmitterConfig === "Single Transmitter" && transmitterId === "tx2") return false;
         const config = cloneDvor1150Config(state.config);
         if (mode === "main") {
           for (const id of ["tx1", "tx2"] as const) {
-            config.transmitters[id].onAir = id === transmitterId;
+            const isSelected = id === transmitterId;
+            config.transmitters[id].enabled = isSelected;
+            config.transmitters[id].onAir = isSelected;
             config.transmitters[id].load = false;
           }
         } else if (mode === "load") {
+          config.transmitters[transmitterId].enabled = true;
           config.transmitters[transmitterId].onAir = false;
           config.transmitters[transmitterId].load = true;
         } else {
+          config.transmitters[transmitterId].enabled = false;
           config.transmitters[transmitterId].onAir = false;
           config.transmitters[transmitterId].load = false;
         }
@@ -297,6 +308,9 @@ export function createDvor1150PmdtStore(
       },
       executeCommand: (commandId) => {
         const state = get();
+        if (commandId === "enable-command-mode" || commandId === "disable-command-mode") {
+          return get().setLocalMode(commandId === "enable-command-mode");
+        }
         if (state.securityLevel < 2) return false;
         if (commandId === "set-time") {
           get().refreshClock();
@@ -311,6 +325,7 @@ export function createDvor1150PmdtStore(
       },
       openScreen: (screenId, menuPath) => set({ activeScreen: screenId, activeView: defaultViews[screenId], activeMenuPath: [...menuPath] }),
       openView: (screenId, viewId, menuPath) => set({ activeScreen: screenId, activeView: viewId, activeMenuPath: [...menuPath] }),
+      setSimulationParametersOpen: (open) => set({ simulationParametersOpen: open }),
       nextView: () => {
         const state = get();
         const views = viewGroups[state.activeScreen];

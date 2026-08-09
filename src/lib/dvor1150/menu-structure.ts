@@ -22,6 +22,7 @@ export const dvor1150MenuStructure: readonly Dvor1150MenuGroup[] = [
       { id: "system-config-load", label: "Configuration Load", enabled: false },
       { id: "system-config-print", label: "Configuration Print", enabled: false },
       { id: "system-pmdt-setup", label: "PMDT Setup", enabled: false },
+      { id: "system-simulation-parameters", label: "Simulation Parameters...", enabled: true, action: "open-config" },
       { id: "system-print-setup", label: "Print Setup", enabled: false },
       { id: "system-exit", label: "Exit PMDT", enabled: false },
     ],
@@ -32,7 +33,7 @@ export const dvor1150MenuStructure: readonly Dvor1150MenuGroup[] = [
     items: [
       { id: "rms-status", label: "Status", enabled: true, screenId: "rms-status", viewId: "rms-status" },
       { id: "rms-data", label: "Data", enabled: true, screenId: "rms-data", viewId: "rms-maintenance-alerts" },
-      { id: "rms-logs", label: "Logs", enabled: true, screenId: "rms-logs", viewId: "rms-logs" },
+      { id: "rms-logs", label: "Logs", enabled: true, screenId: "rms-logs", viewId: "rms-logs-operational-summary" },
       { id: "rms-config", label: "Configuration", enabled: true, screenId: "rms-config", viewId: "rms-config-general" },
       {
         id: "rms-commands",
@@ -77,7 +78,7 @@ export const dvor1150MenuStructure: readonly Dvor1150MenuGroup[] = [
     id: "transmitters",
     label: "Transmitters",
     items: [
-      { id: "transmitters-data", label: "Data", enabled: true, screenId: "tx-data", viewId: "tx-data-main" },
+      { id: "transmitters-data", label: "Data", enabled: true, screenId: "tx-data", viewId: "tx-data-tx1" },
       { id: "transmitters-config", label: "Configuration", enabled: true, screenId: "tx-config", viewId: "tx-config-nominal" },
       {
         id: "transmitters-commands",

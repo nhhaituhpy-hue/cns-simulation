@@ -11,27 +11,26 @@ function MenuItemRow({ group, item, closeMenu }: { group: Dvor1150MenuGroup; ite
   const openView = useDvor1150PmdtStore((state) => state.openView);
   const openLogin = useDvor1150PmdtStore((state) => state.openLogin);
   const logout = useDvor1150PmdtStore((state) => state.logout);
+  const setSimulationParametersOpen = useDvor1150PmdtStore((state) => state.setSimulationParametersOpen);
   const restoreConfig = useDvor1150PmdtStore((state) => state.restoreConfig);
   const backupConfig = useDvor1150PmdtStore((state) => state.backupConfig);
   const setBypass = useDvor1150PmdtStore((state) => state.setMonitorBypass);
   const setTransmitterMode = useDvor1150PmdtStore((state) => state.setTransmitterMode);
   const executeCommand = useDvor1150PmdtStore((state) => state.executeCommand);
   const security = useDvor1150PmdtStore((state) => state.securityLevel);
-  const local = useDvor1150PmdtStore((state) => state.config.simulation.local);
-  const bypass = useDvor1150PmdtStore((state) => state.config.simulation.integralMonitorBypass);
   const needBackup = useDvor1150PmdtStore((state) => state.needBackup);
   const hasChildren = Boolean(item.children?.length);
   const isTx = item.action === "set-transmitter-mode";
-  const isMain = isTx && item.transmitterMode === "main";
   const unavailable = !item.enabled
-    || (isTx && (security < 3 || (!isMain && (!local || !bypass))))
-    || (item.action === "config-restore" && (security < 3 || !local || !bypass))
-    || (item.action === "config-backup" && (security < 3 || !needBackup || !local || !bypass))
-    || (item.action === "set-bypass" && (security < 3 || (!local && item.id.endsWith("on"))))
-    || (item.action === "execute-command" && security < 2);
+    || (isTx && security < 3)
+    || (item.action === "config-restore" && security < 3)
+    || (item.action === "config-backup" && (security < 3 || !needBackup))
+    || (item.action === "set-bypass" && security < 3)
+    || (item.action === "execute-command" && ((item.commandId === "enable-command-mode" || item.commandId === "disable-command-mode") ? security < 3 : security < 2));
 
   function selectItem() {
     if (unavailable || hasChildren) return;
+    if (item.action === "open-config") { setSimulationParametersOpen(true); closeMenu(); return; }
     if (item.action === "open-login") { openLogin(); closeMenu(); return; }
     if (item.action === "logoff") { logout(); closeMenu(); return; }
     if (item.action === "config-restore") { if (restoreConfig()) closeMenu(); return; }

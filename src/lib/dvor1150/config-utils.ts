@@ -61,7 +61,7 @@ const monitorOffsetFields = DVOR1150_MONITOR_IDS.flatMap((monitor) =>
 
 const transmitterFields = DVOR1150_TRANSMITTER_IDS.flatMap((transmitter) => [
   numeric(`transmitters.${transmitter}.nominal.azimuthIndex`, `${transmitter.toUpperCase()} Azimuth Index`, "Transmitter Nominal", { min: -360, max: 360, step: 0.01, digits: 2, unit: "°" }),
-  numeric(`transmitters.${transmitter}.nominal.outputPower`, `${transmitter.toUpperCase()} Output Power`, "Transmitter Nominal", { min: 0, max: 125, step: 0.1, digits: 1, unit: "Watts" }),
+  numeric(`transmitters.${transmitter}.nominal.outputPower`, `${transmitter.toUpperCase()} Output Power`, "Transmitter Nominal", { min: 0, max: 250, step: 0.1, digits: 1, unit: "Watts", description: "Common nominal carrier power. The simulator accepts up to 250 W for training scenarios; the manual baseline is approximately 125 W at 100%." }),
   numeric(`transmitters.${transmitter}.nominal.voiceModulation`, `${transmitter.toUpperCase()} Voice Modulation`, "Transmitter Nominal", { min: 0, max: 100, step: 0.1, digits: 1, unit: "%" }),
   numeric(`transmitters.${transmitter}.nominal.identModulation`, `${transmitter.toUpperCase()} Ident Modulation`, "Transmitter Nominal", { min: 0, max: 100, step: 0.1, digits: 1, unit: "%" }),
   numeric(`transmitters.${transmitter}.nominal.referenceModulation`, `${transmitter.toUpperCase()} Reference Modulation`, "Transmitter Nominal", { min: 0, max: 100, step: 0.1, digits: 1, unit: "%" }),
@@ -72,6 +72,9 @@ const transmitterFields = DVOR1150_TRANSMITTER_IDS.flatMap((transmitter) => [
   numeric(`transmitters.${transmitter}.offsets.voiceModulationScale`, `${transmitter.toUpperCase()} Voice Modulation Scale`, "Transmitter Offsets", { min: 0, max: 200, step: 0.1, digits: 1, unit: "%" }),
   numeric(`transmitters.${transmitter}.offsets.identModulationScale`, `${transmitter.toUpperCase()} Ident Modulation Scale`, "Transmitter Offsets", { min: 0, max: 200, step: 0.1, digits: 1, unit: "%" }),
   numeric(`transmitters.${transmitter}.offsets.referenceModulationScale`, `${transmitter.toUpperCase()} Reference Modulation Scale`, "Transmitter Offsets", { min: 0, max: 200, step: 0.1, digits: 1, unit: "%" }),
+  numeric(`transmitters.${transmitter}.offsets.sideband12PhaseOffset`, `${transmitter.toUpperCase()} Sideband 1-2 Phase Offset`, "Transmitter Offsets", { min: -180, max: 180, step: 0.01, digits: 2, unit: "°" }),
+  numeric(`transmitters.${transmitter}.offsets.sideband34PhaseOffset`, `${transmitter.toUpperCase()} Sideband 3-4 Phase Offset`, "Transmitter Offsets", { min: -180, max: 180, step: 0.01, digits: 2, unit: "°" }),
+  numeric(`transmitters.${transmitter}.offsets.carrierSidebandPhaseOffset`, `${transmitter.toUpperCase()} Carrier-Sideband Phase Offset`, "Transmitter Offsets", { min: -180, max: 180, step: 0.01, digits: 2, unit: "°" }),
   numeric(`transmitters.${transmitter}.offsets.sideband1RfLevelScale`, `${transmitter.toUpperCase()} Sideband 1 RF Scale`, "Transmitter Offsets", { min: 0, max: 200, step: 0.1, digits: 1, unit: "%" }),
   numeric(`transmitters.${transmitter}.offsets.sideband2RfLevelScale`, `${transmitter.toUpperCase()} Sideband 2 RF Scale`, "Transmitter Offsets", { min: 0, max: 200, step: 0.1, digits: 1, unit: "%" }),
   numeric(`transmitters.${transmitter}.offsets.sideband3RfLevelScale`, `${transmitter.toUpperCase()} Sideband 3 RF Scale`, "Transmitter Offsets", { min: 0, max: 200, step: 0.1, digits: 1, unit: "%" }),

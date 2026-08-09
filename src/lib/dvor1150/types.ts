@@ -38,15 +38,24 @@ export type Dvor1150ViewId =
   | "rms-status"
   | "rms-maintenance-alerts"
   | "rms-ad-data"
-  | "rms-logs"
+  | "rms-logs-operational-summary"
+  | "rms-logs-alarms"
+  | "rms-logs-maintenance-alerts"
+  | "rms-logs-command-activity"
+  | "rms-logs-parameter-change"
   | "rms-config-general"
   | "rms-config-station"
   | "rms-config-ad-limits"
   | "monitor-integrity"
+  | "monitor-ground-check"
+  | "monitor-certification"
+  | "monitor-test-data"
+  | "monitor-notch"
   | "monitor-sideband-vswr"
   | "monitor-alarm-limits"
   | "monitor-offsets"
-  | "tx-data-main"
+  | "tx-data-tx1"
+  | "tx-data-tx2"
   | "tx-config-nominal"
   | "tx-config-offsets"
   | "diagnostics-power-up"
@@ -108,6 +117,9 @@ export interface Dvor1150TransmitterOffsets {
   voiceModulationScale: number;
   identModulationScale: number;
   referenceModulationScale: number;
+  sideband12PhaseOffset: number;
+  sideband34PhaseOffset: number;
+  carrierSidebandPhaseOffset: number;
   sideband1RfLevelScale: number;
   sideband2RfLevelScale: number;
   sideband3RfLevelScale: number;
@@ -168,6 +180,7 @@ export interface Dvor1150EffectiveTransmitter {
   onAir: boolean;
   load: boolean;
   active: boolean;
+  azimuthIndex: number;
   outputPower: number;
   voiceModulation: number;
   identModulation: number;

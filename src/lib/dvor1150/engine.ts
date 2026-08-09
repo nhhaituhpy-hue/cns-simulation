@@ -14,6 +14,9 @@ import {
 } from "./types";
 import { formatDvor1150Timestamp } from "./defaults";
 
+const DVOR1150_SIDEBAND_VSWR_ALARM_THRESHOLD = 1.25;
+const DVOR1150_REFERENCE_NOMINAL_OUTPUT_POWER = 100;
+
 const parameterLabels: Record<Dvor1150MonitorParameter, string> = {
   azimuth: "Azimuth Angle",
   hz30Modulation: "30 Hz Mod",
@@ -61,9 +64,15 @@ function effectiveTransmitter(config: Dvor1150Config, id: Dvor1150TransmitterId)
     transmitter.offsets.sideband3RfLevelScale,
     transmitter.offsets.sideband4RfLevelScale,
   ];
+  const phaseOffsets = [
+    transmitter.offsets.sideband12PhaseOffset,
+    transmitter.offsets.sideband12PhaseOffset,
+    transmitter.offsets.sideband34PhaseOffset,
+    transmitter.offsets.sideband34PhaseOffset,
+  ];
   const outputPower = enabled ? Math.max(0, transmitter.nominal.outputPower * outputScale) : 0;
   const sboRfLevel = enabled
-    ? Math.max(0, transmitter.nominal.sboRfLevel * outputScale)
+    ? Math.max(0, transmitter.nominal.sboRfLevel * (transmitter.nominal.outputPower / DVOR1150_REFERENCE_NOMINAL_OUTPUT_POWER))
     : 0;
   return {
     id,
@@ -71,6 +80,7 @@ function effectiveTransmitter(config: Dvor1150Config, id: Dvor1150TransmitterId)
     onAir: enabled && transmitter.onAir,
     load: enabled && transmitter.load,
     active: enabled && transmitter.onAir,
+    azimuthIndex: transmitter.nominal.azimuthIndex,
     outputPower,
     voiceModulation: clamp(transmitter.nominal.voiceModulation * transmitter.offsets.voiceModulationScale / 100, 0, 100),
     identModulation: clamp(transmitter.nominal.identModulation * transmitter.offsets.identModulationScale / 100, 0, 100),
@@ -79,8 +89,8 @@ function effectiveTransmitter(config: Dvor1150Config, id: Dvor1150TransmitterId)
     carrierFrequency: config.station.frequencyMHz,
     lowerSidebandFrequency: config.station.frequencyMHz - 0.00996,
     upperSidebandFrequency: config.station.frequencyMHz + 0.00996,
-    sidebandPower: sidebandScales.map((scale) => Math.max(0, sboRfLevel * scale / 100 / 30)),
-    sidebandVswr: sidebandScales.map((scale, index) => Math.max(1, 1 + Math.abs(100 - scale) / 250 + (index + 1) * 0.01)),
+    sidebandPower: sidebandScales.map((scale) => Math.max(0, sboRfLevel * (scale / 100) ** 2 / 30)),
+    sidebandVswr: sidebandScales.map((scale, index) => Math.max(1, 1 + Math.abs(100 - scale) / 250 + (index + 1) * 0.01 + Math.abs(phaseOffsets[index] + transmitter.offsets.carrierSidebandPhaseOffset) / 1800)),
   };
 }
 
@@ -99,7 +109,7 @@ function monitorResult(
   const offsets = config.monitor.offsets[monitorId];
   const activeTx = active ?? effectiveTransmitter(config, "tx1");
   const rawValues: Record<Dvor1150MonitorParameter, number> = {
-    azimuth: normalizeAzimuth(359.97 + activeTx.voiceModulation * 0.01 + offsets.azimuth),
+    azimuth: normalizeAzimuth(359.97 + activeTx.azimuthIndex + config.transmitters[activeTx.id].offsets.azimuthAngle + offsets.azimuth),
     hz30Modulation: 29.1 + activeTx.referenceModulation * 0.03 + offsets.hz30Modulation,
     hz9960Modulation: 29 + activeTx.referenceModulation * 0.033 + offsets.hz9960Modulation,
     deviation: 16 + activeTx.voiceModulation * 0.12 + offsets.deviation,
@@ -166,7 +176,7 @@ export function buildDvor1150Snapshot(config: Dvor1150Config, now = new Date()):
   const timestamp = config.simulation.timestamp || formatDvor1150Timestamp(now);
   const sidebandVswr = Array.from({ length: 48 }, (_, index) => {
     const value = active ? Math.max(1, active.sidebandVswr[index % 4] + ((index % 3) * 0.005)) : 1;
-    const alarm = value > 1 + config.monitor.sidebandVswrTolerance / 100;
+    const alarm = value > DVOR1150_SIDEBAND_VSWR_ALARM_THRESHOLD;
     return {
       antenna: index + 1,
       value,

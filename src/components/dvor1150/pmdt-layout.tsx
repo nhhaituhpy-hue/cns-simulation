@@ -7,6 +7,7 @@ import { Dvor1150ScreenRouter } from "./pmdt-screens";
 import { Dvor1150Sidebar } from "./pmdt-sidebar";
 import { Dvor1150StatusBar } from "./pmdt-status-bar";
 import { Dvor1150TitleBar } from "./pmdt-title-bar";
+import { Dvor1150SimulationParametersPanel } from "./pmdt-simulation-parameters";
 import { useDvor1150PmdtStore } from "@/stores/dvor1150-pmdt-store";
 import type { Dvor1150PmdtMode } from "@/lib/dvor1150";
 
@@ -18,6 +19,7 @@ export function Dvor1150PmdtLayout({ mode = "preview" }: { mode?: Dvor1150PmdtMo
   const next = useDvor1150PmdtStore((state) => state.nextView);
   const close = useDvor1150PmdtStore((state) => state.closeScreen);
   const refreshClock = useDvor1150PmdtStore((state) => state.refreshClock);
+  const simulationParametersOpen = useDvor1150PmdtStore((state) => state.simulationParametersOpen);
 
   useEffect(() => { setMode(mode); }, [mode, setMode]);
   useEffect(() => {
@@ -43,6 +45,7 @@ export function Dvor1150PmdtLayout({ mode = "preview" }: { mode?: Dvor1150PmdtMo
       <Dvor1150Sidebar />
       <main className="pmdt-classic-main">{loginOpen ? <div className="pmdt-prelogin-workspace" aria-hidden /> : <Dvor1150ScreenRouter />}</main>
       <div className="pmdt-statusbar-row"><Dvor1150StatusBar /></div>
+      {simulationParametersOpen ? <Dvor1150SimulationParametersPanel /> : null}
       {loginOpen ? <Dvor1150LoginDialog /> : null}
     </section>
   </div>;
