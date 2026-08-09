@@ -2,6 +2,7 @@
 @import "../styles/theme-tokens.css";
 @import "../styles/pmdt-classic.css";
 @import "../styles/dme-pmdt-classic.css";
+@import "../styles/dvor1150-pmdt.css";
 
 :root {
   --terminal-bg: #000000;

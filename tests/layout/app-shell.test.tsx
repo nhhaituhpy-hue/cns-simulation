@@ -156,7 +156,7 @@ describe("AppShell", () => {
     expect(window.localStorage.getItem("cns-app-theme")).toBe("light");
   });
 
-  it("shows the simulator software name in the submenu header", () => {
+  it("keeps the classic DVOR PMDT routes outside the global app shell", () => {
     mockUsePathname.mockReturnValue("/simulator/dvor-1150a");
 
     render(
@@ -165,9 +165,8 @@ describe("AppShell", () => {
       </AppShell>,
     );
 
-    expect(
-      screen.getByRole("heading", { name: "DVOR 1150A PMDT Simulator" }),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Nội dung kiểm thử")).toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Điều hướng chính" })).not.toBeInTheDocument();
   });
 
   it("shows contextual header titles for the remaining workspace menus", () => {

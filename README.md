@@ -12,7 +12,7 @@ Dự án đang ở giai đoạn **MVP hoạt động đầy đủ cho đào tạ
 
 | Module | Phạm vi đã triển khai | Cách đánh giá |
 | --- | --- | --- |
-| VOR | PMDT DVOR 1150A, cấu hình kịch bản, checkpoint, nhật ký màn hình, tương tác Local/Bypass và chẩn đoán phần cứng | Giám khảo xem bằng chứng, đối chiếu checkpoint và nhập điểm thủ công |
+| VOR | PMDT DVOR 1150A và DVOR 1150, cấu hình kịch bản, checkpoint, nhật ký màn hình, tương tác Local/Bypass và chẩn đoán phần cứng | Giám khảo xem bằng chứng, đối chiếu checkpoint và nhập điểm thủ công |
 | DME | PMDT Model 1118A/1119A, cấu hình kịch bản, nhật ký, Local/Integral Bypass/Standby Bypass và sơ đồ Dual High Power | Giám khảo xem bằng chứng, đối chiếu checkpoint và nhập điểm thủ công |
 | ADS-B | QCMS, terminal SA/MA, trạng thái site/sensor, sự cố phần cứng, ghi nhận và sắp xếp thao tác | Chấm tự động theo ngữ cảnh menu, thứ tự thao tác và dữ liệu nhập |
 
@@ -29,6 +29,19 @@ Bản redesigner DVOR 1150A được triển khai theo giao diện PMDT cổ đi
 
 Quality gate cho bản DVOR này: **9 file test, 45/45 test đạt**. Phần DME có quality gate và phạm vi kiểm thử riêng ở mục dưới; các derived engine được giữ tách biệt để hai simulator chạy song song.
 
+### DVOR 1150 — PMDT đơn giản theo mục 3.4
+
+Bản DVOR 1150 được xây dựng độc lập từ mục 3.4 của `doc/DVOR1150/DVOR 1150.pdf`, dùng lại ngôn ngữ PMDT cổ điển nhưng không dùng engine/state của DVOR 1150A:
+
+- Route mô phỏng: `/simulator/dvor-1150`. Phạm vi lõi gồm title/menu/sidebar/status bar, login, RMS Status/Data/Logs/Configuration, Monitor Data/Configuration, Transmitter Data/Configuration và Diagnostics.
+- Tài khoản PMDT: `GUEST` không mật khẩu và chỉ xem; `SEC3/THREE`, `SEC4/FOUR` được bật Local/Bypass, chuyển máy và sửa cấu hình. Trước login, Connected, tham số và các đèn G/Y/R được che trống.
+- Chuyển TX1 ↔ TX2 sang Main không cần Local/Bypass. Chọn Load/Off và chỉnh Configuration yêu cầu Local + Integral Monitor Bypass. Load và Off của cùng máy phát là hai trạng thái loại trừ.
+- Config nhập vào `configDraft`, cho phép xóa rồi nhập lại, Apply (F7) mới cập nhật engine. Apply đặt Need Backup màu đỏ; RMS > Config Backup lưu snapshot EEPROM mô phỏng và xóa cảnh báo; RMS > Config Restore khôi phục snapshot đã backup; Reset (F8) hủy draft hiện tại.
+- Derived engine liên kết Output Power/Scale, SBO, modulation, frequency, monitor alarm/voting, 48 anten Sideband VSWR và cột transmitter đang phát. VSWR luôn được giới hạn trong miền vật lý `>= 1`.
+- State DVOR 1150 chỉ nằm trong Zustand store của tab trình duyệt, không ghi localStorage/API/ Supabase. Vì vậy nhiều người hoặc nhiều tab có phiên mô phỏng độc lập, không ghi đè dữ liệu nhau; reload tạo lại snapshot mặc định.
+
+Quality gate trực tiếp cho module: `tests/vor/dvor1150-engine.test.ts`, `tests/layout/app-shell.test.tsx`, `tests/layout/module-routing.test.tsx` và `tests/vor/vor-integration.test.tsx` đạt **15/15 test**; `npm run typecheck` và `npm run build` đạt.
+
 ### DME 1119A — CONFIG → MONITOR derivation
 
 Engine DME nằm riêng trong `src/lib/dme1119a/` và được gọi bởi store DME, không sửa engine DVOR 1150A. Bảng truy vết đầy đủ từ từng trường cấu hình đến màn hình/row bị ảnh hưởng được export bởi `dmeConfigDerivationMap` trong `src/lib/dme1119a/config.ts` và hiển thị trong panel **System → Simulation Parameters…**.
@@ -43,7 +56,7 @@ Engine DME nằm riêng trong `src/lib/dme1119a/` và được gọi bởi store
 
 Quality gate DME hiện tại: `tests/dme/dme1119a-derivation.test.ts`, `tests/dme/dme1119a-channel.test.ts`, `tests/dme/pmdt-shell.test.tsx` và `tests/state/dme-pmdt-store.test.ts` đạt **56/56 test**; `npm run typecheck` và `npm run build` đã pass. Đây là mô hình đào tạo xác định, không thay thế phép đo RF/hiệu chuẩn phần cứng thật.
 
-Mốc xác minh gần nhất được ghi nhận ngày **20/07/2026**: 217 bài kiểm thử Vitest vượt qua và production build thành công. README không thay thế kết quả kiểm tra hiện tại; hãy chạy các quality gate trước khi phát hành thay đổi mới.
+Mốc xác minh gần nhất được ghi nhận ngày **09/08/2026**: quality gate trực tiếp DVOR 1150 đạt 15/15, TypeScript và production build thành công. README không thay thế kết quả kiểm tra hiện tại; hãy chạy các quality gate trước khi phát hành thay đổi mới.
 
 ## Chức năng chính
 
@@ -346,6 +359,7 @@ Khi kế hoạch nội bộ và manual nhà sản xuất khác nhau, manual là 
 - Mở rộng kiểm thử E2E, accessibility, hiệu năng và quan sát lỗi production.
 
 ## Session Log
+- [2026-08-09] Xây dựng DVOR 1150 Simulator độc lập theo mục 3.4 của `doc/DVOR1150/DVOR 1150.pdf`: bổ sung route `/simulator/dvor-1150`, PMDT shell/sidebar/menu/login, RMS/Monitor/Transmitter/Diagnostics core, state/config engine riêng, derived CONFIG → MONITOR, chuyển TX1/TX2, Local/Bypass, Apply/Need Backup/Config Backup/Restore và Reset (F8). Đồng hồ chạy theo thời gian thực; pre-login che Connected/tham số/đèn trạng thái; menu nhiều cấp mở sang phải. Quality gate trực tiếp: 15/15 test, `npm run typecheck`, `npm run build` đạt.
 - [2026-08-09] Hoàn thiện luồng chỉnh sửa CONFIG trực tiếp trên các màn hình DME 1119A: giá trị có thể xoá/nhập lại, stage vào `configDraft`, Apply (F7) áp dụng và phát sinh Need Backup. Bổ sung Reset (F8) khôi phục factory default tương tự DVOR, còn RMS > Config Restore khôi phục bản Config Backup; cả hai thao tác khôi phục đều xoá Need Backup.
 - [2026-08-09] Hoàn thiện mapping CONFIG → MONITOR cho DME 1119A theo `doc/DME1119A/1119A-0001M.pdf`: channel Table 9-5, delay/spacing integrity, PRF/dead-time/SDES-LDES, propagation, PA/ident, monitor offsets/ERP/VSWR và voting/transfer. Tách độc lập `TX1 Power Output Scale`/`TX2 Power Output Scale`, kiểm tra Apply/Need Backup/Config Backup và transfer sau khi đổi từng máy; giữ nguyên engine DVOR 1150A.
 - [2026-07-20] Hoàn thành tích hợp toàn bộ các màn hình PMDT của VOR và DME còn thiếu theo tài liệu `PMDT Capture.docx`.

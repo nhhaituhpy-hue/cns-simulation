@@ -37,7 +37,7 @@ describe("CNS module routing", () => {
 
     const workspace = container.firstChild;
     expect(screen.queryByRole("navigation", { name: "Phân hệ thiết bị CNS" })).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "PMDT Simulator - DME 1118A/1119A" })).toHaveClass("text-base");
+    expect(screen.getByRole("heading", { name: "PMDT Simulator - DME 1119A" })).toHaveClass("text-base");
     expect(workspace).toHaveClass("max-w-none");
     expect(workspace).not.toHaveClass("max-w-[1320px]");
     expect(workspace).toHaveClass("lg:px-8", "xl:px-10", "2xl:px-12");

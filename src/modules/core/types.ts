@@ -3,6 +3,7 @@ export type SimulatorModuleStatus = "available" | "planned";
 
 export type DeviceSimulatorModuleId =
   | "dvor-1150a"
+  | "dvor-1150"
   | "dme-1119a"
   | "ads-b";
 

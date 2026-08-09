@@ -54,6 +54,7 @@ next-env.d.ts
 # Local documentation
 /doc/
 /pdf_extracts/
+/tmp/
 
 # Wrangler & local database mocks
 .wrangler/

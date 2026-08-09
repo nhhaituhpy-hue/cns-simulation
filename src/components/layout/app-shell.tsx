@@ -142,7 +142,7 @@ function getPageHeader(pathname: string) {
     (candidate) => candidate.routes.simulator === pathname,
   );
   if (module) {
-    const usesPmdt = module.id === "dvor-1150a" || module.id === "dme-1119a";
+    const usesPmdt = module.id === "dvor-1150" || module.id === "dvor-1150a" || module.id === "dme-1119a";
     return {
       eyebrow: "Phần mềm mô phỏng",
       title: `${module.shortName}${usesPmdt ? " PMDT" : ""} Simulator`,
@@ -497,7 +497,7 @@ export function AppShell({ children, currentUser }: AppShellProps) {
   // The reference DVOR and DME PMDTs are standalone 900 px desktop
   // applications. Keep the global CNS navigation outside those simulators so
   // their client areas retain the coordinates shown in the supplied captures.
-  if (pathname === "/login" || pathname === "/simulator/dvor-1150a" || pathname === "/simulator/dme-1119a") {
+  if (pathname === "/login" || pathname === "/simulator/dvor-1150" || pathname === "/simulator/dvor-1150a" || pathname === "/simulator/dme-1119a") {
     return <>{children}</>;
   }
 
