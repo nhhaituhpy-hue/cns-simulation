@@ -156,8 +156,12 @@ describe("AppShell", () => {
     expect(window.localStorage.getItem("cns-app-theme")).toBe("light");
   });
 
-  it("keeps the classic DVOR PMDT routes outside the global app shell", () => {
-    mockUsePathname.mockReturnValue("/simulator/dvor-1150a");
+  it.each([
+    "/simulator/dvor-1150a",
+    "/simulator/software/dvor-220",
+    "/simulator/software/dme-320",
+  ])("keeps the standalone simulator route %s outside the global app shell", (pathname) => {
+    mockUsePathname.mockReturnValue(pathname);
 
     render(
       <AppShell currentUser={adminUser}>

@@ -2,8 +2,21 @@ import { ArrowLeft } from "@phosphor-icons/react/dist/ssr/ArrowLeft";
 import { DesktopTower } from "@phosphor-icons/react/dist/ssr/DesktopTower";
 import Link from "next/link";
 import type { OperationsSoftwareModuleId, SimulatorModuleDefinition } from "@/modules/core/types";
+import { Dme320Simulator } from "@/modules/operations/dme-320";
+import { Dvor220Simulator } from "@/modules/operations/dvor-220";
 
 type OperationsModule = SimulatorModuleDefinition<OperationsSoftwareModuleId>;
+
+export function OperationsSoftwareSimulator({ module }: { module: OperationsModule }) {
+  switch (module.id) {
+    case "dvor-220":
+      return <Dvor220Simulator />;
+    case "dme-320":
+      return <Dme320Simulator />;
+    default:
+      return <OperationsSoftwarePlaceholder module={module} />;
+  }
+}
 
 export function OperationsSoftwarePlaceholder({ module }: { module: OperationsModule }) {
   return (

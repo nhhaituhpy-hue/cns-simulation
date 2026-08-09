@@ -1,0 +1,91 @@
+.simulatorRoot {
+  --dme-blue: #3a82b6;
+  --dme-blue-dark: #175a7f;
+  --dme-border: #858e95;
+  --dme-surface: #f1f3f4;
+  --dme-text: #1e2a32;
+  min-height: 100%;
+  color: var(--dme-text);
+  font-family: Tahoma, "Segoe UI", sans-serif;
+  font-size: 12px;
+}
+
+.outputLog {
+  min-height: 72px;
+  background: #fff;
+}
+
+.outputLog table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 10px;
+}
+
+.outputLog th {
+  position: sticky;
+  top: 0;
+  background: #f3f5f6;
+  color: #34434d;
+  text-align: left;
+}
+
+.outputLog th,
+.outputLog td {
+  overflow: hidden;
+  border-right: 1px solid #c4c9cd;
+  border-bottom: 1px solid #d4d8da;
+  padding: 2px 5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.outputLog th:first-child,
+.outputLog td:first-child {
+  width: 18%;
+}
+
+.outputLog th:nth-child(3),
+.outputLog td:nth-child(3) {
+  width: 14%;
+}
+
+.outputLog th:last-child,
+.outputLog td:last-child {
+  width: 16%;
+}
+
+.outputLog tr[data-category="alarm"] {
+  color: #9f211a;
+}
+
+.outputLog tr[data-category="control"],
+.outputLog tr[data-category="configuration"] {
+  color: #155b83;
+}
+
+.outputLog tr[data-category="maintenance"] {
+  color: #67510b;
+}
+
+.commandError {
+  margin: 0;
+  border: 1px solid #b55c54;
+  background: #fff0ed;
+  padding: 5px 7px;
+  color: #7e211a;
+  font-weight: 700;
+}
+
+.emptyOutput {
+  margin: 0;
+  padding: 14px;
+  color: #69757c;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .simulatorRoot * {
+    scroll-behavior: auto;
+  }
+}

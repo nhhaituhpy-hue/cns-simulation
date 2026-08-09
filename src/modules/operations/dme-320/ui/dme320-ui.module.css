@@ -1,0 +1,586 @@
+.screenStack {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  color: var(--mopiens-text, #1d252c);
+}
+
+.screenHeader {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 8px;
+  border: 1px solid var(--mopiens-blue-500, #4b91be);
+  background: linear-gradient(#b7ccdf, #92b0cb);
+}
+
+.screenHeader h2,
+.screenHeader h3,
+.screenHeader p,
+.panelHeading h3,
+.setupSection h3,
+.currentStepPanel h3 {
+  margin: 0;
+}
+
+.screenHeader h2 {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  text-shadow: 0 1px #58758d;
+}
+
+.screenHeader p {
+  margin-top: 2px;
+  color: #334b5d;
+  font-size: 11px;
+}
+
+.actionRow,
+.inlineInputs,
+.monitorStrip,
+.monitorSummary,
+.profileRail,
+.calibrationHeader,
+.lmiSwitchRow,
+.lmiControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.homeOverview {
+  display: grid;
+  grid-template-columns: 150px 230px minmax(300px, 1fr);
+  align-items: stretch;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--mopiens-border, #8b9298);
+  background: var(--mopiens-surface-raised, #fbfbfb);
+}
+
+.topology {
+  min-height: 130px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid var(--mopiens-border-soft, #c4c8cc);
+  background: #f6f7f8;
+}
+
+.topologyAntenna,
+.topologyLoad {
+  justify-self: center;
+  min-width: 92px;
+  padding: 3px 8px;
+  border: 1px solid #4e6472;
+  background: #d8e4ec;
+  color: #254154;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.topologyTransponders {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.topologyTransponders::before,
+.topologyTransponders::after {
+  position: absolute;
+  left: 50%;
+  width: 1px;
+  height: 17px;
+  background: #38596d;
+  content: "";
+}
+
+.topologyTransponders::before { bottom: 100%; }
+.topologyTransponders::after { top: 100%; }
+
+.topologyNode {
+  min-width: 0;
+  padding: 4px;
+  border: 2px solid var(--mopiens-border, #8b9298);
+  background: #fff;
+}
+
+.topologyNodeAntenna { border-color: var(--mopiens-normal, #16b83e); }
+.topologyNodeLoad { border-color: var(--mopiens-warning, #f0b400); }
+
+.monitorStrip,
+.monitorSummary,
+.profileRail {
+  min-height: 38px;
+  padding: 5px 8px;
+  border: 1px solid var(--mopiens-border-soft, #c4c8cc);
+  background: var(--mopiens-surface-sunken, #e7e9ec);
+}
+
+.gaugeGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--mopiens-border, #8b9298);
+  background: var(--mopiens-surface-raised, #fbfbfb);
+}
+
+.quickControls {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 7px;
+  padding: 7px;
+  border: 1px solid var(--mopiens-border, #8b9298);
+  background: linear-gradient(#eceff1, #d5d9dc);
+}
+
+.quickControls > button { width: 100%; }
+
+.twoColumnGrid,
+.monitorGrid,
+.powerDialogGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.monitorGrid { align-items: start; }
+
+.statusPanel,
+.setupSection,
+.currentStepPanel,
+.powerDialogTransmitter,
+.lmiControlGroup {
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--mopiens-border, #8b9298);
+  background: var(--mopiens-surface-raised, #fbfbfb);
+}
+
+.statusPanel,
+.setupSection,
+.powerDialogTransmitter {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.panelHeading {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--mopiens-blue-300, #9bb8d4);
+}
+
+.panelHeading h3,
+.setupSection h3,
+.currentStepPanel h3 {
+  color: var(--mopiens-blue-800, #17658f);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.batteryGauges {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.inlineNotice,
+.lmiMessage {
+  padding: 5px 8px;
+  border: 1px solid var(--mopiens-blue-300, #9bb8d4);
+  background: #e9f2f8;
+  color: #24516e;
+  font-size: 11px;
+}
+
+.validationBanner {
+  padding: 7px 10px;
+  border: 1px solid #d49100;
+  background: #fff4cc;
+  color: #5c4200;
+  font-size: 11px;
+}
+
+.validationBanner ul {
+  margin: 4px 0 0 18px;
+  padding: 0;
+}
+
+.setupFieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.setupFieldset:disabled { opacity: 0.72; }
+
+.setupGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  align-items: start;
+}
+
+.formField {
+  display: grid;
+  grid-template-columns: minmax(125px, 42%) minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  color: var(--mopiens-text, #1d252c);
+  font-size: 11px;
+}
+
+.formLabel {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.formLabel small,
+.formHelper {
+  color: var(--mopiens-text-muted, #66727b);
+  font-size: 10px;
+}
+
+.formHelper { grid-column: 2; }
+
+.textInput,
+.numberInput,
+.selectInput,
+.historyFilters input,
+.editTable input,
+.editTable select {
+  min-width: 0;
+  width: 100%;
+  height: 23px;
+  padding: 2px 5px;
+  border: 1px solid #87939c;
+  border-radius: 0;
+  background: #fff;
+  color: var(--mopiens-text, #1d252c);
+  font-size: 11px;
+}
+
+.inlineInputs > * { flex: 1 1 70px; }
+
+.switchMatrix {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.editTableFrame {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--mopiens-border, #8b9298);
+}
+
+.editTable {
+  width: 100%;
+  min-width: 920px;
+  border-collapse: collapse;
+  background: var(--mopiens-surface-raised, #fbfbfb);
+  font-size: 10px;
+}
+
+.editTable caption {
+  padding: 6px;
+  background: var(--mopiens-blue-500, #4b91be);
+  color: #fff;
+  font-weight: 700;
+  text-align: left;
+}
+
+.editTable th,
+.editTable td {
+  padding: 3px 4px;
+  border: 1px solid var(--mopiens-border-soft, #c4c8cc);
+  text-align: left;
+}
+
+.editTable thead th { background: #dbe5ed; }
+.editTable tbody th { min-width: 130px; color: #2d5f7d; }
+.editTable input { min-width: 72px; }
+
+.calibrationHeader {
+  padding: 7px;
+  border: 1px solid var(--mopiens-border-soft, #c4c8cc);
+  background: var(--mopiens-surface-sunken, #e7e9ec);
+}
+
+.calibrationHeader .formField { min-width: 240px; }
+
+.currentStepPanel {
+  display: grid;
+  grid-template-columns: minmax(250px, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border-left: 5px solid var(--mopiens-pending, #ef7f1a);
+}
+
+.currentStepPanel p { margin: 4px 0 0; }
+
+.advancedTxGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  align-items: start;
+}
+
+.advancedTxPanel {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  padding: 7px;
+  border: 1px solid var(--mopiens-border, #8b9298);
+  background: var(--mopiens-surface-raised, #fbfbfb);
+}
+
+.advancedControlGroup {
+  display: grid;
+  grid-template-columns: minmax(190px, 1fr) auto minmax(78px, auto);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 6px 8px 8px;
+  border: 1px solid var(--mopiens-border-soft, #c4c8cc);
+  background: #f1f3f4;
+}
+
+.advancedControlGroup legend {
+  padding: 0 4px;
+  color: var(--mopiens-blue-800, #17658f);
+  font-weight: 700;
+}
+
+.advancedControlGroup small {
+  color: var(--mopiens-text-muted, #66727b);
+  white-space: nowrap;
+}
+
+.radioRow {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.radioRow label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.radioRow input { margin: 0; }
+
+.advancedOperationalControls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--mopiens-blue-300, #9bb8d4);
+  flex-wrap: wrap;
+}
+
+.timeline {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  padding: 1px;
+  background: var(--mopiens-border, #8b9298);
+}
+
+.timeline span {
+  position: relative;
+  display: flex;
+  min-height: 50px;
+  flex-direction: column;
+  justify-content: center;
+  padding: 6px 10px;
+  background: #eef4f7;
+  color: #24516e;
+}
+
+.timeline span:not(:last-child)::after {
+  position: absolute;
+  top: 50%;
+  right: -7px;
+  z-index: 1;
+  color: var(--mopiens-blue-800, #17658f);
+  content: "›";
+  font-size: 18px;
+  transform: translateY(-50%);
+}
+
+.timeline small { margin-top: 3px; }
+
+.clockPanel {
+  display: flex;
+  min-height: 150px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px inset #8c969d;
+  background: #151d22;
+  color: #61e86a;
+  font-family: Consolas, "Courier New", monospace;
+}
+
+.clockPanel span { color: #aab8c0; font-family: "Segoe UI", sans-serif; }
+.clockPanel strong { font-size: 34px; letter-spacing: 2px; }
+.clockPanel small { margin-top: 5px; color: #8bd692; }
+
+.historyFilters {
+  display: grid;
+  grid-template-columns: 180px 180px minmax(250px, 1fr) minmax(170px, 1fr) auto;
+  align-items: end;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--mopiens-border, #8b9298);
+  background: var(--mopiens-surface-sunken, #e7e9ec);
+  font-size: 11px;
+}
+
+.historyFilters > label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.historyFilters fieldset {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  margin: 0;
+  padding: 4px 6px;
+  border: 1px solid var(--mopiens-border-soft, #c4c8cc);
+  flex-wrap: wrap;
+}
+
+.checkField {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.checkField input { width: auto; height: auto; }
+
+.dialogStack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dialogStack p { margin: 0; }
+
+.dialogControlRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px;
+  border: 1px solid var(--mopiens-border-soft, #c4c8cc);
+  background: var(--mopiens-surface-sunken, #e7e9ec);
+}
+
+.powerDialogTransmitter legend,
+.lmiControlGroup legend {
+  padding: 0 5px;
+  color: var(--mopiens-blue-800, #17658f);
+  font-weight: 700;
+}
+
+.lmiPage {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.lmiOverviewTop {
+  display: grid;
+  grid-template-columns: 120px 1fr 220px;
+  gap: 6px;
+}
+
+.lmiTopology {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px;
+  border: 1px solid #6b899d;
+  background: #eef4f7;
+}
+
+.lmiControls {
+  justify-content: center;
+  padding: 5px;
+  border: 1px solid #6b899d;
+  background: #dfe9ef;
+}
+
+.lmiEquipmentGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.lmiControlGroup {
+  margin: 0;
+}
+
+.lmiControlGroup p { margin: 3px 0 6px; }
+
+.lmiMessage {
+  margin-top: 4px;
+}
+
+@media (max-width: 820px) {
+  .homeOverview,
+  .setupGrid,
+  .historyFilters,
+  .lmiOverviewTop {
+    grid-template-columns: 1fr;
+  }
+
+  .twoColumnGrid,
+  .monitorGrid,
+  .powerDialogGrid,
+  .gaugeGrid,
+  .lmiEquipmentGrid,
+  .advancedTxGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .currentStepPanel { grid-template-columns: 1fr; }
+  .quickControls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

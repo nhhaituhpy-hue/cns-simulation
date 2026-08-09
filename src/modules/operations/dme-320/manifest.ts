@@ -3,10 +3,11 @@ import type { SimulatorModuleDefinition } from "@/modules/core/types";
 export const DME_320_SOFTWARE_MODULE = {
   id: "dme-320",
   category: "operations-software",
-  status: "planned",
+  status: "available",
+  trainingStatus: "planned",
   name: "Phần mềm khai thác DME 320",
   shortName: "DME 320",
-  description: "Khung mô phỏng phần mềm vận hành và bảo dưỡng DME 320.",
+  description: "Mô phỏng PMDT/LMI vận hành, bảo dưỡng và chẩn đoán MOPIENS 320 DME.",
   routes: {
     admin: "/admin/software/dme-320",
     student: "/student/software/dme-320",

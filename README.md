@@ -12,8 +12,8 @@ Dự án đang ở giai đoạn **MVP hoạt động đầy đủ cho đào tạ
 
 | Module | Phạm vi đã triển khai | Cách đánh giá |
 | --- | --- | --- |
-| VOR | PMDT DVOR 1150A và DVOR 1150, cấu hình kịch bản, checkpoint, nhật ký màn hình, tương tác Local/Bypass và chẩn đoán phần cứng | Giám khảo xem bằng chứng, đối chiếu checkpoint và nhập điểm thủ công |
-| DME | PMDT Model 1118A/1119A, cấu hình kịch bản, nhật ký, Local/Integral Bypass/Standby Bypass và sơ đồ Dual High Power | Giám khảo xem bằng chứng, đối chiếu checkpoint và nhập điểm thủ công |
+| VOR | PMDT DVOR 1150A, DVOR 1150 và simulator MOPIENS 220 DVOR; cấu hình kịch bản, checkpoint, alarm/changeover, Local/Bypass và chẩn đoán phần cứng | Giám khảo xem bằng chứng, đối chiếu checkpoint và nhập điểm thủ công |
+| DME | PMDT Model 1118A/1119A và simulator MOPIENS 320 DME; cấu hình, monitor voting, alarm/changeover, bảo trì và sơ đồ Dual High Power | Giám khảo xem bằng chứng, đối chiếu checkpoint và nhập điểm thủ công |
 | ADS-B | QCMS, terminal SA/MA, trạng thái site/sensor, sự cố phần cứng, ghi nhận và sắp xếp thao tác | Chấm tự động theo ngữ cảnh menu, thứ tự thao tác và dữ liệu nhập |
 
 ### Nhật ký phát triển PMDT DVOR 1150A
@@ -56,7 +56,18 @@ Engine DME nằm riêng trong `src/lib/dme1119a/` và được gọi bởi store
 
 Quality gate DME hiện tại: `tests/dme/dme1119a-derivation.test.ts`, `tests/dme/dme1119a-channel.test.ts`, `tests/dme/pmdt-shell.test.tsx` và `tests/state/dme-pmdt-store.test.ts` đạt **56/56 test**; `npm run typecheck` và `npm run build` đã pass. Đây là mô hình đào tạo xác định, không thay thế phép đo RF/hiệu chuẩn phần cứng thật.
 
-Mốc xác minh gần nhất được ghi nhận ngày **09/08/2026**: quality gate trực tiếp DVOR 1150 đạt 15/15, TypeScript và production build thành công. README không thay thế kết quả kiểm tra hiện tại; hãy chạy các quality gate trước khi phát hành thay đổi mới.
+### MOPIENS 220 DVOR và 320 DME
+
+Hai simulator phần mềm khai thác được xây dựng độc lập từ `doc/DVOR220/220 DVOR Tech Manual 20240320.pdf`, các ảnh tham chiếu DVOR và `doc/DME320/310320_DME_Tech_Manual 2022-12-19.pdf`. Chúng không dùng engine, security level hoặc phím tắt F7/F8 của thiết bị SELEX:
+
+- Route độc lập: `/simulator/software/dvor-220` và `/simulator/software/dme-320`. PMDT và LMI cùng đọc/ghi một store thiết bị trong mỗi simulator.
+- Tài khoản nhà máy: `Administrator` / `1234`, Security Level 3. `Guest` với mật khẩu trống mở phiên Level 0 chỉ đọc. Quyền Local/REM/MAINT được đánh giá độc lập với security level.
+- Cấu hình đi qua ba lớp Draft → Running bằng **Apply** → Flash/Profile bằng **Profile Save**; power cycle/reboot khôi phục profile không mất điện mô phỏng.
+- DVOR 220 bao phủ dual transmitter, antenna/dummy load routing, CMA/SMA/SYN/PDC, 48 antenna, monitor voting, bypass, timed changeover/shutdown, calibration, ground check, flight inspection, fault injection và history.
+- DME 320 bao phủ channel 1–126 X/Y, dual transponder, executive/standby monitor, SCU/TCU/RXU/TXU/HPA/RFG/PMU, power/battery/EMU, calibration/certification, BITE self-test, squitter, IDENT, RF loopback, spacing offset, fault propagation và history.
+- Engine hai thiết bị là deterministic và tách biệt; phần dùng chung trong `src/modules/operations/mopiens-pmdt/` chỉ là presentation shell/component.
+
+Quality gate ngày **10/08/2026**: **21 file, 103/103 test đạt**, targeted ESLint đạt không warning, `npm run typecheck` và `npm run build` thành công. Smoke check HTTP trả 200 và đúng marker cho cả hai route cùng fallback VHF. Browser backend không khả dụng trong phiên xác minh, vì vậy kiểm tra tương tác dùng component workflow tests; cần kiểm tra trực quan desktop/narrow ở phiên có Browser trước khi phát hành UI ra người dùng cuối.
 
 ## Chức năng chính
 
@@ -232,6 +243,13 @@ npm run clean:cache
 
 Các route con xử lý tạo/sửa kịch bản, phiên thực hành, danh sách bài nộp và đánh giá kết quả.
 
+Simulator phần mềm khai thác độc lập:
+
+| Thiết bị | Route | Trạng thái |
+| --- | --- | --- |
+| MOPIENS 220 DVOR | `/simulator/software/dvor-220` | Simulator sẵn sàng; Authoring/Review đang lập kế hoạch |
+| MOPIENS 320 DME | `/simulator/software/dme-320` | Simulator sẵn sàng; Authoring/Review đang lập kế hoạch |
+
 Các route quản lý và vào thi chính thức:
 
 | Chức năng | Route |
@@ -324,6 +342,8 @@ Các tài liệu chính gồm:
 - QCMS User Manual.
 - Sensor SA/MA User Manual.
 - VOR và DME PMDT User Manual.
+- MOPIENS 220 DVOR Technical Manual và bộ ảnh PMDT tham chiếu.
+- MOPIENS 320 DME Technical Manual.
 - Sơ đồ hệ thống, sơ đồ khối và kế hoạch triển khai mô phỏng.
 
 Khi kế hoạch nội bộ và manual nhà sản xuất khác nhau, manual là nguồn tham chiếu ưu tiên.
@@ -359,6 +379,7 @@ Khi kế hoạch nội bộ và manual nhà sản xuất khác nhau, manual là 
 - Mở rộng kiểm thử E2E, accessibility, hiệu năng và quan sát lỗi production.
 
 ## Session Log
+- [2026-08-10] Hoàn thiện hai simulator MOPIENS 220 DVOR và 320 DME tại `/simulator/software/dvor-220` và `/simulator/software/dme-320`: PMDT/LMI dùng chung state thiết bị, security Level 0–3, Local/REM/MAINT, Draft/Running/Profile, dual transmitter/transponder routing, monitor voting, timed alarm/changeover/shutdown, power/environment, calibration/certification, fault injection và history. DME bổ sung BITE Monitor Self-Test cùng Figure 4-114 Squitter/IDENT/RF Loopback/Spacing; sửa shutdown cause để thermal restart không hồi sinh TX bị monitor khóa. Hai engine MOPIENS tách hoàn toàn khỏi SELEX. Quality gate: 21 file, 103/103 test, targeted ESLint, typecheck và production build đạt; HTTP smoke check hai route trả 200. Browser backend không khả dụng nên visual QA desktop/narrow được ghi là bước xác nhận thủ công còn lại.
 - [2026-08-09] Xây dựng DVOR 1150 Simulator độc lập theo mục 3.4 của `doc/DVOR1150/DVOR 1150.pdf`: bổ sung route `/simulator/dvor-1150`, PMDT shell/sidebar/menu/login, RMS/Monitor/Transmitter/Diagnostics core, state/config engine riêng, derived CONFIG → MONITOR, chuyển TX1/TX2, Integral Monitor Bypass, Apply/Need Backup/Config Backup/Restore và Reset (F8). Đồng hồ chạy theo thời gian thực; pre-login che Connected/tham số/đèn trạng thái; menu nhiều cấp mở sang phải. Quality gate trực tiếp: 15/15 test, `npm run typecheck`, `npm run build` đạt.
 - [2026-08-09] Rà soát QA theo các mục 3.4.2.3.1, 3.4.2.7, 3.4.2.10 và 3.4.2.16 của manual Model 1150: khóa mọi control cấu hình và Apply khi chưa bật Integral Monitor Bypass; hiển thị lỗi Apply; cho phép Output Power mô phỏng đến 250 W để phục vụ kịch bản huấn luyện; nối Nominal Output Power với Carrier, SBO/sideband, RF Level và nối Azimuth/Voice/Reference với monitor. Kiểm tra lại đạt 15/15 test, `npm run typecheck` và `npm run build`.
 - [2026-08-09] Hoàn thiện luồng chỉnh sửa CONFIG trực tiếp trên các màn hình DME 1119A: giá trị có thể xoá/nhập lại, stage vào `configDraft`, Apply (F7) áp dụng và phát sinh Need Backup. Bổ sung Reset (F8) khôi phục factory default tương tự DVOR, còn RMS > Config Restore khôi phục bản Config Backup; cả hai thao tác khôi phục đều xoá Need Backup.

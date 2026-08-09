@@ -25,21 +25,22 @@ export function TrainingWorkspaceCatalog({ mode }: { mode: TrainingWorkspaceMode
     <div className="w-full max-w-none px-4 py-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
       <section aria-label={`Danh sách module ${copy.title}`} className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {TRAINING_MODULES.map((module) => {
-          const available = module.status === "available";
+          const trainingStatus = (module as SimulatorModuleDefinition).trainingStatus ?? module.status;
+          const trainingAvailable = trainingStatus === "available";
           return (
             <article key={module.id} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
               <div className="flex items-start justify-between gap-3">
-                <span className={`inline-flex size-10 items-center justify-center rounded-lg ${available ? "bg-[var(--accent-muted)] text-[var(--accent)]" : "bg-[var(--surface-muted)] text-[var(--text-secondary)]"}`}>
+                <span className={`inline-flex size-10 items-center justify-center rounded-lg ${trainingAvailable ? "bg-[var(--accent-muted)] text-[var(--accent)]" : "bg-[var(--surface-muted)] text-[var(--text-secondary)]"}`}>
                   <DesktopTower aria-hidden size={22} weight="duotone" />
                 </span>
-                <span className={`rounded-md border px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${available ? "border-[var(--color-success-border)] bg-[var(--color-success-muted)] text-[var(--color-success)]" : "border-[var(--color-warning-border)] bg-[var(--color-warning-muted)] text-[var(--color-warning)]"}`}>
-                  {available ? "Sẵn sàng" : "Chuẩn bị"}
+                <span className={`rounded-md border px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${trainingAvailable ? "border-[var(--color-success-border)] bg-[var(--color-success-muted)] text-[var(--color-success)]" : "border-[var(--color-warning-border)] bg-[var(--color-warning-muted)] text-[var(--color-warning)]"}`}>
+                  {trainingAvailable ? "Sẵn sàng" : "Chuẩn bị"}
                 </span>
               </div>
               <h2 className="mt-4 text-base font-bold text-[var(--text-primary)]">{module.shortName}</h2>
               <p className="mt-2 min-h-12 text-sm leading-5 text-[var(--text-secondary)]">{module.description}</p>
-              <Link href={module.routes[mode]} className={`mt-4 inline-flex min-h-9 items-center justify-center rounded-md px-3.5 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] active:scale-[0.98] ${available ? "bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] focus-visible:ring-offset-2" : "border border-[var(--accent-border)] bg-[var(--surface)] text-[var(--accent)] hover:bg-[var(--accent-muted)]"}`}>
-                {available ? copy.availableAction : copy.plannedAction}
+              <Link href={module.routes[mode]} className={`mt-4 inline-flex min-h-9 items-center justify-center rounded-md px-3.5 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] active:scale-[0.98] ${trainingAvailable ? "bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] focus-visible:ring-offset-2" : "border border-[var(--accent-border)] bg-[var(--surface)] text-[var(--accent)] hover:bg-[var(--accent-muted)]"}`}>
+                {trainingAvailable ? copy.availableAction : copy.plannedAction}
               </Link>
             </article>
           );

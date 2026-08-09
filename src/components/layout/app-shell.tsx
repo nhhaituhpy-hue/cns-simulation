@@ -138,14 +138,14 @@ function getPageHeader(pathname: string) {
     };
   }
 
-  const module = SIMULATOR_MODULES.find(
+  const simulatorModule = SIMULATOR_MODULES.find(
     (candidate) => candidate.routes.simulator === pathname,
   );
-  if (module) {
-    const usesPmdt = module.id === "dvor-1150" || module.id === "dvor-1150a" || module.id === "dme-1119a";
+  if (simulatorModule) {
+    const usesPmdt = simulatorModule.id === "dvor-1150" || simulatorModule.id === "dvor-1150a" || simulatorModule.id === "dme-1119a";
     return {
       eyebrow: "Phần mềm mô phỏng",
-      title: `${module.shortName}${usesPmdt ? " PMDT" : ""} Simulator`,
+      title: `${simulatorModule.shortName}${usesPmdt ? " PMDT" : ""} Simulator`,
       showMobileTitle: true,
     };
   }
@@ -494,10 +494,17 @@ export function AppShell({ children, currentUser }: AppShellProps) {
   const [signingOut, setSigningOut] = useState(false);
   const pageHeader = getPageHeader(pathname);
 
-  // The reference DVOR and DME PMDTs are standalone 900 px desktop
+  // The reference DVOR and DME maintenance tools are standalone desktop
   // applications. Keep the global CNS navigation outside those simulators so
-  // their client areas retain the coordinates shown in the supplied captures.
-  if (pathname === "/login" || pathname === "/simulator/dvor-1150" || pathname === "/simulator/dvor-1150a" || pathname === "/simulator/dme-1119a") {
+  // their client areas retain the geometry shown in the supplied captures.
+  if (
+    pathname === "/login" ||
+    pathname === "/simulator/dvor-1150" ||
+    pathname === "/simulator/dvor-1150a" ||
+    pathname === "/simulator/dme-1119a" ||
+    pathname === "/simulator/software/dvor-220" ||
+    pathname === "/simulator/software/dme-320"
+  ) {
     return <>{children}</>;
   }
 

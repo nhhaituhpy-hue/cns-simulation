@@ -37,7 +37,13 @@ export interface SimulatorModuleDefinition<
 > {
   id: TId;
   category: SimulatorModuleCategory;
+  /** Availability of the standalone simulator workspace. */
   status: SimulatorModuleStatus;
+  /**
+   * Authoring and review can lag behind a standalone simulator. When omitted,
+   * the training workspaces inherit `status` for backward compatibility.
+   */
+  trainingStatus?: SimulatorModuleStatus;
   name: string;
   shortName: string;
   description: string;
