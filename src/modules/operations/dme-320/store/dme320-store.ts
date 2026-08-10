@@ -10,6 +10,7 @@ import type {
   Dme320CommandResult,
   Dme320SimulationState,
 } from "../domain/types";
+import type { SimulatorParameterChangeLogEntry } from "@/lib/simulator-config/parameter-change";
 
 export interface Dme320Clock {
   now(): number;
@@ -28,7 +29,11 @@ export interface Dme320StoreState {
   advanceBy(elapsedMs: number): Dme320CommandResult;
   syncToClock(): Dme320CommandResult;
   replaceSimulation(simulation: Dme320SimulationState): void;
-  replaceConfigurationProfiles(running: Dme320SimulationState["config"]["running"], flash: Dme320SimulationState["config"]["flash"]): void;
+  replaceConfigurationProfiles(
+    running: Dme320SimulationState["config"]["running"],
+    flash: Dme320SimulationState["config"]["flash"],
+    parameterChangeLogs?: readonly SimulatorParameterChangeLogEntry[],
+  ): void;
   reset(options?: CreateDme320SimulationOptions): void;
 }
 
@@ -93,9 +98,11 @@ export function createDme320Store(options: Dme320StoreOptions = {}): Dme320Store
       replaceSimulation(simulation) {
         set({ simulation: structuredClone(simulation), lastCommandResult: null });
       },
-      replaceConfigurationProfiles(running, flash) {
+      replaceConfigurationProfiles(running, flash, parameterChangeLogs) {
+        const simulation = replaceDme320Configuration(get().simulation, running, flash);
+        if (parameterChangeLogs) simulation.parameterChangeLogs = structuredClone([...parameterChangeLogs]);
         set({
-          simulation: replaceDme320Configuration(get().simulation, running, flash),
+          simulation,
           lastCommandResult: null,
         });
       },

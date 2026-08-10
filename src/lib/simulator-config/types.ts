@@ -16,6 +16,7 @@ export type SupportedSimulatorConfigId =
   | "ads-b";
 
 export type SimulatorConfigAction = "apply" | "restore" | "backup" | "flash-save";
+export type SimulatorConfigHistoryAction = "initialize" | SimulatorConfigAction;
 
 export type Dvor1150aPersistedConfig = Dvor1150aConfig;
 
@@ -52,6 +53,16 @@ export interface SimulatorConfigRecord {
   updated_at: string;
 }
 
+export interface SimulatorConfigHistoryRecord {
+  id: string;
+  action: SimulatorConfigHistoryAction;
+  changedFields: string[];
+  operatorUserId: string | null;
+  sessionId: string | null;
+  revision: number;
+  createdAt: string;
+}
+
 export interface SimulatorConfigResponse {
   simulatorId: SupportedSimulatorConfigId;
   schemaVersion: number;
@@ -61,6 +72,7 @@ export interface SimulatorConfigResponse {
   preferences: Record<string, unknown>;
   revision: number;
   persisted: boolean;
+  history: SimulatorConfigHistoryRecord[];
 }
 
 export interface SimulatorConfigApplyResponse extends SimulatorConfigResponse {

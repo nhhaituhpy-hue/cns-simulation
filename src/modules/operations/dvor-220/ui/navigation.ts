@@ -39,7 +39,8 @@ export type Dvor220ScreenId =
   | "flight-check"
   | "flight-results"
   | "history-pmdt"
-  | "history-lmi";
+  | "history-lmi"
+  | "history-parameter-change";
 
 export type Dvor220DialogId = "bypass" | "main" | "changeover" | "reset" | "power" | "simulation-parameters";
 export type Dvor220ViewMode = "pmdt" | "lmi";
@@ -80,6 +81,7 @@ export const DVOR220_SCREEN_LABELS: Record<Dvor220ScreenId, string> = {
   "flight-results": "Flight Check Results",
   "history-pmdt": "PMDT History Log",
   "history-lmi": "LMI History Log",
+  "history-parameter-change": "Parameter Change",
 };
 
 export const DVOR220_SECTION_DEFAULTS: Record<string, Dvor220ScreenId> = {
@@ -177,6 +179,7 @@ export function buildDvor220Navigation(userName: string | null): MopiensNavigati
       items: [
         { id: "history-pmdt", label: "PMDT History Log" },
         { id: "history-lmi", label: "LMI History Log" },
+        { id: "history-parameter-change", label: "Parameter Change" },
       ],
     },
     {
@@ -235,6 +238,7 @@ export function buildDvor220Menus(options: {
         { id: "home", label: "Home", dividerBefore: true },
         { id: "equipment", label: "Equipment Status" },
         { id: "history-pmdt", label: "PMDT History" },
+        { id: "history-parameter-change", label: "Parameter Change" },
       ],
     },
     {

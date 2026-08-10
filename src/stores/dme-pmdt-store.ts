@@ -1,8 +1,15 @@
 import { cloneDefaultDmePmdtData } from "@/lib/dme-pmdt-defaults";
 import {
   hydrateDme1119aData,
+  extractDme1119aConfig,
   type Dme1119aPersistedConfig,
 } from "@/lib/simulator-config/dme-1119a";
+import {
+  collectChangedConfigFields,
+  createParameterChangeLogEntries,
+  prependParameterChangeLogEntries,
+  type SimulatorParameterChangeLogEntry,
+} from "@/lib/simulator-config/parameter-change";
 import {
   dmeParameterFieldCatalog,
   dmeTransferRequested,
@@ -82,6 +89,7 @@ export interface DmePmdtStoreState {
   configDirty: boolean;
   needBackup: boolean;
   configurationBackup: DmePmdtData | null;
+  parameterChangeLogs: SimulatorParameterChangeLogEntry[];
   savedConfiguration: DmePmdtData | null;
   specialTestRunning: boolean;
   diagnosticsRunning: boolean;
@@ -113,7 +121,11 @@ export interface DmePmdtStoreState {
 
 export interface DmePmdtStoreActions {
   initializeSession: (initialization: DmeSessionInitialization) => void;
-  replaceConfig: (config: Dme1119aPersistedConfig) => void;
+  replaceConfig: (
+    config: Dme1119aPersistedConfig,
+    backupConfig?: Dme1119aPersistedConfig,
+    parameterChangeLogs?: readonly SimulatorParameterChangeLogEntry[],
+  ) => void;
   setMode: (mode: DmePmdtMode) => void;
   setConfigPanelOpen: (open: boolean) => void;
   setAboutDialogOpen: (open: boolean) => void;
@@ -244,6 +256,7 @@ function initialState(): DmePmdtStoreState {
     configDirty: false,
     needBackup: false,
     configurationBackup: structuredClone(data),
+    parameterChangeLogs: [],
     specialTestRunning: false,
     diagnosticsRunning: false,
     diagnosticsMode: null,
@@ -526,17 +539,19 @@ export function createDmePmdtStore(
         });
       },
 
-      replaceConfig: (persistedConfig) => {
+      replaceConfig: (persistedConfig, persistedBackup = persistedConfig, parameterChangeLogs) => {
         const state = get();
         const data = hydrateDme1119aData(persistedConfig);
+        const backupData = hydrateDme1119aData(persistedBackup);
         data.rmsStatus.logonLevel = state.securityLevel;
         data.rmsStatus.localControlMode = data.local;
         set({
           data,
           configDraft: structuredClone(data),
           configDirty: false,
-          needBackup: false,
-          configurationBackup: structuredClone(data),
+          needBackup: JSON.stringify(extractDme1119aConfig(data)) !== JSON.stringify(extractDme1119aConfig(backupData)),
+          configurationBackup: backupData,
+          parameterChangeLogs: parameterChangeLogs ? [...parameterChangeLogs] : state.parameterChangeLogs,
           savedConfiguration: structuredClone(data),
           lastCommand: "User configuration loaded",
         });
@@ -867,7 +882,24 @@ export function createDmePmdtStore(
       backupConfig: () => {
         const state = get();
         if (state.securityLevel < 3 || state.loginDialogOpen || !state.data.local || !state.needBackup) return false;
-        set({ configurationBackup: structuredClone(state.data), needBackup: false, lastCommand: "RMS Config Backup" });
+        const previousBackup = state.configurationBackup ?? state.data;
+        const changedFields = collectChangedConfigFields(
+          extractDme1119aConfig(previousBackup),
+          extractDme1119aConfig(state.data),
+        );
+        const nextLogs = createParameterChangeLogEntries({
+          changedFields,
+          timeTag: state.data.timestamp,
+          userName: state.authenticatedUserId,
+          file: "RMS",
+          actionLabel: "RMS Configuration Backup",
+        });
+        set({
+          configurationBackup: structuredClone(state.data),
+          parameterChangeLogs: prependParameterChangeLogEntries(state.parameterChangeLogs, nextLogs),
+          needBackup: false,
+          lastCommand: "RMS Config Backup",
+        });
         return true;
       },
 

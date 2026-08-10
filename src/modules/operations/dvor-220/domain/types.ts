@@ -1,3 +1,5 @@
+import type { SimulatorParameterChangeLogEntry } from "@/lib/simulator-config/parameter-change";
+
 export const DVOR220_TRANSMITTER_IDS = ["tx1", "tx2"] as const;
 export type Dvor220TransmitterId = (typeof DVOR220_TRANSMITTER_IDS)[number];
 
@@ -411,6 +413,7 @@ export interface Dvor220LogEntry {
 export interface Dvor220HistoryState {
   pmdt: Dvor220LogEntry[];
   lmi: Dvor220LogEntry[];
+  parameterChanges: SimulatorParameterChangeLogEntry[];
   nextId: number;
 }
 

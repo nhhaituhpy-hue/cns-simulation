@@ -1,6 +1,11 @@
 import { configurationsEqual, mergeDvor220Patch } from "./configuration";
 import { cloneDvor220, createInitialDvor220State } from "./defaults";
 import {
+  collectChangedConfigFields,
+  createParameterChangeLogEntries,
+  prependParameterChangeLogEntries,
+} from "@/lib/simulator-config/parameter-change";
+import {
   appendDvor220Log,
   deriveDvor220Snapshot,
   getDvor220GroundCheckDurationMs,
@@ -397,8 +402,21 @@ export function reduceDvor220Command(
       const denied = requirePermission(state, "configure");
       if (denied) return failure(state, denied);
       if (!state.configuration.flashDirty) return failure(state, "No running configuration changes require Profile Save.");
+      const previousFlash = cloneDvor220(state.configuration.flash);
+      const changedFields = collectChangedConfigFields(previousFlash, state.configuration.running);
       state.configuration.flash = cloneDvor220(state.configuration.running);
       state.configuration.flashDirty = false;
+      const parameterChanges = createParameterChangeLogEntries({
+        changedFields,
+        timestampMs: state.nowMs,
+        userName: state.session.username,
+        file: "RMS",
+        actionLabel: "Profile Save",
+      });
+      state.history.parameterChanges = prependParameterChangeLogEntries(
+        state.history.parameterChanges,
+        parameterChanges,
+      );
       recordControl(state, "Running profile saved to non-volatile flash");
       return success(state);
     }

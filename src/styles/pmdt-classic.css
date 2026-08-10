@@ -5827,6 +5827,45 @@
   width: 143px !important;
 }
 
+/* Parameter Change now has five columns.  The legacy RMS log list keeps a
+ * three-column 317px table, which makes Parameter and State overlap. */
+.pmdt-classic-window .pmdt-rms-log-list--parameter-change table {
+  width: 694px !important;
+  height: auto !important;
+  min-width: 0 !important;
+  table-layout: fixed;
+}
+
+.pmdt-classic-window .pmdt-rms-log-list--parameter-change table th:nth-child(1),
+.pmdt-classic-window .pmdt-rms-log-list--parameter-change table td:nth-child(1) {
+  width: 17% !important;
+}
+
+.pmdt-classic-window .pmdt-rms-log-list--parameter-change table th:nth-child(2),
+.pmdt-classic-window .pmdt-rms-log-list--parameter-change table td:nth-child(2) {
+  width: 11% !important;
+}
+
+.pmdt-classic-window .pmdt-rms-log-list--parameter-change table th:nth-child(3),
+.pmdt-classic-window .pmdt-rms-log-list--parameter-change table td:nth-child(3) {
+  width: 16% !important;
+}
+
+.pmdt-classic-window .pmdt-rms-log-list--parameter-change table th:nth-child(4),
+.pmdt-classic-window .pmdt-rms-log-list--parameter-change table td:nth-child(4) {
+  width: 44% !important;
+}
+
+.pmdt-classic-window .pmdt-rms-log-list--parameter-change table th:nth-child(5),
+.pmdt-classic-window .pmdt-rms-log-list--parameter-change table td:nth-child(5) {
+  width: 12% !important;
+}
+
+.pmdt-classic-window .pmdt-rms-log-list--parameter-change table td:nth-child(4) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .pmdt-classic-window .pmdt-rms-log-screen [data-vor-field-status] {
   color: #000 !important;
   font-weight: 400 !important;

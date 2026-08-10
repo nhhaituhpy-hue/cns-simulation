@@ -336,6 +336,7 @@ export function createInitialDvor220State(
     history: {
       pmdt: [],
       lmi: [],
+      parameterChanges: [],
       nextId: 1,
     },
   };

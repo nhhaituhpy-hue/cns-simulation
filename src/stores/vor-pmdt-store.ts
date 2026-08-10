@@ -23,6 +23,13 @@ import {
   type DvorTransmitterMode,
   type DvorTransmitterId,
 } from "@/lib/dvor1150a";
+import {
+  collectChangedConfigFields,
+  createParameterChangeLogEntries,
+  prependParameterChangeLogEntries,
+  type SimulatorParameterChangeLogEntry,
+} from "@/lib/simulator-config/parameter-change";
+import { extractDvor1150aConfig } from "@/lib/simulator-config/dvor-1150a";
 import { create, type StoreApi, type UseBoundStore } from "zustand";
 
 const emptyAnswer: VorStudentAnswer = {
@@ -66,8 +73,11 @@ export interface VorPmdtStoreState {
   aboutDialogOpen: boolean;
   config: Dvor1150aConfig;
   configDraft: Dvor1150aConfig;
+  configurationBackup: Dvor1150aConfig;
   configDirty: boolean;
   needBackup: boolean;
+  parameterChangeLogs: SimulatorParameterChangeLogEntry[];
+  lastCommand: string | null;
   loginDialogOpen: boolean;
   authenticatedUserId: string | null;
   securityLevel: VorSecurityLevel;
@@ -103,7 +113,11 @@ export interface VorPmdtStoreActions {
   resetConfigDraft: () => boolean;
   restoreDefaultConfig: () => boolean;
   backupConfig: () => boolean;
-  replaceConfig: (config: Dvor1150aConfig) => void;
+  replaceConfig: (
+    config: Dvor1150aConfig,
+    backupConfig?: Dvor1150aConfig,
+    parameterChangeLogs?: readonly SimulatorParameterChangeLogEntry[],
+  ) => void;
   setTransmitterMode: (transmitterId: DvorTransmitterId, mode: DvorTransmitterMode) => boolean;
   selectMainTransmitter: (transmitterId: DvorTransmitterId) => boolean;
   openScreen: (screenId: VorScreenId, menuPath: readonly string[], title: string) => void;
@@ -153,8 +167,18 @@ function initialState(): VorPmdtStoreState {
     aboutDialogOpen: false,
     config,
     configDraft: cloneDvor1150aConfig(config),
+    configurationBackup: cloneDvor1150aConfig(config),
     configDirty: false,
     needBackup: false,
+    parameterChangeLogs: derived.data.rmsParameterLogs.map((entry, index) => ({
+      id: `default-vor-parameter-${index}`,
+      timeTag: entry.timeTag,
+      userName: entry.userName,
+      file: entry.file,
+      parameter: entry.file,
+      state: "normal",
+    })),
+    lastCommand: null,
     loginDialogOpen: true,
     authenticatedUserId: null,
     securityLevel: 0,
@@ -361,13 +385,14 @@ export function createVorPmdtStore(
         const result = applyDvorConfigPatches(state.configDraft);
         if (!result.ok) return false;
         set({
-        config: result.config,
-        configDraft: cloneDvor1150aConfig(result.config),
-        configDirty: false,
-        needBackup: true,
-        data: result.snapshot.data,
-        derived: result.snapshot,
-      });
+          config: result.config,
+          configDraft: cloneDvor1150aConfig(result.config),
+          configDirty: false,
+          needBackup: true,
+          data: result.snapshot.data,
+          derived: result.snapshot,
+          lastCommand: "Configuration Apply",
+        });
         return true;
       },
 
@@ -417,6 +442,7 @@ export function createVorPmdtStore(
           needBackup: false,
           data: result.snapshot.data,
           derived: result.snapshot,
+          lastCommand: "RMS Config Restore",
         });
         return true;
       },
@@ -424,19 +450,40 @@ export function createVorPmdtStore(
       backupConfig: () => {
         const state = get();
         if (state.securityLevel < 3 || !state.needBackup) return false;
-        set({ needBackup: false });
+        const changedFields = collectChangedConfigFields(
+          extractDvor1150aConfig(state.configurationBackup),
+          extractDvor1150aConfig(state.config),
+        );
+        const nextLogs = createParameterChangeLogEntries({
+          changedFields,
+          timeTag: state.data.timestamp,
+          userName: state.authenticatedUserId,
+          file: "RMS",
+          actionLabel: "RMS Configuration Backup",
+        });
+        set({
+          configurationBackup: cloneDvor1150aConfig(state.config),
+          parameterChangeLogs: prependParameterChangeLogEntries(state.parameterChangeLogs, nextLogs),
+          needBackup: false,
+          lastCommand: "RMS Config Backup",
+        });
         return true;
       },
 
-      replaceConfig: (config) => {
+      replaceConfig: (config, backupConfig = config, parameterChangeLogs) => {
         const nextConfig = cloneDvor1150aConfig(config);
+        const nextBackupConfig = cloneDvor1150aConfig(backupConfig);
         const derived = buildDvor1150aSnapshot(nextConfig);
         set({
           config: nextConfig,
           configDraft: cloneDvor1150aConfig(nextConfig),
+          configurationBackup: nextBackupConfig,
           configDirty: false,
+          needBackup: JSON.stringify(extractDvor1150aConfig(nextConfig)) !== JSON.stringify(extractDvor1150aConfig(nextBackupConfig)),
+          parameterChangeLogs: parameterChangeLogs ? [...parameterChangeLogs] : get().parameterChangeLogs,
           data: derived.data,
           derived,
+          lastCommand: "User configuration loaded",
         });
       },
 

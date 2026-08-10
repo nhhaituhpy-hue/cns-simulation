@@ -5,6 +5,8 @@ import { getSimulatorConfigAdapter } from "@/lib/simulator-config/registry";
 import {
   SIMULATOR_CONFIG_SCHEMA_VERSION,
   type SimulatorConfigAction,
+  type SimulatorConfigHistoryAction,
+  type SimulatorConfigHistoryRecord,
   type SimulatorConfigRecord,
   type SupportedSimulatorConfigId,
 } from "@/lib/simulator-config/types";
@@ -50,7 +52,33 @@ function responseFromRecord(
     preferences: record.preferences ?? {},
     revision: Number(record.revision),
     persisted: true,
+    history: [],
   };
+}
+
+function parseHistoryRows(value: unknown): SimulatorConfigHistoryRecord[] {
+  if (!Array.isArray(value)) return [];
+  const actions: SimulatorConfigHistoryAction[] = ["initialize", "apply", "restore", "backup", "flash-save"];
+  return value.flatMap((candidate) => {
+    if (!candidate || typeof candidate !== "object") return [];
+    const row = candidate as Record<string, unknown>;
+    const action = row.action;
+    if (typeof row.id !== "string" || typeof action !== "string" || !actions.includes(action as SimulatorConfigHistoryAction)) {
+      return [];
+    }
+    const changedFields = Array.isArray(row.changed_fields)
+      ? row.changed_fields.filter((field): field is string => typeof field === "string")
+      : [];
+    return [{
+      id: row.id,
+      action: action as SimulatorConfigHistoryAction,
+      changedFields,
+      operatorUserId: typeof row.operator_user_id === "string" ? row.operator_user_id : null,
+      sessionId: typeof row.session_id === "string" ? row.session_id : null,
+      revision: Number(row.revision),
+      createdAt: typeof row.created_at === "string" ? row.created_at : "",
+    }];
+  });
 }
 
 function isUuid(value: unknown): value is string {
@@ -89,10 +117,23 @@ export async function GET(_request: Request, context: RouteContext) {
         preferences: {},
         revision: 0,
         persisted: false,
+        history: [],
       });
     }
 
-    return NextResponse.json(responseFromRecord(unwrapRecord(data), simulatorId as SupportedSimulatorConfigId, adapter));
+    const { data: historyRows, error: historyError } = await supabase
+      .from("user_simulator_config_history")
+      .select("id, action, changed_fields, operator_user_id, session_id, revision, created_at")
+      .eq("user_id", profile.id)
+      .eq("simulator_id", simulatorId)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (historyError) throw historyError;
+
+    return NextResponse.json({
+      ...responseFromRecord(unwrapRecord(data), simulatorId as SupportedSimulatorConfigId, adapter),
+      history: parseHistoryRows(historyRows),
+    });
   } catch (error) {
     console.error("Simulator configuration fetch failed:", error);
     return NextResponse.json(

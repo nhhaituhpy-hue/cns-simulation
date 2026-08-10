@@ -430,6 +430,39 @@ function HistoryScreen({ screenId, device }: Dvor220MaintenanceScreenProps) {
   );
 }
 
+function ParameterChangeHistoryScreen({ device }: { device: Dvor220DeviceState }) {
+  const [query, setQuery] = useState("");
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const rows = device.history.parameterChanges.filter((row) =>
+    !normalizedQuery
+    || `${row.userName} ${row.file} ${row.parameter} ${row.state}`.toLocaleLowerCase().includes(normalizedQuery),
+  );
+
+  return (
+    <div className={styles.screenBody}>
+      <MaintenanceHeader title="Parameter Change" detail="Configuration changes recorded when the running profile is saved to non-volatile memory." />
+      <div className={styles.maintenanceToolbar}>
+        <CompactField label="Search"><input aria-label="Parameter change search" value={query} onChange={(event) => setQuery(event.target.value)} /></CompactField>
+        <span>{rows.length} of {device.history.parameterChanges.length} records</span>
+      </div>
+      <MopiensTable
+        caption="Parameter change history"
+        rows={rows}
+        dense
+        emptyLabel="No parameter change records"
+        getRowId={(row) => row.id}
+        columns={[
+          { id: "time", label: "Time Tag", width: "20%", render: (row) => row.timeTag },
+          { id: "file", label: "File", width: "16%", render: (row) => row.file },
+          { id: "parameter", label: "Parameter", render: (row) => row.parameter },
+          { id: "state", label: "State", width: "12%", render: (row) => row.state === "normal" ? "Normal" : row.state === "warning" ? "Alert Low" : "Alarm" },
+          { id: "user", label: "User ID", width: "14%", render: (row) => row.userName },
+        ]}
+      />
+    </div>
+  );
+}
+
 export function Dvor220MaintenanceScreen(props: Dvor220MaintenanceScreenProps) {
   if (["maintenance-tx-reading", "maintenance-tx-setpoint", "maintenance-monitor-cal"].includes(props.screenId)) return <CalibrationScreen {...props} />;
   if (props.screenId === "maintenance-certification") return <CertificationScreen {...props} />;
@@ -441,5 +474,6 @@ export function Dvor220MaintenanceScreen(props: Dvor220MaintenanceScreenProps) {
   if (props.screenId === "maintenance-version") return <VersionScreen {...props} />;
   if (props.screenId === "flight-check") return <FlightInspectionScreen {...props} />;
   if (props.screenId === "flight-results") return <FlightResultsScreen {...props} />;
+  if (props.screenId === "history-parameter-change") return <ParameterChangeHistoryScreen device={props.device} />;
   return <HistoryScreen {...props} />;
 }

@@ -44,6 +44,11 @@ import {
   assertValidDme320Config,
   validateDme320Account,
 } from "./validation";
+import {
+  collectChangedConfigFields,
+  createParameterChangeLogEntries,
+  prependParameterChangeLogEntries,
+} from "@/lib/simulator-config/parameter-change";
 
 const MONITOR_IDS = ["mon1", "mon2"] as const;
 const MONITOR_CHANNELS = ["executive", "standby"] as const;
@@ -226,6 +231,7 @@ export function createDme320SimulationState(
     lastManualTest: null,
     lastCertification: null,
     logs: [],
+    parameterChangeLogs: [],
   };
 
   return refreshDme320Simulation(state, false);
@@ -1187,8 +1193,21 @@ export function executeDme320Command(
     }
 
     case "save-running-to-flash": {
+      const previousFlash = cloneDme320Config(state.config.flash);
+      const changedFields = collectChangedConfigFields(previousFlash, state.config.running);
       state.config.flash = cloneDme320Config(state.config.running);
       state.config.flashDirty = false;
+      const parameterChanges = createParameterChangeLogEntries({
+        changedFields,
+        timestampMs: state.nowMs,
+        userName: state.session.userId,
+        file: "RMS",
+        actionLabel: "Profile Save",
+      });
+      state.parameterChangeLogs = prependParameterChangeLogEntries(
+        state.parameterChangeLogs,
+        parameterChanges,
+      );
       appendLog(state, "configuration", "Running profile saved to non-volatile flash.");
       return accept(state, "Profile saved to flash.", false);
     }

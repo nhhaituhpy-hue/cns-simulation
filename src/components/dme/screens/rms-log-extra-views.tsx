@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
 
 const operationalRows = [
   ["Normal Operation", "26846.52", "28121.55"],
@@ -134,5 +135,33 @@ export function RmsCommandActivity() {
 }
 
 export function RmsParameterChange() {
-  return <ActivityTable rows={parameterRows} thirdColumn="File" />;
+  const storedLogs = useDmePmdtStore((state) => state.parameterChangeLogs);
+  const rows = storedLogs.length
+    ? storedLogs
+    : parameterRows.map(([timeTag, userName, file], index) => ({
+        id: `default-dme-parameter-${index}`,
+        timeTag,
+        userName,
+        file,
+        parameter: file,
+        state: "normal" as const,
+      }));
+
+  return (
+    <div className="dme-pmdt-log-scroll">
+      <table className="dme-pmdt-log-table">
+        <caption className="sr-only">Parameter change activity log</caption>
+        <thead><tr><th>Time Tag</th><th>User Name</th><th>File</th><th>Parameter</th><th>State</th></tr></thead>
+        <tbody>{rows.map((row) => (
+          <tr key={row.id}>
+            <td>{row.timeTag}</td>
+            <td>{row.userName}</td>
+            <td>{row.file}</td>
+            <td>{row.parameter}</td>
+            <td>{row.state === "normal" ? "Normal" : row.state === "warning" ? "Alert Low" : "Alarm"}</td>
+          </tr>
+        ))}</tbody>
+      </table>
+    </div>
+  );
 }

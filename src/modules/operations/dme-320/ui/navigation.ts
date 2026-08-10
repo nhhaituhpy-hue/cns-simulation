@@ -33,7 +33,8 @@ export type Dme320ScreenId =
   | "maintenance-time"
   | "maintenance-version"
   | "history-pmdt"
-  | "history-lmi";
+  | "history-lmi"
+  | "history-parameter-change";
 
 export type Dme320ViewMode = "pmdt" | "lmi";
 export type Dme320DialogId = "bypass" | "main" | "changeover" | "reset" | "power" | "simulation-parameters";
@@ -67,6 +68,7 @@ export const DME320_SCREEN_LABELS: Record<Dme320ScreenId, string> = {
   "maintenance-version": "Version Information",
   "history-pmdt": "PMDT History Log",
   "history-lmi": "LMI History Log",
+  "history-parameter-change": "Parameter Change",
 };
 
 export const DME320_SECTION_DEFAULTS: Record<string, Dme320ScreenId> = {
@@ -153,6 +155,7 @@ export function buildDme320Navigation(userId: string | null): MopiensNavigationS
       items: [
         { id: "history-pmdt", label: "PMDT History Log" },
         { id: "history-lmi", label: "LMI History Log" },
+        { id: "history-parameter-change", label: "Parameter Change" },
       ],
     },
     {
@@ -212,6 +215,7 @@ export function buildDme320Menus(options: {
         { id: "home", label: "Home", dividerBefore: true },
         { id: "equipment", label: "Equipment Status" },
         { id: "history-pmdt", label: "PMDT History" },
+        { id: "history-parameter-change", label: "Parameter Change" },
       ],
     },
     {

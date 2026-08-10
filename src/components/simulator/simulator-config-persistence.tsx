@@ -7,6 +7,7 @@ import {
   loadSimulatorConfig,
 } from "@/lib/simulator-config/client";
 import { collectChangedConfigFields } from "@/lib/simulator-config/diff";
+import { parameterChangesFromHistory } from "@/lib/simulator-config/parameter-change";
 import {
   extractDme1119aConfig,
   dme1119aConfigAdapter,
@@ -65,9 +66,10 @@ function Dvor1150aConfigPersistence() {
         let response = await loadSimulatorConfig("dvor-1150a");
         if (!response.persisted) response = await initializeSimulatorConfig("dvor-1150a");
         const config = dvor1150aConfigAdapter.parseConfig(response.appliedConfig);
-        if (!config) throw new Error("Cấu hình DVOR 1150A từ server không hợp lệ.");
+        const backupConfig = dvor1150aConfigAdapter.parseConfig(response.backupConfig ?? response.appliedConfig);
+        if (!config || !backupConfig) throw new Error("Cấu hình DVOR 1150A từ server không hợp lệ.");
         if (cancelled) return;
-        replaceConfig(config);
+        replaceConfig(config, backupConfig, parameterChangesFromHistory(response.history, "RMS"));
         revisionRef.current = response.revision;
         readyRef.current = true;
         setStatus("saved");
@@ -87,24 +89,36 @@ function Dvor1150aConfigPersistence() {
 
   useEffect(() => {
     return useVorPmdtStore.subscribe((state, previousState) => {
-      if (
-        !readyRef.current ||
-        !previousState.configDirty ||
-        state.configDirty ||
-        JSON.stringify(state.config) === JSON.stringify(previousState.config)
-      ) {
-        return;
-      }
+      if (!readyRef.current) return;
 
       const nextConfig = extractDvor1150aConfig(state.config);
       const previousConfig = extractDvor1150aConfig(previousState.config);
+      const previousBackupConfig = extractDvor1150aConfig(previousState.configurationBackup);
+      const configChanged = !areJsonEqual(nextConfig, previousConfig);
+      const backupChanged = !areJsonEqual(state.configurationBackup, previousState.configurationBackup);
+      let action: "apply" | "restore" | "backup" | null = null;
+      if (state.lastCommand === "Configuration Apply" && previousState.configDirty && !state.configDirty && configChanged) {
+        action = "apply";
+      } else if (state.lastCommand === "RMS Config Restore" && configChanged) {
+        action = "restore";
+      } else if (state.lastCommand === "RMS Config Backup" && backupChanged) {
+        action = "backup";
+      }
+      if (!action) return;
+
+      const backupConfig = extractDvor1150aConfig(state.configurationBackup);
       persistChainRef.current = persistChainRef.current
         .then(async () => {
           const response = await applySimulatorConfig({
             simulatorId: "dvor-1150a",
+            action,
             config: nextConfig,
+            backupConfig: action === "backup" || action === "restore" ? backupConfig : undefined,
             expectedRevision: revisionRef.current,
-            changedFields: collectChangedConfigFields(previousConfig, nextConfig),
+            changedFields: collectChangedConfigFields(
+              action === "backup" ? previousBackupConfig : previousConfig,
+              nextConfig,
+            ),
             operatorUserId: state.authenticatedUserId,
             sessionId: sessionIdRef.current,
           });
@@ -140,9 +154,10 @@ function Dme1119aConfigPersistence() {
         let response = await loadSimulatorConfig("dme-1119a");
         if (!response.persisted) response = await initializeSimulatorConfig("dme-1119a");
         const config = dme1119aConfigAdapter.parseConfig(response.appliedConfig);
-        if (!config) throw new Error("Cấu hình DME 1119A từ server không hợp lệ.");
+        const backupConfig = dme1119aConfigAdapter.parseConfig(response.backupConfig ?? response.appliedConfig);
+        if (!config || !backupConfig) throw new Error("Cấu hình DME 1119A từ server không hợp lệ.");
         if (cancelled) return;
-        replaceConfig(config);
+        replaceConfig(config, backupConfig, parameterChangesFromHistory(response.history, "RMS"));
         revisionRef.current = response.revision;
         readyRef.current = true;
         setStatus("saved");
@@ -162,24 +177,35 @@ function Dme1119aConfigPersistence() {
 
   useEffect(() => {
     return useDmePmdtStore.subscribe((state, previousState) => {
-      if (
-        !readyRef.current ||
-        !previousState.configDirty ||
-        state.configDirty ||
-        JSON.stringify(state.data) === JSON.stringify(previousState.data)
-      ) {
-        return;
-      }
-
+      if (!readyRef.current) return;
       const nextConfig = extractDme1119aConfig(state.data);
       const previousConfig = extractDme1119aConfig(previousState.data);
+      const previousBackupConfig = extractDme1119aConfig(previousState.configurationBackup ?? previousState.data);
+      const configChanged = !areJsonEqual(nextConfig, previousConfig);
+      const backupChanged = !areJsonEqual(state.configurationBackup, previousState.configurationBackup);
+      let action: "apply" | "restore" | "backup" | null = null;
+      if (state.lastCommand === "Configuration Apply" && previousState.configDirty && !state.configDirty && configChanged) {
+        action = "apply";
+      } else if (state.lastCommand === "RMS Config Restore" && configChanged) {
+        action = "restore";
+      } else if (state.lastCommand === "RMS Config Backup" && backupChanged) {
+        action = "backup";
+      }
+      if (!action) return;
+
+      const backupConfig = extractDme1119aConfig(state.configurationBackup ?? state.data);
       persistChainRef.current = persistChainRef.current
         .then(async () => {
           const response = await applySimulatorConfig({
             simulatorId: "dme-1119a",
+            action,
             config: nextConfig,
+            backupConfig: action === "backup" || action === "restore" ? backupConfig : undefined,
             expectedRevision: revisionRef.current,
-            changedFields: collectChangedConfigFields(previousConfig, nextConfig),
+            changedFields: collectChangedConfigFields(
+              action === "backup" ? previousBackupConfig : previousConfig,
+              nextConfig,
+            ),
             operatorUserId: state.authenticatedUserId,
             sessionId: sessionIdRef.current,
           });
@@ -220,7 +246,7 @@ function Dvor1150ConfigPersistence() {
         );
         if (!config || !backupConfig) throw new Error("Cấu hình DVOR 1150 từ server không hợp lệ.");
         if (cancelled) return;
-        replaceConfig(config, backupConfig);
+        replaceConfig(config, backupConfig, parameterChangesFromHistory(response.history, "RMS"));
         revisionRef.current = response.revision;
         readyRef.current = true;
         setStatus("saved");
@@ -262,6 +288,9 @@ function Dvor1150ConfigPersistence() {
       const backupConfig = state.configurationBackup
         ? extractDvor1150Config(state.configurationBackup)
         : undefined;
+      const previousBackupConfig = previousState.configurationBackup
+        ? extractDvor1150Config(previousState.configurationBackup)
+        : undefined;
       persistChainRef.current = persistChainRef.current
         .then(async () => {
           const response = await applySimulatorConfig({
@@ -270,7 +299,10 @@ function Dvor1150ConfigPersistence() {
             config: currentConfig,
             backupConfig: action === "backup" || action === "restore" ? backupConfig : undefined,
             expectedRevision: revisionRef.current,
-            changedFields: collectChangedConfigFields(previousConfig, currentConfig),
+            changedFields: collectChangedConfigFields(
+              action === "backup" && previousBackupConfig ? previousBackupConfig : previousConfig,
+              currentConfig,
+            ),
             operatorUserId: state.authenticatedUserId,
             sessionId: sessionIdRef.current,
           });
@@ -308,7 +340,11 @@ function Dvor220ConfigPersistence({ store }: { store: Dvor220StoreApi }) {
         const flash = dvor220ConfigAdapter.parseConfig(response.backupConfig ?? response.appliedConfig);
         if (!running || !flash) throw new Error("Cấu hình DVOR 220 từ server không hợp lệ.");
         if (cancelled) return;
-        store.getState().replaceConfigurationLayers(running, flash);
+        store.getState().replaceConfigurationLayers(
+          running,
+          flash,
+          parameterChangesFromHistory(response.history, "RMS"),
+        );
         revisionRef.current = response.revision;
         readyRef.current = true;
         setStatus("saved");
@@ -349,6 +385,7 @@ function Dvor220ConfigPersistence({ store }: { store: Dvor220StoreApi }) {
 
       const running = extractDvor220Config(current.running);
       const previousRunning = extractDvor220Config(previous.running);
+      const previousFlash = extractDvor220Config(previous.flash);
       const flash = action === "flash-save" || action === "restore"
         ? extractDvor220Config(current.flash)
         : undefined;
@@ -360,7 +397,10 @@ function Dvor220ConfigPersistence({ store }: { store: Dvor220StoreApi }) {
             config: running,
             backupConfig: flash,
             expectedRevision: revisionRef.current,
-            changedFields: collectChangedConfigFields(previousRunning, running),
+            changedFields: collectChangedConfigFields(
+              action === "flash-save" ? previousFlash : previousRunning,
+              action === "flash-save" ? extractDvor220Config(current.flash) : running,
+            ),
             operatorUserId: state.device.session.username,
             sessionId: sessionIdRef.current,
           });
@@ -398,7 +438,11 @@ function Dme320ConfigPersistence({ store }: { store: Dme320StoreApi }) {
         const flash = dme320ConfigAdapter.parseConfig(response.backupConfig ?? response.appliedConfig);
         if (!running || !flash) throw new Error("Cấu hình DME 320 từ server không hợp lệ.");
         if (cancelled) return;
-        store.getState().replaceConfigurationProfiles(running, flash);
+        store.getState().replaceConfigurationProfiles(
+          running,
+          flash,
+          parameterChangesFromHistory(response.history, "RMS"),
+        );
         revisionRef.current = response.revision;
         readyRef.current = true;
         setStatus("saved");
@@ -439,6 +483,7 @@ function Dme320ConfigPersistence({ store }: { store: Dme320StoreApi }) {
 
       const running = extractDme320Config(current.running);
       const previousRunning = extractDme320Config(previous.running);
+      const previousFlash = extractDme320Config(previous.flash);
       const flash = action === "flash-save" || action === "restore"
         ? extractDme320Config(current.flash)
         : undefined;
@@ -450,7 +495,10 @@ function Dme320ConfigPersistence({ store }: { store: Dme320StoreApi }) {
             config: running,
             backupConfig: flash,
             expectedRevision: revisionRef.current,
-            changedFields: collectChangedConfigFields(previousRunning, running),
+            changedFields: collectChangedConfigFields(
+              action === "flash-save" ? previousFlash : previousRunning,
+              action === "flash-save" ? extractDme320Config(current.flash) : running,
+            ),
             operatorUserId: state.simulation.session.userId,
             sessionId: sessionIdRef.current,
           });

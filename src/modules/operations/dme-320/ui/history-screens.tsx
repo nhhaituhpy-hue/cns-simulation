@@ -42,7 +42,7 @@ interface HistoryFilter {
   text: string;
 }
 
-export function Dme320HistoryScreen(props: Dme320ScreenProps) {
+function Dme320EventHistoryScreen(props: Dme320ScreenProps) {
   const isLmi = props.screenId === "history-lmi";
   const initialCategories = isLmi
     ? (["alarm", "control", "event", "maintenance"] as Dme320LogCategory[])
@@ -123,4 +123,49 @@ export function Dme320HistoryScreen(props: Dme320ScreenProps) {
       />
     </div>
   );
+}
+
+function Dme320ParameterChangeHistoryScreen(props: Dme320ScreenProps) {
+  const [query, setQuery] = useState("");
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const rows = props.simulation.parameterChangeLogs.filter((row) =>
+    !normalizedQuery
+    || `${row.userName} ${row.file} ${row.parameter} ${row.state}`.toLocaleLowerCase().includes(normalizedQuery),
+  );
+
+  return (
+    <div className={styles.screenStack}>
+      <header className={styles.screenHeader}>
+        <div>
+          <h2>Parameter Change</h2>
+          <p>Configuration changes recorded when the running profile is saved to non-volatile flash.</p>
+        </div>
+        <MopiensStatusIndicator compact label="RESULTS" detail={`${rows.length} records`} tone="normal" />
+      </header>
+      <section className={styles.historyFilters} aria-label="Parameter change history filter">
+        <label><span>Contains</span><input value={query} placeholder="Parameter or User ID" onChange={(event) => setQuery(event.currentTarget.value)} /></label>
+      </section>
+      <MopiensTable
+        caption="Parameter change history"
+        rows={rows}
+        dense
+        emptyLabel="No parameter change records"
+        getRowId={(row) => row.id}
+        columns={[
+          { id: "time", label: "Time Tag", width: "20%", render: (row) => row.timeTag },
+          { id: "file", label: "File", width: "16%", render: (row) => row.file },
+          { id: "parameter", label: "Parameter", render: (row) => row.parameter },
+          { id: "state", label: "State", width: "12%", render: (row) => row.state === "normal" ? "Normal" : row.state === "warning" ? "Alert Low" : "Alarm" },
+          { id: "user", label: "User ID", width: "14%", render: (row) => row.userName },
+        ]}
+      />
+    </div>
+  );
+}
+
+export function Dme320HistoryScreen(props: Dme320ScreenProps) {
+  if (props.screenId === "history-parameter-change") {
+    return <Dme320ParameterChangeHistoryScreen {...props} />;
+  }
+  return <Dme320EventHistoryScreen {...props} />;
 }

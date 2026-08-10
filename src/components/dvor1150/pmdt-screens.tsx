@@ -5,6 +5,7 @@ import { Dvor1150Toolbar } from "./pmdt-toolbar";
 import { useState, type ReactNode } from "react";
 import type { Dvor1150MonitorParameter, Dvor1150ScreenId, Dvor1150ViewId } from "@/lib/dvor1150";
 import { getDvor1150ConfigValue } from "@/lib/dvor1150";
+import type { SimulatorParameterChangeLogEntry } from "@/lib/simulator-config/parameter-change";
 import { useDvor1150PmdtStore } from "@/stores/dvor1150-pmdt-store";
 
 const parameterRows: readonly { id: Dvor1150MonitorParameter; label: string; unit: string; digits: number }[] = [
@@ -97,6 +98,7 @@ export function Dvor1150RmsDataScreen() {
 export function Dvor1150RmsLogsScreen() {
   const activeView = useDvor1150PmdtStore((state) => state.activeView);
   const storedLogs = useDvor1150PmdtStore((state) => state.derived.data.logs);
+  const parameterChangeLogs = useDvor1150PmdtStore((state) => state.parameterChangeLogs);
   const sampleLogs = [
     { timeTag: "10/06/02 - 13:45:20", user: "SEC3", message: "Monitor 1 Deviation Normal", severity: "green" as const },
     { timeTag: "10/06/02 - 13:45:16", user: "SEC3", message: "Monitor 2 Notch Monitor Fault Normal", severity: "green" as const },
@@ -104,13 +106,23 @@ export function Dvor1150RmsLogsScreen() {
     { timeTag: "10/06/02 - 13:44:40", user: "SEC3", message: "Monitor 1 Configuration", severity: "green" as const },
     { timeTag: "10/06/02 - 13:43:11", user: "SEC3", message: "RMS Configuration Backup", severity: "green" as const },
   ];
+  const sampleParameterLogs: SimulatorParameterChangeLogEntry[] = [
+    { id: "sample-parameter-1", timeTag: "10/06/02 - 13:45:20", userName: "SEC3", file: "Monitor #1", parameter: "Monitor 1 Deviation", state: "normal" },
+    { id: "sample-parameter-2", timeTag: "10/06/02 - 13:45:16", userName: "SEC3", file: "Monitor #1", parameter: "Monitor 2 Notch Monitor Fault", state: "normal" },
+    { id: "sample-parameter-3", timeTag: "10/06/02 - 13:44:40", userName: "SEC3", file: "Monitor #1", parameter: "Monitor 1 Configuration", state: "normal" },
+    { id: "sample-parameter-4", timeTag: "10/06/02 - 13:43:11", userName: "SEC3", file: "RMS", parameter: "RMS Configuration Backup", state: "normal" },
+  ];
   const logs = storedLogs.length ? storedLogs : sampleLogs;
   const views = ["rms-logs-operational-summary", "rms-logs-alarms", "rms-logs-maintenance-alerts", "rms-logs-command-activity", "rms-logs-parameter-change"] as const;
   const title = tabLabels[activeView] ?? "RMS Logs";
   if (activeView === "rms-logs-operational-summary") {
     return <Screen title="RMS Logs" tabs={<ScreenTabs screenId="rms-logs" activeView={activeView} views={views} />}><div className="dvor1150-content"><div className="dvor1150-log-actions"><button type="button">Update</button><button type="button">Reset</button></div><fieldset className="dvor1150-panel dvor1150-log-summary"><legend>Operational Summary</legend><table className="dvor1150-table"><thead><tr><th /><th>Transmitter 1</th><th>Transmitter 2</th><th>Unit</th></tr></thead><tbody><tr><th>Time in Normal State</th><td>2914.38</td><td>0.00</td><td>Hours</td></tr><tr><th>Time in Standby State</th><td>0.00</td><td>2914.38</td><td>Hours</td></tr><tr><th>Availability</th><td>99.9996</td><td>99.9996</td><td>%</td></tr><tr><th>Start Time</th><td colSpan={2}>6/07/02 - 03:21:17</td><td /></tr><tr><th>End Time</th><td colSpan={2}>10/06/02 - 13:44:40</td><td /></tr><tr><th>Elapsed Time</th><td>2914.3931</td><td>Hours</td><td /></tr></tbody></table><button type="button" className="dvor1150-log-summary-reset">Reset Operational Summary</button></fieldset></div></Screen>;
   }
-  return <Screen title="RMS Logs" tabs={<ScreenTabs screenId="rms-logs" activeView={activeView} views={views} />}><div className="dvor1150-content"><div className="dvor1150-log-actions"><button type="button">Update</button><button type="button">Reset</button></div><fieldset className="dvor1150-panel dvor1150-log-table-panel"><legend>{title}</legend><table className="dvor1150-table"><thead><tr><th>Time Tag</th><th>{activeView === "rms-logs-command-activity" ? "User Name" : activeView === "rms-logs-parameter-change" ? "File" : "Type"}</th><th>{activeView === "rms-logs-command-activity" ? "Command" : activeView === "rms-logs-parameter-change" ? "Parameter" : "Alert"}</th><th>State</th></tr></thead><tbody>{logs.map((entry, index) => <tr key={`${entry.timeTag}-${index}`}><td>{entry.timeTag}</td><td>{activeView === "rms-logs-command-activity" ? entry.user : activeView === "rms-logs-parameter-change" ? "Monitor #1" : "Monitor 1"}</td><td>{entry.message}</td><td>{entry.severity === "green" ? "Normal" : entry.severity === "yellow" ? "Alert Low" : "Alarm"}</td></tr>)}</tbody></table></fieldset></div></Screen>;
+  if (activeView === "rms-logs-parameter-change") {
+    const rows = parameterChangeLogs.length ? parameterChangeLogs : sampleParameterLogs;
+    return <Screen title="RMS Logs" tabs={<ScreenTabs screenId="rms-logs" activeView={activeView} views={views} />}><div className="dvor1150-content"><div className="dvor1150-log-actions"><button type="button">Update</button><button type="button">Reset</button></div><fieldset className="dvor1150-panel dvor1150-log-table-panel"><legend>Parameter Change</legend><table className="dvor1150-table"><thead><tr><th>Time Tag</th><th>File</th><th>Parameter</th><th>State</th><th>User ID</th></tr></thead><tbody>{rows.map((entry) => <tr key={entry.id}><td>{entry.timeTag}</td><td>{entry.file}</td><td>{entry.parameter}</td><td>{entry.state === "normal" ? "Normal" : entry.state === "warning" ? "Alert Low" : "Alarm"}</td><td>{entry.userName}</td></tr>)}</tbody></table></fieldset></div></Screen>;
+  }
+  return <Screen title="RMS Logs" tabs={<ScreenTabs screenId="rms-logs" activeView={activeView} views={views} />}><div className="dvor1150-content"><div className="dvor1150-log-actions"><button type="button">Update</button><button type="button">Reset</button></div><fieldset className="dvor1150-panel dvor1150-log-table-panel"><legend>{title}</legend><table className="dvor1150-table"><thead><tr><th>Time Tag</th><th>{activeView === "rms-logs-command-activity" ? "User Name" : "Type"}</th><th>{activeView === "rms-logs-command-activity" ? "Command" : "Alert"}</th><th>State</th></tr></thead><tbody>{logs.map((entry, index) => <tr key={`${entry.timeTag}-${index}`}><td>{entry.timeTag}</td><td>{activeView === "rms-logs-command-activity" ? entry.user : "Monitor 1"}</td><td>{entry.message}</td><td>{entry.severity === "green" ? "Normal" : entry.severity === "yellow" ? "Alert Low" : "Alarm"}</td></tr>)}</tbody></table></fieldset></div></Screen>;
 }
 
 function ConfigRows({ fields }: { fields: readonly { id: string; label: string; unit?: string; type?: "number" | "text" | "boolean" | "select"; digits?: number }[] }) {

@@ -18,6 +18,12 @@ import {
   type Dvor1150TransmitterMode,
   type Dvor1150ViewId,
 } from "@/lib/dvor1150";
+import {
+  collectChangedConfigFields,
+  createParameterChangeLogEntries,
+  prependParameterChangeLogEntries,
+  type SimulatorParameterChangeLogEntry,
+} from "@/lib/simulator-config/parameter-change";
 import { create, type StoreApi, type UseBoundStore } from "zustand";
 
 const defaultViews: Record<Dvor1150ScreenId, Dvor1150ViewId> = {
@@ -61,6 +67,7 @@ export interface Dvor1150PmdtStoreState {
   configurationBackup: Dvor1150Config | null;
   configDirty: boolean;
   needBackup: boolean;
+  parameterChangeLogs: SimulatorParameterChangeLogEntry[];
   derived: Dvor1150Snapshot;
   loginDialogOpen: boolean;
   authenticatedUserId: string | null;
@@ -88,7 +95,11 @@ export interface Dvor1150PmdtStoreActions {
   resetConfigDraft: () => boolean;
   restoreConfig: () => boolean;
   backupConfig: () => boolean;
-  replaceConfig: (config: Dvor1150Config, backupConfig?: Dvor1150Config) => void;
+  replaceConfig: (
+    config: Dvor1150Config,
+    backupConfig?: Dvor1150Config,
+    parameterChangeLogs?: readonly SimulatorParameterChangeLogEntry[],
+  ) => void;
   setTransmitterMode: (transmitterId: Dvor1150TransmitterId, mode: Dvor1150TransmitterMode) => boolean;
   executeCommand: (commandId: string) => boolean;
   openScreen: (screenId: Dvor1150ScreenId, menuPath: readonly string[], title?: string) => void;
@@ -116,6 +127,7 @@ function buildInitialState(now: () => Date): Dvor1150PmdtStoreState {
     configurationBackup: cloneDvor1150Config(defaultDvor1150Config),
     configDirty: false,
     needBackup: false,
+    parameterChangeLogs: [],
     derived,
     loginDialogOpen: true,
     authenticatedUserId: null,
@@ -284,10 +296,27 @@ export function createDvor1150PmdtStore(
       backupConfig: () => {
         const state = get();
         if (state.securityLevel < 3 || !state.needBackup) return false;
-        set({ configurationBackup: cloneDvor1150Config(state.config), needBackup: false, lastCommand: "RMS Config Backup" });
+        const previousBackup = state.configurationBackup ?? defaultDvor1150Config;
+        const changedFields = collectChangedConfigFields(
+          persistentConfigValue(previousBackup),
+          persistentConfigValue(state.config),
+        );
+        const nextLogs = createParameterChangeLogEntries({
+          changedFields,
+          timeTag: state.derived.data.timestamp,
+          userName: state.authenticatedUserId,
+          file: "RMS",
+          actionLabel: "RMS Configuration Backup",
+        });
+        set({
+          configurationBackup: cloneDvor1150Config(state.config),
+          parameterChangeLogs: prependParameterChangeLogEntries(state.parameterChangeLogs, nextLogs),
+          needBackup: false,
+          lastCommand: "RMS Config Backup",
+        });
         return true;
       },
-      replaceConfig: (persistedConfig, persistedBackup = persistedConfig) => {
+      replaceConfig: (persistedConfig, persistedBackup = persistedConfig, parameterChangeLogs) => {
         const state = get();
         const config = preserveLiveSimulation(cloneDvor1150Config(persistedConfig), state.config);
         const configurationBackup = preserveLiveSimulation(
@@ -301,6 +330,7 @@ export function createDvor1150PmdtStore(
           configurationBackup,
           configDirty: false,
           needBackup: JSON.stringify(persistentConfigValue(config)) !== JSON.stringify(persistentConfigValue(configurationBackup)),
+          parameterChangeLogs: parameterChangeLogs ? [...parameterChangeLogs] : state.parameterChangeLogs,
           derived,
           lastCommand: "User configuration loaded",
         });

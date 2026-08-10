@@ -38,7 +38,7 @@ Bản DVOR 1150 được xây dựng độc lập từ mục 3.4 của `doc/DVOR
 - Chuyển TX1 ↔ TX2 sang Main không cần Local/Bypass. Load và Off của cùng máy phát là hai trạng thái loại trừ; các lệnh transmitter vẫn bị giới hạn bởi Security Level.
 - Config nhập vào `configDraft`, cho phép xóa rồi nhập lại, Apply (F7) mới cập nhật engine. Apply đặt Need Backup màu đỏ; RMS > Config Backup lưu snapshot EEPROM mô phỏng và xóa cảnh báo; RMS > Config Restore khôi phục snapshot đã backup; Reset (F8) hủy draft hiện tại.
 - Derived engine liên kết Output Power/Scale, SBO, modulation, frequency, monitor alarm/voting, 48 anten Sideband VSWR và cột transmitter đang phát. Nominal Output Power làm thay đổi Carrier, SBO/sideband và RF Level; Voice/Reference Modulation tác động các giá trị điều chế tương ứng. VSWR luôn được giới hạn trong miền vật lý `>= 1` và cảnh báo khi vượt `1.25:1`.
-- State DVOR 1150 chỉ nằm trong Zustand store của tab trình duyệt, không ghi localStorage/API/ Supabase. Vì vậy nhiều người hoặc nhiều tab có phiên mô phỏng độc lập, không ghi đè dữ liệu nhau; reload tạo lại snapshot mặc định.
+- Trạng thái runtime DVOR 1150 chỉ nằm trong Zustand store của tab trình duyệt; snapshot cấu hình và lịch sử Backup được lưu theo application user qua API/Supabase. Vì vậy nhiều người hoặc nhiều tab có cấu hình riêng, còn reload khởi tạo lại runtime từ cấu hình đã lưu.
 
 Quality gate trực tiếp cho module: `tests/vor/dvor1150-engine.test.ts`, `tests/layout/app-shell.test.tsx`, `tests/layout/module-routing.test.tsx` và `tests/vor/vor-integration.test.tsx` đạt **15/15 test**; `npm run typecheck` và `npm run build` đạt.
 
@@ -65,10 +65,19 @@ Hai simulator phần mềm khai thác được xây dựng độc lập từ `do
 - Cấu hình đi qua ba lớp Draft → Running bằng **Apply** → Flash/Profile bằng **Profile Save**; power cycle/reboot khôi phục profile không mất điện mô phỏng.
 - DVOR 220 bao phủ dual transmitter, antenna/dummy load routing, CMA/SMA/SYN/PDC, 48 antenna, monitor voting, bypass, timed changeover/shutdown, calibration, ground check, flight inspection, fault injection và history.
 - DME 320 bao phủ channel 1–126 X/Y, dual transponder, executive/standby monitor, SCU/TCU/RXU/TXU/HPA/RFG/PMU, power/battery/EMU, calibration/certification, BITE self-test, squitter, IDENT, RF loopback, spacing offset, fault propagation và history.
-- Cả hai simulator có menu **System → Simulation Parameters...** để chọn Monitor/Channel, nhập raw measurement overrides, Apply hoặc Reset về giá trị engine mặc định. Các giá trị này chỉ nằm trong bộ nhớ phiên mô phỏng, tách khỏi Setup/Profile Save/Flash; persistence dùng chung cho toàn bộ simulator được để ở giai đoạn sau.
+- Cả hai simulator có menu **System → Simulation Parameters...** để chọn Monitor/Channel, nhập raw measurement overrides, Apply hoặc Reset về giá trị engine mặc định. Các raw measurement overrides này chỉ nằm trong bộ nhớ phiên mô phỏng, tách khỏi Setup/Profile Save/Flash; snapshot cấu hình Setup/Profile được persistence theo application user.
 - Engine hai thiết bị là deterministic và tách biệt; phần dùng chung trong `src/modules/operations/mopiens-pmdt/` chỉ là presentation shell/component.
 
 Quality gate ngày **10/08/2026**: **21 file, 103/103 test đạt**, targeted ESLint đạt không warning, `npm run typecheck` và `npm run build` thành công. Smoke check HTTP trả 200 và đúng marker cho cả hai route cùng fallback VHF. Browser backend không khả dụng trong phiên xác minh, vì vậy kiểm tra tương tác dùng component workflow tests; cần kiểm tra trực quan desktop/narrow ở phiên có Browser trước khi phát hành UI ra người dùng cuối.
+
+### Lưu cấu hình và lịch sử Parameter Change
+
+- Cấu hình simulator được lưu theo từng tài khoản ứng dụng trong `user_simulator_configs`, tách riêng snapshot khởi tạo, cấu hình đã Apply/Restore và bản Backup/Profile Save.
+- Mỗi thao tác ghi cấu hình tạo một dòng trong `user_simulator_config_history` với action, danh sách `changed_fields`, revision, session và `operator_user_id` của tài khoản đăng nhập bên trong simulator.
+- DVOR 1150A, DVOR 1150, DVOR 220, DME 1119A và DME 320 hiển thị các thay đổi sau Backup/Profile Save trong màn hình **Parameter Change**; lịch sử được nạp lại theo đúng application user sau khi reload.
+- ADS-B vẫn dùng persistence cấu hình chung nhưng không hiển thị màn hình Parameter Change theo phạm vi thiết kế.
+
+Quality gate cho phần này ngày **10/08/2026**: **33 file, 188/188 test đạt**; `npm run typecheck` và `npm run build` đều thành công.
 
 ## Chức năng chính
 
@@ -124,11 +133,13 @@ Trình duyệt
             ├─ exams / exam_examiners / exam_candidates
             ├─ exam_candidate_subjects / exam_attempts / exam_attempt_items
             ├─ auth_login_attempts
+            ├─ user_simulator_configs / user_simulator_config_history
             └─ training media storage
 ```
 
 - Supabase Auth quản lý thông tin đăng nhập; `public.profiles` quản lý họ tên, đơn vị và vai trò ứng dụng.
 - Supabase Database lưu kịch bản ADS-B, VOR, DME và bài nộp VOR/DME.
+- Supabase Database lưu snapshot cấu hình theo application user và audit history thay đổi parameter của simulator.
 - `localStorage` giữ bản dữ liệu cục bộ có phiên bản và đóng vai trò fallback khi API hoặc Supabase không khả dụng.
 - Luồng **thi chính thức** là ngoại lệ: kỳ thi, phân đề, tiến độ và kịch bản đang thi luôn được đọc/ghi trực tiếp từ Supabase; hệ thống không dùng dữ liệu `localStorage` thay thế khi Supabase lỗi. Điểm chính thức chỉ được giám khảo nhập sau khi thí sinh nộp môn thi.
 - Các migration và seed data được quản lý trong `supabase/migrations/`.
@@ -380,6 +391,7 @@ Khi kế hoạch nội bộ và manual nhà sản xuất khác nhau, manual là 
 - Mở rộng kiểm thử E2E, accessibility, hiệu năng và quan sát lỗi production.
 
 ## Session Log
+- [2026-08-10] Bổ sung Parameter Change history cho DVOR 1150A, DVOR 1150, DVOR 220, DME 1119A và DME 320: ghi từng field thay đổi sau Apply rồi Backup/Profile Save, hydrate lại theo application user từ `user_simulator_config_history`, bổ sung màn hình Parameter Change cho MOPIENS và sửa layout bảng 5 cột của DVOR 1150A. ADS-B không hiển thị màn hình này. Quality gate: 188/188 test, `npm run typecheck` và `npm run build` đạt.
 - [2026-08-10] Mở rộng persistence cấu hình theo user ID cho các simulator DVOR 1150, DVOR 220, DME 320 và ADS-B. Supabase bổ sung `backup_config`, RPC ghi `apply`/`restore`/`backup`/`flash-save`, revision/history; frontend hydrate khi mở simulator và lưu sau Apply, Backup/Restore, Profile Save hoặc Power-cycle. Migration `202608100002_extend_simulator_config_backup.sql` đã được áp dụng lên remote Supabase. Đồng thời sửa route recovery password để POST Server Action `/login` không bị proxy redirect thành `307`.
 - [2026-08-10] Bổ sung **System → Simulation Parameters...** cho MOPIENS 220 DVOR và 320 DME: chọn Monitor/Channel, chỉnh raw measurement values, Apply và Reset to Defaults. DVOR 220 thêm measurement override vào engine; DME 320 tái sử dụng override hiện có và xóa override khi reboot. Tính năng chưa lưu persistence theo yêu cầu để chờ triển khai đồng bộ toàn bộ simulator. Test ảnh hưởng trực tiếp: **27/27 đạt**; `npm run build` thành công.
 - [2026-08-10] Căn giữa lại các trang PMDT `/simulator/dvor-1150a` và `/simulator/dme-1119a` theo DVOR 1150; tách `/simulator/ads-b` khỏi AppShell, đặt terminal trong trang độc lập có khung căn giữa và điều chỉnh chiều cao khi không còn navigation chung. Test `tests/layout/app-shell.test.tsx`: **9/9 đạt**; `npm run build` thành công.

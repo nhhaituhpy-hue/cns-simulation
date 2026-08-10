@@ -14,6 +14,7 @@ import type {
   Dvor220DeviceState,
   Dvor220Snapshot,
 } from "../domain/types";
+import type { SimulatorParameterChangeLogEntry } from "@/lib/simulator-config/parameter-change";
 
 export interface Dvor220Clock {
   now(): number;
@@ -32,7 +33,11 @@ export interface Dvor220StoreState {
   dispatch(command: Dvor220Command): Dvor220CommandResult;
   advanceTime(elapsedMs: number): Dvor220DeviceState;
   syncClock(): Dvor220DeviceState;
-  replaceConfigurationLayers(running: Dvor220Configuration, flash: Dvor220Configuration): void;
+  replaceConfigurationLayers(
+    running: Dvor220Configuration,
+    flash: Dvor220Configuration,
+    parameterChangeLogs?: readonly SimulatorParameterChangeLogEntry[],
+  ): void;
   reset(options?: CreateDvor220StateOptions): void;
 }
 
@@ -91,7 +96,7 @@ export function createDvor220Store(options: Dvor220StoreOptions = {}): Dvor220St
         }
         return get().advanceTime(elapsedMs);
       },
-      replaceConfigurationLayers(running, flash) {
+      replaceConfigurationLayers(running, flash, parameterChangeLogs) {
         const device = cloneDvor220(get().device);
         device.configuration = {
           draft: cloneDvor220(running),
@@ -100,6 +105,9 @@ export function createDvor220Store(options: Dvor220StoreOptions = {}): Dvor220St
           draftDirty: false,
           flashDirty: JSON.stringify(running) !== JSON.stringify(flash),
         };
+        device.history.parameterChanges = parameterChangeLogs
+          ? structuredClone([...parameterChangeLogs])
+          : device.history.parameterChanges;
         synchronizeRuntimeWithConfiguration(device);
         set({
           device,
