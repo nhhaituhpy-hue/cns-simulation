@@ -510,6 +510,7 @@ export function AppShell({ children, currentUser }: AppShellProps) {
     pathname === "/simulator/dvor-1150" ||
     pathname === "/simulator/dvor-1150a" ||
     pathname === "/simulator/dme-1119a" ||
+    pathname === "/simulator/ads-b" ||
     pathname === "/simulator/software/dvor-220" ||
     pathname === "/simulator/software/dme-320"
   ) {

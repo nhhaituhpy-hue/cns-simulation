@@ -3,6 +3,11 @@
   justify-content: center;
 }
 
+.dvor1150a-pmdt-page .pmdt-classic-viewport {
+  align-items: flex-start;
+  justify-content: center;
+}
+
 .dvor1150-pmdt-window {
   flex: 0 0 900px;
   width: 900px;

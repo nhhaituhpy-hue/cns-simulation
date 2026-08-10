@@ -4,5 +4,9 @@ import { AdsbSimulatorLab } from "@/modules/devices/adsb";
 export const metadata: Metadata = { title: "ADS-B Simulator" };
 
 export default function AdsbSimulatorPage() {
-  return <AdsbSimulatorLab />;
+  return (
+    <div className="adsb-simulator-page">
+      <AdsbSimulatorLab />
+    </div>
+  );
 }

@@ -1,0 +1,17 @@
+.adsb-simulator-page {
+  display: flex;
+  min-height: 100dvh;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: auto;
+  background: #070a12;
+}
+
+.adsb-simulator-page .adsb-simulator-lab {
+  width: min(100%, 1280px);
+  min-height: 100dvh;
+}
+
+.adsb-simulator-page .adsb-simulator-lab .terminal-surface {
+  min-height: calc(100dvh - 6rem);
+}

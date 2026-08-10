@@ -38,7 +38,7 @@ export function AdsbSimulatorLab() {
   }, [terminal.initialize]);
 
   return (
-    <div className="simulator-skin min-h-[calc(100dvh-4.25rem)] w-full bg-[#070a12] text-[#e2e8f0]">
+    <div className="simulator-skin adsb-simulator-lab min-h-screen w-full bg-[#070a12] text-[#e2e8f0]">
       <header className="border-b border-[#334155] bg-[#0f172a]">
         <div className="flex h-8 items-center justify-between gap-3 border-b border-[#26364d] px-4">
           <Link

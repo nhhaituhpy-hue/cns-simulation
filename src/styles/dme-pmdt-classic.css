@@ -12,6 +12,11 @@
   overflow: auto;
 }
 
+.dme-pmdt-page .pmdt-classic-viewport {
+  align-items: flex-start;
+  justify-content: center;
+}
+
 .dme-pmdt-window {
   width: 900px;
   height: 693px;
