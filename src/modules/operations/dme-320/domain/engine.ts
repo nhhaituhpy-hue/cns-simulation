@@ -763,6 +763,23 @@ function resetEquipmentFromRunningConfig(state: Dme320SimulationState): void {
   }
 }
 
+export function replaceDme320Configuration(
+  source: Dme320SimulationState,
+  running: Dme320Config,
+  flash: Dme320Config,
+): Dme320SimulationState {
+  const state = structuredClone(source);
+  state.config = {
+    draft: cloneDme320Config(running),
+    running: cloneDme320Config(running),
+    flash: cloneDme320Config(flash),
+    draftDirty: false,
+    flashDirty: JSON.stringify(running) !== JSON.stringify(flash),
+  };
+  resetEquipmentFromRunningConfig(state);
+  return refreshDme320Simulation(state, false);
+}
+
 function manualChangeover(state: Dme320SimulationState): boolean {
   if (state.faults.some((fault) => fault.active && fault.kind === "coax-relay-failure")) {
     appendLog(state, "event", "Changeover command failed: coaxial relay fault.", "SYSTEM");

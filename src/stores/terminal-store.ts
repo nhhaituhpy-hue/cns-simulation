@@ -2,6 +2,7 @@ import {
   authenticateLoginUser,
   authenticateTerminalLogin,
   TerminalEngine,
+  type TerminalEnginePersistentState,
   type PendingInteractionType,
   type TerminalEngineOptions,
   type TerminalProcessResult,
@@ -34,6 +35,7 @@ export type TerminalInitializationOptions = Omit<
   "menus" | "rootMenuId"
 > & {
   persistenceKey?: string;
+  initialPersistentState?: unknown;
 };
 
 export type TerminalInitialization = LoginUser | TerminalInitializationOptions;
@@ -59,6 +61,8 @@ export interface TerminalStoreActions {
   processInput: (input: string) => TerminalProcessResult | null;
   clearOutput: () => void;
   clearPersistedSession: () => void;
+  getPersistentState: () => TerminalEnginePersistentState | null;
+  restorePersistentState: (snapshot: unknown) => void;
   reset: () => void;
 }
 
@@ -88,16 +92,25 @@ const EMPTY_STATE: TerminalStoreState = {
 
 function resolveInitialization(
   initialization: TerminalInitialization,
-): { engineOptions: TerminalEngineOptions; persistenceKey: string | null } {
+): {
+  engineOptions: TerminalEngineOptions;
+  persistenceKey: string | null;
+  initialPersistentState: unknown;
+} {
   if (typeof initialization === "string") {
     return {
       engineOptions: { targetLoginUser: initialization },
       persistenceKey: null,
+      initialPersistentState: undefined,
     };
   }
 
-  const { persistenceKey, ...engineOptions } = initialization;
-  return { engineOptions, persistenceKey: persistenceKey ?? null };
+  const { persistenceKey, initialPersistentState, ...engineOptions } = initialization;
+  return {
+    engineOptions,
+    persistenceKey: persistenceKey ?? null,
+    initialPersistentState,
+  };
 }
 
 function browserStorage(): TerminalCacheStorage | null {
@@ -167,7 +180,7 @@ export function createTerminalStore(
       clearTerminalSessionState(storage, activePersistenceKey);
     };
 
-    const restorePersistentState = () => {
+    const restoreCachedPersistentState = () => {
       if (!engine) return;
 
       const storage = browserStorage();
@@ -218,7 +231,17 @@ export function createTerminalStore(
         activePersistenceKey = resolved.persistenceKey;
         sharedSessionState = null;
         engine = new TerminalEngine(resolvedOptions);
-        restorePersistentState();
+        restoreCachedPersistentState();
+        if (resolved.initialPersistentState !== undefined) {
+          try {
+            engine.restorePersistentState(resolved.initialPersistentState);
+            sharedSessionState = engine.getPersistentState();
+          } catch {
+            // An invalid server snapshot should not prevent the terminal from
+            // opening with its factory state.
+            sharedSessionState = null;
+          }
+        }
         acceptedUsername = false;
 
         const isTest = typeof process !== "undefined" && process.env?.NODE_ENV === "test";
@@ -286,7 +309,7 @@ export function createTerminalStore(
               ...baseOptions,
               targetLoginUser: acceptedLoginUser,
             });
-            restorePersistentState();
+            restoreCachedPersistentState();
           }
 
           set({
@@ -347,7 +370,7 @@ export function createTerminalStore(
             ...baseOptions,
             targetLoginUser: activeLoginUser,
           });
-          restorePersistentState();
+          restoreCachedPersistentState();
           acceptedUsername = false;
 
           set({
@@ -378,6 +401,20 @@ export function createTerminalStore(
       },
 
       clearPersistedSession: clearPersistentState,
+
+      getPersistentState: () => engine?.getPersistentState() ?? null,
+
+      restorePersistentState: (snapshot) => {
+        if (!engine) return;
+        try {
+          engine.restorePersistentState(snapshot);
+          sharedSessionState = engine.getPersistentState();
+          set(engineSnapshot());
+        } catch {
+          // Callers can validate/parse a snapshot before calling this method;
+          // keep the running terminal unchanged if a malformed value slips in.
+        }
+      },
 
       reset: () => {
         acceptedUsername = false;

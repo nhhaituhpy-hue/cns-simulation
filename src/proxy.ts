@@ -25,7 +25,11 @@ export async function proxy(request: NextRequest) {
     return responseWithRefreshedCookies(loginUrl, response);
   }
 
-  if (pathname === "/login" && claims?.sub) {
+  // Server Actions defined in the login page are invoked as POST /login.
+  // A recovery OTP creates a temporary authenticated session before the
+  // new-password action runs, so redirecting every /login request here would
+  // intercept that action and return 307 instead of letting it update Auth.
+  if (pathname === "/login" && request.method === "GET" && claims?.sub) {
     const homeUrl = request.nextUrl.clone();
     homeUrl.pathname = "/";
     homeUrl.search = "";

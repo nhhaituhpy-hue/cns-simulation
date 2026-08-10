@@ -2,6 +2,7 @@ import { createStore, type StoreApi } from "zustand/vanilla";
 import {
   createDme320SimulationState,
   executeDme320Command,
+  replaceDme320Configuration,
   type CreateDme320SimulationOptions,
 } from "../domain/engine";
 import type {
@@ -27,6 +28,7 @@ export interface Dme320StoreState {
   advanceBy(elapsedMs: number): Dme320CommandResult;
   syncToClock(): Dme320CommandResult;
   replaceSimulation(simulation: Dme320SimulationState): void;
+  replaceConfigurationProfiles(running: Dme320SimulationState["config"]["running"], flash: Dme320SimulationState["config"]["flash"]): void;
   reset(options?: CreateDme320SimulationOptions): void;
 }
 
@@ -90,6 +92,12 @@ export function createDme320Store(options: Dme320StoreOptions = {}): Dme320Store
       },
       replaceSimulation(simulation) {
         set({ simulation: structuredClone(simulation), lastCommandResult: null });
+      },
+      replaceConfigurationProfiles(running, flash) {
+        set({
+          simulation: replaceDme320Configuration(get().simulation, running, flash),
+          lastCommandResult: null,
+        });
       },
       reset(resetOptions = {}) {
         set({

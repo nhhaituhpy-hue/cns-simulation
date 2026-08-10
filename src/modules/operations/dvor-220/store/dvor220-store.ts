@@ -5,6 +5,8 @@ import {
   type CreateDvor220StateOptions,
 } from "../domain/defaults";
 import { advanceDvor220Time, deriveDvor220Snapshot } from "../domain/engine";
+import { synchronizeRuntimeWithConfiguration } from "../domain/commands";
+import { cloneDvor220 } from "../domain/defaults";
 import type {
   Dvor220Command,
   Dvor220CommandResult,
@@ -30,6 +32,7 @@ export interface Dvor220StoreState {
   dispatch(command: Dvor220Command): Dvor220CommandResult;
   advanceTime(elapsedMs: number): Dvor220DeviceState;
   syncClock(): Dvor220DeviceState;
+  replaceConfigurationLayers(running: Dvor220Configuration, flash: Dvor220Configuration): void;
   reset(options?: CreateDvor220StateOptions): void;
 }
 
@@ -87,6 +90,22 @@ export function createDvor220Store(options: Dvor220StoreOptions = {}): Dvor220St
           throw new RangeError("The injected clock cannot move DVOR 220 simulation time backwards.");
         }
         return get().advanceTime(elapsedMs);
+      },
+      replaceConfigurationLayers(running, flash) {
+        const device = cloneDvor220(get().device);
+        device.configuration = {
+          draft: cloneDvor220(running),
+          running: cloneDvor220(running),
+          flash: cloneDvor220(flash),
+          draftDirty: false,
+          flashDirty: JSON.stringify(running) !== JSON.stringify(flash),
+        };
+        synchronizeRuntimeWithConfiguration(device);
+        set({
+          device,
+          snapshot: deriveDvor220Snapshot(device),
+          lastCommandResult: null,
+        });
       },
       reset(resetOptions = {}) {
         const device = buildDevice(resetOptions);

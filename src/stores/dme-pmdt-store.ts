@@ -1,5 +1,9 @@
 import { cloneDefaultDmePmdtData } from "@/lib/dme-pmdt-defaults";
 import {
+  hydrateDme1119aData,
+  type Dme1119aPersistedConfig,
+} from "@/lib/simulator-config/dme-1119a";
+import {
   dmeParameterFieldCatalog,
   dmeTransferRequested,
   getDmeParameterValue,
@@ -109,6 +113,7 @@ export interface DmePmdtStoreState {
 
 export interface DmePmdtStoreActions {
   initializeSession: (initialization: DmeSessionInitialization) => void;
+  replaceConfig: (config: Dme1119aPersistedConfig) => void;
   setMode: (mode: DmePmdtMode) => void;
   setConfigPanelOpen: (open: boolean) => void;
   setAboutDialogOpen: (open: boolean) => void;
@@ -518,6 +523,22 @@ export function createDmePmdtStore(
               ...item,
               menuPath: [...item.menuPath],
             })) ?? [],
+        });
+      },
+
+      replaceConfig: (persistedConfig) => {
+        const state = get();
+        const data = hydrateDme1119aData(persistedConfig);
+        data.rmsStatus.logonLevel = state.securityLevel;
+        data.rmsStatus.localControlMode = data.local;
+        set({
+          data,
+          configDraft: structuredClone(data),
+          configDirty: false,
+          needBackup: false,
+          configurationBackup: structuredClone(data),
+          savedConfiguration: structuredClone(data),
+          lastCommand: "User configuration loaded",
         });
       },
 

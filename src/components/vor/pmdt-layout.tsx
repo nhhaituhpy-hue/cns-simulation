@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
+import { SimulatorConfigPersistence } from "@/components/simulator/simulator-config-persistence";
+import type { SupportedSimulatorConfigId } from "@/lib/simulator-config/types";
 import type { VorPmdtMode } from "@/lib/vor-types";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
 import { PmdtMenuBar } from "./pmdt-menu-bar";
@@ -27,6 +29,7 @@ import { DiagnosticsWorkspace } from "./screens/diagnostics-workspace";
 
 export interface PmdtLayoutProps {
   mode?: VorPmdtMode;
+  simulatorId?: Extract<SupportedSimulatorConfigId, "dvor-1150a">;
   children?: ReactNode;
   sidePanel?: ReactNode;
 }
@@ -53,6 +56,7 @@ function PmdtScreenRouter() {
 
 export function PmdtLayout({
   mode = "preview",
+  simulatorId,
   children,
   sidePanel,
 }: PmdtLayoutProps) {
@@ -113,6 +117,7 @@ export function PmdtLayout({
         {configPanelOpen ? <DvorConfigPanel /> : null}
         {aboutDialogOpen ? <AboutPmdtDialog /> : null}
         {loginDialogOpen ? <PmdtLoginDialog /> : null}
+        {mode === "preview" && simulatorId ? <SimulatorConfigPersistence simulatorId={simulatorId} /> : null}
       </section>
     </div>
   );

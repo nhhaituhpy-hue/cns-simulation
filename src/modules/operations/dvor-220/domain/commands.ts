@@ -58,7 +58,7 @@ function mainTransmitterId(state: Dvor220DeviceState): Dvor220TransmitterId {
   return DVOR220_TRANSMITTER_IDS.find((id) => state.transmitters[id].designation === "main") ?? "tx1";
 }
 
-function synchronizeRuntimeWithConfiguration(state: Dvor220DeviceState) {
+export function synchronizeRuntimeWithConfiguration(state: Dvor220DeviceState) {
   const running = state.configuration.running;
   if (running.station.equipmentVersion === "single") {
     state.transmitters.tx2.powerOn = false;

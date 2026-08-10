@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
+import { SimulatorConfigPersistence } from "@/components/simulator/simulator-config-persistence";
+import type { SupportedSimulatorConfigId } from "@/lib/simulator-config/types";
 import type { DmePmdtMode } from "@/lib/dme-types";
 import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
 import { PmdtMenuBar } from "./pmdt-menu-bar";
@@ -31,6 +33,7 @@ import { TxDataLayout } from "./screens/tx-data-layout";
 
 export interface PmdtLayoutProps {
   mode?: DmePmdtMode;
+  simulatorId?: Extract<SupportedSimulatorConfigId, "dme-1119a">;
   children?: ReactNode;
   sidePanel?: ReactNode;
 }
@@ -63,6 +66,7 @@ function PmdtScreenRouter() {
 
 export function PmdtLayout({
   mode = "preview",
+  simulatorId,
   children,
   sidePanel,
 }: PmdtLayoutProps) {
@@ -153,6 +157,7 @@ export function PmdtLayout({
         {aboutDialogOpen ? <AboutPmdtDialog /> : null}
         {passwordDialogOpen ? <DmePmdtPasswordDialog /> : null}
         {loginDialogOpen ? <DmePmdtLoginDialog /> : null}
+        {mode === "preview" && simulatorId ? <SimulatorConfigPersistence simulatorId={simulatorId} /> : null}
       </section>
     </div>
   );

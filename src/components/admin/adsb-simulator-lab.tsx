@@ -4,8 +4,15 @@ import { ArrowCounterClockwise } from "@phosphor-icons/react/dist/csr/ArrowCount
 import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { Terminal } from "@phosphor-icons/react/dist/csr/Terminal";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { TerminalWindow } from "@/components/terminal/terminal-window";
+import {
+  applySimulatorConfig,
+  initializeSimulatorConfig,
+  loadSimulatorConfig,
+} from "@/lib/simulator-config/client";
+import { collectChangedConfigFields } from "@/lib/simulator-config/diff";
+import { adsbConfigAdapter } from "@/lib/simulator-config/ads-b";
 import {
   NOI_BAI_TRAINING_MONITORING,
   NOI_BAI_TRAINING_SENSOR,
@@ -32,10 +39,83 @@ export function AdsbSimulatorLab() {
   const terminal = useAdsbSimulatorTerminal();
   const connectionIpAddress =
     terminal.connectionIpAddress ?? NOI_BAI_TRAINING_SENSOR.network.ip;
+  const [persistenceReady, setPersistenceReady] = useState(false);
+  const revisionRef = useRef(0);
+  const sessionIdRef = useRef<string | null>(null);
+  const persistedConfigRef = useRef<ReturnType<typeof terminal.getPersistentState>>(null);
+  const persistChainRef = useRef(Promise.resolve());
+  const [persistenceStatus, setPersistenceStatus] = useState<"" | "loading" | "saved" | "error">("");
 
   useEffect(() => {
-    terminal.initialize(LAB_INITIALIZATION);
-  }, [terminal.initialize]);
+    sessionIdRef.current = typeof globalThis.crypto?.randomUUID === "function"
+      ? globalThis.crypto.randomUUID()
+      : null;
+    let cancelled = false;
+
+    async function initializeWithSavedConfig() {
+      setPersistenceStatus("loading");
+      try {
+        let response = await loadSimulatorConfig("ads-b");
+        if (!response.persisted) response = await initializeSimulatorConfig("ads-b");
+        const config = adsbConfigAdapter.parseConfig(response.appliedConfig);
+        if (!config) throw new Error("Cấu hình ADS-B từ server không hợp lệ.");
+        if (cancelled) return;
+        terminal.initialize({ ...LAB_INITIALIZATION, initialPersistentState: config });
+        persistedConfigRef.current = terminal.getPersistentState();
+        revisionRef.current = response.revision;
+        setPersistenceReady(true);
+        setPersistenceStatus("saved");
+      } catch (error) {
+        if (cancelled) return;
+        console.error("ADS-B configuration hydration failed:", error);
+        terminal.initialize(LAB_INITIALIZATION);
+        persistedConfigRef.current = terminal.getPersistentState();
+        setPersistenceReady(false);
+        setPersistenceStatus("error");
+      }
+    }
+
+    void initializeWithSavedConfig();
+    return () => {
+      cancelled = true;
+      setPersistenceReady(false);
+    };
+  }, [terminal.initialize, terminal.getPersistentState]);
+
+  useEffect(() => {
+    if (!persistenceReady) return;
+    const currentConfig = terminal.getPersistentState();
+    const previousConfig = persistedConfigRef.current;
+    if (!currentConfig || !previousConfig) return;
+    if (JSON.stringify(currentConfig) === JSON.stringify(previousConfig)) return;
+
+    persistedConfigRef.current = structuredClone(currentConfig);
+    persistChainRef.current = persistChainRef.current
+      .then(async () => {
+        const response = await applySimulatorConfig({
+          simulatorId: "ads-b",
+          action: "apply",
+          config: currentConfig,
+          expectedRevision: revisionRef.current,
+          changedFields: collectChangedConfigFields(previousConfig, currentConfig),
+          operatorUserId: terminal.loginUser,
+          sessionId: sessionIdRef.current,
+        });
+        revisionRef.current = response.revision;
+        setPersistenceStatus("saved");
+      })
+      .catch((error) => {
+        console.error("ADS-B configuration persistence failed:", error);
+        setPersistenceStatus("error");
+      });
+  }, [
+    persistenceReady,
+    terminal.authPhase,
+    terminal.getPersistentState,
+    terminal.isLoggedIn,
+    terminal.lastProcessResult,
+    terminal.loginUser,
+  ]);
 
   return (
     <div className="simulator-skin adsb-simulator-lab min-h-screen w-full bg-[#070a12] text-[#e2e8f0]">
@@ -89,6 +169,7 @@ export function AdsbSimulatorLab() {
         isExited={terminal.isExited}
         onSubmit={terminal.processInput}
       />
+      <span className="sr-only" role="status" aria-live="polite">{persistenceStatus}</span>
     </div>
   );
 }

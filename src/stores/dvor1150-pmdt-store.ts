@@ -88,6 +88,7 @@ export interface Dvor1150PmdtStoreActions {
   resetConfigDraft: () => boolean;
   restoreConfig: () => boolean;
   backupConfig: () => boolean;
+  replaceConfig: (config: Dvor1150Config, backupConfig?: Dvor1150Config) => void;
   setTransmitterMode: (transmitterId: Dvor1150TransmitterId, mode: Dvor1150TransmitterMode) => boolean;
   executeCommand: (commandId: string) => boolean;
   openScreen: (screenId: Dvor1150ScreenId, menuPath: readonly string[], title?: string) => void;
@@ -132,6 +133,12 @@ function buildInitialState(now: () => Date): Dvor1150PmdtStoreState {
 
 function preserveLiveSimulation(next: Dvor1150Config, current: Dvor1150Config): Dvor1150Config {
   next.simulation = { ...current.simulation };
+  return next;
+}
+
+function persistentConfigValue(config: Dvor1150Config): Dvor1150Config {
+  const next = cloneDvor1150Config(config);
+  next.simulation = { ...defaultDvor1150Config.simulation };
   return next;
 }
 
@@ -279,6 +286,24 @@ export function createDvor1150PmdtStore(
         if (state.securityLevel < 3 || !state.needBackup) return false;
         set({ configurationBackup: cloneDvor1150Config(state.config), needBackup: false, lastCommand: "RMS Config Backup" });
         return true;
+      },
+      replaceConfig: (persistedConfig, persistedBackup = persistedConfig) => {
+        const state = get();
+        const config = preserveLiveSimulation(cloneDvor1150Config(persistedConfig), state.config);
+        const configurationBackup = preserveLiveSimulation(
+          cloneDvor1150Config(persistedBackup),
+          state.config,
+        );
+        const derived = recompute(config, state.derived);
+        set({
+          config,
+          configDraft: cloneDvor1150Config(config),
+          configurationBackup,
+          configDirty: false,
+          needBackup: JSON.stringify(persistentConfigValue(config)) !== JSON.stringify(persistentConfigValue(configurationBackup)),
+          derived,
+          lastCommand: "User configuration loaded",
+        });
       },
       setTransmitterMode: (transmitterId, mode) => {
         const state = get();

@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useStore } from "zustand";
+import { Dvor220ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
 import {
   MopiensBeveledButton,
   MopiensConnectionDialog,
@@ -312,6 +313,7 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
 
   return (
     <div className={styles.simulatorRoot} data-view-mode={viewMode}>
+      <Dvor220ConfigPersistenceBoundary store={store} />
       {viewMode === "pmdt" ? (
         <MopiensPmdtShell
           ariaLabel="MOPIENS 220 DVOR PMDT"

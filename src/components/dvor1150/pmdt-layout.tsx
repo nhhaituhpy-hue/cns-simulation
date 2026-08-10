@@ -10,6 +10,7 @@ import { Dvor1150TitleBar } from "./pmdt-title-bar";
 import { Dvor1150SimulationParametersPanel } from "./pmdt-simulation-parameters";
 import { useDvor1150PmdtStore } from "@/stores/dvor1150-pmdt-store";
 import type { Dvor1150PmdtMode } from "@/lib/dvor1150";
+import { Dvor1150ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
 
 export function Dvor1150PmdtLayout({ mode = "preview" }: { mode?: Dvor1150PmdtMode }) {
   const setMode = useDvor1150PmdtStore((state) => state.setMode);
@@ -47,6 +48,7 @@ export function Dvor1150PmdtLayout({ mode = "preview" }: { mode?: Dvor1150PmdtMo
       <div className="pmdt-statusbar-row"><Dvor1150StatusBar /></div>
       {simulationParametersOpen ? <Dvor1150SimulationParametersPanel /> : null}
       {loginOpen ? <Dvor1150LoginDialog /> : null}
+      {mode === "preview" ? <Dvor1150ConfigPersistenceBoundary /> : null}
     </section>
   </div>;
 }

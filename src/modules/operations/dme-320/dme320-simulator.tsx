@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useStore } from "zustand";
+import { Dme320ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
 import {
   MopiensConnectionDialog,
   MopiensLoginDialog,
@@ -439,6 +440,7 @@ export function Dme320Simulator({
 
   return (
     <div className={styles.simulatorRoot} data-view-mode={viewMode}>
+      <Dme320ConfigPersistenceBoundary store={store} />
       {viewMode === "pmdt" ? (
         <MopiensPmdtShell
           ariaLabel="MOPIENS 320 DME PMDT"
