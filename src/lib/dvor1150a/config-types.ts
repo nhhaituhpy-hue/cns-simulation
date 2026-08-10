@@ -152,8 +152,8 @@ export interface Dvor1150aConfig {
     stationDescription: string;
     frequencyMHz: number;
     stationType: "DVOR";
-    transmitterConfig: "Dual Transmitters";
-    monitorConfig: "Dual Monitors";
+    transmitterConfig: "Dual Transmitters" | "Single Transmitter";
+    monitorConfig: "Dual Monitors" | "Single Monitor";
   };
   transmitters: Record<DvorTransmitterId, DvorTransmitterConfig>;
   monitor: DvorMonitorConfig;

@@ -154,6 +154,21 @@ function statusForNotchMonitor(
   return maximumDeviation >= config.monitor.notchTolerance ? "alarm" : "normal";
 }
 
+function isInstalledMonitor(config: Dvor1150aConfig, monitorId: DvorMonitorId): boolean {
+  return config.station.monitorConfig !== "Single Monitor" || monitorId === "mon1";
+}
+
+function effectiveIdentCode(config: Dvor1150aConfig, transmitterId: DvorTransmitterId): string {
+  const nominal = config.transmitters[transmitterId].nominal;
+  // The standby transmitter must keep the station identification after a
+  // transfer. "Different Ident" remains an explicit training override; the
+  // normal "Same as Main Ident" route takes TX1's station-ident source.
+  if (transmitterId === "tx2" && nominal.standbyIdentCode === "Same as Main Ident") {
+    return config.transmitters.tx1.nominal.mainIdentCode;
+  }
+  return nominal.mainIdentCode;
+}
+
 function effectiveTransmitter(
   config: Dvor1150aConfig,
   transmitterId: DvorTransmitterId,
@@ -165,16 +180,23 @@ function effectiveTransmitter(
   const tx = config.transmitters[transmitterId];
   const nominal = tx.nominal;
   const offsets = tx.offsets;
-  const enabled = tx.enabled && !tx.faults.disabled;
+  // A single-transmitter station keeps TX2's stored settings for a later
+  // return to dual operation, but TX2 must not contribute an on-air/load
+  // route or any live measurement while that station mode is active.
+  const enabled = tx.enabled
+    && !tx.faults.disabled
+    && !(config.station.transmitterConfig === "Single Transmitter" && transmitterId === "tx2");
   const onAir = tx.onAir && enabled;
   const load = tx.load && !onAir && enabled;
-  const effectiveOutputPower = nominal.outputPower * offsets.outputPowerScale / 100;
-  const effectiveVoiceModulation = nominal.voiceModulation * offsets.voiceModulationScale / 100;
-  const effectiveIdentModulation = nominal.identModulation * offsets.identModulationScale / 100;
-  const effectiveReferenceModulation = nominal.referenceModulation * offsets.referenceModulationScale / 100;
-  const effectiveSboRfLevel = nominal.sboRfLevel
-    * (nominal.outputPower / referenceNominalOutputPower)
-    * offsets.txSidebandRfLevelScale / 100;
+  const effectiveOutputPower = enabled ? nominal.outputPower * offsets.outputPowerScale / 100 : 0;
+  const effectiveVoiceModulation = enabled ? nominal.voiceModulation * offsets.voiceModulationScale / 100 : 0;
+  const effectiveIdentModulation = enabled ? nominal.identModulation * offsets.identModulationScale / 100 : 0;
+  const effectiveReferenceModulation = enabled ? nominal.referenceModulation * offsets.referenceModulationScale / 100 : 0;
+  const effectiveSboRfLevel = enabled
+    ? nominal.sboRfLevel
+      * (nominal.outputPower / referenceNominalOutputPower)
+      * offsets.txSidebandRfLevelScale / 100
+    : 0;
   const sidebandScale = [
     offsets.sideband1RfLevelScale,
     offsets.sideband2RfLevelScale,
@@ -212,7 +234,7 @@ function effectiveTransmitter(
     effectiveIdentModulation,
     effectiveReferenceModulation,
     effectiveSboRfLevel,
-    identCode: nominal.mainIdentCode,
+    identCode: effectiveIdentCode(config, transmitterId),
     carrierFrequencyMHz,
     sidebandPower,
     carrierVswr: tx.faults.carrierVswr ? 3 : Math.max(1, tx.vswr.carrier),
@@ -233,6 +255,10 @@ const referenceSidebandSettings: Record<DvorTransmitterId, { sboRfLevel: number;
   tx1: { sboRfLevel: 62.075, phaseCoarse: 180, phaseFine: 33 },
   tx2: { sboRfLevel: 61.75, phaseCoarse: 90, phaseFine: -16 },
 };
+
+// Training-model calibration: preserve the reference snapshot at the default
+// 0% voice modulation while matching the established DVOR 1150 response.
+const voiceToDeviationFactor = 0.12;
 
 function wrapPhaseDegrees(value: number): number {
   return ((value + 180) % 360 + 360) % 360 - 180;
@@ -274,6 +300,9 @@ function sourceMeasurement(
   const referenceDelta = transmitter ? transmitter.effectiveReferenceModulation - 27.72 : 0;
   const identDelta = transmitter ? transmitter.effectiveIdentModulation - 8 : 0;
   const sboDelta = transmitter ? transmitter.effectiveSboRfLevel - 62.075 : 0;
+  const voiceDeviationDelta = transmitter
+    ? transmitter.effectiveVoiceModulation * voiceToDeviationFactor
+    : 0;
   const effectiveDefaultOutputPower = 70 * 84 / 100;
   const monitorReferencePower = 70.8 / 0.99;
   const inputAttenuationDelta = 14 - antenna.inputAttenuation;
@@ -300,7 +329,7 @@ function sourceMeasurement(
     azimuth: measuredAzimuth,
     hz30Modulation: raw.hz30Modulation + referenceDelta,
     hz9960Modulation: raw.hz9960Modulation + referenceDelta + (transmitter ? sidebandModulationAdjustment(config, transmitter) : 0),
-    deviation: raw.deviation + sboDelta * 0.01,
+    deviation: raw.deviation + sboDelta * 0.01 + voiceDeviationDelta,
     rfLevel: measuredRfLevel,
     identModulation: raw.identModulation + identDelta * 0.9,
     identStatus: transmitter?.id && config.transmitters[transmitter.id].faults.frequencyError ? "No Ident" : raw.identStatus,
@@ -348,6 +377,7 @@ function monitorResult(
   notchBaselineRows: VorPmdtData["notchData"],
 ): DvorMonitorResult {
   const antenna = config.monitor.antennas[monitorId];
+  const enabled = antenna.enabled && isInstalledMonitor(config, monitorId);
   const calibrated = calibratedMeasurement(config, monitorId, sourceMeasurement(config, monitorId, transmitter));
   const nominalAzimuth = antenna.secondAntennaEnabled
     ? (antenna.azimuthAngle + antenna.secondAzimuthAngle) / 2
@@ -423,9 +453,9 @@ function monitorResult(
       ? config.monitor.routing[parameter].primary
       : config.monitor.routing[parameter].secondary,
   );
-  const healthy = antenna.enabled && routedParameters.every((parameter) => statuses[parameter].status !== "alarm");
+  const healthy = enabled && routedParameters.every((parameter) => statuses[parameter].status !== "alarm");
 
-  return { id: monitorId, enabled: antenna.enabled, healthy, parameters: statuses, sidebandVswr: sidebandValues };
+  return { id: monitorId, enabled, healthy, parameters: statuses, sidebandVswr: sidebandValues };
 }
 
 function toParameterStatus(indicator: VorIndicatorColor): VorParameterStatus {
@@ -770,7 +800,12 @@ function buildValidation(config: Dvor1150aConfig): DvorConfigValidationIssue[] {
   if (config.monitor.azimuthLimits.preAlarm <= 0 || config.monitor.azimuthLimits.alarm <= config.monitor.azimuthLimits.preAlarm) {
     issues.push({ fieldId: "monitor.azimuthLimits", message: "Azimuth pre-alarm must be positive and lower than the alarm range.", severity: "error" });
   }
-  const active = DVOR_TRANSMITTER_IDS.filter((id) => config.transmitters[id].onAir && config.transmitters[id].enabled && !config.transmitters[id].faults.disabled);
+  const active = DVOR_TRANSMITTER_IDS.filter((id) => (
+    !(config.station.transmitterConfig === "Single Transmitter" && id === "tx2")
+    && config.transmitters[id].onAir
+    && config.transmitters[id].enabled
+    && !config.transmitters[id].faults.disabled
+  ));
   if (active.length > 1) {
     issues.push({ fieldId: "transmitters", message: "Only one transmitter can be on-air in a dual-DVOR configuration.", severity: "warning" });
   }
@@ -864,13 +899,21 @@ export function buildDvor1150aSnapshot(
     tx2: buildDvorGroundCheck(config, "tx2"),
   };
   const primaryHealthy = monitors.mon1.healthy;
-  const secondaryHealthy = monitors.mon2.healthy;
-  const systemHealthy = config.monitor.votingLogic === "AND"
+  const hasSecondaryMonitor = config.station.monitorConfig === "Dual Monitors";
+  // An absent second monitor is excluded from voting; represent it as healthy
+  // in the aggregate result while preserving `monitors.mon2.enabled = false`.
+  const secondaryHealthy = hasSecondaryMonitor ? monitors.mon2.healthy : true;
+  const systemHealthy = !hasSecondaryMonitor
+    ? primaryHealthy
+    : config.monitor.votingLogic === "AND"
     ? primaryHealthy && secondaryHealthy
     : primaryHealthy || secondaryHealthy;
-  const transferRequested = config.monitor.transfer === "on Any Alarm"
-    ? !monitors.mon1.healthy || !monitors.mon2.healthy
+  const alarmRequestsTransfer = config.monitor.transfer === "on Any Alarm"
+    ? !primaryHealthy || (hasSecondaryMonitor && !monitors.mon2.healthy)
     : config.monitor.transfer === "on Primary Alarm" && !primaryHealthy;
+  // Bypass is a maintenance interlock: alarms remain visible, but they must
+  // not request an automatic transmitter transfer until the bypass is released.
+  const transferRequested = !config.simulation.integralMonitorBypass && alarmRequestsTransfer;
 
   data.connected = config.simulation.connected;
   data.alert = config.simulation.alert || !systemHealthy;
@@ -881,15 +924,18 @@ export function buildDvor1150aSnapshot(
   data.alarmLimits = buildAlarmLimits(config);
   data.monitorAzimuthLimits = { ...config.monitor.azimuthLimits };
   data.monitorTimers = { ...config.monitor.timers };
-  data.monitorAntennas = [config.monitor.antennas.mon1, config.monitor.antennas.mon2].map(({ monitor, enabled, inputAttenuation, azimuthAngle, secondAntennaEnabled, secondInputAttenuation, secondAzimuthAngle }) => ({
-    monitor,
-    enabled,
-    inputAttenuation,
-    azimuthAngle,
-    secondAntennaEnabled,
-    secondInputAttenuation,
-    secondAzimuthAngle,
-  }));
+  data.monitorAntennas = (["mon1", "mon2"] as const).map((monitorId) => {
+    const antenna = config.monitor.antennas[monitorId];
+    return {
+      monitor: antenna.monitor,
+      enabled: monitors[monitorId].enabled,
+      inputAttenuation: antenna.inputAttenuation,
+      azimuthAngle: antenna.azimuthAngle,
+      secondAntennaEnabled: antenna.secondAntennaEnabled,
+      secondInputAttenuation: antenna.secondInputAttenuation,
+      secondAzimuthAngle: antenna.secondAzimuthAngle,
+    };
+  });
   data.monitorOffsets = monitorOffsets.mon1;
   data.notchData = data.notchData.map((row) => ({
     ...row,
@@ -943,8 +989,8 @@ export function buildDvor1150aSnapshot(
     ...data.rmsMonitorTransmitterStatus,
     monitorAlarmShutdown: !systemHealthy,
     enabledMonitors: {
-      monitor1: config.monitor.antennas.mon1.enabled,
-      monitor2: config.monitor.antennas.mon2.enabled,
+      monitor1: monitors.mon1.enabled,
+      monitor2: monitors.mon2.enabled,
     },
     monitors: data.rmsMonitorTransmitterStatus.monitors.map((row) => ({
       ...row,

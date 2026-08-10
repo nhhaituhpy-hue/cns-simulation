@@ -19,6 +19,81 @@ describe("DVOR 1150A configuration engine", () => {
     expect(snapshot.monitors.mon1.parameters.hz30Modulation.indicator).toBe("green");
   });
 
+  it("takes TX2 out of service in single-transmitter mode without erasing its dual-mode route", () => {
+    const config = createDefaultDvor1150aConfig();
+    const tx2Selected = setDvorConfigValue(
+      setDvorConfigValue(config, "transmitters.tx1.onAir", false),
+      "transmitters.tx2.onAir",
+      true,
+    );
+    const single = buildDvor1150aSnapshot(
+      setDvorConfigValue(tx2Selected, "station.transmitterConfig", "Single Transmitter"),
+    );
+    const restoredDual = buildDvor1150aSnapshot(
+      setDvorConfigValue(
+        setDvorConfigValue(tx2Selected, "station.transmitterConfig", "Single Transmitter"),
+        "station.transmitterConfig",
+        "Dual Transmitters",
+      ),
+    );
+
+    expect(single.effectiveTransmitters.tx2.enabled).toBe(false);
+    expect(single.effectiveTransmitters.tx2.effectiveOutputPower).toBe(0);
+    expect(single.voting.activeTransmitter).toBeNull();
+    expect(single.data.transmitters.tx2.off).toBe("red");
+    expect(single.validation.some((issue) => issue.message.includes("No healthy transmitter"))).toBe(true);
+    expect(restoredDual.voting.activeTransmitter).toBe("tx2");
+    expect(restoredDual.effectiveTransmitters.tx2.enabled).toBe(true);
+  });
+
+  it("keeps the station IDENT when TX2 takes over with Same as Main Ident", () => {
+    const config = createDefaultDvor1150aConfig();
+    const tx2OnAir = setDvorConfigValue(
+      setDvorConfigValue(
+        setDvorConfigValue(
+          setDvorConfigValue(config, "transmitters.tx1.nominal.mainIdentCode", "TQH"),
+          "transmitters.tx2.nominal.mainIdentCode",
+          "ALT",
+        ),
+        "transmitters.tx1.onAir",
+        false,
+      ),
+      "transmitters.tx2.onAir",
+      true,
+    );
+    const sameAsMain = buildDvor1150aSnapshot(tx2OnAir);
+    const differentIdent = buildDvor1150aSnapshot(
+      setDvorConfigValue(tx2OnAir, "transmitters.tx2.nominal.standbyIdentCode", "Different Ident"),
+    );
+
+    expect(sameAsMain.voting.activeTransmitter).toBe("tx2");
+    expect(sameAsMain.effectiveTransmitters.tx2.identCode).toBe("TQH");
+    expect(sameAsMain.monitors.mon1.parameters.identCode.value).toBe("TQH");
+    expect(differentIdent.effectiveTransmitters.tx2.identCode).toBe("ALT");
+  });
+
+  it("excludes Monitor 2 from voting in single-monitor mode and restores it in dual mode", () => {
+    const config = createDefaultDvor1150aConfig();
+    const mon2Alarm = setDvorConfigValue(
+      setDvorConfigValue(config, "monitor.rawMeasurements.mon2.deviation", 25),
+      "monitor.routing.deviation.secondary",
+      true,
+    );
+    const single = buildDvor1150aSnapshot(
+      setDvorConfigValue(mon2Alarm, "station.monitorConfig", "Single Monitor"),
+    );
+    const restoredDual = buildDvor1150aSnapshot(mon2Alarm);
+
+    expect(single.monitors.mon2.enabled).toBe(false);
+    expect(single.monitors.mon2.healthy).toBe(false);
+    expect(single.voting.secondaryHealthy).toBe(true);
+    expect(single.voting.systemHealthy).toBe(true);
+    expect(single.data.rmsMonitorTransmitterStatus.enabledMonitors.monitor2).toBe(false);
+    expect(restoredDual.monitors.mon2.enabled).toBe(true);
+    expect(restoredDual.voting.secondaryHealthy).toBe(false);
+    expect(restoredDual.voting.systemHealthy).toBe(false);
+  });
+
   it("propagates transmitter output power changes into power data and monitor data", () => {
     const config = createDefaultDvor1150aConfig();
     const changed = setDvorConfigValue(config, "transmitters.tx1.nominal.outputPower", 100);
@@ -69,6 +144,38 @@ describe("DVOR 1150A configuration engine", () => {
     expect(phaseError.monitors.mon1.parameters.hz9960Modulation.value).toBeLessThan(
       baseline.monitors.mon1.parameters.hz9960Modulation.value as number,
     );
+  });
+
+  it("propagates active-transmitter voice modulation into Deviation and alarm voting", () => {
+    const config = createDefaultDvor1150aConfig();
+    const baseline = buildDvor1150aSnapshot(config);
+    const voiceApplied = buildDvor1150aSnapshot(
+      setDvorConfigValue(config, "transmitters.tx1.nominal.voiceModulation", 50),
+    );
+    const halfScaled = buildDvor1150aSnapshot(
+      setDvorConfigValue(
+        setDvorConfigValue(config, "transmitters.tx1.nominal.voiceModulation", 50),
+        "transmitters.tx1.offsets.voiceModulationScale",
+        50,
+      ),
+    );
+    const standbyOnly = buildDvor1150aSnapshot(
+      setDvorConfigValue(config, "transmitters.tx2.nominal.voiceModulation", 50),
+    );
+    const calibrationScale = config.monitor.calibration.mon1.deviationScale / 100;
+    const baselineDeviation = baseline.monitors.mon1.parameters.deviation.value as number;
+
+    expect(voiceApplied.monitors.mon1.parameters.deviation.value).toBeCloseTo(
+      baselineDeviation + 50 * 0.12 * calibrationScale,
+      5,
+    );
+    expect(voiceApplied.monitors.mon1.parameters.deviation.status).toBe("alarm");
+    expect(voiceApplied.voting.primaryHealthy).toBe(false);
+    expect(halfScaled.monitors.mon1.parameters.deviation.value).toBeCloseTo(
+      baselineDeviation + 50 * 0.5 * 0.12 * calibrationScale,
+      5,
+    );
+    expect(standbyOnly.monitors.mon1.parameters.deviation.value).toBeCloseTo(baselineDeviation, 5);
   });
 
   it("propagates transmitter faults to RMS digital I/O and status alerts", () => {
@@ -226,6 +333,21 @@ describe("DVOR 1150A configuration engine", () => {
     expect(snapshot.monitors.mon2.parameters.rfLevel.status).toBe("alarm");
     expect(snapshot.voting.systemHealthy).toBe(false);
     expect(snapshot.voting.transferRequested).toBe(true);
+  });
+
+  it("keeps monitor alarms visible but suppresses the transfer request while bypassed", () => {
+    const config = createDefaultDvor1150aConfig();
+    const changed = setDvorConfigValue(
+      setDvorConfigValue(config, "monitor.rawMeasurements.mon1.deviation", 25),
+      "simulation.integralMonitorBypass",
+      true,
+    );
+    const snapshot = buildDvor1150aSnapshot(changed);
+
+    expect(snapshot.monitors.mon1.parameters.deviation.status).toBe("alarm");
+    expect(snapshot.voting.primaryHealthy).toBe(false);
+    expect(snapshot.data.monitorIntegral.bypass).toBe(true);
+    expect(snapshot.voting.transferRequested).toBe(false);
   });
 
   it("uses the manual's one-tenth integrity test formulas", () => {

@@ -34,6 +34,48 @@ describe("DVOR 1150 configuration and PMDT engine", () => {
     expect(snapshot.monitors.mon1.parameters.rfLevel.value).toBeCloseTo(0.14, 5);
   });
 
+  it("keeps an imported On-Air/Load conflict deterministic and visible to validation", () => {
+    const conflicting = cloneDvor1150Config(defaultDvor1150Config);
+    conflicting.transmitters.tx1.onAir = true;
+    conflicting.transmitters.tx1.load = true;
+
+    const snapshot = buildDvor1150Snapshot(conflicting);
+
+    expect(snapshot.effectiveTransmitters.tx1.onAir).toBe(true);
+    expect(snapshot.effectiveTransmitters.tx1.load).toBe(false);
+    expect(snapshot.data.transmitters.tx1).toMatchObject({ antenna: "green", load: "gray" });
+    expect(snapshot.validation).toEqual(expect.arrayContaining([
+      expect.objectContaining({ fieldId: "transmitters.tx1", severity: "warning" }),
+    ]));
+  });
+
+  it("excludes an uninstalled Monitor 2 from a single-monitor station", () => {
+    const config = cloneDvor1150Config(defaultDvor1150Config);
+    config.monitor.offsets.mon2.deviation = 10;
+    config.station.monitorConfig = "Single Monitor";
+
+    const singleMonitor = buildDvor1150Snapshot(config);
+
+    expect(singleMonitor.monitors.mon2.parameters.deviation.status).toBe("alarm");
+    expect(singleMonitor.monitors.mon2).toMatchObject({
+      healthy: false,
+      controlling: false,
+      commStatus: "gray",
+    });
+    expect(singleMonitor.data.monitorIntegral).toMatchObject({ normal: true, alarm: false });
+    expect(singleMonitor.data.maintenanceAlerts).toEqual(expect.arrayContaining([
+      { label: "Monitor Mismatch", indicator: "gray" },
+    ]));
+
+    config.station.monitorConfig = "Dual Monitors";
+    const dualMonitor = buildDvor1150Snapshot(config);
+
+    expect(dualMonitor.data.monitorIntegral).toMatchObject({ normal: false, alarm: true });
+    expect(dualMonitor.data.maintenanceAlerts).toEqual(expect.arrayContaining([
+      { label: "Monitor Mismatch", indicator: "yellow" },
+    ]));
+  });
+
   it("enforces transfer, Local/Bypass configuration, backup and restore semantics", () => {
     const store = createDvor1150PmdtStore({ now: () => new Date("2026-08-09T13:00:00Z") });
 

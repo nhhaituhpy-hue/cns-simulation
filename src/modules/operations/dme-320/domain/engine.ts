@@ -1,6 +1,7 @@
 import {
   cloneDme320Config,
   createDefaultDme320Config,
+  createDefaultDme320MonitorLimits,
   createEmptyReadings,
   createIdleDme320Calibration,
   createNormalAlarmStates,
@@ -33,6 +34,7 @@ import type {
   Dme320MonitorChannel,
   Dme320MonitorChannelState,
   Dme320MonitorId,
+  Dme320MonitorLimit,
   Dme320MonitorParameter,
   Dme320MonitorSelfTestState,
   Dme320MonitorState,
@@ -743,6 +745,74 @@ function touchSession(state: Dme320SimulationState): void {
   if (state.session.level > 0) state.session.lastActivityAtMs = state.nowMs;
 }
 
+function rebaseDme320MonitorLimit(
+  limit: Dme320MonitorLimit,
+  previousBaseline: Dme320MonitorLimit,
+  nextBaseline: Dme320MonitorLimit,
+): Dme320MonitorLimit {
+  const shift = (
+    value: number | null,
+    previousValue: number | null,
+    nextValue: number | null,
+  ) => value === null || previousValue === null || nextValue === null
+    ? value
+    : value + nextValue - previousValue;
+  return {
+    ...limit,
+    nominal:
+      typeof limit.nominal === "number"
+      && typeof previousBaseline.nominal === "number"
+      && typeof nextBaseline.nominal === "number"
+        ? limit.nominal + nextBaseline.nominal - previousBaseline.nominal
+        : limit.nominal,
+    alarmLow: shift(limit.alarmLow, previousBaseline.alarmLow, nextBaseline.alarmLow),
+    warningLow: shift(limit.warningLow, previousBaseline.warningLow, nextBaseline.warningLow),
+    warningHigh: shift(limit.warningHigh, previousBaseline.warningHigh, nextBaseline.warningHigh),
+    alarmHigh: shift(limit.alarmHigh, previousBaseline.alarmHigh, nextBaseline.alarmHigh),
+  };
+}
+
+/**
+ * Channel allocation is the source of delay, reply spacing, and reply
+ * frequency. When a draft changes that allocation, rebase every related limit
+ * from its old default to its new default. User calibration offsets remain
+ * intact, while frequency windows still follow their frequency-based default
+ * tolerance rather than retaining the old channel's window width.
+ */
+function rebaseChannelDependentMonitorLimits(
+  previous: Dme320Config,
+  next: Dme320Config,
+): void {
+  const previousDefaults = createDefaultDme320MonitorLimits(
+    previous.station.channel,
+    previous.station.powerOutputWatts,
+    previous.station.delayOffsetUs,
+    previous.station.identCode,
+  );
+  const nextDefaults = createDefaultDme320MonitorLimits(
+    next.station.channel,
+    next.station.powerOutputWatts,
+    next.station.delayOffsetUs,
+    next.station.identCode,
+  );
+
+  next.monitor.limits.timeDelayUs = rebaseDme320MonitorLimit(
+    next.monitor.limits.timeDelayUs,
+    previousDefaults.timeDelayUs,
+    nextDefaults.timeDelayUs,
+  );
+  next.monitor.limits.pulseSpacingUs = rebaseDme320MonitorLimit(
+    next.monitor.limits.pulseSpacingUs,
+    previousDefaults.pulseSpacingUs,
+    nextDefaults.pulseSpacingUs,
+  );
+  next.monitor.limits.frequencyMhz = rebaseDme320MonitorLimit(
+    next.monitor.limits.frequencyMhz,
+    previousDefaults.frequencyMhz,
+    nextDefaults.frequencyMhz,
+  );
+}
+
 function resetEquipmentFromRunningConfig(state: Dme320SimulationState): void {
   const config = state.config.running;
   state.equipmentResetRevision += 1;
@@ -1171,7 +1241,10 @@ export function executeDme320Command(
       } catch (error) {
         return reject(source, error instanceof Error ? error.message : "Invalid configuration.");
       }
-      state.config.running = cloneDme320Config(state.config.draft);
+      const nextRunningConfig = cloneDme320Config(state.config.draft);
+      rebaseChannelDependentMonitorLimits(state.config.running, nextRunningConfig);
+      state.config.running = nextRunningConfig;
+      state.config.draft = cloneDme320Config(nextRunningConfig);
       state.config.draftDirty = false;
       state.config.flashDirty = true;
       appendLog(state, "configuration", "Draft configuration applied to running equipment.");

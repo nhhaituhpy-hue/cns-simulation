@@ -201,6 +201,43 @@ function initialState(): VorPmdtStoreState {
   };
 }
 
+interface AutomaticMonitorTransfer {
+  config: Dvor1150aConfig;
+  snapshot: Dvor1150aSnapshot;
+  target: DvorTransmitterId | null;
+}
+
+/**
+ * Evaluates the relay exactly when a maintenance bypass is released.  The
+ * engine remains a pure snapshot builder; this store-level operation is the
+ * single, explicit state transition that can move the physical main route.
+ */
+function applyAutomaticMonitorTransfer(config: Dvor1150aConfig): AutomaticMonitorTransfer {
+  const snapshot = buildDvor1150aSnapshot(config);
+  const active = snapshot.voting.activeTransmitter;
+
+  if (
+    !snapshot.voting.transferRequested
+    || !active
+    || config.station.transmitterConfig !== "Dual Transmitters"
+  ) {
+    return { config, snapshot, target: null };
+  }
+
+  const target: DvorTransmitterId = active === "tx1" ? "tx2" : "tx1";
+  const standby = config.transmitters[target];
+  if (!standby.enabled || standby.faults.disabled) {
+    return { config, snapshot, target: null };
+  }
+
+  const result = applyDvorConfigPatches(config, [
+    { fieldId: `transmitters.${target}.onAir`, value: true },
+  ]);
+  if (!result.ok) return { config, snapshot, target: null };
+
+  return { config: result.config, snapshot: result.snapshot, target };
+}
+
 export function resolveVorField<T extends VorEditableValue>(
   baseValue: T,
   fieldId: string,
@@ -347,18 +384,39 @@ export function createVorPmdtStore(
         if (isLocalModeField || isBypassField) {
           if (isBypassField && value === true && !state.config.simulation.local) return;
           const patches = [{ fieldId, value }];
+          const releasingBypass = state.config.simulation.integralMonitorBypass
+            && ((isBypassField && value === false) || (isLocalModeField && value === false));
           if (isLocalModeField && value === false) {
             patches.push({ fieldId: "simulation.integralMonitorBypass", value: false });
           }
           const result = applyDvorConfigPatches(state.config, patches);
           if (!result.ok) return;
+          const automaticTransfer = releasingBypass
+            ? applyAutomaticMonitorTransfer(result.config)
+            : null;
+          const nextConfig = automaticTransfer?.config ?? result.config;
+          const nextSnapshot = automaticTransfer?.snapshot ?? result.snapshot;
           const draftResult = applyDvorConfigPatches(state.configDraft, patches);
+          let nextDraft = draftResult.ok
+            ? draftResult.config
+            : cloneDvor1150aConfig(nextConfig);
+          if (automaticTransfer?.target) {
+            const draftTransfer = applyDvorConfigPatches(nextDraft, [
+              { fieldId: `transmitters.${automaticTransfer.target}.onAir`, value: true },
+            ]);
+            nextDraft = draftTransfer.ok
+              ? draftTransfer.config
+              : cloneDvor1150aConfig(nextConfig);
+          }
           set({
-            config: result.config,
-            configDraft: draftResult.ok ? draftResult.config : cloneDvor1150aConfig(result.config),
+            config: nextConfig,
+            configDraft: nextDraft,
             configDirty: state.configDirty,
-            data: result.snapshot.data,
-            derived: result.snapshot,
+            data: nextSnapshot.data,
+            derived: nextSnapshot,
+            ...(automaticTransfer?.target
+              ? { lastCommand: `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}` }
+              : {}),
           });
           return;
         }
@@ -490,6 +548,9 @@ export function createVorPmdtStore(
       setTransmitterMode: (transmitterId, mode) => {
         const state = get();
         if (state.securityLevel < 3) return false;
+        if (state.config.station.transmitterConfig === "Single Transmitter" && transmitterId === "tx2") {
+          return false;
+        }
         if (
           mode !== "main"
           && (!state.config.simulation.local || !state.config.simulation.integralMonitorBypass)

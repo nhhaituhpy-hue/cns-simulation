@@ -79,6 +79,227 @@ Quality gate ngày **10/08/2026**: **21 file, 103/103 test đạt**, targeted ES
 
 Quality gate cho phần này ngày **10/08/2026**: **33 file, 188/188 test đạt**; `npm run typecheck` và `npm run build` đều thành công.
 
+## Kiến trúc tạo simulator và ma trận ảnh hưởng CONFIG
+
+### Nguyên tắc tổng quát
+
+Repository không tạo simulator hoàn toàn bằng một factory chung. Mỗi simulator được ghép từ các lớp sau:
+
+```text
+Manifest/Registry
+    ↓
+Next.js route
+    ↓
+React simulator component
+    ↓
+Zustand store
+    ↓
+Domain engine / command reducer
+    ↓
+Derived snapshot
+    ↓
+PMDT, LMI, QCMS hoặc terminal screens
+```
+
+Registry chịu trách nhiệm tạo danh sách module và route metadata; nó không tự tạo ra hành vi thiết bị. Manifest được gom trong `src/modules/core/registry.ts`, trang `/simulator` hiển thị catalog từ `SIMULATOR_MODULES`, còn route động `/simulator/software/[moduleId]` chọn implementation DVOR 220, DME 320 hoặc placeholder bằng module ID.
+
+Route `/simulator/*` được bảo vệ bởi `src/app/simulator/layout.tsx`. Khi simulator được mở, phần hiển thị và state chạy ở client; API/ Supabase chủ yếu cung cấp cấu hình đã lưu, backup và lịch sử thay đổi. Repository không mở kết nối serial/TCP/SSH tới thiết bị thật trong luồng mô phỏng.
+
+### Hai thế hệ kiến trúc
+
+Nhóm thiết bị PMDT legacy gồm DVOR 1150, DVOR 1150A và DME 1119A. Layout tại `src/components/vor` hoặc `src/components/dme` dựng shell cổ điển; Zustand store giữ session, config, draft, màn hình và derived data; engine nằm trong `src/lib/dvor1150`, `src/lib/dvor1150a` hoặc `src/lib/dme1119a`.
+
+Nhóm phần mềm vận hành mới gồm DVOR 220 và DME 320. Mỗi module tách rõ:
+
+- `domain/types.ts`: kiểu dữ liệu thiết bị.
+- `domain/defaults.ts`: trạng thái khởi tạo.
+- `domain/commands.ts`: command, quyền và reducer.
+- `domain/engine.ts`: alarm, fault, thời gian, changeover và snapshot.
+- `store/*-store.ts`: adapter Zustand mỏng.
+- `ui/*`: màn hình PMDT/LMI.
+
+DVOR 220 và DME 320 dùng chung vỏ `src/modules/operations/mopiens-pmdt/`. Vỏ này chỉ cung cấp title bar, menu, toolbar, navigation, tabs, output log và status bar; luật của từng thiết bị vẫn nằm trong domain engine riêng.
+
+ADS-B là nhánh khác: `/simulator/ads-b` dùng `createTerminalStore` và `TerminalWindow`, không dùng PMDT shell.
+
+### Luồng DVOR 1150A
+
+```text
+/simulator/dvor-1150a
+    → Dvor1150aPmdtLayout
+    → useVorPmdtStore
+    → setConfigValue / Apply / transmitter commands
+    → buildDvor1150aSnapshot(config)
+    → derived.data và derived measurements
+    → PmdtScreenRouter
+```
+
+`buildDvor1150aSnapshot()` tính transmitter active, công suất, tần số, điều chế, monitor, VSWR, alarm, voting, yêu cầu transfer (`transferRequested`) và dữ liệu sidebar. Khi maintenance Bypass được nhả, Zustand store đánh giá yêu cầu này một lần và tự chuyển sang TX dự phòng hợp lệ của cấu hình dual; alarm vẫn hiển thị trong khi Bypass đang bật. Màn hình chỉ đọc snapshot, không tự hardcode giá trị phụ thuộc thiết bị.
+
+### Luồng DVOR 1150
+
+DVOR 1150 có engine đơn giản hơn tại `src/lib/dvor1150/engine.ts`. Khi TX2 được chọn làm Main và `outputPowerScale = 70`, snapshot hiện tại cho TX2 output power bằng 70, TX1 bằng 0 và RF Level của monitor đi theo TX2. Cấu hình transmitter, monitor limits và active path được tính lại qua `buildDvor1150Snapshot()`.
+
+DVOR 1150 là model rút gọn: nó không khai báo `frequencyErrorPpm`; carrier và sideband chủ ý chỉ lấy `station.frequencyMHz`. Ma trận dependency và test regression vẫn phải phát hiện các field có control nhưng chưa có tác động thực tế.
+
+### Luồng DME 1119A
+
+```text
+setDmeParameterValue(fieldId, value)
+    → cập nhật config/draft
+    → synchronizeDmeChannelData() nếu đổi channel
+    → recomputeDmeDerivedData()
+    → Monitor, Decoder, RTC, PA, Sidebar, Alert và Transfer
+```
+
+DME 1119A đã có `dmeDerivationRules`, `dmeConfigDerivationMap` và metadata `affects/formula/alarmStatus` trong `src/lib/dme1119a/config.ts`. Metadata giúp audit và kiểm thử từng control; công thức thực tế nằm trong `recomputeDmeDerivedData()`.
+
+### Ma trận CONFIG → DERIVED theo code hiện tại
+
+Đây là ma trận **as-built** của source hiện tại, không phải danh sách hành vi lý tưởng suy ra từ manual. Một dependency chỉ được xem là đã triển khai khi field nguồn thật sự được engine/reducer đọc và làm thay đổi output. Field chỉ xuất hiện trên form, được lưu hoặc được validation nhưng chưa tham gia phép tính phải được ghi rõ là **control/display-only** hoặc **chưa nối engine**.
+
+Mỗi quan hệ cần truy được đủ chuỗi:
+
+```text
+source config/runtime field
+    → công thức hoặc invariant
+    → derived measurement
+    → alarm/voting/status
+    → routing hoặc automatic action (nếu đã triển khai)
+```
+
+| Simulator | Nguồn live | Điểm tái tính chính | Nguồn audit |
+| --- | --- | --- | --- |
+| DVOR 1150A | `config` sau Apply | `buildDvor1150aSnapshot()` | `src/lib/dvor1150a/engine.ts`; chưa có metadata map riêng |
+| DVOR 1150 | `config` sau Apply | `buildDvor1150Snapshot()` | `src/lib/dvor1150/engine.ts`; chưa có metadata map riêng |
+| DME 1119A | `data`/`configDraft` | `recomputeDmeDerivedData()` | `dmeConfigDerivationMap` bao phủ toàn bộ catalog và được test đối chiếu |
+| DVOR 220 | `configuration.running` | `deriveDvor220Snapshot()` và executive state machine | Draft chỉ có hiệu lực sau Apply; Flash chỉ đổi sau Profile Save |
+| DME 320 | `config.running` | `refreshDme320Simulation()` → `evaluateMonitors()` | Draft chỉ có hiệu lực sau Apply; Flash chỉ đổi sau Profile Save |
+
+ADS-B không có mô hình RF CONFIG → DERIVED tương đương nên nằm ngoài ma trận này. Persistence của ADS-B vẫn hoạt động độc lập.
+
+Không ghi ngược hàng loạt giá trị dẫn xuất vào config. Config giữ giá trị nguồn; Tx Power, RF Level, Delay, ERP, VSWR và alarm status phải được tái tính xác định. Chỉ invariant cấu trúc mới được sửa các field nguồn liên quan, ví dụ:
+
+- DVOR chọn một TX On-Air/Antenna thì đường TX còn lại phải rời antenna; On-Air và Load của cùng một TX loại trừ nhau.
+- DVOR 1150/1150A tắt Local thì Bypass bị tắt.
+- DME 1119A đổi channel thì rebase channel allocation, Delay/Spacing nominal và calibration delta.
+- DME 1119A chọn Single Transmitter thì TX còn lại cùng Standby data trở thành không khả dụng.
+- MOPIENS giữ ba lớp Draft → Running → Flash; Apply chỉ cập nhật Running, Profile Save mới cập nhật Flash.
+
+Với DVOR 1150/1150A và DME 1119A, thay đổi bền vững đi qua draft → Apply (F7) → Need Backup → Config Backup. Với DVOR 220/DME 320, luồng tương ứng là Draft → Apply → Running → Profile Save → Flash. Simulation measurement override của hai MOPIENS là runtime-only, không đi vào Profile Save và bị xóa khi reboot/power-cycle.
+
+#### Ma trận DVOR 1150A
+
+Ký hiệu `<tx>` là `tx1` hoặc `tx2`; `<mon>` là `mon1` hoặc `mon2`. Chỉ TX đang `onAir` cấp dữ liệu live cho các cột TX/monitor.
+
+| Nguồn | Công thức/quan hệ đã triển khai | Output trực tiếp | Alarm/status/action |
+| --- | --- | --- | --- |
+| `station.frequencyMHz`; `transmitters.<tx>.frequencyErrorPpm` | `carrier = station × (1 + ppm / 1_000_000)`; sideband lấy carrier −0.0099/+0.0100 MHz | Carrier/sideband frequency và monitor Tx Frequency Error của TX active | Calibration/limits của Tx Frequency Error đổi status; fault frequency làm Ident Status và các TX alert liên quan chuyển lỗi |
+| `nominal.outputPower`; `offsets.outputPowerScale` | `effectiveOutput = nominal × scale / 100`; riêng nominal power còn làm scale SBO theo mốc 70 W | Carrier Tx Power và monitor Tx Power sau `txPowerScale/txPowerOffset` | Tx Power limits → monitor health → voting/system alert; `outputPowerScale` không trực tiếp scale SBO |
+| `nominal.sboRfLevel`; `nominal.outputPower`; `offsets.txSidebandRfLevelScale` | `effectiveSBO = nominalSBO × (nominalPower / 70) × scale / 100` | SBO, 9960 Hz adjustment, Deviation, RF Level và nguồn tính sideband power | Các limits tương ứng phân loại warning/alarm và có thể tạo `transferRequested` |
+| `offsets.sideband1..4RfLevelScale` | Mỗi sideband dùng voltage scale: `power = effectiveSBO × (scale / 100)^2 / 41` | Công suất Sideband #1…#4 đúng TX | Forward-power alert khi TX On-Air mà power về 0; hiện không trực tiếp đổi 9960 Hz measurement |
+| `nominal.referenceModulation` + `referenceModulationScale`; `nominal.identModulation` + `identModulationScale` | Reference delta cộng vào 30 Hz/9960 Hz; Ident delta đi qua hệ số 0.9 rồi calibration monitor | 30 Hz, 9960 Hz và Ident Modulation | Limit từng parameter → indicator/health/voting theo routing |
+| `nominal.azimuthIndex`; `offsets.azimuthAngleOffset`; `monitor.antennas.<mon>.*` | Azimuth lấy TX delta và trung bình hai antenna nếu antenna 2 bật; RF Level cộng attenuation delta của đường antenna | Azimuth/RF riêng từng monitor | Azimuth limits/RF limits → status; antenna disabled làm monitor không healthy |
+| `monitor.rawMeasurements.<mon>.*`; `monitor.calibration.<mon>.*` | Raw → scale/offset của đúng monitor; không lan sang monitor còn lại | Toàn bộ measurement của `<mon>`, notch và 48 giá trị sideband VSWR | Classify sau calibration; routing quyết định measurement nào tham gia health |
+| Carrier-sideband coarse/fine; sideband #1…#4 phase; `carrierPllControl`; azimuth offset | Coarse/fine đổi hiệu suất pha của 9960 Hz; phase từng sideband tạo quadrantal/octantal; PLL/azimuth tạo ground-check bias | 9960 Hz và 16 điểm Ground Check/error spread | Phase sai có thể bật TX phase/sideband alerts; Ground Check hiện là kết quả đo, không tự transfer |
+| `transmitters.<tx>.vswr.*`; sideband VSWR offsets; raw VSWR monitor; odd/even return-loss calibration | Carrier/sideband VSWR luôn clamp `>= 1`; TX active tạo delta lên profile monitor | TX VSWR và profile 48 antenna; màn hình tổng dùng Monitor 1 | Pre-alarm/alarm theo số antenna vượt ngưỡng; carrier/sideband faults cập nhật TX alerts |
+| `monitor.alarmLimits.*`; `azimuthLimits`; `routing`; `votingLogic`; `transfer` | Limits chỉ classify, không sửa measurement; health chỉ xét parameter được route; AND/OR tổng hợp monitor | Indicator, primary/secondary health, system health | Sinh `transferRequested` theo rule, nhưng engine DVOR 1150A hiện chưa tự đổi relay/Main TX |
+| `transmitters.<tx>.enabled/onAir/load/faults.*` | Chọn active path, khóa TX fault/disabled và xóa dữ liệu live ở cột Off | TX Data, Monitor Data, sidebar, power/frequency/VSWR | Cập nhật validation, maintenance/TX alerts và voting source |
+
+Ví dụ mặc định: nominal output 70 W, output scale 84%. Đổi nominal thành 100 W tạo effective output `100 × 84% = 84 W`; sau hệ số tham chiếu và calibration Monitor 1, Tx Power hiển thị khoảng 101.14 W. Đây là một chuỗi tính dẫn xuất, không phải thao tác sửa đồng thời nhiều field config.
+
+#### Ma trận DVOR 1150
+
+| Nguồn | Công thức/quan hệ đã triển khai | Output trực tiếp | Alarm/status/action |
+| --- | --- | --- | --- |
+| `nominal.outputPower`; `offsets.outputPowerScale` | `output = nominal × scale / 100` | Carrier power của TX và RF Level monitor khi TX đó active | RF/monitor limits → health/voting/maintenance alert |
+| `nominal.outputPower`; `nominal.sboRfLevel`; `sideband1..4RfLevelScale` | SBO scale theo `nominalPower / referencePower`; sideband power dùng bình phương RF scale | SBO và Sideband #1…#4 | VSWR synthetic cũng phản ứng với RF scale/phase; không có RF power alarm state machine riêng |
+| `nominal.referenceModulation`; `nominal.voiceModulation`; các modulation scale | Reference → 30 Hz/9960 Hz; Voice → Deviation | Monitor measurement của cả hai monitor, cộng offset riêng | Alarm bands phân loại normal/warning/alarm |
+| `station.frequencyMHz` | Carrier = station; lower/upper = station ±0.00996 MHz | TX frequency của cột active | Model không có `frequencyErrorPpm`; tần số chỉ theo station |
+| `monitor.offsets.<mon>.*` | Cộng offset độc lập sau giá trị nguồn | Azimuth, modulation, deviation, RF của đúng monitor | Status được tính lại sau offset; không làm đổi monitor còn lại |
+| `monitor.alarmLimits.*`; `votingLogic` | Limits chỉ classify; AND/OR tổng hợp health | Indicator, sidebar, monitor integral | Maintenance alert thay đổi; chưa có automatic transfer |
+| `station.transmitterConfig`; `transmitters.*.enabled/onAir/load` | Single Transmitter vô hiệu TX2; active path quyết định cột live | Main/Load/Off, TX data, monitor path, 48 VSWR | Không có TX active thì monitor unhealthy và validation cảnh báo |
+
+DVOR 1150 là model rút gọn. Các field có control nhưng chưa nối engine phải nằm trong bảng khoảng trống bên dưới thay vì được suy diễn từ manual.
+
+#### Ma trận DME 1119A
+
+`dmeConfigDerivationMap` trong `src/lib/dme1119a/config.ts` là bản kê canonical theo từng field. Bảng dưới gom theo nhóm để README dễ đọc; metadata chi tiết vẫn là nguồn dùng cho audit/test tự động.
+
+| Nguồn | Công thức/quan hệ đã triển khai | Output trực tiếp | Alarm/status/action |
+| --- | --- | --- | --- |
+| `rmsConfigStation.channelType/channelNumber` | Table 9-5: INT/RX `1024+n`, RX LO `899+n`, TX theo dải X/Y; Delay 50/56 µs và spacing theo type | Channel allocation, Monitor, Decoder, RTC, calibration baseline, sidebar | Rebase Delay/Spacing nominal và limits nhưng giữ calibration delta |
+| `transmitterConfig/monitorConfig/hotStandby`; relay selectors | Single/dual gate availability; TX antenna là Integral, TX còn lại là Standby/Load trong dual hot-standby | TX state, Integral/Standby rows, RTC traffic | Disabled path chuyển gray; automatic transfer chỉ có khi dual path khả dụng |
+| `rtcParameters.powerOutput`; `txOffsets.0.*`; HPA enable/low-output limit | Target theo station baseline × RTC dB ratio × scale riêng TX; HPA disabled làm giảm đúng TX | RTC/PA output, Monitor Tx Power, ERP, sidebar | PA/Tx Power/ERP status và maintenance alert; TX1/TX2 không dùng chung scale |
+| `replyDelayOffset`; propagation/base/standby offsets | Delay = channel nominal + reply offset + TX base + monitor offset | Monitor Delay và RTC Prop Delay | Delay alarm có thể tạo yêu cầu transfer khi Apply |
+| `minimumSquitter`; `maximumPrf`; `deadTime`; SDES/LDES | Effective PRF bị chặn bởi max, `1_000_000/deadTime` và 5500 ppps; echo suppression giảm traffic xác định | PRF, capacity, traffic bands, replies, gain reduction | Overload/RTC status và maintenance alert |
+| `monitorOffsets.*`; reply attenuation; directional-coupler loss | Offset/scale riêng monitor cho Delay, Spacing, Power, Efficiency, PRF, frequency, ERP; Return Loss đổi sang VSWR và clamp `>=1` | Integral/Standby/calibration/sidebar | Classify từng cột monitor sau calibration |
+| `alarmLimits.*`; integrity enable/config | Delay/Spacing limits là offset quanh nominal; integrity dùng bốn công thức 1/10 của §3.6.9.2.1 | Limit rows và Integrity Results | Alarm/warning, primary/secondary state và station alert |
+| `rmsConfigGeneral.votingLogic/transfer`; `monitorConfigGeneral.*` | AND/OR tổng hợp monitor; routing xác định Primary/Secondary | Monitor Normal/Pri/Sec | Apply (F7) thực hiện transfer dual hot-standby khi rule thỏa |
+| `txConfigNominal.ident.*`; `identMode` | Chọn primary/secondary/standby ident; Off/Continuous/keyer-loss đổi status | Ident Code/Status và RTC data | Ident maintenance/station alert |
+| Security, Local, timestamp và các field metadata `controlOnly` | Chỉ điều khiển session/status/presentation | Login, RMS status, clock | Không tạo measurement RF giả |
+
+Ví dụ đổi 117X sang 117Y làm nominal Delay 50 → 56 µs, reply spacing 12 → 30 µs, interrogation spacing 12 → 36 µs và TX reply frequency 1204 → 1078 MHz. Engine giữ calibration delta rồi tái tính toàn bộ data thay vì ghi đè mù các giá trị đã hiệu chuẩn.
+
+#### Ma trận MOPIENS DVOR 220
+
+Với monitor reading, thứ tự ưu tiên là `measurement override > injected monitor fault > engine baseline`, sau đó mới classify theo limits. Vì vậy Simulation Parameters có thể cố ý che giá trị của một fault cùng ô; Reset override sẽ làm fault/baseline hiện lại.
+
+| Nguồn | Công thức/quan hệ đã triển khai | Output trực tiếp | Alarm/status/action |
+| --- | --- | --- | --- |
+| `station.frequencyMHz` | Carrier = station; USB/LSB = station ±0.00996 MHz; band Carrier Frequency được shift cùng station | TX frequencies và monitor Carrier Frequency | Giữ nguyên khoảng tolerance tương đối khi đổi tần số |
+| `station.carrierPowerW`; `transmitters.<tx>.carrierScalePercent`; calibration factors | Forward carrier = setpoint × setpoint factor × reading factor | Carrier forward power từng TX đang bật RF | Hiện transmitter power limit bands chưa tham gia classify engine |
+| `transmitters.<tx>.sidebandPowerW.*`; calibration factors | Sideband forward power lấy setpoint riêng từng nhánh × calibration | USB/LSB Cos/Sin power | RF output Off đưa power về 0 và làm FM/9960/distortion monitor báo lỗi theo limits |
+| `useStationModulation/useStationAzimuth/useStationIdent` và giá trị station/TX tương ứng | Chọn nguồn cho AM 30 Hz, bearing error và Ident 1020 Hz | Monitor baseline theo active hoặc standby path | Channel limits phân loại; `identCodeAlarmSeverity` đổi Primary/Secondary của Ident |
+| `monitor.channels.<channel>.type/limits/executiveAction` | Disabled channel bị loại; reading được classify theo band; chỉ primary alarm của channel có `executiveAction` mới vote | Channel status, primary/secondary alarms | Vote đi vào executive alarm nếu monitor không bypass |
+| `monitor.votingLogic`; executive delay; power-on/post-changeover holdoff | AND cần cả hai monitor vote, OR cần một; state machine dùng các timer | Executive phase/service status | Alarm đầu tiên changeover; alarm tiếp theo có thể shutdown/lock reset theo state hiện tại |
+| `transmitterLimits.vswrUpperWarning/vswrUpperAlarm`; antenna fault | Worst USB/LSB của 48 antenna so với hai ngưỡng | PDC antenna profile/status | PDC alarm tham gia executive/service status |
+| `thermal.<tx>.*`; `battery.*`; configured communication shutdown | Fan hysteresis, thermal trip/restart, battery warning/alarm/cutoff và delay link fault | Unit/power status, battery runtime | Có thể shutdown TX/system hoặc đổi service status |
+| `measurementOverrides`; typed faults; Local/REM/MAINT và bypass | Override thay đúng Monitor/Channel/Parameter; fault/status vẫn đi theo engine; MAINT tạo effective bypass | PMDT/LMI monitor readings và equipment status | Reclassify ngay; bypass giữ indication nhưng chặn executive vote |
+
+#### Ma trận MOPIENS DME 320
+
+Measurement override cũng có ưu tiên cuối cùng so với baseline và fault-derived value. Sau đó engine classify, chạy alarm delay, voting và monitor action.
+
+| Nguồn | Công thức/quan hệ đã triển khai | Output trực tiếp | Alarm/status/action |
+| --- | --- | --- | --- |
+| `station.channel` | Allocation đủ 1X–126Y: interrogation `1024+n`; reply ±63 MHz; X/Y quyết định spacing và Delay 50/56 µs | Frequency, Delay, pulse spacing và self-test nominal | Apply tự rebase limits Time Delay, Pulse Spacing và Frequency theo channel mới, đồng thời giữ calibration delta của người dùng |
+| `station.powerOutputWatts`; `transmitters.<tx>.outputPowerPercent` | `peakPower = stationPower × percent / 100` theo source transponder của channel | Peak Power của Executive/Standby | HPA-low-output fault giảm còn 40%, kéo Efficiency/ERP và alarm liên quan |
+| `station.delayOffsetUs`; runtime `spacingOffsetUs` | Delay = channel nominal + station offset; spacing = channel reply spacing + offset của TX nguồn | Time Delay và Pulse Spacing | Classify theo limits; RXU fault cộng 1.2 µs vào Delay |
+| `station.minimumPulseRatePps`; runtime Squitter/Ident Keying | Continuous Ident = 1350 pps; Squitter On = `max(700, minimumPulseRate)`; Off = 0 | Transmission Rate, Efficiency, Ident Code | Runtime state/fault có thể đưa value về 0 và sinh alarm |
+| `station.identCode`; runtime `identKeying` | Ident Off trả chuỗi rỗng; trạng thái khác trả station code | Ident reading | `identFaultDelayMs` áp dụng riêng Ident alarm |
+| TX route/power/RF/shutdown/interlock; active/standby mapping | Executive channel đọc TX trên antenna, Standby channel đọc TX còn lại; unavailable path trả 0 hoặc invalid | Toàn bộ monitor readings của path | Invalid/fault → alarm; severe TX fault chặn changeover |
+| `monitor.limits.*` và per-limit `alarmDelayMs` | Classify normal/warning/alarm; alarm đi pending → active sau delay | Alarm state và overall monitor status | ERP active mask mọi reading trừ ERP; primary active mới tạo vote |
+| `monitor.votingLogic`; `monitorActionDelayMs`; holdoffs; monitor mode | AND/OR tổng hợp primary vote của Executive channel; Bypass vẫn hiện alarm nhưng không vote | Monitor action state | Khi delay đủ: changeover nếu standby khả dụng, nếu không thì shutdown; lần action tiếp theo không hồi sinh TX đã latched fault |
+| Battery/system/environment config và runtime fault | Battery thresholds/cutoff, configured link-fault delay, EMU enable và environmental inputs | Power/environment/service status | Có thể warning/alarm hoặc shutdown hệ thống |
+| `measurementOverrides`; fault injection | Override đúng Monitor/Channel/Parameter được áp sau fault transformation | Reading được chọn | Alarm, ERP masking, voting và action được tính lại ngay; override bị xóa khi reboot |
+
+#### Khoảng trống dependency phát hiện khi audit
+
+Các mục này đã có field/control nhưng chưa tạo đủ quan hệ dẫn xuất. README ghi rõ để không nhầm “đã lưu được” với “đã mô phỏng được”.
+
+| Module | Field/control chưa nối đủ | Hệ quả hiện tại |
+| --- | --- | --- |
+| DVOR 1150A | `monitor.integrity.maxConsecutiveFailures`; keyer mode | Voice đã tác động Deviation, timer được chốt display-only và relay transfer đã có; hai field này vẫn control-only cho đến khi có rule training cụ thể |
+| DVOR 1150 | Ident modulation không có Ident monitor; automatic transfer | Model rút gọn chỉ hiển thị health/voting, không mô phỏng hai feature này |
+| DVOR 220 | Voice modulation, IDENT code/keyer/sync, RF phase, channel reference azimuth, RF gain, average count, warning-range %, IDENT delay và carrier/sideband power limit bands | Các field này hiện chủ yếu validation/display/persistence; chưa làm đổi measurement/alarm tương ứng trong engine |
+| DME 320 | Auto Delay Calibration, SDES/LDES/dead-time/equalizer, `useStation*`, station IDENT keyer/sync | Các field này hiện chủ yếu validation/display/persistence; channel-dependent limits đã tự rebase nhưng các model RF/calibration còn lại cần rule training xác nhận |
+| DME 1119A | Không có field catalog bị bỏ trống metadata | Mỗi field đều có derivation metadata hoặc được đánh dấu `controlOnly`; công thức thực tế vẫn phải được regression test khi sửa engine |
+
+### Nguyên tắc mở rộng ma trận
+
+Khi thêm tham số mới:
+
+1. Thêm field có kiểu và default trong domain model.
+2. Thêm catalog metadata, parse, min/max/step và validation.
+3. Ghi một dependency entry gồm: source path, lifecycle Draft/Running/Flash, công thức, output, alarm/action, phạm vi TX/Monitor và trạng thái `implemented`/`controlOnly`/`planned`.
+4. Đặt quan hệ vật lý trong engine, không đặt trong JSX; khai báo rõ thứ tự ưu tiên nếu có baseline, calibration, fault và override.
+5. Tính lại snapshot sau Apply và kiểm tra cả active/inactive transmitter, Integral/Standby hoặc Monitor 1/2.
+6. Thêm test dương cho output phải đổi, test âm cho output không được đổi và test downstream cho alarm/voting/transfer khi có.
+7. Chỉ xóa một mục khỏi bảng khoảng trống sau khi công thức, UI projection và regression test đều đã có.
+
+Các quan hệ vật lý phải xác định, giải thích được và ưu tiên theo thứ tự: hành vi đã xác nhận cùng ảnh tham chiếu; manual thiết bị; sau đó mới đến quy ước của source/test hiện tại. Một số giá trị trong engine là training approximation đã hiệu chuẩn theo ảnh PMDT, không phải mô hình RF đầy đủ của thiết bị thật.
+
 ## Chức năng chính
 
 ### Dành cho giám khảo
@@ -391,6 +612,8 @@ Khi kế hoạch nội bộ và manual nhà sản xuất khác nhau, manual là 
 - Mở rộng kiểm thử E2E, accessibility, hiệu năng và quan sát lỗi production.
 
 ## Session Log
+- [2026-08-10] Tối ưu correlation engine 5 simulator: DVOR 1150A nối Voice Modulation → Deviation, Single/Dual TX/monitor, automatic transfer khi nhả Bypass và giữ station IDENT khi TX2 takeover; DVOR 1150 giữ invariant On-Air/Load và loại Monitor 2 khỏi voting trong Single Monitor; DME 1119A loại monitor bypass khỏi transfer vote; DVOR 220 khởi tạo/cô lập đúng Single Equipment và standby monitor; DME 320 tự rebase giới hạn phụ thuộc channel. Ghi backlog RF/calibration chưa có specification vào `TODO.md`. Quality gate: 62/62 targeted tests, `npm run typecheck` và `npm run build` đạt.
+- [2026-08-10] Rà soát và bổ sung chương kiến trúc/ma trận CONFIG → DERIVED theo code as-built: registry/route/component/store/engine/snapshot, lifecycle legacy và MOPIENS, ma trận bốn tầng source → formula → measurement → alarm/action cho DVOR 1150A, DVOR 1150, DME 1119A, DVOR 220 và DME 320; ghi rõ thứ tự override/fault, invariant, phạm vi từng TX/Monitor và các field hiện mới validation/display hoặc chưa nối automatic action.
 - [2026-08-10] Bổ sung Parameter Change history cho DVOR 1150A, DVOR 1150, DVOR 220, DME 1119A và DME 320: ghi từng field thay đổi sau Apply rồi Backup/Profile Save, hydrate lại theo application user từ `user_simulator_config_history`, bổ sung màn hình Parameter Change cho MOPIENS và sửa layout bảng 5 cột của DVOR 1150A. ADS-B không hiển thị màn hình này. Quality gate: 188/188 test, `npm run typecheck` và `npm run build` đạt.
 - [2026-08-10] Mở rộng persistence cấu hình theo user ID cho các simulator DVOR 1150, DVOR 220, DME 320 và ADS-B. Supabase bổ sung `backup_config`, RPC ghi `apply`/`restore`/`backup`/`flash-save`, revision/history; frontend hydrate khi mở simulator và lưu sau Apply, Backup/Restore, Profile Save hoặc Power-cycle. Migration `202608100002_extend_simulator_config_backup.sql` đã được áp dụng lên remote Supabase. Đồng thời sửa route recovery password để POST Server Action `/login` không bị proxy redirect thành `307`.
 - [2026-08-10] Bổ sung **System → Simulation Parameters...** cho MOPIENS 220 DVOR và 320 DME: chọn Monitor/Channel, chỉnh raw measurement values, Apply và Reset to Defaults. DVOR 220 thêm measurement override vào engine; DME 320 tái sử dụng override hiện có và xóa override khi reboot. Tính năng chưa lưu persistence theo yêu cầu để chờ triển khai đồng bộ toàn bộ simulator. Test ảnh hưởng trực tiếp: **27/27 đạt**; `npm run build` thành công.

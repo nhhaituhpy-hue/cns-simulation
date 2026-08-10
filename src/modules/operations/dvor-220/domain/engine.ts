@@ -252,7 +252,10 @@ function buildMonitorChannelSnapshot(
 ): Dvor220MonitorChannelSnapshot {
   const channel = state.configuration.running.monitor.channels[channelId];
   const enabled = channel.type !== "disabled" && (
-    channelId !== "standby" || state.configuration.running.optionalUnits.standbyMonitor
+    channelId !== "standby" || (
+      state.configuration.running.optionalUnits.standbyMonitor
+      && state.configuration.running.station.equipmentVersion === "dual"
+    )
   );
   const values = baseMonitorValues(state, monitorId, channelId);
   const readings = Object.fromEntries(DVOR220_MONITOR_PARAMETERS.map((parameter) => {

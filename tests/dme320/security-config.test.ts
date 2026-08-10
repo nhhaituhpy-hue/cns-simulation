@@ -3,6 +3,7 @@ import {
   createDme320SimulationState,
   executeDme320Command,
 } from "@/modules/operations/dme-320/domain/engine";
+import { createDefaultDme320MonitorLimits } from "@/modules/operations/dme-320/domain/defaults";
 import type {
   Dme320Command,
   Dme320SimulationState,
@@ -97,6 +98,61 @@ describe("DME 320 security and keylock ownership", () => {
 });
 
 describe("DME 320 configuration persistence", () => {
+  it("rebases channel-dependent monitor limits while preserving custom calibration deltas", () => {
+    let state = loginOperator(createDme320SimulationState());
+    const previous = structuredClone(state.config.running);
+    const draft = structuredClone(state.config.draft);
+    draft.station.channel = { number: 100, suffix: "Y" };
+    draft.monitor.limits.timeDelayUs.warningHigh =
+      (draft.monitor.limits.timeDelayUs.warningHigh ?? 0) + 0.15;
+    draft.monitor.limits.pulseSpacingUs.alarmLow =
+      (draft.monitor.limits.pulseSpacingUs.alarmLow ?? 0) - 0.1;
+    draft.monitor.limits.frequencyMhz.warningHigh =
+      (draft.monitor.limits.frequencyMhz.warningHigh ?? 0) + 0.001;
+    const previousDefaults = createDefaultDme320MonitorLimits(
+      previous.station.channel,
+      previous.station.powerOutputWatts,
+      previous.station.delayOffsetUs,
+      previous.station.identCode,
+    );
+    const nextDefaults = createDefaultDme320MonitorLimits(
+      draft.station.channel,
+      draft.station.powerOutputWatts,
+      draft.station.delayOffsetUs,
+      draft.station.identCode,
+    );
+
+    state = accept(state, { type: "set-draft-config", config: draft });
+    state = accept(state, { type: "apply-draft" });
+
+    expect(state.config.running.monitor.limits.timeDelayUs.warningHigh).toBeCloseTo(
+      (previous.monitor.limits.timeDelayUs.warningHigh ?? 0)
+        + 0.15
+        + (nextDefaults.timeDelayUs.warningHigh ?? 0)
+        - (previousDefaults.timeDelayUs.warningHigh ?? 0),
+      5,
+    );
+    expect(state.config.running.monitor.limits.pulseSpacingUs.alarmLow).toBeCloseTo(
+      (previous.monitor.limits.pulseSpacingUs.alarmLow ?? 0)
+        - 0.1
+        + (nextDefaults.pulseSpacingUs.alarmLow ?? 0)
+        - (previousDefaults.pulseSpacingUs.alarmLow ?? 0),
+      5,
+    );
+    expect(state.config.running.monitor.limits.frequencyMhz.warningHigh).toBeCloseTo(
+      (previous.monitor.limits.frequencyMhz.warningHigh ?? 0)
+        + 0.001
+        + (nextDefaults.frequencyMhz.warningHigh ?? 0)
+        - (previousDefaults.frequencyMhz.warningHigh ?? 0),
+      5,
+    );
+    expect(state.config.running.monitor.limits.peakPowerWatts).toEqual(
+      previous.monitor.limits.peakPowerWatts,
+    );
+    expect(state.config.draft).toEqual(state.config.running);
+    expect(state.monitors.mon1.channels.executive.alarms.timeDelayUs.phase).toBe("normal");
+  });
+
   it("reverts unsaved running changes on reboot and retains flash-saved changes", () => {
     let state = loginOperator(createDme320SimulationState());
     const originalName = state.config.flash.station.stationName;

@@ -43,6 +43,12 @@ describe("VOR PMDT defaults", () => {
 });
 
 describe("VOR PMDT store", () => {
+  function enterMaintenanceMode(store: ReturnType<typeof createVorPmdtStore>) {
+    expect(store.getState().login("SEC3", "THREE")).toBe(true);
+    store.getState().setConfigValue("simulation.local", true);
+    store.getState().setConfigValue("simulation.integralMonitorBypass", true);
+  }
+
   it("applies typed overlays without mutating the baseline", () => {
     const store = createVorPmdtStore();
     store.getState().setOverride("txPower.0.tx1", 0, "red");
@@ -129,5 +135,56 @@ describe("VOR PMDT store", () => {
       resultStatus: "yellow",
       visitedAt: "2026-07-16T10:05:00.000Z",
     });
+  });
+
+  it("transfers once to the eligible standby transmitter when monitor bypass is released", () => {
+    const store = createVorPmdtStore();
+    enterMaintenanceMode(store);
+    store.getState().setConfigValue("monitor.rawMeasurements.mon1.deviation", 25);
+
+    expect(store.getState().applyConfigChanges()).toBe(true);
+    expect(store.getState().derived.voting.transferRequested).toBe(false);
+    expect(store.getState().derived.voting.activeTransmitter).toBe("tx1");
+
+    store.getState().setConfigValue("simulation.integralMonitorBypass", false);
+
+    expect(store.getState().config.transmitters.tx1.onAir).toBe(false);
+    expect(store.getState().config.transmitters.tx2.onAir).toBe(true);
+    expect(store.getState().configDraft.transmitters.tx2.onAir).toBe(true);
+    expect(store.getState().derived.voting.activeTransmitter).toBe("tx2");
+    expect(store.getState().derived.monitors.mon1.parameters.txFrequencyError.value).toBe(0);
+    expect(store.getState().derived.voting.transferRequested).toBe(true);
+    expect(store.getState().lastCommand).toBe("Automatic monitor transfer to TX2");
+  });
+
+  it("keeps the active transmitter in place when no eligible standby exists", () => {
+    const store = createVorPmdtStore();
+    enterMaintenanceMode(store);
+    store.getState().setConfigValue("monitor.rawMeasurements.mon1.deviation", 25);
+    store.getState().setConfigValue("transmitters.tx2.enabled", false);
+
+    expect(store.getState().applyConfigChanges()).toBe(true);
+    store.getState().setConfigValue("simulation.integralMonitorBypass", false);
+
+    expect(store.getState().derived.voting.transferRequested).toBe(true);
+    expect(store.getState().derived.voting.activeTransmitter).toBe("tx1");
+    expect(store.getState().config.transmitters.tx1.onAir).toBe(true);
+    expect(store.getState().config.transmitters.tx2.onAir).toBe(false);
+  });
+
+  it("rejects TX2 commands while the station is configured for one transmitter", () => {
+    const store = createVorPmdtStore();
+    enterMaintenanceMode(store);
+    store.getState().setConfigValue("station.transmitterConfig", "Single Transmitter");
+
+    expect(store.getState().applyConfigChanges()).toBe(true);
+    expect(store.getState().derived.effectiveTransmitters.tx2.enabled).toBe(false);
+    expect(store.getState().setTransmitterMode("tx2", "main")).toBe(false);
+    expect(store.getState().config.transmitters.tx1.onAir).toBe(true);
+
+    store.getState().setConfigValue("station.transmitterConfig", "Dual Transmitters");
+    expect(store.getState().applyConfigChanges()).toBe(true);
+    expect(store.getState().setTransmitterMode("tx2", "main")).toBe(true);
+    expect(store.getState().derived.voting.activeTransmitter).toBe("tx2");
   });
 });

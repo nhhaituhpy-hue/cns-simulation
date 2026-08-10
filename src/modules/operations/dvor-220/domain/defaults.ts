@@ -231,13 +231,14 @@ function createTransmitterRuntime(
   const hotStandby = configuration.station.standbyMode === "hot";
   const outputOn = configuration.station.transmitterOutputOnBoot;
   const isMain = transmitterId === "tx1";
-  const powerOn = isMain || hotStandby;
+  const installed = transmitterId === "tx1" || configuration.station.equipmentVersion === "dual";
+  const powerOn = installed && (isMain || hotStandby);
   return {
     powerOn,
     designation: isMain ? "main" as const : "standby" as const,
-    path: isMain ? "antenna" as const : powerOn ? "load" as const : "disconnected" as const,
+    path: !installed ? "disconnected" as const : isMain ? "antenna" as const : powerOn ? "load" as const : "disconnected" as const,
     rfOutputs: Object.fromEntries(
-      DVOR220_RF_OUTPUT_IDS.map((output) => [output, powerOn && outputOn]),
+      DVOR220_RF_OUTPUT_IDS.map((output) => [output, installed && powerOn && outputOn]),
     ) as Record<Dvor220RfOutputId, boolean>,
     temperaturesC: { cma: 35.5, usb: 34.1, lsb: 34.3 },
     thermalTrips: { cma: false, usb: false, lsb: false },

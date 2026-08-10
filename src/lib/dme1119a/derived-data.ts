@@ -855,9 +855,15 @@ export function deriveIntegrityTestTargets(limit: DmeAlarmLimitRow) {
 /** Used by Apply(F7) to reproduce the §6.2.8 alarm-transfer action. */
 export function dmeTransferRequested(data: DmePmdtData): boolean {
   if (data.rmsConfigStation.transmitterConfig !== "Dual Transmitters" || !data.rmsConfigStation.hotStandby) return false;
-  if (data.rmsConfigGeneral.transfer === "on Primary Alarm") return data.monitors.integral.priAlarm || data.monitors.standby.priAlarm;
-  if (data.rmsConfigGeneral.transfer === "on Secondary Alarm") return data.monitors.integral.secAlarm || data.monitors.standby.secAlarm;
-  return data.monitors.integral.priAlarm || data.monitors.integral.secAlarm || data.monitors.standby.priAlarm || data.monitors.standby.secAlarm;
+  // Bypass leaves the monitor's alarm visible to the operator, but removes
+  // that monitor from the automatic-transfer voting path.
+  const integral = data.monitors.integral.bypass ? null : data.monitors.integral;
+  const standby = data.monitors.standby.bypass ? null : data.monitors.standby;
+  const primaryAlarm = Boolean(integral?.priAlarm || standby?.priAlarm);
+  const secondaryAlarm = Boolean(integral?.secAlarm || standby?.secAlarm);
+  if (data.rmsConfigGeneral.transfer === "on Primary Alarm") return primaryAlarm;
+  if (data.rmsConfigGeneral.transfer === "on Secondary Alarm") return secondaryAlarm;
+  return primaryAlarm || secondaryAlarm;
 }
 
 export function recomputeDmeDerivedData(source: DmePmdtData): DmePmdtData {

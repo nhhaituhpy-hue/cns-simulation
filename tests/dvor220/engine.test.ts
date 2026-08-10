@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { reduceDvor220Command } from "@/modules/operations/dvor-220/domain/commands";
-import { createInitialDvor220State } from "@/modules/operations/dvor-220/domain/defaults";
+import {
+  createDefaultDvor220Configuration,
+  createInitialDvor220State,
+} from "@/modules/operations/dvor-220/domain/defaults";
 import {
   classifyDvor220Reading,
   deriveDvor220Snapshot,
@@ -31,6 +34,24 @@ describe("MOPIENS DVOR 220 derivation engine", () => {
     expect(snapshot.activeTransmitterId).toBe("tx2");
     expect(snapshot.transmitters.tx1).toMatchObject({ designation: "main", path: "load" });
     expect(snapshot.transmitters.tx2).toMatchObject({ designation: "standby", path: "antenna" });
+  });
+
+  it("removes the standby monitor channel with a single-equipment configuration", () => {
+    const configuration = createDefaultDvor220Configuration();
+    configuration.station.equipmentVersion = "single";
+    configuration.station.bypassMonitorsOnBoot = false;
+    configuration.monitor.channels.standby.executiveAction = true;
+    const state = createInitialDvor220State({ configuration });
+
+    const snapshot = deriveDvor220Snapshot(state);
+
+    expect(snapshot.transmitters.tx2.path).toBe("disconnected");
+    expect(snapshot.monitors.mon1.channels.standby).toMatchObject({
+      enabled: false,
+      status: "not-present",
+      primaryAlarm: false,
+    });
+    expect(snapshot.executiveAlarm).toBe(false);
   });
 
   it("propagates disabled RF into monitor measurements and alarms", () => {

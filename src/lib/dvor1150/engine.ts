@@ -57,6 +57,11 @@ function effectiveTransmitter(config: Dvor1150Config, id: Dvor1150TransmitterId)
   const enabled = config.station.transmitterConfig === "Single Transmitter" && id === "tx2"
     ? false
     : transmitter.enabled;
+  // A persisted/imported configuration can contain a contradictory route even
+  // though the PMDT command path prevents it. Give On-Air precedence in the
+  // derived snapshot so a transmitter can never be shown on Antenna and Load
+  // at the same time.
+  const onAir = enabled && transmitter.onAir;
   const outputScale = transmitter.offsets.outputPowerScale / 100;
   const sidebandScales = [
     transmitter.offsets.sideband1RfLevelScale,
@@ -77,9 +82,9 @@ function effectiveTransmitter(config: Dvor1150Config, id: Dvor1150TransmitterId)
   return {
     id,
     enabled,
-    onAir: enabled && transmitter.onAir,
-    load: enabled && transmitter.load,
-    active: enabled && transmitter.onAir,
+    onAir,
+    load: enabled && !onAir && transmitter.load,
+    active: onAir,
     azimuthIndex: transmitter.nominal.azimuthIndex,
     outputPower,
     voiceModulation: clamp(transmitter.nominal.voiceModulation * transmitter.offsets.voiceModulationScale / 100, 0, 100),
@@ -100,12 +105,17 @@ function chooseActiveTransmitter(
   return DVOR1150_TRANSMITTER_IDS.find((id) => transmitters[id].active) ?? null;
 }
 
+function isInstalledMonitor(config: Dvor1150Config, monitorId: Dvor1150MonitorId): boolean {
+  return config.station.monitorConfig === "Dual Monitors" || monitorId === "mon1";
+}
+
 function monitorResult(
   config: Dvor1150Config,
   monitorId: Dvor1150MonitorId,
   active: Dvor1150EffectiveTransmitter | null,
   controlling: boolean,
 ): Dvor1150MonitorResult {
+  const installed = isInstalledMonitor(config, monitorId);
   const offsets = config.monitor.offsets[monitorId];
   const activeTx = active ?? effectiveTransmitter(config, "tx1");
   const rawValues: Record<Dvor1150MonitorParameter, number> = {
@@ -120,12 +130,14 @@ function monitorResult(
     const status = getStatus(value, config.monitor.alarmLimits[parameter]);
     return [parameter, { value, status, indicator: indicatorFor(status) }];
   })) as Dvor1150MonitorResult["parameters"];
-  const healthy = Object.values(parameters).every((parameter) => parameter.status === "normal") && Boolean(active);
+  const healthy = installed
+    && Object.values(parameters).every((parameter) => parameter.status === "normal")
+    && Boolean(active);
   return {
     id: monitorId,
     healthy,
-    controlling,
-    commStatus: "green",
+    controlling: installed && controlling,
+    commStatus: installed ? "green" : "gray",
     parameters,
   };
 }
@@ -150,6 +162,16 @@ function buildValidation(config: Dvor1150Config): Dvor1150Snapshot["validation"]
       validation.push({ fieldId: `monitor.alarmLimits.${parameter}`, message: `${parameterLabels[parameter]} limits are not ordered.`, severity: "error" });
     }
   }
+  for (const id of DVOR1150_TRANSMITTER_IDS) {
+    const transmitter = config.transmitters[id];
+    if (transmitter.enabled && transmitter.onAir && transmitter.load) {
+      validation.push({
+        fieldId: `transmitters.${id}`,
+        message: "A transmitter cannot be On-Air and on Load at the same time.",
+        severity: "warning",
+      });
+    }
+  }
   const active = DVOR1150_TRANSMITTER_IDS.filter((id) => {
     if (config.station.transmitterConfig === "Single Transmitter" && id === "tx2") return false;
     return config.transmitters[id].enabled && config.transmitters[id].onAir;
@@ -170,9 +192,12 @@ export function buildDvor1150Snapshot(config: Dvor1150Config, now = new Date()):
     mon1: monitorResult(config, "mon1", active, activeId === "tx1"),
     mon2: monitorResult(config, "mon2", active, activeId === "tx2"),
   };
-  const systemHealthy = config.monitor.votingLogic === "AND"
-    ? monitors.mon1.healthy && monitors.mon2.healthy
-    : monitors.mon1.healthy || monitors.mon2.healthy;
+  const hasSecondaryMonitor = config.station.monitorConfig === "Dual Monitors";
+  const systemHealthy = !hasSecondaryMonitor
+    ? monitors.mon1.healthy
+    : config.monitor.votingLogic === "AND"
+      ? monitors.mon1.healthy && monitors.mon2.healthy
+      : monitors.mon1.healthy || monitors.mon2.healthy;
   const timestamp = config.simulation.timestamp || formatDvor1150Timestamp(now);
   const sidebandVswr = Array.from({ length: 48 }, (_, index) => {
     const value = active ? Math.max(1, active.sidebandVswr[index % 4] + ((index % 3) * 0.005)) : 1;
@@ -244,7 +269,10 @@ export function buildDvor1150Snapshot(config: Dvor1150Config, now = new Date()):
     },
     maintenanceAlerts: [
       { label: "Maintenance Alert", indicator: maintenanceAlert ? "yellow" : "gray" },
-      { label: "Monitor Mismatch", indicator: monitors.mon1.healthy === monitors.mon2.healthy ? "gray" : "yellow" },
+      {
+        label: "Monitor Mismatch",
+        indicator: hasSecondaryMonitor && monitors.mon1.healthy !== monitors.mon2.healthy ? "yellow" : "gray",
+      },
       { label: "Transmitter Status", indicator: activeId ? "green" : "red" },
     ],
     adData: [

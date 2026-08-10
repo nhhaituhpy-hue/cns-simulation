@@ -75,6 +75,11 @@ describe("DME 1119A CONFIG -> MONITOR derivation", () => {
     expect(row(data, "integral", "Delay")?.mon1Status).toBe("alarm");
     expect(data.monitors.integral.priAlarm).toBe(true);
     expect(dmeTransferRequested(data)).toBe(true);
+
+    const bypassed = structuredClone(data);
+    bypassed.monitors.integral.bypass = true;
+    bypassed.monitors.standby.bypass = true;
+    expect(dmeTransferRequested(bypassed)).toBe(false);
   });
 
   it("applies TX2 Power Output Scale to standby and RX Sensitivity Offset to Monitor 2 decoder", () => {
@@ -223,5 +228,34 @@ describe("DME 1119A CONFIG -> MONITOR derivation", () => {
     expect(store.getState().restoreConfig()).toBe(true);
     expect(store.getState().data.rmsConfigStation.channelType).toBe("Y");
     expect(store.getState().needBackup).toBe(false);
+  });
+
+  it("performs dual hot-standby transfer at Apply when a routed alarm requests it", () => {
+    const store = createDmePmdtStore();
+    expect(store.getState().login("SEC3", "THREE")).toBe(true);
+    expect(store.getState().setLocalMode(true)).toBe(true);
+    store.getState().setParameterValue("txConfigNominal.rtcParameters.replyDelayOffset", 0.45);
+
+    expect(store.getState().applyConfigChanges()).toBe(true);
+    expect(store.getState().data.monitorTransmitterStatus.antennaSelect).toBe(2);
+    expect(store.getState().data.monitorTransmitterStatus.mainSelect).toBe(2);
+    expect(store.getState().data.transmitters.tx2.antenna).toBe("green");
+    expect(store.getState().data.transmitters.tx1.load).toBe("green");
+  });
+
+  it("keeps the relay on the current transmitter when the alarmed monitors are bypassed", () => {
+    const store = createDmePmdtStore();
+    expect(store.getState().login("SEC3", "THREE")).toBe(true);
+    expect(store.getState().setLocalMode(true)).toBe(true);
+    expect(store.getState().setMonitorBypass("integral", true)).toBe(true);
+    expect(store.getState().setMonitorBypass("standby", true)).toBe(true);
+    store.getState().setParameterValue("txConfigNominal.rtcParameters.replyDelayOffset", 0.45);
+
+    expect(store.getState().applyConfigChanges()).toBe(true);
+    expect(store.getState().data.monitors.integral.priAlarm).toBe(true);
+    expect(store.getState().data.monitors.integral.bypass).toBe(true);
+    expect(store.getState().data.monitorTransmitterStatus.antennaSelect).toBe(1);
+    expect(store.getState().data.transmitters.tx1.antenna).toBe("green");
+    expect(store.getState().data.transmitters.tx2.load).toBe("green");
   });
 });
