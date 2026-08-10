@@ -436,7 +436,9 @@ function NavigationTree({
               <span className={styles.treeCaret} aria-hidden>
                 {hasChildren ? (expanded ? "▾" : "▸") : ""}
               </span>
-              {item.icon ? <span className={styles.navigationItemIcon}>{item.icon}</span> : null}
+              <span className={styles.navigationItemIcon} aria-hidden>
+                {item.icon ?? null}
+              </span>
               <span className={styles.navigationItemLabel}>{item.label}</span>
               {item.badge !== undefined ? (
                 <span className={styles.navigationBadge}>{item.badge}</span>
@@ -525,7 +527,11 @@ export function MopiensNavigation({
               }`}
               onClick={() => onSectionChange?.(section.id)}
             >
-              {section.icon ? <span aria-hidden>{section.icon}</span> : null}
+              {section.icon ? (
+                <span className={styles.navigationSectionIcon} aria-hidden>
+                  {section.icon}
+                </span>
+              ) : null}
               <span>{section.label}</span>
             </button>
           );

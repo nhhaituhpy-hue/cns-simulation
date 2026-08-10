@@ -43,6 +43,8 @@ export function MopiensModal({
 }: MopiensModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
@@ -56,7 +58,7 @@ export function MopiensModal({
     const handleDocumentKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape" && closeOnEscape) {
         event.preventDefault();
-        onClose();
+        onCloseRef.current();
       }
     };
     document.addEventListener("keydown", handleDocumentKeyDown);
@@ -64,7 +66,7 @@ export function MopiensModal({
       document.removeEventListener("keydown", handleDocumentKeyDown);
       previousFocus?.focus();
     };
-  }, [closeOnEscape, onClose, open]);
+  }, [closeOnEscape, open]);
 
   if (!open) return null;
 

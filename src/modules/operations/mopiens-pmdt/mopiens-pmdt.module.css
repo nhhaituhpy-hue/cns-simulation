@@ -113,7 +113,7 @@
 .brandMark,
 .modalBrandMark {
   display: inline-flex;
-  width: 18px;
+  min-width: 18px;
   height: 18px;
   align-items: center;
   justify-content: center;
@@ -121,6 +121,15 @@
   font-size: 13px;
   font-weight: 900;
   line-height: 1;
+}
+
+.brandMark {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.modalBrandMark {
+  width: 18px;
 }
 
 .windowTitle {
@@ -555,7 +564,7 @@
   font-weight: 600;
 }
 
-.navigationSectionButton > span:first-child {
+.navigationSectionIcon {
   width: 17px;
   display: inline-flex;
   align-items: center;
