@@ -1181,6 +1181,7 @@ export function executeDme320Command(
       state.config.draft = cloneDme320Config(state.config.flash);
       state.config.draftDirty = false;
       state.config.flashDirty = false;
+      state.measurementOverrides = [];
       resetEquipmentFromRunningConfig(state);
       state.calibration = createIdleDme320Calibration();
       state.session.userId = null;

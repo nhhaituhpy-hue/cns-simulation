@@ -426,6 +426,7 @@ export interface Dvor220DeviceState {
   power: Dvor220PowerRuntime;
   environment: Dvor220EnvironmentRuntime;
   faults: Dvor220InjectedFault[];
+  measurementOverrides: Dvor220MeasurementOverride[];
   calibration: Dvor220CalibrationState;
   groundCheck: Dvor220GroundCheckState;
   executive: Dvor220ExecutiveState;
@@ -443,6 +444,18 @@ export interface Dvor220ParameterReading {
   status: "normal" | "warning" | "alarm" | "unplugged" | "disabled";
   severity: Dvor220AlarmSeverity;
   unit: string;
+}
+
+/**
+ * Instructor-controlled raw monitor input used by the in-memory simulator.
+ * It is deliberately separate from the equipment configuration/profile layers
+ * so a training scenario cannot silently become a saved station setting.
+ */
+export interface Dvor220MeasurementOverride {
+  monitorId: Dvor220MonitorId;
+  channelId: Dvor220MonitorChannelId;
+  parameter: Dvor220MonitorParameter;
+  value: number;
 }
 
 export interface Dvor220MonitorChannelSnapshot {
@@ -584,6 +597,8 @@ export type Dvor220Command =
   | { type: "inject-fault"; fault: Dvor220InjectedFault }
   | { type: "clear-fault"; faultId: string }
   | { type: "clear-all-faults" }
+  | { type: "inject-measurement"; override: Dvor220MeasurementOverride }
+  | { type: "clear-measurement"; monitorId: Dvor220MonitorId; channelId: Dvor220MonitorChannelId; parameter: Dvor220MonitorParameter }
   | { type: "calibrate"; calibration: Dvor220CalibrationCommand }
   | { type: "start-ground-check"; transmitterId?: Dvor220TransmitterId }
   | { type: "add-user"; account: Dvor220UserAccount }

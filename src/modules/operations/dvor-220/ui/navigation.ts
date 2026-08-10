@@ -41,7 +41,7 @@ export type Dvor220ScreenId =
   | "history-pmdt"
   | "history-lmi";
 
-export type Dvor220DialogId = "bypass" | "main" | "changeover" | "reset" | "power";
+export type Dvor220DialogId = "bypass" | "main" | "changeover" | "reset" | "power" | "simulation-parameters";
 export type Dvor220ViewMode = "pmdt" | "lmi";
 
 export const DVOR220_SCREEN_LABELS: Record<Dvor220ScreenId, string> = {
@@ -199,6 +199,13 @@ export function buildDvor220Menus(options: {
 }): MopiensMenuGroup[] {
   const controlDisabled = !options.writeAllowed || !options.controlAvailable;
   return [
+    {
+      id: "system",
+      label: "System",
+      commands: [
+        { id: "simulation-parameters", label: "Simulation Parameters..." },
+      ],
+    },
     {
       id: "file",
       label: "File",

@@ -311,6 +311,7 @@ export function createInitialDvor220State(
       expansionDigitalInputs: Array.from({ length: 8 }, () => false),
     },
     faults: [],
+    measurementOverrides: [],
     calibration: createCalibrationState(),
     groundCheck: {
       status: "idle",

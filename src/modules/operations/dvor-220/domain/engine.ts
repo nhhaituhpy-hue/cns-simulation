@@ -261,7 +261,12 @@ function buildMonitorChannelSnapshot(
       "monitor-parameter",
       (fault) => fault.monitorId === monitorId && fault.channelId === channelId && fault.parameter === parameter,
     );
-    const value = injected?.value ?? values[parameter];
+    const measurementOverride = state.measurementOverrides.find(
+      (override) => override.monitorId === monitorId
+        && override.channelId === channelId
+        && override.parameter === parameter,
+    );
+    const value = measurementOverride?.value ?? injected?.value ?? values[parameter];
     const configuredBand = channel.limits[parameter];
     let effectiveBand = parameter === "carrierFrequency"
       ? shiftedCarrierBand(configuredBand, state.configuration.running.station.frequencyMHz)

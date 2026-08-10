@@ -488,6 +488,41 @@ export function reduceDvor220Command(
       return success(state);
     }
 
+    case "inject-measurement": {
+      const denied = requirePermission(state, "configure");
+      if (denied) return failure(state, denied);
+      if (!Number.isFinite(command.override.value)) {
+        return failure(state, "Simulation measurement must be a finite number.");
+      }
+      const matches = (candidate: typeof command.override) => (
+        candidate.monitorId === command.override.monitorId
+        && candidate.channelId === command.override.channelId
+        && candidate.parameter === command.override.parameter
+      );
+      state.measurementOverrides = [
+        ...state.measurementOverrides.filter((candidate) => !matches(candidate)),
+        cloneDvor220(command.override),
+      ];
+      recordControl(state, `Simulation parameter override applied: ${command.override.parameter}`);
+      state = reconcileDvor220State(state);
+      return success(state);
+    }
+
+    case "clear-measurement": {
+      const denied = requirePermission(state, "configure");
+      if (denied) return failure(state, denied);
+      state.measurementOverrides = state.measurementOverrides.filter(
+        (override) => !(
+          override.monitorId === command.monitorId
+          && override.channelId === command.channelId
+          && override.parameter === command.parameter
+        ),
+      );
+      recordControl(state, `Simulation parameter reset: ${command.parameter}`);
+      state = reconcileDvor220State(state);
+      return success(state);
+    }
+
     case "calibrate": {
       const denied = requirePermission(state, "calibrate");
       if (denied) return failure(state, denied);

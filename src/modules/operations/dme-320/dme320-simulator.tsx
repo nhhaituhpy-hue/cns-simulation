@@ -353,6 +353,7 @@ export function Dme320Simulator({
     else if (commandId === "reboot") dispatch({ type: "reboot" });
     else if (commandId === "view-pmdt") setViewMode("pmdt");
     else if (commandId === "view-lmi") setViewMode("lmi");
+    else if (commandId === "simulation-parameters") setActiveDialog("simulation-parameters");
     else if (commandId === "keylock-local") dispatch({ type: "set-keylock", mode: "LOCAL" });
     else if (commandId === "keylock-rem" || commandId === "keylock-remote") dispatch({ type: "set-keylock", mode: "REM" });
     else if (commandId === "keylock-maint") dispatch({ type: "set-keylock", mode: "MAINT" });

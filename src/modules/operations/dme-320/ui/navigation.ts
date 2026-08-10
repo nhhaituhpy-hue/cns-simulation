@@ -36,7 +36,7 @@ export type Dme320ScreenId =
   | "history-lmi";
 
 export type Dme320ViewMode = "pmdt" | "lmi";
-export type Dme320DialogId = "bypass" | "main" | "changeover" | "reset" | "power";
+export type Dme320DialogId = "bypass" | "main" | "changeover" | "reset" | "power" | "simulation-parameters";
 
 export const DME320_SCREEN_LABELS: Record<Dme320ScreenId, string> = {
   home: "Home",
@@ -176,6 +176,13 @@ export function buildDme320Menus(options: {
   const controlDisabled = !options.connected || !options.authenticated || !options.controlAvailable;
 
   return [
+    {
+      id: "system",
+      label: "System",
+      commands: [
+        { id: "simulation-parameters", label: "Simulation Parameters..." },
+      ],
+    },
     {
       id: "file",
       label: "File",

@@ -15,6 +15,7 @@ import type {
 import type { Dme320DialogId } from "./navigation";
 import { formatStatus } from "./presentation";
 import { monitorTone, transmitterDetail, transmitterTone } from "./main-screens";
+import { Dme320SimulationParametersDialog } from "./simulation-parameters";
 import styles from "./dme320-ui.module.css";
 
 const TRANSPONDER_IDS = ["tx1", "tx2"] as const;
@@ -169,6 +170,13 @@ export function Dme320ControlDialogs({
           })}
         </div>
       </MopiensModal>
+
+      <Dme320SimulationParametersDialog
+        open={activeDialog === "simulation-parameters"}
+        simulation={simulation}
+        dispatch={dispatch}
+        onClose={onClose}
+      />
     </>
   );
 }

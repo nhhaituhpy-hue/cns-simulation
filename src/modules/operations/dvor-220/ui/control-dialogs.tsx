@@ -18,6 +18,7 @@ import {
 } from "../domain/types";
 import { formatDvor220Status, toneForDvor220Status } from "./main-screens";
 import type { Dvor220DialogId } from "./navigation";
+import { Dvor220SimulationParametersDialog } from "./simulation-parameters";
 import styles from "../dvor220.module.css";
 
 export interface Dvor220ControlDialogsProps {
@@ -160,6 +161,14 @@ export function Dvor220ControlDialogs({
           })}
         </div>
       </MopiensModal>
+
+      <Dvor220SimulationParametersDialog
+        open={activeDialog === "simulation-parameters"}
+        device={device}
+        snapshot={snapshot}
+        dispatch={dispatch}
+        onClose={onClose}
+      />
     </>
   );
 }

@@ -240,6 +240,7 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
     else if (commandId === "reset-draft") dispatch({ type: "reset-draft" });
     else if (commandId === "view-pmdt") setViewMode("pmdt");
     else if (commandId === "view-lmi") setViewMode("lmi");
+    else if (commandId === "simulation-parameters") setActiveDialog("simulation-parameters");
     else if (["bypass", "main-control", "changeover", "reset", "power-control"].includes(commandId)) {
       const dialogMap: Record<string, Dvor220DialogId> = { bypass: "bypass", "main-control": "main", changeover: "changeover", reset: "reset", "power-control": "power" };
       setActiveDialog(dialogMap[commandId]);
