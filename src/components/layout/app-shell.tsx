@@ -130,6 +130,14 @@ function ApplicationIdentity({ mobile = false }: { mobile?: boolean }) {
 }
 
 function getPageHeader(pathname: string) {
+  if (pathname === "/") {
+    return {
+      eyebrow: "Trung tâm mô phỏng CNS",
+      title: "CNS Simulation Lab",
+      showMobileTitle: true,
+    };
+  }
+
   if (pathname === "/simulator") {
     return {
       eyebrow: "Bộ công cụ mô phỏng CNS",

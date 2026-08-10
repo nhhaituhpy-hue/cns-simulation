@@ -179,7 +179,6 @@ function PasswordField({
   onChange,
   autoComplete,
   compact = false,
-  classic = false,
 }: {
   id: string;
   label: string;
@@ -187,17 +186,16 @@ function PasswordField({
   onChange: (value: string) => void;
   autoComplete: string;
   compact?: boolean;
-  classic?: boolean;
 }) {
   const [visible, setVisible] = useState(false);
   return (
     <label
       htmlFor={id}
-      className={`pmdt-auth-password-field grid text-sm font-semibold text-[var(--text-secondary)] ${compact ? "gap-1.5" : "gap-2"}`}
+      className={`grid text-sm font-semibold text-[var(--text-secondary)] ${compact ? "gap-1.5" : "gap-2"}`}
     >
-      <span className="pmdt-auth-field-label">{classic ? "Password" : label}</span>
+      {label}
       <span className="relative block">
-        <LockKey aria-hidden size={20} className="pmdt-auth-field-icon pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+        <LockKey aria-hidden size={20} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
         <input
           id={id}
           name={id}
@@ -205,15 +203,15 @@ function PasswordField({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           autoComplete={autoComplete}
-          placeholder={classic ? "" : "******"}
+          placeholder="******"
           required
-          className="pmdt-auth-password-input h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] pl-11 pr-12 text-base font-normal text-[var(--text-primary)] outline-none transition-[border-color,box-shadow] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
+          className="h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] pl-11 pr-12 text-base font-normal text-[var(--text-primary)] outline-none transition-[border-color,box-shadow] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20"
         />
         <button
           type="button"
           onClick={() => setVisible((current) => !current)}
           aria-label={visible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-          className="pmdt-auth-password-toggle absolute right-2 top-1/2 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+          className="absolute right-2 top-1/2 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
         >
           {visible ? <EyeSlash aria-hidden size={20} /> : <Eye aria-hidden size={20} />}
         </button>
@@ -387,7 +385,6 @@ export function AuthPage({ nextPath, initialView = "login" }: { nextPath?: strin
     }
   }
 
-  const classicLogin = view === "login";
   const showingTabs = view === "login" || view === "signup";
   const heading = view === "login"
     ? "Đăng nhập hệ thống"
@@ -402,7 +399,7 @@ export function AuthPage({ nextPath, initialView = "login" }: { nextPath?: strin
             : "Đặt mật khẩu mới";
 
   return (
-    <main className={classicLogin ? "pmdt-auth-classic" : "grid h-[100dvh] overflow-hidden bg-[var(--background)] lg:grid-cols-[minmax(20rem,35%)_minmax(0,1fr)]"}>
+    <main className="grid h-[100dvh] overflow-hidden bg-[var(--background)] lg:grid-cols-[minmax(20rem,35%)_minmax(0,1fr)]">
       {loginSucceeded ? <LoginSuccessOverlay reduceMotion={Boolean(reduceMotion)} /> : null}
       <section
         className="hidden h-[100dvh] border-r border-[var(--border)] bg-[#e8f3f8] bg-cover bg-center bg-no-repeat px-10 py-12 lg:flex lg:flex-col lg:justify-between xl:px-16"
@@ -441,7 +438,7 @@ export function AuthPage({ nextPath, initialView = "login" }: { nextPath?: strin
             </p>
           </div>
 
-            <div className="pmdt-auth-card-wrap" style={{ perspective: "1200px" }}>
+            <div style={{ perspective: "1200px" }}>
               <motion.div
                 animate={flipControls}
                 initial={{ rotateY: 0, opacity: 1 }}
@@ -450,14 +447,10 @@ export function AuthPage({ nextPath, initialView = "login" }: { nextPath?: strin
                   transformOrigin: "center center",
                   WebkitBackfaceVisibility: "hidden",
                 }}
-                className={`pmdt-auth-card rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-7 ${flipping ? "pointer-events-none will-change-transform" : ""}`}
+                className={`rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-7 ${flipping ? "pointer-events-none will-change-transform" : ""}`}
               >
-            <header className="pmdt-auth-window-titlebar">
-              <span>Login</span>
-              <button type="button" aria-label="Close login" onClick={() => router.back()}>×</button>
-            </header>
-            <h2 className="pmdt-auth-heading text-2xl font-bold tracking-tight text-[var(--text-primary)]">{heading}</h2>
-            <p className="pmdt-auth-description mt-2 min-h-12 text-sm leading-6 text-[var(--text-secondary)]">
+            <h2 className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">{heading}</h2>
+            <p className="mt-2 min-h-12 text-sm leading-6 text-[var(--text-secondary)]">
               {view === "login" && "Sử dụng tên đăng nhập và mật khẩu của bạn."}
               {view === "signup" && "Tài khoản mới được cấp quyền thí sinh mặc định."}
               {view === "verify-signup" && <>Nhập mã 6 số đã gửi đến <strong>{email}</strong>.</>}
@@ -492,25 +485,22 @@ export function AuthPage({ nextPath, initialView = "login" }: { nextPath?: strin
             ) : null}
 
             {view === "login" ? (
-              <form onSubmit={submitLogin} className="pmdt-auth-login-form mt-5 grid gap-5">
-                <label htmlFor="login-username" className="pmdt-auth-username-field grid gap-2 text-sm font-semibold text-[var(--text-secondary)]">
-                  <span className="pmdt-auth-field-label">{classicLogin ? "User ID" : "Tên đăng nhập"}</span>
+              <form onSubmit={submitLogin} className="mt-5 grid gap-5">
+                <label htmlFor="login-username" className="grid gap-2 text-sm font-semibold text-[var(--text-secondary)]">
+                  Tên đăng nhập
                   <span className="relative block">
-                    <User aria-hidden size={20} className="pmdt-auth-field-icon pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
-                    <input id="login-username" type="text" value={username} onChange={(event) => setUsername(event.target.value.replace(/@attech\.com\.vn$/i, ""))} autoComplete="username" placeholder={classicLogin ? "" : "user"} required className="pmdt-auth-username-input h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] pl-11 pr-[8.75rem] font-normal text-[var(--text-primary)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20" />
-                    <span className="pmdt-auth-username-suffix pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm font-normal text-[var(--text-muted)]">@attech.com.vn</span>
+                    <User aria-hidden size={20} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                    <input id="login-username" type="text" value={username} onChange={(event) => setUsername(event.target.value.replace(/@attech\.com\.vn$/i, ""))} autoComplete="username" placeholder="user" required className="h-12 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] pl-11 pr-[8.75rem] font-normal text-[var(--text-primary)] outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20" />
+                    <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm font-normal text-[var(--text-muted)]">@attech.com.vn</span>
                   </span>
                 </label>
-                <PasswordField id="login-password" label="Mật khẩu" value={password} onChange={setPassword} autoComplete="current-password" classic={classicLogin} />
+                <PasswordField id="login-password" label="Mật khẩu" value={password} onChange={setPassword} autoComplete="current-password" />
                 <FieldMessage result={result} />
-                <div className={classicLogin ? "pmdt-auth-classic-actions" : "pmdt-auth-modern-actions"}>
-                  <button type="submit" disabled={pending} className="pmdt-auth-submit inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-5 text-sm font-bold text-white shadow-sm transition-[background-color,transform] hover:bg-[var(--accent-hover)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60">
-                    <SignIn aria-hidden size={20} weight="bold" />
-                    {classicLogin ? "OK" : pending ? "Đang đăng nhập..." : "Đăng nhập"}
-                  </button>
-                  {classicLogin ? <button type="button" className="pmdt-auth-cancel" onClick={() => router.back()}>Cancel</button> : null}
-                </div>
-                <button type="button" onClick={() => switchView("forgot-password")} className={`${classicLogin ? "pmdt-auth-forgot" : ""} justify-self-center text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--accent)] focus-visible:outline-none focus-visible:underline`}>
+                <button type="submit" disabled={pending} className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[var(--accent)] px-5 text-sm font-bold text-white shadow-sm transition-[background-color,transform] hover:bg-[var(--accent-hover)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60">
+                  <SignIn aria-hidden size={20} weight="bold" />
+                  {pending ? "Đang đăng nhập..." : "Đăng nhập"}
+                </button>
+                <button type="button" onClick={() => switchView("forgot-password")} className="justify-self-center text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--accent)] focus-visible:outline-none focus-visible:underline">
                   Quên mật khẩu?
                 </button>
               </form>

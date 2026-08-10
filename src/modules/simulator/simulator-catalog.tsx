@@ -1,6 +1,17 @@
-import { DesktopTower } from "@phosphor-icons/react/dist/ssr/DesktopTower";
+import Image from "next/image";
 import Link from "next/link";
 import { SIMULATOR_MODULES } from "@/modules/core/registry";
+
+const moduleIconImages: Record<string, string> = {
+  "dvor-1150": "/images/simulator-icons/dvor-1150.png",
+  "dvor-1150a": "/images/simulator-icons/dvor-1150.png",
+  "dme-1119a": "/images/simulator-icons/dme-1119a.png",
+  "dvor-220": "/images/simulator-icons/dvor-220.png",
+  "dme-320": "/images/simulator-icons/dme-1119a.png",
+  "ads-b": "/images/simulator-icons/ads-b.png",
+  vhf: "/images/simulator-icons/vhf.png",
+  vsat: "/images/simulator-icons/vsat.png",
+};
 
 export function SimulatorCatalog() {
   return (
@@ -9,11 +20,12 @@ export function SimulatorCatalog() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {SIMULATOR_MODULES.map((module) => {
             const available = module.status === "available";
+            const moduleIcon = moduleIconImages[module.id] ?? moduleIconImages["dvor-1150"];
             return (
               <article key={module.id} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
-                  <span className={`inline-flex size-10 items-center justify-center rounded-lg ${available ? "bg-[var(--accent-muted)] text-[var(--accent)]" : "bg-[var(--surface-muted)] text-[var(--text-secondary)]"}`}>
-                    <DesktopTower aria-hidden size={22} weight="duotone" />
+                  <span className={`inline-flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl ${available ? "bg-[var(--accent-muted)]" : "bg-[var(--surface-muted)]"}`}>
+                    <Image src={moduleIcon} alt="" width={80} height={80} sizes="80px" className="size-full object-contain p-1" />
                   </span>
                   <span className={`rounded-md border px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${available ? "border-[var(--color-success-border)] bg-[var(--color-success-muted)] text-[var(--color-success)]" : "border-[var(--color-warning-border)] bg-[var(--color-warning-muted)] text-[var(--color-warning)]"}`}>
                     {available ? "Sẵn sàng" : "Chuẩn bị"}

@@ -137,3 +137,13 @@ button {
     transition-duration: 0.01ms !important;
   }
 }
+
+.home-dashboard {
+  background:
+    radial-gradient(circle at 92% 0%, rgb(3 105 161 / 0.1), transparent 28rem),
+    var(--background);
+}
+
+.home-dashboard__stats strong {
+  font-variant-numeric: tabular-nums;
+}
