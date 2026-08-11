@@ -1,5 +1,6 @@
-import { DesktopTower } from "@phosphor-icons/react/dist/ssr/DesktopTower";
+import Image from "next/image";
 import Link from "next/link";
+import { getSimulatorIconImage } from "@/modules/core/simulator-icon-images";
 import { TRAINING_MODULES } from "@/modules/core/registry";
 import type { SimulatorModuleDefinition } from "@/modules/core/types";
 
@@ -27,11 +28,12 @@ export function TrainingWorkspaceCatalog({ mode }: { mode: TrainingWorkspaceMode
         {TRAINING_MODULES.map((module) => {
           const trainingStatus = (module as SimulatorModuleDefinition).trainingStatus ?? module.status;
           const trainingAvailable = trainingStatus === "available";
+          const moduleIcon = getSimulatorIconImage(module.id);
           return (
             <article key={module.id} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
               <div className="flex items-start justify-between gap-3">
-                <span className={`inline-flex size-10 items-center justify-center rounded-lg ${trainingAvailable ? "bg-[var(--accent-muted)] text-[var(--accent)]" : "bg-[var(--surface-muted)] text-[var(--text-secondary)]"}`}>
-                  <DesktopTower aria-hidden size={22} weight="duotone" />
+                <span className={`inline-flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl ${trainingAvailable ? "bg-[var(--accent-muted)]" : "bg-[var(--surface-muted)]"}`}>
+                  <Image src={moduleIcon} alt="" width={80} height={80} sizes="80px" className="size-full object-contain p-1" />
                 </span>
                 <span className={`rounded-md border px-2 py-1 text-[10px] font-semibold uppercase tracking-wide ${trainingAvailable ? "border-[var(--color-success-border)] bg-[var(--color-success-muted)] text-[var(--color-success)]" : "border-[var(--color-warning-border)] bg-[var(--color-warning-muted)] text-[var(--color-warning)]"}`}>
                   {trainingAvailable ? "Sẵn sàng" : "Chuẩn bị"}
@@ -59,6 +61,7 @@ export function TrainingModulePlaceholder({
 }) {
   const copy = workspaceCopy[mode];
   const backHref = mode === "authoring" ? "/authoring" : "/review";
+  const moduleIcon = getSimulatorIconImage(module.id);
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
@@ -67,8 +70,8 @@ export function TrainingModulePlaceholder({
       </Link>
       <section className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm sm:p-8">
         <div className="flex items-start gap-4">
-          <span className="inline-flex size-12 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-muted)] text-[var(--accent)]">
-            <DesktopTower aria-hidden size={26} weight="duotone" />
+          <span className="inline-flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[var(--accent-muted)]">
+            <Image src={moduleIcon} alt="" width={48} height={48} sizes="48px" className="size-full object-contain p-1" />
           </span>
           <div>
             <p className="text-sm leading-6 text-[var(--text-secondary)]">{module.description}</p>

@@ -1,17 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getSimulatorIconImage } from "@/modules/core/simulator-icon-images";
 import { SIMULATOR_MODULES } from "@/modules/core/registry";
-
-const moduleIconImages: Record<string, string> = {
-  "dvor-1150": "/images/simulator-icons/dvor-1150.png",
-  "dvor-1150a": "/images/simulator-icons/dvor-1150.png",
-  "dme-1119a": "/images/simulator-icons/dme-1119a.png",
-  "dvor-220": "/images/simulator-icons/dvor-220.png",
-  "dme-320": "/images/simulator-icons/dme-1119a.png",
-  "ads-b": "/images/simulator-icons/ads-b.png",
-  vhf: "/images/simulator-icons/vhf.png",
-  vsat: "/images/simulator-icons/vsat.png",
-};
 
 export function SimulatorCatalog() {
   return (
@@ -20,7 +10,7 @@ export function SimulatorCatalog() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {SIMULATOR_MODULES.map((module) => {
             const available = module.status === "available";
-            const moduleIcon = moduleIconImages[module.id] ?? moduleIconImages["dvor-1150"];
+            const moduleIcon = getSimulatorIconImage(module.id);
             return (
               <article key={module.id} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
                 <div className="flex items-start justify-between gap-3">

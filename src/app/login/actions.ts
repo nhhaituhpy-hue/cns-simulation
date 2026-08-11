@@ -1,12 +1,14 @@
 "use server";
 
 import { clearFailedLogins, getLoginLockStatus, recordFailedLogin, attemptsRemaining } from "@/lib/auth/login-lockout";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { redirect, RedirectType } from "next/navigation";
 
 export type AuthActionCode =
   | "INVALID_INPUT"
   | "INVALID_CREDENTIALS"
+  | "EMAIL_ALREADY_REGISTERED"
   | "LOCKED"
   | "RATE_LIMITED"
   | "SERVER_ERROR"
@@ -42,6 +44,41 @@ function serverFailure(context: string, error: unknown): AuthActionResult {
     code: "SERVER_ERROR",
     message: "Hệ thống xác thực đang bận. Vui lòng thử lại sau.",
   };
+}
+
+async function isEmailRegistered(email: string) {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("email", email)
+    .maybeSingle();
+
+  if (error) throw error;
+  return Boolean(data);
+}
+
+function registeredEmailResult(): AuthActionResult {
+  return {
+    ok: false,
+    code: "EMAIL_ALREADY_REGISTERED",
+    message: "Email này đã được đăng ký. Nếu quên mật khẩu, hãy đặt lại mật khẩu.",
+  };
+}
+
+export async function checkSignupEmailAction(emailValue: string): Promise<AuthActionResult> {
+  const email = normalizeEmail(emailValue);
+  if (!validEmail(email)) {
+    return { ok: false, code: "INVALID_INPUT", message: "Vui lòng nhập email @attech.com.vn hợp lệ." };
+  }
+
+  try {
+    return await isEmailRegistered(email)
+      ? registeredEmailResult()
+      : { ok: true, code: "SUCCESS", message: "Email có thể đăng ký." };
+  } catch (error) {
+    return serverFailure("Signup email lookup failed", error);
+  }
 }
 
 export async function loginAction(input: {
@@ -152,6 +189,10 @@ export async function signUpAction(input: {
   }
 
   try {
+    if (await isEmailRegistered(email)) {
+      return registeredEmailResult();
+    }
+
     const supabase = await createClient();
     const { error } = await supabase.auth.signUp({
       email,

@@ -139,12 +139,93 @@ button {
   }
 }
 
-.home-dashboard {
-  background:
-    radial-gradient(circle at 92% 0%, rgb(3 105 161 / 0.1), transparent 28rem),
-    var(--background);
+.cns-landing__hero-image {
+  filter: saturate(0.76) contrast(1.06) brightness(0.7);
 }
 
-.home-dashboard__stats strong {
-  font-variant-numeric: tabular-nums;
+.cns-landing__hero-overlay {
+  background:
+    linear-gradient(90deg, rgb(2 17 27 / 0.96) 0%, rgb(3 25 36 / 0.86) 35%, rgb(3 25 36 / 0.38) 69%, rgb(3 25 36 / 0.7) 100%),
+    linear-gradient(0deg, rgb(3 20 29 / 0.82) 0%, transparent 48%);
+}
+
+.cns-landing__hero-grid {
+  opacity: 0.3;
+  background-image:
+    linear-gradient(rgb(185 236 255 / 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(185 236 255 / 0.09) 1px, transparent 1px);
+  background-size: 5rem 5rem;
+  mask-image: linear-gradient(90deg, black 0%, black 56%, transparent 100%);
+}
+
+.cns-showcase__eyebrow {
+  color: rgb(165 243 252 / 0.78);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.cns-showcase__orbit {
+  overflow: clip;
+  overscroll-behavior: contain;
+  padding-inline: 0.25rem;
+}
+
+.cns-showcase__track {
+  height: 22rem;
+  max-width: 64rem;
+  touch-action: pan-y;
+  transform-style: preserve-3d;
+}
+
+.cns-showcase__card {
+  cursor: grab;
+  transform-style: preserve-3d;
+  user-select: none;
+}
+
+.cns-showcase__card:active {
+  cursor: grabbing;
+}
+
+.cns-showcase__control {
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.05);
+  color: rgb(207 250 254);
+  transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
+}
+
+.cns-showcase__control:hover {
+  border-color: rgb(165 243 252 / 0.7);
+  background: rgb(207 250 254 / 0.14);
+  transform: translateY(-1px);
+}
+
+.cns-showcase__control:focus-visible {
+  outline: 2px solid rgb(165 243 252);
+  outline-offset: 3px;
+}
+
+@media (min-width: 640px) {
+  .cns-showcase__track {
+    height: 26rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cns-showcase__control {
+    transition: none;
+  }
+
+  .cns-showcase__control:hover {
+    transform: none;
+  }
 }
