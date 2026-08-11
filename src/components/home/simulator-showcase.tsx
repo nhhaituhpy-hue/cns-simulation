@@ -146,17 +146,10 @@ export function SimulatorShowcase({ simulators }: SimulatorShowcaseProps) {
             const hidden = Math.abs(distance) > 3;
 
             return (
-              <motion.button
+              <motion.div
                 key={simulator.id}
-                id={cardId}
-                type="button"
-                role="tab"
-                tabIndex={selectedCard ? 0 : -1}
-                aria-selected={selectedCard}
-                aria-controls={panelId}
-                aria-label={"Chọn mô phỏng " + simulator.shortName}
                 className={[
-                  "cns-showcase__card absolute left-1/2 top-10 -ml-[6.75rem] h-72 w-[13.5rem] overflow-hidden rounded-[1.4rem] border text-left shadow-[0_1.5rem_3.75rem_rgba(0,0,0,0.38)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-100 focus-visible:ring-offset-2 focus-visible:ring-offset-[#082630] sm:-ml-32 sm:h-[21rem] sm:w-64",
+                  "cns-showcase__card absolute left-1/2 top-10 -ml-[6.75rem] h-72 w-[13.5rem] overflow-hidden rounded-[1.4rem] border text-left shadow-[0_1.5rem_3.75rem_rgba(0,0,0,0.38)] sm:-ml-32 sm:h-[21rem] sm:w-64",
                   selectedCard
                     ? "border-cyan-100/80 bg-slate-950"
                     : "border-white/15 bg-slate-950 hover:border-cyan-100/60",
@@ -178,39 +171,66 @@ export function SimulatorShowcase({ simulators }: SimulatorShowcaseProps) {
                   if (info.offset.x < -44) rotate(1);
                   if (info.offset.x > 44) rotate(-1);
                 }}
-                onClick={() => setSelectedIndex(index)}
               >
-                <div className="absolute inset-0 bg-slate-950">
-                  <Image
-                    src={simulator.cardImage}
-                    alt=""
-                    fill
-                    sizes="(max-width: 640px) 216px, 256px"
-                    className={[
-                      simulator.cardImageFit === "cover"
-                        ? "object-cover"
-                        : "object-contain p-7 sm:p-9",
-                    ].join(" ")}
-                  />
-                </div>
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,12,18,0.1)_24%,rgba(2,12,18,0.2)_45%,rgba(2,12,18,0.94)_100%)]" />
-                <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
-                  <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-100/80">
-                    {simulator.categoryLabel}
-                  </span>
-                  <span className="mt-2 block text-xl font-semibold tracking-[-0.04em] text-white sm:text-2xl">
-                    {simulator.shortName}
-                  </span>
-                  <span
-                    className={[
-                      "mt-2 block text-[10px] font-bold uppercase tracking-[0.14em]",
-                      simulator.status === "available" ? "text-emerald-200" : "text-amber-200",
-                    ].join(" ")}
+                <button
+                  id={cardId}
+                  type="button"
+                  role="tab"
+                  tabIndex={selectedCard ? 0 : -1}
+                  aria-selected={selectedCard}
+                  aria-controls={panelId}
+                  aria-label={"Chọn mô phỏng " + simulator.shortName}
+                  onClick={() => setSelectedIndex(index)}
+                  className="absolute inset-0 z-10 w-full rounded-[1.4rem] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-100"
+                >
+                  <div className="absolute inset-0 bg-slate-950">
+                    <Image
+                      src={simulator.cardImage}
+                      alt=""
+                      fill
+                      sizes="(max-width: 640px) 216px, 256px"
+                      className={[
+                        simulator.cardImageFit === "cover"
+                          ? "object-cover"
+                          : "object-contain p-7 sm:p-9",
+                      ].join(" ")}
+                    />
+                  </div>
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,12,18,0.1)_24%,rgba(2,12,18,0.2)_45%,rgba(2,12,18,0.94)_100%)]" />
+                  <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+                    <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-100/80">
+                      {simulator.categoryLabel}
+                    </span>
+                    <span className="mt-2 block text-xl font-semibold tracking-[-0.04em] text-white sm:text-2xl">
+                      {simulator.shortName}
+                    </span>
+                    <span
+                      className={[
+                        "mt-2 block text-[10px] font-bold uppercase tracking-[0.14em]",
+                        simulator.status === "available" ? "text-emerald-200" : "text-amber-200",
+                      ].join(" ")}
+                    >
+                      {simulator.status === "available" ? "Sẵn sàng thực hành" : "Đang hoàn thiện"}
+                    </span>
+                  </div>
+                </button>
+
+                {simulator.href ? (
+                  <Link
+                    href={simulator.href}
+                    tabIndex={selectedCard ? 0 : -1}
+                    aria-label={"Mở simulator " + simulator.shortName}
+                    onPointerDown={(event) => event.stopPropagation()}
+                    className="absolute left-1/2 top-1/2 z-20 inline-flex h-8 -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 whitespace-nowrap rounded-full border border-cyan-100/40 bg-slate-950/80 px-3 text-[11px] font-bold text-cyan-50 shadow-lg backdrop-blur-sm transition-transform hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-100 active:scale-95 motion-reduce:transform-none"
                   >
-                    {simulator.status === "available" ? "Sẵn sàng thực hành" : "Đang hoàn thiện"}
+                    Mở simulator <ArrowRight aria-hidden size={14} weight="bold" />
+                  </Link>
+                ) : (
+                  <span className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border border-amber-100/25 bg-slate-950/75 px-3 py-2 text-[11px] font-bold text-amber-100/90 backdrop-blur-sm">
+                    Đang hoàn thiện
                   </span>
-                </div>
-              </motion.button>
+                )}
+              </motion.div>
             );
           })}
         </div>
