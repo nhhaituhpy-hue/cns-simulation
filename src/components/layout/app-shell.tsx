@@ -38,11 +38,25 @@ type NavigationItem = {
 type WorkspaceSection = "simulator" | "authoring" | "review" | "admin" | "student";
 
 function simulatorNavigationItems(): NavigationItem[] {
-  return SIMULATOR_MODULES.map((module) => ({
+  const moduleItems: NavigationItem[] = SIMULATOR_MODULES.map((module) => ({
     href: module.routes.simulator,
     label: module.shortName,
     icon: DesktopTower,
   }));
+
+  const dvor1150Index = moduleItems.findIndex(
+    (item) => item.href === "/simulator/dvor-1150",
+  );
+
+  if (dvor1150Index >= 0) {
+    moduleItems.splice(dvor1150Index + 1, 0, {
+      href: "/simulator/dvor-1150/block-diagram",
+      label: "Sơ đồ khối DVOR 1150",
+      icon: DesktopTower,
+    });
+  }
+
+  return moduleItems;
 }
 
 function trainingNavigationItems(mode: "authoring" | "review"): NavigationItem[] {
@@ -77,8 +91,11 @@ const navigationItems: NavigationItem[] = [
     href: "/authoring",
     label: "Tạo kịch bản",
     icon: FilePlus,
+    // Some unfinished module manifests temporarily point authoring back to a
+    // simulator URL. Only explicit aliases should affect this top-level tab;
+    // real /authoring child routes are already covered by item.href itself.
     activePrefixes: workspaceItems.authoring.flatMap((item) => [
-      item.href,
+      ...(item.href.startsWith("/simulator") ? [] : [item.href]),
       ...(item.activePrefixes ?? []),
     ]),
   },
@@ -86,8 +103,9 @@ const navigationItems: NavigationItem[] = [
     href: "/review",
     label: "Ôn tập",
     icon: BookOpenText,
+    // Do not mark Review active for fallback URLs in the simulator workspace.
     activePrefixes: workspaceItems.review.flatMap((item) => [
-      item.href,
+      ...(item.href.startsWith("/simulator") ? [] : [item.href]),
       ...(item.activePrefixes ?? []),
     ]),
   },
@@ -119,6 +137,21 @@ function isPathWithinNavigationItem(pathname: string, item: NavigationItem) {
   return (
     isPathWithin(pathname, item.href) ||
     item.activePrefixes?.some((prefix) => isPathWithin(pathname, prefix)) === true
+  );
+}
+
+function isMostSpecificActiveItem(
+  pathname: string,
+  item: NavigationItem,
+  siblings: readonly NavigationItem[],
+) {
+  if (!isPathWithinNavigationItem(pathname, item)) return false;
+
+  return !siblings.some(
+    (candidate) =>
+      candidate !== item &&
+      candidate.href.length > item.href.length &&
+      isPathWithinNavigationItem(pathname, candidate),
   );
 }
 
@@ -185,7 +218,11 @@ function MobileWorkspaceTabs({
       className="ml-4 grid grid-cols-2 gap-1 border-l border-[var(--border-strong)] pl-3"
     >
       {workspaceItems[section].map((item) => {
-        const active = isPathWithinNavigationItem(pathname, item);
+        const active = isMostSpecificActiveItem(
+          pathname,
+          item,
+          workspaceItems[section],
+        );
 
         return (
           <Link

@@ -1,0 +1,236 @@
+.faceplate {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 760px;
+}
+
+.synthesizer { max-width: 250px; }
+.sideband { max-width: 230px; }
+.statusPanel { width: min(100%, 760px); max-height: 310px; }
+
+.panelShadow {
+  fill: #091318;
+  filter: url("#dvor1150-face-shadow");
+  opacity: 0.48;
+}
+
+.panelFrame {
+  fill: url("#dvor1150-face-metal");
+  stroke: #38484d;
+  stroke-width: 3;
+}
+
+.panelBrush {
+  fill: url("#dvor1150-face-brush");
+  stroke: rgb(255 255 255 / 64%);
+  stroke-width: 1;
+}
+
+.screw circle {
+  fill: #cdd3d2;
+  stroke: #687477;
+  stroke-width: 2;
+}
+
+.screw path {
+  fill: none;
+  stroke: #505d60;
+  stroke-linecap: round;
+  stroke-width: 2;
+}
+
+.moduleTitle,
+.moduleTitleSmall,
+.controlId,
+.groupLabel,
+.partNumber,
+.sidebandId,
+.powerTransistor text,
+.statusBrand,
+.statusSystem,
+.statusLabel {
+  fill: #152024;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 900;
+  paint-order: stroke fill;
+  stroke: rgb(245 248 247 / 52%);
+  stroke-width: 0.8px;
+}
+
+.moduleTitle {
+  font-size: 28px;
+  letter-spacing: 1px;
+  text-anchor: middle;
+}
+
+.moduleTitleSmall {
+  font-size: 17px;
+  letter-spacing: 0.7px;
+  text-anchor: middle;
+}
+
+.controlId {
+  font-size: 25px;
+  letter-spacing: 0.5px;
+}
+
+.groupLabel {
+  font-size: 26px;
+  letter-spacing: 0.8px;
+  text-anchor: middle;
+}
+
+.partNumber {
+  fill: #e9f0f0;
+  stroke: #253438;
+  stroke-width: 1.4px;
+  font-size: 15px;
+  letter-spacing: 0.8px;
+  text-anchor: middle;
+}
+
+.testPoint circle:first-child {
+  fill: #c8cecd;
+  stroke: #687477;
+  stroke-width: 2;
+}
+
+.testPoint circle:last-child {
+  fill: url("#dvor1150-testpoint");
+  stroke: #eef1f0;
+  stroke-width: 1.2;
+}
+
+.coaxConnector circle:first-child {
+  fill: url("#dvor1150-connector");
+  stroke: #5f6b6e;
+  stroke-width: 2;
+}
+
+.coaxConnector circle:nth-child(2) {
+  fill: #c2c9c8;
+  stroke: #596568;
+  stroke-width: 2;
+}
+
+.coaxConnector circle:last-child {
+  fill: #172125;
+  stroke: #e8eceb;
+  stroke-width: 2;
+}
+
+.handle circle,
+.handle rect {
+  fill: #eef1f0;
+  stroke: #7a8587;
+  stroke-width: 2;
+}
+
+.handle path {
+  fill: none;
+  stroke: #abb3b3;
+  stroke-width: 2;
+}
+
+.trimPot,
+.bottomFastener {
+  fill: #d2d7d6;
+  stroke: #667276;
+  stroke-width: 2;
+}
+
+.trimSlot,
+.bottomSlot {
+  fill: none;
+  stroke: #556164;
+  stroke-linecap: round;
+  stroke-width: 3;
+}
+
+.heatSink {
+  fill: #b9c1c0;
+  stroke: #4d5a5d;
+  stroke-width: 2;
+}
+
+.heatSinkFin {
+  fill: none;
+  stroke: #566366;
+  stroke-width: 2;
+}
+
+.sidebandId {
+  fill: #092884;
+  stroke: rgb(255 255 255 / 60%);
+  stroke-width: 1px;
+  font-size: 18px;
+}
+
+.powerTransistor path {
+  fill: #dee3e1;
+  stroke: #725135;
+  stroke-width: 2;
+}
+
+.powerTransistor circle {
+  fill: #f1f3f2;
+  stroke: #725135;
+  stroke-width: 2;
+}
+
+.powerTransistor text {
+  fill: #173686;
+  font-size: 17px;
+  text-anchor: middle;
+}
+
+.statusFrame {
+  fill: #273337;
+  filter: url("#dvor1150-face-shadow");
+}
+
+.statusPlate {
+  fill: url("#dvor1150-face-metal");
+  stroke: #647174;
+  stroke-width: 2;
+}
+
+.statusBrand {
+  font-size: 18px;
+  letter-spacing: 1.2px;
+  text-anchor: middle;
+}
+
+.statusSystem {
+  font-size: 16px;
+  text-anchor: middle;
+}
+
+.statusLampBezel {
+  fill: #293438;
+  stroke: #d9dedd;
+  stroke-width: 3;
+}
+
+.statusLamp {
+  stroke: #172125;
+  stroke-width: 2;
+}
+
+.statusLamp[data-color="green"] { fill: #21d55a; filter: drop-shadow(0 0 6px #12a940); }
+.statusLamp[data-color="red"] { fill: #ef3c39; filter: drop-shadow(0 0 6px #c71e1c); }
+.statusLamp[data-color="amber"] { fill: #ffc533; filter: drop-shadow(0 0 6px #d89f00); }
+
+.statusLabel {
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  text-anchor: middle;
+}
+
+@media (max-width: 700px) {
+  .faceplate { max-height: 680px; }
+  .synthesizer { max-width: 225px; }
+  .sideband { max-width: 210px; }
+}
