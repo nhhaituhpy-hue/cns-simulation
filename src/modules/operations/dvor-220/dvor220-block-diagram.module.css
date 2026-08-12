@@ -1,0 +1,363 @@
+.page {
+  min-height: 100dvh;
+  padding: 14px clamp(8px, 1.6vw, 24px) 46px;
+  color: #dce9ee;
+  background:
+    linear-gradient(rgb(96 192 216 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(96 192 216 / 0.045) 1px, transparent 1px),
+    #061a23;
+  background-size: 36px 36px;
+}
+
+.workspace {
+  display: grid;
+  width: min(1960px, 100%);
+  margin: 0 auto;
+  grid-template-columns: minmax(390px, 0.56fr) minmax(780px, 1.44fr);
+  align-items: start;
+  gap: 12px;
+}
+
+.viewerPanel,
+.detailPanel {
+  min-width: 0;
+  border: 1px solid #294955;
+  border-radius: 8px;
+  background: rgb(8 31 41 / 96%);
+  box-shadow: 0 18px 50px rgb(0 0 0 / 24%);
+}
+
+.viewerPanel { padding: 8px; }
+.surfaceTabs,
+.diagramTabs { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 4px; margin-bottom: 7px; }
+.surfaceTabs button,
+.diagramTabs button { min-height: 32px; border: 1px solid #36545f; border-radius: 4px; background: #102d39; color: #abc0c8; padding: 6px 10px; cursor: pointer; font-size: 10px; font-weight: 750; }
+.surfaceTabs button[aria-selected="true"],
+.diagramTabs button[aria-selected="true"] { border-color: #72d7e8; background: #164858; color: #fff; }
+
+.cabinetInteractive { position: relative; width: 100%; }
+.cabinetDrawing,
+.systemDiagram { display: block; width: 100%; height: auto; border: 1px solid #36545e; border-radius: 5px; background: #0b222b; }
+.diagramViewport { width: 100%; overflow-x: auto; border-radius: 5px; }
+.systemDiagram { min-width: 780px; }
+
+.cabinetBackdrop { fill: #0b222b; }
+.cabinetShadow,
+.asuShadow { fill: #02080b; opacity: 0.6; filter: drop-shadow(0 15px 20px rgb(0 0 0 / 48%)); }
+.cabinetOuter { fill: url("#dvor220-metal"); stroke: #e0e8e7; stroke-width: 2; }
+.cabinetRail { fill: none; stroke: #536468; stroke-width: 18; }
+.cabinetHeader { fill: #d4dad8; stroke: #526064; stroke-width: 1.5; }
+.rackBay { fill: #172a31; stroke: #758589; stroke-width: 1.5; }
+.cabinetBrand,
+.cabinetBrandVertical,
+.cabinetCaption,
+.bayTitle,
+.cspCabinetPanel text,
+.narrowCard text,
+.amplifierModule text,
+.dcdcCabinetModule text,
+.pdcCabinetPanel text,
+.powerShelf text,
+.acdcShelf text,
+.lmiDoor text,
+.rearAssembly text,
+.rearDivider text,
+.rearBackplane text,
+.rearPower text,
+.asuBoard text,
+.asuSelectModule text,
+.asuPowerMonitor text,
+.asuBrand,
+.asuTitle {
+  fill: #172226;
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  font-weight: 800;
+  text-anchor: middle;
+}
+.cabinetBrand { font-size: 11px; letter-spacing: 1px; }
+.cabinetBrandVertical { font-size: 9px; letter-spacing: 1px; writing-mode: vertical-rl; }
+.cabinetCaption { fill: #8ba2ab; font-size: 10px; letter-spacing: 1px; }
+.bayTitle { fill: #94abb2; font-size: 7px; text-anchor: start; letter-spacing: 0.8px; }
+.fanStrip { fill: #8f9a99; stroke: #46565a; stroke-width: 1; }
+
+.cspCabinetPanel > rect,
+.narrowCard > rect:first-child,
+.dcdcCabinetModule > rect:first-child,
+.pdcCabinetPanel > rect:nth-child(2),
+.powerShelf > rect:not(:first-child),
+.acdcShelf g > rect,
+.lmiDoor > rect:first-child,
+.lmiDoor > rect:nth-child(2) { fill: url("#dvor220-panel"); stroke: #59686b; stroke-width: 1.1; }
+.cspCabinetPanel text { font-size: 6px; }
+.cspCabinetPanel path { fill: none; stroke: #455458; stroke-width: 1; }
+.cspCabinetPanel circle:last-of-type { fill: #a8b1af; stroke: #455458; stroke-width: 1; }
+.narrowCard > rect:nth-child(2) { fill: #313e41; stroke: #718084; stroke-width: 0.8; }
+.narrowCard > rect:not(:first-child, :nth-child(2)) { fill: #d6dcda; stroke: #59676a; stroke-width: 0.8; }
+.narrowCard text { font-size: 6px; writing-mode: vertical-rl; }
+.amplifierModule > rect:first-child { fill: #a4aead; stroke: #455458; stroke-width: 1.4; }
+.amplifierModule > rect:nth-child(2) { fill: #d2d7d4; stroke: #566568; stroke-width: 1; }
+.amplifierModule text { font-size: 5px; }
+.amplifierModule circle:not([class]) { fill: #d0d6d3; stroke: #465458; stroke-width: 1.2; }
+.dcdcCabinetModule text { font-size: 6px; }
+.dcdcCabinetModule circle:not([class]) { fill: #c7cecb; stroke: #4c5b5e; stroke-width: 1; }
+.pdcCabinetPanel > rect:first-child { fill: #172a31; stroke: #758589; stroke-width: 1.5; }
+.pdcCabinetPanel circle:not([class]) { fill: #cbd2cf; stroke: #465458; stroke-width: 1.3; }
+.pdcCabinetPanel text { font-size: 6px; }
+.powerShelf circle:not([class]) { fill: #d8ddda; stroke: #4e5d60; stroke-width: 1; }
+.powerShelf rect:not(:first-child) { fill: #bdc6c3; stroke: #536267; stroke-width: 1; }
+.powerShelf path { fill: none; stroke: #4b5a5d; stroke-width: 1; }
+.powerShelf text,
+.acdcShelf text { font-size: 5.5px; }
+.acdcShelf path { fill: none; stroke: #6d7b7e; stroke-width: 1; }
+.lmiDoor > rect:first-child { fill: #7d898a; }
+.lmiDoor > rect:nth-child(2) { fill: #b7bfbd; }
+.lmiDoor rect:not(:first-child, :nth-child(2), .lmiScreen) { fill: #d1d6d4; stroke: #5a686b; stroke-width: 0.8; }
+.lmiScreen { fill: #233b42; stroke: #5a696c; stroke-width: 1.2; }
+.lmiDoor text { font-size: 5.5px; }
+.lmiDoor path { fill: none; stroke: #5a676a; stroke-width: 1.2; }
+
+.cabinetScrew circle { fill: #d9deda; stroke: #4f5c60; stroke-width: 1.2; }
+.cabinetScrew path { fill: none; stroke: #4f5c60; stroke-width: 0.9; }
+.cabinetHandle rect { fill: #dde2df; stroke: #4d5a5e; stroke-width: 1.3; }
+.cabinetHandle path { fill: none; stroke: #778487; stroke-width: 1; }
+.cabinetLedGreen { fill: #36d96b; stroke: #1f6239; stroke-width: 1; filter: drop-shadow(0 0 2px #42e77a); }
+.cabinetLedRed { fill: #ef4141; stroke: #762323; stroke-width: 1; }
+.cabinetLedAmber { fill: #f2b63b; stroke: #76541b; stroke-width: 1; }
+.cabinetLedOff { fill: #566267; stroke: #26353a; stroke-width: 1; }
+
+.rearCabinetOuter { fill: url("#dvor220-rear-metal"); stroke: #dfe5e2; stroke-width: 2; }
+.rearInterior { fill: #17292f; stroke: #849194; stroke-width: 1.5; }
+.rearAssembly > rect,
+.rearDivider > rect,
+.rearBackplane > rect:first-child,
+.rearPower > rect { fill: #aab5b3; stroke: #465559; stroke-width: 1.4; }
+.rearAssembly rect:not(:first-child),
+.rearBackplane rect:not(:first-child),
+.rearPower rect:not(:first-child) { fill: #d0d6d3; stroke: #59676a; stroke-width: 0.8; }
+.rearAssembly path,
+.rearDivider path,
+.rearBackplane path,
+.rearPower path { fill: none; stroke: #536367; stroke-width: 1.4; }
+.rearDivider circle { fill: #cfd5d2; stroke: #435256; stroke-width: 1; }
+.rearAssembly text,
+.rearDivider text,
+.rearBackplane text,
+.rearPower text { font-size: 7px; }
+
+.asuOuter { fill: url("#dvor220-asu-blue"); stroke: #78e1ed; stroke-width: 2; }
+.asuHeader { fill: rgb(3 67 86 / 68%); stroke: #65ccda; stroke-width: 1; }
+.asuBrand { fill: #fff; font-size: 17px; text-anchor: start; letter-spacing: 1.4px; }
+.asuTitle { fill: #fff; font-size: 12px; text-anchor: end; }
+.asuInterior { fill: #15343c; stroke: #75a3aa; stroke-width: 1.5; }
+.asuBoard > rect,
+.asuSelectModule > rect,
+.asuPowerMonitor > rect { fill: #c5ccc9; stroke: #445357; stroke-width: 1.4; }
+.asuBoard rect:not(:first-child) { fill: #a7b3b2; stroke: #556568; stroke-width: 1; }
+.asuBoard text,
+.asuSelectModule text,
+.asuPowerMonitor text { font-size: 7px; }
+.asuBoard path,
+.asuSelectModule path,
+.asuPowerMonitor path,
+.asuCableRuns path { fill: none; stroke: #4a595d; stroke-width: 1.3; }
+.asuSelectModule circle,
+.asuPowerMonitor circle { fill: #d3d8d5; stroke: #465458; stroke-width: 1.2; }
+.asuCableRuns path { stroke: #73c7d5; stroke-width: 3; opacity: 0.7; }
+
+.cabinetHotspot { cursor: pointer; outline: none; }
+.hotspotTarget { fill: transparent; stroke: transparent; vector-effect: non-scaling-stroke; }
+.hotspotOutline { fill: transparent; stroke: transparent; stroke-width: 2.5; vector-effect: non-scaling-stroke; }
+.cabinetHotspot:hover .hotspotTarget,
+.cabinetHotspot:focus-visible .hotspotTarget { fill: rgb(98 226 245 / 13%); stroke: #78e2f2; stroke-width: 1.4; }
+.cabinetHotspot:focus-visible .hotspotTarget { stroke-width: 3; }
+.cabinetHotspot[data-selected] .hotspotTarget { fill: rgb(50 229 113 / 26%); stroke: #6bff9c; stroke-width: 3; filter: url("#dvor220-glow"); }
+.cabinetHotspot[data-selected] .hotspotOutline { stroke: rgb(208 255 222 / 80%); stroke-dasharray: 6 4; }
+
+.diagramPaper { fill: #eef0ed; }
+.diagramZones rect { fill: rgb(248 249 247 / 72%); stroke: #8f9b9e; stroke-width: 1.2; stroke-dasharray: 6 4; }
+.diagramZones text { fill: #536065; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 11px; font-weight: 850; }
+.diagramLinks polyline { fill: none; stroke-width: 2; stroke-linecap: square; stroke-linejoin: miter; vector-effect: non-scaling-stroke; transition: opacity 120ms ease, stroke-width 120ms ease; }
+.diagramLinks polyline[data-kind="rf"] { stroke: #8d2588; }
+.diagramLinks polyline[data-kind="modulation"] { stroke: #d57228; }
+.diagramLinks polyline[data-kind="control"] { stroke: #235fd1; stroke-dasharray: 5 3; }
+.diagramLinks polyline[data-kind="monitor"] { stroke: #6b36c8; stroke-dasharray: 8 4; }
+.diagramLinks polyline[data-kind="power"] { stroke: #e11d2e; }
+.diagramLinks polyline[data-kind="data"] { stroke: #008a62; stroke-dasharray: 3 3; }
+.diagramLinks polyline[data-active] { stroke-width: 4; opacity: 1; }
+.diagramLinks polyline[data-muted] { opacity: 0.13; }
+.markerRf { fill: #8d2588; }
+.markerModulation { fill: #d57228; }
+.markerControl { fill: #235fd1; }
+.markerMonitor { fill: #6b36c8; }
+.markerPower { fill: #e11d2e; }
+.markerData { fill: #008a62; }
+.diagramPathLabels text { fill: #344246; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 8px; font-weight: 760; paint-order: stroke fill; stroke: #eef0ed; stroke-width: 4px; stroke-linejoin: round; text-anchor: middle; }
+.diagramPathLabels text[data-muted] { opacity: 0.16; }
+.diagramBlock { cursor: pointer; outline: none; }
+.diagramBlock > rect:first-child { fill: #fff; stroke: #536166; stroke-width: 1.5; vector-effect: non-scaling-stroke; transition: fill 120ms ease, stroke 120ms ease; }
+.diagramBlock[data-variant="amplifier"] > rect:first-child { fill: #edf6e8; }
+.diagramBlock[data-variant="external"] > rect:first-child { fill: #f5f0fb; stroke-dasharray: 4 3; }
+.diagramBlock[data-variant="antenna"] > rect:first-child { fill: #e7f3f7; }
+.diagramBlock > text { fill: #152328; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 11px; font-weight: 820; text-anchor: middle; pointer-events: none; }
+.diagramNodeRef { fill: #697579 !important; font-size: 7px !important; font-weight: 700 !important; }
+.amplifierInner { fill: #d7e7d0; stroke: #6b7b69; stroke-width: 1; }
+.diagramBlock:hover > rect:first-child { fill: #dff6fb; stroke: #1b809c; }
+.diagramBlock:focus-visible > rect:first-child { fill: #dff6fb; stroke: #096b87; stroke-width: 4; }
+.diagramBlock[data-selected] > rect:first-child { fill: #bdffd3; stroke: #168d47; stroke-width: 4; filter: drop-shadow(0 0 6px rgb(40 210 105 / 70%)); }
+.diagramLegend path { fill: none; stroke-width: 3; }
+.diagramLegend path[data-kind="rf"] { stroke: #8d2588; }
+.diagramLegend path[data-kind="modulation"] { stroke: #d57228; }
+.diagramLegend path[data-kind="control"] { stroke: #235fd1; stroke-dasharray: 5 3; }
+.diagramLegend path[data-kind="monitor"] { stroke: #6b36c8; stroke-dasharray: 8 4; }
+.diagramLegend path[data-kind="power"] { stroke: #e11d2e; }
+.diagramLegend path[data-kind="data"] { stroke: #008a62; stroke-dasharray: 3 3; }
+.diagramLegend text { fill: #465256; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 8px; font-weight: 750; }
+.diagramReference { fill: #59666a; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 9px; font-weight: 800; text-anchor: end; }
+
+.detailPanel { width: min(1760px, 100%); margin: 14px auto 0; padding: clamp(14px, 2vw, 24px); }
+.detailHeader { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid #294955; padding-bottom: 12px; }
+.detailHeader h2 { margin: 0; color: #f4f9fb; font-size: clamp(18px, 2vw, 24px); letter-spacing: -0.025em; }
+.assemblyIds { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
+.assemblyIds span { border: 1px solid #46616b; border-radius: 3px; background: #102c37; padding: 5px 7px; color: #a8c5ce; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 10px; font-weight: 800; }
+.detailGrid { display: grid; margin-top: 16px; grid-template-columns: minmax(330px, 0.88fr) minmax(420px, 1.12fr); align-items: start; gap: clamp(16px, 2vw, 28px); }
+.faceplateFigure { display: flex; min-width: 0; min-height: 650px; margin: 0; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #6b7a7e; border-radius: 4px; background: radial-gradient(circle at 50% 14%, rgb(255 255 255 / 72%), transparent 36%), linear-gradient(135deg, #aeb7b8, #e1e5e4 48%, #9ba6a8); padding: 18px; }
+.faceplateFigure[data-wide] { min-height: 410px; }
+.faceplateFigure figcaption { margin-top: 10px; color: #465356; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 10px; font-weight: 800; }
+.moduleFaceplate { display: block; width: auto; max-width: 100%; max-height: 650px; overflow: visible; }
+.faceplateFigure[data-wide] .moduleFaceplate { width: 100%; height: auto; max-height: 560px; }
+.faceplateShadow { fill: #111b1d; opacity: 0.25; filter: drop-shadow(8px 10px 10px rgb(0 0 0 / 25%)); }
+.faceplateBody { stroke: #455357; stroke-width: 2; }
+.faceplateTitleStrip { fill: #b5bdbb; stroke: #566568; stroke-width: 1.3; }
+.faceplateTitle,
+.faceplatePartNumber,
+.faceplateSmallLabel,
+.faceplateSectionTitle,
+.cspCenterLabel,
+.faceplateVerticalBrand,
+.lmiLampLabel,
+.lmiFaceBrand,
+.lmiFaceSubBrand,
+.pmuDigits,
+.breaker text {
+  fill: #172326;
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  font-weight: 850;
+}
+.faceplateTitle { font-size: 17px; }
+.faceplatePartNumber { font-size: 9px; }
+.faceplateSmallLabel { font-size: 9px; }
+.faceplateSectionTitle { font-size: 12px; }
+.cspCenterLabel { font-size: 10px; }
+.faceplateVerticalBrand { fill: #455357; font-size: 9px; letter-spacing: 1.2px; }
+.faceplateDivider,
+.cspBusLine { fill: none; stroke: #4e5c5f; stroke-width: 2; }
+.faceplateScrew circle { fill: #cdd3d0; stroke: #4b595c; stroke-width: 1.6; }
+.faceplateScrew path { fill: none; stroke: #485659; stroke-width: 1.2; }
+.faceplateLed circle { stroke-width: 1.5; }
+.faceplateLed[data-color="green"] circle { fill: #31db66; stroke: #156736; filter: drop-shadow(0 0 4px #43e878); }
+.faceplateLed[data-color="red"] circle { fill: #ec4242; stroke: #752323; filter: drop-shadow(0 0 3px #f15a5a); }
+.faceplateLed[data-color="amber"] circle { fill: #f4b93e; stroke: #76551b; filter: drop-shadow(0 0 3px #ffc85c); }
+.faceplateLed[data-color="blue"] circle { fill: #3f8ef1; stroke: #1d4d8a; filter: drop-shadow(0 0 3px #65aaff); }
+.faceplateLed[data-color="off"] circle { fill: #616b6c; stroke: #303b3e; }
+.faceplateLed text,
+.faceplateButton text,
+.faceplateTestJack text,
+.faceplateCoax text,
+.faceplateHeader text,
+.volumeScrew text { fill: #1c292d; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 9px; font-weight: 780; }
+.faceplateButton rect:first-child { fill: #d9ddda; stroke: #5b686b; stroke-width: 1.2; }
+.faceplateButton rect:nth-child(2) { fill: #f1f3f0; stroke: #687578; stroke-width: 1.2; }
+.faceplateTestJack circle:first-child { stroke-width: 1.4; }
+.faceplateTestJack[data-color="red"] circle:first-child { fill: #d63c3c; stroke: #752323; }
+.faceplateTestJack[data-color="black"] circle:first-child { fill: #232b2d; stroke: #090d0e; }
+.faceplateTestJack circle:nth-child(2) { fill: #d8dcda; stroke: #3e4c4f; stroke-width: 1; }
+.faceplateCoax circle:first-child { fill: #dfe3e0; stroke: #465458; stroke-width: 2; }
+.faceplateCoax circle:nth-child(2) { fill: #565f61; stroke: #20282a; stroke-width: 2; }
+.faceplateCoax circle:nth-child(3) { fill: #e9ece9; stroke: #2e3a3d; stroke-width: 1.4; }
+.faceplateHeader rect { fill: #2e393c; stroke: #111718; stroke-width: 1.2; }
+.faceplateHeader circle { fill: #d7dcda; stroke: #111718; stroke-width: 0.8; }
+.faceplateHandle rect { fill: #dce1de; stroke: #4e5c60; stroke-width: 2; }
+.faceplateHandle path { fill: none; stroke: #778487; stroke-width: 2; }
+.faceplateHandle circle { fill: #aeb7b5; stroke: #4f5d60; stroke-width: 1; }
+.faceplateConnector { fill: #293437; stroke: #101718; stroke-width: 1.5; }
+.volumeScrew circle:first-child { fill: #d5dad7; stroke: #566367; stroke-width: 1.4; }
+.volumeScrew circle:nth-child(2) { fill: #919b9a; stroke: #4a575a; stroke-width: 1; }
+.volumeScrew path { fill: none; stroke: #3f4c4f; stroke-width: 2; }
+.lmiFaceScreenFrame { fill: #b3bab8; stroke: #536164; stroke-width: 2; }
+.lmiFaceScreen { fill: #172f38; stroke: #3f5258; stroke-width: 2; }
+.lmiRightPanel { fill: #abb3b2; stroke: #536164; stroke-width: 2; }
+.lmiLampWindow { fill: #101719; stroke: #eff1ed; stroke-width: 2; }
+.lmiLampLabel { fill: #eef2ef; font-size: 10px; }
+.lmiFaceBrand { fill: #a5d7e0; font-size: 34px; letter-spacing: 2px; }
+.lmiFaceSubBrand { fill: #7799a1; font-size: 12px; }
+.keylockOuter { fill: #87908f; stroke: #3e4b4e; stroke-width: 2; }
+.keylockInner { fill: #323d40; stroke: #111718; stroke-width: 1.4; }
+.keylockKey { fill: none; stroke: #84c8db; stroke-width: 7; }
+.fanVent { fill: #738082; stroke: #354346; stroke-width: 2; }
+.fanSymbol circle { fill: #222f33; stroke: #c7cfcc; stroke-width: 2; }
+.fanSymbol path { fill: #667477; stroke: #9ca8a7; stroke-width: 1; }
+.acAvailableLamp { fill: #f2f5e8; stroke: #617073; stroke-width: 3; filter: drop-shadow(0 0 8px #efffc1); }
+.breaker rect:first-child { fill: #b2bab8; stroke: #536164; stroke-width: 2; }
+.breaker rect:nth-child(2) { fill: #f0f2ee; stroke: #4f5d60; stroke-width: 2; }
+.breaker path { fill: none; stroke: #3e4c4f; stroke-width: 4; }
+.pmuDisplay { fill: #1d2425; stroke: #566568; stroke-width: 2; }
+.pmuDigits { fill: #78ff9f; font-size: 36px; letter-spacing: 6px; }
+.acdcVent circle { fill: #707d7f; stroke: #3f4d51; stroke-width: 2; }
+.acdcVent path { fill: none; stroke: #c6cecb; stroke-width: 3; }
+.acdcRelease { fill: #909b99; stroke: #465458; stroke-width: 2; }
+.asuFaceInterior { fill: #0b7189; stroke: #6ad6e6; stroke-width: 2; }
+.asuFaceBoard { fill: #bcc5c2; stroke: #425155; stroke-width: 2; }
+.asuRfInput,
+.asuRfOutput { fill: #e0e4e1; stroke: #465458; stroke-width: 2; }
+.asuPowerMeterPanel { fill: #d2d7d4; stroke: #465458; stroke-width: 2; }
+.asuAnalogMeter { fill: #f3f0dc; stroke: #465458; stroke-width: 2; }
+.asuSelector { fill: #a5afad; stroke: #465458; stroke-width: 2; }
+
+.detailPlaceholder { display: flex; min-height: 300px; flex-direction: column; align-items: center; justify-content: center; border: 1px dashed #6d7e83; border-radius: 4px; background: #d5dad9; padding: 32px; color: #263438; text-align: center; }
+.detailPlaceholder span { color: #315c6a; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 11px; font-weight: 900; letter-spacing: 0.1em; }
+.detailPlaceholder strong { margin-top: 8px; font-size: 21px; }
+.detailPlaceholder p { max-width: 360px; margin: 12px 0 0; color: #536165; font-size: 12px; line-height: 1.6; }
+.manualPanel { border: 1px solid #738287; border-radius: 4px; background: #d2d8d7; padding: clamp(18px, 2vw, 28px); color: #1d2a2e; }
+.blockDescription { margin: 0; border-left: 3px solid #315d6a; padding-left: 13px; font-size: 13px; line-height: 1.7; }
+.manualSection { margin-top: 22px; }
+.manualSection h3 { margin: 0 0 10px; color: #26383d; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.manualSection ul { display: grid; margin: 0; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 7px; padding: 0; list-style: none; }
+.manualSection li { border: 1px solid #9fa9aa; background: #e4e8e7; padding: 9px 10px; font-size: 11px; line-height: 1.45; }
+.manualSection dl { margin: 0; }
+.manualSection dl > div { display: grid; grid-template-columns: minmax(90px, 0.22fr) minmax(0, 1fr); gap: 12px; border-bottom: 1px solid #a2acad; padding: 10px 0; }
+.manualSection dt { font-family: var(--font-geist-mono), Consolas, monospace; font-size: 11px; font-weight: 900; }
+.manualSection dd { margin: 0; font-size: 11px; line-height: 1.5; }
+.manualSection dd strong,
+.manualSection dd span { display: block; }
+.manualSection dd span { margin-top: 2px; color: #4c5a5e; }
+.waveformGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 260px)); gap: 9px; }
+.waveformButton { display: grid; border: 1px solid #52676e; border-radius: 3px; background: #142a33; padding: 5px; cursor: zoom-in; text-align: left; }
+.waveformThumbnail { display: block; width: 100%; height: 155px; border: 1px solid #748388; background: #fff; object-fit: contain; object-position: center; }
+.waveformButton span { padding: 7px 3px 2px; color: #d9e9ee; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 9px; font-weight: 850; letter-spacing: 0.04em; text-transform: uppercase; }
+.manualNote { margin: 18px 0 0; border: 1px solid #c49948; background: #f3e7cb; padding: 9px 11px; color: #5d461d; font-size: 10px; line-height: 1.5; }
+.manualReference { margin: 22px 0 0; border-top: 1px solid #a2acad; padding-top: 11px; color: #4c5a5e; font-size: 10px; font-style: italic; }
+.waveformBackdrop { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; overflow-y: auto; background: rgb(2 10 14 / 88%); padding: clamp(12px, 3vw, 36px); }
+.waveformDialog { width: min(940px, 100%); max-height: calc(100dvh - 24px); overflow-y: auto; border: 1px solid #71878f; border-radius: 5px; background: #10242c; box-shadow: 0 24px 80px rgb(0 0 0 / 55%); padding: clamp(12px, 2vw, 20px); }
+.waveformDialog header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.waveformDialog h3 { margin: 0; color: #f1f7f9; font-size: clamp(14px, 2vw, 19px); }
+.waveformDialog header span { display: block; margin-top: 4px; color: #8da6af; font-size: 9px; }
+.waveformDialog header button { flex: none; border: 1px solid #75909a; border-radius: 3px; background: #29434d; color: #f5fafb; padding: 7px 10px; cursor: pointer; font-size: 10px; font-weight: 800; }
+.waveformLarge { display: block; width: 100%; height: auto; max-height: calc(100dvh - 155px); border: 1px solid #72838a; background: #fff; object-fit: contain; }
+.page button:focus-visible,
+.page [role="button"]:focus-visible { outline: 2px solid #9ceafa; outline-offset: 2px; }
+
+@media (max-width: 1180px) { .workspace { grid-template-columns: 1fr; } }
+@media (max-width: 820px) { .detailGrid { grid-template-columns: 1fr; } .faceplateFigure { min-height: 0; } }
+@media (max-width: 620px) {
+  .page { padding-inline: 7px; }
+  .surfaceTabs,
+  .diagramTabs { width: 100%; justify-content: stretch; }
+  .surfaceTabs button,
+  .diagramTabs button { flex: 1 1 30%; padding-inline: 5px; }
+  .detailHeader { align-items: flex-start; flex-direction: column; }
+  .assemblyIds { justify-content: flex-start; }
+  .manualSection dl > div { grid-template-columns: 1fr; gap: 4px; }
+  .waveformGrid { grid-template-columns: 1fr; }
+  .waveformButton { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .diagramBlock > rect:first-child, .diagramLinks polyline { transition: none; } }

@@ -170,6 +170,8 @@ export function createSimulatorShowcaseItem(
     blockDiagramHref:
       module.id === "dvor-1150" || module.id === "dvor-1150a" || module.id === "dme-1119a"
         ? `/simulator/${module.id}/block-diagram`
+        : module.id === "dvor-220"
+          ? "/simulator/software/dvor-220/block-diagram"
         : null,
     ...visual,
   };
