@@ -12,6 +12,7 @@ import {
   type DvorHotspot,
   type DvorWaveformReference,
 } from "./block-diagram-data";
+import { DvorModuleFaceplate, hasRebuiltModuleFaceplate } from "./dvor-module-faceplates";
 import styles from "./dvor-block-diagram.module.css";
 
 const cabinetImages: Record<CabinetFace, { src: string; alt: string; label: string; horizontalScale?: number }> = {
@@ -415,7 +416,11 @@ function LcuPanel() {
                 <span key={indicator.label}><i className={indicator.active ? styles.lcuLampOn : styles.lcuLampOff} />{indicator.label}</span>
               ))}
             </div>
-            <label className={styles.volumeControl}><input aria-label="LCU alarm volume" type="range" min="0" max="100" defaultValue="45" />VOLUME</label>
+            <label className={styles.volumeControl}>
+              <input aria-label="LCU alarm volume" type="range" min="0" max="100" defaultValue="45" />
+              <span className={styles.volumeKnob} aria-hidden />
+              <span>VOLUME</span>
+            </label>
           </fieldset>
         </div>
       </div>
@@ -425,6 +430,7 @@ function LcuPanel() {
 
 function ModulePanel({ blockId }: { blockId: Exclude<DvorBlockId, "lcu"> }) {
   const block = DVOR_BLOCK_BY_ID.get(blockId)!;
+  const hasRebuiltFaceplate = hasRebuiltModuleFaceplate(blockId);
   const [activeWaveform, setActiveWaveform] = useState<DvorWaveformReference | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -450,7 +456,12 @@ function ModulePanel({ blockId }: { blockId: Exclude<DvorBlockId, "lcu"> }) {
 
   return (
     <div className={styles.modulePanel}>
-      {block.faceImage ? (
+      {hasRebuiltFaceplate ? (
+        <figure className={`${styles.moduleFigure} ${styles.moduleFigureRebuilt}`}>
+          <DvorModuleFaceplate blockId={blockId} />
+          <figcaption>{block.faceImage?.figure}</figcaption>
+        </figure>
+      ) : block.faceImage ? (
         <figure className={styles.moduleFigure}>
           <Image
             src={block.faceImage.src}

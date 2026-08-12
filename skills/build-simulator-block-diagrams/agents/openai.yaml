@@ -1,0 +1,4 @@
+interface:
+  display_name: "Simulator Block Diagram Builder"
+  short_description: "Build interactive equipment block-diagram pages"
+  default_prompt: "Use $build-simulator-block-diagrams to create an interactive block-diagram page for this simulator device from its manual and reference images."

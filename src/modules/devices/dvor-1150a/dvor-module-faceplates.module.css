@@ -1,0 +1,117 @@
+.faceplate {
+  display: block;
+  width: auto;
+  max-width: min(100%, 220px);
+  height: auto;
+  max-height: 780px;
+  overflow: visible;
+}
+
+.faceplateNarrow {
+  max-width: min(100%, 205px);
+}
+
+.faceplateMedium {
+  max-width: min(100%, 250px);
+}
+
+.faceplateWide {
+  max-width: min(100%, 300px);
+}
+
+.faceplatePower {
+  max-width: min(100%, 330px);
+}
+
+.controlLabel,
+.controlId,
+.partNumber,
+.groupLabel,
+.warningLabel,
+.warningMark,
+.powerLabel,
+.powerId,
+.connectorLabel {
+  font-family: Arial, Helvetica, sans-serif;
+  paint-order: stroke fill;
+}
+
+.controlLabel {
+  fill: #182226;
+  stroke: rgb(244 247 246 / 56%);
+  stroke-width: 0.75px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.1px;
+}
+
+.controlId {
+  fill: #0f181b;
+  stroke: rgb(244 247 246 / 58%);
+  stroke-width: 0.8px;
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: 0.35px;
+}
+
+.partNumber {
+  fill: #eef5f6;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.65px;
+}
+
+.groupLabel {
+  fill: #142024;
+  stroke: rgb(244 247 246 / 55%);
+  stroke-width: 0.75px;
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: 0.35px;
+}
+
+.warningLabel {
+  fill: #172125;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.warningMark {
+  fill: #1b2528;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.powerLabel,
+.powerId {
+  fill: #111a1d;
+  stroke: rgb(245 248 247 / 60%);
+  stroke-width: 0.9px;
+  font-size: 23px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+}
+
+.powerId {
+  font-size: 24px;
+}
+
+.connectorLabel {
+  fill: #111a1d;
+  stroke: rgb(245 248 247 / 58%);
+  stroke-width: 0.8px;
+  font-size: 19px;
+  font-weight: 900;
+}
+
+@media (max-width: 700px) {
+  .faceplate {
+    max-width: min(100%, 205px);
+    max-height: 740px;
+  }
+
+  .faceplateNarrow { max-width: min(100%, 190px); }
+  .faceplateMedium { max-width: min(100%, 230px); }
+  .faceplateWide { max-width: min(100%, 280px); }
+  .faceplatePower { max-width: min(100%, 300px); }
+}
