@@ -216,15 +216,28 @@ export function SimulatorShowcase({ simulators }: SimulatorShowcaseProps) {
                 </button>
 
                 {simulator.href ? (
-                  <Link
-                    href={simulator.href}
-                    tabIndex={selectedCard ? 0 : -1}
-                    aria-label={"Mở simulator " + simulator.shortName}
-                    onPointerDown={(event) => event.stopPropagation()}
-                    className="absolute left-1/2 top-1/2 z-20 inline-flex h-8 -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 whitespace-nowrap rounded-full border border-cyan-100/40 bg-slate-950/80 px-3 text-[11px] font-bold text-cyan-50 shadow-lg backdrop-blur-sm transition-transform hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-100 active:scale-95 motion-reduce:transform-none"
-                  >
-                    Mở simulator <ArrowRight aria-hidden size={14} weight="bold" />
-                  </Link>
+                  <div className="absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2">
+                    <Link
+                      href={simulator.href}
+                      tabIndex={selectedCard ? 0 : -1}
+                      aria-label={"Mở simulator " + simulator.shortName}
+                      onPointerDown={(event) => event.stopPropagation()}
+                      className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full border border-cyan-100/40 bg-slate-950/80 px-3 text-[11px] font-bold text-cyan-50 shadow-lg backdrop-blur-sm transition-transform hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-100 active:scale-95 motion-reduce:transform-none"
+                    >
+                      Mở simulator <ArrowRight aria-hidden size={14} weight="bold" />
+                    </Link>
+                    {simulator.blockDiagramHref ? (
+                      <Link
+                        href={simulator.blockDiagramHref}
+                        tabIndex={selectedCard ? 0 : -1}
+                        aria-label={"Mở sơ đồ khối " + simulator.shortName}
+                        onPointerDown={(event) => event.stopPropagation()}
+                        className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full border border-amber-200/55 bg-amber-100/90 px-3 text-[11px] font-bold text-slate-950 shadow-lg transition-transform hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100 active:scale-95 motion-reduce:transform-none"
+                      >
+                        Sơ đồ khối <ArrowRight aria-hidden size={14} weight="bold" />
+                      </Link>
+                    ) : null}
+                  </div>
                 ) : (
                   <span className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border border-amber-100/25 bg-slate-950/75 px-3 py-2 text-[11px] font-bold text-amber-100/90 backdrop-blur-sm">
                     Đang hoàn thiện
@@ -300,12 +313,22 @@ export function SimulatorShowcase({ simulators }: SimulatorShowcaseProps) {
 
           <div className="mt-auto pt-9">
             {selected.href ? (
-              <Link
-                href={selected.href}
-                className="inline-flex h-11 items-center gap-2 rounded-full bg-cyan-200 px-5 text-sm font-bold text-slate-950 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-100 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 active:translate-y-0 motion-reduce:transform-none"
-              >
-                Mở simulator <ArrowRight aria-hidden size={18} weight="bold" />
-              </Link>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href={selected.href}
+                  className="inline-flex h-11 items-center gap-2 rounded-full bg-cyan-200 px-5 text-sm font-bold text-slate-950 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-100 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 active:translate-y-0 motion-reduce:transform-none"
+                >
+                  Mở simulator <ArrowRight aria-hidden size={18} weight="bold" />
+                </Link>
+                {selected.blockDiagramHref ? (
+                  <Link
+                    href={selected.blockDiagramHref}
+                    className="inline-flex h-11 items-center gap-2 rounded-full border border-amber-200/55 bg-amber-100/10 px-5 text-sm font-bold text-amber-100 transition-colors hover:bg-amber-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                  >
+                    Sơ đồ khối <ArrowRight aria-hidden size={18} weight="bold" />
+                  </Link>
+                ) : null}
+              </div>
             ) : (
               <span className="inline-flex h-11 items-center rounded-full border border-amber-100/25 bg-amber-100/10 px-5 text-sm font-semibold text-amber-100">
                 Nội dung đang hoàn thiện

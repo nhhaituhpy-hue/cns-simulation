@@ -26,11 +26,12 @@ export type SimulatorShowcaseItem = {
   imageFit: "cover" | "contain";
   status: SimulatorModuleStatus;
   href: string | null;
+  blockDiagramHref: string | null;
 };
 
 type ShowcaseVisual = Omit<
   SimulatorShowcaseItem,
-  "id" | "shortName" | "status" | "href"
+  "id" | "shortName" | "status" | "href" | "blockDiagramHref"
 >;
 
 const showcaseVisuals: Record<SimulatorModuleId, ShowcaseVisual> = {
@@ -166,6 +167,10 @@ export function createSimulatorShowcaseItem(
     shortName: module.shortName,
     status: module.status,
     href: module.status === "available" ? module.routes.simulator : null,
+    blockDiagramHref:
+      module.id === "dvor-1150a"
+        ? "/simulator/dvor-1150a/block-diagram"
+        : null,
     ...visual,
   };
 }
