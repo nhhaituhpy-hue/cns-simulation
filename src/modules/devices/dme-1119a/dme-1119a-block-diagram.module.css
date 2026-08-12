@@ -1,0 +1,243 @@
+.page {
+  min-height: 100dvh;
+  padding: 14px clamp(10px, 1.8vw, 26px) 46px;
+  color: #dce9ee;
+  background:
+    linear-gradient(rgb(96 192 216 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(96 192 216 / 0.045) 1px, transparent 1px),
+    #061a23;
+  background-size: 36px 36px;
+}
+
+.workspace {
+  display: grid;
+  width: min(1900px, 100%);
+  margin: 0 auto;
+  grid-template-columns: minmax(330px, 0.52fr) minmax(760px, 1.48fr);
+  align-items: start;
+  gap: 12px;
+}
+
+.viewerPanel,
+.detailPanel {
+  min-width: 0;
+  border: 1px solid #294955;
+  border-radius: 8px;
+  background: rgb(8 31 41 / 96%);
+  box-shadow: 0 18px 50px rgb(0 0 0 / 24%);
+}
+
+.viewerPanel { padding: 8px; }
+.surfaceTabs,
+.diagramTabs { display: flex; justify-content: flex-end; gap: 4px; margin-bottom: 7px; }
+.surfaceTabs button,
+.diagramTabs button { height: 32px; border: 1px solid #36545f; border-radius: 4px; background: #102d39; color: #abc0c8; padding: 0 10px; cursor: pointer; font-size: 11px; font-weight: 750; }
+.surfaceTabs button[aria-selected="true"],
+.diagramTabs button[aria-selected="true"] { border-color: #72d7e8; background: #164858; color: #fff; }
+
+.cabinetDrawing,
+.systemDiagram { display: block; width: 100%; height: auto; border: 1px solid #36545e; border-radius: 5px; background: #0b222b; }
+.diagramViewport { width: 100%; overflow-x: auto; border-radius: 5px; }
+.systemDiagram { min-width: 760px; }
+
+.cabinetBackdrop { fill: #0b222b; }
+.cabinetShadow,
+.sideShadow { fill: #02080b; opacity: 0.54; filter: drop-shadow(0 15px 20px rgb(0 0 0 / 45%)); }
+.cabinetOuter,
+.sideOuter { fill: url("#dme1119a-cabinet-metal"); stroke: #e0e8e7; stroke-width: 2; }
+.cabinetRail { fill: none; stroke: #56666a; stroke-width: 18; }
+.cabinetHeader { fill: #d4dad8; stroke: #526064; stroke-width: 1.5; }
+.cabinetBrand,
+.bayTitle,
+.cabinetCaption,
+.sideOrientation,
+.lcuAssembly text,
+.statusPanel text,
+.rfPanel text,
+.controllerBoard text,
+.interfaceAssembly text,
+.bcpsAssembly text,
+.acMonitorAssembly text,
+.rearPowerPanel text,
+.fanPlenum text,
+.sideRack text,
+.lnaAssembly text,
+.cabinetCardFace text,
+.powerModule text,
+.blankBay text,
+.hpaModule text { fill: #172226; font-family: var(--font-geist-mono), Consolas, monospace; font-weight: 800; text-anchor: middle; }
+.cabinetBrand { font-size: 12px; letter-spacing: 1px; }
+.bayTitle { fill: #94abb2; font-size: 8px; text-anchor: start; letter-spacing: 0.8px; }
+.cabinetCaption { fill: #8ba2ab; font-size: 10px; letter-spacing: 1px; }
+
+.rackBay,
+.blankBay,
+.sideRack { fill: #172a31; stroke: #758589; stroke-width: 1.5; }
+.blankBay { fill: #20343b; }
+.blankBay text { fill: #687c83; font-size: 9px; }
+.lcuAssembly > rect:first-child,
+.statusPanel > rect:first-child,
+.rfPanel > rect:first-child,
+.interfaceAssembly > rect:first-child,
+.bcpsAssembly > rect:first-child,
+.acMonitorAssembly > rect:first-child,
+.rearPowerPanel > rect:first-child,
+.controllerBoard,
+.sideInterior { fill: url("#dme1119a-panel-metal"); stroke: #536267; stroke-width: 1.4; }
+.lcuAssembly text { font-size: 6px; }
+.lcuScreen { fill: #ced8d5; stroke: #4d5b5e; stroke-width: 1.2; }
+.lcuAssembly rect:not(:first-child, .lcuScreen) { fill: #d7ddda; stroke: #647276; stroke-width: 0.8; }
+.hpaModule > rect { fill: #8d9a9a; stroke: #3f4d51; stroke-width: 1.5; }
+.hpaModule circle { fill: #d3d8d6; stroke: #445256; stroke-width: 1.4; }
+.hpaModule path { fill: none; stroke: #5e6d70; stroke-width: 1.5; }
+.hpaModule text { fill: #17262a; font-size: 8px; }
+.cabinetCardFace > rect:first-child { fill: url("#dme1119a-panel-metal"); stroke: #566568; stroke-width: 1.1; }
+.cabinetCardFace > rect:nth-child(2) { fill: #293b41; stroke: #718084; stroke-width: 0.8; }
+.cabinetCardFace text { fill: #17252a; font-size: 6px; writing-mode: vertical-rl; text-orientation: mixed; }
+.powerModule rect:first-child { fill: #8d999a; stroke: #455256; stroke-width: 1.4; }
+.powerModule path { fill: none; stroke: #cbd2d0; stroke-width: 1.4; }
+.powerModule text { fill: #a9bcc2; font-size: 7px; }
+.statusPanel > rect:first-child { fill: #bcc5c3; }
+.statusPanel rect:not(:first-child) { fill: #d7dddb; stroke: #4c5a5d; stroke-width: 1; }
+.statusPanel text { font-size: 7px; }
+.cabinetHandle rect { fill: #dde2df; stroke: #4d5a5e; stroke-width: 1.3; }
+.cabinetHandle path { fill: none; stroke: #778487; stroke-width: 1; }
+.cabinetScrew circle { fill: #d9deda; stroke: #4f5c60; stroke-width: 1.2; }
+.cabinetScrew path { fill: none; stroke: #4f5c60; stroke-width: 0.9; }
+.cabinetLedOn { fill: #36d96b; stroke: #1f6239; stroke-width: 1; filter: drop-shadow(0 0 3px #42e77a); }
+.cabinetLedOff { fill: #566267; stroke: #26353a; stroke-width: 1; }
+
+.rfPanel > rect:first-child { fill: #9ba8a8; }
+.rfPanel rect:not(:first-child),
+.loadModule { fill: #c3cac8; stroke: #4d5b5e; stroke-width: 1.2; }
+.rfPanel circle { fill: #cdd3d1; stroke: #465458; stroke-width: 1.2; }
+.rfPanel path,
+.loadModule + path,
+.loadModule ~ path { fill: none; stroke: #4a585c; stroke-width: 1.2; }
+.rfPanel text,
+.controllerBoard text,
+.interfaceAssembly text,
+.bcpsAssembly text,
+.acMonitorAssembly text,
+.rearPowerPanel text { font-size: 7px; }
+.backplane rect:first-child { fill: #263a42; stroke: #879496; stroke-width: 1.2; }
+.backplane rect:not(:first-child) { fill: #c4ccca; stroke: #59676a; stroke-width: 0.8; }
+.backplane path { stroke: #6d7b7e; stroke-width: 2; }
+.interfaceAssembly rect:not(:first-child),
+.bcpsAssembly rect:not(:first-child),
+.acMonitorAssembly rect:not(:first-child),
+.rearPowerPanel rect:not(:first-child) { fill: #d4dad8; stroke: #59676b; stroke-width: 1; }
+
+.sideInterior { fill: #172a31; }
+.sideOrientation { fill: #82999f; font-size: 10px; letter-spacing: 1px; }
+.fanPlenum > rect { fill: #9eaaaa; stroke: #4e5d60; stroke-width: 1.4; }
+.fanPlenum circle { fill: #24353b; stroke: #c7cfcd; stroke-width: 1.3; }
+.fanPlenum path { fill: none; stroke: #9aa8a8; stroke-width: 1.2; }
+.fanPlenum text,
+.sideRack text,
+.lnaAssembly text { fill: #97aeb5; font-size: 7px; }
+.sideRack path { fill: none; stroke: #617175; stroke-width: 1; }
+.lnaAssembly rect { fill: #a6b2b1; stroke: #4f5e61; stroke-width: 1.2; }
+.lnaAssembly path { fill: none; stroke: #657376; stroke-width: 1.1; }
+.lnaAssembly circle { fill: #d2d8d6; stroke: #48565a; stroke-width: 1.3; }
+.sideCableRun path { fill: none; stroke: #2f3e43; stroke-width: 7; }
+
+.cabinetHotspot { cursor: pointer; outline: none; }
+.hotspotTarget { fill: transparent; stroke: transparent; }
+.hotspotOutline { fill: transparent; stroke: transparent; stroke-width: 2.5; vector-effect: non-scaling-stroke; }
+.cabinetHotspot:hover .hotspotTarget,
+.cabinetHotspot:focus-visible .hotspotTarget { fill: rgb(98 226 245 / 13%); stroke: #78e2f2; stroke-width: 1.4; }
+.cabinetHotspot:focus-visible .hotspotTarget { stroke-width: 3; }
+.cabinetHotspot[data-selected] .hotspotTarget { fill: rgb(50 229 113 / 25%); stroke: #6bff9c; stroke-width: 3; filter: url("#dme1119a-hotspot-glow"); }
+.cabinetHotspot[data-selected] .hotspotOutline { stroke: rgb(208 255 222 / 75%); stroke-dasharray: 6 4; }
+
+.diagramPaper { fill: #eef0ed; }
+.diagramZones rect { fill: #f8f9f7; stroke: #94a0a2; stroke-width: 1.2; stroke-dasharray: 5 4; }
+.diagramZones text { fill: #5e6a6e; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 10px; font-weight: 850; }
+.diagramLinks polyline { fill: none; stroke-width: 2; stroke-linecap: square; stroke-linejoin: miter; vector-effect: non-scaling-stroke; transition: opacity 120ms ease, stroke-width 120ms ease; }
+.diagramLinks polyline[data-kind="monitor"] { stroke-dasharray: 7 4; }
+.diagramLinks polyline[data-kind="control"] { stroke-dasharray: 3 3; }
+.diagramLinks polyline[data-active] { stroke-width: 4; opacity: 1; }
+.diagramLinks polyline[data-muted] { opacity: 0.16; }
+.diagramPathLabels text { fill: #3d494d; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 7px; font-weight: 720; paint-order: stroke fill; stroke: #eef0ed; stroke-width: 3px; stroke-linejoin: round; text-anchor: middle; }
+.diagramBlock { cursor: pointer; outline: none; }
+.diagramBlock rect { fill: #fff; stroke: #536166; stroke-width: 1.5; vector-effect: non-scaling-stroke; transition: fill 120ms ease, stroke 120ms ease; }
+.diagramBlock text { fill: #152328; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 11px; font-weight: 820; text-anchor: middle; pointer-events: none; }
+.diagramBlock text[data-compact] { font-size: 9px; }
+.diagramBlock:hover rect { fill: #dff6fb; stroke: #1b809c; }
+.diagramBlock:focus-visible rect { fill: #dff6fb; stroke: #096b87; stroke-width: 4; }
+.diagramBlock[data-selected] rect { fill: #bdffd3; stroke: #168d47; stroke-width: 4; filter: drop-shadow(0 0 6px rgb(40 210 105 / 70%)); }
+.diagramSymbol { cursor: pointer; outline: none; }
+.symbolHitbox { fill: transparent; stroke: transparent; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.diagramSymbol:hover .symbolHitbox { fill: rgb(217 245 251 / 62%); stroke: #1b809c; }
+.diagramSymbol:focus-visible .symbolHitbox { fill: rgb(217 245 251 / 72%); stroke: #096b87; stroke-width: 4; }
+.diagramSymbol[data-selected] .symbolHitbox { fill: rgb(189 255 211 / 52%); stroke: #168d47; stroke-width: 4; filter: drop-shadow(0 0 6px rgb(40 210 105 / 70%)); }
+.symbolBody { fill: #fff; stroke: #47565a; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+.antennaSymbolPath,
+.couplerSymbolPath,
+.circulatorSymbolPath,
+.switchSymbolPath { fill: none; stroke: #26363b; stroke-width: 1.7; vector-effect: non-scaling-stroke; }
+.couplerSymbolPath path,
+.circulatorSymbolPath path { fill: #26363b; }
+.symbolLabel { fill: #152328; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 8px; font-weight: 850; text-anchor: middle; pointer-events: none; }
+.diagramLegend path { fill: none; stroke-width: 2.5; }
+.diagramLegend text { fill: #465256; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 7px; font-weight: 750; }
+.diagramReference { fill: #59666a; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 8px; font-weight: 800; text-anchor: end; }
+
+.detailPanel { width: min(1760px, 100%); margin: 14px auto 0; padding: clamp(14px, 2vw, 24px); }
+.detailHeader { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid #294955; padding-bottom: 12px; }
+.detailHeader h2 { margin: 0; color: #f4f9fb; font-size: clamp(18px, 2vw, 24px); letter-spacing: -0.025em; }
+.assemblyIds { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
+.assemblyIds span { border: 1px solid #46616b; border-radius: 3px; background: #102c37; padding: 5px 7px; color: #a8c5ce; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 10px; font-weight: 800; }
+.detailGrid { display: grid; margin-top: 16px; grid-template-columns: minmax(320px, 0.86fr) minmax(420px, 1.14fr); align-items: start; gap: clamp(16px, 2vw, 28px); }
+.faceplateFigure { display: flex; min-width: 0; min-height: 590px; margin: 0; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #6b7a7e; border-radius: 4px; background: radial-gradient(circle at 50% 14%, rgb(255 255 255 / 72%), transparent 36%), linear-gradient(135deg, #aeb7b8, #e1e5e4 48%, #9ba6a8); padding: 18px; }
+.faceplateFigure[data-wide] { min-height: 390px; }
+.faceplateFigure figcaption { margin-top: 10px; color: #465356; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 10px; font-weight: 800; }
+.detailPlaceholder { display: flex; min-height: 300px; flex-direction: column; align-items: center; justify-content: center; border: 1px dashed #6d7e83; border-radius: 4px; background: #d5dad9; padding: 32px; color: #263438; text-align: center; }
+.detailPlaceholder span { color: #315c6a; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 11px; font-weight: 900; letter-spacing: 0.1em; }
+.detailPlaceholder strong { margin-top: 8px; font-size: 21px; }
+.detailPlaceholder p { max-width: 360px; margin: 12px 0 0; color: #536165; font-size: 12px; line-height: 1.6; }
+.manualPanel { border: 1px solid #738287; border-radius: 4px; background: #d2d8d7; padding: clamp(18px, 2vw, 28px); color: #1d2a2e; }
+.blockDescription { margin: 0; border-left: 3px solid #315d6a; padding-left: 13px; font-size: 13px; line-height: 1.7; }
+.manualSection { margin-top: 22px; }
+.manualSection h3 { margin: 0 0 10px; color: #26383d; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.manualSection ul { display: grid; margin: 0; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 7px; padding: 0; list-style: none; }
+.manualSection li { border: 1px solid #9fa9aa; background: #e4e8e7; padding: 9px 10px; font-size: 11px; line-height: 1.45; }
+.manualSection dl { margin: 0; }
+.manualSection dl > div { display: grid; grid-template-columns: minmax(90px, 0.22fr) minmax(0, 1fr); gap: 12px; border-bottom: 1px solid #a2acad; padding: 10px 0; }
+.manualSection dt { font-family: var(--font-geist-mono), Consolas, monospace; font-size: 11px; font-weight: 900; }
+.manualSection dd { margin: 0; font-size: 11px; line-height: 1.5; }
+.manualSection dd strong,
+.manualSection dd span { display: block; }
+.manualSection dd span { margin-top: 2px; color: #4c5a5e; }
+.waveformGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 260px)); gap: 9px; }
+.waveformButton { display: grid; border: 1px solid #52676e; border-radius: 3px; background: #142a33; padding: 5px; cursor: zoom-in; text-align: left; }
+.waveformThumbnail { display: block; width: 100%; height: 155px; border: 1px solid #748388; background: #fff; object-fit: contain; object-position: center; }
+.waveformButton span { padding: 7px 3px 2px; color: #d9e9ee; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 9px; font-weight: 850; letter-spacing: 0.05em; text-transform: uppercase; }
+.manualNote { margin: 18px 0 0; border: 1px solid #c49948; background: #f3e7cb; padding: 9px 11px; color: #5d461d; font-size: 10px; line-height: 1.5; }
+.manualReference { margin: 22px 0 0; border-top: 1px solid #a2acad; padding-top: 11px; color: #4c5a5e; font-size: 10px; font-style: italic; }
+.waveformBackdrop { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; overflow-y: auto; background: rgb(2 10 14 / 88%); padding: clamp(12px, 3vw, 36px); }
+.waveformDialog { width: min(940px, 100%); max-height: calc(100dvh - 24px); overflow-y: auto; border: 1px solid #71878f; border-radius: 5px; background: #10242c; box-shadow: 0 24px 80px rgb(0 0 0 / 55%); padding: clamp(12px, 2vw, 20px); }
+.waveformDialog header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.waveformDialog h3 { margin: 0; color: #f1f7f9; font-size: clamp(14px, 2vw, 19px); }
+.waveformDialog header span { display: block; margin-top: 4px; color: #8da6af; font-size: 9px; }
+.waveformDialog header button { flex: none; border: 1px solid #75909a; border-radius: 3px; background: #29434d; color: #f5fafb; padding: 7px 10px; cursor: pointer; font-size: 10px; font-weight: 800; }
+.waveformLarge { display: block; width: 100%; height: auto; max-height: calc(100dvh - 155px); border: 1px solid #72838a; background: #fff; object-fit: contain; }
+.page button:focus-visible,
+.page [role="button"]:focus-visible { outline: 2px solid #9ceafa; outline-offset: 2px; }
+
+@media (max-width: 1120px) { .workspace { grid-template-columns: 1fr; } }
+@media (max-width: 820px) { .detailGrid { grid-template-columns: 1fr; } .faceplateFigure { min-height: 0; } }
+@media (max-width: 620px) {
+  .page { padding-inline: 8px; }
+  .surfaceTabs,
+  .diagramTabs { width: 100%; }
+  .surfaceTabs button,
+  .diagramTabs button { flex: 1; padding-inline: 5px; }
+  .detailHeader { align-items: flex-start; flex-direction: column; }
+  .assemblyIds { justify-content: flex-start; }
+  .manualSection dl > div { grid-template-columns: 1fr; gap: 4px; }
+  .waveformGrid { grid-template-columns: 1fr; }
+  .waveformButton { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .diagramBlock rect, .diagramLinks polyline { transition: none; } }

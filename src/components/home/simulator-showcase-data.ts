@@ -168,7 +168,7 @@ export function createSimulatorShowcaseItem(
     status: module.status,
     href: module.status === "available" ? module.routes.simulator : null,
     blockDiagramHref:
-      module.id === "dvor-1150" || module.id === "dvor-1150a"
+      module.id === "dvor-1150" || module.id === "dvor-1150a" || module.id === "dme-1119a"
         ? `/simulator/${module.id}/block-diagram`
         : null,
     ...visual,

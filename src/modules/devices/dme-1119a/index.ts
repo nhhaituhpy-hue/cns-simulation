@@ -1,4 +1,5 @@
 export { DME_1119A_MODULE } from "./manifest";
+export { Dme1119aBlockDiagram } from "./dme-1119a-block-diagram";
 export { DmeAdminDashboard as Dme1119aAdminDashboard } from "@/components/dme/admin/dme-admin-dashboard";
 export { DmeScenarioAuthor as Dme1119aScenarioAuthor } from "@/components/dme/admin/dme-scenario-author";
 export { DmeSubmissionList as Dme1119aSubmissionList } from "@/components/dme/admin/dme-submission-list";
