@@ -1,0 +1,310 @@
+.page {
+  min-height: 100dvh;
+  padding: 14px clamp(8px, 1.6vw, 24px) 46px;
+  color: #dce9ee;
+  background:
+    linear-gradient(rgb(96 192 216 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(96 192 216 / 0.045) 1px, transparent 1px),
+    #061a23;
+  background-size: 36px 36px;
+}
+
+.workspace {
+  display: grid;
+  width: min(1960px, 100%);
+  margin: 0 auto;
+  grid-template-columns: minmax(390px, 0.56fr) minmax(780px, 1.44fr);
+  align-items: start;
+  gap: 12px;
+}
+
+.viewerPanel,
+.detailPanel {
+  min-width: 0;
+  border: 1px solid #294955;
+  border-radius: 8px;
+  background: rgb(8 31 41 / 96%);
+  box-shadow: 0 18px 50px rgb(0 0 0 / 24%);
+}
+
+.viewerPanel { padding: 8px; }
+.surfaceTabs,
+.diagramTabs { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 4px; margin-bottom: 7px; }
+.surfaceTabs button,
+.diagramTabs button { min-height: 32px; border: 1px solid #36545f; border-radius: 4px; background: #102d39; color: #abc0c8; padding: 6px 10px; cursor: pointer; font-size: 10px; font-weight: 750; }
+.surfaceTabs button[aria-selected="true"],
+.diagramTabs button[aria-selected="true"] { border-color: #72d7e8; background: #164858; color: #fff; }
+
+.cabinetInteractive { position: relative; width: 100%; }
+.cabinetDrawing,
+.systemDiagram { display: block; width: 100%; height: auto; border: 1px solid #36545e; border-radius: 5px; background: #0b222b; }
+.diagramViewport { width: 100%; overflow-x: auto; border-radius: 5px; }
+.systemDiagram { min-width: 780px; }
+
+.cabinetBackdrop { fill: #0b222b; }
+.cabinetShadow { fill: #02080b; opacity: 0.6; filter: drop-shadow(0 15px 20px rgb(0 0 0 / 48%)); }
+.cabinetOuter { fill: url("#dme320-metal"); stroke: #dfe7e5; stroke-width: 2; }
+.cabinetRail { fill: none; stroke: #536468; stroke-width: 18; }
+.cabinetHeader { fill: #d4dad8; stroke: #526064; stroke-width: 1.5; }
+.rackBay { fill: #172a31; stroke: #758589; stroke-width: 1.5; }
+.fanStrip { fill: #8f9a99; stroke: #46565a; stroke-width: 1; }
+.cabinetBrand,
+.cabinetBrandVertical,
+.cabinetCaption,
+.bayTitle,
+.cabinetModule text,
+.cspCabinetPanel text,
+.narrowCard text,
+.amplifierModule text,
+.dcdcCabinetModule text,
+.powerShelf text,
+.acdcShelf text,
+.rearModule text,
+.rearAssembly text,
+.rearDivider text,
+.rearBackplane text,
+.rearPower text,
+.lmiDoor text {
+  fill: #172226;
+  font-family: var(--font-geist-mono), Consolas, monospace;
+  font-weight: 800;
+  text-anchor: middle;
+}
+.cabinetBrand { font-size: 11px; letter-spacing: 1px; }
+.cabinetBrandVertical { fill: #455357; font-size: 7px; letter-spacing: 1px; writing-mode: vertical-rl; }
+.cabinetCaption { fill: #8ba2ab; font-size: 10px; letter-spacing: 1px; }
+.bayTitle { fill: #94abb2; font-size: 7px; text-anchor: start; letter-spacing: 0.8px; }
+.cabinetModule > rect:first-child,
+.cspCabinetPanel > rect:first-child,
+.narrowCard > rect:first-child,
+.amplifierModule > rect:first-child,
+.dcdcCabinetModule > rect:first-child,
+.powerShelf rect:not(.rackBay),
+.acdcShelf g > rect,
+.lmiDoor > rect:first-child,
+.rearModule > rect:first-child,
+.rearAssembly > rect:first-child,
+.rearDivider rect,
+.rearBackplane > rect:first-child,
+.rearPower > rect:first-child { fill: url("#dme320-panel"); stroke: #59686b; stroke-width: 1.1; }
+.cabinetModule text,
+.cspCabinetPanel text,
+.narrowCard text,
+.amplifierModule text,
+.dcdcCabinetModule text,
+.powerShelf text,
+.acdcShelf text,
+.rearModule text,
+.rearAssembly text,
+.rearDivider text,
+.rearBackplane text,
+.rearPower text,
+.lmiDoor text { font-size: 6px; }
+.cabinetModule path,
+.cspCabinetPanel path,
+.narrowCard path,
+.amplifierModule path,
+.dcdcCabinetModule path,
+.powerShelf path,
+.acdcShelf path,
+.rearModule path,
+.rearAssembly path,
+.rearDivider path,
+.rearBackplane path,
+.rearPower path,
+.lmiDoor path { fill: none; stroke: #536367; stroke-width: 1.1; }
+.cabinetModule circle:not([class]),
+.cspCabinetPanel circle:not([class]),
+.narrowCard circle:not([class]),
+.amplifierModule circle:not([class]),
+.dcdcCabinetModule circle:not([class]),
+.powerShelf circle:not([class]),
+.acdcShelf circle:not([class]),
+.rearModule circle:not([class]) { fill: #d1d7d4; stroke: #465458; stroke-width: 1; }
+.moduleHandle,
+.cabinetHandle rect { fill: #dce1de; stroke: #4e5c60; stroke-width: 1.3; }
+.cabinetHandle path { fill: none; stroke: #778487; stroke-width: 1; }
+.narrowCard > rect:nth-of-type(n + 2),
+.dcdcCabinetModule > rect:nth-of-type(n + 2),
+.cspCabinetPanel > rect:nth-of-type(n + 2) { fill: #d1d6d4; stroke: #59676a; stroke-width: 0.8; }
+.amplifierModule > rect:nth-of-type(2) { fill: #d3d8d5; stroke: #566568; stroke-width: 1; }
+.narrowCard text { writing-mode: vertical-rl; }
+.lmiScreen { fill: #19333c; stroke: #53666c; stroke-width: 1.3; }
+.lmiDoor > rect:nth-child(2) { fill: #b7bfbd; stroke: #536164; stroke-width: 1; }
+.lmiDoor rect:not(:first-child, :nth-child(2), .lmiScreen) { fill: #d1d6d4; stroke: #5a686b; stroke-width: 0.8; }
+.rearInterior { fill: #17292f; stroke: #849194; stroke-width: 1.5; }
+.rearCabinetOuter { fill: url("#dme320-rear-metal"); stroke: #dfe5e2; stroke-width: 2; }
+.rearAssembly rect:not(:first-child),
+.rearBackplane rect:not(:first-child),
+.rearPower rect:not(:first-child) { fill: #d0d6d3; stroke: #59676a; stroke-width: 0.8; }
+.rearDivider circle { fill: #cfd5d2; stroke: #435256; stroke-width: 1; }
+.rearCable { fill: none; stroke: #5a6870; stroke-width: 4; }
+.rearRfCable { fill: none; stroke: #c18b3f; stroke-width: 5; }
+
+.cabinetScrew circle { fill: #d9deda; stroke: #4f5c60; stroke-width: 1.2; }
+.cabinetScrew path { fill: none; stroke: #4f5c60; stroke-width: 0.9; }
+.cabinetLedGreen { fill: #36d96b; stroke: #1f6239; stroke-width: 1; filter: drop-shadow(0 0 2px #42e77a); }
+.cabinetLedRed { fill: #ef4141; stroke: #762323; stroke-width: 1; }
+.cabinetLedAmber { fill: #f2b63b; stroke: #76541b; stroke-width: 1; }
+.cabinetLedOff { fill: #566267; stroke: #26353a; stroke-width: 1; }
+
+.cabinetHotspot { cursor: pointer; outline: none; }
+.hotspotTarget { fill: transparent; stroke: transparent; vector-effect: non-scaling-stroke; }
+.hotspotOutline { fill: transparent; stroke: transparent; stroke-width: 2.5; vector-effect: non-scaling-stroke; }
+.cabinetHotspot:hover .hotspotTarget,
+.cabinetHotspot:focus-visible .hotspotTarget { fill: rgb(98 226 245 / 13%); stroke: #78e2f2; stroke-width: 1.4; }
+.cabinetHotspot:focus-visible .hotspotTarget { stroke-width: 3; }
+.cabinetHotspot[data-selected] .hotspotTarget { fill: rgb(50 229 113 / 26%); stroke: #6bff9c; stroke-width: 3; filter: url("#dme320-glow"); }
+.cabinetHotspot[data-selected] .hotspotOutline { stroke: rgb(208 255 222 / 80%); stroke-dasharray: 6 4; }
+
+.diagramPaper { fill: #eef0ed; }
+.diagramZones rect { fill: rgb(248 249 247 / 72%); stroke: #8f9b9e; stroke-width: 1.2; stroke-dasharray: 6 4; }
+.diagramZones text { fill: #536065; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 11px; font-weight: 850; }
+.diagramLinks polyline { fill: none; stroke-width: 2; stroke-linecap: square; stroke-linejoin: miter; vector-effect: non-scaling-stroke; transition: opacity 120ms ease, stroke-width 120ms ease; }
+.diagramLinks polyline[data-kind="rf"] { stroke: #8d2588; }
+.diagramLinks polyline[data-kind="pulse"] { stroke: #d57228; }
+.diagramLinks polyline[data-kind="control"] { stroke: #235fd1; stroke-dasharray: 5 3; }
+.diagramLinks polyline[data-kind="monitor"] { stroke: #6b36c8; stroke-dasharray: 8 4; }
+.diagramLinks polyline[data-kind="power"] { stroke: #e11d2e; }
+.diagramLinks polyline[data-kind="data"] { stroke: #008a62; stroke-dasharray: 3 3; }
+.diagramLinks polyline[data-active] { stroke-width: 4; opacity: 1; }
+.diagramLinks polyline[data-muted] { opacity: 0.13; }
+.markerRf { fill: #8d2588; }
+.markerPulse { fill: #d57228; }
+.markerControl { fill: #235fd1; }
+.markerMonitor { fill: #6b36c8; }
+.markerPower { fill: #e11d2e; }
+.markerData { fill: #008a62; }
+.diagramPathLabels text { fill: #344246; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 8px; font-weight: 760; paint-order: stroke fill; stroke: #eef0ed; stroke-width: 4px; stroke-linejoin: round; text-anchor: middle; }
+.diagramPathLabels text[data-muted] { opacity: 0.16; }
+.diagramBlock { cursor: pointer; outline: none; }
+.diagramBlock > rect:first-child { fill: #fff; stroke: #536166; stroke-width: 1.5; vector-effect: non-scaling-stroke; transition: fill 120ms ease, stroke 120ms ease; }
+.diagramBlock[data-variant="amplifier"] > rect:first-child { fill: #edf6e8; }
+.diagramBlock[data-variant="rf"] > rect:first-child { fill: #f7ebf6; }
+.diagramBlock[data-variant="power"] > rect:first-child { fill: #fff3e3; }
+.diagramBlock[data-variant="external"] > rect:first-child { fill: #f5f0fb; stroke-dasharray: 4 3; }
+.diagramBlock[data-variant="antenna"] > rect:first-child { fill: #e7f3f7; }
+.diagramBlock > text { fill: #152328; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 11px; font-weight: 820; text-anchor: middle; pointer-events: none; }
+.diagramNodeRef { fill: #697579 !important; font-size: 7px !important; font-weight: 700 !important; }
+.diagramBlock:hover > rect:first-child { fill: #dff6fb; stroke: #1b809c; }
+.diagramBlock:focus-visible > rect:first-child { fill: #dff6fb; stroke: #096b87; stroke-width: 4; }
+.diagramBlock[data-selected] > rect:first-child { fill: #bdffd3; stroke: #168d47; stroke-width: 4; filter: drop-shadow(0 0 6px rgb(40 210 105 / 70%)); }
+.diagramLegend path { fill: none; stroke-width: 3; }
+.diagramLegend path[data-kind="rf"] { stroke: #8d2588; }
+.diagramLegend path[data-kind="pulse"] { stroke: #d57228; }
+.diagramLegend path[data-kind="control"] { stroke: #235fd1; stroke-dasharray: 5 3; }
+.diagramLegend path[data-kind="monitor"] { stroke: #6b36c8; stroke-dasharray: 8 4; }
+.diagramLegend path[data-kind="power"] { stroke: #e11d2e; }
+.diagramLegend path[data-kind="data"] { stroke: #008a62; stroke-dasharray: 3 3; }
+.diagramLegend text { fill: #465256; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 8px; font-weight: 750; }
+.diagramReference { fill: #59666a; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 9px; font-weight: 800; text-anchor: end; }
+
+.detailPanel { width: min(1760px, 100%); margin: 14px auto 0; padding: clamp(14px, 2vw, 24px); }
+.detailHeader { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid #294955; padding-bottom: 12px; }
+.detailHeader h2 { margin: 0; color: #f4f9fb; font-size: clamp(18px, 2vw, 24px); letter-spacing: -0.025em; }
+.assemblyIds { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
+.assemblyIds span { border: 1px solid #46616b; border-radius: 3px; background: #102c37; padding: 5px 7px; color: #a8c5ce; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 10px; font-weight: 800; }
+.detailGrid { display: grid; margin-top: 16px; grid-template-columns: minmax(330px, 0.88fr) minmax(420px, 1.12fr); align-items: start; gap: clamp(16px, 2vw, 28px); }
+.faceplateFigure { display: flex; min-width: 0; min-height: 650px; margin: 0; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #6b7a7e; border-radius: 4px; background: radial-gradient(circle at 50% 14%, rgb(255 255 255 / 72%), transparent 36%), linear-gradient(135deg, #aeb7b8, #e1e5e4 48%, #9ba6a8); padding: 18px; }
+.faceplateFigure[data-wide] { min-height: 410px; }
+.faceplateFigure figcaption { margin-top: 10px; color: #465356; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 10px; font-weight: 800; }
+.moduleFaceplate { display: block; width: auto; max-width: 100%; max-height: 650px; overflow: visible; }
+.faceplateFigure[data-wide] .moduleFaceplate { width: 100%; height: auto; max-height: 560px; }
+.faceplateShadow { fill: #111b1d; opacity: 0.25; filter: drop-shadow(8px 10px 10px rgb(0 0 0 / 25%)); }
+.faceplateBody { stroke: #455357; stroke-width: 2; }
+.faceplateTitleStrip { fill: #b5bdbb; stroke: #566568; stroke-width: 1.3; }
+.faceplateTitle,
+.faceplatePartNumber,
+.faceplateSmallLabel,
+.faceplateSectionTitle { fill: #172326; font-family: var(--font-geist-mono), Consolas, monospace; font-weight: 850; }
+.faceplateTitle { font-size: 17px; }
+.faceplatePartNumber { font-size: 9px; }
+.faceplateSmallLabel { font-size: 9px; }
+.faceplateSectionTitle { font-size: 12px; }
+.faceplateDivider { fill: none; stroke: #4e5c5f; stroke-width: 2; }
+.faceplateScrew circle { fill: #cdd3d0; stroke: #4b595c; stroke-width: 1.6; }
+.faceplateScrew path { fill: none; stroke: #485659; stroke-width: 1.2; }
+.faceplateLed circle { stroke-width: 1.5; }
+.faceplateLed[data-color="green"] circle { fill: #31db66; stroke: #156736; filter: drop-shadow(0 0 4px #43e878); }
+.faceplateLed[data-color="red"] circle { fill: #ec4242; stroke: #752323; }
+.faceplateLed[data-color="amber"] circle { fill: #f4b93e; stroke: #76551b; }
+.faceplateLed[data-color="blue"] circle { fill: #3f8ef1; stroke: #1d4d8a; }
+.faceplateLed[data-color="off"] circle { fill: #616b6c; stroke: #303b3e; }
+.faceplateLed text,
+.faceplateButton text,
+.faceplateTestJack text,
+.faceplateCoax text,
+.faceplateHeader text { fill: #1c292d; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 9px; font-weight: 780; }
+.faceplateButton rect:first-child { fill: #d9ddda; stroke: #5b686b; stroke-width: 1.2; }
+.faceplateButton rect:nth-child(2) { fill: #f1f3f0; stroke: #687578; stroke-width: 1.2; }
+.faceplateTestJack circle:first-child { stroke-width: 1.4; }
+.faceplateTestJack[data-color="red"] circle:first-child { fill: #d63c3c; stroke: #752323; }
+.faceplateTestJack[data-color="black"] circle:first-child { fill: #232b2d; stroke: #090d0e; }
+.faceplateTestJack circle:nth-child(2) { fill: #d8dcda; stroke: #3e4c4f; stroke-width: 1; }
+.faceplateCoax circle:first-child { fill: #dfe3e0; stroke: #465458; stroke-width: 2; }
+.faceplateCoax circle:nth-child(2) { fill: #565f61; stroke: #20282a; stroke-width: 2; }
+.faceplateCoax circle:nth-child(3) { fill: #e9ece9; stroke: #2e3a3d; stroke-width: 1.4; }
+.faceplateHeader rect { fill: #2e393c; stroke: #111718; stroke-width: 1.2; }
+.faceplateHeader circle { fill: #d7dcda; stroke: #111718; stroke-width: 0.8; }
+.faceplateHandle rect { fill: #dce1de; stroke: #4e5c60; stroke-width: 2; }
+.faceplateHandle path { fill: none; stroke: #778487; stroke-width: 2; }
+.faceplateConnector { fill: #293437; stroke: #101718; stroke-width: 1.5; }
+.faceplateScreenFrame { fill: #b3bab8; stroke: #536164; stroke-width: 2; }
+.faceplateScreen { fill: #172f38; stroke: #3f5258; stroke-width: 2; }
+.faceplateDisplay { fill: #1d2425; stroke: #566568; stroke-width: 2; }
+.faceplateDigits { fill: #78ff9f; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 34px; font-weight: 850; letter-spacing: 5px; }
+.faceplateVent { fill: #738082; stroke: #354346; stroke-width: 2; }
+.faceplateVentLine { fill: none; stroke: #c6cecb; stroke-width: 3; }
+
+.detailPlaceholder { display: flex; min-height: 300px; flex-direction: column; align-items: center; justify-content: center; border: 1px dashed #6d7e83; border-radius: 4px; background: #d5dad9; padding: 32px; color: #263438; text-align: center; }
+.detailPlaceholder span { color: #315c6a; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 11px; font-weight: 900; letter-spacing: 0.1em; }
+.detailPlaceholder strong { margin-top: 8px; font-size: 21px; }
+.detailPlaceholder p { max-width: 360px; margin: 12px 0 0; color: #536165; font-size: 12px; line-height: 1.6; }
+.manualPanel { border: 1px solid #738287; border-radius: 4px; background: #d2d8d7; padding: clamp(18px, 2vw, 28px); color: #1d2a2e; }
+.blockDescription { margin: 0; border-left: 3px solid #315d6a; padding-left: 13px; font-size: 13px; line-height: 1.7; }
+.manualSection { margin-top: 22px; }
+.manualSection h3 { margin: 0 0 10px; color: #26383d; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+.manualSection ul { display: grid; margin: 0; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 7px; padding: 0; list-style: none; }
+.manualSection li { border: 1px solid #9fa9aa; background: #e4e8e7; padding: 9px 10px; font-size: 11px; line-height: 1.45; }
+.manualSection dl { margin: 0; }
+.manualSection dl > div { display: grid; grid-template-columns: minmax(90px, 0.22fr) minmax(0, 1fr); gap: 12px; border-bottom: 1px solid #a2acad; padding: 10px 0; }
+.manualSection dt { font-family: var(--font-geist-mono), Consolas, monospace; font-size: 11px; font-weight: 900; }
+.manualSection dd { margin: 0; font-size: 11px; line-height: 1.5; }
+.manualSection dd strong,
+.manualSection dd span { display: block; }
+.manualSection dd span { margin-top: 2px; color: #4c5a5e; }
+.waveformGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 280px)); gap: 9px; }
+.waveformButton { display: grid; border: 1px solid #52676e; border-radius: 3px; background: #142a33; padding: 5px; cursor: zoom-in; text-align: left; }
+.waveformThumbnail { display: block; width: 100%; height: 155px; border: 1px solid #748388; background: #fff; object-fit: contain; object-position: center; }
+.waveformButton span { padding: 7px 3px 2px; color: #d9e9ee; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 9px; font-weight: 850; letter-spacing: 0.04em; text-transform: uppercase; }
+.manualNote { margin: 18px 0 0; border: 1px solid #c49948; background: #f3e7cb; padding: 9px 11px; color: #5d461d; font-size: 10px; line-height: 1.5; }
+.manualReference { margin: 22px 0 0; border-top: 1px solid #a2acad; padding-top: 11px; color: #4c5a5e; font-size: 10px; font-style: italic; }
+.waveformBackdrop { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; overflow-y: auto; background: rgb(2 10 14 / 88%); padding: clamp(12px, 3vw, 36px); }
+.waveformDialog { width: min(940px, 100%); max-height: calc(100dvh - 24px); overflow-y: auto; border: 1px solid #71878f; border-radius: 5px; background: #10242c; box-shadow: 0 24px 80px rgb(0 0 0 / 55%); padding: clamp(12px, 2vw, 20px); }
+.waveformDialog header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.waveformDialog h3 { margin: 0; color: #f1f7f9; font-size: clamp(14px, 2vw, 19px); }
+.waveformDialog header span { display: block; margin-top: 4px; color: #8da6af; font-size: 9px; }
+.waveformDialog header button { flex: none; border: 1px solid #75909a; border-radius: 3px; background: #29434d; color: #f5fafb; padding: 7px 10px; cursor: pointer; font-size: 10px; font-weight: 800; }
+.waveformLarge { display: block; width: 100%; height: auto; max-height: calc(100dvh - 155px); border: 1px solid #72838a; background: #fff; object-fit: contain; }
+.page button:focus-visible,
+.page [role="button"]:focus-visible { outline: 2px solid #9ceafa; outline-offset: 2px; }
+
+@media (max-width: 1180px) { .workspace { grid-template-columns: 1fr; } }
+@media (max-width: 820px) { .detailGrid { grid-template-columns: 1fr; } .faceplateFigure { min-height: 0; } }
+@media (max-width: 620px) {
+  .page { padding-inline: 7px; }
+  .surfaceTabs,
+  .diagramTabs { width: 100%; justify-content: stretch; }
+  .surfaceTabs button,
+  .diagramTabs button { flex: 1 1 30%; padding-inline: 5px; }
+  .detailHeader { align-items: flex-start; flex-direction: column; }
+  .assemblyIds { justify-content: flex-start; }
+  .manualSection dl > div { grid-template-columns: 1fr; gap: 4px; }
+  .waveformGrid { grid-template-columns: 1fr; }
+  .waveformButton { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .diagramBlock > rect:first-child,
+  .diagramLinks polyline { transition: none; }
+}
