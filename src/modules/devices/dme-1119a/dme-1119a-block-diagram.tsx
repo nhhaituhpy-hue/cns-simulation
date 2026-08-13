@@ -22,7 +22,6 @@ import styles from "./dme-1119a-block-diagram.module.css";
 const surfaceLabels: Record<Dme1119aCabinetSurface, string> = {
   front: "Front Cabinet",
   rear: "Rear Cabinet",
-  side: "Side View",
 };
 
 function WaveformButton({ waveform, onOpen }: { waveform: Dme1119aWaveformReference; onOpen: (waveform: Dme1119aWaveformReference) => void }) {

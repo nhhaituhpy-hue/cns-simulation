@@ -300,7 +300,7 @@ function BcpsInterior() {
 }
 
 function RfAssemblyInterior({ blockId }: { blockId: Dme1119aBlockId }) {
-  return <g aria-hidden className={styles.rfInterior}><rect x="68" y="120" width="176" height="130" rx="4" /><circle cx="156" cy="185" r="45" /><path d="M156 140v90M111 185h90" /><rect x="292" y="120" width="176" height="130" rx="4" /><path d="M318 145h124l-62 78z" /><rect x="516" y="120" width="176" height="130" rx="4" />{[0, 1, 2, 3, 4].map((row) => <path key={row} d={`M540 ${144 + row * 20}h128`} />)}<text x="156" y="280" textAnchor="middle">CIRCULATOR / COUPLER</text><text x="380" y="280" textAnchor="middle">RF SWITCH</text><text x="604" y="280" textAnchor="middle">LOAD / LNA</text><text x="380" y="322" textAnchor="middle">SELECTED: {blockId.toUpperCase()}</text></g>;
+  return <g aria-hidden className={styles.rfInterior}><rect x="68" y="120" width="176" height="130" rx="4" /><circle cx="156" cy="185" r="45" /><path d="M156 140v90M111 185h90" /><rect x="292" y="120" width="176" height="130" rx="4" /><path d="M318 145h124l-62 78z" /><rect x="516" y="120" width="176" height="130" rx="4" />{[0, 1, 2, 3, 4].map((row) => <path key={row} d={`M540 ${144 + row * 20}h128`} />)}<text x="156" y="280" textAnchor="middle">CIRCULATOR / COUPLER</text><text x="380" y="280" textAnchor="middle">RF SWITCH</text><text x="604" y="270" textAnchor="middle"><tspan x="604">PRESELECTOR / LNA</tspan><tspan x="604" dy="14">LOAD / ATTEN</tspan></text><text x="380" y="322" textAnchor="middle">SELECTED: {blockId.toUpperCase()}</text></g>;
 }
 
 function PowerSupplyInterior() {

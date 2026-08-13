@@ -1,4 +1,4 @@
-export type Dme1119aCabinetSurface = "front" | "rear" | "side";
+export type Dme1119aCabinetSurface = "front" | "rear";
 
 export type Dme1119aBlockId =
   | "antenna"
@@ -6,6 +6,7 @@ export type Dme1119aBlockId =
   | "circulator"
   | "rf-switch"
   | "load-attenuator"
+  | "preselector"
   | "low-noise-amplifier"
   | "lpa-synth-1"
   | "hpa-1"
@@ -191,37 +192,34 @@ const occurrence = (
 });
 
 const front = {
-  lcu: hotspot("front-lcu", "front", 108, 52, 384, 88, "1A1", "LCU", "lcu"),
-  hpa1: hotspot("front-hpa-1", "front", 118, 158, 174, 194, "1A3", "HPA 1", "amplifier"),
-  hpa2: hotspot("front-hpa-2", "front", 308, 158, 174, 194, "1A7", "HPA 2", "amplifier"),
-  lpa1: hotspot("front-lpa-1", "front", 116, 370, 54, 158, "1A9", "LPA/SYNTH 1", "amplifier"),
-  rtc1: hotspot("front-rtc-1", "front", 172, 370, 42, 158, "1A10", "RTC 1", "card"),
-  monitor1: hotspot("front-monitor-1", "front", 216, 370, 42, 158, "1A11", "MON/INT 1", "card"),
-  rms: hotspot("front-rms", "front", 260, 370, 42, 158, "1A13", "RMS", "card"),
-  facilities: hotspot("front-facilities", "front", 304, 370, 42, 158, "1A14", "FACILITIES", "card"),
-  monitor2: hotspot("front-monitor-2", "front", 348, 370, 42, 158, "1A15", "MON/INT 2", "card"),
-  rtc2: hotspot("front-rtc-2", "front", 392, 370, 42, 158, "1A16", "RTC 2", "card"),
-  lpa2: hotspot("front-lpa-2", "front", 436, 370, 54, 158, "1A17", "LPA/SYNTH 2", "amplifier"),
-  power1: hotspot("front-power-supply-1", "front", 130, 618, 145, 60, "1A24", "1500 W PS 1", "power"),
-  power2: hotspot("front-power-supply-2", "front", 325, 618, 145, 60, "1A25", "1500 W PS 2", "power"),
-  status: hotspot("front-status-panel", "front", 112, 820, 378, 132, "1A26", "STATUS PANEL", "control"),
+  lcu: hotspot("front-lcu", "front", 54, 77, 324, 92, "1A1", "LCU", "lcu"),
+  hpa1: hotspot("front-hpa-1", "front", 80, 169, 55, 180, "1A3", "HPA 1", "amplifier"),
+  hpa2: hotspot("front-hpa-2", "front", 298, 169, 55, 180, "1A7", "HPA 2", "amplifier"),
+  lpa1: hotspot("front-lpa-1", "front", 54, 349, 63, 178, "1A9", "LPA/SYNTH 1", "amplifier"),
+  rtc1: hotspot("front-rtc-1", "front", 117, 349, 34, 178, "1A10", "RTC 1", "card"),
+  monitor1: hotspot("front-monitor-1", "front", 151, 349, 34, 178, "1A11", "MON/INT 1", "card"),
+  rms: hotspot("front-rms", "front", 185, 349, 41, 178, "1A13", "RMS", "card"),
+  facilities: hotspot("front-facilities", "front", 226, 349, 20, 178, "1A14", "FACILITIES", "card"),
+  monitor2: hotspot("front-monitor-2", "front", 246, 349, 34, 178, "1A15", "MON/INT 2", "card"),
+  rtc2: hotspot("front-rtc-2", "front", 280, 349, 34, 178, "1A16", "RTC 2", "card"),
+  lpa2: hotspot("front-lpa-2", "front", 314, 349, 64, 178, "1A17", "LPA/SYNTH 2", "amplifier"),
+  power1: hotspot("front-power-supply-1", "front", 92, 713, 102, 30, "1A24", "1500 W PS 1", "power"),
+  power2: hotspot("front-power-supply-2", "front", 241, 713, 102, 30, "1A25", "1500 W PS 2", "power"),
+  acMonitor: hotspot("front-ac-monitor", "front", 326, 781, 52, 93, "1A22", "AC MONITOR", "power"),
+  status: hotspot("front-status-panel", "front", 54, 1066, 324, 122, "1A26", "STATUS PANEL", "control"),
 } as const;
 
 const rear = {
-  coupler: hotspot("rear-directional-coupler", "rear", 130, 58, 76, 72, "RF PANEL", "30 dB COUPLER", "rf"),
-  rfSwitch: hotspot("rear-rf-switch", "rear", 254, 54, 92, 82, "1K1", "RF SWITCH", "rf"),
-  circulator: hotspot("rear-circulator", "rear", 374, 58, 74, 72, "RF PANEL", "CIRCULATOR", "rf"),
-  load: hotspot("rear-load-attenuator", "rear", 448, 154, 45, 116, "RF PANEL", "LOAD/ATTEN", "rf"),
-  fanController: hotspot("rear-fan-controller", "rear", 254, 164, 92, 78, "1A2A2", "FAN CTRL", "control"),
-  interface: hotspot("rear-interface", "rear", 112, 520, 378, 105, "1A19", "INTERFACE CCA", "interface"),
-  bcps2: hotspot("rear-bcps-2", "rear", 112, 646, 181, 108, "1A21", "BCPS 2", "power"),
-  bcps1: hotspot("rear-bcps-1", "rear", 307, 646, 183, 108, "1A20", "BCPS 1", "power"),
-  acMonitor: hotspot("rear-ac-monitor", "rear", 112, 770, 108, 116, "1A22", "AC MONITOR", "power"),
-} as const;
-
-const side = {
-  fan: hotspot("side-circulating-fan", "side", 176, 70, 250, 115, "1A2A3", "CIRCULATING FAN", "control"),
-  lna: hotspot("side-lna", "side", 260, 300, 118, 112, "1A8A2", "PRESELECTOR/LNA", "rf"),
+  coupler: hotspot("rear-directional-coupler", "rear", 113, 42, 38, 54, "1DC1", "30 dB COUPLER", "rf"),
+  rfSwitch: hotspot("rear-rf-switch", "rear", 207, 93, 29, 45, "1K1", "RF SWITCH", "rf"),
+  circulator: hotspot("rear-circulator", "rear", 188, 125, 20, 26, "RF PANEL", "CIRCULATOR", "rf"),
+  load: hotspot("rear-load-attenuator", "rear", 280, 127, 55, 26, "1AT1", "LOAD/ATTEN", "rf"),
+  fanController: hotspot("rear-fan-controller", "rear", 202, 170, 106, 75, "1A2A2", "FAN CTRL", "control"),
+  interface: hotspot("rear-interface", "rear", 93, 533, 254, 118, "1A19", "INTERFACE CCA", "interface"),
+  bcps2: hotspot("rear-bcps-2", "rear", 75, 651, 148, 121, "1A21", "BCPS 2", "power"),
+  bcps1: hotspot("rear-bcps-1", "rear", 223, 651, 137, 121, "1A20", "BCPS 1", "power"),
+  statusDisplay2: hotspot("rear-status-display-2", "rear", 147, 1124, 51, 37, "1A26A2", "STATUS DISPLAY 2", "control"),
+  statusDisplay1: hotspot("rear-status-display-1", "rear", 201, 1124, 51, 37, "1A26A1", "STATUS DISPLAY 1", "control"),
 } as const;
 
 const rtcIndicators = [
@@ -286,7 +284,7 @@ export const DME_1119A_BLOCKS: readonly Dme1119aBlockDefinition[] = [
     cabinetHotspots: [],
     diagramOccurrences: [occurrence("antenna")],
     indicators: [], controls: ["J1 RF INPUT", "J2/J3 RF MONITOR OUTPUT", "J4 obstruction-light input"], testPoints: [],
-    notes: ["Antenna nằm ngoài cabinet nên không có vị trí LRU để làm sáng trong ba mặt cabinet."],
+    notes: ["Antenna nằm ngoài cabinet nên không có vị trí LRU để làm sáng trên Front/Rear Cabinet."],
   },
   {
     id: "directional-coupler", shortName: "30 dB COUPLER", name: "Directional Coupler 30 dB", assemblyIds: ["RF Panel"],
@@ -296,9 +294,9 @@ export const DME_1119A_BLOCKS: readonly Dme1119aBlockDefinition[] = [
   },
   {
     id: "circulator", shortName: "CIRCULATOR", name: "RF Circulator", assemblyIds: ["RF Panel"],
-    description: "Tách chiều phát và thu trên đường antenna: reply từ RF switch đi ra antenna, interrogation thu được đưa sang LNA/preselector.",
-    manualReference: "Figure 1-10 / Figure 2-4.", cabinetHotspots: [rear.circulator], diagramOccurrences: [occurrence("circulator", [rear.circulator.id])],
-    indicators: [], controls: ["TX port", "Antenna port", "Receiver/LNA port"], testPoints: [], faceplate: "rf-assembly",
+    description: "Tách chiều phát và thu trên đường antenna: reply từ RF switch đi ra antenna, còn interrogation thu được định tuyến sang Preselector.",
+    manualReference: "Figure 1-10; Figures 2-1 and 2-2; Section 2.2.", cabinetHotspots: [rear.circulator], diagramOccurrences: [occurrence("circulator", [rear.circulator.id])],
+    indicators: [], controls: ["TX port", "Antenna port", "Receiver/Preselector port"], testPoints: [], faceplate: "rf-assembly",
   },
   {
     id: "rf-switch", shortName: "RF SWITCH", name: "Transmit RF Switch", assemblyIds: ["1K1"],
@@ -313,10 +311,18 @@ export const DME_1119A_BLOCKS: readonly Dme1119aBlockDefinition[] = [
     indicators: [], controls: ["RF input from transfer switch", "Attenuated monitor sample"], testPoints: [], faceplate: "rf-assembly",
   },
   {
-    id: "low-noise-amplifier", shortName: "LNA", name: "Preselector / Low-noise Amplifier", assemblyIds: ["1A8A2"],
-    description: "Lọc chọn trước theo tần số trạm và khuếch đại interrogation mức thấp trước khi phân phối tới hai Receiver/Transmitter Controller.",
-    manualReference: "Figure 1-5; Section 1.2.1.4; replacement procedure 7.7.10.", cabinetHotspots: [side.lna], diagramOccurrences: [occurrence("lna", [side.lna.id])],
-    indicators: [], controls: ["RF input from circulator", "Filtered receiver output to RTC backplane"], testPoints: [], faceplate: "rf-assembly",
+    id: "preselector", shortName: "PRESELECTOR", name: "DME Preselector Assembly", assemblyIds: ["FL1", "RLC F-19076"],
+    description: "Bộ lọc hẹp ba cực, chỉnh cơ khí theo tần số interrogation của trạm. Khối loại bỏ tín hiệu ngoài băng và suy giảm thêm năng lượng phát rò trước khi đưa tín hiệu thu sang LNA.",
+    manualReference: "Figure 2-2; Section 2.2, page 2-5; Figure 6-6 and Section 6.5.2.", cabinetHotspots: [], diagramOccurrences: [occurrence("preselector")],
+    indicators: [], controls: ["RF input from circulator", "Filtered RF output to LNA", "A1/A2/A3 mechanical tuning capacitors"], testPoints: [],
+    notes: ["Preselector nằm trong cụm RF nội bộ và không có mặt LRU riêng nhìn thấy trên Front/Rear Cabinet; Side View đã được lược bỏ theo phạm vi trang."],
+  },
+  {
+    id: "low-noise-amplifier", shortName: "LNA", name: "Low-noise Amplifier", assemblyIds: ["1A8A2", "012033-0001"],
+    description: "Khuếch đại interrogation 1025–1150 MHz tại đầu ra của Preselector trước khi tín hiệu được chia và gửi tới hai Receiver/Transmitter Controller.",
+    manualReference: "Figure 2-2; Section 2.3.2.15, page 2-44; replacement procedure 7.7.10; Figure 11-27.", cabinetHotspots: [], diagramOccurrences: [occurrence("lna")],
+    indicators: [], controls: ["RF input from Preselector", "Amplified receiver output to RTC paths", "5 VDC feed from either RTC through the RF coax"], testPoints: [],
+    notes: ["LNA 1A8A2 gắn ở đáy preselector filter và được tiếp cận từ cửa sau, nhưng không có mặt LRU riêng nhìn thấy trên Front/Rear Cabinet."],
   },
   {
     id: "lpa-synth-1", shortName: "LPA/SYNTH 1", name: "Low Power Amplifier / Synthesizer TX1", assemblyIds: ["1A9", "030802-0003"],
@@ -471,22 +477,22 @@ export const DME_1119A_BLOCKS: readonly Dme1119aBlockDefinition[] = [
   {
     id: "ac-monitor", shortName: "AC MONITOR", name: "AC Power Monitor CCA", assemblyIds: ["1A22", "012186-0001"],
     description: "Đo điện áp và dòng AC của DME cùng obstruction lights; hỗ trợ photo-switch và chế độ bypass cho obstruction lighting.",
-    manualReference: "Figure 1-4; Section 1.2.1.10; replacement procedure 7.7.11.", cabinetHotspots: [rear.acMonitor], diagramOccurrences: [], indicators: [], controls: ["System AC sense", "Obstruction-light AC sense", "Photo-switch/bypass interface"], testPoints: [], faceplate: "ac-monitor",
-    notes: ["AC Monitor không được vẽ thành block riêng trên Figure 1-10."],
+    manualReference: "Figure 1-3; Section 1.2.1.10; replacement procedure 7.7.11.", cabinetHotspots: [front.acMonitor], diagramOccurrences: [], indicators: [], controls: ["System AC sense", "Obstruction-light AC sense", "Photo-switch/bypass interface"], testPoints: [], faceplate: "ac-monitor",
+    notes: ["AC Monitor gắn dọc bên phải ở mặt trước cabinet và không được vẽ thành block riêng trên Figure 1-10."],
   },
   {
-    id: "status-panel", shortName: "STATUS PANEL", name: "Status / Power Panel Assembly", assemblyIds: ["1A26", "030813-0002"],
+    id: "status-panel", shortName: "STATUS PANEL", name: "Status / Power Panel Assembly", assemblyIds: ["1A26", "1A26A1", "1A26A2", "030813-0002"],
     description: "Tập trung circuit breaker AC/DC của TX1/TX2, status displays và convenience outlet ở phần dưới cabinet.",
-    manualReference: "Figure 1-3; Table 1-1 Section 2.4.1; replacement procedure 7.7.13.", cabinetHotspots: [front.status], diagramOccurrences: [],
+    manualReference: "Figures 1-3 and 1-4; Table 8-4; Section 2.4.1; replacement procedure 7.7.13.", cabinetHotspots: [front.status, rear.statusDisplay2, rear.statusDisplay1], diagramOccurrences: [],
     indicators: ["TX1/TX2: AC FAIL, BATTERY FAULT, ON BATTERY, FAST CHARGE và TRICKLE CHARGE."], controls: ["TX1/TX2 AC circuit breakers", "TX1/TX2 DC battery-disconnect circuit breakers", "Charger reset", "Convenience outlet"], testPoints: [], faceplate: "status-panel",
-    notes: ["Status Panel không được vẽ thành block riêng trên Figure 1-10."],
+    notes: ["Figure 1-4 cho thấy hai Status Display CCA 1A26A2 (trái ảnh rear) và 1A26A1 (phải ảnh rear).", "Status Panel không được vẽ thành block riêng trên Figure 1-10."],
   },
   {
     id: "fan-controller", shortName: "FAN CTRL", name: "Fan Controller CCA", assemblyIds: ["1A2A2", "012187-0001"],
     description: "Điều khiển và giám sát tối đa hai quạt của high-power rack; báo FANS_OK dựa trên tachometer của từng quạt.",
-    manualReference: "Figure 1-4; Figure 2-19; Section 2.3.2.12; replacement procedure 7.7.14.", cabinetHotspots: [rear.fanController, side.fan], diagramOccurrences: [],
+    manualReference: "Figure 1-4; Figure 2-19; Section 2.3.2.12; replacement procedure 7.7.14.", cabinetHotspots: [rear.fanController], diagramOccurrences: [],
     indicators: ["FANS_OK được đưa về Facilities CCA; không có LED mặt trước riêng được mô tả."], controls: ["P1 power/control", "TB1/TB2 fan power and tachometer"], testPoints: [], faceplate: "fan-controller",
-    notes: ["Hotspot Side View bao gồm circulating fan 1A2A3 được Fan Controller giám sát."],
+    notes: ["Circulating fan assembly 1A2A3 do CCA này giám sát nhưng không còn hiển thị thành một Side View riêng."],
   },
 ] as const;
 

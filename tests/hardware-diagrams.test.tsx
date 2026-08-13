@@ -62,6 +62,22 @@ describe("equipment block diagrams", () => {
     ]));
   });
 
+  it("keeps the DME receive path ordered as circulator, preselector, then LNA", () => {
+    const diagram = DME_EQUIPMENT_DIAGRAMS[0];
+
+    expect(diagram.components).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: "dme-preselector", name: "DME Preselector Assembly" }),
+      expect.objectContaining({ id: "dme-lna", name: "Low-noise Amplifier" }),
+    ]));
+    expect(diagram.links).toEqual(expect.arrayContaining([
+      expect.objectContaining({ fromComponentId: "dme-circulator", toComponentId: "dme-preselector", kind: "rf" }),
+      expect.objectContaining({ fromComponentId: "dme-preselector", toComponentId: "dme-lna", kind: "rf" }),
+    ]));
+    expect(diagram.links).not.toEqual(expect.arrayContaining([
+      expect.objectContaining({ fromComponentId: "dme-circulator", toComponentId: "dme-lna" }),
+    ]));
+  });
+
   it("expands legacy aggregate component IDs without losing unknown IDs", () => {
     expect(normalizeEquipmentComponentIds("vor", ["vor-sideband-amp-1", "vor-carrier-amp-1"])).toEqual([
       "vor-tx1-sideband-1",

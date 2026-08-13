@@ -3,7 +3,7 @@ import { Dme1119aBlockDiagram } from "@/modules/devices/dme-1119a/dme-1119a-bloc
 
 export const metadata: Metadata = {
   title: "Sơ đồ khối DME 1119A",
-  description: "Khám phá sơ đồ nguyên lý, cabinet ba mặt và dữ liệu bảo dưỡng của Model 1119A Dual High Power DME.",
+  description: "Khám phá sơ đồ nguyên lý Dual High Power, cabinet Front/Rear và dữ liệu bảo dưỡng của Model 1119A DME.",
 };
 
 export default function Dme1119aBlockDiagramPage() {

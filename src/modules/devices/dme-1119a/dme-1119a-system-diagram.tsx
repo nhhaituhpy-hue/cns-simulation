@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
 import type {
   EquipmentComponent,
@@ -21,8 +21,6 @@ interface Dme1119aSystemDiagramProps {
   selectedOccurrenceId: string | null;
   onSelect: (blockId: Dme1119aBlockId, occurrence: Dme1119aDiagramOccurrence) => void;
 }
-
-type DiagramMode = "system" | "functional";
 
 const diagram = DME_EQUIPMENT_DIAGRAMS[0]!;
 
@@ -49,6 +47,7 @@ const componentLabels: Record<string, readonly string[]> = {
   "dme-circulator": ["CIRCULATOR"],
   "dme-rf-switch": ["RF", "SWITCH"],
   "dme-load": ["LOAD /", "ATTEN"],
+  "dme-preselector": ["PRESELECTOR"],
   "dme-lna": ["LOW-NOISE", "AMPLIFIER"],
   "dme-lpa-synth-1": ["LOW POWER AMP /", "SYNTH 1"],
   "dme-hpa-1": ["HIGH POWER", "AMP 1"],
@@ -150,7 +149,7 @@ function ComponentNode({
         <rect className={styles.symbolHitbox} x={box.x} y={box.y} width={box.width} height={box.height} rx="3" />
         <circle className={styles.symbolBody} cx="500" cy="180" r="24" />
         <path className={styles.circulatorSymbolPath} d="M487 187a16 16 0 1 1 25-4M512 183l-1-9 8 5z" />
-        <text className={styles.symbolLabel} x="500" y="216">CIRCULATOR</text>
+        <text className={`${styles.symbolLabel} ${styles.circulatorLabel}`} x="467" y="184">CIRCULATOR</text>
       </g>
     );
   }
@@ -160,7 +159,7 @@ function ComponentNode({
       <g className={styles.diagramSymbol} data-selected={selected || undefined} {...interactionProps}>
         <rect className={styles.symbolHitbox} x={box.x} y={box.y} width={box.width} height={box.height} rx="3" />
         <path className={styles.symbolBody} d="M500 241l40 29-40 29-40-29z" />
-        <path className={styles.switchSymbolPath} d="M500 244v52M464 270h72M478 254l44 32M522 254l-44 32" />
+        <path className={styles.switchSymbolPath} d="M500 244v17M500 279v17M464 270h27M509 270h27" />
         <text className={styles.symbolLabel} x="500" y="267"><tspan x="500">RF</tspan><tspan x="500" dy="12">SWITCH</tspan></text>
       </g>
     );
@@ -181,26 +180,23 @@ function ComponentNode({
 }
 
 export function Dme1119aSystemDiagram({ selectedOccurrenceId, onSelect }: Dme1119aSystemDiagramProps) {
-  const [mode, setMode] = useState<DiagramMode>("system");
   const markerPrefix = useId().replaceAll(":", "");
   const selectedComponentId = selectedOccurrenceId?.replace(/^diagram-/, "dme-") ?? null;
+  const receiveCrossingActive = selectedComponentId === "dme-preselector" || selectedComponentId === "dme-lna";
 
   return (
     <div>
-      <div className={styles.diagramTabs} role="tablist" aria-label="Chọn sơ đồ DME 1119A">
-        <button type="button" role="tab" aria-selected={mode === "system"} onClick={() => setMode("system")}>Dual High Power</button>
-        <button type="button" role="tab" aria-selected={mode === "functional"} onClick={() => setMode("functional")}>Simplified</button>
-      </div>
+      <div className={styles.diagramModeBadge}>Dual High Power</div>
       <div className={styles.diagramViewport}>
         <svg
           className={styles.systemDiagram}
           viewBox="0 0 1000 1000"
           role="img"
-          aria-label={mode === "system" ? "Figure 1-10 Dual High Power DME Block Diagram" : "Figure 2-4 DME Simplified Block Diagram"}
+          aria-label="Figure 1-10 Dual High Power DME Block Diagram, với tuyến thu Preselector trước Low-noise Amplifier theo Figure 2-2"
         >
           <defs>
             {(Object.keys(signalColors) as EquipmentLinkKind[]).map((kind) => (
-              <marker key={kind} id={`${markerPrefix}-${kind}`} viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <marker key={kind} id={`${markerPrefix}-${kind}`} viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
                 <path d="M0 0 8 4 0 8z" fill={signalColors[kind]} />
               </marker>
             ))}
@@ -240,6 +236,14 @@ export function Dme1119aSystemDiagram({ selectedOccurrenceId, onSelect }: Dme111
               );
             })}
           </g>
+          <g className={styles.diagramCrossing} aria-hidden>
+            <circle cx="610" cy="270" r="5" />
+            <path
+              d="M610 264v12"
+              data-active={receiveCrossingActive || undefined}
+              data-muted={selectedComponentId && !receiveCrossingActive ? true : undefined}
+            />
+          </g>
 
           <g className={styles.diagramPathLabels} aria-hidden>
             {diagram.links.filter((link) => link.label).map((link) => {
@@ -262,9 +266,7 @@ export function Dme1119aSystemDiagram({ selectedOccurrenceId, onSelect }: Dme111
               </g>
             ))}
           </g>
-          <text className={styles.diagramReference} x="980" y="980">
-            {mode === "system" ? "FIGURE 1-10 · DUAL HIGH POWER DME BLOCK DIAGRAM" : "FIGURE 2-4 · DME SIMPLIFIED BLOCK DIAGRAM"}
-          </text>
+          <text className={styles.diagramReference} x="980" y="980">FIGURE 1-10 · DUAL HIGH POWER DME BLOCK DIAGRAM · RECEIVE PATH VERIFIED WITH FIGURE 2-2</text>
         </svg>
       </div>
     </div>
