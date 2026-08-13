@@ -34,4 +34,12 @@ describe("Home page layout", () => {
       expect(screen.getByRole("link", { name })).toHaveAttribute("href", href);
     }
   });
+
+  it("links the ADS-B card to its outdoor block diagram", () => {
+    render(<Home />);
+
+    expect(
+      screen.getByRole("link", { name: "Mở sơ đồ khối ADS-B" }),
+    ).toHaveAttribute("href", "/simulator/ads-b/block-diagram");
+  });
 });
