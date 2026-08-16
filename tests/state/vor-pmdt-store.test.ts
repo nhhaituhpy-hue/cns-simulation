@@ -137,10 +137,10 @@ describe("VOR PMDT store", () => {
     });
   });
 
-  it("transfers once to the eligible standby transmitter when monitor bypass is released", () => {
+  it("transfers once to the eligible standby transmitter and shows Main/Off/Antenna separately", () => {
     const store = createVorPmdtStore();
     enterMaintenanceMode(store);
-    store.getState().setConfigValue("monitor.rawMeasurements.mon1.deviation", 25);
+    store.getState().setConfigValue("transmitters.tx1.nominal.voiceModulation", 30);
 
     expect(store.getState().applyConfigChanges()).toBe(true);
     expect(store.getState().derived.voting.transferRequested).toBe(false);
@@ -153,14 +153,34 @@ describe("VOR PMDT store", () => {
     expect(store.getState().configDraft.transmitters.tx2.onAir).toBe(true);
     expect(store.getState().derived.voting.activeTransmitter).toBe("tx2");
     expect(store.getState().derived.monitors.mon1.parameters.txFrequencyError.value).toBe(0);
-    expect(store.getState().derived.voting.transferRequested).toBe(true);
+    expect(store.getState().derived.voting.transferRequested).toBe(false);
+    expect(store.getState().derived.mainTransmitter).toBe("tx1");
+    expect(store.getState().data.transmitters.tx1).toMatchObject({ main: "green", antenna: "gray", off: "red" });
+    expect(store.getState().data.transmitters.tx2).toMatchObject({ main: "gray", antenna: "green" });
     expect(store.getState().lastCommand).toBe("Automatic monitor transfer to TX2");
+  });
+
+  it("turns both transmitters Off when the standby transmitter alarms too", () => {
+    const store = createVorPmdtStore();
+    enterMaintenanceMode(store);
+    store.getState().setConfigValue("transmitters.tx1.nominal.voiceModulation", 30);
+    store.getState().setConfigValue("transmitters.tx2.nominal.voiceModulation", 30);
+
+    expect(store.getState().applyConfigChanges()).toBe(true);
+    store.getState().setConfigValue("simulation.integralMonitorBypass", false);
+
+    expect(store.getState().derived.voting.activeTransmitter).toBe(null);
+    expect(store.getState().config.transmitters.tx1.enabled).toBe(false);
+    expect(store.getState().config.transmitters.tx2.enabled).toBe(false);
+    expect(store.getState().data.transmitters.tx1.off).toBe("red");
+    expect(store.getState().data.transmitters.tx2.off).toBe("red");
+    expect(store.getState().lastCommand).toBe("Automatic monitor shutdown: both transmitters off");
   });
 
   it("keeps the active transmitter in place when no eligible standby exists", () => {
     const store = createVorPmdtStore();
     enterMaintenanceMode(store);
-    store.getState().setConfigValue("monitor.rawMeasurements.mon1.deviation", 25);
+    store.getState().setConfigValue("transmitters.tx1.nominal.voiceModulation", 30);
     store.getState().setConfigValue("transmitters.tx2.enabled", false);
 
     expect(store.getState().applyConfigChanges()).toBe(true);

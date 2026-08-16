@@ -272,6 +272,35 @@ describe("DME PMDT store", () => {
     expect(store.getState().lastCommand).toBe("TX Transfer -> TX2");
   });
 
+  it("performs one automatic transfer at Apply and keeps Main on TX1", () => {
+    const store = createDmePmdtStore();
+    expect(store.getState().login("SEC3", "THREE")).toBe(true);
+    expect(store.getState().setLocalMode(true)).toBe(true);
+    store.getState().setParameterValue("txOffsets.0.tx1", 0);
+
+    expect(store.getState().applyConfigChanges()).toBe(true);
+    expect(store.getState().data.monitorTransmitterStatus.mainSelect).toBe(1);
+    expect(store.getState().data.monitorTransmitterStatus.antennaSelect).toBe(2);
+    expect(store.getState().data.monitorTransmitterStatus.transmitterOn).toEqual({ tx1: false, tx2: true });
+    expect(store.getState().data.transmitters.tx1).toMatchObject({ main: "green", off: "red" });
+    expect(store.getState().data.transmitters.tx2.antenna).toBe("green");
+    expect(store.getState().lastCommand).toBe("Automatic monitor transfer to TX2");
+  });
+
+  it("turns both DME transmitters Off when the standby path alarms too", () => {
+    const store = createDmePmdtStore();
+    expect(store.getState().login("SEC3", "THREE")).toBe(true);
+    expect(store.getState().setLocalMode(true)).toBe(true);
+    store.getState().setParameterValue("txOffsets.0.tx1", 0);
+    store.getState().setParameterValue("txOffsets.0.tx2", 0);
+
+    expect(store.getState().applyConfigChanges()).toBe(true);
+    expect(store.getState().data.monitorTransmitterStatus.transmitterOn).toEqual({ tx1: false, tx2: false });
+    expect(store.getState().data.transmitters.tx1.off).toBe("red");
+    expect(store.getState().data.transmitters.tx2.off).toBe("red");
+    expect(store.getState().lastCommand).toBe("Automatic monitor shutdown: both transmitters off");
+  });
+
   it("applies independent TX1/TX2 power scales and remaps monitor/ERP/sidebar data after transfer", () => {
     const store = createDmePmdtStore();
     expect(store.getState().login("SEC3", "THREE")).toBe(true);
@@ -301,20 +330,20 @@ describe("DME PMDT store", () => {
     expect(store.getState().needBackup).toBe(false);
   });
 
-  it("keeps TX1=60 and TX2=70 isolated in the draft, then transfers the active path on Apply", () => {
+  it("keeps TX1=70 and TX2=60 isolated in the draft, then transfers the active path on Apply", () => {
     const store = createDmePmdtStore();
     expect(store.getState().login("SEC3", "THREE")).toBe(true);
     expect(store.getState().setLocalMode(true)).toBe(true);
 
     const baseTx1Power = Number(store.getState().configDraft.integralData.find((row) => row.label === "Tx Power")?.mon1Value);
     const baseTx2Power = Number(store.getState().configDraft.standbyData.find((row) => row.label === "Tx Power")?.mon1Value);
-    store.getState().setParameterValue("txOffsets.0.tx1", 60);
+    store.getState().setParameterValue("txOffsets.0.tx1", 70);
     const tx1Only = store.getState().configDraft;
     const tx1Power = Number(tx1Only.integralData.find((row) => row.label === "Tx Power")?.mon1Value);
     expect(tx1Power).toBeGreaterThan(baseTx1Power);
     expect(Number(tx1Only.standbyData.find((row) => row.label === "Tx Power")?.mon1Value)).toBe(baseTx2Power);
 
-    store.getState().setParameterValue("txOffsets.0.tx2", 70);
+    store.getState().setParameterValue("txOffsets.0.tx2", 60);
     const bothScaled = store.getState().configDraft;
     expect(Number(bothScaled.integralData.find((row) => row.label === "Tx Power")?.mon1Value)).toBe(tx1Power);
     expect(Number(bothScaled.standbyData.find((row) => row.label === "Tx Power")?.mon1Value)).toBeGreaterThan(baseTx2Power);
@@ -323,8 +352,8 @@ describe("DME PMDT store", () => {
     expect(store.getState().needBackup).toBe(true);
     const applied = store.getState().data;
     expect(applied.monitorTransmitterStatus.antennaSelect).toBe(2);
-    expect(applied.integralData.find((row) => row.label === "Tx Power")?.mon1Value).toBe("1269");
-    expect(applied.standbyData.find((row) => row.label === "Tx Power")?.mon1Value).toBe("1182");
+    expect(applied.integralData.find((row) => row.label === "Tx Power")?.mon1Value).toBe("1088");
+    expect(applied.standbyData.find((row) => row.label === "Tx Power")?.mon1Value).toBe("0");
     expect(store.getState().backupConfig()).toBe(true);
     expect(store.getState().needBackup).toBe(false);
   });

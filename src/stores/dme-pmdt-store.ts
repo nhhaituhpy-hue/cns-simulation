@@ -355,6 +355,55 @@ function routeTransmitter(
   return recomputeDmeDerivedData(data);
 }
 
+interface AutomaticDmeTransfer {
+  data: DmePmdtData;
+  target: DmeTransmitterId | null;
+  action: "transfer" | "shutdown" | null;
+}
+
+/**
+ * Performs one DME hot-standby relay attempt. MainSelect remains the logical
+ * primary transmitter while AntennaSelect moves to the standby. If the new
+ * antenna path also alarms, both RTCs are powered Off and the function stops;
+ * it never retries in the opposite direction.
+ */
+function applyAutomaticDmeTransfer(source: DmePmdtData): AutomaticDmeTransfer {
+  const data = recomputeDmeDerivedData(source);
+  const noAction = { data, target: null, action: null } as const;
+  if (!dmeTransferRequested(data)) return noAction;
+
+  const current: DmeTransmitterId = data.monitorTransmitterStatus.antennaSelect === 2 ? "tx2" : "tx1";
+  const target: DmeTransmitterId = current === "tx1" ? "tx2" : "tx1";
+  if (!data.monitorTransmitterStatus.transmitterOn[target]) return noAction;
+
+  const transferred = structuredClone(data);
+  transferred.monitorTransmitterStatus.antennaSelect = target === "tx1" ? 1 : 2;
+  transferred.monitorTransmitterStatus.transmitterOn[current] = false;
+  transferred.monitorTransmitterStatus.transmitterOn[target] = true;
+  const transferredData = recomputeDmeDerivedData(transferred);
+
+  if (dmeTransferRequested(transferredData)) {
+    const shutdown = structuredClone(transferredData);
+    shutdown.monitorTransmitterStatus.transmitterOn.tx1 = false;
+    shutdown.monitorTransmitterStatus.transmitterOn.tx2 = false;
+    return {
+      data: recomputeDmeDerivedData(shutdown),
+      target: null,
+      action: "shutdown",
+    };
+  }
+
+  return { data: transferredData, target, action: "transfer" };
+}
+
+function copyDmeTransmitterRoute(source: DmePmdtData, target: DmePmdtData): DmePmdtData {
+  const next = structuredClone(target);
+  next.monitorTransmitterStatus.mainSelect = source.monitorTransmitterStatus.mainSelect;
+  next.monitorTransmitterStatus.antennaSelect = source.monitorTransmitterStatus.antennaSelect;
+  next.monitorTransmitterStatus.transmitterOn = { ...source.monitorTransmitterStatus.transmitterOn };
+  return recomputeDmeDerivedData(next);
+}
+
 function setIdentMode(data: DmePmdtData, mode: "normal" | "off" | "continuous"): DmePmdtData {
   const next = structuredClone(data);
   next.identMode = mode;
@@ -732,20 +781,25 @@ export function createDmePmdtStore(
       setLocalMode: (enabled) => {
         const state = get();
         if (state.securityLevel < 3 || state.loginDialogOpen) return false;
-        const data = structuredClone(state.data);
+        let data = structuredClone(state.data);
         data.local = enabled;
         data.rmsStatus.localControlMode = enabled;
         if (!enabled) {
           data.monitors.integral.bypass = false;
           data.monitors.standby.bypass = false;
         }
-        const configDraft = structuredClone(state.configDraft);
+        data = recomputeDmeDerivedData(data);
+        const automaticTransfer = !enabled ? applyAutomaticDmeTransfer(data) : null;
+        data = automaticTransfer?.data ?? data;
+        let configDraft = structuredClone(state.configDraft);
         configDraft.local = enabled;
         configDraft.rmsStatus.localControlMode = enabled;
         if (!enabled) {
           configDraft.monitors.integral.bypass = false;
           configDraft.monitors.standby.bypass = false;
         }
+        configDraft = recomputeDmeDerivedData(configDraft);
+        if (automaticTransfer?.action) configDraft = copyDmeTransmitterRoute(data, configDraft);
         syncMaintenanceAlert(data);
         syncMaintenanceAlert(configDraft);
         set({
@@ -756,7 +810,11 @@ export function createDmePmdtStore(
           // toggled; it must remain available for Apply (F7) after Local is
           // enabled again.
           configDirty: JSON.stringify(configDraft) !== JSON.stringify(data),
-          lastCommand: enabled ? "Local Mode" : "Remote Mode",
+          lastCommand: automaticTransfer?.action === "transfer" && automaticTransfer.target
+            ? `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}`
+            : automaticTransfer?.action === "shutdown"
+              ? "Automatic monitor shutdown: both transmitters off"
+              : enabled ? "Local Mode" : "Remote Mode",
         });
         return true;
       },
@@ -831,23 +889,22 @@ export function createDmePmdtStore(
           set({ lastCommand: `Configuration validation failed: ${validationError}` });
           return false;
         }
-        let data = recomputeDmeDerivedData(state.configDraft);
-        // §6.2.8: a primary monitor alarm requests a dual hot-standby
-        // transfer. Draft edits remain passive; the relay action happens at
-        // Apply(F7), matching the maintenance procedure.
-        if (dmeTransferRequested(data)) {
-          const current = data.monitorTransmitterStatus.mainSelect;
-          const target: DmeTransmitterId = current === 1 ? "tx2" : "tx1";
-          data = routeTransmitter(data, target, "antenna");
-          data = recomputeDmeDerivedData(data);
-        }
+        // §6.2.8: a primary monitor alarm requests one dual hot-standby
+        // transfer. If the target is also in alarm, the helper takes both
+        // transmitters Off and deliberately does not retry in reverse.
+        const automaticTransfer = applyAutomaticDmeTransfer(state.configDraft);
+        const data = automaticTransfer.data;
         data.rmsStatus.logonLevel = state.securityLevel;
         set({
           data,
           configDraft: structuredClone(data),
           configDirty: false,
           needBackup: true,
-          lastCommand: "Configuration Apply",
+          lastCommand: automaticTransfer.action === "transfer" && automaticTransfer.target
+            ? `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}`
+            : automaticTransfer.action === "shutdown"
+              ? "Automatic monitor shutdown: both transmitters off"
+              : "Configuration Apply",
         });
         return true;
       },
@@ -952,11 +1009,24 @@ export function createDmePmdtStore(
       setMonitorBypass: (monitor, enabled) => {
         const state = get();
         if (state.securityLevel < 2 || state.loginDialogOpen || !state.data.local) return false;
-        const data = structuredClone(state.data);
+        let data = structuredClone(state.data);
         data.monitors[monitor].bypass = enabled;
-        const configDraft = structuredClone(state.configDraft);
+        data = recomputeDmeDerivedData(data);
+        const automaticTransfer = !enabled ? applyAutomaticDmeTransfer(data) : null;
+        data = automaticTransfer?.data ?? data;
+        let configDraft = structuredClone(state.configDraft);
         configDraft.monitors[monitor].bypass = enabled;
-        set({ data, configDraft, lastCommand: `${monitor === "integral" ? "Integral" : "Standby"} Monitor Bypass ${enabled ? "On" : "Off"}` });
+        configDraft = recomputeDmeDerivedData(configDraft);
+        if (automaticTransfer?.action) configDraft = copyDmeTransmitterRoute(data, configDraft);
+        set({
+          data,
+          configDraft,
+          lastCommand: automaticTransfer?.action === "transfer" && automaticTransfer.target
+            ? `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}`
+            : automaticTransfer?.action === "shutdown"
+              ? "Automatic monitor shutdown: both transmitters off"
+              : `${monitor === "integral" ? "Integral" : "Standby"} Monitor Bypass ${enabled ? "On" : "Off"}`,
+        });
         return true;
       },
 

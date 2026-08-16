@@ -35,14 +35,13 @@ export function PmdtConfigControl({
   const config = useVorPmdtStore((state) => state.configDraft);
   const securityLevel = useVorPmdtStore((state) => state.securityLevel);
   const local = useVorPmdtStore((state) => state.config.simulation.local);
-  const bypass = useVorPmdtStore((state) => state.config.simulation.integralMonitorBypass);
   const setConfigValue = useVorPmdtStore((state) => state.setConfigValue);
   const field = dvorConfigFieldCatalog.find((item) => item.id === configFieldId);
   const value = getDvorConfigValue(config, configFieldId);
   const controlType = type ?? field?.type ?? "text";
   const [draftValue, setDraftValue] = useState(formatValue(value, digits));
   const [isEditing, setIsEditing] = useState(false);
-  const canEdit = !disabled && securityLevel >= 3 && local && bypass && Boolean(field);
+  const canEdit = !disabled && securityLevel >= 3 && local && Boolean(field);
   const isTextEntry = controlType === "number" || controlType === "text";
 
   useEffect(() => {

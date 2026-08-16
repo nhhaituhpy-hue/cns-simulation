@@ -226,6 +226,8 @@ export interface DvorVotingResult {
 
 export interface Dvor1150aSnapshot {
   data: import("@/lib/vor-types").VorPmdtData;
+  /** Logical Main selection; it can remain TX1 while the antenna is on TX2 after an automatic transfer. */
+  mainTransmitter: DvorTransmitterId | null;
   effectiveTransmitters: Record<DvorTransmitterId, DvorEffectiveTransmitter>;
   monitors: Record<DvorMonitorId, DvorMonitorResult>;
   monitorOffsets: Record<DvorMonitorId, VorMonitorOffsetRow[]>;

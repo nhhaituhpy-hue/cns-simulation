@@ -31,18 +31,17 @@ function MenuItemRow({
   const setTransmitterMode = useVorPmdtStore((state) => state.setTransmitterMode);
   const securityLevel = useVorPmdtStore((state) => state.securityLevel);
   const local = useVorPmdtStore((state) => state.config.simulation.local);
-  const bypass = useVorPmdtStore((state) => state.config.simulation.integralMonitorBypass);
   const needBackup = useVorPmdtStore((state) => state.needBackup);
   const isTransmitterCommand = item.action === "set-transmitter-mode";
   const isMainTransmitterCommand = isTransmitterCommand && item.transmitterMode === "main";
   const isMaintenanceTransmitterCommand = isTransmitterCommand && !isMainTransmitterCommand;
   const canOperateTransmitter = securityLevel >= 3
-    && (isMainTransmitterCommand || (local && bypass));
+    && (isMainTransmitterCommand || local);
   const isRestoreCommand = item.action === "config-restore";
   const isBackupCommand = item.action === "config-backup";
   const unavailable = !item.enabled
     || (isTransmitterCommand && !canOperateTransmitter)
-    || (isRestoreCommand && (securityLevel < 3 || !local || !bypass))
+    || (isRestoreCommand && (securityLevel < 3 || !local))
     || (isBackupCommand && (securityLevel < 3 || !needBackup));
   const hasChildren = Boolean(item.children?.length);
 
@@ -104,16 +103,16 @@ function MenuItemRow({
             ? disabledMenuTooltip
             : isRestoreCommand && securityLevel < 3
               ? "Yêu cầu đăng nhập SEC3 hoặc SEC4"
-              : isRestoreCommand && (!local || !bypass)
-                ? "Bật Local rồi Bypass để khôi phục cấu hình"
+              : isRestoreCommand && !local
+                ? "Bật Local để khôi phục cấu hình"
             : isBackupCommand && securityLevel < 3
               ? "Yêu cầu đăng nhập SEC3 hoặc SEC4"
               : isBackupCommand && !needBackup
                 ? "Chưa có cấu hình cần backup"
                 : isTransmitterCommand && securityLevel < 3
                   ? "GUEST chỉ được xem tham số"
-                  : isMaintenanceTransmitterCommand && (!local || !bypass)
-                    ? "Bật Local rồi Bypass để điều khiển transmitter"
+                  : isMaintenanceTransmitterCommand && !local
+                    ? "Bật Local để điều khiển transmitter"
               : undefined
         }
         onClick={selectItem}

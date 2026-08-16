@@ -18,14 +18,17 @@ function MenuItemRow({ group, item, closeMenu }: { group: Dvor1150MenuGroup; ite
   const setTransmitterMode = useDvor1150PmdtStore((state) => state.setTransmitterMode);
   const executeCommand = useDvor1150PmdtStore((state) => state.executeCommand);
   const security = useDvor1150PmdtStore((state) => state.securityLevel);
+  const local = useDvor1150PmdtStore((state) => state.config.simulation.local);
   const needBackup = useDvor1150PmdtStore((state) => state.needBackup);
   const hasChildren = Boolean(item.children?.length);
   const isTx = item.action === "set-transmitter-mode";
+  const isMaintenanceTx = isTx && item.transmitterMode !== "main";
   const unavailable = !item.enabled
     || (isTx && security < 3)
-    || (item.action === "config-restore" && security < 3)
+    || (isMaintenanceTx && !local)
+    || (item.action === "config-restore" && (security < 3 || !local))
     || (item.action === "config-backup" && (security < 3 || !needBackup))
-    || (item.action === "set-bypass" && security < 3)
+    || (item.action === "set-bypass" && (security < 3 || !local))
     || (item.action === "execute-command" && ((item.commandId === "enable-command-mode" || item.commandId === "disable-command-mode") ? security < 3 : security < 2));
 
   function selectItem() {

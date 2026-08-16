@@ -15,9 +15,8 @@ function ConfigField({ field }: { field: DvorConfigFieldDefinition }) {
   const config = useVorPmdtStore((state) => state.configDraft);
   const securityLevel = useVorPmdtStore((state) => state.securityLevel);
   const local = useVorPmdtStore((state) => state.config.simulation.local);
-  const bypass = useVorPmdtStore((state) => state.config.simulation.integralMonitorBypass);
   const setConfigValue = useVorPmdtStore((state) => state.setConfigValue);
-  const canEdit = securityLevel >= 3 && local && bypass;
+  const canEdit = securityLevel >= 3 && local;
   const value = getDvorConfigValue(config, field.id);
   const validationMessage = validateDvorConfigField(field, value);
   const [draftValue, setDraftValue] = useState(value === null ? "" : String(value));
@@ -84,7 +83,6 @@ export function DvorConfigPanel() {
   const configDirty = useVorPmdtStore((state) => state.configDirty);
   const securityLevel = useVorPmdtStore((state) => state.securityLevel);
   const local = useVorPmdtStore((state) => state.config.simulation.local);
-  const bypass = useVorPmdtStore((state) => state.config.simulation.integralMonitorBypass);
   const derived = useVorPmdtStore((state) => state.derived);
 
   const sections = Array.from(new Set(dvorConfigFieldCatalog.map((field) => field.section)));
@@ -101,7 +99,7 @@ export function DvorConfigPanel() {
         <span>Active Tx: <b>{derived.voting.activeTransmitter?.toUpperCase() ?? "NONE"}</b></span>
         <span>Voting: <b>{derived.voting.systemHealthy ? "NORMAL" : "ALARM"}</b></span>
         {derived.validation.length > 0 ? <span className="pmdt-config-summary-warning">{derived.validation.length} validation issue(s)</span> : null}
-        {securityLevel < 3 ? <span>GUEST: view-only</span> : !local || !bypass ? <span>Enable Local and Bypass to edit</span> : configDirty ? <span>Pending changes — press Apply (F7)</span> : <span>Ready</span>}
+        {securityLevel < 3 ? <span>GUEST: view-only</span> : !local ? <span>Enable Local to edit</span> : configDirty ? <span>Pending changes — press Apply (F7)</span> : <span>Ready</span>}
       </div>
       <div className="pmdt-config-panel-body">
         {sections.map((section) => (
@@ -116,7 +114,7 @@ export function DvorConfigPanel() {
         ))}
       </div>
       <footer className="pmdt-config-panel-footer">
-        <button type="button" disabled={securityLevel < 3 || !local || !bypass} onClick={resetConfigDraft}>Reset defaults</button>
+        <button type="button" disabled={securityLevel < 3 || !local} onClick={resetConfigDraft}>Reset defaults</button>
         <button type="button" disabled={!configDirty} onClick={discardConfigChanges}>Discard</button>
         <span>{configDirty ? "Apply (F7) to commit" : "Changes are staged"}</span>
       </footer>

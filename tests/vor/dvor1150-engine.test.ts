@@ -76,7 +76,7 @@ describe("DVOR 1150 configuration and PMDT engine", () => {
     ]));
   });
 
-  it("enforces transfer, Local/Bypass configuration, backup and restore semantics", () => {
+  it("enforces transfer, Local-only configuration, backup and restore semantics", () => {
     const store = createDvor1150PmdtStore({ now: () => new Date("2026-08-09T13:00:00Z") });
 
     expect(store.getState().login("SEC3", "THREE")).toBe(true);
@@ -97,5 +97,38 @@ describe("DVOR 1150 configuration and PMDT engine", () => {
     expect(store.getState().applyConfigChanges()).toBe(true);
     expect(store.getState().restoreConfig()).toBe(true);
     expect(store.getState().derived.effectiveTransmitters.tx2.outputPower).toBe(80);
+  });
+
+  it("keeps the logical Main on TX1 after a one-step automatic transfer to TX2", () => {
+    const store = createDvor1150PmdtStore();
+    expect(store.getState().login("SEC3", "THREE")).toBe(true);
+    expect(store.getState().setLocalMode(true)).toBe(true);
+    expect(store.getState().setMonitorBypass("mon1", true)).toBe(true);
+    store.getState().setConfigValue("transmitters.tx1.nominal.voiceModulation", 30);
+    expect(store.getState().applyConfigChanges()).toBe(true);
+
+    expect(store.getState().setMonitorBypass("mon1", false)).toBe(true);
+    const state = store.getState();
+    expect(state.derived.activeTransmitter).toBe("tx2");
+    expect(state.derived.mainTransmitter).toBe("tx1");
+    expect(state.derived.data.transmitters.tx1).toMatchObject({ main: "green", antenna: "gray", off: "red" });
+    expect(state.derived.data.transmitters.tx2).toMatchObject({ main: "gray", antenna: "green" });
+  });
+
+  it("turns both DVOR 1150 transmitters Off when the standby path also alarms", () => {
+    const store = createDvor1150PmdtStore();
+    expect(store.getState().login("SEC3", "THREE")).toBe(true);
+    expect(store.getState().setLocalMode(true)).toBe(true);
+    expect(store.getState().setMonitorBypass("mon1", true)).toBe(true);
+    store.getState().setConfigValue("transmitters.tx1.nominal.voiceModulation", 30);
+    store.getState().setConfigValue("transmitters.tx2.nominal.voiceModulation", 30);
+    expect(store.getState().applyConfigChanges()).toBe(true);
+
+    expect(store.getState().setMonitorBypass("mon1", false)).toBe(true);
+    const state = store.getState();
+    expect(state.derived.activeTransmitter).toBe(null);
+    expect(state.config.transmitters.tx1.enabled).toBe(false);
+    expect(state.config.transmitters.tx2.enabled).toBe(false);
+    expect(state.lastCommand).toBe("Automatic monitor shutdown: both transmitters off");
   });
 });

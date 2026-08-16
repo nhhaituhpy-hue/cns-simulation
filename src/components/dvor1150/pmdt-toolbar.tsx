@@ -14,9 +14,9 @@ export function Dvor1150Toolbar({ title }: { title: string }) {
   const close = useDvor1150PmdtStore((state) => state.closeScreen);
   const dirty = useDvor1150PmdtStore((state) => state.configDirty);
   const security = useDvor1150PmdtStore((state) => state.securityLevel);
-  const bypass = useDvor1150PmdtStore((state) => state.config.simulation.integralMonitorBypass);
-  const canApply = dirty && security >= 3 && bypass;
-  const canRestore = security >= 3;
+  const local = useDvor1150PmdtStore((state) => state.config.simulation.local);
+  const canApply = dirty && security >= 3 && local;
+  const canRestore = security >= 3 && local;
   return (
     <div className="pmdt-toolbar">
       <h2 className="pmdt-toolbar-title">{title}</h2>

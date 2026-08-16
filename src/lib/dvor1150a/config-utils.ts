@@ -413,7 +413,7 @@ export const dvorConfigFieldCatalog: readonly DvorConfigFieldDefinition[] = [
   ...routingFields,
   { id: "simulation.connected", label: "RMS connected", section: "Simulation", type: "boolean", description: "Trạng thái liên kết RMS." },
   { id: "simulation.local", label: "Local mode", section: "Simulation", type: "boolean", description: "Đưa hệ thống vào Local mode." },
-  { id: "simulation.integralMonitorBypass", label: "Integral monitor bypass", section: "Simulation", type: "boolean", description: "Cho phép thao tác bảo trì sau khi Local mode đã được bật." },
+  { id: "simulation.integralMonitorBypass", label: "Integral monitor bypass", section: "Simulation", type: "boolean", description: "Giữ alarm hiển thị nhưng chặn tự động chuyển transmitter; chỉ được bật sau khi Local đã bật." },
   { id: "simulation.alert", label: "Force system alert", section: "Simulation", type: "boolean", description: "Ép trạng thái Alert để phục vụ kịch bản." },
   { id: "simulation.timestamp", label: "Display timestamp", section: "Simulation", type: "text", description: "Timestamp hiển thị trên status/data screens." },
 ];

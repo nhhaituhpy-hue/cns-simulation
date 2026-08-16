@@ -676,11 +676,14 @@ function deriveTransmitterStates(data: DmePmdtData): void {
     state.load = "gray";
     state.off = "gray";
     if (tx === "tx2" && !dual) continue;
+    const isMain = (data.monitorTransmitterStatus.mainSelect === 1 && tx === "tx1")
+      || (data.monitorTransmitterStatus.mainSelect === 2 && tx === "tx2");
+    const isAntenna = (data.monitorTransmitterStatus.antennaSelect === 1 && tx === "tx1")
+      || (data.monitorTransmitterStatus.antennaSelect === 2 && tx === "tx2");
+    if (isMain) state.main = "green";
     if (!data.monitorTransmitterStatus.transmitterOn[tx]) {
-      state.off = "green";
-    } else if ((data.monitorTransmitterStatus.antennaSelect === 1 && tx === "tx1")
-      || (data.monitorTransmitterStatus.antennaSelect === 2 && tx === "tx2")) {
-      state.main = "green";
+      state.off = "red";
+    } else if (isAntenna) {
       state.antenna = "green";
     } else {
       state.load = "green";

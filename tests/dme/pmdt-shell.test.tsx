@@ -206,7 +206,7 @@ describe("DME PMDT shell", () => {
     expect(offState.monitorTransmitterStatus.antennaSelect).toBe(2);
     expect(offState.monitorTransmitterStatus.transmitterOn).toEqual({ tx1: true, tx2: false });
     expect(offState.transmitters.tx1.load).toBe("green");
-    expect(offState.transmitters.tx2.off).toBe("green");
+    expect(offState.transmitters.tx2.off).toBe("red");
   });
 
   it("exposes the RMS command names from the 1119A manual", async () => {

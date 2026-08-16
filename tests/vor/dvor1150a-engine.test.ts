@@ -350,6 +350,24 @@ describe("DVOR 1150A configuration engine", () => {
     expect(snapshot.voting.transferRequested).toBe(false);
   });
 
+  it("keeps Main on TX1 while Antenna fails over to TX2", () => {
+    const config = createDefaultDvor1150aConfig();
+    const transferred = setDvorConfigValue(
+      setDvorConfigValue(
+        setDvorConfigValue(config, "transmitters.tx1.nominal.voiceModulation", 50),
+        "transmitters.tx1.onAir",
+        false,
+      ),
+      "transmitters.tx2.onAir",
+      true,
+    );
+    const snapshot = buildDvor1150aSnapshot(transferred, undefined, "tx1");
+
+    expect(snapshot.mainTransmitter).toBe("tx1");
+    expect(snapshot.data.transmitters.tx1).toMatchObject({ main: "green", antenna: "gray", off: "red" });
+    expect(snapshot.data.transmitters.tx2).toMatchObject({ main: "gray", antenna: "green" });
+  });
+
   it("uses the manual's one-tenth integrity test formulas", () => {
     expect(calculateIntegrityTestValues({
       alarmLow: 23,

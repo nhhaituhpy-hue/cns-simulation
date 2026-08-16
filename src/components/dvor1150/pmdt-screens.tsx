@@ -140,9 +140,10 @@ function StaticPanel({ title, rows }: { title: string; rows: readonly (readonly 
 function Dvor1150ConfigRadio({ fieldId, value, label }: { fieldId: string; value: string; label: string }) {
   const config = useDvor1150PmdtStore((state) => state.configDraft);
   const security = useDvor1150PmdtStore((state) => state.securityLevel);
+  const local = useDvor1150PmdtStore((state) => state.config.simulation.local);
   const setConfigValue = useDvor1150PmdtStore((state) => state.setConfigValue);
   const selected = getDvor1150ConfigValue(config, fieldId) === value;
-  return <label className="dvor1150-config-radio"><input type="radio" checked={selected} disabled={security < 3 || !config.simulation.integralMonitorBypass} onChange={() => setConfigValue(fieldId, value)} />{label}</label>;
+  return <label className="dvor1150-config-radio"><input type="radio" checked={selected} disabled={security < 3 || !local} onChange={() => setConfigValue(fieldId, value)} />{label}</label>;
 }
 
 function Dvor1150StaticSelect({ label, value }: { label: string; value: string }) {

@@ -28,7 +28,6 @@ function SimulationParameterField({ field }: { field: Dvor1150ConfigFieldDefinit
         type={field.type}
         digits={field.digits}
         mirrorFieldIds={mirrorNominalField(field)}
-        requireBypass
       />
       {field.unit ? <small>{field.unit}</small> : null}
     </span>
@@ -44,10 +43,10 @@ export function Dvor1150SimulationParametersPanel() {
   const loginDialogOpen = useDvor1150PmdtStore((state) => state.loginDialogOpen);
   const config = useDvor1150PmdtStore((state) => state.config);
   const derived = useDvor1150PmdtStore((state) => state.derived);
+  const local = config.simulation.local;
   const applyConfigChanges = useDvor1150PmdtStore((state) => state.applyConfigChanges);
   const resetConfigDraft = useDvor1150PmdtStore((state) => state.resetConfigDraft);
-  const bypass = config.simulation.integralMonitorBypass;
-  const canEdit = securityLevel >= 3 && !loginDialogOpen && bypass;
+  const canEdit = securityLevel >= 3 && !loginDialogOpen && local;
   const fields = dvor1150ConfigFieldCatalog.filter((field) => (
     !field.id.startsWith("transmitters.tx2.nominal.") && !field.id.endsWith("nominal.identCode")
   ));
@@ -63,7 +62,7 @@ export function Dvor1150SimulationParametersPanel() {
       <span>VSWR alarm: <b>&gt; 1.25 : 1</b></span>
       {derived.validation.length > 0 ? <span className="pmdt-config-summary-warning">{derived.validation.length} validation issue(s)</span> : null}
       {lastCommand?.startsWith("Apply failed:") ? <span className="pmdt-config-summary-warning">{lastCommand}</span> : null}
-      {loginDialogOpen || securityLevel < 3 ? <span>GUEST: view-only</span> : !bypass ? <span>Enable Integral Monitor Bypass to edit</span> : configDirty ? <span>Pending changes - press Apply (F7)</span> : needBackup ? <span>Applied - run RMS &gt; Config Backup</span> : <span>Ready</span>}
+      {loginDialogOpen || securityLevel < 3 ? <span>GUEST: view-only</span> : !local ? <span>Enable Local to edit</span> : configDirty ? <span>Pending changes - press Apply (F7)</span> : needBackup ? <span>Applied - run RMS &gt; Config Backup</span> : <span>Ready</span>}
     </div>
     <div className="pmdt-config-panel-body">
       {sections.map((section) => <details key={section} className="pmdt-config-section" open={section === "Station" || section === "Transmitter Nominal" || section === "Monitor General"}>

@@ -144,11 +144,19 @@ function monitorResult(
 
 function transmitterSidebarState(
   transmitter: Dvor1150EffectiveTransmitter,
+  transmitterId: Dvor1150TransmitterId,
+  mainId: Dvor1150TransmitterId | null,
+  antennaId: Dvor1150TransmitterId | null,
 ): Dvor1150Snapshot["data"]["transmitters"][Dvor1150TransmitterId] {
-  if (!transmitter.enabled) return { main: "gray", antenna: "gray", load: "gray", off: "red" };
-  if (transmitter.active) return { main: "green", antenna: "green", load: "gray", off: "gray" };
-  if (transmitter.load) return { main: "gray", antenna: "gray", load: "green", off: "gray" };
-  return { main: "gray", antenna: "gray", load: "gray", off: "gray" };
+  const operatingColor = transmitter.enabled ? "green" as const : "red" as const;
+  return {
+    // Main identifies the logical primary transmitter, independently from
+    // the relay's current Antenna route during an automatic transfer.
+    main: transmitterId === mainId ? operatingColor : "gray" as const,
+    antenna: transmitterId === antennaId && transmitter.onAir ? operatingColor : "gray" as const,
+    load: transmitter.load ? operatingColor : "gray" as const,
+    off: !transmitter.enabled || (!transmitter.onAir && !transmitter.load) ? "red" as const : "gray" as const,
+  };
 }
 
 function buildValidation(config: Dvor1150Config): Dvor1150Snapshot["validation"] {
@@ -181,12 +189,17 @@ function buildValidation(config: Dvor1150Config): Dvor1150Snapshot["validation"]
   return validation;
 }
 
-export function buildDvor1150Snapshot(config: Dvor1150Config, now = new Date()): Dvor1150Snapshot {
+export function buildDvor1150Snapshot(
+  config: Dvor1150Config,
+  now = new Date(),
+  mainTransmitter?: Dvor1150TransmitterId,
+): Dvor1150Snapshot {
   const effectiveTransmitters = {
     tx1: effectiveTransmitter(config, "tx1"),
     tx2: effectiveTransmitter(config, "tx2"),
   };
   const activeId = chooseActiveTransmitter(effectiveTransmitters);
+  const mainId = mainTransmitter ?? activeId;
   const active = activeId ? effectiveTransmitters[activeId] : null;
   const monitors = {
     mon1: monitorResult(config, "mon1", active, activeId === "tx1"),
@@ -248,8 +261,8 @@ export function buildDvor1150Snapshot(config: Dvor1150Config, now = new Date()):
     alert: maintenanceAlert,
     timestamp,
     transmitters: {
-      tx1: transmitterSidebarState(effectiveTransmitters.tx1),
-      tx2: transmitterSidebarState(effectiveTransmitters.tx2),
+      tx1: transmitterSidebarState(effectiveTransmitters.tx1, "tx1", mainId, activeId),
+      tx2: transmitterSidebarState(effectiveTransmitters.tx2, "tx2", mainId, activeId),
     },
     monitorIntegral: {
       normal: systemHealthy,
@@ -286,5 +299,5 @@ export function buildDvor1150Snapshot(config: Dvor1150Config, now = new Date()):
     txFrequency,
     txVswr,
   };
-  return { data, activeTransmitter: activeId, effectiveTransmitters, monitors, validation: buildValidation(config) };
+  return { data, activeTransmitter: activeId, mainTransmitter: mainId, effectiveTransmitters, monitors, validation: buildValidation(config) };
 }

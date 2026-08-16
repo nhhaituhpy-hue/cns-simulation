@@ -205,37 +205,68 @@ interface AutomaticMonitorTransfer {
   config: Dvor1150aConfig;
   snapshot: Dvor1150aSnapshot;
   target: DvorTransmitterId | null;
+  action: "transfer" | "shutdown" | null;
 }
 
 /**
- * Evaluates the relay exactly when a maintenance bypass is released.  The
- * engine remains a pure snapshot builder; this store-level operation is the
- * single, explicit state transition that can move the physical main route.
+ * Evaluates the relay at most once for a configuration change. The engine
+ * remains a pure snapshot builder; this store-level operation is the single,
+ * explicit state transition that can move the physical main route. If the
+ * standby transmitter also alarms, both transmitters are taken off-air
+ * instead of handing control back and forth between the same two bad paths.
  */
-function applyAutomaticMonitorTransfer(config: Dvor1150aConfig): AutomaticMonitorTransfer {
-  const snapshot = buildDvor1150aSnapshot(config);
+function applyAutomaticMonitorTransfer(
+  config: Dvor1150aConfig,
+  mainTransmitter?: DvorTransmitterId | null,
+): AutomaticMonitorTransfer {
+  const snapshot = buildDvor1150aSnapshot(config, undefined, mainTransmitter ?? undefined);
   const active = snapshot.voting.activeTransmitter;
+  const noAction = { config, snapshot, target: null, action: null } as const;
 
   if (
     !snapshot.voting.transferRequested
     || !active
     || config.station.transmitterConfig !== "Dual Transmitters"
   ) {
-    return { config, snapshot, target: null };
+    return noAction;
   }
 
   const target: DvorTransmitterId = active === "tx1" ? "tx2" : "tx1";
   const standby = config.transmitters[target];
   if (!standby.enabled || standby.faults.disabled) {
-    return { config, snapshot, target: null };
+    return noAction;
   }
 
   const result = applyDvorConfigPatches(config, [
     { fieldId: `transmitters.${target}.onAir`, value: true },
   ]);
-  if (!result.ok) return { config, snapshot, target: null };
+  if (!result.ok) return noAction;
+  const transferredSnapshot = buildDvor1150aSnapshot(
+    result.config,
+    undefined,
+    mainTransmitter ?? active,
+  );
 
-  return { config: result.config, snapshot: result.snapshot, target };
+  if (transferredSnapshot.voting.transferRequested) {
+    const shutdown = applyDvorConfigPatches(result.config, [
+      { fieldId: "transmitters.tx1.enabled", value: false },
+      { fieldId: "transmitters.tx1.onAir", value: false },
+      { fieldId: "transmitters.tx1.load", value: false },
+      { fieldId: "transmitters.tx2.enabled", value: false },
+      { fieldId: "transmitters.tx2.onAir", value: false },
+      { fieldId: "transmitters.tx2.load", value: false },
+    ]);
+    return shutdown.ok
+      ? {
+          config: shutdown.config,
+          snapshot: buildDvor1150aSnapshot(shutdown.config, undefined, mainTransmitter ?? active),
+          target: null,
+          action: "shutdown",
+        }
+      : noAction;
+  }
+
+  return { config: result.config, snapshot: transferredSnapshot, target, action: "transfer" };
 }
 
 export function resolveVorField<T extends VorEditableValue>(
@@ -384,28 +415,41 @@ export function createVorPmdtStore(
         if (isLocalModeField || isBypassField) {
           if (isBypassField && value === true && !state.config.simulation.local) return;
           const patches = [{ fieldId, value }];
-          const releasingBypass = state.config.simulation.integralMonitorBypass
-            && ((isBypassField && value === false) || (isLocalModeField && value === false));
+          const shouldEvaluateAutomaticTransfer = (isBypassField && value === false)
+            || (isLocalModeField && value === false);
           if (isLocalModeField && value === false) {
             patches.push({ fieldId: "simulation.integralMonitorBypass", value: false });
           }
           const result = applyDvorConfigPatches(state.config, patches);
           if (!result.ok) return;
-          const automaticTransfer = releasingBypass
-            ? applyAutomaticMonitorTransfer(result.config)
+          const automaticTransfer = shouldEvaluateAutomaticTransfer
+            ? applyAutomaticMonitorTransfer(result.config, state.derived.mainTransmitter)
             : null;
           const nextConfig = automaticTransfer?.config ?? result.config;
-          const nextSnapshot = automaticTransfer?.snapshot ?? result.snapshot;
+          const nextSnapshot = automaticTransfer?.snapshot
+            ?? buildDvor1150aSnapshot(result.config, undefined, state.derived.mainTransmitter ?? undefined);
           const draftResult = applyDvorConfigPatches(state.configDraft, patches);
           let nextDraft = draftResult.ok
             ? draftResult.config
             : cloneDvor1150aConfig(nextConfig);
-          if (automaticTransfer?.target) {
+          if (automaticTransfer?.action === "transfer" && automaticTransfer.target) {
             const draftTransfer = applyDvorConfigPatches(nextDraft, [
               { fieldId: `transmitters.${automaticTransfer.target}.onAir`, value: true },
             ]);
             nextDraft = draftTransfer.ok
               ? draftTransfer.config
+              : cloneDvor1150aConfig(nextConfig);
+          } else if (automaticTransfer?.action === "shutdown") {
+            const draftShutdown = applyDvorConfigPatches(nextDraft, [
+              { fieldId: "transmitters.tx1.enabled", value: false },
+              { fieldId: "transmitters.tx1.onAir", value: false },
+              { fieldId: "transmitters.tx1.load", value: false },
+              { fieldId: "transmitters.tx2.enabled", value: false },
+              { fieldId: "transmitters.tx2.onAir", value: false },
+              { fieldId: "transmitters.tx2.load", value: false },
+            ]);
+            nextDraft = draftShutdown.ok
+              ? draftShutdown.config
               : cloneDvor1150aConfig(nextConfig);
           }
           set({
@@ -414,14 +458,16 @@ export function createVorPmdtStore(
             configDirty: state.configDirty,
             data: nextSnapshot.data,
             derived: nextSnapshot,
-            ...(automaticTransfer?.target
+            ...(automaticTransfer?.action === "transfer" && automaticTransfer.target
               ? { lastCommand: `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}` }
-              : {}),
+              : automaticTransfer?.action === "shutdown"
+                ? { lastCommand: "Automatic monitor shutdown: both transmitters off" }
+                : {}),
           });
           return;
         }
 
-        if (!state.config.simulation.local || !state.config.simulation.integralMonitorBypass) return;
+        if (!state.config.simulation.local) return;
         const result = applyDvorConfigPatches(state.configDraft, [{ fieldId, value }]);
         if (!result.ok) return;
         set({
@@ -436,20 +482,29 @@ export function createVorPmdtStore(
           !state.configDirty
           || state.securityLevel < 3
           || !state.config.simulation.local
-          || !state.config.simulation.integralMonitorBypass
         ) {
           return false;
         }
         const result = applyDvorConfigPatches(state.configDraft);
         if (!result.ok) return false;
+        const automaticTransfer = result.config.simulation.integralMonitorBypass
+          ? null
+          : applyAutomaticMonitorTransfer(result.config, state.derived.mainTransmitter);
+        const nextConfig = automaticTransfer?.config ?? result.config;
+        const nextSnapshot = automaticTransfer?.snapshot
+          ?? buildDvor1150aSnapshot(result.config, undefined, state.derived.mainTransmitter ?? undefined);
         set({
-          config: result.config,
-          configDraft: cloneDvor1150aConfig(result.config),
+          config: nextConfig,
+          configDraft: cloneDvor1150aConfig(nextConfig),
           configDirty: false,
           needBackup: true,
-          data: result.snapshot.data,
-          derived: result.snapshot,
-          lastCommand: "Configuration Apply",
+          data: nextSnapshot.data,
+          derived: nextSnapshot,
+          lastCommand: automaticTransfer?.action === "transfer" && automaticTransfer.target
+            ? `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}`
+            : automaticTransfer?.action === "shutdown"
+              ? "Automatic monitor shutdown: both transmitters off"
+              : "Configuration Apply",
         });
         return true;
       },
@@ -464,7 +519,6 @@ export function createVorPmdtStore(
         if (
           state.securityLevel < 3
           || !state.config.simulation.local
-          || !state.config.simulation.integralMonitorBypass
         ) {
           return false;
         }
@@ -482,7 +536,6 @@ export function createVorPmdtStore(
         if (
           state.securityLevel < 3
           || !state.config.simulation.local
-          || !state.config.simulation.integralMonitorBypass
         ) {
           return false;
         }
@@ -553,7 +606,7 @@ export function createVorPmdtStore(
         }
         if (
           mode !== "main"
-          && (!state.config.simulation.local || !state.config.simulation.integralMonitorBypass)
+          && !state.config.simulation.local
         ) {
           return false;
         }
@@ -576,11 +629,13 @@ export function createVorPmdtStore(
         const result = applyDvorConfigPatches(state.config, patches);
         if (!result.ok) return false;
         const draftResult = applyDvorConfigPatches(state.configDraft, patches);
+        const mainTransmitter = mode === "main" ? transmitterId : state.derived.mainTransmitter;
+        const snapshot = buildDvor1150aSnapshot(result.config, undefined, mainTransmitter ?? undefined);
         set({
           config: result.config,
           configDraft: draftResult.ok ? draftResult.config : cloneDvor1150aConfig(result.config),
-          data: result.snapshot.data,
-          derived: result.snapshot,
+          data: snapshot.data,
+          derived: snapshot,
         });
         return true;
       },

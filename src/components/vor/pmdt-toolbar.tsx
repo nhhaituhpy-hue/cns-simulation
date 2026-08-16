@@ -12,10 +12,9 @@ export function PmdtToolbar({ title }: { title: string }) {
   const restoreDefaultConfig = useVorPmdtStore((state) => state.restoreDefaultConfig);
   const securityLevel = useVorPmdtStore((state) => state.securityLevel);
   const local = useVorPmdtStore((state) => state.config.simulation.local);
-  const bypass = useVorPmdtStore((state) => state.config.simulation.integralMonitorBypass);
   const configDirty = useVorPmdtStore((state) => state.configDirty);
-  const canApply = configDirty && securityLevel >= 3 && local && bypass;
-  const canRestore = securityLevel >= 3 && local && bypass;
+  const canApply = configDirty && securityLevel >= 3 && local;
+  const canRestore = securityLevel >= 3 && local;
 
   return (
     <div className="pmdt-toolbar">

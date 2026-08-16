@@ -6574,3 +6574,74 @@
   left: 14px;
   margin: 0;
 }
+
+/* Keep selection controls readable across all classic PMDT screens. */
+.pmdt-classic-window input[type="checkbox"],
+.pmdt-classic-window input[type="radio"] {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  box-sizing: border-box;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-content: center;
+  width: 13px !important;
+  height: 13px !important;
+  min-width: 13px;
+  min-height: 13px;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid #707070 !important;
+  border-radius: 0 !important;
+  background: #f8f8f8 !important;
+  color: #202020 !important;
+  box-shadow: inset 1px 1px #fff, inset -1px -1px #b8b8b8 !important;
+  vertical-align: middle;
+}
+
+.pmdt-classic-window input[type="checkbox"]::after,
+.pmdt-classic-window input[type="radio"]::after {
+  content: "";
+  display: block;
+}
+
+.pmdt-classic-window input[type="checkbox"]::after {
+  width: 5px;
+  height: 9px;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  transform: translateY(-1px) rotate(45deg) scale(0);
+  transform-origin: center;
+}
+
+.pmdt-classic-window input[type="checkbox"]:checked::after {
+  transform: translateY(-1px) rotate(45deg) scale(1);
+}
+
+.pmdt-classic-window input[type="radio"] {
+  border-radius: 50% !important;
+}
+
+.pmdt-classic-window input[type="radio"]::after {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  transform: scale(0);
+}
+
+.pmdt-classic-window input[type="radio"]:checked::after {
+  transform: scale(1);
+}
+
+.pmdt-classic-window input[type="checkbox"]:disabled,
+.pmdt-classic-window input[type="radio"]:disabled {
+  border-color: #999 !important;
+  background: #e8e8e8 !important;
+  color: #666 !important;
+}
+
+.pmdt-classic-window input[type="checkbox"]:focus-visible,
+.pmdt-classic-window input[type="radio"]:focus-visible {
+  outline: 1px dotted #000;
+  outline-offset: 1px;
+}

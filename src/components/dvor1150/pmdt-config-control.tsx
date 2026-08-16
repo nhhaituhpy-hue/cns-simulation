@@ -19,25 +19,24 @@ export function Dvor1150ConfigControl({
   type,
   digits,
   mirrorFieldIds,
-  requireBypass = true,
   className = "dvor1150-control",
 }: {
   fieldId: string;
   type?: Dvor1150ConfigFieldType;
   digits?: number;
   mirrorFieldIds?: readonly string[];
-  requireBypass?: boolean;
   className?: string;
 }) {
   const config = useDvor1150PmdtStore((state) => state.configDraft);
   const security = useDvor1150PmdtStore((state) => state.securityLevel);
+  const local = useDvor1150PmdtStore((state) => state.config.simulation.local);
   const setConfigValue = useDvor1150PmdtStore((state) => state.setConfigValue);
   const field = dvor1150ConfigFieldCatalog.find((item) => item.id === fieldId);
   const value = getDvor1150ConfigValue(config, fieldId);
   const controlType = type ?? field?.type ?? "text";
   const [draftValue, setDraftValue] = useState(formatValue(value, digits ?? field?.digits));
   const [editing, setEditing] = useState(false);
-  const canEdit = security >= 3 && Boolean(field) && (!requireBypass || config.simulation.integralMonitorBypass);
+  const canEdit = security >= 3 && local && Boolean(field);
 
   useEffect(() => {
     if (!editing) setDraftValue(formatValue(value, digits ?? field?.digits));

@@ -878,6 +878,7 @@ export function buildDvorGroundCheck(
 export function buildDvor1150aSnapshot(
   config: Dvor1150aConfig,
   baseline = cloneDefaultVorPmdtData(),
+  mainTransmitter?: DvorTransmitterId,
 ): Dvor1150aSnapshot {
   const data = structuredClone(baseline);
   const effectiveTransmitters = {
@@ -885,6 +886,7 @@ export function buildDvor1150aSnapshot(
     tx2: effectiveTransmitter(config, "tx2"),
   };
   const activeId = chooseActiveTransmitter(effectiveTransmitters);
+  const mainId = mainTransmitter ?? activeId;
   const active = activeId ? effectiveTransmitters[activeId] : null;
   const monitors = {
     mon1: monitorResult(config, "mon1", active, baseline.notchData),
@@ -998,7 +1000,7 @@ export function buildDvor1150aSnapshot(
       secondaryAlarm: !secondaryHealthy,
     })),
     antennaSelect: activeId === "tx2" ? 2 : 1,
-    mainSelect: activeId === "tx2" ? 2 : 1,
+    mainSelect: mainId === "tx2" ? 2 : 1,
     transmitterOn: {
       tx1: effectiveTransmitters.tx1.onAir,
       tx2: effectiveTransmitters.tx2.onAir,
@@ -1023,12 +1025,13 @@ export function buildDvor1150aSnapshot(
     bypass: config.simulation.integralMonitorBypass,
   };
   data.transmitters = {
-    tx1: transmitterSidebarState(effectiveTransmitters.tx1),
-    tx2: transmitterSidebarState(effectiveTransmitters.tx2),
+    tx1: transmitterSidebarState(effectiveTransmitters.tx1, "tx1", mainId, activeId),
+    tx2: transmitterSidebarState(effectiveTransmitters.tx2, "tx2", mainId, activeId),
   };
 
   return {
     data,
+    mainTransmitter: mainId,
     effectiveTransmitters,
     monitors,
     monitorOffsets,
@@ -1057,20 +1060,22 @@ function parameterToSidebarKey(parameter: DvorMonitorParameter): string | null {
   return map[parameter] ?? null;
 }
 
-function transmitterSidebarState(transmitter: DvorEffectiveTransmitter) {
-  if (!transmitter.enabled) {
-    return { main: "gray" as const, antenna: "gray" as const, load: "gray" as const, off: "red" as const };
-  }
-  if (transmitter.status === "red") {
-    return { main: "red" as const, antenna: "red" as const, load: "gray" as const, off: "red" as const };
-  }
-  if (transmitter.onAir) {
-    return { main: "green" as const, antenna: "green" as const, load: "gray" as const, off: "gray" as const };
-  }
-  if (transmitter.load) {
-    return { main: "gray" as const, antenna: "gray" as const, load: "green" as const, off: "gray" as const };
-  }
-  return { main: "gray" as const, antenna: "gray" as const, load: "gray" as const, off: "red" as const };
+function transmitterSidebarState(
+  transmitter: DvorEffectiveTransmitter,
+  transmitterId: DvorTransmitterId,
+  mainId: DvorTransmitterId | null,
+  antennaId: DvorTransmitterId | null,
+) {
+  return {
+    // Main identifies the logical primary transmitter, independently from
+    // the relay's current Antenna route during an automatic transfer.
+    // Alarm state is shown by the monitor/alarm indicators; these route cells
+    // stay green so Main/Antenna/Off can be compared independently.
+    main: transmitterId === mainId && transmitter.enabled ? "green" as const : "gray" as const,
+    antenna: transmitterId === antennaId && transmitter.onAir ? "green" as const : "gray" as const,
+    load: transmitter.load ? "green" as const : "gray" as const,
+    off: !transmitter.enabled || (!transmitter.onAir && !transmitter.load) ? "red" as const : "gray" as const,
+  };
 }
 
 export function createDefaultDvor1150aSnapshot(): Dvor1150aSnapshot {

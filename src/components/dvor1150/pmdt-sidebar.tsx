@@ -31,10 +31,11 @@ export function Dvor1150Sidebar() {
   const needBackup = useDvor1150PmdtStore((state) => state.needBackup);
   const loginOpen = useDvor1150PmdtStore((state) => state.loginDialogOpen);
   const security = useDvor1150PmdtStore((state) => state.securityLevel);
+  const local = useDvor1150PmdtStore((state) => state.config.simulation.local);
   const setBypass = useDvor1150PmdtStore((state) => state.setMonitorBypass);
   const setTransmitterMode = useDvor1150PmdtStore((state) => state.setTransmitterMode);
   const canMain = security >= 3;
-  const canMaintenance = security >= 3;
+  const canMaintenance = security >= 3 && local;
   const bypassColor: Dvor1150IndicatorColor = config.simulation.integralMonitorBypass ? "yellow" : "gray";
   const activeMonitor = activeTransmitter === "tx2" ? monitors.mon2 : monitors.mon1;
   const dualTransmitters = config.station.transmitterConfig === "Dual Transmitters";
@@ -95,9 +96,9 @@ export function Dvor1150Sidebar() {
         <span className="dvor1150-monitor-status-cell"><Indicator color={monitors.mon1.healthy ? "gray" : "red"} locked={loginOpen} /></span>
         <span className="pmdt-monitor-label">Alarm</span>
         <span className="dvor1150-monitor-status-cell"><Indicator color={monitors.mon2.healthy ? "gray" : "red"} locked={loginOpen} /></span>
-        <button type="button" className="dvor1150-monitor-status-cell dvor1150-monitor-status-cell--command" aria-label="Bypass Monitor 1" aria-pressed={config.simulation.integralMonitorBypass} disabled={security < 3} onClick={() => setBypass("mon1", !config.simulation.integralMonitorBypass)} title={security < 3 ? "Yêu cầu Security Level 3" : "Bật/tắt Bypass cho cả hai monitor"}><Indicator color={bypassColor} locked={loginOpen} /></button>
+        <button type="button" className="dvor1150-monitor-status-cell dvor1150-monitor-status-cell--command" aria-label="Bypass Monitor 1" aria-pressed={config.simulation.integralMonitorBypass} disabled={security < 3 || !local} onClick={() => setBypass("mon1", !config.simulation.integralMonitorBypass)} title={security < 3 ? "Yêu cầu Security Level 3" : !local ? "Bật Local trước khi chọn Bypass" : "Bật/tắt Bypass cho cả hai monitor"}><Indicator color={bypassColor} locked={loginOpen} /></button>
         <span className="pmdt-monitor-label">Bypass</span>
-        <button type="button" className="dvor1150-monitor-status-cell dvor1150-monitor-status-cell--command" aria-label="Bypass Monitor 2" aria-pressed={config.simulation.integralMonitorBypass} disabled={security < 3} onClick={() => setBypass("mon2", !config.simulation.integralMonitorBypass)} title={security < 3 ? "Yêu cầu Security Level 3" : "Bật/tắt Bypass cho cả hai monitor"}><Indicator color={bypassColor} locked={loginOpen} /></button>
+        <button type="button" className="dvor1150-monitor-status-cell dvor1150-monitor-status-cell--command" aria-label="Bypass Monitor 2" aria-pressed={config.simulation.integralMonitorBypass} disabled={security < 3 || !local} onClick={() => setBypass("mon2", !config.simulation.integralMonitorBypass)} title={security < 3 ? "Yêu cầu Security Level 3" : !local ? "Bật Local trước khi chọn Bypass" : "Bật/tắt Bypass cho cả hai monitor"}><Indicator color={bypassColor} locked={loginOpen} /></button>
       </div>
     </section>
     <section aria-labelledby="dvor1150-parameters" className="pmdt-sidebar-section">

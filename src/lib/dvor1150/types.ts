@@ -310,6 +310,8 @@ export interface Dvor1150ConfigValidationIssue {
 export interface Dvor1150Snapshot {
   data: Dvor1150PmdtData;
   activeTransmitter: Dvor1150TransmitterId | null;
+  /** Logical Main selection; it can remain TX1 while the antenna is on TX2 after an automatic transfer. */
+  mainTransmitter: Dvor1150TransmitterId | null;
   effectiveTransmitters: Record<Dvor1150TransmitterId, Dvor1150EffectiveTransmitter>;
   monitors: Record<Dvor1150MonitorId, Dvor1150MonitorResult>;
   validation: Dvor1150ConfigValidationIssue[];
