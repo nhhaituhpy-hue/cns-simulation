@@ -30,7 +30,7 @@ const faultIntegralRows: DmeDualValueRow[] = [
   { label: "Rx Frequency", mon1Value: "1140.991", mon1Status: "gray", mon2Value: "1140.991", mon2Status: "gray", unit: "MHz" },
   { label: "VSWR", mon1Value: "1.3", mon1Status: "normal", mon2Value: "1.3", mon2Status: "normal", unit: ":1" },
   { label: "Ident Status", mon1Value: "Normal", mon1Status: "green", mon2Value: "Normal", mon2Status: "green", unit: "" },
-  { label: "Ident Code", mon1Value: "TUH", mon1Status: "green", mon2Value: "TUH", mon2Status: "green", unit: "" },
+  { label: "Ident Code", mon1Value: "TST", mon1Status: "green", mon2Value: "TST", mon2Status: "green", unit: "" },
 ];
 
 const faultStandbyRows: DmeDualValueRow[] = [

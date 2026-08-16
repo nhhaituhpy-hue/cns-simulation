@@ -17,7 +17,7 @@ describe("DME PMDT shell", () => {
     render(<PmdtLayout />);
     expect(screen.getByRole("form", { name: "Login" })).toBeInTheDocument();
     act(() => login());
-    expect(screen.getByRole("heading", { name: /VIETNAM TUY HOA 117X - Dual DME - SELEX ES Inc\. PMDT/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /TST - Dual DME - SELEX ES Inc\. PMDT/i })).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Selex ES" })).toBeInTheDocument();
     expect(screen.getByText("Connected")).toBeInTheDocument();
     expect(screen.getByText("11.97")).toBeInTheDocument();

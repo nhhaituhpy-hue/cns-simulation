@@ -30,7 +30,7 @@ function shiftValue(
 
 /**
  * Keeps screenshot-calibrated monitor snapshots while moving channel-derived
- * measurements when the station is changed from the default 117X channel.
+ * measurements when the station channel assignment is changed.
  */
 export function withAssignedDmeMeasurements(
   rows: readonly DmeDualValueRow[],
@@ -49,4 +49,3 @@ export function withAssignedDmeMeasurements(
     };
   });
 }
-

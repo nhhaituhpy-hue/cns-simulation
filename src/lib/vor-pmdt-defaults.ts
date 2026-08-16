@@ -343,8 +343,8 @@ export const defaultRmsConfigStation: VorRmsConfigStation = {
   stationType: "DVOR",
   transmitterConfig: "Dual Transmitters",
   monitorConfig: "Dual Monitors",
-  stationDescription: "TUY HOA 117.0 MHz",
-  transmitterFrequency: "117.0 MHz",
+  stationDescription: "TST",
+  transmitterFrequency: "TST",
 };
 
 export const defaultRmsStatus: VorRmsStatus = {

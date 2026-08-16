@@ -630,10 +630,6 @@ function synchronizeDmeChannelData(
   previous: DmeChannelAllocation | null,
   next: DmeChannelAllocation,
 ): DmePmdtData {
-  if (previous && data.rmsConfigStation.stationDescription === `VIETNAM TUY HOA ${previous.channelLabel}`) {
-    data.rmsConfigStation.stationDescription = `VIETNAM TUY HOA ${next.channelLabel}`;
-  }
-
   const updateMonitorRows = (rows: DmePmdtData["integralData"]) => rows.map((row) => {
     const assignments: Record<string, { previous: number | null; next: number; precision: number }> = {
       Delay: { previous: previous?.nominalReplyDelayUs ?? null, next: next.nominalReplyDelayUs, precision: 2 },

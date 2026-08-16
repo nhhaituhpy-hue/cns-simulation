@@ -40,7 +40,7 @@ describe("Transmitter screens", () => {
     const outputPowerInput = screen.getByLabelText("txConfigNominal.audioGenParams.outputPower");
     expect(outputPowerInput).toHaveValue("70.0");
     expect(outputPowerInput).not.toBeDisabled();
-    expect(screen.getByDisplayValue("TUH")).not.toBeDisabled();
+    expect(screen.getByDisplayValue("TST")).not.toBeDisabled();
     await user.click(
       screen.getByRole("tab", { name: "Offsets and Scale Factors" }),
     );

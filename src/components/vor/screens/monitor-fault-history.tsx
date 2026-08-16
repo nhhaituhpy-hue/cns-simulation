@@ -37,7 +37,7 @@ function FaultIntegral({ monitorNumber }: { monitorNumber: 1 | 2 }) {
     "RF Level": { value: "-96.2", color: "red" },
     "Ident Modulation": { value: "7.2", color: "green" },
     "Ident Status": { value: "No Ident", color: "red" },
-    "Ident Code": { value: "TUH", color: "green" },
+    "Ident Code": { value: "TST", color: "green" },
     "Tx Power": { value: "1.4", color: "red" },
     "Tx Frequency": { value: "0.0000", color: "red" },
     "Tx Frequency Error": { value: "<= -50", color: "red" },

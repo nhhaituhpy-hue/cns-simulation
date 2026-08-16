@@ -53,7 +53,7 @@ function makeMonitorMeasurement(): DvorRawMonitorMeasurement {
     rfLevel: 0.9,
     identModulation: 7.2,
     identStatus: "Normal",
-    identCode: "TUH",
+    identCode: "TST",
     txFrequencyError: 5,
     notchMonitor: 100,
     sidebandVswr: [...screenshotVswr],
@@ -103,7 +103,7 @@ function makeTxConfig(id: DvorTransmitterId): DvorTransmitterConfig {
       identModulation: 8,
       referenceModulation: 28,
       sboRfLevel: 65,
-      mainIdentCode: "TUH",
+      mainIdentCode: "TST",
       standbyIdentCode: "Same as Main Ident",
       keyerMode: "disabled",
     },
@@ -197,7 +197,7 @@ function makeCalibration() {
 export function createDefaultDvor1150aConfig(): Dvor1150aConfig {
   return {
     station: {
-      stationDescription: "TUY HOA 117.0 MHz",
+      stationDescription: "TST",
       frequencyMHz: 117,
       stationType: "DVOR",
       transmitterConfig: "Dual Transmitters",

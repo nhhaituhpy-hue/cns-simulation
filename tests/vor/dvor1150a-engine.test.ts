@@ -14,7 +14,7 @@ describe("DVOR 1150A configuration engine", () => {
 
     expect(snapshot.voting.activeTransmitter).toBe("tx1");
     expect(snapshot.data.rmsConfigStation.transmitterFrequency).toBe("117.0 MHz");
-    expect(snapshot.data.integralData.find((row) => row.label === "Ident Code")?.mon1Value).toBe("TUH");
+    expect(snapshot.data.integralData.find((row) => row.label === "Ident Code")?.mon1Value).toBe("TST");
     expect(snapshot.data.txFrequency[0].value1).toBeCloseTo(117.000585, 6);
     expect(snapshot.monitors.mon1.parameters.hz30Modulation.indicator).toBe("green");
   });

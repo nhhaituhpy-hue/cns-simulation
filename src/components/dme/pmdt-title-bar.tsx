@@ -4,7 +4,6 @@ import { Minus } from "@phosphor-icons/react/dist/csr/Minus";
 import { Square } from "@phosphor-icons/react/dist/csr/Square";
 import { Wrench } from "@phosphor-icons/react/dist/csr/Wrench";
 import { X } from "@phosphor-icons/react/dist/csr/X";
-import { getDmeStationChannelAllocation } from "@/lib/dme1119a";
 import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
 
 const windowButtons = [
@@ -15,9 +14,8 @@ const windowButtons = [
 
 export function PmdtTitleBar() {
   const station = useDmePmdtStore((state) => state.data.rmsConfigStation);
-  const allocation = getDmeStationChannelAllocation(station);
   const equipmentLabel = station.transmitterConfig === "Dual Transmitters" ? "Dual DME" : "Single DME";
-  const stationLabel = station.stationDescription.trim() || `VIETNAM TUY HOA ${allocation?.channelLabel ?? "--"}`;
+  const stationLabel = station.stationDescription.trim() || "TST";
 
   return (
     <header className="pmdt-titlebar">

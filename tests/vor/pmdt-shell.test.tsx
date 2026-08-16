@@ -22,7 +22,7 @@ describe("PMDT shell", () => {
 
     expect(
       screen.getByRole("heading", {
-        name: /TUY HOA 117\.0 MHz - Dual DVOR - SELEX ES Inc\. PMDT/i,
+        name: /TST 117\.0 MHz - Dual DVOR - SELEX ES Inc\. PMDT/i,
       }),
     ).toBeInTheDocument();
     expect(screen.getByText("Connected")).toBeInTheDocument();

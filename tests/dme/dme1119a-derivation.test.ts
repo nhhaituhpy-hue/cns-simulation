@@ -27,7 +27,7 @@ describe("DME 1119A CONFIG -> MONITOR derivation", () => {
 
   it("propagates Table 9-5 X to Y channel allocation and calibration baseline", () => {
     const data = change("rmsConfigStation.channelType", "Y");
-    expect(data.rmsConfigStation.stationDescription).toContain("117Y");
+    expect(data.rmsConfigStation.stationDescription).toBe("TST");
     expect(row(data, "integral", "Delay")?.mon1Value).toBe("55.99");
     expect(row(data, "integral", "Spacing")?.mon1Value).toBe("29.98");
     expect(row(data, "integral", "Tx Frequency")?.mon1Value).toBe("1078.000");
