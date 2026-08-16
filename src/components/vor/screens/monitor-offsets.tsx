@@ -3,6 +3,22 @@
 import { Fragment } from "react";
 import { resolveVorField, resolveVorStatus, useVorPmdtStore } from "@/stores/vor-pmdt-store";
 import { PmdtToolbar } from "../pmdt-toolbar";
+import { PmdtConfigControl } from "../pmdt-config-control";
+
+const calibrationFieldByParameter: Record<string, string> = {
+  "Azimuth Angle Offset": "azimuthOffset",
+  "30 Hz Modulation Scale": "hz30ModulationScale",
+  "9960 Hz Modulation Scale": "hz9960ModulationScale",
+  "9960 Hz Deviation Scale": "deviationScale",
+  "RF Level Offset": "rfLevelOffset",
+  "Ident Modulation Scale": "identModulationScale",
+  "Tx Power Scale": "txPowerScale",
+  "Tx Power Offset": "txPowerOffset",
+  "Tx Frequency Error Offset": "txFrequencyErrorOffset",
+  "Notch Monitor Scale": "notchScale",
+  "Odd Antenna Sideband Return Loss Offset": "oddAntennaReturnLossOffset",
+  "Even Antenna Sideband Return Loss Offset": "evenAntennaReturnLossOffset",
+};
 
 function OffsetCell({
   fieldId,
@@ -84,13 +100,27 @@ export function MonitorOffsets({ monitorNumber }: { monitorNumber: 1 | 2 }) {
                 {index === 6 && <tr className="pmdt-offset-row-group-start"><td colSpan={6} /></tr>}
                 <tr>
                   <th scope="row">{row.parameter}</th>
-                  <OffsetCell
-                    fieldId={`monitorOffsets.${monitorNumber}.${index}.integral`}
-                    label={`${row.parameter} Integral`}
-                    value={row.integral}
-                    digits={digitsFor(row.parameter)}
-                    overrides={overrides}
-                  />
+                  {calibrationFieldByParameter[row.parameter] ? (
+                    <td
+                      data-vor-field-id={`monitorOffsets.${monitorNumber}.${index}.integral`}
+                      className="pmdt-offset-value"
+                    >
+                      <PmdtConfigControl
+                        displayFieldId={`monitorOffsets.${monitorNumber}.${index}.integral`}
+                        configFieldId={`monitor.calibration.mon${monitorNumber}.${calibrationFieldByParameter[row.parameter]}`}
+                        type="number"
+                        digits={digitsFor(row.parameter)}
+                      />
+                    </td>
+                  ) : (
+                    <OffsetCell
+                      fieldId={`monitorOffsets.${monitorNumber}.${index}.integral`}
+                      label={`${row.parameter} Integral`}
+                      value={row.integral}
+                      digits={digitsFor(row.parameter)}
+                      overrides={overrides}
+                    />
+                  )}
                   <td className="pmdt-offset-gap" aria-hidden="true" />
                   <OffsetCell
                     fieldId={`monitorOffsets.${monitorNumber}.${index}.standby`}

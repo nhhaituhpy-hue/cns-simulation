@@ -17,6 +17,7 @@ import {
   buildDvor1150aSnapshot,
   cloneDvor1150aConfig,
   createDefaultDvor1150aConfig,
+  DVOR_MONITOR_IDS,
   type Dvor1150aConfig,
   type Dvor1150aSnapshot,
   type DvorConfigValue,
@@ -208,12 +209,24 @@ interface AutomaticMonitorTransfer {
   action: "transfer" | "shutdown" | null;
 }
 
+function allEnabledMonitorsReportAlarm(snapshot: Dvor1150aSnapshot): boolean {
+  const enabledMonitors = DVOR_MONITOR_IDS
+    .map((monitorId) => snapshot.monitors[monitorId])
+    .filter((monitor) => monitor.enabled);
+
+  return enabledMonitors.length > 0 && enabledMonitors.every((monitor) =>
+    Object.values(monitor.parameters).some((parameter) => parameter.status === "alarm"),
+  );
+}
+
 /**
  * Evaluates the relay at most once for a configuration change. The engine
  * remains a pure snapshot builder; this store-level operation is the single,
- * explicit state transition that can move the physical main route. If the
- * standby transmitter also alarms, both transmitters are taken off-air
- * instead of handing control back and forth between the same two bad paths.
+ * explicit state transition that can move the physical main route. A monitor
+ * calibration alarm can remain visible after the route changes because it is
+ * independent of the transmitter. Only shut down when every enabled monitor
+ * path still reports an alarm after the transfer; this keeps that persistent
+ * calibration alarm from being mistaken for a bad standby transmitter.
  */
 function applyAutomaticMonitorTransfer(
   config: Dvor1150aConfig,
@@ -227,6 +240,7 @@ function applyAutomaticMonitorTransfer(
     !snapshot.voting.transferRequested
     || !active
     || config.station.transmitterConfig !== "Dual Transmitters"
+    || (mainTransmitter && active !== mainTransmitter)
   ) {
     return noAction;
   }
@@ -247,7 +261,7 @@ function applyAutomaticMonitorTransfer(
     mainTransmitter ?? active,
   );
 
-  if (transferredSnapshot.voting.transferRequested) {
+  if (allEnabledMonitorsReportAlarm(transferredSnapshot)) {
     const shutdown = applyDvorConfigPatches(result.config, [
       { fieldId: "transmitters.tx1.enabled", value: false },
       { fieldId: "transmitters.tx1.onAir", value: false },

@@ -160,6 +160,21 @@ describe("VOR PMDT store", () => {
     expect(store.getState().lastCommand).toBe("Automatic monitor transfer to TX2");
   });
 
+  it("transfers to standby when a single monitor calibration alarm persists after the route changes", () => {
+    const store = createVorPmdtStore();
+    enterMaintenanceMode(store);
+    store.getState().setConfigValue("monitor.calibration.mon1.deviationScale", 70);
+
+    expect(store.getState().applyConfigChanges()).toBe(true);
+    store.getState().setConfigValue("simulation.integralMonitorBypass", false);
+
+    expect(store.getState().derived.monitors.mon1.parameters.deviation.status).toBe("alarm");
+    expect(store.getState().config.transmitters.tx1.onAir).toBe(false);
+    expect(store.getState().config.transmitters.tx2.onAir).toBe(true);
+    expect(store.getState().derived.voting.activeTransmitter).toBe("tx2");
+    expect(store.getState().lastCommand).toBe("Automatic monitor transfer to TX2");
+  });
+
   it("turns both transmitters Off when the standby transmitter alarms too", () => {
     const store = createVorPmdtStore();
     enterMaintenanceMode(store);
