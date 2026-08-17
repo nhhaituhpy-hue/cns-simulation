@@ -31,7 +31,7 @@ describe("DVOR 1150 configuration and PMDT engine", () => {
     expect(snapshot.activeTransmitter).toBe("tx2");
     expect(snapshot.effectiveTransmitters.tx2.outputPower).toBe(70);
     expect(snapshot.data.txPower[0]).toMatchObject({ tx1: 0, tx2: 70 });
-    expect(snapshot.monitors.mon1.parameters.rfLevel.value).toBeCloseTo(0.14, 5);
+    expect(snapshot.monitors.mon1.parameters.rfLevel.value).toBeCloseTo(-1.631, 3);
   });
 
   it("keeps an imported On-Air/Load conflict deterministic and visible to validation", () => {
@@ -76,7 +76,7 @@ describe("DVOR 1150 configuration and PMDT engine", () => {
     ]));
   });
 
-  it("enforces transfer, Local-only configuration, backup and restore semantics", () => {
+  it("enforces transfer, Local-only configuration, backup and baseline restore semantics", () => {
     const store = createDvor1150PmdtStore({ now: () => new Date("2026-08-09T13:00:00Z") });
 
     expect(store.getState().login("SEC3", "THREE")).toBe(true);
@@ -96,7 +96,82 @@ describe("DVOR 1150 configuration and PMDT engine", () => {
     store.getState().setConfigValue("transmitters.tx2.nominal.outputPower", 90);
     expect(store.getState().applyConfigChanges()).toBe(true);
     expect(store.getState().restoreConfig()).toBe(true);
-    expect(store.getState().derived.effectiveTransmitters.tx2.outputPower).toBe(80);
+    expect(store.getState().derived.effectiveTransmitters.tx2.outputPower).toBe(100);
+    expect(store.getState().config.simulation.local).toBe(false);
+    expect(store.getState().needBackup).toBe(false);
+  });
+
+  it("applies Field Detector calibration to the selected monitor after Apply", () => {
+    const store = createDvor1150PmdtStore();
+    expect(store.getState().login("SEC3", "THREE")).toBe(true);
+    expect(store.getState().setLocalMode(true)).toBe(true);
+    expect(store.getState().setMonitorBypass("mon1", true)).toBe(true);
+
+    store.getState().setConfigValue("monitor.calibration.mon2.fieldDetector.azimuthAngleOffset", 0.03);
+    store.getState().setConfigValue("monitor.calibration.mon2.fieldDetector.hz9960ModulationScale", 101.4);
+    store.getState().setConfigValue("monitor.calibration.mon2.fieldDetector.hz9960DeviationScale", 120);
+    expect(store.getState().derived.monitors.mon2.parameters.hz9960Modulation.value).toBeCloseTo(30, 2);
+
+    expect(store.getState().applyConfigChanges()).toBe(true);
+    const { monitors } = store.getState().derived;
+    expect(monitors.mon1.parameters.hz9960Modulation.value).toBeCloseTo(30, 2);
+    expect(monitors.mon2.parameters.azimuth.value).toBeCloseTo(360, 2);
+    expect(monitors.mon2.parameters.azimuth.status).toBe("normal");
+    expect(monitors.mon2.parameters.hz9960Modulation.value).toBeCloseTo(30.42, 2);
+    expect(monitors.mon2.parameters.deviation.value).toBeCloseTo(19.2, 2);
+  });
+
+  it("propagates transmitter configuration through both monitor measurement paths after Apply", () => {
+    const store = createDvor1150PmdtStore();
+    expect(store.getState().login("SEC3", "THREE")).toBe(true);
+    expect(store.getState().setLocalMode(true)).toBe(true);
+    expect(store.getState().setMonitorBypass("mon1", true)).toBe(true);
+
+    store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 120);
+    store.getState().setConfigValue("transmitters.tx1.nominal.referenceModulation", 31);
+    store.getState().setConfigValue("transmitters.tx1.nominal.voiceModulation", 10);
+    expect(store.getState().applyConfigChanges()).toBe(true);
+
+    const { mon1, mon2 } = store.getState().derived.monitors;
+    expect(mon1.parameters.hz30Modulation.value).toBeCloseTo(31, 2);
+    expect(mon1.parameters.hz9960Modulation.value).toBeCloseTo(32.88, 2);
+    expect(mon1.parameters.deviation.value).toBeCloseTo(17.294, 3);
+    expect(mon1.parameters.rfLevel.value).toBeCloseTo(1.18, 2);
+    expect(mon2.parameters.rfLevel.value).toBeCloseTo(mon1.parameters.rfLevel.value, 5);
+  });
+
+  it("models carrier power and carrier-sideband phase at the 9960 Hz monitor", () => {
+    const outputPower = cloneDvor1150Config(defaultDvor1150Config);
+    outputPower.transmitters.tx1.nominal.outputPower = 110;
+
+    const nominalPowerSnapshot = buildDvor1150Snapshot(outputPower);
+    expect(nominalPowerSnapshot.monitors.mon1.parameters.hz9960Modulation.value).toBeCloseTo(30.94, 2);
+
+    const outputScale = cloneDvor1150Config(defaultDvor1150Config);
+    outputScale.transmitters.tx1.offsets.outputPowerScale = 110;
+    expect(buildDvor1150Snapshot(outputScale).monitors.mon1.parameters.hz9960Modulation.value).toBeCloseTo(30.94, 2);
+
+    outputPower.transmitters.tx1.offsets.carrierSidebandPhaseOffset = 90;
+    expect(buildDvor1150Snapshot(outputPower).monitors.mon1.parameters.hz9960Modulation.value).toBeCloseTo(31.54, 2);
+
+    outputPower.transmitters.tx1.offsets.carrierSidebandPhaseOffset = -90;
+    expect(buildDvor1150Snapshot(outputPower).monitors.mon1.parameters.hz9960Modulation.value).toBeCloseTo(30.34, 2);
+  });
+
+  it("restores Reset (F8) to Simulation Parameters baseline", () => {
+    const store = createDvor1150PmdtStore();
+    expect(store.getState().login("SEC3", "THREE")).toBe(true);
+    expect(store.getState().setLocalMode(true)).toBe(true);
+    store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 120);
+    expect(store.getState().applyConfigChanges()).toBe(true);
+
+    expect(store.getState().resetConfigDraft()).toBe(true);
+    const state = store.getState();
+    expect(state.config.transmitters.tx1.nominal.outputPower).toBe(100);
+    expect(state.config.monitor.calibration.mon1.fieldDetector.hz9960DeviationScale).toBe(100);
+    expect(state.config.simulation.local).toBe(false);
+    expect(state.needBackup).toBe(false);
+    expect(state.derived.monitors.mon1.parameters.rfLevel.value).toBeCloseTo(0.2, 5);
   });
 
   it("keeps the logical Main on TX1 after a one-step automatic transfer to TX2", () => {

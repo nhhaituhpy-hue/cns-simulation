@@ -59,6 +59,63 @@ const monitorOffsetFields = DVOR1150_MONITOR_IDS.flatMap((monitor) =>
   ),
 );
 
+const azimuthLimitFields = DVOR1150_MONITOR_IDS.flatMap((monitor) =>
+  (["alarmLow", "preAlarmLow", "nominal", "preAlarmHigh", "alarmHigh"] as const).map((band) =>
+    numeric(
+      `monitor.azimuthAlarmLimits.${monitor}.${band}`,
+      `Monitor ${monitor === "mon1" ? "1" : "2"} Azimuth ${band}`,
+      "Monitor Alarm Limits",
+      { min: -720, max: 720, step: 0.01, digits: 2, unit: "°" },
+    ),
+  ),
+);
+
+const monitorCalibrationFields = DVOR1150_MONITOR_IDS.flatMap((monitor) => [
+  numeric(`monitor.calibration.${monitor}.fieldDetector.azimuthAngleOffset`, `Monitor ${monitor === "mon1" ? "1" : "2"} Field Detector Azimuth Angle Offset`, "Monitor Offsets", { min: -360, max: 360, step: 0.01, digits: 2, unit: "°" }),
+  numeric(`monitor.calibration.${monitor}.fieldDetector.hz30ModulationScale`, `Monitor ${monitor === "mon1" ? "1" : "2"} Field Detector 30 Hz Modulation Scale`, "Monitor Offsets", { min: 0, max: 200, step: 0.1, digits: 1, unit: "%" }),
+  numeric(`monitor.calibration.${monitor}.fieldDetector.hz9960ModulationScale`, `Monitor ${monitor === "mon1" ? "1" : "2"} Field Detector 9960 Hz Modulation Scale`, "Monitor Offsets", { min: 0, max: 200, step: 0.1, digits: 1, unit: "%" }),
+  numeric(`monitor.calibration.${monitor}.fieldDetector.hz9960DeviationScale`, `Monitor ${monitor === "mon1" ? "1" : "2"} Field Detector 9960 Hz Deviation Scale`, "Monitor Offsets", { min: 0, max: 200, step: 0.1, digits: 1, unit: "%" }),
+  numeric(`monitor.calibration.${monitor}.fieldDetector.rfLevelOffset`, `Monitor ${monitor === "mon1" ? "1" : "2"} Field Detector RF Level Offset`, "Monitor Offsets", { min: -20, max: 20, step: 0.1, digits: 1, unit: "dB" }),
+  numeric(`monitor.calibration.${monitor}.testGenerator.azimuthAngleOffset`, `Monitor ${monitor === "mon1" ? "1" : "2"} Test Generator Azimuth Angle Offset`, "Monitor Offsets", { min: -360, max: 360, step: 0.01, digits: 2, unit: "°" }),
+  numeric(`monitor.calibration.${monitor}.testGenerator.hz30ModulationScale`, `Monitor ${monitor === "mon1" ? "1" : "2"} Test Generator 30 Hz Modulation Scale`, "Monitor Offsets", { min: 0, max: 200, step: 0.1, digits: 1, unit: "%" }),
+  numeric(`monitor.calibration.${monitor}.testGenerator.hz9960ModulationScale`, `Monitor ${monitor === "mon1" ? "1" : "2"} Test Generator 9960 Hz Modulation Scale`, "Monitor Offsets", { min: 0, max: 200, step: 0.1, digits: 1, unit: "%" }),
+  numeric(`monitor.calibration.${monitor}.testGenerator.hz9960DeviationScale`, `Monitor ${monitor === "mon1" ? "1" : "2"} Test Generator 9960 Hz Deviation Scale`, "Monitor Offsets", { min: 0, max: 200, step: 0.1, digits: 1, unit: "%" }),
+  numeric(`monitor.calibration.${monitor}.testGenerator.rfLevelOffset`, `Monitor ${monitor === "mon1" ? "1" : "2"} Test Generator RF Level Offset`, "Monitor Offsets", { min: -20, max: 20, step: 0.1, digits: 1, unit: "dB" }),
+]);
+
+const testGeneratorFields: readonly Dvor1150ConfigFieldDefinition[] = [
+  numeric("monitor.testGenerator.azimuthAngle", "Test Generator Azimuth Angle", "Test Generator", { min: 0, max: 360, step: 0.01, digits: 2, unit: "°" }),
+  numeric("monitor.testGenerator.hz30Modulation", "Test Generator 30 Hz Modulation", "Test Generator", { min: 0, max: 100, step: 0.1, digits: 1, unit: "%" }),
+  numeric("monitor.testGenerator.hz9960Modulation", "Test Generator 9960 Hz Modulation", "Test Generator", { min: 0, max: 100, step: 0.1, digits: 1, unit: "%" }),
+  numeric("monitor.testGenerator.deviation", "Test Generator Deviation", "Test Generator", { min: 0, max: 50, step: 0.1, digits: 1, unit: "Ratio" }),
+  numeric("monitor.testGenerator.identModulation", "Test Generator Ident Modulation", "Test Generator", { min: 0, max: 100, step: 0.1, digits: 1, unit: "%" }),
+  { id: "monitor.testGenerator.identControl", label: "Test Generator Ident Control", section: "Test Generator", type: "select", options: ["Normal", "Off", "Continuous"] },
+  numeric("monitor.testGenerator.audioModulation", "Test Generator Audio Modulation", "Test Generator", { min: 0, max: 100, step: 0.1, digits: 1, unit: "%" }),
+  numeric("monitor.testGenerator.audioFrequency", "Test Generator Audio Frequency", "Test Generator", { min: 30, max: 3000, step: 30, digits: 0, unit: "Hz" }),
+  { id: "monitor.notch.enabled", label: "Enable Notch Monitoring", section: "Monitor General", type: "boolean" },
+  numeric("monitor.notch.tolerance", "Notch Monitor Tolerance", "Monitor General", { min: 0, max: 100, step: 1, digits: 0, unit: "%" }),
+];
+
+const adLimitFields = (["tx1", "tx2"] as const).flatMap((transmitter) =>
+  (["plus5V", "plus12V", "plus12VLogic", "plus28V", "paVoltage"] as const).flatMap((parameter) =>
+    (["low", "preLow", "preHigh", "high"] as const).map((band) => numeric(
+      `rms.adLimits.${transmitter}.${parameter}.${band}`,
+      `${transmitter.toUpperCase()} ${parameter} ${band}`,
+      "RMS A/D Limits",
+      { step: 0.01, digits: 2 },
+    )),
+  ),
+);
+
+const temperatureLimitFields = (["exterior", "tx1", "tx2"] as const).flatMap((parameter) =>
+  (["low", "preLow", "preHigh", "high"] as const).map((band) => numeric(
+    `rms.adLimits.temperature.${parameter}.${band}`,
+    `${parameter} temperature ${band}`,
+    "RMS A/D Limits",
+    { step: 0.1, digits: 1, unit: "°C" },
+  )),
+);
+
 const transmitterFields = DVOR1150_TRANSMITTER_IDS.flatMap((transmitter) => [
   numeric(`transmitters.${transmitter}.nominal.azimuthIndex`, `${transmitter.toUpperCase()} Azimuth Index`, "Transmitter Nominal", { min: -360, max: 360, step: 0.01, digits: 2, unit: "°" }),
   numeric(`transmitters.${transmitter}.nominal.outputPower`, `${transmitter.toUpperCase()} Output Power`, "Transmitter Nominal", { min: 0, max: 250, step: 0.1, digits: 1, unit: "Watts", description: "Common nominal carrier power. The simulator accepts up to 250 W for training scenarios; the manual baseline is approximately 125 W at 100%." }),
@@ -79,6 +136,7 @@ const transmitterFields = DVOR1150_TRANSMITTER_IDS.flatMap((transmitter) => [
   numeric(`transmitters.${transmitter}.offsets.sideband2RfLevelScale`, `${transmitter.toUpperCase()} Sideband 2 RF Scale`, "Transmitter Offsets", { min: 0, max: 200, step: 0.1, digits: 1, unit: "%" }),
   numeric(`transmitters.${transmitter}.offsets.sideband3RfLevelScale`, `${transmitter.toUpperCase()} Sideband 3 RF Scale`, "Transmitter Offsets", { min: 0, max: 200, step: 0.1, digits: 1, unit: "%" }),
   numeric(`transmitters.${transmitter}.offsets.sideband4RfLevelScale`, `${transmitter.toUpperCase()} Sideband 4 RF Scale`, "Transmitter Offsets", { min: 0, max: 200, step: 0.1, digits: 1, unit: "%" }),
+  numeric(`transmitters.${transmitter}.offsets.cabinetTemperatureOffset`, `${transmitter.toUpperCase()} Cabinet Temperature Offset`, "Transmitter Offsets", { min: -50, max: 50, step: 0.1, digits: 1, unit: "°C" }),
 ]);
 
 export const dvor1150ConfigFieldCatalog: readonly Dvor1150ConfigFieldDefinition[] = [
@@ -104,7 +162,12 @@ export const dvor1150ConfigFieldCatalog: readonly Dvor1150ConfigFieldDefinition[
   { id: "monitor.sidebandVswrExecutiveAlarm", label: "VSWR Executive Alarm", section: "Monitor General", type: "boolean" },
   numeric("monitor.numberOfAntennasInAlarm", "Number of Antennas in Alarm", "Monitor General", { min: 1, max: 48, step: 1, digits: 0 }),
   ...monitorLimitFields,
+  ...azimuthLimitFields,
   ...monitorOffsetFields,
+  ...monitorCalibrationFields,
+  ...testGeneratorFields,
+  ...adLimitFields,
+  ...temperatureLimitFields,
   ...transmitterFields,
 ];
 
@@ -183,6 +246,26 @@ export function validateDvor1150Config(config: Dvor1150Config): string[] {
     const band = config.monitor.alarmLimits[parameter];
     if (!(band.alarmLow < band.preAlarmLow && band.preAlarmLow <= band.nominal && band.nominal <= band.preAlarmHigh && band.preAlarmHigh < band.alarmHigh)) {
       errors.push(`${parameterLabels[parameter]} limits không theo thứ tự.`);
+    }
+  }
+  for (const monitor of DVOR1150_MONITOR_IDS) {
+    const band = config.monitor.azimuthAlarmLimits[monitor];
+    if (!(band.alarmLow < band.preAlarmLow && band.preAlarmLow <= band.nominal && band.nominal <= band.preAlarmHigh && band.preAlarmHigh < band.alarmHigh)) {
+      errors.push(`Monitor ${monitor === "mon1" ? "1" : "2"} Azimuth limits không theo thứ tự.`);
+    }
+  }
+  for (const transmitter of ["tx1", "tx2"] as const) {
+    for (const parameter of ["plus5V", "plus12V", "plus12VLogic", "plus28V", "paVoltage"] as const) {
+      const band = config.rms.adLimits[transmitter][parameter];
+      if (!(band.low < band.preLow && band.preLow <= band.preHigh && band.preHigh < band.high)) {
+        errors.push(`${transmitter.toUpperCase()} ${parameter} A/D limits không theo thứ tự.`);
+      }
+    }
+  }
+  for (const parameter of ["exterior", "tx1", "tx2"] as const) {
+    const band = config.rms.adLimits.temperature[parameter];
+    if (!(band.low < band.preLow && band.preLow <= band.preHigh && band.preHigh < band.high)) {
+      errors.push(`${parameter} temperature limits không theo thứ tự.`);
     }
   }
   return errors;

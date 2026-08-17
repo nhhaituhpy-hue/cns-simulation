@@ -14,6 +14,11 @@ function formatValue(value: string | number | boolean | null, digits?: number): 
   return typeof value === "number" && digits !== undefined ? value.toFixed(digits) : String(value);
 }
 
+function stepPrecision(step: number, digits?: number): number {
+  if (digits !== undefined) return digits;
+  return String(step).split(".")[1]?.length ?? 0;
+}
+
 export function Dvor1150ConfigControl({
   fieldId,
   type,
@@ -50,6 +55,22 @@ export function Dvor1150ConfigControl({
     mirrorFieldIds?.forEach((mirrorFieldId) => setConfigValue(mirrorFieldId, parsed));
   }
 
+  function stepNumber(direction: 1 | -1) {
+    if (!field || field.type !== "number") return;
+    const typedValue = Number(draftValue);
+    const currentValue = Number.isFinite(typedValue)
+      ? typedValue
+      : typeof value === "number"
+        ? value
+        : field.min ?? 0;
+    const nextValue = Math.min(
+      field.max ?? Number.POSITIVE_INFINITY,
+      Math.max(field.min ?? Number.NEGATIVE_INFINITY, currentValue + direction * (field.step ?? 1)),
+    );
+    update(nextValue.toFixed(stepPrecision(field.step ?? 1, digits ?? field.digits)));
+    setEditing(false);
+  }
+
   if (controlType === "boolean") {
     return <input type="checkbox" checked={Boolean(value)} disabled={!canEdit} onChange={(event) => update(event.currentTarget.checked)} className={className} aria-label={field?.label ?? fieldId} />;
   }
@@ -58,5 +79,29 @@ export function Dvor1150ConfigControl({
       {field?.options?.map((option) => <option key={option} value={option}>{option}</option>)}
     </select>;
   }
-  return <input type="text" inputMode={controlType === "number" ? "decimal" : undefined} value={draftValue} disabled={!canEdit} onChange={(event) => update(event.currentTarget.value)} onFocus={() => setEditing(true)} onBlur={() => setEditing(false)} className={className} aria-label={field?.label ?? fieldId} />;
+  if (controlType === "number") {
+    const label = field?.label ?? fieldId;
+    return <span className={`${className} dvor1150-number-control`}>
+      <input
+        type="text"
+        inputMode="decimal"
+        value={draftValue}
+        disabled={!canEdit}
+        onChange={(event) => update(event.currentTarget.value)}
+        onFocus={() => setEditing(true)}
+        onBlur={() => setEditing(false)}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowUp") { event.preventDefault(); stepNumber(1); }
+          if (event.key === "ArrowDown") { event.preventDefault(); stepNumber(-1); }
+        }}
+        className="dvor1150-number-control__input"
+        aria-label={label}
+      />
+      <span className="dvor1150-number-control__buttons">
+        <button type="button" tabIndex={-1} disabled={!canEdit} onMouseDown={(event) => event.preventDefault()} onClick={() => stepNumber(1)} aria-label={`Increase ${label}`}>▲</button>
+        <button type="button" tabIndex={-1} disabled={!canEdit} onMouseDown={(event) => event.preventDefault()} onClick={() => stepNumber(-1)} aria-label={`Decrease ${label}`}>▼</button>
+      </span>
+    </span>;
+  }
+  return <input type="text" value={draftValue} disabled={!canEdit} onChange={(event) => update(event.currentTarget.value)} onFocus={() => setEditing(true)} onBlur={() => setEditing(false)} className={className} aria-label={field?.label ?? fieldId} />;
 }

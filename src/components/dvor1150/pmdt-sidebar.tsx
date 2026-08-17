@@ -26,18 +26,18 @@ const transmitterRows = [
 export function Dvor1150Sidebar() {
   const data = useDvor1150PmdtStore((state) => state.derived.data);
   const monitors = useDvor1150PmdtStore((state) => state.derived.monitors);
-  const activeTransmitter = useDvor1150PmdtStore((state) => state.derived.activeTransmitter);
   const config = useDvor1150PmdtStore((state) => state.config);
   const needBackup = useDvor1150PmdtStore((state) => state.needBackup);
   const loginOpen = useDvor1150PmdtStore((state) => state.loginDialogOpen);
   const security = useDvor1150PmdtStore((state) => state.securityLevel);
   const local = useDvor1150PmdtStore((state) => state.config.simulation.local);
+  const setLocal = useDvor1150PmdtStore((state) => state.setLocalMode);
   const setBypass = useDvor1150PmdtStore((state) => state.setMonitorBypass);
   const setTransmitterMode = useDvor1150PmdtStore((state) => state.setTransmitterMode);
   const canMain = security >= 3;
   const canMaintenance = security >= 3 && local;
   const bypassColor: Dvor1150IndicatorColor = config.simulation.integralMonitorBypass ? "yellow" : "gray";
-  const activeMonitor = activeTransmitter === "tx2" ? monitors.mon2 : monitors.mon1;
+  const activeMonitor = monitors.mon1;
   const dualTransmitters = config.station.transmitterConfig === "Dual Transmitters";
   const sidebarParameterRows = [
     { key: "azimuth", id: "azimuth", label: "Azimuth Angle", digits: 2 },
@@ -46,6 +46,8 @@ export function Dvor1150Sidebar() {
     { key: "deviation", id: "deviation", label: "Deviation", digits: 1 },
     { key: "rfLevel", id: "rfLevel", label: "RF Level", digits: 1 },
   ] as const;
+  const monitorNormalColor = (monitorId: "mon1" | "mon2"): Dvor1150IndicatorColor => monitors[monitorId].commStatus === "gray" ? "gray" : monitors[monitorId].healthy ? "green" : "gray";
+  const monitorAlarmColor = (monitorId: "mon1" | "mon2"): Dvor1150IndicatorColor => monitors[monitorId].commStatus === "gray" ? "gray" : monitors[monitorId].healthy ? "gray" : "red";
 
   function renderTransmitterCell(transmitter: Dvor1150TransmitterId, row: (typeof transmitterRows)[number]) {
     const color = data.transmitters[transmitter][row.key as keyof typeof data.transmitters["tx1"]];
@@ -68,8 +70,20 @@ export function Dvor1150Sidebar() {
     <section aria-label="Connection" className="pmdt-sidebar-section">
       <span className={`pmdt-connection-badge ${loginOpen ? "pmdt-connection-badge--locked" : data.connected ? "" : "pmdt-connection-badge--offline"}`}>{connected}</span>
       <div className={`dvor1150-backup-alert ${needBackup ? "dvor1150-backup-alert--active" : ""}`} aria-hidden={loginOpen || undefined}>{needBackup ? "Need Backup" : ""}</div>
-      <div className={`dvor1150-maintenance-alert ${data.alert ? "dvor1150-maintenance-alert--active" : ""}`} aria-hidden={loginOpen || undefined}>
-        {loginOpen ? null : <><Indicator color={data.alert ? "yellow" : "gray"} /><span>Maintenance Alert</span></>}
+      <div className="dvor1150-maintenance-controls" aria-hidden={loginOpen || undefined}>
+        <div className={`dvor1150-maintenance-alert ${data.alert ? "dvor1150-maintenance-alert--active" : ""}`}>
+          {loginOpen ? null : <><Indicator color={data.alert ? "yellow" : "gray"} /><span>Alert</span></>}
+        </div>
+        <button
+          type="button"
+          className={`dvor1150-maintenance-alert dvor1150-local-control ${local ? "dvor1150-local-control--active" : ""}`}
+          aria-pressed={local}
+          disabled={security < 3}
+          title={security < 3 ? "Yêu cầu SEC3/SEC4" : "Local cho phép chỉnh sửa cấu hình"}
+          onClick={() => setLocal(!local)}
+        >
+          {loginOpen ? null : <><Indicator color={local ? "yellow" : "gray"} /><span>Local</span></>}
+        </button>
       </div>
     </section>
     <section aria-labelledby="dvor1150-transmitters" className="pmdt-sidebar-section">
@@ -88,17 +102,25 @@ export function Dvor1150Sidebar() {
       <h2 id="dvor1150-monitors" className="pmdt-sidebar-heading">Monitors</h2>
       <div className="dvor1150-monitor-sidebar">
         <span className="dvor1150-monitor-sidebar-corner" aria-hidden="true" />
-        <span className="dvor1150-monitor-column-heading">Mon1</span>
-        <span className="dvor1150-monitor-column-heading">Mon2</span>
-        <span className="dvor1150-monitor-status-cell"><Indicator color={monitors.mon1.healthy ? "green" : "gray"} locked={loginOpen} /></span>
+        <span className="dvor1150-monitor-column-heading">Mon 1</span>
+        <span className="dvor1150-monitor-sidebar-corner" aria-hidden="true" />
+        <span className="dvor1150-monitor-column-heading">Mon 2</span>
+        <span className="dvor1150-monitor-sidebar-corner" aria-hidden="true" />
+        <span className="dvor1150-monitor-sidebar-corner" aria-hidden="true" />
+        <span className="dvor1150-monitor-status-cell"><Indicator color={monitorNormalColor("mon1")} locked={loginOpen} /></span>
         <span className="pmdt-monitor-label">Normal</span>
-        <span className="dvor1150-monitor-status-cell"><Indicator color={monitors.mon2.healthy ? "green" : "gray"} locked={loginOpen} /></span>
-        <span className="dvor1150-monitor-status-cell"><Indicator color={monitors.mon1.healthy ? "gray" : "red"} locked={loginOpen} /></span>
+        <span className="dvor1150-monitor-status-cell"><Indicator color={monitorNormalColor("mon2")} locked={loginOpen} /></span>
+        <span className="dvor1150-monitor-sidebar-corner" aria-hidden="true" />
+        <span className="dvor1150-monitor-sidebar-corner" aria-hidden="true" />
+        <span className="dvor1150-monitor-status-cell"><Indicator color={monitorAlarmColor("mon1")} locked={loginOpen} /></span>
         <span className="pmdt-monitor-label">Alarm</span>
-        <span className="dvor1150-monitor-status-cell"><Indicator color={monitors.mon2.healthy ? "gray" : "red"} locked={loginOpen} /></span>
+        <span className="dvor1150-monitor-status-cell"><Indicator color={monitorAlarmColor("mon2")} locked={loginOpen} /></span>
+        <span className="dvor1150-monitor-sidebar-corner" aria-hidden="true" />
+        <span className="dvor1150-monitor-sidebar-corner" aria-hidden="true" />
         <button type="button" className="dvor1150-monitor-status-cell dvor1150-monitor-status-cell--command" aria-label="Bypass Monitor 1" aria-pressed={config.simulation.integralMonitorBypass} disabled={security < 3 || !local} onClick={() => setBypass("mon1", !config.simulation.integralMonitorBypass)} title={security < 3 ? "Yêu cầu Security Level 3" : !local ? "Bật Local trước khi chọn Bypass" : "Bật/tắt Bypass cho cả hai monitor"}><Indicator color={bypassColor} locked={loginOpen} /></button>
         <span className="pmdt-monitor-label">Bypass</span>
         <button type="button" className="dvor1150-monitor-status-cell dvor1150-monitor-status-cell--command" aria-label="Bypass Monitor 2" aria-pressed={config.simulation.integralMonitorBypass} disabled={security < 3 || !local} onClick={() => setBypass("mon2", !config.simulation.integralMonitorBypass)} title={security < 3 ? "Yêu cầu Security Level 3" : !local ? "Bật Local trước khi chọn Bypass" : "Bật/tắt Bypass cho cả hai monitor"}><Indicator color={bypassColor} locked={loginOpen} /></button>
+        <span className="dvor1150-monitor-sidebar-corner" aria-hidden="true" />
       </div>
     </section>
     <section aria-labelledby="dvor1150-parameters" className="pmdt-sidebar-section">

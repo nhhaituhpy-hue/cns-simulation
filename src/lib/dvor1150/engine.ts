@@ -3,19 +3,31 @@ import {
   DVOR1150_MONITOR_PARAMETERS,
   DVOR1150_TRANSMITTER_IDS,
   type Dvor1150Config,
+  type Dvor1150AdRow,
   type Dvor1150EffectiveTransmitter,
   type Dvor1150IndicatorColor,
+  type Dvor1150AdParameter,
   type Dvor1150MonitorId,
   type Dvor1150MonitorParameter,
   type Dvor1150MonitorResult,
   type Dvor1150ParameterStatus,
   type Dvor1150Snapshot,
+  type Dvor1150TransferState,
   type Dvor1150TransmitterId,
 } from "./types";
 import { formatDvor1150Timestamp } from "./defaults";
 
-const DVOR1150_SIDEBAND_VSWR_ALARM_THRESHOLD = 1.25;
 const DVOR1150_REFERENCE_NOMINAL_OUTPUT_POWER = 100;
+
+const monitorSourceReference = {
+  azimuth: 359.97,
+  hz30Modulation: 30,
+  hz9960Modulation: 30,
+  deviation: 16,
+  rfLevel: 0.2,
+  referenceModulation: 30,
+  sboRfLevel: 47,
+} as const;
 
 const parameterLabels: Record<Dvor1150MonitorParameter, string> = {
   azimuth: "Azimuth Angle",
@@ -35,6 +47,25 @@ const parameterDigits: Record<Dvor1150MonitorParameter, number> = {
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
+}
+
+function average(values: readonly number[]): number {
+  return values.reduce((total, value) => total + value, 0) / Math.max(values.length, 1);
+}
+
+function relativePowerDb(outputPower: number): number {
+  if (outputPower <= 0) return -60;
+  return clamp(10 * Math.log10(outputPower / DVOR1150_REFERENCE_NOMINAL_OUTPUT_POWER), -60, 60);
+}
+
+/**
+ * Carrier-to-sideband phase tuning changes the 9960 Hz monitor response in a
+ * non-linear way. A sine response preserves the nominal value at 0°, gives a
+ * repeatable positive or negative variation for opposite phase directions,
+ * and avoids non-deterministic training outcomes.
+ */
+function carrierSidebandModulationAdjustment(phaseDegrees: number): number {
+  return Math.sin((phaseDegrees * Math.PI) / 180) * 0.6;
 }
 
 function normalizeAzimuth(value: number): number {
@@ -76,16 +107,17 @@ function effectiveTransmitter(config: Dvor1150Config, id: Dvor1150TransmitterId)
     transmitter.offsets.sideband34PhaseOffset,
   ];
   const outputPower = enabled ? Math.max(0, transmitter.nominal.outputPower * outputScale) : 0;
-  const sboRfLevel = enabled
-    ? Math.max(0, transmitter.nominal.sboRfLevel * (transmitter.nominal.outputPower / DVOR1150_REFERENCE_NOMINAL_OUTPUT_POWER))
+  const baseSboRfLevel = enabled
+    ? Math.max(0, transmitter.nominal.sboRfLevel * (outputPower / DVOR1150_REFERENCE_NOMINAL_OUTPUT_POWER))
     : 0;
+  const sboRfLevel = baseSboRfLevel * average(sidebandScales) / 100;
   return {
     id,
     enabled,
     onAir,
     load: enabled && !onAir && transmitter.load,
     active: onAir,
-    azimuthIndex: transmitter.nominal.azimuthIndex,
+    azimuthIndex: transmitter.nominal.azimuthIndex + transmitter.offsets.azimuthAngle,
     outputPower,
     voiceModulation: clamp(transmitter.nominal.voiceModulation * transmitter.offsets.voiceModulationScale / 100, 0, 100),
     identModulation: clamp(transmitter.nominal.identModulation * transmitter.offsets.identModulationScale / 100, 0, 100),
@@ -94,8 +126,9 @@ function effectiveTransmitter(config: Dvor1150Config, id: Dvor1150TransmitterId)
     carrierFrequency: config.station.frequencyMHz,
     lowerSidebandFrequency: config.station.frequencyMHz - 0.00996,
     upperSidebandFrequency: config.station.frequencyMHz + 0.00996,
-    sidebandPower: sidebandScales.map((scale) => Math.max(0, sboRfLevel * (scale / 100) ** 2 / 30)),
+    sidebandPower: sidebandScales.map((scale) => Math.max(0, baseSboRfLevel * (scale / 100) ** 2 / 30)),
     sidebandVswr: sidebandScales.map((scale, index) => Math.max(1, 1 + Math.abs(100 - scale) / 250 + (index + 1) * 0.01 + Math.abs(phaseOffsets[index] + transmitter.offsets.carrierSidebandPhaseOffset) / 1800)),
+    identCode: transmitter.nominal.identCode,
   };
 }
 
@@ -117,21 +150,56 @@ function monitorResult(
 ): Dvor1150MonitorResult {
   const installed = isInstalledMonitor(config, monitorId);
   const offsets = config.monitor.offsets[monitorId];
-  const activeTx = active ?? effectiveTransmitter(config, "tx1");
+  const calibration = config.monitor.calibration[monitorId].fieldDetector;
+  const referenceDelta = active
+    ? active.referenceModulation - monitorSourceReference.referenceModulation
+    : 0;
+  const sboDelta = active
+    ? active.sboRfLevel - monitorSourceReference.sboRfLevel
+    : 0;
+  const carrierSidebandPhaseOffset = active
+    ? config.transmitters[active.id].offsets.carrierSidebandPhaseOffset
+    : 0;
+  const carrierSidebandModulationDelta = carrierSidebandModulationAdjustment(carrierSidebandPhaseOffset);
+
+  /*
+   * PMDT configuration influence matrix (applied after Apply/F7):
+   * - TX azimuth, reference modulation, voice modulation, output power and
+   *   SBO/sideband scales form the common signal seen by both monitors.
+   * - Monitor offsets are per-monitor source corrections.
+   * - Field Detector offset/scale values are the final per-monitor calibration.
+   * - Carrier power/scale strongly affects the effective SBO level: a 10 W
+   *   change at the 100 W reference produces about 0.94% at 9960 Hz.
+   * - Carrier-to-sideband phase creates a bounded, non-linear 9960 Hz change;
+   *   other TX phase offsets feed ground-check and sideband VSWR.
+   * - Cabinet temperature feeds RMS temperature data; ident modulation drives
+   *   the Ident monitor.
+   */
   const rawValues: Record<Dvor1150MonitorParameter, number> = {
-    azimuth: normalizeAzimuth(359.97 + activeTx.azimuthIndex + config.transmitters[activeTx.id].offsets.azimuthAngle + offsets.azimuth),
-    hz30Modulation: 29.1 + activeTx.referenceModulation * 0.03 + offsets.hz30Modulation,
-    hz9960Modulation: 29 + activeTx.referenceModulation * 0.033 + offsets.hz9960Modulation,
-    deviation: 16 + activeTx.voiceModulation * 0.12 + offsets.deviation,
-    rfLevel: active ? active.outputPower * 0.002 + offsets.rfLevel : -0.2 + offsets.rfLevel,
+    // PMDT alarm bands are expressed around the 360° reference (for example
+    // 358.00 … 362.00). Keep the monitor readout on that same continuous
+    // scale; wrapping 360.00 to 0.00 would create a false alarm after a
+    // small calibration offset such as +0.03°.
+    azimuth: monitorSourceReference.azimuth + (active?.azimuthIndex ?? 0) + offsets.azimuth + calibration.azimuthAngleOffset,
+    hz30Modulation: (monitorSourceReference.hz30Modulation + referenceDelta + offsets.hz30Modulation) * calibration.hz30ModulationScale / 100,
+    hz9960Modulation: (monitorSourceReference.hz9960Modulation + referenceDelta + sboDelta * 0.2 + carrierSidebandModulationDelta + offsets.hz9960Modulation) * calibration.hz9960ModulationScale / 100,
+    deviation: (monitorSourceReference.deviation + (active?.voiceModulation ?? 0) * 0.12 + sboDelta * 0.01 + offsets.deviation) * calibration.hz9960DeviationScale / 100,
+    rfLevel: (active
+      ? monitorSourceReference.rfLevel + relativePowerDb(active.outputPower) + sboDelta * 0.02
+      : -0.2) + offsets.rfLevel + calibration.rfLevelOffset,
   };
   const parameters = Object.fromEntries(DVOR1150_MONITOR_PARAMETERS.map((parameter) => {
     const value = rawValues[parameter];
-    const status = getStatus(value, config.monitor.alarmLimits[parameter]);
+    const limits = parameter === "azimuth"
+      ? config.monitor.azimuthAlarmLimits[monitorId]
+      : config.monitor.alarmLimits[parameter];
+    const status = getStatus(value, limits);
     return [parameter, { value, status, indicator: indicatorFor(status) }];
   })) as Dvor1150MonitorResult["parameters"];
+  const identNormal = Boolean(active && active.identCode.trim() && active.identModulation >= 2);
   const healthy = installed
     && Object.values(parameters).every((parameter) => parameter.status === "normal")
+    && (!config.monitor.identMonitoringEnabled || identNormal)
     && Boolean(active);
   return {
     id: monitorId,
@@ -139,6 +207,10 @@ function monitorResult(
     controlling: installed && controlling,
     commStatus: installed ? "green" : "gray",
     parameters,
+    ident: {
+      value: identNormal ? "Normal" : "No Ident",
+      indicator: identNormal ? "green" : "red",
+    },
   };
 }
 
@@ -170,6 +242,12 @@ function buildValidation(config: Dvor1150Config): Dvor1150Snapshot["validation"]
       validation.push({ fieldId: `monitor.alarmLimits.${parameter}`, message: `${parameterLabels[parameter]} limits are not ordered.`, severity: "error" });
     }
   }
+  for (const monitorId of DVOR1150_MONITOR_IDS) {
+    const band = config.monitor.azimuthAlarmLimits[monitorId];
+    if (!(band.alarmLow < band.preAlarmLow && band.preAlarmLow <= band.nominal && band.nominal <= band.preAlarmHigh && band.preAlarmHigh < band.alarmHigh)) {
+      validation.push({ fieldId: `monitor.azimuthAlarmLimits.${monitorId}`, message: `Monitor ${monitorId === "mon1" ? "1" : "2"} azimuth limits are not ordered.`, severity: "error" });
+    }
+  }
   for (const id of DVOR1150_TRANSMITTER_IDS) {
     const transmitter = config.transmitters[id];
     if (transmitter.enabled && transmitter.onAir && transmitter.load) {
@@ -189,10 +267,175 @@ function buildValidation(config: Dvor1150Config): Dvor1150Snapshot["validation"]
   return validation;
 }
 
+const adParameterMeta: Record<Dvor1150AdParameter, { label: string; unit: string; base: number }> = {
+  plus5V: { label: "+5 VDC", unit: "Volts", base: 5 },
+  plus12V: { label: "+12 VDC", unit: "Volts", base: 12 },
+  plus12VLogic: { label: "+12 VDC", unit: "Volts", base: 12 },
+  plus28V: { label: "+28 VDC", unit: "Volts", base: 28 },
+  paVoltage: { label: "PA Voltage", unit: "Volts", base: 45 },
+};
+
+function adRowsFor(
+  config: Dvor1150Config,
+  transmitterId: Dvor1150TransmitterId,
+  transmitter: Dvor1150EffectiveTransmitter,
+): Dvor1150AdRow[] {
+  const outputFactor = transmitter.enabled ? transmitter.outputPower / DVOR1150_REFERENCE_NOMINAL_OUTPUT_POWER : 0;
+  const values: Record<Dvor1150AdParameter, number> = {
+    plus5V: 5 + (outputFactor - 1) * 0.03,
+    plus12V: 12 + (outputFactor - 1) * 0.08,
+    plus12VLogic: 12 + (outputFactor - 1) * -0.05,
+    plus28V: 28 + (outputFactor - 1) * 0.12,
+    paVoltage: 45 + (outputFactor - 1) * 2.2,
+  };
+  return (Object.keys(adParameterMeta) as Dvor1150AdParameter[]).map((parameter) => {
+    const limits = config.rms.adLimits[transmitterId][parameter];
+    return {
+      parameter: adParameterMeta[parameter].label,
+      low: limits.low,
+      preLow: limits.preLow,
+      value: values[parameter],
+      preHigh: limits.preHigh,
+      high: limits.high,
+      unit: adParameterMeta[parameter].unit,
+    };
+  });
+}
+
+function temperatureRows(config: Dvor1150Config): Dvor1150AdRow[] {
+  const values: Record<"exterior" | "tx1" | "tx2", number> = {
+    exterior: 27,
+    tx1: 18 + config.transmitters.tx1.offsets.cabinetTemperatureOffset,
+    tx2: 16 + config.transmitters.tx2.offsets.cabinetTemperatureOffset,
+  };
+  const labels: Record<"exterior" | "tx1" | "tx2", string> = {
+    exterior: "Exterior Temperature",
+    tx1: "Transmitter 1 Temperature",
+    tx2: "Transmitter 2 Temperature",
+  };
+  return (Object.keys(labels) as Array<"exterior" | "tx1" | "tx2">).map((parameter) => {
+    const limits = config.rms.adLimits.temperature[parameter];
+    return {
+      parameter: labels[parameter],
+      low: limits.low,
+      preLow: limits.preLow,
+      value: values[parameter],
+      preHigh: limits.preHigh,
+      high: limits.high,
+      unit: "°C",
+    };
+  });
+}
+
+function buildGroundCheck(config: Dvor1150Config, active: Dvor1150EffectiveTransmitter | null): Dvor1150Snapshot["data"]["groundCheck"] {
+  const offsets = active ? config.transmitters[active.id].offsets : null;
+  const quadrantal = {
+    amplitude: offsets ? (offsets.sideband12PhaseOffset - offsets.sideband34PhaseOffset) / 10 : 0,
+    phase: offsets?.carrierSidebandPhaseOffset ?? 0,
+  };
+  const octantal = {
+    amplitude: offsets ? (offsets.sideband34PhaseOffset + offsets.carrierSidebandPhaseOffset) / 20 : 0,
+    phase: offsets?.sideband12PhaseOffset ?? 0,
+  };
+  const bias = offsets ? offsets.azimuthAngle * 0.1 : 0;
+  const rows = Array.from({ length: 16 }, (_, index) => {
+    const azimuth = index * 22.5;
+    const radians = Math.PI / 180;
+    return {
+      azimuth,
+      stationError: bias
+        + quadrantal.amplitude * Math.cos((2 * azimuth + quadrantal.phase) * radians)
+        + octantal.amplitude * Math.cos((4 * azimuth + octantal.phase) * radians),
+    };
+  });
+  const values = rows.map((row) => row.stationError);
+  return {
+    rows,
+    quadrantal,
+    octantal,
+    bias,
+    errorSpread: Math.max(...values) - Math.min(...values),
+  };
+}
+
+function buildMonitorTestResults(config: Dvor1150Config): Dvor1150Snapshot["data"]["monitorTestResults"] {
+  const calibrated = (monitorId: Dvor1150MonitorId) => {
+    const settings = config.monitor.testGenerator;
+    const calibration = config.monitor.calibration[monitorId].testGenerator;
+    return {
+      ...structuredClone(settings),
+      azimuthAngle: normalizeAzimuth(settings.azimuthAngle + calibration.azimuthAngleOffset),
+      hz30Modulation: settings.hz30Modulation * calibration.hz30ModulationScale / 100,
+      hz9960Modulation: settings.hz9960Modulation * calibration.hz9960ModulationScale / 100,
+      deviation: settings.deviation * calibration.hz9960DeviationScale / 100,
+    };
+  };
+  return {
+    mon1: { available: true, values: calibrated("mon1"), status: "green" },
+    mon2: { available: true, values: calibrated("mon2"), status: "green" },
+  };
+}
+
+function buildCertificationResults(config: Dvor1150Config, monitors: Dvor1150Snapshot["monitors"]): Dvor1150Snapshot["data"]["certificationResults"] {
+  return Object.fromEntries(DVOR1150_MONITOR_IDS.map((monitorId) => [monitorId, DVOR1150_MONITOR_PARAMETERS.map((parameter) => {
+    const result = monitors[monitorId].parameters[parameter];
+    const limits = parameter === "azimuth" ? config.monitor.azimuthAlarmLimits[monitorId] : config.monitor.alarmLimits[parameter];
+    return {
+      parameter,
+      lowLimit: limits.alarmLow,
+      lowData: result.value,
+      highLimit: limits.alarmHigh,
+      highData: result.value,
+      unit: parameter === "azimuth" ? "°" : parameter === "deviation" ? "Ratio" : parameter === "rfLevel" ? "dB" : "%",
+    };
+  })])) as Dvor1150Snapshot["data"]["certificationResults"];
+}
+
+function buildNotchData(config: Dvor1150Config, active: Dvor1150EffectiveTransmitter | null): Dvor1150Snapshot["data"]["notchData"] {
+  return Array.from({ length: 48 }, (_, index) => {
+    const baseline = config.monitor.notch.baseline[index] ?? 1;
+    const current = active ? Math.max(0, baseline * (active.sidebandVswr[index % 4] / 1.05)) : baseline;
+    const alarm = config.monitor.notch.enabled && current > baseline * (1 + config.monitor.notch.tolerance / 100);
+    return { antenna: index + 1, baseline, current, indicator: alarm ? "yellow" : "green" };
+  });
+}
+
+function buildFaultHistory(
+  config: Dvor1150Config,
+  monitors: Dvor1150Snapshot["monitors"],
+  timestamp: string,
+  effectiveTransmitters: Record<Dvor1150TransmitterId, Dvor1150EffectiveTransmitter>,
+): Dvor1150Snapshot["data"]["faultHistory"] {
+  const monitorData = DVOR1150_MONITOR_IDS.flatMap((monitorId) => DVOR1150_MONITOR_PARAMETERS.flatMap((parameter) => {
+    const result = monitors[monitorId].parameters[parameter];
+    return result.status === "normal" ? [] : [{ timestamp, monitor: monitorId, parameter, value: result.value, indicator: result.indicator }];
+  }));
+  return {
+    monitorData,
+    systemStatus: [{
+      timestamp,
+      monitorLogic: config.monitor.votingLogic,
+      monitor1Alarm: !monitors.mon1.healthy,
+      monitor2Alarm: !monitors.mon2.healthy,
+      tx1On: effectiveTransmitters.tx1.onAir,
+      tx2On: effectiveTransmitters.tx2.onAir,
+    }],
+  };
+}
+
+const idleTransferState = (): Dvor1150TransferState => ({
+  cause: "none",
+  phase: "idle",
+  from: null,
+  to: null,
+  message: "No transmitter transfer",
+});
+
 export function buildDvor1150Snapshot(
   config: Dvor1150Config,
   now = new Date(),
   mainTransmitter?: Dvor1150TransmitterId,
+  transfer: Dvor1150TransferState = idleTransferState(),
 ): Dvor1150Snapshot {
   const effectiveTransmitters = {
     tx1: effectiveTransmitter(config, "tx1"),
@@ -202,19 +445,14 @@ export function buildDvor1150Snapshot(
   const mainId = mainTransmitter ?? activeId;
   const active = activeId ? effectiveTransmitters[activeId] : null;
   const monitors = {
-    mon1: monitorResult(config, "mon1", active, activeId === "tx1"),
-    mon2: monitorResult(config, "mon2", active, activeId === "tx2"),
+    mon1: monitorResult(config, "mon1", active, true),
+    mon2: monitorResult(config, "mon2", active, false),
   };
   const hasSecondaryMonitor = config.station.monitorConfig === "Dual Monitors";
-  const systemHealthy = !hasSecondaryMonitor
-    ? monitors.mon1.healthy
-    : config.monitor.votingLogic === "AND"
-      ? monitors.mon1.healthy && monitors.mon2.healthy
-      : monitors.mon1.healthy || monitors.mon2.healthy;
   const timestamp = config.simulation.timestamp || formatDvor1150Timestamp(now);
   const sidebandVswr = Array.from({ length: 48 }, (_, index) => {
     const value = active ? Math.max(1, active.sidebandVswr[index % 4] + ((index % 3) * 0.005)) : 1;
-    const alarm = value > DVOR1150_SIDEBAND_VSWR_ALARM_THRESHOLD;
+    const alarm = value > config.monitor.sidebandVswrTolerance;
     return {
       antenna: index + 1,
       value,
@@ -222,6 +460,15 @@ export function buildDvor1150Snapshot(
       indicator: alarm ? (config.monitor.sidebandVswrExecutiveAlarm ? "red" : "yellow") : "green",
     } as const;
   });
+  const vswrAlarmCount = sidebandVswr.filter((row) => row.indicator !== "green").length;
+  const vswrExecutiveAlarm = config.monitor.sidebandVswrExecutiveAlarm
+    && vswrAlarmCount >= config.monitor.numberOfAntennasInAlarm;
+  const monitorHealthy = !hasSecondaryMonitor
+    ? monitors.mon1.healthy
+    : config.monitor.votingLogic === "AND"
+      ? monitors.mon1.healthy && monitors.mon2.healthy
+      : monitors.mon1.healthy || monitors.mon2.healthy;
+  const systemHealthy = monitorHealthy && !vswrExecutiveAlarm;
   const txPower = [
     { parameter: "Carrier", tx1: effectiveTransmitters.tx1.active ? effectiveTransmitters.tx1.outputPower : 0, tx2: effectiveTransmitters.tx2.active ? effectiveTransmitters.tx2.outputPower : 0, unit: "Watts" },
     ...[0, 1, 2, 3].map((index) => ({
@@ -254,6 +501,16 @@ export function buildDvor1150Snapshot(
     deviation: { value: monitors.mon1.parameters.deviation.value, status: monitors.mon1.parameters.deviation.status },
     rfLevel: { value: monitors.mon1.parameters.rfLevel.value, status: monitors.mon1.parameters.rfLevel.status },
   };
+  const adDataByTransmitter = {
+    tx1: adRowsFor(config, "tx1", effectiveTransmitters.tx1),
+    tx2: adRowsFor(config, "tx2", effectiveTransmitters.tx2),
+  };
+  const temperatureData = temperatureRows(config);
+  const notchData = buildNotchData(config, active);
+  const groundCheck = buildGroundCheck(config, active);
+  const monitorTestResults = buildMonitorTestResults(config);
+  const certificationResults = buildCertificationResults(config, monitors);
+  const faultHistory = buildFaultHistory(config, monitors, timestamp, effectiveTransmitters);
   const maintenanceAlert = config.simulation.alert || !systemHealthy;
   const data: Dvor1150Snapshot["data"] = {
     connected: config.simulation.connected,
@@ -263,6 +520,16 @@ export function buildDvor1150Snapshot(
     transmitters: {
       tx1: transmitterSidebarState(effectiveTransmitters.tx1, "tx1", mainId, activeId),
       tx2: transmitterSidebarState(effectiveTransmitters.tx2, "tx2", mainId, activeId),
+    },
+    dme: {
+      tx1: {
+        normal: config.rms.dmePresent ? "green" : "gray",
+        antenna: config.rms.dmePresent && activeId === "tx1" ? "green" : "gray",
+      },
+      tx2: {
+        normal: config.rms.dmePresent && config.rms.dualDme ? "green" : "gray",
+        antenna: config.rms.dmePresent && config.rms.dualDme && activeId === "tx2" ? "green" : "gray",
+      },
     },
     monitorIntegral: {
       normal: systemHealthy,
@@ -287,17 +554,22 @@ export function buildDvor1150Snapshot(
         indicator: hasSecondaryMonitor && monitors.mon1.healthy !== monitors.mon2.healthy ? "yellow" : "gray",
       },
       { label: "Transmitter Status", indicator: activeId ? "green" : "red" },
+      { label: "Notch Monitor", indicator: notchData.some((row) => row.indicator !== "green") ? "yellow" : "gray" },
+      { label: "Sideband Antenna VSWR", indicator: vswrExecutiveAlarm ? "red" : vswrAlarmCount > 0 ? "yellow" : "gray" },
     ],
-    adData: [
-      { parameter: "+28 VDC", low: 25, preLow: 26, value: 28, preHigh: 30, high: 31, unit: "Volts" },
-      { parameter: "+48 VDC", low: 44, preLow: 46, value: 48, preHigh: 50, high: 52, unit: "Volts" },
-      { parameter: "Cabinet Temperature", low: 0, preLow: 5, value: 23, preHigh: 45, high: 50, unit: "°C" },
-    ],
+    adData: adDataByTransmitter.tx1,
+    adDataByTransmitter,
+    temperatureData,
     logs: [],
+    groundCheck,
+    monitorTestResults,
+    certificationResults,
+    notchData,
+    faultHistory,
     sidebandVswr,
     txPower,
     txFrequency,
     txVswr,
   };
-  return { data, activeTransmitter: activeId, mainTransmitter: mainId, effectiveTransmitters, monitors, validation: buildValidation(config) };
+  return { data, activeTransmitter: activeId, mainTransmitter: mainId, effectiveTransmitters, monitors, transfer, validation: buildValidation(config) };
 }

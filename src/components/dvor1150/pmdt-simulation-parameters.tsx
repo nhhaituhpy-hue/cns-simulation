@@ -54,10 +54,11 @@ export function Dvor1150SimulationParametersPanel() {
 
   return <aside className="pmdt-config-panel dvor1150-simulation-parameters-panel" aria-label="DVOR 1150 simulation parameters">
     <header className="pmdt-config-panel-header">
-      <strong>DVOR 1150 Parameters</strong>
+      <strong>Simulation Parameters</strong>
       <button type="button" title="Close" aria-label="Close parameters" onClick={() => setOpen(false)}><X aria-hidden size={13} weight="bold" /></button>
     </header>
     <div className="pmdt-config-summary">
+      <span>Initial values: DVOR 1150 new baseline</span>
       <span>Active Tx: <b>{derived.activeTransmitter?.toUpperCase() ?? "NONE"}</b></span>
       <span>VSWR alarm: <b>&gt; 1.25 : 1</b></span>
       {derived.validation.length > 0 ? <span className="pmdt-config-summary-warning">{derived.validation.length} validation issue(s)</span> : null}

@@ -14,6 +14,7 @@ import {
   type Dvor1150ScreenId,
   type Dvor1150SecurityLevel,
   type Dvor1150Snapshot,
+  type Dvor1150TransferState,
   type Dvor1150TransmitterId,
   type Dvor1150TransmitterMode,
   type Dvor1150ViewId,
@@ -44,9 +45,9 @@ const viewGroups: Record<Dvor1150ScreenId, readonly Dvor1150ViewId[]> = {
   home: ["home"],
   "rms-status": ["rms-status"],
   "rms-data": ["rms-maintenance-alerts", "rms-ad-data"],
-  "rms-config": ["rms-config-general", "rms-config-station", "rms-config-ad-limits"],
+  "rms-config": ["rms-config-general", "rms-config-station", "rms-config-ad-limits", "rms-config-security-codes"],
   "rms-logs": ["rms-logs-operational-summary", "rms-logs-alarms", "rms-logs-maintenance-alerts", "rms-logs-command-activity", "rms-logs-parameter-change"],
-  "monitor-data": ["monitor-integrity", "monitor-ground-check", "monitor-certification", "monitor-test-data", "monitor-notch", "monitor-sideband-vswr"],
+  "monitor-data": ["monitor-integrity", "monitor-ground-check", "monitor-certification", "monitor-test-data", "monitor-notch", "monitor-sideband-vswr", "monitor-standby", "monitor-fault-history-data", "monitor-fault-history-system-status"],
   "monitor-config": ["monitor-alarm-limits", "monitor-offsets"],
   "tx-data": ["tx-data-tx1", "tx-data-tx2"],
   "tx-config": ["tx-config-nominal", "tx-config-offsets"],
@@ -148,6 +149,15 @@ function preserveLiveSimulation(next: Dvor1150Config, current: Dvor1150Config): 
   return next;
 }
 
+function initialConfigurationForSession(current: Dvor1150Config): Dvor1150Config {
+  const initial = cloneDvor1150Config(defaultDvor1150Config);
+  // Connection and clock belong to the active PMDT session. All configurable
+  // station values and maintenance flags return to Simulation Parameters.
+  initial.simulation.connected = current.simulation.connected;
+  initial.simulation.timestamp = current.simulation.timestamp;
+  return initial;
+}
+
 function persistentConfigValue(config: Dvor1150Config): Dvor1150Config {
   const next = cloneDvor1150Config(config);
   next.simulation = { ...defaultDvor1150Config.simulation };
@@ -159,6 +169,7 @@ interface AutomaticDvor1150Transfer {
   snapshot: Dvor1150Snapshot;
   target: Dvor1150TransmitterId | null;
   action: "transfer" | "shutdown" | null;
+  transfer: Dvor1150TransferState;
 }
 
 /**
@@ -172,7 +183,7 @@ function applyAutomaticDvor1150Transfer(
 ): AutomaticDvor1150Transfer {
   const snapshot = buildDvor1150Snapshot(config, undefined, mainTransmitter ?? undefined);
   const active = snapshot.activeTransmitter;
-  const noAction = { config, snapshot, target: null, action: null } as const;
+  const noAction = { config, snapshot, target: null, action: null, transfer: snapshot.transfer } as const;
 
   if (
     config.simulation.integralMonitorBypass
@@ -193,7 +204,14 @@ function applyAutomaticDvor1150Transfer(
   transferred.transmitters[target].onAir = true;
   transferred.transmitters[target].load = false;
   const transferMain = mainTransmitter ?? active;
-  const transferredSnapshot = buildDvor1150Snapshot(transferred, undefined, transferMain);
+  const transfer: Dvor1150TransferState = {
+    cause: "monitor-alarm",
+    phase: "transferred",
+    from: active,
+    to: target,
+    message: `Automatic transfer from ${active.toUpperCase()} to ${target.toUpperCase()} after monitor alarm`,
+  };
+  const transferredSnapshot = buildDvor1150Snapshot(transferred, undefined, transferMain, transfer);
 
   if (transferredSnapshot.data.monitorIntegral.alarm) {
     const shutdown = cloneDvor1150Config(transferred);
@@ -204,13 +222,26 @@ function applyAutomaticDvor1150Transfer(
     }
     return {
       config: shutdown,
-      snapshot: buildDvor1150Snapshot(shutdown, undefined, transferMain),
+      snapshot: buildDvor1150Snapshot(shutdown, undefined, transferMain, {
+        cause: "monitor-alarm",
+        phase: "shutdown",
+        from: active,
+        to: null,
+        message: "Automatic monitor shutdown: both transmitters off",
+      }),
       target: null,
       action: "shutdown",
+      transfer: {
+        cause: "monitor-alarm",
+        phase: "shutdown",
+        from: active,
+        to: null,
+        message: "Automatic monitor shutdown: both transmitters off",
+      },
     };
   }
 
-  return { config: transferred, snapshot: transferredSnapshot, target, action: "transfer" };
+  return { config: transferred, snapshot: transferredSnapshot, target, action: "transfer", transfer };
 }
 
 function copyTransmitterRoutes(source: Dvor1150Config, target: Dvor1150Config): Dvor1150Config {
@@ -232,11 +263,13 @@ export function createDvor1150PmdtStore(
       config: Dvor1150Config,
       previous?: Dvor1150Snapshot,
       mainTransmitter?: Dvor1150TransmitterId | null,
+      transfer?: Dvor1150TransferState,
     ): Dvor1150Snapshot => {
       const next = buildDvor1150Snapshot(
         config,
         now(),
         mainTransmitter ?? previous?.mainTransmitter ?? undefined,
+        transfer ?? previous?.transfer,
       );
       if (previous?.data.logs.length) next.data.logs = [...previous.data.logs];
       return next;
@@ -326,6 +359,14 @@ export function createDvor1150PmdtStore(
         configDraft.simulation.local = config.simulation.local;
         configDraft.simulation.integralMonitorBypass = config.simulation.integralMonitorBypass;
         if (automaticTransfer?.action) configDraft = copyTransmitterRoutes(nextConfig, configDraft);
+        if (automaticTransfer?.action) {
+          derived.data.logs = [...derived.data.logs, {
+            timeTag: nextConfig.simulation.timestamp,
+            user: "Op System",
+            message: automaticTransfer.transfer.message,
+            severity: automaticTransfer.action === "shutdown" ? "red" : "yellow",
+          }];
+        }
         set({
           config: nextConfig,
           configDraft,
@@ -351,6 +392,14 @@ export function createDvor1150PmdtStore(
         let configDraft = cloneDvor1150Config(state.configDraft);
         configDraft.simulation.integralMonitorBypass = enabled;
         if (automaticTransfer?.action) configDraft = copyTransmitterRoutes(nextConfig, configDraft);
+        if (automaticTransfer?.action) {
+          derived.data.logs = [...derived.data.logs, {
+            timeTag: nextConfig.simulation.timestamp,
+            user: "Op System",
+            message: automaticTransfer.transfer.message,
+            severity: automaticTransfer.action === "shutdown" ? "red" : "yellow",
+          }];
+        }
         set({
           config: nextConfig,
           configDraft,
@@ -387,12 +436,24 @@ export function createDvor1150PmdtStore(
         const nextConfig = automaticTransfer?.config ?? config;
         const derived = automaticTransfer?.snapshot ?? recompute(nextConfig, state.derived);
         derived.data.logs = [...derived.data.logs, { timeTag: config.simulation.timestamp, user: state.authenticatedUserId ?? "", message: "Configuration applied", severity: "yellow" }];
+        const changedFields = collectChangedConfigFields(
+          persistentConfigValue(state.config),
+          persistentConfigValue(config),
+        );
+        const nextParameterLogs = createParameterChangeLogEntries({
+          changedFields,
+          timeTag: config.simulation.timestamp,
+          userName: state.authenticatedUserId,
+          file: "Monitor / Transmitter / RMS",
+          actionLabel: "Configuration Apply",
+        });
         set({
           config: nextConfig,
           configDraft: cloneDvor1150Config(nextConfig),
           derived,
           configDirty: false,
           needBackup: true,
+          parameterChangeLogs: prependParameterChangeLogEntries(state.parameterChangeLogs, nextParameterLogs),
           lastCommand: automaticTransfer?.action === "transfer" && automaticTransfer.target
             ? `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}`
             : automaticTransfer?.action === "shutdown"
@@ -404,15 +465,31 @@ export function createDvor1150PmdtStore(
       resetConfigDraft: () => {
         const state = get();
         if (state.securityLevel < 3 || !state.config.simulation.local) return false;
-        set({ configDraft: cloneDvor1150Config(state.config), configDirty: false, lastCommand: "Reset (F8)" });
+        const config = initialConfigurationForSession(state.config);
+        set({
+          config,
+          configDraft: cloneDvor1150Config(config),
+          configurationBackup: cloneDvor1150Config(config),
+          derived: recompute(config),
+          configDirty: false,
+          needBackup: false,
+          lastCommand: "Reset (F8): Simulation Parameters baseline",
+        });
         return true;
       },
       restoreConfig: () => {
         const state = get();
         if (state.securityLevel < 3 || !state.config.simulation.local) return false;
-        const restored = preserveLiveSimulation(cloneDvor1150Config(state.configurationBackup ?? defaultDvor1150Config), state.config);
-        const derived = recompute(restored, state.derived);
-        set({ config: restored, configDraft: cloneDvor1150Config(restored), derived, configDirty: false, needBackup: false, lastCommand: "RMS Config Restore" });
+        const config = initialConfigurationForSession(state.config);
+        set({
+          config,
+          configDraft: cloneDvor1150Config(config),
+          configurationBackup: cloneDvor1150Config(config),
+          derived: recompute(config),
+          configDirty: false,
+          needBackup: false,
+          lastCommand: "RMS Config Restore: Simulation Parameters baseline",
+        });
         return true;
       },
       backupConfig: () => {
@@ -486,7 +563,28 @@ export function createDvor1150PmdtStore(
           state.derived,
           mode === "main" ? transmitterId : state.derived.mainTransmitter,
         );
-        set({ config, configDraft, derived, lastCommand: `${transmitterId.toUpperCase()} ${mode}` });
+        const transfer: Dvor1150TransferState = {
+          cause: "manual",
+          phase: "manual",
+          from: state.derived.activeTransmitter,
+          to: mode === "main" ? transmitterId : null,
+          message: mode === "main"
+            ? `Manual transfer to ${transmitterId.toUpperCase()}`
+            : `Manual ${transmitterId.toUpperCase()} ${mode}`,
+        };
+        derived.transfer = transfer;
+        derived.data.logs = [...derived.data.logs, {
+          timeTag: config.simulation.timestamp,
+          user: state.authenticatedUserId ?? "",
+          message: transfer.message,
+          severity: "green",
+        }];
+        set({
+          config,
+          configDraft,
+          derived,
+          lastCommand: transfer.message,
+        });
         return true;
       },
       executeCommand: (commandId) => {
@@ -500,7 +598,7 @@ export function createDvor1150PmdtStore(
           set({ lastCommand: "Set Time and Date" });
           return true;
         }
-        if (commandId === "reset-rms" || commandId === "reset-intrusion" || commandId === "reset-smoke" || commandId === "abort-tests") {
+        if (commandId === "reset-rms" || commandId === "reset-intrusion" || commandId === "reset-smoke" || commandId === "abort-tests" || commandId === "dme-1-on" || commandId === "dme-2-on" || commandId === "dme-off" || commandId === "dme-transfer" || commandId === "ident-normal" || commandId === "ident-off" || commandId === "ident-continuous" || commandId === "run-ground-check" || commandId === "run-monitor-test" || commandId === "run-on-air-diagnostics" || commandId.startsWith("run-certification-") || commandId === "record-notch-baseline") {
           set({ lastCommand: commandId });
           return true;
         }

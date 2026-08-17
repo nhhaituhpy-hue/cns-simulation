@@ -250,10 +250,13 @@ function Dvor1150ConfigPersistence() {
         revisionRef.current = response.revision;
         readyRef.current = true;
         setStatus("saved");
-      } catch (error) {
+      } catch {
         if (cancelled) return;
-        console.error("DVOR 1150 configuration hydration failed:", error);
-        setStatus("error");
+        // The PMDT must remain usable in a local/offline training session.
+        // The Zustand store is already initialized from the DVOR 1150 baseline,
+        // so leave it intact and disable remote persistence for this session.
+        readyRef.current = false;
+        setStatus("");
       }
     }
 
@@ -278,7 +281,9 @@ function Dvor1150ConfigPersistence() {
       let action: "apply" | "restore" | "backup" | null = null;
       if (state.lastCommand === "Apply (F7)" && previousState.configDirty && !state.configDirty && configChanged) {
         action = "apply";
-      } else if (state.lastCommand === "RMS Config Restore" && configChanged) {
+      } else if (state.lastCommand?.startsWith("RMS Config Restore") && configChanged) {
+        action = "restore";
+      } else if (state.lastCommand?.startsWith("Reset (F8)") && configChanged) {
         action = "restore";
       } else if (state.lastCommand === "RMS Config Backup" && backupChanged) {
         action = "backup";
