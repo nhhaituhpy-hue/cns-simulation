@@ -118,7 +118,7 @@ function HomeScreen({ device, snapshot, openDialog, navigate }: Dvor220MainScree
                 key={id}
                 type="button"
                 className={`${styles.txTopologyUnit} ${onAntenna ? styles.txTopologyActive : ""}`}
-                onClick={() => navigate("transmitter")}
+                onClick={() => navigate("equipment")}
                 aria-label={`${id.toUpperCase()} ${transmitter.path}`}
               >
                 <strong>{id.toUpperCase()}</strong>
@@ -197,7 +197,7 @@ function EquipmentScreen({ snapshot, navigate }: Dvor220MainScreenProps) {
       route: `${snapshot.transmitters[id].path}, ${snapshot.transmitters[id].designation}`,
       detail: DVOR220_TRANSMITTER_UNIT_IDS.map((unit) => `${unit.toUpperCase()}: ${snapshot.transmitters[id].units[unit]}`).join(" | "),
       status: snapshot.transmitters[id].status,
-      screen: "transmitter" as Dvor220ScreenId,
+      screen: "equipment" as Dvor220ScreenId,
     })),
     {
       id: "monitors",
@@ -308,7 +308,7 @@ function PdcScreen({ snapshot }: Dvor220MainScreenProps) {
   }));
   return (
     <div className={styles.screenBody}>
-      <ScreenTitle title="PDC Status" detail={`Carrier VSWR ${snapshot.pdc.carrierVswr.toFixed(2)}:1 | ${formatDvor220Status(snapshot.pdc.status)}`} />
+      <ScreenTitle title="PDC Status" detail={`Carrier ${snapshot.pdc.carrierPowerW.toFixed(2)} W | VSWR ${snapshot.pdc.carrierVswr.toFixed(2)}:1 | ${formatDvor220Status(snapshot.pdc.status)}`} />
       <MopiensTable
         caption="PDC 48 sideband antenna measurements"
         rows={rows}
@@ -526,7 +526,6 @@ function EnvironmentScreen({ device }: Dvor220MainScreenProps) {
 export function Dvor220MainScreen(props: Dvor220MainScreenProps) {
   if (props.screenId === "home") return <HomeScreen {...props} />;
   if (props.screenId === "equipment") return <EquipmentScreen {...props} />;
-  if (props.screenId === "transmitter") return <TransmitterScreen {...props} />;
   if (props.screenId === "pdc") return <PdcScreen {...props} />;
   if (props.screenId === "cma-sma") return <AmplifierScreen {...props} />;
   if (props.screenId === "syn") return <SynScreen {...props} />;

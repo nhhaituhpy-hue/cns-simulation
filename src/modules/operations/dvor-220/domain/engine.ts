@@ -88,6 +88,22 @@ function shiftedCarrierBand(band: Dvor220AlarmBand, frequencyMHz: number): Dvor2
   };
 }
 
+function withConfiguredWarningRange(
+  band: Dvor220AlarmBand,
+  warningRangePercent: number,
+): Dvor220AlarmBand {
+  const ratio = Math.max(0, Math.min(100, warningRangePercent)) / 100;
+  return {
+    ...band,
+    lowerWarning: band.lowerAlarm === null
+      ? band.lowerWarning
+      : band.nominal + (band.lowerAlarm - band.nominal) * ratio,
+    upperWarning: band.upperAlarm === null
+      ? band.upperWarning
+      : band.nominal + (band.upperAlarm - band.nominal) * ratio,
+  };
+}
+
 export function classifyDvor220Reading(
   value: number,
   band: Dvor220AlarmBand,
@@ -132,7 +148,7 @@ function transmitterUnitStatus(
   return "normal";
 }
 
-function transmitterOutputPower(
+function transmitterTrueOutputPower(
   state: Dvor220DeviceState,
   transmitterId: Dvor220TransmitterId,
   output: Dvor220RfOutputId,
@@ -145,8 +161,17 @@ function transmitterOutputPower(
     ? configuration.station.carrierPowerW * transmitter.carrierScalePercent / 100
     : transmitter.sidebandPowerW[output];
   const setpointFactor = state.calibration.transmitterSetpointFactors[transmitterId][output];
+  return setpoint * setpointFactor;
+}
+
+function transmitterOutputPower(
+  state: Dvor220DeviceState,
+  transmitterId: Dvor220TransmitterId,
+  output: Dvor220RfOutputId,
+): number {
+  const truePower = transmitterTrueOutputPower(state, transmitterId, output);
   const readingFactor = state.calibration.transmitterReadingFactors[transmitterId][output];
-  return round(setpoint * setpointFactor * readingFactor, output === "carrier" ? 2 : 3);
+  return round(truePower * readingFactor, output === "carrier" ? 2 : 3);
 }
 
 function transmitterFrequency(
@@ -216,28 +241,37 @@ function baseMonitorValues(
   const compositeAvailable = carrierAvailable && sidebandsAvailable;
   const stationModulation = transmitter.useStationModulation;
   const stationIdent = transmitter.useStationIdent;
-  const offsets = state.calibration.monitorOffsets[monitorId][channelId];
-  const withOffset = (parameter: Dvor220MonitorParameter, value: number) => value + (offsets[parameter] ?? 0);
+  const setpointFactors = monitoredTransmitterId
+    ? state.calibration.transmitterSetpointFactors[monitoredTransmitterId]
+    : state.calibration.transmitterSetpointFactors.tx1;
+  const factors = state.calibration.monitorFactors[monitorId][channelId];
+  const rfLevelOffset = state.calibration.monitorRfLevelOffsets[monitorId][channelId];
+  const withCalibration = (parameter: Dvor220MonitorParameter, value: number) =>
+    parameter === "rfLevel" ? value + rfLevelOffset : value * factors[parameter];
 
   return {
-    bearingError: withOffset(
+    bearingError: withCalibration(
       "bearingError",
       (transmitter.useStationAzimuth ? configuration.station.azimuthOffsetDeg : transmitter.azimuthOffsetDeg) + monitorBias + channelBias,
     ),
-    fmIndex: withOffset("fmIndex", compositeAvailable ? 16 + monitorBias : 0),
-    am30Hz: withOffset(
+    fmIndex: withCalibration("fmIndex", compositeAvailable ? 16 + monitorBias : 0),
+    am30Hz: withCalibration(
       "am30Hz",
-      carrierAvailable ? (stationModulation ? configuration.station.am30HzPercent : transmitter.am30HzPercent) + monitorBias : 0,
+      carrierAvailable
+        ? (stationModulation ? configuration.station.am30HzPercent : transmitter.am30HzPercent) * setpointFactors.am30Hz + monitorBias
+        : 0,
     ),
-    am9960Hz: withOffset("am9960Hz", compositeAvailable ? 30 + channelBias : 0),
-    ident1020Hz: withOffset(
+    am9960Hz: withCalibration("am9960Hz", compositeAvailable ? 30 + channelBias : 0),
+    ident1020Hz: withCalibration(
       "ident1020Hz",
-      carrierAvailable ? (stationIdent ? configuration.station.identModulationPercent : transmitter.identModulationPercent) : 0,
+      carrierAvailable
+        ? (stationIdent ? configuration.station.identModulationPercent : transmitter.identModulationPercent) * setpointFactors.ident1020Hz
+        : 0,
     ),
-    rfLevel: withOffset("rfLevel", carrierAvailable ? monitorBias + channelBias : -50),
-    distortion9960Hz: withOffset("distortion9960Hz", compositeAvailable ? 0.5 + channelBias : 100),
-    carrierFrequency: withOffset("carrierFrequency", configuration.station.frequencyMHz + monitorBias / 10_000),
-    subcarrierFrequency: withOffset(
+    rfLevel: withCalibration("rfLevel", carrierAvailable ? monitorBias + channelBias : -50),
+    distortion9960Hz: withCalibration("distortion9960Hz", compositeAvailable ? 0.5 + channelBias : 100),
+    carrierFrequency: withCalibration("carrierFrequency", configuration.station.frequencyMHz + monitorBias / 10_000),
+    subcarrierFrequency: withCalibration(
       "subcarrierFrequency",
       compositeAvailable ? 9960 + channelIndex * 0.4 + (monitorId === "mon1" ? 0 : 0.1) : 0,
     ),
@@ -274,6 +308,10 @@ function buildMonitorChannelSnapshot(
     let effectiveBand = parameter === "carrierFrequency"
       ? shiftedCarrierBand(configuredBand, state.configuration.running.station.frequencyMHz)
       : configuredBand;
+    effectiveBand = withConfiguredWarningRange(
+      effectiveBand,
+      state.configuration.running.monitor.warningRangePercent,
+    );
     if (parameter === "ident1020Hz") {
       effectiveBand = {
         ...effectiveBand,
@@ -388,14 +426,28 @@ function powerSnapshot(state: Dvor220DeviceState): Dvor220Snapshot["power"] {
 function pdcSnapshot(state: Dvor220DeviceState): Dvor220Snapshot["pdc"] {
   const fault = getFault(state, "pdc", () => true);
   const antennas = buildAntennaSnapshots(state);
+  const active = activeTransmitterId(state);
+  const trueCarrierPowerW = active ? transmitterTrueOutputPower(state, active, "carrier") : 0;
+  const carrierPowerW = round(trueCarrierPowerW * state.calibration.pdcFactors.carrierPower, 2);
+  const trueCarrierVswr = 1.38;
+  const carrierVswr = round(
+    1 + (trueCarrierVswr - 1) * state.calibration.pdcFactors.carrierVswr,
+    2,
+  );
   const antennaStatus = antennas.some((antenna) => antenna.status === "alarm")
     ? "alarm" as const
     : antennas.some((antenna) => antenna.status === "warning")
       ? "warning" as const
       : "normal" as const;
+  const carrierStatus = carrierVswr >= state.configuration.running.transmitterLimits.vswrUpperAlarm
+    ? "alarm" as const
+    : carrierVswr > state.configuration.running.transmitterLimits.vswrUpperWarning
+      ? "warning" as const
+      : "normal" as const;
   return {
-    status: fault?.condition ?? antennaStatus,
-    carrierVswr: 1.38,
+    status: fault?.condition ?? aggregateStatus([carrierStatus, antennaStatus]),
+    carrierPowerW,
+    carrierVswr,
     antennas,
   };
 }

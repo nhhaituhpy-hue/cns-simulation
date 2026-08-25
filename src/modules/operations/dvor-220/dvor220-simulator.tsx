@@ -88,7 +88,7 @@ const connectionOptions: MopiensConnectionProfileOption[] = connectionProfiles.m
 }));
 
 const mainScreenIds = new Set<Dvor220ScreenId>([
-  "home", "equipment", "transmitter", "pdc", "cma-sma", "syn",
+  "home", "equipment", "pdc", "cma-sma", "syn",
   "monitor-cha", "monitor-chb1", "monitor-chb2", "monitor-standby",
   "monitor-self-test", "power", "environment",
 ]);
@@ -105,6 +105,11 @@ export interface Dvor220SimulatorProps {
   store?: Dvor220StoreApi;
   initialView?: Dvor220ViewMode;
 }
+
+type Dvor220SimulatorToolScreen =
+  | "maintenance-faults"
+  | "flight-results"
+  | "history-parameter-change";
 
 export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }: Dvor220SimulatorProps = {}) {
   const [store] = useState<Dvor220StoreApi>(() => providedStore ?? createDvor220Store({ initialNowMs: trainingStartMs }));
@@ -124,6 +129,8 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
   const [commandError, setCommandError] = useState<string | null>(null);
   const [outputFilter, setOutputFilter] = useState("all");
   const [hiddenBeforeLogId, setHiddenBeforeLogId] = useState(0);
+  const [simulatorToolsOpen, setSimulatorToolsOpen] = useState(false);
+  const [activeSimulatorTool, setActiveSimulatorTool] = useState<Dvor220SimulatorToolScreen | null>(null);
 
   const dispatch = useCallback((command: Dvor220Command): Dvor220CommandResult => {
     const result = store.getState().dispatch(command);
@@ -148,9 +155,14 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
   const authenticated = device.session.username !== null;
   const writeAllowed = device.session.level >= 2;
   const readAllowed = getDvor220PermissionDecision(device, "read").allowed;
+  const standbyMonitorEnabled = device.configuration.running.optionalUnits.standbyMonitor
+    && device.configuration.running.monitor.channels.standby.type !== "disabled";
   const navigationSections = useMemo(
-    () => buildDvor220Navigation(device.session.username),
-    [device.session.username],
+    () => buildDvor220Navigation({
+      userName: device.session.username,
+      standbyMonitorEnabled,
+    }),
+    [device.session.username, standbyMonitorEnabled],
   );
   const menus = useMemo(() => buildDvor220Menus({
     connected: device.connection.connected,
@@ -311,9 +323,49 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
     </section>
   );
 
+  const simulatorToolScreen = activeSimulatorTool ? (
+    <Dvor220MaintenanceScreen
+      screenId={activeSimulatorTool}
+      device={device}
+      snapshot={snapshot}
+      dispatch={dispatch}
+      advanceTime={advanceTime}
+      syncClock={syncClock}
+      navigate={navigate}
+    />
+  ) : null;
+
   return (
     <div className={styles.simulatorRoot} data-view-mode={viewMode}>
       <Dvor220ConfigPersistenceBoundary store={store} />
+      <section className={styles.simulatorTools} aria-label="Simulator Tools">
+        <button
+          type="button"
+          className={styles.simulatorToolsToggle}
+          aria-expanded={simulatorToolsOpen}
+          aria-controls="dvor220-simulator-tools"
+          onClick={() => setSimulatorToolsOpen((open) => !open)}
+        >
+          Simulator Tools
+        </button>
+        {simulatorToolsOpen ? (
+          <div id="dvor220-simulator-tools" className={styles.simulatorToolsActions}>
+            <button type="button" onClick={() => setActiveDialog("simulation-parameters")}>Raw Parameters</button>
+            <button type="button" onClick={() => setActiveSimulatorTool("maintenance-faults")}>Fault Injection</button>
+            <button type="button" onClick={() => setActiveSimulatorTool("flight-results")}>Flight Results</button>
+            <button type="button" onClick={() => setActiveSimulatorTool("history-parameter-change")}>Config Audit</button>
+          </div>
+        ) : null}
+      </section>
+      {simulatorToolScreen ? (
+        <aside className={styles.simulatorToolPanel} aria-label={`${DVOR220_SCREEN_LABELS[activeSimulatorTool!]} simulator tool`}>
+          <div className={styles.simulatorToolPanelHeader}>
+            <strong>Simulator Tools / {DVOR220_SCREEN_LABELS[activeSimulatorTool!]}</strong>
+            <button type="button" onClick={() => setActiveSimulatorTool(null)}>Close</button>
+          </div>
+          {simulatorToolScreen}
+        </aside>
+      ) : null}
       {viewMode === "pmdt" ? (
         <MopiensPmdtShell
           ariaLabel="MOPIENS 220 DVOR PMDT"

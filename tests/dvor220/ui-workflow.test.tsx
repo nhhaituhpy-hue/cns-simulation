@@ -128,8 +128,8 @@ describe("MOPIENS DVOR 220 simulator UI", () => {
     fireEvent.click(within(screen.getByRole("dialog", { name: "Monitor Bypass" })).getByRole("button", { name: "Set Both Auto" }));
     fireEvent.click(within(screen.getByRole("dialog", { name: "Monitor Bypass" })).getByRole("button", { name: "Close" }));
 
-    fireEvent.click(screen.getByRole("button", { name: "Maintenance" }));
-    fireEvent.click(screen.getByRole("button", { name: "Fault Controls" }));
+    fireEvent.click(screen.getByRole("button", { name: "Simulator Tools" }));
+    fireEvent.click(screen.getByRole("button", { name: "Fault Injection" }));
     const injectButtons = screen.getAllByRole("button", { name: "Inject" });
     fireEvent.click(injectButtons[0]);
     expect(store.getState().snapshot.monitors.mon1.channels.cha.primaryAlarm).toBe(true);

@@ -199,6 +199,11 @@ function TransmitterSetup({ configuration, disabled, patch }: { configuration: D
                 </FormField>
               ))}
               <FormField label="Carrier to Sideband Phase (°)"><input type="number" min="0" max="359.9" step="0.1" value={transmitter.rfPhaseDeg.carrierToSideband} onChange={(event) => transmitterPatch(transmitterId, { rfPhaseDeg: { carrierToSideband: numberValue(event.target.value, transmitter.rfPhaseDeg.carrierToSideband) } })} /></FormField>
+              <FormField label="30 Hz AM (%)"><input type="number" min="0" max="40" step="0.1" value={transmitter.am30HzPercent} disabled={disabled || transmitter.useStationModulation} onChange={(event) => transmitterPatch(transmitterId, { am30HzPercent: numberValue(event.target.value, transmitter.am30HzPercent) })} /></FormField>
+              <FormField label="IDENT Modulation (%)"><input type="number" min="0" max="20" step="0.1" value={transmitter.identModulationPercent} disabled={disabled || transmitter.useStationIdent} onChange={(event) => transmitterPatch(transmitterId, { identModulationPercent: numberValue(event.target.value, transmitter.identModulationPercent) })} /></FormField>
+              <FormField label="Voice Modulation (%)"><input type="number" min="0" max="40" step="0.1" value={transmitter.voiceModulationPercent} disabled={disabled || transmitter.useStationModulation} onChange={(event) => transmitterPatch(transmitterId, { voiceModulationPercent: numberValue(event.target.value, transmitter.voiceModulationPercent) })} /></FormField>
+              <FormField label="Azimuth Offset (°)"><input type="number" min="-40" max="40" step="0.01" value={transmitter.azimuthOffsetDeg} disabled={disabled || transmitter.useStationAzimuth} onChange={(event) => transmitterPatch(transmitterId, { azimuthOffsetDeg: numberValue(event.target.value, transmitter.azimuthOffsetDeg) })} /></FormField>
+              <FormField label="IDENT Code"><input maxLength={4} value={transmitter.identCode} disabled={disabled || transmitter.useStationIdent} onChange={(event) => transmitterPatch(transmitterId, { identCode: event.target.value.toUpperCase() })} /></FormField>
               <MopiensSlideSwitch label="Use station modulation" checked={transmitter.useStationModulation} disabled={disabled} onCheckedChange={(checked) => transmitterPatch(transmitterId, { useStationModulation: checked })} />
               <MopiensSlideSwitch label="Use station azimuth" checked={transmitter.useStationAzimuth} disabled={disabled} onCheckedChange={(checked) => transmitterPatch(transmitterId, { useStationAzimuth: checked })} />
               <MopiensSlideSwitch label="Use station IDENT" checked={transmitter.useStationIdent} disabled={disabled} onCheckedChange={(checked) => transmitterPatch(transmitterId, { useStationIdent: checked })} />
@@ -363,7 +368,79 @@ function CommunicationSetup({ configuration, disabled, patch }: { configuration:
   );
 }
 
-function BatterySetup({ configuration, disabled, patch }: { configuration: Dvor220Configuration; disabled: boolean; patch: (patch: Dvor220DeepPartial<Dvor220Configuration>) => void }) {
+function TransmitterLimitSetup({ configuration, disabled, patch }: { configuration: Dvor220Configuration; disabled: boolean; patch: (patch: Dvor220DeepPartial<Dvor220Configuration>) => void }) {
+  const limits = configuration.transmitterLimits;
+  const bandFields: { key: BandField; label: string }[] = [
+    { key: "lowerAlarm", label: "Alarm Low" },
+    { key: "lowerWarning", label: "Warning Low" },
+    { key: "nominal", label: "Nominal" },
+    { key: "upperWarning", label: "Warning High" },
+    { key: "upperAlarm", label: "Alarm High" },
+  ];
+  function updateBand(
+    bandId: "carrierPower" | "sidebandPower",
+    field: BandField,
+    value: string,
+  ) {
+    const current = limits[bandId][field];
+    const parsed = value === "" && field !== "nominal" ? null : numberValue(value, current ?? 0);
+    patch({ transmitterLimits: { [bandId]: { [field]: parsed } } } as Dvor220DeepPartial<Dvor220Configuration>);
+  }
+  return (
+    <div className={styles.setupSections}>
+      <fieldset className={styles.formSection} disabled={disabled}>
+        <legend>Transmitter Power Limits</legend>
+        <div className={styles.editorTableFrame}>
+          <table className={styles.editorTable}>
+            <caption>Carrier and sideband warning/alarm limits</caption>
+            <thead><tr><th>Output</th>{bandFields.map((field) => <th key={field.key}>{field.label}</th>)}</tr></thead>
+            <tbody>
+              {(["carrierPower", "sidebandPower"] as const).map((bandId) => (
+                <tr key={bandId}>
+                  <th scope="row">{bandId === "carrierPower" ? "Carrier Power (W)" : "Sideband Power (W)"}</th>
+                  {bandFields.map((field) => (
+                    <td key={field.key}>
+                      <input
+                        aria-label={`${bandId} ${field.label}`}
+                        type="number"
+                        step="any"
+                        value={limits[bandId][field.key] ?? ""}
+                        onChange={(event) => updateBand(bandId, field.key, event.target.value)}
+                      />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </fieldset>
+      <fieldset className={styles.formSection} disabled={disabled}>
+        <legend>VSWR Limits</legend>
+        <div className={styles.formGrid}>
+          <FormField label="Upper Warning"><input type="number" min="1" step="0.01" value={limits.vswrUpperWarning} onChange={(event) => patch({ transmitterLimits: { vswrUpperWarning: numberValue(event.target.value, limits.vswrUpperWarning) } })} /></FormField>
+          <FormField label="Upper Alarm"><input type="number" min="1" step="0.01" value={limits.vswrUpperAlarm} onChange={(event) => patch({ transmitterLimits: { vswrUpperAlarm: numberValue(event.target.value, limits.vswrUpperAlarm) } })} /></FormField>
+        </div>
+      </fieldset>
+    </div>
+  );
+}
+
+function EnvironmentalSetup({ configuration, disabled, patch }: { configuration: Dvor220Configuration; disabled: boolean; patch: (patch: Dvor220DeepPartial<Dvor220Configuration>) => void }) {
+  const units = configuration.optionalUnits;
+  return (
+    <fieldset className={styles.formSection} disabled={disabled}>
+      <legend>Environmental and Optional Units</legend>
+      <div className={styles.formGridSingle}>
+        <MopiensSlideSwitch label="EMU installed" checked={units.emu} disabled={disabled} onCheckedChange={(checked) => patch({ optionalUnits: { emu: checked } })} />
+        <MopiensSlideSwitch label="NIU installed" checked={units.niu} disabled={disabled} onCheckedChange={(checked) => patch({ optionalUnits: { niu: checked } })} />
+        <MopiensSlideSwitch label="VAU installed" checked={units.vau} disabled={disabled} onCheckedChange={(checked) => patch({ optionalUnits: { vau: checked } })} />
+      </div>
+    </fieldset>
+  );
+}
+
+function MiscellaneousSetup({ configuration, disabled, patch }: { configuration: Dvor220Configuration; disabled: boolean; patch: (patch: Dvor220DeepPartial<Dvor220Configuration>) => void }) {
   const battery = configuration.battery;
   const fields: { key: keyof typeof battery; label: string; unit: string; step: string }[] = [
     { key: "voltageWarningV", label: "Voltage Warning", unit: "V", step: "0.1" },
@@ -375,14 +452,34 @@ function BatterySetup({ configuration, disabled, patch }: { configuration: Dvor2
     { key: "backupRuntimeMinutes", label: "Backup Runtime", unit: "min", step: "1" },
   ];
   return (
-    <fieldset className={styles.formSection} disabled={disabled}>
-      <legend>Backup Battery</legend>
-      <div className={styles.formGrid}>
-        {fields.map((field) => <FormField key={field.key} label={`${field.label} (${field.unit})`}><input type="number" step={field.step} value={battery[field.key]} onChange={(event) => patch({ battery: { [field.key]: numberValue(event.target.value, battery[field.key]) } })} /></FormField>)}
-        <MopiensSlideSwitch label="Battery installed" checked={configuration.optionalUnits.battery} disabled={disabled} onCheckedChange={(checked) => patch({ optionalUnits: { battery: checked } })} />
-        <MopiensSlideSwitch label="Standby monitor installed" checked={configuration.optionalUnits.standbyMonitor} disabled={disabled} onCheckedChange={(checked) => patch({ optionalUnits: { standbyMonitor: checked } })} />
-      </div>
-    </fieldset>
+    <div className={styles.setupSections}>
+      <fieldset className={styles.formSection} disabled={disabled}>
+        <legend>Backup Battery</legend>
+        <div className={styles.formGrid}>
+          {fields.map((field) => <FormField key={field.key} label={`${field.label} (${field.unit})`}><input type="number" step={field.step} value={battery[field.key]} onChange={(event) => patch({ battery: { [field.key]: numberValue(event.target.value, battery[field.key]) } })} /></FormField>)}
+          <MopiensSlideSwitch label="Battery installed" checked={configuration.optionalUnits.battery} disabled={disabled} onCheckedChange={(checked) => patch({ optionalUnits: { battery: checked } })} />
+          <MopiensSlideSwitch label="Standby monitor installed" checked={configuration.optionalUnits.standbyMonitor} disabled={disabled} onCheckedChange={(checked) => patch({ optionalUnits: { standbyMonitor: checked }, monitor: { channels: { standby: { type: checked ? "FFM" : "disabled" } } } } as Dvor220DeepPartial<Dvor220Configuration>)} />
+        </div>
+      </fieldset>
+      {(["mon1", "mon2"] as const).map((monitorId) => (
+        <fieldset key={monitorId} className={styles.formSection} disabled={disabled}>
+          <legend>{monitorId.toUpperCase()} RF Gain</legend>
+          <div className={styles.formGrid}>
+            {(["cha", "chb1", "chb2", "standby", "tsg"] as const).map((channelId) => (
+              <FormField key={channelId} label={`${channelId.toUpperCase()} Gain (dB)`}>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={configuration.monitor.rfGainDb[monitorId][channelId]}
+                  disabled={disabled || (channelId === "standby" && !configuration.optionalUnits.standbyMonitor)}
+                  onChange={(event) => patch({ monitor: { rfGainDb: { [monitorId]: { [channelId]: numberValue(event.target.value, configuration.monitor.rfGainDb[monitorId][channelId]) } } } } as Dvor220DeepPartial<Dvor220Configuration>)}
+                />
+              </FormField>
+            ))}
+          </div>
+        </fieldset>
+      ))}
+    </div>
   );
 }
 
@@ -398,11 +495,14 @@ export function Dvor220SetupScreen({ screenId, device, snapshot, dispatch }: Dvo
   if (screenId === "setup-station") content = <StationSetup configuration={configuration} disabled={disabled} patch={patch} />;
   else if (screenId === "setup-transmitter") content = <TransmitterSetup configuration={configuration} disabled={disabled} patch={patch} />;
   else if (screenId === "setup-thermal") content = <ThermalSetup configuration={configuration} disabled={disabled} patch={patch} />;
+  else if (screenId === "setup-transmitter-limit") content = <TransmitterLimitSetup configuration={configuration} disabled={disabled} patch={patch} />;
   else if (screenId === "setup-monitor") content = <MonitorSetup configuration={configuration} disabled={disabled} patch={patch} />;
   else if (screenId === "setup-limits") content = <MonitorLimitSetup configuration={configuration} disabled={disabled} patch={patch} channelId={limitChannel} onChannelChange={setLimitChannel} />;
+  else if (screenId === "setup-standby-limits") content = <MonitorLimitSetup configuration={configuration} disabled={disabled} patch={patch} channelId="standby" onChannelChange={() => undefined} />;
   else if (screenId === "setup-system") content = <SystemSetup configuration={configuration} disabled={disabled} patch={patch} />;
+  else if (screenId === "setup-environmental") content = <EnvironmentalSetup configuration={configuration} disabled={disabled} patch={patch} />;
   else if (screenId === "setup-communication") content = <CommunicationSetup configuration={configuration} disabled={disabled} patch={patch} />;
-  else content = <BatterySetup configuration={configuration} disabled={disabled} patch={patch} />;
+  else content = <MiscellaneousSetup configuration={configuration} disabled={disabled} patch={patch} />;
 
   const tone: MopiensVisualTone = disabled ? "inactive" : device.configuration.draftDirty ? "warning" : "normal";
   return (

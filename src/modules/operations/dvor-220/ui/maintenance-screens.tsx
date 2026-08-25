@@ -18,6 +18,7 @@ import {
   DVOR220_RF_OUTPUT_IDS,
   DVOR220_TRANSMITTER_IDS,
   type Dvor220CalibrationCommand,
+  type Dvor220CalibrationTarget,
   type Dvor220Command,
   type Dvor220CommandResult,
   type Dvor220DeviceState,
@@ -26,6 +27,7 @@ import {
   type Dvor220MonitorChannelId,
   type Dvor220MonitorId,
   type Dvor220MonitorParameter,
+  type Dvor220PdcCalibrationParameter,
   type Dvor220RfOutputId,
   type Dvor220Snapshot,
   type Dvor220TransmitterId,
@@ -58,16 +60,28 @@ function CompactField({ label, children }: { label: string; children: ReactNode 
   return <label className={styles.formField}><span>{label}</span>{children}</label>;
 }
 
-function CalibrationScreen({ screenId, device, snapshot, dispatch }: Dvor220MaintenanceScreenProps) {
+function CalibrationScreen({ screenId, device, snapshot, dispatch, navigate }: Dvor220MaintenanceScreenProps) {
   const [transmitterId, setTransmitterId] = useState<Dvor220TransmitterId>("tx1");
   const [output, setOutput] = useState<Dvor220RfOutputId>("carrier");
   const [setpointParameter, setSetpointParameter] = useState<Dvor220RfOutputId | "am30Hz" | "ident1020Hz">("carrier");
   const [monitorId, setMonitorId] = useState<Dvor220MonitorId>("mon1");
   const [channelId, setChannelId] = useState<Dvor220MonitorChannelId>("cha");
   const [monitorParameter, setMonitorParameter] = useState<Dvor220MonitorParameter>("bearingError");
+  const [pdcParameter, setPdcParameter] = useState<Dvor220PdcCalibrationParameter>("carrierPower");
   const [indicatedValue, setIndicatedValue] = useState("100");
   const [referenceValue, setReferenceValue] = useState("100");
   const permission = getDvor220PermissionDecision(device, "calibrate");
+
+  function selectedCalibrationTarget(): Dvor220CalibrationTarget {
+    if (screenId === "maintenance-tx-reading") {
+      return { kind: "transmitter-reading", transmitterId, output };
+    }
+    if (screenId === "maintenance-tx-setpoint") {
+      return { kind: "transmitter-setpoint", transmitterId, parameter: setpointParameter };
+    }
+    if (screenId === "maintenance-pdc-cal") return { kind: "pdc", parameter: pdcParameter };
+    return { kind: "monitor", monitorId, channelId, parameter: monitorParameter };
+  }
 
   function runCalibration() {
     let calibration: Dvor220CalibrationCommand;
@@ -75,6 +89,8 @@ function CalibrationScreen({ screenId, device, snapshot, dispatch }: Dvor220Main
       calibration = { kind: "transmitter-reading", transmitterId, output, indicatedValue: Number(indicatedValue), referenceValue: Number(referenceValue) };
     } else if (screenId === "maintenance-tx-setpoint") {
       calibration = { kind: "transmitter-setpoint", transmitterId, parameter: setpointParameter, indicatedValue: Number(indicatedValue), referenceValue: Number(referenceValue) };
+    } else if (screenId === "maintenance-pdc-cal") {
+      calibration = { kind: "pdc", parameter: pdcParameter, indicatedValue: Number(indicatedValue), referenceValue: Number(referenceValue) };
     } else {
       calibration = { kind: "monitor", monitorId, channelId, parameter: monitorParameter, indicatedValue: Number(indicatedValue), referenceValue: Number(referenceValue) };
     }
@@ -89,12 +105,21 @@ function CalibrationScreen({ screenId, device, snapshot, dispatch }: Dvor220Main
     value1: snapshot.transmitters.tx1.forwardPowerW[id],
     value2: snapshot.transmitters.tx2.forwardPowerW[id],
   }));
+  const calibrationDirty = JSON.stringify({
+    transmitterReadingFactors: device.calibration.transmitterReadingFactors,
+    transmitterSetpointFactors: device.calibration.transmitterSetpointFactors,
+    pdcFactors: device.calibration.pdcFactors,
+    monitorFactors: device.calibration.monitorFactors,
+    monitorRfLevelOffsets: device.calibration.monitorRfLevelOffsets,
+  }) !== JSON.stringify(device.calibration.saved);
 
   return (
     <div className={styles.screenBody}>
-      <MaintenanceHeader title={DVOR220_SCREEN_LABELS[screenId]} detail="Level 2 or 3 access is required. Calibration factors remain in equipment memory." />
+      <MaintenanceHeader title={DVOR220_SCREEN_LABELS[screenId]} detail={calibrationDirty ? "Unsaved calibration is active in running memory." : "Running calibration matches non-volatile memory."} />
       <div className={styles.maintenanceToolbar}>
-        <CompactField label="Transmitter"><select value={transmitterId} onChange={(event) => setTransmitterId(event.target.value as Dvor220TransmitterId)}>{DVOR220_TRANSMITTER_IDS.map((id) => <option key={id} value={id}>{id.toUpperCase()}</option>)}</select></CompactField>
+        {screenId === "maintenance-tx-reading" || screenId === "maintenance-tx-setpoint" ? (
+          <CompactField label="Transmitter"><select value={transmitterId} onChange={(event) => setTransmitterId(event.target.value as Dvor220TransmitterId)}>{DVOR220_TRANSMITTER_IDS.map((id) => <option key={id} value={id}>{id.toUpperCase()}</option>)}</select></CompactField>
+        ) : null}
         {screenId === "maintenance-tx-reading" ? (
           <CompactField label="Reading"><select value={output} onChange={(event) => setOutput(event.target.value as Dvor220RfOutputId)}>{DVOR220_RF_OUTPUT_IDS.map((id) => <option key={id} value={id}>{id.toUpperCase()}</option>)}</select></CompactField>
         ) : null}
@@ -108,24 +133,60 @@ function CalibrationScreen({ screenId, device, snapshot, dispatch }: Dvor220Main
             <CompactField label="Parameter"><select value={monitorParameter} onChange={(event) => setMonitorParameter(event.target.value as Dvor220MonitorParameter)}>{DVOR220_MONITOR_PARAMETERS.map((id) => <option key={id} value={id}>{id}</option>)}</select></CompactField>
           </>
         ) : null}
+        {screenId === "maintenance-pdc-cal" ? (
+          <CompactField label="PDC Reading">
+            <select
+              value={pdcParameter}
+              onChange={(event) => {
+                const parameter = event.target.value as Dvor220PdcCalibrationParameter;
+                const reading = parameter === "carrierPower" ? snapshot.pdc.carrierPowerW : snapshot.pdc.carrierVswr;
+                setPdcParameter(parameter);
+                setIndicatedValue(String(reading));
+                setReferenceValue(String(reading));
+              }}
+            >
+              <option value="carrierPower">Carrier Power</option>
+              <option value="carrierVswr">Carrier VSWR</option>
+            </select>
+          </CompactField>
+        ) : null}
         <CompactField label="Indicated"><input type="number" step="any" value={indicatedValue} onChange={(event) => setIndicatedValue(event.target.value)} /></CompactField>
         <CompactField label="Reference"><input type="number" step="any" value={referenceValue} onChange={(event) => setReferenceValue(event.target.value)} /></CompactField>
-        <MopiensBeveledButton tone="primary" disabled={!permission.allowed} onClick={runCalibration}>Calculate and Apply</MopiensBeveledButton>
+        <MopiensBeveledButton tone="primary" disabled={!permission.allowed} onClick={runCalibration}>Calculate</MopiensBeveledButton>
+        <MopiensBeveledButton disabled={!permission.allowed} onClick={() => dispatch({ type: "initialize-calibration", target: selectedCalibrationTarget() })}>Initialize</MopiensBeveledButton>
+        <MopiensBeveledButton tone={calibrationDirty ? "warning" : "default"} disabled={!permission.allowed || !calibrationDirty} onClick={() => dispatch({ type: "save-calibration" })}>Save</MopiensBeveledButton>
+        <MopiensBeveledButton disabled={!permission.allowed} onClick={() => {
+          dispatch({ type: "close-calibration", target: selectedCalibrationTarget() });
+          navigate("home");
+        }}>Close</MopiensBeveledButton>
       </div>
       {permission.allowed ? null : <p role="alert" className={styles.inlineError}>{permission.reason}</p>}
-      <MopiensTable
-        caption="Transmitter calibration factors and current readings"
-        rows={readingRows}
-        dense
-        getRowId={(row) => row.id}
-        columns={[
-          { id: "parameter", label: "Parameter", render: (row) => row.parameter },
-          { id: "tx1-factor", label: "TX1 Factor", align: "right", render: (row) => row.tx1.toFixed(5) },
-          { id: "tx1-value", label: "TX1 Reading", align: "right", render: (row) => row.value1.toFixed(3) },
-          { id: "tx2-factor", label: "TX2 Factor", align: "right", render: (row) => row.tx2.toFixed(5) },
-          { id: "tx2-value", label: "TX2 Reading", align: "right", render: (row) => row.value2.toFixed(3) },
-        ]}
-      />
+      {screenId === "maintenance-pdc-cal" ? (
+        <MopiensPropertyGrid ariaLabel="PDC calibration factors" sections={[{
+          id: "pdc-calibration",
+          title: "PDC Reading Calibration",
+          rows: [
+            { id: "power-reading", label: "Carrier Power Reading", value: `${snapshot.pdc.carrierPowerW.toFixed(2)} W` },
+            { id: "power-factor", label: "Power Factor", value: device.calibration.pdcFactors.carrierPower.toFixed(6) },
+            { id: "vswr-reading", label: "Carrier VSWR Reading", value: `${snapshot.pdc.carrierVswr.toFixed(2)}:1` },
+            { id: "vswr-factor", label: "VSWR Factor", value: device.calibration.pdcFactors.carrierVswr.toFixed(6) },
+          ],
+        }]} />
+      ) : (
+        <MopiensTable
+          caption="Transmitter calibration factors and current readings"
+          rows={readingRows}
+          dense
+          getRowId={(row) => row.id}
+          columns={[
+            { id: "parameter", label: "Parameter", render: (row) => row.parameter },
+            { id: "tx1-factor", label: "TX1 Factor", align: "right", render: (row) => row.tx1.toFixed(5) },
+            { id: "tx1-value", label: "TX1 Reading", align: "right", render: (row) => row.value1.toFixed(3) },
+            { id: "tx2-factor", label: "TX2 Factor", align: "right", render: (row) => row.tx2.toFixed(5) },
+            { id: "tx2-value", label: "TX2 Reading", align: "right", render: (row) => row.value2.toFixed(3) },
+          ]}
+        />
+      )}
     </div>
   );
 }
@@ -463,12 +524,33 @@ function ParameterChangeHistoryScreen({ device }: { device: Dvor220DeviceState }
   );
 }
 
+function AdvancedControlsScreen(props: Dvor220MaintenanceScreenProps) {
+  const [activeTool, setActiveTool] = useState<"certification" | "antenna" | "ground-check">("certification");
+  return (
+    <div className={styles.screenBody}>
+      <MaintenanceHeader
+        title="Advanced Controls"
+        detail="Maintenance tests provided by the DVOR 220 PMDT."
+      />
+      <div className={styles.maintenanceToolbar} role="tablist" aria-label="Advanced control pages">
+        <MopiensBeveledButton pressed={activeTool === "certification"} onClick={() => setActiveTool("certification")}>Monitor Certification</MopiensBeveledButton>
+        <MopiensBeveledButton pressed={activeTool === "antenna"} onClick={() => setActiveTool("antenna")}>Antenna Tests</MopiensBeveledButton>
+        <MopiensBeveledButton pressed={activeTool === "ground-check"} onClick={() => setActiveTool("ground-check")}>Automatic Ground Error Check</MopiensBeveledButton>
+      </div>
+      {activeTool === "certification" ? <CertificationScreen {...props} /> : null}
+      {activeTool === "antenna" ? <AntennaScreen {...props} /> : null}
+      {activeTool === "ground-check" ? <GroundCheckScreen {...props} /> : null}
+    </div>
+  );
+}
+
 export function Dvor220MaintenanceScreen(props: Dvor220MaintenanceScreenProps) {
-  if (["maintenance-tx-reading", "maintenance-tx-setpoint", "maintenance-monitor-cal"].includes(props.screenId)) return <CalibrationScreen {...props} />;
+  if (["maintenance-tx-reading", "maintenance-tx-setpoint", "maintenance-monitor-cal", "maintenance-pdc-cal"].includes(props.screenId)) return <CalibrationScreen {...props} />;
   if (props.screenId === "maintenance-certification") return <CertificationScreen {...props} />;
   if (props.screenId === "maintenance-antenna") return <AntennaScreen {...props} />;
   if (props.screenId === "maintenance-faults") return <FaultControlsScreen {...props} />;
   if (props.screenId === "maintenance-ground-check") return <GroundCheckScreen {...props} />;
+  if (props.screenId === "maintenance-advanced") return <AdvancedControlsScreen {...props} />;
   if (props.screenId === "maintenance-users") return <UserManagementScreen {...props} />;
   if (props.screenId === "maintenance-time") return <TimeScreen {...props} />;
   if (props.screenId === "maintenance-version") return <VersionScreen {...props} />;

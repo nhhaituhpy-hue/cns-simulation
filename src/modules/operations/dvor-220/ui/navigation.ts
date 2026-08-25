@@ -7,7 +7,6 @@ import type {
 export type Dvor220ScreenId =
   | "home"
   | "equipment"
-  | "transmitter"
   | "pdc"
   | "cma-sma"
   | "syn"
@@ -21,14 +20,19 @@ export type Dvor220ScreenId =
   | "setup-station"
   | "setup-transmitter"
   | "setup-thermal"
+  | "setup-transmitter-limit"
   | "setup-monitor"
   | "setup-limits"
+  | "setup-standby-limits"
   | "setup-system"
+  | "setup-environmental"
   | "setup-communication"
-  | "setup-battery"
+  | "setup-miscellaneous"
   | "maintenance-tx-reading"
   | "maintenance-tx-setpoint"
   | "maintenance-monitor-cal"
+  | "maintenance-pdc-cal"
+  | "maintenance-advanced"
   | "maintenance-certification"
   | "maintenance-antenna"
   | "maintenance-faults"
@@ -48,7 +52,6 @@ export type Dvor220ViewMode = "pmdt" | "lmi";
 export const DVOR220_SCREEN_LABELS: Record<Dvor220ScreenId, string> = {
   home: "Home",
   equipment: "Equipment Status",
-  transmitter: "Transmitter Status",
   pdc: "PDC Status",
   "cma-sma": "CMA SMA Status",
   syn: "SYN Status",
@@ -62,14 +65,19 @@ export const DVOR220_SCREEN_LABELS: Record<Dvor220ScreenId, string> = {
   "setup-station": "Station Setup",
   "setup-transmitter": "Transmitter Setup",
   "setup-thermal": "Thermal Control",
+  "setup-transmitter-limit": "Transmitter Limit Setup",
   "setup-monitor": "Monitor Setup",
   "setup-limits": "Monitor Limit Setup",
+  "setup-standby-limits": "Standby Monitor Limit Setup",
   "setup-system": "System Setup",
+  "setup-environmental": "Environmental Setup",
   "setup-communication": "Communication Setup",
-  "setup-battery": "Battery Setup",
+  "setup-miscellaneous": "Miscellaneous Setup",
   "maintenance-tx-reading": "TX Reading Calibration",
   "maintenance-tx-setpoint": "TX Setpoint Calibration",
   "maintenance-monitor-cal": "Monitor Calibration",
+  "maintenance-pdc-cal": "PDC Calibration",
+  "maintenance-advanced": "Advanced Controls",
   "maintenance-certification": "Monitor Certification",
   "maintenance-antenna": "Antenna Tests",
   "maintenance-faults": "Fault Controls",
@@ -77,7 +85,7 @@ export const DVOR220_SCREEN_LABELS: Record<Dvor220ScreenId, string> = {
   "maintenance-users": "User Management",
   "maintenance-time": "Time Synchronization",
   "maintenance-version": "Version Information",
-  "flight-check": "Flight Inspection",
+  "flight-check": "Monitor Check",
   "flight-results": "Flight Check Results",
   "history-pmdt": "PMDT History Log",
   "history-lmi": "LMI History Log",
@@ -93,7 +101,20 @@ export const DVOR220_SECTION_DEFAULTS: Record<string, Dvor220ScreenId> = {
   logout: "home",
 };
 
-export function buildDvor220Navigation(userName: string | null): MopiensNavigationSection[] {
+export function buildDvor220Navigation(options: {
+  userName: string | null;
+  standbyMonitorEnabled: boolean;
+}): MopiensNavigationSection[] {
+  const monitorItems = [
+    { id: "monitor-cha", label: "CH.A Monitor" },
+    { id: "monitor-chb1", label: "CH.B.1 Monitor" },
+    { id: "monitor-chb2", label: "CH.B.2 Monitor" },
+    ...(options.standbyMonitorEnabled
+      ? [{ id: "monitor-standby", label: "Standby Monitor" }]
+      : []),
+    { id: "monitor-self-test", label: "Monitor Self-Test" },
+  ];
+
   return [
     {
       id: "main",
@@ -104,7 +125,6 @@ export function buildDvor220Navigation(userName: string | null): MopiensNavigati
         {
           id: "transmitter",
           label: "Transmitter",
-          selectable: true,
           expandedByDefault: true,
           children: [
             { id: "pdc", label: "PDC Status" },
@@ -116,13 +136,7 @@ export function buildDvor220Navigation(userName: string | null): MopiensNavigati
           id: "monitor",
           label: "Monitor",
           expandedByDefault: true,
-          children: [
-            { id: "monitor-cha", label: "CH.A Monitor" },
-            { id: "monitor-chb1", label: "CH.B.1 Monitor" },
-            { id: "monitor-chb2", label: "CH.B.2 Monitor" },
-            { id: "monitor-standby", label: "Standby Monitor" },
-            { id: "monitor-self-test", label: "Monitor Self-Test" },
-          ],
+          children: monitorItems,
         },
         { id: "power", label: "Power Supply" },
         { id: "environment", label: "Environmental" },
@@ -135,11 +149,16 @@ export function buildDvor220Navigation(userName: string | null): MopiensNavigati
         { id: "setup-station", label: "Station Setup" },
         { id: "setup-transmitter", label: "Transmitter Setup" },
         { id: "setup-thermal", label: "Thermal Control" },
+        { id: "setup-transmitter-limit", label: "Transmitter Limit Setup" },
         { id: "setup-monitor", label: "Monitor Setup" },
         { id: "setup-limits", label: "Monitor Limit Setup" },
+        ...(options.standbyMonitorEnabled
+          ? [{ id: "setup-standby-limits", label: "Standby Monitor Limit Setup" }]
+          : []),
         { id: "setup-system", label: "System Setup" },
+        { id: "setup-environmental", label: "Environmental Setup" },
         { id: "setup-communication", label: "Communication Setup" },
-        { id: "setup-battery", label: "Battery Setup" },
+        { id: "setup-miscellaneous", label: "Miscellaneous Setup" },
       ],
     },
     {
@@ -154,12 +173,10 @@ export function buildDvor220Navigation(userName: string | null): MopiensNavigati
             { id: "maintenance-tx-reading", label: "TX Reading Calibration" },
             { id: "maintenance-tx-setpoint", label: "TX Setpoint Calibration" },
             { id: "maintenance-monitor-cal", label: "Monitor Calibration" },
+            { id: "maintenance-pdc-cal", label: "PDC Calibration" },
           ],
         },
-        { id: "maintenance-certification", label: "Monitor Certification" },
-        { id: "maintenance-antenna", label: "Antenna Tests" },
-        { id: "maintenance-faults", label: "Fault Controls" },
-        { id: "maintenance-ground-check", label: "Automatic Ground Error Check" },
+        { id: "maintenance-advanced", label: "Advanced Controls" },
         { id: "maintenance-users", label: "User Management" },
         { id: "maintenance-time", label: "Time Synchronization" },
         { id: "maintenance-version", label: "Version Information" },
@@ -169,8 +186,7 @@ export function buildDvor220Navigation(userName: string | null): MopiensNavigati
       id: "flight",
       label: "Flight Inspection",
       items: [
-        { id: "flight-check", label: "Flight Inspection" },
-        { id: "flight-results", label: "Flight Check Results" },
+        { id: "flight-check", label: "Monitor Check" },
       ],
     },
     {
@@ -179,12 +195,11 @@ export function buildDvor220Navigation(userName: string | null): MopiensNavigati
       items: [
         { id: "history-pmdt", label: "PMDT History Log" },
         { id: "history-lmi", label: "LMI History Log" },
-        { id: "history-parameter-change", label: "Parameter Change" },
       ],
     },
     {
       id: "logout",
-      label: `${userName ?? "Administrator"} Logout`,
+      label: `${options.userName ?? "Administrator"} Logout`,
       items: [{ id: "logout", label: "Logout" }],
     },
   ];
@@ -206,7 +221,7 @@ export function buildDvor220Menus(options: {
       id: "system",
       label: "System",
       commands: [
-        { id: "simulation-parameters", label: "Simulation Parameters..." },
+        { id: "connect", label: options.connected ? "Connection List..." : "Connect..." },
       ],
     },
     {
@@ -238,7 +253,6 @@ export function buildDvor220Menus(options: {
         { id: "home", label: "Home", dividerBefore: true },
         { id: "equipment", label: "Equipment Status" },
         { id: "history-pmdt", label: "PMDT History" },
-        { id: "history-parameter-change", label: "Parameter Change" },
       ],
     },
     {
@@ -259,7 +273,7 @@ export function buildDvor220Menus(options: {
         { id: "home", label: "Home" },
         { id: "pdc", label: "PDC Status" },
         { id: "monitor-cha", label: "CH.A Monitor" },
-        { id: "maintenance-ground-check", label: "Ground Error Check" },
+        { id: "maintenance-advanced", label: "Advanced Controls" },
       ],
     },
     {

@@ -22,7 +22,10 @@ describe("MOPIENS DVOR 220 derivation engine", () => {
     expect(snapshot.transmitters.tx2).toMatchObject({ designation: "standby", path: "load" });
     expect(snapshot.pdc.antennas).toHaveLength(48);
     expect(new Set(snapshot.pdc.antennas.map((antenna) => antenna.antenna))).toHaveLength(48);
-    expect(snapshot.monitors.mon2.channels.standby.status).toBe("normal");
+    expect(snapshot.monitors.mon2.channels.standby).toMatchObject({
+      enabled: false,
+      status: "not-present",
+    });
   });
 
   it("keeps Main/Standby designation independent from Antenna/Load routing", () => {

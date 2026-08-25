@@ -14,6 +14,69 @@
   font-size: 12px;
 }
 
+.simulatorTools {
+  display: flex;
+  min-height: 34px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #4c5660;
+  border-bottom: 0;
+  background: #242b31;
+  padding: 4px 6px;
+  color: #f4f7f9;
+}
+
+.simulatorTools button,
+.simulatorToolPanelHeader button {
+  min-height: 25px;
+  border: 1px solid #7e8a94;
+  border-radius: 2px;
+  background: linear-gradient(#f8f9fa, #cdd2d6);
+  padding: 3px 10px;
+  color: #1f2b33;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.simulatorTools button:hover,
+.simulatorToolPanelHeader button:hover {
+  background: linear-gradient(#fff, #e2e6e9);
+}
+
+.simulatorTools button:focus-visible,
+.simulatorToolPanelHeader button:focus-visible {
+  outline: 2px solid #75b7ff;
+  outline-offset: 2px;
+}
+
+.simulatorToolsToggle {
+  min-width: 124px;
+}
+
+.simulatorToolsActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.simulatorToolPanel {
+  border: 2px solid #4c5660;
+  border-bottom: 0;
+  background: #d9dde0;
+}
+
+.simulatorToolPanelHeader {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #3d4851;
+  padding: 4px 7px 4px 10px;
+  color: #fff;
+}
+
 .screenBody,
 .homeScreen {
   min-height: 100%;

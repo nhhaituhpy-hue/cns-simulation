@@ -1,9 +1,11 @@
 import {
   DVOR220_MONITOR_CHANNEL_IDS,
   DVOR220_MONITOR_IDS,
+  DVOR220_MONITOR_PARAMETERS,
   DVOR220_RF_OUTPUT_IDS,
   type Dvor220AlarmBand,
   type Dvor220CalibrationState,
+  type Dvor220CalibrationValues,
   type Dvor220Configuration,
   type Dvor220DeviceState,
   type Dvor220MonitorChannelConfiguration,
@@ -31,7 +33,7 @@ function createMonitorChannel(
   channelId: Dvor220MonitorChannelId,
 ): Dvor220MonitorChannelConfiguration {
   return {
-    type: "FFM",
+    type: channelId === "standby" ? "disabled" : "FFM",
     referenceAzimuthDeg: 0,
     executiveAction: channelId === "cha",
     limits: {
@@ -74,7 +76,7 @@ function createTransmitterConfiguration(): Dvor220Configuration["transmitters"][
     identModulationPercent: 8,
     voiceModulationPercent: 0,
     azimuthOffsetDeg: 0,
-    identCode: "MOP",
+    identCode: "TST",
     identKeyer: "independent",
     identSync: "code",
   };
@@ -87,7 +89,7 @@ export function createDefaultDvor220Configuration(): Dvor220Configuration {
 
   return {
     station: {
-      stationName: "S/N: 0002 New DVOR",
+      stationName: "Đài TEST",
       equipmentVersion: "dual",
       frequencyMHz: 113,
       carrierPowerW: 100,
@@ -95,7 +97,7 @@ export function createDefaultDvor220Configuration(): Dvor220Configuration {
       identModulationPercent: 8,
       voiceModulationPercent: 0,
       azimuthOffsetDeg: 0,
-      identCode: "MOP",
+      identCode: "TST",
       identKeyer: "independent",
       identSync: "code",
       playbackSource: "on-antenna",
@@ -195,7 +197,7 @@ export function createDefaultDvor220Configuration(): Dvor220Configuration {
       niu: true,
       vau: false,
       battery: true,
-      standbyMonitor: true,
+      standbyMonitor: false,
     },
   };
 }
@@ -205,11 +207,17 @@ function unitFactors<T extends string>(ids: readonly T[]): Record<T, number> {
 }
 
 function createCalibrationState(): Dvor220CalibrationState {
-  const channelOffsets = Object.fromEntries(
-    DVOR220_MONITOR_CHANNEL_IDS.map((channelId) => [channelId, {}]),
-  ) as Record<Dvor220MonitorChannelId, Partial<Record<Dvor220MonitorParameter, number>>>;
+  const factorParameters = DVOR220_MONITOR_PARAMETERS.filter(
+    (parameter): parameter is Exclude<Dvor220MonitorParameter, "rfLevel"> => parameter !== "rfLevel",
+  );
+  const channelFactors = Object.fromEntries(
+    DVOR220_MONITOR_CHANNEL_IDS.map((channelId) => [channelId, unitFactors(factorParameters)]),
+  ) as Dvor220CalibrationValues["monitorFactors"][Dvor220MonitorId];
+  const channelRfLevelOffsets = Object.fromEntries(
+    DVOR220_MONITOR_CHANNEL_IDS.map((channelId) => [channelId, 0]),
+  ) as Record<Dvor220MonitorChannelId, number>;
 
-  return {
+  const values: Dvor220CalibrationValues = {
     transmitterReadingFactors: {
       tx1: unitFactors(DVOR220_RF_OUTPUT_IDS),
       tx2: unitFactors(DVOR220_RF_OUTPUT_IDS),
@@ -218,9 +226,20 @@ function createCalibrationState(): Dvor220CalibrationState {
       tx1: unitFactors([...DVOR220_RF_OUTPUT_IDS, "am30Hz", "ident1020Hz"] as const),
       tx2: unitFactors([...DVOR220_RF_OUTPUT_IDS, "am30Hz", "ident1020Hz"] as const),
     },
-    monitorOffsets: Object.fromEntries(
-      DVOR220_MONITOR_IDS.map((monitorId) => [monitorId, structuredClone(channelOffsets)]),
-    ) as Dvor220CalibrationState["monitorOffsets"],
+    pdcFactors: {
+      carrierPower: 1,
+      carrierVswr: 1,
+    },
+    monitorFactors: Object.fromEntries(
+      DVOR220_MONITOR_IDS.map((monitorId) => [monitorId, structuredClone(channelFactors)]),
+    ) as Dvor220CalibrationState["monitorFactors"],
+    monitorRfLevelOffsets: Object.fromEntries(
+      DVOR220_MONITOR_IDS.map((monitorId) => [monitorId, structuredClone(channelRfLevelOffsets)]),
+    ) as Dvor220CalibrationState["monitorRfLevelOffsets"],
+  };
+  return {
+    ...values,
+    saved: cloneDvor220(values),
   };
 }
 
