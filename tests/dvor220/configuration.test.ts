@@ -65,4 +65,46 @@ describe("MOPIENS DVOR 220 configuration layers", () => {
     expect(result.state.configuration.draft.thermal.tx1.fanStopC).toBe(35);
     expect(result.state.configuration.draft.thermal.tx2.fanStartC).toBe(40);
   });
+
+  it("keeps Helper Apply in RAM, saves only on request and tracks later carrier changes", () => {
+    let state = createAuthorizedDvor220State();
+    const helperSettings = {
+      carrierScalePercent: 90,
+      sidebandPowerW: { usbCos: 0.9, usbSin: 0.9, lsbCos: 0.9, lsbSin: 0.9 },
+      trackingEnabled: true,
+    };
+
+    state = accepted(state, {
+      type: "apply-transmitter-helper",
+      transmitterIds: ["tx1"],
+      settings: helperSettings,
+    });
+    expect(state.configuration.running.transmitters.tx1).toMatchObject(helperSettings);
+    expect(state.configuration.flash.transmitters.tx1.carrierScalePercent).toBe(100);
+
+    state = accepted(state, { type: "reset" });
+    expect(state.configuration.running.transmitters.tx1).toMatchObject({
+      carrierScalePercent: 100,
+      trackingEnabled: false,
+    });
+
+    state = accepted(state, {
+      type: "apply-transmitter-helper",
+      transmitterIds: ["tx1"],
+      settings: helperSettings,
+    });
+    state = accepted(state, { type: "save-transmitter-helper", transmitterIds: ["tx1"] });
+    state = accepted(state, {
+      type: "patch-draft",
+      patch: { station: { carrierPowerW: 50 } },
+    });
+    state = accepted(state, { type: "apply-draft" });
+
+    expect(state.configuration.running.transmitters.tx1.sidebandPowerW).toEqual({
+      usbCos: 0.45,
+      usbSin: 0.45,
+      lsbCos: 0.45,
+      lsbSin: 0.45,
+    });
+  });
 });

@@ -10,6 +10,7 @@ import {
   deriveDvor220Snapshot,
   getDvor220GroundCheckDurationMs,
   reconcileDvor220State,
+  resetDvor220MonitorAveragesMutating,
 } from "./engine";
 import {
   getDvor220PermissionDecision,
@@ -77,6 +78,7 @@ export function synchronizeRuntimeWithConfiguration(state: Dvor220DeviceState) {
   state.power.batteryCapacityMs = running.battery.backupRuntimeMinutes * 60_000;
   state.power.batteryRemainingMs = Math.min(state.power.batteryRemainingMs, state.power.batteryCapacityMs);
   state.power.batteryPresent = running.optionalUnits.battery;
+  resetDvor220MonitorAveragesMutating(state);
 }
 
 function restoreAfterReset(state: Dvor220DeviceState) {
@@ -109,6 +111,7 @@ function restoreAfterReset(state: Dvor220DeviceState) {
     changeoverFlag: false,
     shutdownReason: null,
   };
+  resetDvor220MonitorAveragesMutating(state);
 }
 
 function validateAccount(account: Dvor220UserAccount): string | null {
@@ -307,6 +310,61 @@ function defaultCalibrationValue(target: Dvor220CalibrationTarget): number {
   return target.kind === "monitor" && target.parameter === "rfLevel" ? 0 : 1;
 }
 
+type TransmitterHelperSettings = Extract<
+  Dvor220Command,
+  { type: "apply-transmitter-helper" }
+>["settings"];
+
+function carrierSetpointW(
+  configuration: Dvor220Configuration,
+  transmitterId: Dvor220TransmitterId,
+): number {
+  return configuration.station.carrierPowerW
+    * configuration.transmitters[transmitterId].carrierScalePercent
+    / 100;
+}
+
+function applyPersistentSidebandTracking(
+  previous: Dvor220Configuration,
+  next: Dvor220Configuration,
+) {
+  for (const transmitterId of DVOR220_TRANSMITTER_IDS) {
+    const previousTransmitter = previous.transmitters[transmitterId];
+    const nextTransmitter = next.transmitters[transmitterId];
+    if (!previousTransmitter.trackingEnabled || !nextTransmitter.trackingEnabled) continue;
+    const previousCarrier = carrierSetpointW(previous, transmitterId);
+    const nextCarrier = carrierSetpointW(next, transmitterId);
+    if (previousCarrier <= 0 || previousCarrier === nextCarrier) continue;
+    const ratio = nextCarrier / previousCarrier;
+    for (const output of ["usbCos", "usbSin", "lsbCos", "lsbSin"] as const) {
+      nextTransmitter.sidebandPowerW[output] *= ratio;
+    }
+  }
+}
+
+function writeTransmitterHelperSettings(
+  configuration: Dvor220Configuration,
+  transmitterId: Dvor220TransmitterId,
+  settings: TransmitterHelperSettings,
+) {
+  const transmitter = configuration.transmitters[transmitterId];
+  transmitter.carrierScalePercent = settings.carrierScalePercent;
+  transmitter.sidebandPowerW = cloneDvor220(settings.sidebandPowerW);
+  transmitter.trackingEnabled = settings.trackingEnabled;
+}
+
+function transmitterHelperSettingsChanged(
+  left: Dvor220Configuration,
+  right: Dvor220Configuration,
+  transmitterId: Dvor220TransmitterId,
+): boolean {
+  const a = left.transmitters[transmitterId];
+  const b = right.transmitters[transmitterId];
+  return a.carrierScalePercent !== b.carrierScalePercent
+    || a.trackingEnabled !== b.trackingEnabled
+    || !configurationsEqual(a.sidebandPowerW, b.sidebandPowerW);
+}
+
 export function reduceDvor220Command(
   currentState: Dvor220DeviceState,
   command: Dvor220Command,
@@ -423,6 +481,7 @@ export function reduceDvor220Command(
       state.executive.phase = "post-changeover-holdoff";
       state.executive.pendingSinceMs = null;
       state.executive.postChangeoverUntilMs = state.nowMs + state.configuration.running.monitor.postChangeoverHoldoffMs;
+      resetDvor220MonitorAveragesMutating(state);
       recordControl(state, `Manual changeover: ${current.toUpperCase()} to ${next.toUpperCase()}`);
       state = reconcileDvor220State(state);
       return success(state);
@@ -431,6 +490,7 @@ export function reduceDvor220Command(
     case "set-transmitter-power": {
       const denied = requirePermission(state, "control");
       if (denied) return failure(state, denied);
+      const activeBefore = deriveDvor220Snapshot(state).activeTransmitterId;
       const runtime = state.transmitters[command.transmitterId];
       runtime.powerOn = command.on;
       if (!command.on) {
@@ -438,6 +498,9 @@ export function reduceDvor220Command(
         setAllRfOutputs(state, command.transmitterId, false);
       } else if (runtime.path === "disconnected") {
         runtime.path = "load";
+      }
+      if (deriveDvor220Snapshot(state).activeTransmitterId !== activeBefore) {
+        resetDvor220MonitorAveragesMutating(state);
       }
       if (command.on && state.configuration.running.monitor.powerOnHoldoffMs > 0) {
         state.executive.powerOnHoldoffUntilMs = state.nowMs + state.configuration.running.monitor.powerOnHoldoffMs;
@@ -475,8 +538,18 @@ export function reduceDvor220Command(
         state.executive.phase === "shutdown-locked" &&
         (state.executive.shutdownLockedUntilMs ?? Infinity) > state.nowMs
       ) return failure(state, "Reset is locked for at least 20 seconds after shutdown.");
+      state.configuration.running = cloneDvor220(state.configuration.flash);
+      state.configuration.draft = cloneDvor220(state.configuration.flash);
+      state.configuration.draftDirty = false;
+      state.configuration.flashDirty = false;
+      const savedCalibration = cloneDvor220(state.calibration.saved);
+      state.calibration = {
+        ...cloneDvor220(savedCalibration),
+        saved: savedCalibration,
+      };
+      synchronizeRuntimeWithConfiguration(state);
       restoreAfterReset(state);
-      recordControl(state, "System Reset");
+      recordControl(state, "System Reset restored non-volatile configuration and calibration");
       state = reconcileDvor220State(state);
       return success(state);
     }
@@ -521,15 +594,92 @@ export function reduceDvor220Command(
     case "apply-draft": {
       const denied = requirePermission(state, "configure");
       if (denied) return failure(state, denied);
-      const issues = validateDvor220Configuration(state.configuration.draft);
+      const nextRunning = cloneDvor220(state.configuration.draft);
+      applyPersistentSidebandTracking(state.configuration.running, nextRunning);
+      const issues = validateDvor220Configuration(nextRunning);
       const firstError = issues.find((item) => item.severity === "error");
       if (firstError) return failure(state, `${firstError.path}: ${firstError.message}`);
-      state.configuration.running = cloneDvor220(state.configuration.draft);
+      state.configuration.running = nextRunning;
+      state.configuration.draft = cloneDvor220(nextRunning);
       state.configuration.draftDirty = false;
       state.configuration.flashDirty = !configurationsEqual(state.configuration.running, state.configuration.flash);
       synchronizeRuntimeWithConfiguration(state);
       recordControl(state, "Running configuration applied");
       state = reconcileDvor220State(state);
+      return success(state);
+    }
+
+    case "apply-transmitter-helper": {
+      const denied = requirePermission(state, "configure");
+      if (denied) return failure(state, denied);
+      const transmitterIds = [...new Set(command.transmitterIds)];
+      if (transmitterIds.length === 0) return failure(state, "Select at least one transmitter in Helper.");
+      const nextRunning = cloneDvor220(state.configuration.running);
+      for (const transmitterId of transmitterIds) {
+        writeTransmitterHelperSettings(nextRunning, transmitterId, command.settings);
+      }
+      const firstError = validateDvor220Configuration(nextRunning).find(
+        (item) => item.severity === "error" && item.path.startsWith("transmitters."),
+      );
+      if (firstError) return failure(state, `${firstError.path}: ${firstError.message}`);
+      for (const transmitterId of transmitterIds) {
+        writeTransmitterHelperSettings(state.configuration.running, transmitterId, command.settings);
+        writeTransmitterHelperSettings(state.configuration.draft, transmitterId, command.settings);
+      }
+      state.configuration.draftDirty = !configurationsEqual(
+        state.configuration.draft,
+        state.configuration.running,
+      );
+      state.configuration.flashDirty = !configurationsEqual(
+        state.configuration.running,
+        state.configuration.flash,
+      );
+      recordControl(
+        state,
+        `Transmitter Helper applied to ${transmitterIds.map((id) => id.toUpperCase()).join(" and ")} (RAM)`,
+      );
+      state = reconcileDvor220State(state);
+      return success(state);
+    }
+
+    case "save-transmitter-helper": {
+      const denied = requirePermission(state, "configure");
+      if (denied) return failure(state, denied);
+      const transmitterIds = [...new Set(command.transmitterIds)];
+      const changedIds = transmitterIds.filter((transmitterId) => transmitterHelperSettingsChanged(
+        state.configuration.flash,
+        state.configuration.running,
+        transmitterId,
+      ));
+      if (changedIds.length === 0) return failure(state, "No applied Helper values require Save.");
+      const previousFlash = cloneDvor220(state.configuration.flash);
+      for (const transmitterId of changedIds) {
+        const running = state.configuration.running.transmitters[transmitterId];
+        writeTransmitterHelperSettings(state.configuration.flash, transmitterId, {
+          carrierScalePercent: running.carrierScalePercent,
+          sidebandPowerW: running.sidebandPowerW,
+          trackingEnabled: running.trackingEnabled,
+        });
+      }
+      state.configuration.flashDirty = !configurationsEqual(
+        state.configuration.running,
+        state.configuration.flash,
+      );
+      const parameterChanges = createParameterChangeLogEntries({
+        changedFields: collectChangedConfigFields(previousFlash, state.configuration.flash),
+        timestampMs: state.nowMs,
+        userName: state.session.username,
+        file: "RMS",
+        actionLabel: "Transmitter Helper Save",
+      });
+      state.history.parameterChanges = prependParameterChangeLogEntries(
+        state.history.parameterChanges,
+        parameterChanges,
+      );
+      recordControl(
+        state,
+        `Transmitter Helper saved to non-volatile flash for ${changedIds.map((id) => id.toUpperCase()).join(" and ")}`,
+      );
       return success(state);
     }
 
@@ -685,6 +835,7 @@ export function reduceDvor220Command(
       if (denied) return failure(state, denied);
       const error = applyCalibration(state, command.calibration);
       if (error) return failure(state, error);
+      resetDvor220MonitorAveragesMutating(state);
       recordControl(state, `Calibration applied: ${command.calibration.kind}`);
       return success(state);
     }
@@ -693,6 +844,7 @@ export function reduceDvor220Command(
       const denied = requirePermission(state, "calibrate");
       if (denied) return failure(state, denied);
       setCalibrationValue(state, command.target, defaultCalibrationValue(command.target));
+      resetDvor220MonitorAveragesMutating(state);
       recordControl(state, `Calibration initialized: ${command.target.kind}`);
       return success(state);
     }
@@ -712,6 +864,7 @@ export function reduceDvor220Command(
       const saved = calibrationValue(state.calibration.saved, command.target);
       if (current !== saved) {
         setCalibrationValue(state, command.target, defaultCalibrationValue(command.target));
+        resetDvor220MonitorAveragesMutating(state);
         recordControl(state, `Unsaved calibration discarded; parameter default restored: ${command.target.kind}`);
       }
       return success(state);

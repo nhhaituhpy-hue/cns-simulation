@@ -90,6 +90,7 @@ export interface Dvor220StationConfiguration {
 export interface Dvor220TransmitterConfiguration {
   carrierScalePercent: number;
   sidebandPowerW: Record<Exclude<Dvor220RfOutputId, "carrier">, number>;
+  trackingEnabled: boolean;
   rfPhaseDeg: {
     usbCosToSin: number;
     lsbCosToSin: number;
@@ -375,6 +376,16 @@ export interface Dvor220CalibrationState extends Dvor220CalibrationValues {
   saved: Dvor220CalibrationValues;
 }
 
+export type Dvor220MonitorSampleBuffers = Record<
+  Dvor220MonitorId,
+  Record<Dvor220MonitorChannelId, Record<Dvor220MonitorParameter, number[]>>
+>;
+
+export interface Dvor220MonitorAveragingState {
+  nextSampleAtMs: number;
+  buffers: Dvor220MonitorSampleBuffers;
+}
+
 export interface Dvor220GroundCheckPoint {
   azimuthDeg: number;
   bearingErrorDeg: number;
@@ -438,6 +449,7 @@ export interface Dvor220DeviceState {
   faults: Dvor220InjectedFault[];
   measurementOverrides: Dvor220MeasurementOverride[];
   calibration: Dvor220CalibrationState;
+  monitorAveraging: Dvor220MonitorAveragingState;
   groundCheck: Dvor220GroundCheckState;
   executive: Dvor220ExecutiveState;
   history: Dvor220HistoryState;
@@ -451,7 +463,7 @@ export interface Dvor220ValidationIssue {
 
 export interface Dvor220ParameterReading {
   value: number;
-  status: "normal" | "warning" | "alarm" | "unplugged" | "disabled";
+  status: "normal" | "warning" | "alarm" | "unplugged" | "disabled" | "stabilizing";
   severity: Dvor220AlarmSeverity;
   unit: string;
 }
@@ -475,6 +487,9 @@ export interface Dvor220MonitorChannelSnapshot {
   status: Dvor220Status;
   primaryAlarm: boolean;
   secondaryAlarm: boolean;
+  stabilizing: boolean;
+  sampleCount: number;
+  requiredSamples: number;
 }
 
 export interface Dvor220MonitorSnapshot {
@@ -607,6 +622,12 @@ export type Dvor220Command =
   | { type: "reset-draft" }
   | { type: "apply-draft" }
   | { type: "save-profile" }
+  | {
+      type: "apply-transmitter-helper";
+      transmitterIds: Dvor220TransmitterId[];
+      settings: Pick<Dvor220TransmitterConfiguration, "carrierScalePercent" | "sidebandPowerW" | "trackingEnabled">;
+    }
+  | { type: "save-transmitter-helper"; transmitterIds: Dvor220TransmitterId[] }
   | { type: "load-configuration"; configuration: Dvor220Configuration }
   | { type: "power-cycle" }
   | { type: "set-ac-available"; available: boolean }

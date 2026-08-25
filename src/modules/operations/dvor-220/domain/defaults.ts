@@ -59,6 +59,7 @@ function createTransmitterConfiguration(): Dvor220Configuration["transmitters"][
       lsbCos: 1,
       lsbSin: 1,
     },
+    trackingEnabled: false,
     rfPhaseDeg: {
       usbCosToSin: 176,
       lsbCosToSin: 130,
@@ -243,6 +244,19 @@ function createCalibrationState(): Dvor220CalibrationState {
   };
 }
 
+function createMonitorSampleBuffers(): Dvor220DeviceState["monitorAveraging"]["buffers"] {
+  return DVOR220_MONITOR_IDS.reduce((monitors, monitorId) => {
+    monitors[monitorId] = DVOR220_MONITOR_CHANNEL_IDS.reduce((channels, channelId) => {
+      channels[channelId] = DVOR220_MONITOR_PARAMETERS.reduce((parameters, parameter) => {
+        parameters[parameter] = [];
+        return parameters;
+      }, {} as Record<Dvor220MonitorParameter, number[]>);
+      return channels;
+    }, {} as Dvor220DeviceState["monitorAveraging"]["buffers"][Dvor220MonitorId]);
+    return monitors;
+  }, {} as Dvor220DeviceState["monitorAveraging"]["buffers"]);
+}
+
 function createTransmitterRuntime(
   transmitterId: Dvor220TransmitterId,
   configuration: Dvor220Configuration,
@@ -333,6 +347,10 @@ export function createInitialDvor220State(
     faults: [],
     measurementOverrides: [],
     calibration: createCalibrationState(),
+    monitorAveraging: {
+      nextSampleAtMs: nowMs + 100,
+      buffers: createMonitorSampleBuffers(),
+    },
     groundCheck: {
       status: "idle",
       transmitterId: null,

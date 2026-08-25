@@ -5,6 +5,7 @@ import {
   createInitialDvor220State,
 } from "@/modules/operations/dvor-220/domain/defaults";
 import {
+  advanceDvor220Time,
   classifyDvor220Reading,
   deriveDvor220Snapshot,
 } from "@/modules/operations/dvor-220/domain/engine";
@@ -69,6 +70,16 @@ describe("MOPIENS DVOR 220 derivation engine", () => {
       output: "usbCos",
       on: false,
     }).state;
+    const stabilizing = deriveDvor220Snapshot(state);
+
+    expect(stabilizing.monitors.mon1.channels.cha).toMatchObject({
+      stabilizing: true,
+      sampleCount: 0,
+      requiredSamples: 10,
+      primaryAlarm: false,
+    });
+
+    state = advanceDvor220Time(state, 1_000);
     const snapshot = deriveDvor220Snapshot(state);
 
     expect(snapshot.monitors.mon1.channels.cha.readings.fmIndex).toMatchObject({

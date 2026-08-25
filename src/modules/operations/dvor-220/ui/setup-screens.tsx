@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import {
   MopiensBeveledButton,
+  MopiensModal,
   MopiensSlideSwitch,
   type MopiensVisualTone,
 } from "@/modules/operations/mopiens-pmdt";
@@ -180,38 +181,247 @@ function StationSetup({
   );
 }
 
-function TransmitterSetup({ configuration, disabled, patch }: { configuration: Dvor220Configuration; disabled: boolean; patch: (patch: Dvor220DeepPartial<Dvor220Configuration>) => void }) {
+type TransmitterHelperSettings = Pick<
+  Dvor220Configuration["transmitters"][Dvor220TransmitterId],
+  "carrierScalePercent" | "sidebandPowerW" | "trackingEnabled"
+>;
+
+function helperSettings(
+  configuration: Dvor220Configuration,
+  transmitterId: Dvor220TransmitterId,
+): TransmitterHelperSettings {
+  const transmitter = configuration.transmitters[transmitterId];
+  return {
+    carrierScalePercent: transmitter.carrierScalePercent,
+    sidebandPowerW: structuredClone(transmitter.sidebandPowerW),
+    trackingEnabled: transmitter.trackingEnabled,
+  };
+}
+
+function helperSettingsEqual(left: TransmitterHelperSettings, right: TransmitterHelperSettings): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function TransmitterSetup({
+  configuration,
+  device,
+  disabled,
+  patch,
+  dispatch,
+}: {
+  configuration: Dvor220Configuration;
+  device: Dvor220DeviceState;
+  disabled: boolean;
+  patch: (patch: Dvor220DeepPartial<Dvor220Configuration>) => void;
+  dispatch: (command: Dvor220Command) => Dvor220CommandResult;
+}) {
+  const [helperOpen, setHelperOpen] = useState(false);
+  const [helperTransmitterId, setHelperTransmitterId] = useState<Dvor220TransmitterId>("tx1");
+  const [sameToBoth, setSameToBoth] = useState(false);
+  const [sidebandsSame, setSidebandsSame] = useState(false);
+  const [syncEnabled, setSyncEnabled] = useState(false);
+  const [helperDrafts, setHelperDrafts] = useState<Record<Dvor220TransmitterId, TransmitterHelperSettings>>(() => ({
+    tx1: helperSettings(device.configuration.running, "tx1"),
+    tx2: helperSettings(device.configuration.running, "tx2"),
+  }));
+
   function transmitterPatch(transmitterId: Dvor220TransmitterId, value: Dvor220DeepPartial<Dvor220Configuration["transmitters"][Dvor220TransmitterId]>) {
     patch({ transmitters: { [transmitterId]: value } } as Dvor220DeepPartial<Dvor220Configuration>);
   }
+
+  function openHelper(transmitterId: Dvor220TransmitterId) {
+    setHelperTransmitterId(transmitterId);
+    setHelperDrafts({
+      tx1: helperSettings(device.configuration.running, "tx1"),
+      tx2: helperSettings(device.configuration.running, "tx2"),
+    });
+    setSameToBoth(false);
+    setSidebandsSame(false);
+    setSyncEnabled(false);
+    setHelperOpen(true);
+  }
+
+  function updateActiveHelper(next: TransmitterHelperSettings) {
+    setHelperDrafts((current) => ({ ...current, [helperTransmitterId]: next }));
+  }
+
+  function updateHelperCarrier(value: number) {
+    const current = helperDrafts[helperTransmitterId];
+    const followCarrier = syncEnabled || current.trackingEnabled;
+    const ratio = followCarrier && current.carrierScalePercent > 0
+      ? value / current.carrierScalePercent
+      : 1;
+    const scaledSidebands = Object.fromEntries(
+      Object.entries(current.sidebandPowerW).map(([output, power]) => [
+        output,
+        Math.round(power * ratio * 1_000) / 1_000,
+      ]),
+    ) as TransmitterHelperSettings["sidebandPowerW"];
+    updateActiveHelper({
+      ...current,
+      carrierScalePercent: value,
+      sidebandPowerW: followCarrier ? scaledSidebands : current.sidebandPowerW,
+    });
+  }
+
+  function updateHelperSideband(
+    output: keyof TransmitterHelperSettings["sidebandPowerW"],
+    value: number,
+  ) {
+    const current = helperDrafts[helperTransmitterId];
+    let nextSidebands: TransmitterHelperSettings["sidebandPowerW"] = {
+      ...current.sidebandPowerW,
+      [output]: value,
+    };
+    if (sidebandsSame) {
+      nextSidebands = Object.fromEntries(
+        Object.keys(current.sidebandPowerW).map((sideband) => [sideband, value]),
+      ) as TransmitterHelperSettings["sidebandPowerW"];
+    }
+    updateActiveHelper({ ...current, sidebandPowerW: nextSidebands });
+  }
+
+  const activeHelper = helperDrafts[helperTransmitterId];
+  const helperTargets = sameToBoth ? [...DVOR220_TRANSMITTER_IDS] : [helperTransmitterId];
+  const helperValid = activeHelper.carrierScalePercent >= 0
+    && activeHelper.carrierScalePercent <= 100
+    && Object.values(activeHelper.sidebandPowerW).every((value) => value >= 0 && value <= 5);
+  const helperHasUnappliedChanges = helperTargets.some(
+    (transmitterId) => !helperSettingsEqual(
+      activeHelper,
+      helperSettings(device.configuration.running, transmitterId),
+    ),
+  );
+  const helperHasUnsavedChanges = helperTargets.some(
+    (transmitterId) => !helperSettingsEqual(
+      helperSettings(device.configuration.running, transmitterId),
+      helperSettings(device.configuration.flash, transmitterId),
+    ),
+  );
+
+  function applyHelper() {
+    const result = dispatch({
+      type: "apply-transmitter-helper",
+      transmitterIds: helperTargets,
+      settings: activeHelper,
+    });
+    if (!result.ok) return;
+    setHelperDrafts((current) => {
+      const next = { ...current };
+      for (const transmitterId of helperTargets) {
+        next[transmitterId] = helperSettings(result.state.configuration.running, transmitterId);
+      }
+      return next;
+    });
+  }
+
+  function saveHelper() {
+    dispatch({ type: "save-transmitter-helper", transmitterIds: helperTargets });
+  }
+
   return (
-    <div className={styles.twoColumnLayout}>
-      {DVOR220_TRANSMITTER_IDS.map((transmitterId) => {
-        const transmitter = configuration.transmitters[transmitterId];
-        return (
-          <fieldset key={transmitterId} className={styles.formSection} disabled={disabled}>
-            <legend>{transmitterId.toUpperCase()}</legend>
-            <div className={styles.formGridSingle}>
-              <FormField label="Carrier Scale (%)"><input type="number" min="0" max="100" step="0.1" value={transmitter.carrierScalePercent} onChange={(event) => transmitterPatch(transmitterId, { carrierScalePercent: numberValue(event.target.value, transmitter.carrierScalePercent) })} /></FormField>
+    <>
+      <div className={styles.twoColumnLayout}>
+        {DVOR220_TRANSMITTER_IDS.map((transmitterId) => {
+          const transmitter = configuration.transmitters[transmitterId];
+          return (
+            <fieldset key={transmitterId} className={styles.formSection} disabled={disabled}>
+              <legend>{transmitterId.toUpperCase()}</legend>
+              <div className={styles.transmitterHelperBar}>
+                <span>RF setpoints: {transmitter.trackingEnabled ? "Tracking" : "Manual"}</span>
+                <MopiensBeveledButton onClick={() => openHelper(transmitterId)}>Helper...</MopiensBeveledButton>
+              </div>
+              <div className={styles.formGridSingle}>
+                <FormField label="Carrier Scale (%)"><input type="number" min="0" max="100" step="0.1" value={transmitter.carrierScalePercent} onChange={(event) => transmitterPatch(transmitterId, { carrierScalePercent: numberValue(event.target.value, transmitter.carrierScalePercent) })} /></FormField>
+                {(["usbCos", "usbSin", "lsbCos", "lsbSin"] as const).map((output) => (
+                  <FormField key={output} label={`${output.toUpperCase()} Power (W)`}>
+                    <input type="number" min="0" max="5" step="0.01" value={transmitter.sidebandPowerW[output]} onChange={(event) => transmitterPatch(transmitterId, { sidebandPowerW: { [output]: numberValue(event.target.value, transmitter.sidebandPowerW[output]) } })} />
+                  </FormField>
+                ))}
+                <FormField label="Carrier to Sideband Phase (°)"><input type="number" min="0" max="359.9" step="0.1" value={transmitter.rfPhaseDeg.carrierToSideband} onChange={(event) => transmitterPatch(transmitterId, { rfPhaseDeg: { carrierToSideband: numberValue(event.target.value, transmitter.rfPhaseDeg.carrierToSideband) } })} /></FormField>
+                <FormField label="30 Hz AM (%)"><input type="number" min="0" max="40" step="0.1" value={transmitter.am30HzPercent} disabled={disabled || transmitter.useStationModulation} onChange={(event) => transmitterPatch(transmitterId, { am30HzPercent: numberValue(event.target.value, transmitter.am30HzPercent) })} /></FormField>
+                <FormField label="IDENT Modulation (%)"><input type="number" min="0" max="20" step="0.1" value={transmitter.identModulationPercent} disabled={disabled || transmitter.useStationIdent} onChange={(event) => transmitterPatch(transmitterId, { identModulationPercent: numberValue(event.target.value, transmitter.identModulationPercent) })} /></FormField>
+                <FormField label="Voice Modulation (%)"><input type="number" min="0" max="40" step="0.1" value={transmitter.voiceModulationPercent} disabled={disabled || transmitter.useStationModulation} onChange={(event) => transmitterPatch(transmitterId, { voiceModulationPercent: numberValue(event.target.value, transmitter.voiceModulationPercent) })} /></FormField>
+                <FormField label="Azimuth Offset (°)"><input type="number" min="-40" max="40" step="0.01" value={transmitter.azimuthOffsetDeg} disabled={disabled || transmitter.useStationAzimuth} onChange={(event) => transmitterPatch(transmitterId, { azimuthOffsetDeg: numberValue(event.target.value, transmitter.azimuthOffsetDeg) })} /></FormField>
+                <FormField label="IDENT Code"><input maxLength={4} value={transmitter.identCode} disabled={disabled || transmitter.useStationIdent} onChange={(event) => transmitterPatch(transmitterId, { identCode: event.target.value.toUpperCase() })} /></FormField>
+                <MopiensSlideSwitch label="Use station modulation" checked={transmitter.useStationModulation} disabled={disabled} onCheckedChange={(checked) => transmitterPatch(transmitterId, { useStationModulation: checked })} />
+                <MopiensSlideSwitch label="Use station azimuth" checked={transmitter.useStationAzimuth} disabled={disabled} onCheckedChange={(checked) => transmitterPatch(transmitterId, { useStationAzimuth: checked })} />
+                <MopiensSlideSwitch label="Use station IDENT" checked={transmitter.useStationIdent} disabled={disabled} onCheckedChange={(checked) => transmitterPatch(transmitterId, { useStationIdent: checked })} />
+              </div>
+            </fieldset>
+          );
+        })}
+      </div>
+
+      <MopiensModal
+        open={helperOpen}
+        title="Transmitter Setup Helper"
+        brandLabel="MOPIENS 220 DVOR"
+        size="large"
+        closeOnBackdrop={false}
+        onClose={() => setHelperOpen(false)}
+        actions={[
+          { id: "close", label: "Close", onClick: () => setHelperOpen(false) },
+          { id: "save", label: "Save", disabled: disabled || !helperHasUnsavedChanges, onClick: saveHelper },
+          { id: "apply", label: "Apply", tone: "primary", disabled: disabled || !helperValid || !helperHasUnappliedChanges, onClick: applyHelper },
+        ]}
+      >
+        <div className={styles.transmitterHelperDialog}>
+          <div className={styles.transmitterHelperTabs} role="tablist" aria-label="Helper transmitter">
+            {DVOR220_TRANSMITTER_IDS.map((transmitterId) => (
+              <button
+                key={transmitterId}
+                type="button"
+                role="tab"
+                aria-selected={helperTransmitterId === transmitterId}
+                onClick={() => setHelperTransmitterId(transmitterId)}
+              >
+                {transmitterId.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          <fieldset className={styles.formSection} disabled={disabled}>
+            <legend>{helperTransmitterId.toUpperCase()} RF Output Setpoint</legend>
+            <div className={styles.helperGrid}>
+              <FormField label="Carrier Scale (%)">
+                <input type="number" min="0" max="100" step="0.1" value={activeHelper.carrierScalePercent} onChange={(event) => updateHelperCarrier(numberValue(event.target.value, activeHelper.carrierScalePercent))} />
+              </FormField>
               {(["usbCos", "usbSin", "lsbCos", "lsbSin"] as const).map((output) => (
-                <FormField key={output} label={`${output.toUpperCase()} Power (W)`}>
-                  <input type="number" min="0" max="5" step="0.01" value={transmitter.sidebandPowerW[output]} onChange={(event) => transmitterPatch(transmitterId, { sidebandPowerW: { [output]: numberValue(event.target.value, transmitter.sidebandPowerW[output]) } })} />
+                <FormField key={output} label={`${output.toUpperCase()} (W)`}>
+                  <input type="number" min="0" max="5" step="0.01" value={activeHelper.sidebandPowerW[output]} onChange={(event) => updateHelperSideband(output, numberValue(event.target.value, activeHelper.sidebandPowerW[output]))} />
                 </FormField>
               ))}
-              <FormField label="Carrier to Sideband Phase (°)"><input type="number" min="0" max="359.9" step="0.1" value={transmitter.rfPhaseDeg.carrierToSideband} onChange={(event) => transmitterPatch(transmitterId, { rfPhaseDeg: { carrierToSideband: numberValue(event.target.value, transmitter.rfPhaseDeg.carrierToSideband) } })} /></FormField>
-              <FormField label="30 Hz AM (%)"><input type="number" min="0" max="40" step="0.1" value={transmitter.am30HzPercent} disabled={disabled || transmitter.useStationModulation} onChange={(event) => transmitterPatch(transmitterId, { am30HzPercent: numberValue(event.target.value, transmitter.am30HzPercent) })} /></FormField>
-              <FormField label="IDENT Modulation (%)"><input type="number" min="0" max="20" step="0.1" value={transmitter.identModulationPercent} disabled={disabled || transmitter.useStationIdent} onChange={(event) => transmitterPatch(transmitterId, { identModulationPercent: numberValue(event.target.value, transmitter.identModulationPercent) })} /></FormField>
-              <FormField label="Voice Modulation (%)"><input type="number" min="0" max="40" step="0.1" value={transmitter.voiceModulationPercent} disabled={disabled || transmitter.useStationModulation} onChange={(event) => transmitterPatch(transmitterId, { voiceModulationPercent: numberValue(event.target.value, transmitter.voiceModulationPercent) })} /></FormField>
-              <FormField label="Azimuth Offset (°)"><input type="number" min="-40" max="40" step="0.01" value={transmitter.azimuthOffsetDeg} disabled={disabled || transmitter.useStationAzimuth} onChange={(event) => transmitterPatch(transmitterId, { azimuthOffsetDeg: numberValue(event.target.value, transmitter.azimuthOffsetDeg) })} /></FormField>
-              <FormField label="IDENT Code"><input maxLength={4} value={transmitter.identCode} disabled={disabled || transmitter.useStationIdent} onChange={(event) => transmitterPatch(transmitterId, { identCode: event.target.value.toUpperCase() })} /></FormField>
-              <MopiensSlideSwitch label="Use station modulation" checked={transmitter.useStationModulation} disabled={disabled} onCheckedChange={(checked) => transmitterPatch(transmitterId, { useStationModulation: checked })} />
-              <MopiensSlideSwitch label="Use station azimuth" checked={transmitter.useStationAzimuth} disabled={disabled} onCheckedChange={(checked) => transmitterPatch(transmitterId, { useStationAzimuth: checked })} />
-              <MopiensSlideSwitch label="Use station IDENT" checked={transmitter.useStationIdent} disabled={disabled} onCheckedChange={(checked) => transmitterPatch(transmitterId, { useStationIdent: checked })} />
             </div>
           </fieldset>
-        );
-      })}
-    </div>
+          <fieldset className={styles.formSection} disabled={disabled}>
+            <legend>Helper</legend>
+            <div className={styles.helperSwitchGrid}>
+              <MopiensSlideSwitch label="Same to TX1 and TX2" checked={sameToBoth} disabled={disabled} onCheckedChange={setSameToBoth} />
+              <MopiensSlideSwitch label="Sideband same setting" checked={sidebandsSame} disabled={disabled} onCheckedChange={setSidebandsSame} />
+              <MopiensSlideSwitch label="Sync" checked={syncEnabled} disabled={disabled} onCheckedChange={setSyncEnabled} />
+              <MopiensSlideSwitch
+                label="Tracking"
+                checked={activeHelper.trackingEnabled}
+                disabled={disabled}
+                onCheckedChange={(trackingEnabled) => updateActiveHelper({ ...activeHelper, trackingEnabled })}
+              />
+            </div>
+          </fieldset>
+          <p className={styles.helperState} role="status">
+            {!helperValid
+              ? "Carrier must be 0–100%; each sideband must be 0–5 W."
+              : helperHasUnappliedChanges
+                ? "Edited values are local to Helper. Apply sends them to running RAM."
+                : helperHasUnsavedChanges
+                  ? "Applied in RAM; use Save to write these setpoints to non-volatile flash."
+                  : "Helper values match running RAM and saved flash."}
+          </p>
+          <p className={styles.helperNote}>
+            Sync follows Carrier only in this Helper session. Tracking remains active after Apply and scales sideband setpoints with later Carrier changes.
+          </p>
+        </div>
+      </MopiensModal>
+    </>
   );
 }
 
@@ -493,7 +703,7 @@ export function Dvor220SetupScreen({ screenId, device, snapshot, dispatch }: Dvo
   };
   let content: ReactNode;
   if (screenId === "setup-station") content = <StationSetup configuration={configuration} disabled={disabled} patch={patch} />;
-  else if (screenId === "setup-transmitter") content = <TransmitterSetup configuration={configuration} disabled={disabled} patch={patch} />;
+  else if (screenId === "setup-transmitter") content = <TransmitterSetup configuration={configuration} device={device} disabled={disabled} patch={patch} dispatch={dispatch} />;
   else if (screenId === "setup-thermal") content = <ThermalSetup configuration={configuration} disabled={disabled} patch={patch} />;
   else if (screenId === "setup-transmitter-limit") content = <TransmitterLimitSetup configuration={configuration} disabled={disabled} patch={patch} />;
   else if (screenId === "setup-monitor") content = <MonitorSetup configuration={configuration} disabled={disabled} patch={patch} />;

@@ -132,10 +132,17 @@ describe("MOPIENS DVOR 220 simulator UI", () => {
     fireEvent.click(screen.getByRole("button", { name: "Fault Injection" }));
     const injectButtons = screen.getAllByRole("button", { name: "Inject" });
     fireEvent.click(injectButtons[0]);
+    expect(store.getState().snapshot.monitors.mon1.channels.cha.stabilizing).toBe(true);
+    act(() => {
+      store.getState().advanceTime(1_000);
+    });
     expect(store.getState().snapshot.monitors.mon1.channels.cha.primaryAlarm).toBe(true);
 
     const remainingInjectButtons = screen.getAllByRole("button", { name: "Inject" });
     fireEvent.click(remainingInjectButtons[0]);
+    act(() => {
+      store.getState().advanceTime(1_000);
+    });
     expect(store.getState().snapshot.executiveAlarm).toBe(true);
     expect(store.getState().device.executive.phase).toBe("idle");
 

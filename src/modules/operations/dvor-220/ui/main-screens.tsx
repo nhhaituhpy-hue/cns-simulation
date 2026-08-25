@@ -160,7 +160,13 @@ function HomeScreen({ device, snapshot, openDialog, navigate }: Dvor220MainScree
                 max={gauge.max}
                 unit={gauge.unit}
                 size="small"
-                tone={reading.status === "normal" ? "normal" : reading.status === "warning" ? "warning" : "alarm"}
+                tone={reading.status === "normal"
+                  ? "normal"
+                  : reading.status === "warning"
+                    ? "warning"
+                    : reading.status === "stabilizing"
+                      ? "pending"
+                      : "alarm"}
                 segments={[
                   { from: gauge.min, to: gauge.min + (gauge.max - gauge.min) * 0.15, tone: "alarm" },
                   { from: gauge.min + (gauge.max - gauge.min) * 0.15, to: gauge.min + (gauge.max - gauge.min) * 0.28, tone: "warning" },
@@ -391,13 +397,19 @@ function SynScreen({ snapshot }: Dvor220MainScreenProps) {
 function MonitorScreen({ screenId, device, snapshot }: Dvor220MainScreenProps) {
   const channelId = channelByScreen[screenId] ?? "cha";
   const configuration = device.configuration.running.monitor.channels[channelId];
+  const mon1Channel = snapshot.monitors.mon1.channels[channelId];
+  const mon2Channel = snapshot.monitors.mon2.channels[channelId];
   const rows = DVOR220_MONITOR_PARAMETERS.map((parameter) => {
     const band = configuration.limits[parameter];
     const mon1 = snapshot.monitors.mon1.channels[channelId].readings[parameter];
     const mon2 = snapshot.monitors.mon2.channels[channelId].readings[parameter];
     const worst = mon1.status === "alarm" || mon2.status === "alarm"
       ? "alarm"
-      : mon1.status === "warning" || mon2.status === "warning" ? "warning" : "normal";
+      : mon1.status === "warning" || mon2.status === "warning"
+        ? "warning"
+        : mon1.status === "stabilizing" || mon2.status === "stabilizing"
+          ? "unknown"
+          : "normal";
     return {
       id: parameter,
       label: parameterLabels[parameter],
@@ -418,8 +430,8 @@ function MonitorScreen({ screenId, device, snapshot }: Dvor220MainScreenProps) {
         detail={`${configuration.type} channel | Reference azimuth ${configuration.referenceAzimuthDeg.toFixed(2)}° | Executive ${configuration.executiveAction ? "enabled" : "disabled"}`}
       />
       <div className={styles.inlineIndicators}>
-        <MopiensStatusIndicator label="MON1" detail={formatDvor220Status(snapshot.monitors.mon1.channels[channelId].status)} tone={toneForDvor220Status(snapshot.monitors.mon1.channels[channelId].status)} />
-        <MopiensStatusIndicator label="MON2" detail={formatDvor220Status(snapshot.monitors.mon2.channels[channelId].status)} tone={toneForDvor220Status(snapshot.monitors.mon2.channels[channelId].status)} />
+        <MopiensStatusIndicator label="MON1" detail={mon1Channel.stabilizing ? `Stabilizing ${mon1Channel.sampleCount}/${mon1Channel.requiredSamples}` : formatDvor220Status(mon1Channel.status)} tone={toneForDvor220Status(mon1Channel.status)} />
+        <MopiensStatusIndicator label="MON2" detail={mon2Channel.stabilizing ? `Stabilizing ${mon2Channel.sampleCount}/${mon2Channel.requiredSamples}` : formatDvor220Status(mon2Channel.status)} tone={toneForDvor220Status(mon2Channel.status)} />
         <MopiensStatusIndicator label="Action" detail={snapshot.executiveAlarm ? "Executive alarm" : "No executive alarm"} tone={snapshot.executiveAlarm ? "alarm" : "normal"} />
       </div>
       <MopiensLimitGrid caption={`${channelId.toUpperCase()} monitor limits and readings (MON1 / MON2)`} rows={rows} />
@@ -432,7 +444,11 @@ function MonitorSelfTestScreen({ snapshot }: Dvor220MainScreenProps) {
     channelId,
     mon1: snapshot.monitors.mon1.channels[channelId].status,
     mon2: snapshot.monitors.mon2.channels[channelId].status,
-    result: snapshot.monitors.mon1.channels[channelId].primaryAlarm || snapshot.monitors.mon2.channels[channelId].primaryAlarm ? "Attention" : "Passed",
+    result: snapshot.monitors.mon1.channels[channelId].stabilizing || snapshot.monitors.mon2.channels[channelId].stabilizing
+      ? "Stabilizing"
+      : snapshot.monitors.mon1.channels[channelId].primaryAlarm || snapshot.monitors.mon2.channels[channelId].primaryAlarm
+        ? "Attention"
+        : "Passed",
   }));
   return (
     <div className={styles.screenBody}>
@@ -441,7 +457,7 @@ function MonitorSelfTestScreen({ snapshot }: Dvor220MainScreenProps) {
         caption="Monitor self-test results"
         rows={rows}
         getRowId={(row) => row.channelId}
-        rowTone={(row) => row.result === "Passed" ? "normal" : "alarm"}
+        rowTone={(row) => row.result === "Passed" ? "normal" : row.result === "Stabilizing" ? "pending" : "alarm"}
         columns={[
           { id: "channel", label: "Channel", render: (row) => row.channelId.toUpperCase() },
           { id: "mon1", label: "MON1", render: (row) => formatDvor220Status(row.mon1) },

@@ -39,6 +39,8 @@ describe("MOPIENS DVOR 220 executive alarm state machine", () => {
     expect(state.executive.phase).toBe("idle");
 
     state = injectBearingAlarm(state, "mon2");
+    expect(deriveDvor220Snapshot(state).monitors.mon1.channels.cha.stabilizing).toBe(true);
+    state = advanceDvor220Time(state, 1_000);
     expect(state.executive.phase).toBe("pending-changeover");
     state = advanceDvor220Time(state, 999);
     expect(deriveDvor220Snapshot(state).activeTransmitterId).toBe("tx1");
@@ -48,6 +50,9 @@ describe("MOPIENS DVOR 220 executive alarm state machine", () => {
     expect(deriveDvor220Snapshot(state).activeTransmitterId).toBe("tx2");
     expect(state.transmitters.tx1.designation).toBe("main");
 
+    state = advanceDvor220Time(state, 500);
+    expect(state.executive.phase).toBe("idle");
+    expect(deriveDvor220Snapshot(state).monitors.mon1.channels.cha.stabilizing).toBe(true);
     state = advanceDvor220Time(state, 500);
     expect(state.executive.phase).toBe("pending-shutdown");
     state = advanceDvor220Time(state, 1_000);
@@ -67,12 +72,14 @@ describe("MOPIENS DVOR 220 executive alarm state machine", () => {
     const andConfiguration = alarmConfiguration();
     let andState = createAuthorizedDvor220State({ configuration: andConfiguration });
     andState = injectBearingAlarm(andState, "mon1");
+    andState = advanceDvor220Time(andState, 1_000);
     expect(deriveDvor220Snapshot(andState).executiveAlarm).toBe(false);
 
     const orConfiguration = alarmConfiguration();
     orConfiguration.monitor.votingLogic = "OR";
     let orState = createAuthorizedDvor220State({ configuration: orConfiguration });
     orState = injectBearingAlarm(orState, "mon1");
+    orState = advanceDvor220Time(orState, 1_000);
     expect(deriveDvor220Snapshot(orState).executiveAlarm).toBe(true);
     expect(orState.executive.phase).toBe("pending-changeover");
 
@@ -96,6 +103,7 @@ describe("MOPIENS DVOR 220 executive alarm state machine", () => {
         },
       }).state;
     }
+    state = advanceDvor220Time(state, 1_000);
     const snapshot = deriveDvor220Snapshot(state);
 
     expect(snapshot.monitors.mon1.channels.cha.secondaryAlarm).toBe(true);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useStore } from "zustand";
 import { Dvor220ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
 import {
@@ -131,6 +131,17 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
   const [hiddenBeforeLogId, setHiddenBeforeLogId] = useState(0);
   const [simulatorToolsOpen, setSimulatorToolsOpen] = useState(false);
   const [activeSimulatorTool, setActiveSimulatorTool] = useState<Dvor220SimulatorToolScreen | null>(null);
+
+  useEffect(() => {
+    if (providedStore) return;
+    let previousTick = performance.now();
+    const timer = window.setInterval(() => {
+      const currentTick = performance.now();
+      store.getState().advanceTime(currentTick - previousTick);
+      previousTick = currentTick;
+    }, 100);
+    return () => window.clearInterval(timer);
+  }, [providedStore, store]);
 
   const dispatch = useCallback((command: Dvor220Command): Dvor220CommandResult => {
     const result = store.getState().dispatch(command);

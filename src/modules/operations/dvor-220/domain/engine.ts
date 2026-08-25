@@ -32,6 +32,7 @@ import { validateDvor220Configuration } from "./validation";
 const GROUND_CHECK_DURATION_MS = 5_000;
 const RESET_LOCK_MS = 20_000;
 const MAX_HISTORY_ROWS = 10_000;
+const MONITOR_SAMPLE_INTERVAL_MS = 100;
 
 const parameterUnits: Record<Dvor220MonitorParameter, string> = {
   bearingError: "°",
@@ -278,6 +279,105 @@ function baseMonitorValues(
   };
 }
 
+function monitorChannelIsEnabled(
+  state: Dvor220DeviceState,
+  channelId: Dvor220MonitorChannelId,
+): boolean {
+  const channel = state.configuration.running.monitor.channels[channelId];
+  return channel.type !== "disabled" && (
+    channelId !== "standby" || (
+      state.configuration.running.optionalUnits.standbyMonitor
+      && state.configuration.running.station.equipmentVersion === "dual"
+    )
+  );
+}
+
+function rawMonitorValue(
+  state: Dvor220DeviceState,
+  monitorId: Dvor220MonitorId,
+  channelId: Dvor220MonitorChannelId,
+  parameter: Dvor220MonitorParameter,
+): number {
+  const measurementOverride = state.measurementOverrides.find(
+    (override) => override.monitorId === monitorId
+      && override.channelId === channelId
+      && override.parameter === parameter,
+  );
+  if (measurementOverride) return measurementOverride.value;
+  const injected = getFault(
+    state,
+    "monitor-parameter",
+    (fault) => fault.monitorId === monitorId
+      && fault.channelId === channelId
+      && fault.parameter === parameter,
+  );
+  return injected?.value ?? baseMonitorValues(state, monitorId, channelId)[parameter];
+}
+
+function average(values: readonly number[]): number {
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function monitorHardwareIsUnplugged(state: Dvor220DeviceState, monitorId: Dvor220MonitorId): boolean {
+  return Boolean(getFault(
+    state,
+    "monitor-hardware",
+    (fault) => fault.monitorId === monitorId && fault.condition === "unplugged",
+  ));
+}
+
+function monitorAveragesNeedSampling(state: Dvor220DeviceState): boolean {
+  const requiredSamples = state.configuration.running.monitor.measurementAverageCount;
+  for (const monitorId of DVOR220_MONITOR_IDS) {
+    const unplugged = monitorHardwareIsUnplugged(state, monitorId);
+    for (const channelId of DVOR220_MONITOR_CHANNEL_IDS) {
+      const valid = monitorChannelIsEnabled(state, channelId) && !unplugged;
+      for (const parameter of DVOR220_MONITOR_PARAMETERS) {
+        const buffer = state.monitorAveraging.buffers[monitorId][channelId][parameter];
+        if (!valid) {
+          if (buffer.length > 0) return true;
+          continue;
+        }
+        if (buffer.length < requiredSamples) return true;
+        const current = rawMonitorValue(state, monitorId, channelId, parameter);
+        if (buffer.some((sample) => sample !== current)) return true;
+      }
+    }
+  }
+  return false;
+}
+
+function sampleMonitorMeasurementsMutating(state: Dvor220DeviceState) {
+  const requiredSamples = state.configuration.running.monitor.measurementAverageCount;
+  for (const monitorId of DVOR220_MONITOR_IDS) {
+    const unplugged = monitorHardwareIsUnplugged(state, monitorId);
+    for (const channelId of DVOR220_MONITOR_CHANNEL_IDS) {
+      const valid = monitorChannelIsEnabled(state, channelId) && !unplugged;
+      for (const parameter of DVOR220_MONITOR_PARAMETERS) {
+        const buffer = state.monitorAveraging.buffers[monitorId][channelId][parameter];
+        if (!valid) {
+          buffer.length = 0;
+          continue;
+        }
+        buffer.push(rawMonitorValue(state, monitorId, channelId, parameter));
+        if (buffer.length > requiredSamples) buffer.splice(0, buffer.length - requiredSamples);
+      }
+    }
+  }
+  state.monitorAveraging.nextSampleAtMs = state.nowMs + MONITOR_SAMPLE_INTERVAL_MS;
+}
+
+export function resetDvor220MonitorAveragesMutating(state: Dvor220DeviceState) {
+  for (const monitorId of DVOR220_MONITOR_IDS) {
+    for (const channelId of DVOR220_MONITOR_CHANNEL_IDS) {
+      for (const parameter of DVOR220_MONITOR_PARAMETERS) {
+        state.monitorAveraging.buffers[monitorId][channelId][parameter] = [];
+      }
+    }
+  }
+  state.monitorAveraging.nextSampleAtMs = state.nowMs + MONITOR_SAMPLE_INTERVAL_MS;
+}
+
 function buildMonitorChannelSnapshot(
   state: Dvor220DeviceState,
   monitorId: Dvor220MonitorId,
@@ -285,25 +385,18 @@ function buildMonitorChannelSnapshot(
   hardwareStatus: Dvor220Status,
 ): Dvor220MonitorChannelSnapshot {
   const channel = state.configuration.running.monitor.channels[channelId];
-  const enabled = channel.type !== "disabled" && (
-    channelId !== "standby" || (
-      state.configuration.running.optionalUnits.standbyMonitor
-      && state.configuration.running.station.equipmentVersion === "dual"
-    )
-  );
-  const values = baseMonitorValues(state, monitorId, channelId);
+  const enabled = monitorChannelIsEnabled(state, channelId);
+  const requiredSamples = state.configuration.running.monitor.measurementAverageCount;
+  const channelBuffers = state.monitorAveraging.buffers[monitorId][channelId];
+  const sampleCount = Math.min(...DVOR220_MONITOR_PARAMETERS.map(
+    (parameter) => channelBuffers[parameter].length,
+  ));
+  const stabilizing = enabled && hardwareStatus !== "unplugged" && sampleCount < requiredSamples;
   const readings = Object.fromEntries(DVOR220_MONITOR_PARAMETERS.map((parameter) => {
-    const injected = getFault(
-      state,
-      "monitor-parameter",
-      (fault) => fault.monitorId === monitorId && fault.channelId === channelId && fault.parameter === parameter,
-    );
-    const measurementOverride = state.measurementOverrides.find(
-      (override) => override.monitorId === monitorId
-        && override.channelId === channelId
-        && override.parameter === parameter,
-    );
-    const value = measurementOverride?.value ?? injected?.value ?? values[parameter];
+    const buffer = channelBuffers[parameter];
+    const value = buffer.length > 0
+      ? average(buffer)
+      : rawMonitorValue(state, monitorId, channelId, parameter);
     const configuredBand = channel.limits[parameter];
     let effectiveBand = parameter === "carrierFrequency"
       ? shiftedCarrierBand(configuredBand, state.configuration.running.station.frequencyMHz)
@@ -321,6 +414,7 @@ function buildMonitorChannelSnapshot(
     let status: Dvor220ParameterReading["status"];
     if (!enabled) status = "disabled";
     else if (hardwareStatus === "unplugged") status = "unplugged";
+    else if (stabilizing) status = "stabilizing";
     else status = classifyDvor220Reading(value, effectiveBand);
     return [parameter, {
       value: round(value, parameter === "carrierFrequency" ? 5 : 2),
@@ -340,13 +434,25 @@ function buildMonitorChannelSnapshot(
     ? "not-present"
     : hardwareStatus === "unplugged"
       ? "unplugged"
+      : stabilizing
+        ? "unknown"
       : primaryAlarm || secondaryAlarm
         ? "alarm"
         : valuesList.some((reading) => reading.status === "warning")
           ? "warning"
           : "normal";
 
-  return { channelId, enabled, readings, status, primaryAlarm, secondaryAlarm };
+  return {
+    channelId,
+    enabled,
+    readings,
+    status,
+    primaryAlarm,
+    secondaryAlarm,
+    stabilizing,
+    sampleCount,
+    requiredSamples,
+  };
 }
 
 function buildMonitorSnapshot(
@@ -612,6 +718,7 @@ function performAutomaticChangeover(state: Dvor220DeviceState) {
   state.executive.pendingSinceMs = null;
   state.executive.phase = "post-changeover-holdoff";
   state.executive.postChangeoverUntilMs = state.nowMs + state.configuration.running.monitor.postChangeoverHoldoffMs;
+  resetDvor220MonitorAveragesMutating(state);
   appendDvor220Log(state, "event", `Automatic changeover: ${current.toUpperCase()} to ${next.toUpperCase()}`);
 }
 
@@ -813,6 +920,9 @@ function automaticLogoutMutating(state: Dvor220DeviceState) {
 
 function nextTimedDeadline(state: Dvor220DeviceState, targetMs: number): number {
   const deadlines = [targetMs];
+  if (monitorAveragesNeedSampling(state)) {
+    deadlines.push(state.monitorAveraging.nextSampleAtMs);
+  }
   const delay = effectiveExecutiveDelay(state);
   if (
     (state.executive.phase === "pending-changeover" || state.executive.phase === "pending-shutdown") &&
@@ -841,6 +951,15 @@ function nextTimedDeadline(state: Dvor220DeviceState, targetMs: number): number 
 }
 
 function processTimedEventsMutating(state: Dvor220DeviceState) {
+  if (
+    state.monitorAveraging.nextSampleAtMs <= state.nowMs
+    && monitorAveragesNeedSampling(state)
+  ) {
+    sampleMonitorMeasurementsMutating(state);
+  } else if (state.monitorAveraging.nextSampleAtMs <= state.nowMs) {
+    state.monitorAveraging.nextSampleAtMs = state.nowMs + MONITOR_SAMPLE_INTERVAL_MS;
+  }
+
   if (state.power.source === "battery" && state.power.batteryRemainingMs <= 0) {
     state.power.source = "off";
     shutdownTransmitters(state, "Backup battery exhausted", false);
