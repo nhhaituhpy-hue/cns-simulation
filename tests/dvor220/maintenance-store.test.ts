@@ -65,6 +65,14 @@ describe("MOPIENS DVOR 220 maintenance, power and store", () => {
       type: "set-temperature",
       transmitterId: "tx1",
       unit: "cma",
+      temperatureC: 40,
+    }).state;
+    expect(state.transmitters.tx1.fanOn).toBe(true);
+
+    state = reduceDvor220Command(state, {
+      type: "set-temperature",
+      transmitterId: "tx1",
+      unit: "cma",
       temperatureC: 95,
     }).state;
     expect(state.transmitters.tx1.thermalTrips.cma).toBe(true);
@@ -86,6 +94,14 @@ describe("MOPIENS DVOR 220 maintenance, power and store", () => {
     }).state;
     expect(state.transmitters.tx1.thermalTrips.cma).toBe(false);
     expect(state.transmitters.tx1.rfOutputs.carrier).toBe(true);
+
+    state = reduceDvor220Command(state, {
+      type: "set-temperature",
+      transmitterId: "tx1",
+      unit: "cma",
+      temperatureC: 35,
+    }).state;
+    expect(state.transmitters.tx1.fanOn).toBe(false);
   });
 
   it("keeps LMI history continuous and PMDT history connection-scoped", () => {

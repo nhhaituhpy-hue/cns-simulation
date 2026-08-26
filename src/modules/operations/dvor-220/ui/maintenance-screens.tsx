@@ -258,6 +258,94 @@ function AntennaScreen({ device, snapshot, dispatch }: Dvor220MaintenanceScreenP
   );
 }
 
+function ThermalTestScreen({ device, snapshot, dispatch }: Dvor220MaintenanceScreenProps) {
+  const [transmitterId, setTransmitterId] = useState<Dvor220TransmitterId>("tx1");
+  const [unit, setUnit] = useState<"cma" | "usb" | "lsb">("cma");
+  const [temperatureInput, setTemperatureInput] = useState("35.5");
+  const transmitter = snapshot.transmitters[transmitterId];
+  const runtime = device.transmitters[transmitterId];
+  const thermal = device.configuration.running.thermal[transmitterId];
+  const currentTemperature = transmitter.temperaturesC[unit];
+  const unitStatus = unit === "cma"
+    ? transmitter.units.cma
+    : unit === "usb"
+      ? transmitter.units.smaUsb
+      : transmitter.units.smaLsb;
+  const rfState = unit === "cma"
+    ? `Carrier ${transmitter.rfOutputs.carrier ? "On" : "Off"}`
+    : unit === "usb"
+      ? `USB COS/SIN ${transmitter.rfOutputs.usbCos && transmitter.rfOutputs.usbSin ? "On" : "Off"}`
+      : `LSB COS/SIN ${transmitter.rfOutputs.lsbCos && transmitter.rfOutputs.lsbSin ? "On" : "Off"}`;
+
+  function selectTransmitter(next: Dvor220TransmitterId) {
+    setTransmitterId(next);
+    setTemperatureInput(String(snapshot.transmitters[next].temperaturesC[unit]));
+  }
+
+  function selectUnit(next: "cma" | "usb" | "lsb") {
+    setUnit(next);
+    setTemperatureInput(String(snapshot.transmitters[transmitterId].temperaturesC[next]));
+  }
+
+  function setTemperature(temperatureC: number) {
+    if (!Number.isFinite(temperatureC)) return;
+    setTemperatureInput(String(temperatureC));
+    dispatch({ type: "set-temperature", transmitterId, unit, temperatureC });
+  }
+
+  return (
+    <div className={styles.screenBody}>
+      <MaintenanceHeader
+        title="Thermal Test"
+        detail="Exercise fan hysteresis, thermal shutdown and automatic RF restart without changing the saved profile."
+      />
+      <div className={styles.maintenanceToolbar}>
+        <CompactField label="Transmitter">
+          <select aria-label="Thermal test transmitter" value={transmitterId} onChange={(event) => selectTransmitter(event.target.value as Dvor220TransmitterId)}>
+            {DVOR220_TRANSMITTER_IDS.map((id) => <option key={id} value={id}>{id.toUpperCase()}</option>)}
+          </select>
+        </CompactField>
+        <CompactField label="Power Unit">
+          <select aria-label="Thermal test power unit" value={unit} onChange={(event) => selectUnit(event.target.value as "cma" | "usb" | "lsb")}>
+            <option value="cma">CMA / Carrier</option>
+            <option value="usb">SMA USB</option>
+            <option value="lsb">SMA LSB</option>
+          </select>
+        </CompactField>
+        <CompactField label="Temperature (°C)">
+          <input aria-label="Thermal test temperature" type="number" min="-20" max="150" step="0.5" value={temperatureInput} onChange={(event) => setTemperatureInput(event.target.value)} />
+        </CompactField>
+        <MopiensBeveledButton tone="primary" onClick={() => setTemperature(Number(temperatureInput))}>Apply Temperature</MopiensBeveledButton>
+      </div>
+      <div className={styles.maintenanceToolbar} aria-label="Thermal test presets">
+        <MopiensBeveledButton tone="warning" onClick={() => setTemperature(thermal.fanStartC)}>Heat to Fan Start ({thermal.fanStartC.toFixed(1)}°C)</MopiensBeveledButton>
+        <MopiensBeveledButton tone="danger" onClick={() => setTemperature(thermal.shutdownC[unit])}>Heat to Shutdown ({thermal.shutdownC[unit].toFixed(1)}°C)</MopiensBeveledButton>
+        <MopiensBeveledButton onClick={() => setTemperature(thermal.restartC[unit])}>Cool to Restart ({thermal.restartC[unit].toFixed(1)}°C)</MopiensBeveledButton>
+        <MopiensBeveledButton onClick={() => setTemperature(Math.min(35, thermal.restartC[unit] - 1))}>Restore Normal (35°C)</MopiensBeveledButton>
+      </div>
+      <div className={styles.inlineIndicators}>
+        <MopiensStatusIndicator label={`${transmitterId.toUpperCase()} ${unit.toUpperCase()}`} detail={`${currentTemperature.toFixed(1)} °C`} tone={toneForDvor220Status(unitStatus)} />
+        <MopiensStatusIndicator label="FAN" detail={transmitter.fanOn ? "Running" : "Stopped"} tone={transmitter.fanOn ? "normal" : "inactive"} />
+        <MopiensStatusIndicator label="THERMAL TRIP" detail={runtime.thermalTrips[unit] ? "Latched" : "Clear"} tone={runtime.thermalTrips[unit] ? "alarm" : "normal"} />
+      </div>
+      <div className={styles.twoColumnLayout}>
+        <MopiensPropertyGrid ariaLabel="Thermal thresholds" sections={[{ id: "thresholds", title: `${transmitterId.toUpperCase()} Thresholds`, rows: [
+          { id: "fan-start", label: "Fan Start", value: `${thermal.fanStartC.toFixed(1)} °C` },
+          { id: "fan-stop", label: "Fan Stop", value: `${thermal.fanStopC.toFixed(1)} °C` },
+          { id: "shutdown", label: "Shutdown", value: `${thermal.shutdownC[unit].toFixed(1)} °C`, tone: "alarm" },
+          { id: "restart", label: "Restart", value: `${thermal.restartC[unit].toFixed(1)} °C`, tone: "warning" },
+        ]}]} />
+        <MopiensPropertyGrid ariaLabel="Thermal runtime state" sections={[{ id: "runtime", title: "Runtime State", rows: [
+          { id: "temperature", label: "Current Temperature", value: `${currentTemperature.toFixed(1)} °C`, tone: toneForDvor220Status(unitStatus) },
+          { id: "unit", label: "Unit Status", value: formatDvor220Status(unitStatus), tone: toneForDvor220Status(unitStatus) },
+          { id: "fan", label: "Cooling Fan", value: transmitter.fanOn ? "Running" : "Stopped", tone: transmitter.fanOn ? "normal" : "inactive" },
+          { id: "rf", label: "RF Output", value: rfState, tone: runtime.thermalTrips[unit] ? "alarm" : "normal" },
+        ]}]} />
+      </div>
+    </div>
+  );
+}
+
 function FaultControlsScreen({ device, snapshot, dispatch }: Dvor220MaintenanceScreenProps) {
   const controls = [
     { id: "fault-mon1", label: "MON1 Bearing Alarm", command: { type: "inject-fault", fault: { id: "fault-mon1", kind: "monitor-parameter", monitorId: "mon1", channelId: "cha", parameter: "bearingError", value: 2 } } },
@@ -548,6 +636,7 @@ export function Dvor220MaintenanceScreen(props: Dvor220MaintenanceScreenProps) {
   if (["maintenance-tx-reading", "maintenance-tx-setpoint", "maintenance-monitor-cal", "maintenance-pdc-cal"].includes(props.screenId)) return <CalibrationScreen {...props} />;
   if (props.screenId === "maintenance-certification") return <CertificationScreen {...props} />;
   if (props.screenId === "maintenance-antenna") return <AntennaScreen {...props} />;
+  if (props.screenId === "maintenance-thermal") return <ThermalTestScreen {...props} />;
   if (props.screenId === "maintenance-faults") return <FaultControlsScreen {...props} />;
   if (props.screenId === "maintenance-ground-check") return <GroundCheckScreen {...props} />;
   if (props.screenId === "maintenance-advanced") return <AdvancedControlsScreen {...props} />;

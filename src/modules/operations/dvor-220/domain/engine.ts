@@ -146,6 +146,24 @@ function transmitterUnitStatus(
   if (unit === "cma" && (runtime.thermalTrips.cma || runtime.reverseFaultLatched)) return "alarm";
   if (unit === "smaUsb" && (runtime.thermalTrips.usb || runtime.reverseFaultLatched)) return "alarm";
   if (unit === "smaLsb" && (runtime.thermalTrips.lsb || runtime.reverseFaultLatched)) return "alarm";
+  const limits = state.configuration.running.transmitterLimits;
+  if (unit === "cma" && runtime.rfOutputs.carrier) {
+    return classifyDvor220Reading(transmitterOutputPower(state, transmitterId, "carrier"), limits.carrierPower);
+  }
+  if (unit === "smaUsb") {
+    return aggregateStatus(
+      (["usbCos", "usbSin"] as const)
+        .filter((output) => runtime.rfOutputs[output])
+        .map((output) => classifyDvor220Reading(transmitterOutputPower(state, transmitterId, output), limits.sidebandPower)),
+    );
+  }
+  if (unit === "smaLsb") {
+    return aggregateStatus(
+      (["lsbCos", "lsbSin"] as const)
+        .filter((output) => runtime.rfOutputs[output])
+        .map((output) => classifyDvor220Reading(transmitterOutputPower(state, transmitterId, output), limits.sidebandPower)),
+    );
+  }
   return "normal";
 }
 
@@ -240,6 +258,25 @@ function baseMonitorValues(
     runtime.rfOutputs.lsbSin,
   );
   const compositeAvailable = carrierAvailable && sidebandsAvailable;
+  const trueCarrierPower = monitoredTransmitterId
+    ? transmitterTrueOutputPower(state, monitoredTransmitterId, "carrier")
+    : 0;
+  const trueSidebandPowers = monitoredTransmitterId
+    ? (["usbCos", "usbSin", "lsbCos", "lsbSin"] as const).map((output) =>
+        transmitterTrueOutputPower(state, monitoredTransmitterId, output),
+      )
+    : [0, 0, 0, 0];
+  const trueSidebandPower = trueSidebandPowers.reduce((sum, power) => sum + power, 0);
+  // Four nominal 1 W sidebands around a 100 W carrier correspond to 30% AM.
+  // Scaling both carrier and sidebands proportionally therefore preserves the
+  // modulation depth, while changing either group alone moves the reading.
+  const am9960Percent = compositeAvailable && trueCarrierPower > 0
+    ? 150 * Math.sqrt(trueSidebandPower / trueCarrierPower)
+    : 0;
+  const rfReferencePower = configuration.transmitterLimits.carrierPower.nominal;
+  const rfLevelDb = carrierAvailable && trueCarrierPower > 0 && rfReferencePower > 0
+    ? 10 * Math.log10(trueCarrierPower / rfReferencePower)
+    : -50;
   const stationModulation = transmitter.useStationModulation;
   const stationIdent = transmitter.useStationIdent;
   const setpointFactors = monitoredTransmitterId
@@ -262,14 +299,14 @@ function baseMonitorValues(
         ? (stationModulation ? configuration.station.am30HzPercent : transmitter.am30HzPercent) * setpointFactors.am30Hz + monitorBias
         : 0,
     ),
-    am9960Hz: withCalibration("am9960Hz", compositeAvailable ? 30 + channelBias : 0),
+    am9960Hz: withCalibration("am9960Hz", compositeAvailable ? am9960Percent + channelBias : 0),
     ident1020Hz: withCalibration(
       "ident1020Hz",
       carrierAvailable
         ? (stationIdent ? configuration.station.identModulationPercent : transmitter.identModulationPercent) * setpointFactors.ident1020Hz
         : 0,
     ),
-    rfLevel: withCalibration("rfLevel", carrierAvailable ? monitorBias + channelBias : -50),
+    rfLevel: withCalibration("rfLevel", carrierAvailable ? rfLevelDb + monitorBias + channelBias : -50),
     distortion9960Hz: withCalibration("distortion9960Hz", compositeAvailable ? 0.5 + channelBias : 100),
     carrierFrequency: withCalibration("carrierFrequency", configuration.station.frequencyMHz + monitorBias / 10_000),
     subcarrierFrequency: withCalibration(
@@ -550,8 +587,12 @@ function pdcSnapshot(state: Dvor220DeviceState): Dvor220Snapshot["pdc"] {
     : carrierVswr > state.configuration.running.transmitterLimits.vswrUpperWarning
       ? "warning" as const
       : "normal" as const;
+  const carrierPowerStatus = classifyDvor220Reading(
+    carrierPowerW,
+    state.configuration.running.transmitterLimits.carrierPower,
+  );
   return {
-    status: fault?.condition ?? aggregateStatus([carrierStatus, antennaStatus]),
+    status: fault?.condition ?? aggregateStatus([carrierPowerStatus, carrierStatus, antennaStatus]),
     carrierPowerW,
     carrierVswr,
     antennas,

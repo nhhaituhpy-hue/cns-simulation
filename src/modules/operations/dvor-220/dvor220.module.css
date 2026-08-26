@@ -134,6 +134,206 @@
   text-align: right;
 }
 
+.fieldSection {
+  margin: 0;
+  border: 0;
+  background: transparent;
+}
+
+.fieldSectionSummary {
+  display: flex;
+  min-height: 27px;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #c2c7cb;
+  background: linear-gradient(#f7f7f7, #e5e7e9);
+  padding: 3px 8px;
+  color: #75838c;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+}
+
+.fieldSectionSummary::-webkit-details-marker { display: none; }
+
+.fieldSectionSummary:focus-visible {
+  outline: 2px solid #176fb1;
+  outline-offset: -2px;
+}
+
+.fieldSectionToggle {
+  width: 0;
+  height: 0;
+  flex: 0 0 auto;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 6px solid #28a85d;
+  transform-origin: 3px 4px;
+}
+
+.fieldSection[open] > .fieldSectionSummary .fieldSectionToggle { transform: rotate(90deg); }
+
+.fieldSectionContent {
+  border-right: 1px solid #d2d5d7;
+  border-bottom: 1px solid #d2d5d7;
+  border-left: 1px solid #d2d5d7;
+  background: #f5f5f5;
+  padding: 8px 10px;
+}
+
+.fieldReadingGrid,
+.fieldReadingMatrix,
+.monitorReadingRows {
+  display: grid;
+  gap: 5px 8px;
+}
+
+.fieldReadingGrid { grid-template-columns: minmax(280px, 520px); }
+.fieldReadingMatrix { grid-template-columns: repeat(2, minmax(260px, 1fr)); max-width: 760px; }
+.monitorReadingRows { max-width: 780px; }
+
+.monitorReadingPair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  gap: 8px;
+}
+
+.fieldReadingCard {
+  display: grid;
+  min-height: 58px;
+  grid-template-columns: 92px minmax(0, 1fr);
+  border: 1px solid #c4c9cd;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px #f4f5f6;
+}
+
+.fieldReadingIdentity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-right: 1px solid #d7dadd;
+  padding: 4px;
+  color: #65737c;
+  font-size: 9px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.fieldStatusLamp {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #bbc1c5;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.fieldStatusLamp::after {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  width: 5px;
+  height: 8px;
+  transform: rotate(43deg);
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  content: "";
+}
+
+.fieldStatusLamp[data-tone="normal"] { border-color: #24ad55; color: #24ad55; }
+.fieldStatusLamp[data-tone="warning"] { border-color: #e99c16; color: #e99c16; }
+.fieldStatusLamp[data-tone="alarm"] { border-color: #d84134; color: #d84134; }
+.fieldStatusLamp[data-tone="pending"] { border-color: #e77b1f; color: #e77b1f; }
+.fieldStatusLamp[data-tone="inactive"] { border-color: #858d93; color: #858d93; }
+
+.fieldReadingBody {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 58px minmax(160px, 1fr) 76px;
+  grid-template-rows: 19px 15px 17px;
+  align-items: center;
+  padding: 3px 7px 3px 5px;
+}
+
+.fieldReadingBody > strong {
+  grid-row: 1 / 4;
+  align-self: stretch;
+  display: grid;
+  place-items: center;
+  border-right: 1px solid #e0e2e4;
+  color: #5682a1;
+  font-size: 9px;
+}
+
+.fieldThresholds {
+  display: grid;
+  grid-column: 2;
+  grid-row: 1;
+  grid-template-columns: repeat(5, 1fr);
+  align-self: end;
+  color: #dc4536;
+  font-size: 7px;
+  line-height: 1;
+  text-align: center;
+}
+
+.fieldThresholds span:nth-child(2),
+.fieldThresholds span:nth-child(4) { color: #d78d11; }
+.fieldThresholds span:nth-child(3) { color: #169347; font-weight: 700; }
+
+.fieldLimitTrack {
+  position: relative;
+  grid-column: 2;
+  grid-row: 2;
+  height: 5px;
+  margin: 0 5px;
+  border: 1px solid #aeb4b8;
+  background: var(--field-limit-gradient);
+}
+
+.fieldLimitPointer {
+  position: absolute;
+  top: -5px;
+  left: var(--field-value-position);
+  width: 1px;
+  height: 14px;
+  transform: translateX(-50%);
+  background: #1e282e;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 55%);
+}
+
+.fieldLimitPointer::after {
+  position: absolute;
+  top: -1px;
+  left: -3px;
+  width: 0;
+  height: 0;
+  border-top: 0;
+  border-right: 3px solid transparent;
+  border-bottom: 4px solid #1e282e;
+  border-left: 3px solid transparent;
+  content: "";
+}
+
+.fieldReadingBody output {
+  grid-column: 2;
+  grid-row: 3;
+  color: #079241;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.fieldReadingBody output small { color: #6b747a; font: inherit; font-size: 8px; }
+.fieldReadingCard[data-tone="warning"] output { color: #c37d00; }
+.fieldReadingCard[data-tone="alarm"] output { color: #d3322b; }
+.fieldReadingCard[data-tone="pending"] output { color: #d86d17; }
+.fieldReadingCard[data-tone="inactive"] output { color: #777f84; }
+
 .stationBanner {
   border: 1px solid #7094b1;
   background: linear-gradient(110deg, #659bc1, #377fb1);
@@ -155,13 +355,24 @@
 
 .homeStatusPanel {
   display: grid;
-  grid-template-columns: 132px minmax(240px, 1fr) 245px;
+  grid-template-columns: 150px 112px minmax(220px, 1fr) 235px;
   align-items: center;
   gap: 10px;
   border: 1px solid var(--dvor-line-dark);
   background: var(--dvor-surface-raised);
   padding: 8px 10px;
   box-shadow: inset 0 0 0 2px #e6e8e9;
+}
+
+.stationPhoto {
+  align-self: stretch;
+  min-height: 150px;
+  border: 1px solid #8fa5b2;
+  background-image: url("/images/simulator-showcase/dvor-1150a-station.png");
+  background-position: center -40px;
+  background-repeat: no-repeat;
+  background-size: 340px auto;
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 55%);
 }
 
 .stationFacts {
@@ -317,6 +528,250 @@
   align-items: start;
   gap: 10px;
 }
+
+.equipmentFieldLayout {
+  display: grid;
+  width: min(860px, 100%);
+  grid-template-columns: 190px minmax(0, 1fr);
+  align-items: stretch;
+  gap: 10px;
+}
+
+.equipmentCabinetArt {
+  min-height: 430px;
+  border: 1px solid #8c999f;
+  background: #eef1f2 url("/images/simulator-cataloge/DVOR220.png") center / contain no-repeat;
+  box-shadow: inset 0 0 0 3px #fff;
+}
+
+.equipmentGroups {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.equipmentGroup {
+  border: 1px solid #aeb5ba;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px #f3f4f5;
+}
+
+.equipmentGroup[data-tone="alarm"] { border-left: 3px solid #d74435; }
+.equipmentGroup[data-tone="warning"] { border-left: 3px solid #e79d17; }
+.equipmentGroup[data-tone="normal"] { border-left: 3px solid #2aae58; }
+
+.equipmentGroupTitle {
+  display: grid;
+  width: 100%;
+  min-height: 24px;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  border-bottom: 1px solid #d0d4d7;
+  background: linear-gradient(#f9f9f9, #e8eaec);
+  padding: 3px 7px;
+  color: #66747d;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.equipmentGroupTitle:hover { background: linear-gradient(#fff, #eef1f3); }
+.equipmentGroupTitle:focus-visible { outline: 2px solid #176fb1; outline-offset: -2px; }
+.equipmentGroupTitle strong { color: #566a78; font-size: 10px; }
+.equipmentGroupTitle small { justify-self: end; color: #77848c; font-size: 8px; }
+
+.equipmentUnitRow {
+  display: flex;
+  min-height: 47px;
+  align-items: stretch;
+  gap: 2px;
+  padding: 4px 5px;
+}
+
+.equipmentUnitCell {
+  display: grid;
+  min-width: 48px;
+  flex: 1 1 58px;
+  place-items: center;
+  border: 1px solid #cfd3d6;
+  background: #fafafa;
+  color: #6a747a;
+  text-align: center;
+}
+
+.equipmentUnitCell strong { font-size: 8px; }
+.equipmentUnitCell small { color: #169747; font-size: 7px; }
+.equipmentUnitCell[data-tone="warning"] small { color: #cb8100; }
+.equipmentUnitCell[data-tone="alarm"] small { color: #d23a2f; }
+.equipmentUnitCell[data-tone="inactive"] small { color: #777f84; }
+.equipmentUnitRow > :last-child { min-width: 105px; justify-content: center; }
+
+.monitorChannelMeta {
+  margin-left: auto;
+  border: 1px solid #c4c9cd;
+  background: #fff;
+  padding: 5px 9px;
+  color: #58768a;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.selfTestResult {
+  display: inline-block;
+  min-width: 45px;
+  border: 1px solid #16843c;
+  background: #13a648;
+  padding: 1px 5px;
+  color: #fff;
+  font-weight: 700;
+  text-align: center;
+}
+
+.selfTestResult[data-result="stabilizing"] { border-color: #b96815; background: #dc7b20; }
+.selfTestResult[data-result="attention"] { border-color: #9c211d; background: #d13b32; }
+
+.powerRailBar {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 145px;
+  height: 17px;
+  border: 2px inset #6e7478;
+  background: #050606;
+}
+
+.powerRailBar::before {
+  position: absolute;
+  inset: 3px;
+  background: repeating-linear-gradient(90deg, transparent 0 17%, rgb(165 179 184 / 35%) 17% 17.5%);
+  content: "";
+}
+
+.powerRailBar > span {
+  position: absolute;
+  top: 7px;
+  left: 3px;
+  width: calc(var(--field-rail-level) - 6px);
+  height: 2px;
+  background: #4cbf70;
+  box-shadow: 0 0 3px #58d17b;
+}
+
+.fieldInputTableFrame {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid #c8cdd0;
+  background: #fff;
+}
+
+.fieldInputTable {
+  width: 100%;
+  min-width: 660px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  color: #5e6970;
+  font-size: 8px;
+  text-align: center;
+}
+
+.fieldInputTable caption {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.fieldInputTable th,
+.fieldInputTable td {
+  height: 25px;
+  border: 1px solid #d5d8da;
+  padding: 3px;
+}
+
+.fieldInputTable thead th { background: linear-gradient(#f7f8f8, #e7e9ea); color: #536978; }
+.fieldInputTable tbody th { background: #f0f2f3; text-align: left; }
+.fieldInputTable th:first-child { width: 62px; }
+.fieldInputTable th:last-child { width: 84px; }
+.fieldInputTable td[data-active="true"] { background: #20a950; color: #fff; font-weight: 700; }
+
+.environmentSensorPanel {
+  display: flex;
+  max-width: 520px;
+  min-height: 108px;
+  align-items: center;
+  gap: 26px;
+  border: 1px solid #cbd0d3;
+  background: #fff;
+  padding: 10px 18px;
+}
+
+.smokeSensor {
+  display: grid;
+  min-width: 92px;
+  justify-items: center;
+  gap: 2px;
+  color: #657078;
+  text-align: center;
+}
+
+.smokeSensorBody {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border: 3px double #8d969b;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 18%, #dadddf 19% 27%, #f8f9f9 28% 57%, #bfc5c8 58% 62%, #f0f2f3 63%);
+}
+
+.smokeSensorBody::after {
+  position: absolute;
+  right: 2px;
+  bottom: 4px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #21ae53;
+  box-shadow: 0 0 4px #36c966;
+  content: "";
+}
+
+.smokeSensor[data-alarm="true"] .smokeSensorBody::after { background: #d63830; box-shadow: 0 0 4px #ed524a; }
+.smokeSensor strong { font-size: 9px; }
+.smokeSensor small { color: #1c9b49; font-size: 8px; font-weight: 700; }
+.smokeSensor[data-alarm="true"] small { color: #d63830; }
+
+.environmentReadouts {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.environmentReadouts div {
+  display: grid;
+  grid-template-columns: 92px minmax(100px, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.environmentReadouts dt { color: #56646d; font-size: 9px; }
+.environmentReadouts dd {
+  margin: 0;
+  border: 3px inset #4e5559;
+  background: #071c0c;
+  padding: 4px 8px;
+  color: #4ee36d;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: right;
+}
+
+.environmentReadouts div[data-tone="warning"] dd { background: #2a2106; color: #ffd557; }
+.environmentReadouts div[data-tone="alarm"] dd { background: #2a0907; color: #ff7368; }
+.environmentReadouts dd small { color: inherit; font-size: 9px; }
 
 .twoColumnLayout {
   display: grid;
@@ -703,8 +1158,11 @@
 }
 
 @media (max-width: 820px) {
-  .homeStatusPanel { grid-template-columns: 110px minmax(190px, 1fr) 210px; }
+  .homeStatusPanel { grid-template-columns: 120px 100px minmax(180px, 1fr) 200px; }
   .gaugeRow { grid-template-columns: repeat(5, minmax(80px, 1fr)); }
+  .fieldReadingMatrix,
+  .monitorReadingPair { grid-template-columns: repeat(2, minmax(230px, 1fr)); }
+  .equipmentFieldLayout { grid-template-columns: 165px minmax(0, 1fr); }
   .channelSetupGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .helperGrid,
   .helperSwitchGrid { grid-template-columns: 1fr; }

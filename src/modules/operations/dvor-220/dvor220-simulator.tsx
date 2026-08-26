@@ -108,6 +108,8 @@ export interface Dvor220SimulatorProps {
 
 type Dvor220SimulatorToolScreen =
   | "maintenance-faults"
+  | "maintenance-antenna"
+  | "maintenance-thermal"
   | "flight-results"
   | "history-parameter-change";
 
@@ -363,6 +365,8 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
           <div id="dvor220-simulator-tools" className={styles.simulatorToolsActions}>
             <button type="button" onClick={() => setActiveDialog("simulation-parameters")}>Raw Parameters</button>
             <button type="button" onClick={() => setActiveSimulatorTool("maintenance-faults")}>Fault Injection</button>
+            <button type="button" onClick={() => setActiveSimulatorTool("maintenance-antenna")}>Antenna / VSWR Test</button>
+            <button type="button" onClick={() => setActiveSimulatorTool("maintenance-thermal")}>Thermal Test</button>
             <button type="button" onClick={() => setActiveSimulatorTool("flight-results")}>Flight Results</button>
             <button type="button" onClick={() => setActiveSimulatorTool("history-parameter-change")}>Config Audit</button>
           </div>

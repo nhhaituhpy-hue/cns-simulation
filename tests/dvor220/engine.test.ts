@@ -90,6 +90,54 @@ describe("MOPIENS DVOR 220 derivation engine", () => {
     expect(snapshot.executiveAlarm).toBe(true);
   });
 
+  it("couples carrier and sideband power to RF level and 9960 Hz modulation", () => {
+    const reducedCarrier = createDefaultDvor220Configuration();
+    reducedCarrier.monitor.measurementAverageCount = 2;
+    reducedCarrier.transmitters.tx1.carrierScalePercent = 90;
+    let state = createInitialDvor220State({ nowMs: 0, configuration: reducedCarrier });
+    state = advanceDvor220Time(state, 200);
+    let snapshot = deriveDvor220Snapshot(state);
+
+    expect(snapshot.transmitters.tx1.forwardPowerW.carrier).toBe(90);
+    expect(snapshot.monitors.mon1.channels.cha.readings.rfLevel.value).toBe(-0.48);
+    expect(snapshot.monitors.mon1.channels.cha.readings.am9960Hz).toMatchObject({
+      value: 31.62,
+      status: "warning",
+    });
+
+    const trackedPower = createDefaultDvor220Configuration();
+    trackedPower.monitor.measurementAverageCount = 2;
+    trackedPower.transmitters.tx1.carrierScalePercent = 90;
+    trackedPower.transmitters.tx1.sidebandPowerW = {
+      usbCos: 0.9,
+      usbSin: 0.9,
+      lsbCos: 0.9,
+      lsbSin: 0.9,
+    };
+    state = createInitialDvor220State({ nowMs: 0, configuration: trackedPower });
+    state = advanceDvor220Time(state, 200);
+    snapshot = deriveDvor220Snapshot(state);
+
+    expect(snapshot.monitors.mon1.channels.cha.readings.am9960Hz).toMatchObject({
+      value: 30,
+      status: "normal",
+    });
+    expect(snapshot.monitors.mon2.channels.cha.readings.am9960Hz.value).toBe(30);
+  });
+
+  it("classifies transmitter and PDC power against the configured output limits", () => {
+    const configuration = createDefaultDvor220Configuration();
+    configuration.station.carrierPowerW = 130;
+    configuration.transmitters.tx1.sidebandPowerW.usbCos = 0.5;
+    const snapshot = deriveDvor220Snapshot(createInitialDvor220State({ configuration }));
+
+    expect(snapshot.transmitters.tx1.forwardPowerW.carrier).toBe(130);
+    expect(snapshot.transmitters.tx1.units.cma).toBe("alarm");
+    expect(snapshot.transmitters.tx1.units.smaUsb).toBe("warning");
+    expect(snapshot.transmitters.tx1.status).toBe("alarm");
+    expect(snapshot.pdc.status).toBe("alarm");
+  });
+
   it("propagates typed unit, PDC and antenna faults into their snapshots", () => {
     let state = createInitialDvor220State({ nowMs: 0 });
     state = reduceDvor220Command(state, {

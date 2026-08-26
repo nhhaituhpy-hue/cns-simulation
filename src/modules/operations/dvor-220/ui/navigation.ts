@@ -35,6 +35,7 @@ export type Dvor220ScreenId =
   | "maintenance-advanced"
   | "maintenance-certification"
   | "maintenance-antenna"
+  | "maintenance-thermal"
   | "maintenance-faults"
   | "maintenance-ground-check"
   | "maintenance-users"
@@ -80,6 +81,7 @@ export const DVOR220_SCREEN_LABELS: Record<Dvor220ScreenId, string> = {
   "maintenance-advanced": "Advanced Controls",
   "maintenance-certification": "Monitor Certification",
   "maintenance-antenna": "Antenna Tests",
+  "maintenance-thermal": "Thermal Test",
   "maintenance-faults": "Fault Controls",
   "maintenance-ground-check": "Automatic Ground Error Check",
   "maintenance-users": "User Management",
