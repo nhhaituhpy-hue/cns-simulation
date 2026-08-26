@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   buildDvor1150Snapshot,
   cloneDvor1150Config,
+  createLowCarrierAnd9960Scenario,
   defaultDvor1150Config,
+  evaluateDvor1150Scenario,
+  parseDvor1150ScenarioDefinition,
+  validateDvor1150ScenarioDefinition,
 } from "@/lib/dvor1150";
 import { createDvor1150PmdtStore } from "@/stores/dvor1150-pmdt-store";
 
@@ -205,5 +209,41 @@ describe("DVOR 1150 configuration and PMDT engine", () => {
     expect(state.config.transmitters.tx1.enabled).toBe(false);
     expect(state.config.transmitters.tx2.enabled).toBe(false);
     expect(state.lastCommand).toBe("Automatic monitor shutdown: both transmitters off");
+  });
+
+  it("keeps a loaded scenario session-only, restores it with F8 semantics, and ends at TST", () => {
+    const scenario = createLowCarrierAnd9960Scenario();
+    expect(validateDvor1150ScenarioDefinition(scenario)).toEqual([]);
+    expect(parseDvor1150ScenarioDefinition(JSON.parse(JSON.stringify(scenario)))).toEqual(scenario);
+
+    const store = createDvor1150PmdtStore();
+    expect(store.getState().login("SEC3", "THREE")).toBe(true);
+    store.getState().replaceScenarioDraft(scenario);
+    expect(store.getState().applyScenario()).toBe(true);
+
+    let state = store.getState();
+    expect(state.scenario.active).toBe(true);
+    expect(state.config.transmitters.tx1.nominal.outputPower).toBe(40);
+    expect(state.config.simulation).toMatchObject({ local: true, integralMonitorBypass: true });
+    expect(state.needBackup).toBe(false);
+    expect(evaluateDvor1150Scenario(state.scenario, state.derived).solved).toBe(false);
+
+    state.setConfigValue("transmitters.tx1.nominal.outputPower", 100);
+    expect(state.applyConfigChanges()).toBe(true);
+    expect(store.getState().needBackup).toBe(false);
+    expect(store.getState().setMonitorBypass("mon1", false)).toBe(true);
+    state = store.getState();
+    expect(evaluateDvor1150Scenario(state.scenario, state.derived).solved).toBe(true);
+
+    expect(state.resetConfigDraft()).toBe(true);
+    state = store.getState();
+    expect(state.config.transmitters.tx1.nominal.outputPower).toBe(40);
+    expect(state.config.simulation.integralMonitorBypass).toBe(true);
+
+    expect(state.endScenario()).toBe(true);
+    state = store.getState();
+    expect(state.scenario.active).toBe(false);
+    expect(state.config.transmitters.tx1.nominal.outputPower).toBe(100);
+    expect(state.config.simulation.local).toBe(false);
   });
 });

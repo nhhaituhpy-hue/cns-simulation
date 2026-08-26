@@ -270,6 +270,9 @@ function Dvor1150ConfigPersistence() {
   useEffect(() => {
     return useDvor1150PmdtStore.subscribe((state, previousState) => {
       if (!readyRef.current) return;
+      // Scenarios are examiner-controlled, session-only exercises. Never
+      // persist either their injected baseline or student corrections.
+      if (state.scenario.active || previousState.scenario.active) return;
 
       const currentConfig = extractDvor1150Config(state.config);
       const previousConfig = extractDvor1150Config(previousState.config);

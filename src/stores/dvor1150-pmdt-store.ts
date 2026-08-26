@@ -2,11 +2,16 @@ import {
   applyDvor1150ConfigPatches,
   buildDvor1150Snapshot,
   cloneDvor1150Config,
+  configurationForDvor1150Scenario,
+  createDefaultDvor1150ScenarioDefinition,
   defaultDvor1150Config,
+  type Dvor1150ScenarioDefinition,
+  type Dvor1150ScenarioRuntime,
   formatDvor1150Timestamp,
   getDvor1150ConfigValue,
   setDvor1150ConfigValue,
   validateDvor1150Config,
+  validateDvor1150ScenarioDefinition,
   type Dvor1150Config,
   type Dvor1150ConfigValue,
   type Dvor1150MonitorId,
@@ -80,6 +85,9 @@ export interface Dvor1150PmdtStoreState {
   activeView: Dvor1150ViewId;
   activeMenuPath: string[];
   simulationParametersOpen: boolean;
+  scenarioParametersOpen: boolean;
+  scenario: Dvor1150ScenarioRuntime;
+  scenarioDraft: Dvor1150ScenarioDefinition;
   lastCommand: string | null;
 }
 
@@ -106,6 +114,11 @@ export interface Dvor1150PmdtStoreActions {
   openScreen: (screenId: Dvor1150ScreenId, menuPath: readonly string[], title?: string) => void;
   openView: (screenId: Dvor1150ScreenId, viewId: Dvor1150ViewId, menuPath: readonly string[], title?: string) => void;
   setSimulationParametersOpen: (open: boolean) => void;
+  setScenarioParametersOpen: (open: boolean) => void;
+  replaceScenarioDraft: (definition: Dvor1150ScenarioDefinition) => void;
+  applyScenario: () => boolean;
+  restoreScenario: () => boolean;
+  endScenario: () => boolean;
   nextView: () => void;
   closeScreen: () => void;
   reset: () => void;
@@ -140,6 +153,9 @@ function buildInitialState(now: () => Date): Dvor1150PmdtStoreState {
     activeView: "home",
     activeMenuPath: [],
     simulationParametersOpen: false,
+    scenarioParametersOpen: false,
+    scenario: { active: false, definition: null, startedAt: null },
+    scenarioDraft: createDefaultDvor1150ScenarioDefinition(),
     lastCommand: null,
   };
 }
@@ -275,11 +291,45 @@ export function createDvor1150PmdtStore(
       return next;
     };
 
+    const applyScenarioBaseline = (
+      definition: Dvor1150ScenarioDefinition,
+      command: string,
+      startedAt: string | null,
+    ) => {
+      const state = get();
+      const storedDefinition = structuredClone(definition);
+      const config = configurationForDvor1150Scenario(storedDefinition, state.config);
+      const derived = recompute(config, state.derived, storedDefinition.startPolicy.mainTransmitterId);
+      derived.data.logs = [...derived.data.logs, {
+        timeTag: config.simulation.timestamp,
+        user: state.authenticatedUserId ?? "SYSTEM",
+        message: command,
+        severity: "yellow",
+      }];
+      set({
+        config,
+        configDraft: cloneDvor1150Config(config),
+        configurationBackup: cloneDvor1150Config(config),
+        configDirty: false,
+        needBackup: false,
+        derived,
+        scenario: { active: true, definition: storedDefinition, startedAt: startedAt ?? config.simulation.timestamp },
+        scenarioDraft: structuredClone(storedDefinition),
+        lastCommand: command,
+      });
+      return true;
+    };
+
     const initial = buildInitialState(now);
     return {
       ...initial,
       setMode: (mode) => set({ mode }),
-      openLogin: () => set({ loginDialogOpen: true, loginError: null, simulationParametersOpen: false }),
+      openLogin: () => set({
+        loginDialogOpen: true,
+        loginError: null,
+        simulationParametersOpen: false,
+        scenarioParametersOpen: false,
+      }),
       login: (rawUserId, password) => {
         const state = get();
         const currentTime = Date.now();
@@ -334,6 +384,7 @@ export function createDvor1150PmdtStore(
           activeView: "home",
           activeMenuPath: [],
           simulationParametersOpen: false,
+          scenarioParametersOpen: false,
         });
       },
       refreshClock: () => {
@@ -452,7 +503,8 @@ export function createDvor1150PmdtStore(
           configDraft: cloneDvor1150Config(nextConfig),
           derived,
           configDirty: false,
-          needBackup: true,
+          // Training changes must be contained in the current browser session.
+          needBackup: state.scenario.active ? false : true,
           parameterChangeLogs: prependParameterChangeLogEntries(state.parameterChangeLogs, nextParameterLogs),
           lastCommand: automaticTransfer?.action === "transfer" && automaticTransfer.target
             ? `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}`
@@ -464,6 +516,7 @@ export function createDvor1150PmdtStore(
       },
       resetConfigDraft: () => {
         const state = get();
+        if (state.scenario.active) return get().restoreScenario();
         if (state.securityLevel < 3 || !state.config.simulation.local) return false;
         const config = initialConfigurationForSession(state.config);
         set({
@@ -479,6 +532,7 @@ export function createDvor1150PmdtStore(
       },
       restoreConfig: () => {
         const state = get();
+        if (state.scenario.active) return get().restoreScenario();
         if (state.securityLevel < 3 || !state.config.simulation.local) return false;
         const config = initialConfigurationForSession(state.config);
         set({
@@ -494,7 +548,7 @@ export function createDvor1150PmdtStore(
       },
       backupConfig: () => {
         const state = get();
-        if (state.securityLevel < 3 || !state.needBackup) return false;
+        if (state.securityLevel < 3 || !state.needBackup || state.scenario.active) return false;
         const previousBackup = state.configurationBackup ?? defaultDvor1150Config;
         const changedFields = collectChangedConfigFields(
           persistentConfigValue(previousBackup),
@@ -517,6 +571,8 @@ export function createDvor1150PmdtStore(
       },
       replaceConfig: (persistedConfig, persistedBackup = persistedConfig, parameterChangeLogs) => {
         const state = get();
+        // A delayed persistence hydration must never overwrite a loaded exercise.
+        if (state.scenario.active) return;
         const config = preserveLiveSimulation(cloneDvor1150Config(persistedConfig), state.config);
         const configurationBackup = preserveLiveSimulation(
           cloneDvor1150Config(persistedBackup),
@@ -606,7 +662,61 @@ export function createDvor1150PmdtStore(
       },
       openScreen: (screenId, menuPath) => set({ activeScreen: screenId, activeView: defaultViews[screenId], activeMenuPath: [...menuPath] }),
       openView: (screenId, viewId, menuPath) => set({ activeScreen: screenId, activeView: viewId, activeMenuPath: [...menuPath] }),
-      setSimulationParametersOpen: (open) => set({ simulationParametersOpen: open }),
+      setSimulationParametersOpen: (open) => set((state) => ({
+        simulationParametersOpen: open,
+        scenarioParametersOpen: open ? false : state.scenarioParametersOpen,
+      })),
+      setScenarioParametersOpen: (open) => set((state) => ({
+        scenarioParametersOpen: open,
+        simulationParametersOpen: open ? false : state.simulationParametersOpen,
+      })),
+      replaceScenarioDraft: (definition) => set({ scenarioDraft: structuredClone(definition) }),
+      applyScenario: () => {
+        const state = get();
+        const issues = validateDvor1150ScenarioDefinition(state.scenarioDraft);
+        if (issues.length > 0) {
+          set({ lastCommand: `Scenario apply failed: ${issues[0]}` });
+          return false;
+        }
+        return applyScenarioBaseline(
+          state.scenarioDraft,
+          `Scenario applied: ${state.scenarioDraft.name}`,
+          null,
+        );
+      },
+      restoreScenario: () => {
+        const state = get();
+        if (!state.scenario.active || !state.scenario.definition) return false;
+        return applyScenarioBaseline(
+          state.scenario.definition,
+          `Scenario restored: ${state.scenario.definition.name}`,
+          state.scenario.startedAt,
+        );
+      },
+      endScenario: () => {
+        const state = get();
+        if (!state.scenario.active) return false;
+        const config = initialConfigurationForSession(state.config);
+        const derived = recompute(config, state.derived);
+        derived.data.logs = [...derived.data.logs, {
+          timeTag: config.simulation.timestamp,
+          user: state.authenticatedUserId ?? "SYSTEM",
+          message: "Scenario ended; Đài TEST/TST defaults restored",
+          severity: "green",
+        }];
+        set({
+          config,
+          configDraft: cloneDvor1150Config(config),
+          configurationBackup: cloneDvor1150Config(config),
+          configDirty: false,
+          needBackup: false,
+          derived,
+          scenario: { active: false, definition: null, startedAt: null },
+          scenarioDraft: createDefaultDvor1150ScenarioDefinition(),
+          lastCommand: "Scenario ended; Đài TEST/TST defaults restored",
+        });
+        return true;
+      },
       nextView: () => {
         const state = get();
         const views = viewGroups[state.activeScreen];

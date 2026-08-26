@@ -19,4 +19,23 @@ export {
   formatDvor1150Timestamp,
 } from "./defaults";
 export { buildDvor1150Snapshot } from "./engine";
+export {
+  configurationForDvor1150Scenario,
+  createDefaultDvor1150ScenarioDefinition,
+  createLowCarrierAnd9960Scenario,
+  createReferenceModulationScenario,
+  createSidebandVswrScenario,
+  DVOR1150_BUILT_IN_SCENARIOS,
+  DVOR1150_SCENARIO_SCHEMA_VERSION,
+  evaluateDvor1150Scenario,
+  parseDvor1150ScenarioDefinition,
+  previewDvor1150Scenario,
+  validateDvor1150ScenarioDefinition,
+} from "./scenario";
+export type {
+  Dvor1150ScenarioDefinition,
+  Dvor1150ScenarioDifficulty,
+  Dvor1150ScenarioEvaluation,
+  Dvor1150ScenarioRuntime,
+} from "./scenario";
 export type * from "./types";

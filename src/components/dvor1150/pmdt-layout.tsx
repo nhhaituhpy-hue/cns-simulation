@@ -8,6 +8,7 @@ import { Dvor1150Sidebar } from "./pmdt-sidebar";
 import { Dvor1150StatusBar } from "./pmdt-status-bar";
 import { Dvor1150TitleBar } from "./pmdt-title-bar";
 import { Dvor1150SimulationParametersPanel } from "./pmdt-simulation-parameters";
+import { Dvor1150ScenarioParametersPanel } from "./pmdt-scenario-parameters";
 import { useDvor1150PmdtStore } from "@/stores/dvor1150-pmdt-store";
 import type { Dvor1150PmdtMode } from "@/lib/dvor1150";
 import { Dvor1150ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
@@ -21,6 +22,9 @@ export function Dvor1150PmdtLayout({ mode = "preview" }: { mode?: Dvor1150PmdtMo
   const close = useDvor1150PmdtStore((state) => state.closeScreen);
   const refreshClock = useDvor1150PmdtStore((state) => state.refreshClock);
   const simulationParametersOpen = useDvor1150PmdtStore((state) => state.simulationParametersOpen);
+  const scenarioParametersOpen = useDvor1150PmdtStore((state) => state.scenarioParametersOpen);
+  const setScenarioParametersOpen = useDvor1150PmdtStore((state) => state.setScenarioParametersOpen);
+  const scenario = useDvor1150PmdtStore((state) => state.scenario);
 
   useEffect(() => { setMode(mode); }, [mode, setMode]);
   useEffect(() => {
@@ -40,15 +44,22 @@ export function Dvor1150PmdtLayout({ mode = "preview" }: { mode?: Dvor1150PmdtMo
   }, [apply, close, next, reset]);
 
   return <div className="pmdt-classic-viewport">
-    <section className="pmdt-classic-window pmdt-classic-window--standard dvor1150-pmdt-window" aria-label="DVOR 1150 PMDT Simulator">
-      <div className="pmdt-titlebar-row"><Dvor1150TitleBar /></div>
-      <div className="pmdt-menubar-row"><Dvor1150MenuBar /></div>
-      <Dvor1150Sidebar />
-      <main className="pmdt-classic-main">{loginOpen ? <div className="pmdt-prelogin-workspace" aria-hidden /> : <Dvor1150ScreenRouter />}</main>
-      <div className="pmdt-statusbar-row"><Dvor1150StatusBar /></div>
-      {simulationParametersOpen ? <Dvor1150SimulationParametersPanel /> : null}
-      {loginOpen ? <Dvor1150LoginDialog /> : null}
-      {mode === "preview" ? <Dvor1150ConfigPersistenceBoundary /> : null}
-    </section>
+    <div className="dvor1150-simulator-frame">
+      <nav className="dvor1150-simulator-tools" aria-label="DVOR 1150 simulator tools">
+        <button type="button" onClick={() => setScenarioParametersOpen(true)}>Scenario Parameters</button>
+        {scenario.active ? <span className="dvor1150-scenario-active-badge">Scenario active: {scenario.definition?.name}</span> : null}
+      </nav>
+      <section className="pmdt-classic-window pmdt-classic-window--standard dvor1150-pmdt-window" aria-label="DVOR 1150 PMDT Simulator">
+        <div className="pmdt-titlebar-row"><Dvor1150TitleBar /></div>
+        <div className="pmdt-menubar-row"><Dvor1150MenuBar /></div>
+        <Dvor1150Sidebar />
+        <main className="pmdt-classic-main">{loginOpen ? <div className="pmdt-prelogin-workspace" aria-hidden /> : <Dvor1150ScreenRouter />}</main>
+        <div className="pmdt-statusbar-row"><Dvor1150StatusBar /></div>
+        {simulationParametersOpen ? <Dvor1150SimulationParametersPanel /> : null}
+        {scenarioParametersOpen ? <Dvor1150ScenarioParametersPanel /> : null}
+        {loginOpen ? <Dvor1150LoginDialog /> : null}
+        {mode === "preview" ? <Dvor1150ConfigPersistenceBoundary /> : null}
+      </section>
+    </div>
   </div>;
 }

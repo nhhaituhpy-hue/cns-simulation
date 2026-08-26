@@ -2820,3 +2820,170 @@ input[type="checkbox"].dvor1150-control {
 .dvor1150-pmdt-window .dvor1150-ground-samples .dvor1150-error-spread .dvor1150-control {
   width: 74px;
 }
+
+/* Examiner-only tools live outside the PMDT reference window, following the
+ * same separation as the DVOR 220 simulator. */
+.dvor1150-pmdt-page .dvor1150-simulator-frame {
+  width: 900px;
+  min-width: 900px;
+}
+
+.dvor1150-pmdt-page .dvor1150-simulator-tools {
+  display: flex;
+  min-height: 27px;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 5px;
+  border: 1px solid #3f4b53;
+  border-bottom: 0;
+  background: #202a31;
+}
+
+.dvor1150-pmdt-page .dvor1150-simulator-tools button {
+  min-height: 20px;
+  padding: 1px 10px;
+  border: 1px solid #80909b;
+  border-radius: 2px;
+  background: linear-gradient(#fbfcfd, #d5dde2);
+  color: #102431;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.dvor1150-pmdt-page .dvor1150-simulator-tools button:hover,
+.dvor1150-pmdt-page .dvor1150-simulator-tools button:focus-visible {
+  background: #fff;
+  outline: 1px solid #ffcf00;
+  outline-offset: 1px;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-active-badge {
+  min-width: 0;
+  overflow: hidden;
+  color: #fff6b2;
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-parameters-panel {
+  width: 430px;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-summary {
+  gap: 2px;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-panel-body {
+  display: grid;
+  gap: 5px;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-overview,
+.dvor1150-pmdt-page .dvor1150-scenario-policy,
+.dvor1150-pmdt-page .dvor1150-scenario-preview,
+.dvor1150-pmdt-page .dvor1150-scenario-configurations {
+  display: grid;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid #b0b0b0;
+  background: #f4f4f4;
+  font-size: 10px;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-overview > label,
+.dvor1150-pmdt-page .dvor1150-scenario-policy > label {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  align-items: center;
+  gap: 4px;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-policy > label:has(input[type="checkbox"]) {
+  display: flex;
+  gap: 4px;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-overview input,
+.dvor1150-pmdt-page .dvor1150-scenario-overview select,
+.dvor1150-pmdt-page .dvor1150-scenario-overview textarea,
+.dvor1150-pmdt-page .dvor1150-scenario-policy select {
+  min-width: 0;
+  border: 1px solid #808080;
+  background: #fff;
+  color: #000;
+  font: inherit;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-overview textarea {
+  min-height: 38px;
+  resize: vertical;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-action-row label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-action-row select {
+  max-width: 175px;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-action-row button,
+.dvor1150-pmdt-page .dvor1150-scenario-footer button {
+  min-height: 20px;
+  padding: 1px 5px;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-preview {
+  grid-template-columns: auto 1fr;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-preview strong {
+  grid-column: 1 / -1;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-configurations > p {
+  margin: 0;
+  color: #404040;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-configurations .pmdt-config-field {
+  grid-template-columns: minmax(0, 1fr) 152px;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-message {
+  min-height: 14px;
+  margin: 0;
+  padding: 2px 5px;
+  border-top: 1px solid #b0b0b0;
+  background: #ffffe1;
+  color: #303030;
+  font-size: 9px;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-message--error {
+  background: #ffe1e1;
+  color: #a00000;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-footer {
+  gap: 3px;
+}
+
+@media (max-width: 920px) {
+  .dvor1150-pmdt-page .dvor1150-simulator-frame {
+    width: 900px;
+  }
+}
