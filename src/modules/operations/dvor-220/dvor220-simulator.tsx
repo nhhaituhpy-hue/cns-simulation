@@ -168,6 +168,7 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
   const authenticated = device.session.username !== null;
   const writeAllowed = device.session.level >= 2;
   const readAllowed = getDvor220PermissionDecision(device, "read").allowed;
+  const profileSaveAvailable = device.configuration.flashDirty && !device.scenario.active;
   const standbyMonitorEnabled = device.configuration.running.optionalUnits.standbyMonitor
     && device.configuration.running.monitor.channels.standby.type !== "disabled";
   const navigationSections = useMemo(
@@ -183,18 +184,18 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
     writeAllowed,
     controlAvailable: snapshot.controlAvailable,
     draftDirty: device.configuration.draftDirty,
-    flashDirty: device.configuration.flashDirty,
+    flashDirty: profileSaveAvailable,
     bypassed: snapshot.effectiveMonitorBypass,
     viewMode,
-  }), [authenticated, device.configuration.draftDirty, device.configuration.flashDirty, device.connection.connected, snapshot.controlAvailable, snapshot.effectiveMonitorBypass, viewMode, writeAllowed]);
+  }), [authenticated, device.configuration.draftDirty, device.connection.connected, profileSaveAvailable, snapshot.controlAvailable, snapshot.effectiveMonitorBypass, viewMode, writeAllowed]);
   const toolbarActions = useMemo(() => buildDvor220Toolbar({
     connected: device.connection.connected,
     authenticated,
     writeAllowed,
     controlAvailable: snapshot.controlAvailable,
     bypassed: snapshot.effectiveMonitorBypass,
-    flashDirty: device.configuration.flashDirty,
-  }), [authenticated, device.configuration.flashDirty, device.connection.connected, snapshot.controlAvailable, snapshot.effectiveMonitorBypass, writeAllowed]);
+    flashDirty: profileSaveAvailable,
+  }), [authenticated, device.connection.connected, profileSaveAvailable, snapshot.controlAvailable, snapshot.effectiveMonitorBypass, writeAllowed]);
 
   const tabs: MopiensTabDefinition[] = openTabs.map((screenId) => ({
     id: screenId,
@@ -363,13 +364,18 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
         </button>
         {simulatorToolsOpen ? (
           <div id="dvor220-simulator-tools" className={styles.simulatorToolsActions}>
-            <button type="button" onClick={() => setActiveDialog("simulation-parameters")}>Raw Parameters</button>
+            <button type="button" onClick={() => setActiveDialog("simulation-parameters")}>Scenario Parameters</button>
             <button type="button" onClick={() => setActiveSimulatorTool("maintenance-faults")}>Fault Injection</button>
             <button type="button" onClick={() => setActiveSimulatorTool("maintenance-antenna")}>Antenna / VSWR Test</button>
             <button type="button" onClick={() => setActiveSimulatorTool("maintenance-thermal")}>Thermal Test</button>
             <button type="button" onClick={() => setActiveSimulatorTool("flight-results")}>Flight Results</button>
             <button type="button" onClick={() => setActiveSimulatorTool("history-parameter-change")}>Config Audit</button>
           </div>
+        ) : null}
+        {device.scenario.active ? (
+          <span className={styles.scenarioActiveBadge} role="status">
+            Scenario Active · {device.scenario.definition?.name}
+          </span>
         ) : null}
       </section>
       {simulatorToolScreen ? (

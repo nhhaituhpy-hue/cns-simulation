@@ -345,6 +345,10 @@ function Dvor220ConfigPersistence({ store }: { store: Dvor220StoreApi }) {
         const flash = dvor220ConfigAdapter.parseConfig(response.backupConfig ?? response.appliedConfig);
         if (!running || !flash) throw new Error("Cấu hình DVOR 220 từ server không hợp lệ.");
         if (cancelled) return;
+        if (store.getState().device.scenario.active) {
+          setStatus("");
+          return;
+        }
         store.getState().replaceConfigurationLayers(
           running,
           flash,
@@ -370,6 +374,7 @@ function Dvor220ConfigPersistence({ store }: { store: Dvor220StoreApi }) {
   useEffect(() => {
     return store.subscribe((state, previousState) => {
       if (!readyRef.current) return;
+      if (state.device.scenario.active || previousState.device.scenario.active) return;
       const current = state.device.configuration;
       const previous = previousState.device.configuration;
       const runningChanged = !areJsonEqual(current.running, previous.running);

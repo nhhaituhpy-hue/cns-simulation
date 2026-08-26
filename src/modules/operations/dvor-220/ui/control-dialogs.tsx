@@ -118,7 +118,11 @@ export function Dvor220ControlDialogs({
       <MopiensConfirmationModal
         open={activeDialog === "reset"}
         title="System Reset"
-        message={device.executive.phase === "shutdown-locked" ? "Reset is locked for at least 20 seconds after executive shutdown." : "Reset alarm latches and restore the designated Main transmitter to the Antenna route?"}
+        message={device.executive.phase === "shutdown-locked"
+          ? "Reset is locked for at least 20 seconds after executive shutdown."
+          : device.scenario.active
+            ? `Restore the active training scenario to its starting baseline: ${device.scenario.definition?.name}?`
+            : "Reset alarm latches and restore the designated Main transmitter to the Antenna route?"}
         confirmLabel="Reset"
         tone={device.executive.phase === "shutdown-locked" ? "danger" : "warning"}
         onConfirm={() => execute({ type: "reset" }, true)}

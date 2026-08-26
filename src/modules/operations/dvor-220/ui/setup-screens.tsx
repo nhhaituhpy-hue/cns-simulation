@@ -113,9 +113,9 @@ function ConfigurationActions({
           Apply
         </MopiensBeveledButton>
         <MopiensBeveledButton
-          tone={device.configuration.flashDirty ? "warning" : "default"}
+          tone={device.configuration.flashDirty && !device.scenario.active ? "warning" : "default"}
           onClick={() => dispatch({ type: "save-profile" })}
-          disabled={!permission.allowed || !device.configuration.flashDirty}
+          disabled={!permission.allowed || !device.configuration.flashDirty || device.scenario.active}
         >
           Profile Save
         </MopiensBeveledButton>
@@ -362,7 +362,7 @@ function TransmitterSetup({
         onClose={() => setHelperOpen(false)}
         actions={[
           { id: "close", label: "Close", onClick: () => setHelperOpen(false) },
-          { id: "save", label: "Save", disabled: disabled || !helperHasUnsavedChanges, onClick: saveHelper },
+          { id: "save", label: "Save", disabled: disabled || device.scenario.active || !helperHasUnsavedChanges, onClick: saveHelper },
           { id: "apply", label: "Apply", tone: "primary", disabled: disabled || !helperValid || !helperHasUnappliedChanges, onClick: applyHelper },
         ]}
       >
@@ -413,7 +413,9 @@ function TransmitterSetup({
               : helperHasUnappliedChanges
                 ? "Edited values are local to Helper. Apply sends them to running RAM."
                 : helperHasUnsavedChanges
-                  ? "Applied in RAM; use Save to write these setpoints to non-volatile flash."
+                  ? device.scenario.active
+                    ? "Applied in RAM for the active scenario. Save is disabled so the training baseline remains session-only."
+                    : "Applied in RAM; use Save to write these setpoints to non-volatile flash."
                   : "Helper values match running RAM and saved flash."}
           </p>
           <p className={styles.helperNote}>

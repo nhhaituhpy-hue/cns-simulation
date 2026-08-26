@@ -312,6 +312,63 @@ export interface Dvor220EnvironmentRuntime {
   expansionDigitalInputs: boolean[];
 }
 
+export interface Dvor220ScenarioAntennaVswr {
+  antenna: number;
+  usbVswr: number;
+  lsbVswr: number;
+}
+
+export interface Dvor220ScenarioDefinition {
+  schemaVersion: 1;
+  id: string;
+  name: string;
+  description: string;
+  difficulty: "basic" | "intermediate" | "advanced";
+  configuration: Dvor220Configuration;
+  runtime: {
+    mainTransmitterId: Dvor220TransmitterId;
+    startMonitorBypassed: boolean;
+    acAvailable: boolean;
+    batteryRemainingMinutes: number;
+    temperaturesC: Record<Dvor220TransmitterId, {
+      cma: number;
+      usb: number;
+      lsb: number;
+    }>;
+    environment: {
+      temperatureC: number;
+      smoke: boolean;
+      intrusion: boolean;
+    };
+    antennaVswr: Dvor220ScenarioAntennaVswr[];
+    faults: Dvor220InjectedFault[];
+    measurementOverrides: Dvor220MeasurementOverride[];
+  };
+  successCriteria: {
+    requireServiceNormal: boolean;
+    requireEnabledMonitorChannelsNormal: boolean;
+    requireNoPrimaryAlarm: boolean;
+  };
+}
+
+export interface Dvor220ScenarioRuntime {
+  active: boolean;
+  definition: Dvor220ScenarioDefinition | null;
+  startedAtMs: number | null;
+}
+
+export interface Dvor220ScenarioEvaluation {
+  solved: boolean;
+  correctable: boolean;
+  checks: Array<{
+    id: string;
+    label: string;
+    passed: boolean;
+    detail: string;
+  }>;
+  blockers: string[];
+}
+
 export type Dvor220UnitFaultCondition = "warning" | "alarm" | "fault" | "unplugged";
 
 export type Dvor220InjectedFault =
@@ -452,6 +509,7 @@ export interface Dvor220DeviceState {
   monitorAveraging: Dvor220MonitorAveragingState;
   groundCheck: Dvor220GroundCheckState;
   executive: Dvor220ExecutiveState;
+  scenario: Dvor220ScenarioRuntime;
   history: Dvor220HistoryState;
 }
 
@@ -643,6 +701,9 @@ export type Dvor220Command =
   | { type: "clear-all-faults" }
   | { type: "inject-measurement"; override: Dvor220MeasurementOverride }
   | { type: "clear-measurement"; monitorId: Dvor220MonitorId; channelId: Dvor220MonitorChannelId; parameter: Dvor220MonitorParameter }
+  | { type: "apply-scenario"; scenario: Dvor220ScenarioDefinition }
+  | { type: "restart-scenario" }
+  | { type: "end-scenario" }
   | { type: "calibrate"; calibration: Dvor220CalibrationCommand }
   | { type: "initialize-calibration"; target: Dvor220CalibrationTarget }
   | { type: "save-calibration" }

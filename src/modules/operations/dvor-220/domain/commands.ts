@@ -18,6 +18,12 @@ import {
   isDvor220MonitorEffectivelyBypassed,
 } from "./permissions";
 import {
+  endDvor220Scenario,
+  restartDvor220Scenario,
+  startDvor220Scenario,
+  validateDvor220ScenarioDefinition,
+} from "./scenario";
+import {
   DVOR220_MONITOR_IDS,
   DVOR220_RF_OUTPUT_IDS,
   DVOR220_TRANSMITTER_IDS,
@@ -538,6 +544,10 @@ export function reduceDvor220Command(
         state.executive.phase === "shutdown-locked" &&
         (state.executive.shutdownLockedUntilMs ?? Infinity) > state.nowMs
       ) return failure(state, "Reset is locked for at least 20 seconds after shutdown.");
+      if (state.scenario.active) {
+        const restarted = restartDvor220Scenario(state);
+        return restarted ? success(restarted) : failure(state, "The active scenario baseline is unavailable.");
+      }
       state.configuration.running = cloneDvor220(state.configuration.flash);
       state.configuration.draft = cloneDvor220(state.configuration.flash);
       state.configuration.draftDirty = false;
@@ -645,6 +655,9 @@ export function reduceDvor220Command(
     case "save-transmitter-helper": {
       const denied = requirePermission(state, "configure");
       if (denied) return failure(state, denied);
+      if (state.scenario.active) {
+        return failure(state, "Transmitter Helper Save is disabled during a session-only training scenario.");
+      }
       const transmitterIds = [...new Set(command.transmitterIds)];
       const changedIds = transmitterIds.filter((transmitterId) => transmitterHelperSettingsChanged(
         state.configuration.flash,
@@ -686,6 +699,9 @@ export function reduceDvor220Command(
     case "save-profile": {
       const denied = requirePermission(state, "configure");
       if (denied) return failure(state, denied);
+      if (state.scenario.active) {
+        return failure(state, "Profile Save is disabled during a session-only training scenario.");
+      }
       if (!state.configuration.flashDirty) return failure(state, "No running configuration changes require Profile Save.");
       const previousFlash = cloneDvor220(state.configuration.flash);
       const changedFields = collectChangedConfigFields(previousFlash, state.configuration.running);
@@ -723,6 +739,10 @@ export function reduceDvor220Command(
     }
 
     case "power-cycle": {
+      if (state.scenario.active) {
+        const restarted = restartDvor220Scenario(state);
+        return restarted ? success(restarted) : failure(state, "The active scenario baseline is unavailable.");
+      }
       const flash = cloneDvor220(state.configuration.flash);
       const fresh = createInitialDvor220State({ nowMs: state.nowMs, configuration: flash });
       fresh.connection = cloneDvor220(state.connection);
@@ -829,6 +849,22 @@ export function reduceDvor220Command(
       state = reconcileDvor220State(state);
       return success(state);
     }
+
+    case "apply-scenario": {
+      const issues = validateDvor220ScenarioDefinition(command.scenario);
+      if (issues.length > 0) return failure(state, issues[0]);
+      return success(startDvor220Scenario(state, command.scenario));
+    }
+
+    case "restart-scenario": {
+      const restarted = restartDvor220Scenario(state);
+      return restarted ? success(restarted) : failure(state, "No training scenario is active.");
+    }
+
+    case "end-scenario":
+      return state.scenario.active
+        ? success(endDvor220Scenario(state))
+        : failure(state, "No training scenario is active.");
 
     case "calibrate": {
       const denied = requirePermission(state, "calibrate");

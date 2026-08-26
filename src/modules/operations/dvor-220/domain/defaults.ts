@@ -371,6 +371,11 @@ export function createInitialDvor220State(
       changeoverFlag: false,
       shutdownReason: null,
     },
+    scenario: {
+      active: false,
+      definition: null,
+      startedAtMs: null,
+    },
     history: {
       pmdt: [],
       lmi: [],
