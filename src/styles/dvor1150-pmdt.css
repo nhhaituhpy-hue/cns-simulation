@@ -3027,3 +3027,205 @@ input[type="checkbox"].dvor1150-control {
     width: 850px;
   }
 }
+
+/* DVOR 1150A Scenario Parameters use the same classic external-tool pattern
+ * while retaining the original 900 px 1150A PMDT geometry. */
+.dvor1150a-pmdt-page .dvor1150a-simulator-frame {
+  width: 900px;
+  min-width: 900px;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-simulator-tools {
+  display: flex;
+  min-height: 27px;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 5px;
+  border: 1px solid #3f4b53;
+  border-bottom: 0;
+  background: #202a31;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-simulator-tools button {
+  min-height: 20px;
+  padding: 1px 10px;
+  border: 1px solid #80909b;
+  border-radius: 2px;
+  background: linear-gradient(#fbfcfd, #d5dde2);
+  color: #102431;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-simulator-tools button:hover,
+.dvor1150a-pmdt-page .dvor1150a-simulator-tools button:focus-visible {
+  background: #fff;
+  outline: 1px solid #ffcf00;
+  outline-offset: 1px;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-role-badge,
+.dvor1150a-pmdt-page .dvor1150a-training-hud {
+  display: inline-flex;
+  min-height: 18px;
+  align-items: center;
+  padding: 0 6px;
+  border: 1px solid #6e8390;
+  color: #dfeaf0;
+  background: #2b3a43;
+  font: 700 10px Arial, sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-training-hud {
+  gap: 7px;
+  border-color: #c69a20;
+  color: #fff3bc;
+  background: #3a341e;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-training-hud strong {
+  color: #ffe16a;
+  font-weight: 700;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-active-badge {
+  min-width: 0;
+  overflow: hidden;
+  color: #fff6b2;
+  font: 700 10px Arial, sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-parameters-panel {
+  width: 430px;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-summary,
+.dvor1150a-pmdt-page .dvor1150a-scenario-panel-body {
+  gap: 4px;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-overview,
+.dvor1150a-pmdt-page .dvor1150a-scenario-policy,
+.dvor1150a-pmdt-page .dvor1150a-scenario-preview,
+.dvor1150a-pmdt-page .dvor1150a-scenario-configurations {
+  display: grid;
+  gap: 3px;
+  padding: 4px;
+  border: 1px solid #b0b0b0;
+  background: #f4f4f4;
+  font-size: 10px;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-overview > label,
+.dvor1150a-pmdt-page .dvor1150a-scenario-policy > label {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  align-items: center;
+  gap: 4px;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-policy > label:has(input[type="checkbox"]) {
+  display: flex;
+  gap: 4px;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-policy > p,
+.dvor1150a-pmdt-page .dvor1150a-scenario-configurations > p {
+  margin: 0;
+  color: #404040;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-policy .pmdt-config-section-body > label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-overview input,
+.dvor1150a-pmdt-page .dvor1150a-scenario-overview select,
+.dvor1150a-pmdt-page .dvor1150a-scenario-overview textarea,
+.dvor1150a-pmdt-page .dvor1150a-scenario-policy select {
+  min-width: 0;
+  border: 1px solid #808080;
+  background: #fff;
+  color: #000;
+  font: inherit;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-overview textarea {
+  min-height: 38px;
+  resize: vertical;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-action-row label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-action-row select {
+  max-width: 175px;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-action-row button,
+.dvor1150a-pmdt-page .dvor1150a-scenario-footer button {
+  min-height: 20px;
+  padding: 1px 5px;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-preview {
+  grid-template-columns: auto 1fr;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-preview strong {
+  grid-column: 1 / -1;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-configurations .pmdt-config-field {
+  grid-template-columns: minmax(0, 1fr) 152px;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-message {
+  min-height: 14px;
+  margin: 0;
+  padding: 2px 5px;
+  border-top: 1px solid #b0b0b0;
+  background: #ffffe1;
+  color: #303030;
+  font-size: 9px;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-message--error {
+  background: #ffe1e1;
+  color: #a00000;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-footer {
+  gap: 3px;
+}
+
+.dvor1150a-pmdt-page .pmdt-config-empty {
+  margin: 0;
+  padding: 5px;
+  color: #404040;
+  font-size: 10px;
+}
+
+@media (max-width: 920px) {
+  .dvor1150a-pmdt-page .dvor1150a-simulator-frame {
+    width: 900px;
+  }
+}

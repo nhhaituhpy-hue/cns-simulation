@@ -1,4 +1,14 @@
 import { describe, expect, it } from "vitest";
+import {
+  createLowCarrierAnd9960Scenario,
+  createReferenceModulationScenario,
+  createSidebandVswrScenario,
+  createTx1FaultChangeoverScenario,
+  evaluateDvor1150aScenario,
+  parseDvor1150aScenarioDefinition,
+  previewDvor1150aScenario,
+  validateDvor1150aScenarioDefinition,
+} from "@/lib/dvor1150a";
 import { defaultVorPmdtData } from "@/lib/vor-pmdt-defaults";
 import { vorMenuStructure } from "@/lib/vor-menu-structure";
 import {
@@ -221,5 +231,110 @@ describe("VOR PMDT store", () => {
     expect(store.getState().applyConfigChanges()).toBe(true);
     expect(store.getState().setTransmitterMode("tx2", "main")).toBe(true);
     expect(store.getState().derived.voting.activeTransmitter).toBe("tx2");
+  });
+
+  it("validates and previews every built-in DVOR 1150A training scenario", () => {
+    const scenarios = [
+      createLowCarrierAnd9960Scenario(),
+      createReferenceModulationScenario(),
+      createSidebandVswrScenario(),
+      createTx1FaultChangeoverScenario(),
+    ];
+
+    for (const scenario of scenarios) {
+      expect(validateDvor1150aScenarioDefinition(scenario)).toEqual([]);
+      expect(parseDvor1150aScenarioDefinition(JSON.parse(JSON.stringify(scenario)))).toEqual(scenario);
+
+      const preview = previewDvor1150aScenario(scenario);
+      expect(preview.snapshot.data.monitorIntegral.normal).toBe(false);
+      expect(preview.config.simulation).toMatchObject({
+        local: true,
+        integralMonitorBypass: true,
+      });
+    }
+
+    expect(previewDvor1150aScenario(scenarios[0]).snapshot.monitors.mon1.parameters.hz9960Modulation.value).toBeCloseTo(23.2, 1);
+    expect(previewDvor1150aScenario(scenarios[1]).snapshot.monitors.mon1.parameters.hz30Modulation.value).toBeCloseTo(21.7, 1);
+    expect(previewDvor1150aScenario(scenarios[2]).snapshot.monitors.mon1.parameters.sidebandVswr.status).toBe("alarm");
+  });
+
+  it("keeps a DVOR 1150A scenario session-only and restores its baseline with F8 semantics", () => {
+    const store = createVorPmdtStore({ now: () => new Date("2026-08-26T09:00:00.000Z") });
+    const scenario = createLowCarrierAnd9960Scenario();
+
+    expect(store.getState().login("SEC3", "THREE")).toBe(true);
+    store.getState().setScenarioAuthoringEnabled(true);
+    store.getState().replaceScenarioDraft(scenario);
+    expect(store.getState().applyScenario()).toBe(true);
+
+    let state = store.getState();
+    expect(state.scenario.active).toBe(true);
+    expect(state.config.transmitters.tx1.nominal.outputPower).toBe(10);
+    expect(state.config.simulation).toMatchObject({ local: true, integralMonitorBypass: true });
+    expect(state.needBackup).toBe(false);
+    expect(evaluateDvor1150aScenario(state.scenario, state.derived, state.config).solved).toBe(false);
+
+    state.setConfigValue("transmitters.tx1.nominal.outputPower", 70);
+    expect(state.applyConfigChanges()).toBe(true);
+    expect(store.getState().needBackup).toBe(false);
+    store.getState().setConfigValue("simulation.integralMonitorBypass", false);
+    state = store.getState();
+    expect(evaluateDvor1150aScenario(state.scenario, state.derived, state.config).solved).toBe(true);
+
+    expect(state.restoreDefaultConfig()).toBe(true);
+    state = store.getState();
+    expect(state.config.transmitters.tx1.nominal.outputPower).toBe(10);
+    expect(state.config.simulation.integralMonitorBypass).toBe(true);
+    expect(evaluateDvor1150aScenario(state.scenario, state.derived, state.config).solved).toBe(false);
+
+    expect(state.endScenario()).toBe(true);
+    state = store.getState();
+    expect(state.scenario.active).toBe(false);
+    expect(state.config.station.stationDescription).toBe("TST");
+    expect(state.config.transmitters.tx1.nominal.outputPower).toBe(70);
+    expect(state.config.simulation).toMatchObject({ local: false, integralMonitorBypass: false });
+  });
+
+  it("locks protected DVOR 1150A fields while allowing assigned recovery controls", () => {
+    const store = createVorPmdtStore();
+    const scenario = createSidebandVswrScenario();
+
+    expect(store.getState().login("SEC3", "THREE")).toBe(true);
+    store.getState().setScenarioAuthoringEnabled(true);
+    store.getState().replaceScenarioDraft(scenario);
+    expect(store.getState().applyScenario()).toBe(true);
+
+    store.getState().setConfigValue("monitor.sidebandVswr.alarm", 5);
+    expect(store.getState().configDraft.monitor.sidebandVswr.alarm).toBe(3);
+    expect(store.getState().lastCommand).toContain("Scenario control locked");
+
+    store.getState().setConfigValue("transmitters.tx1.vswr.sidebands.0", 1.83);
+    store.getState().setConfigValue("transmitters.tx1.vswr.sidebands.1", 1.83);
+    store.getState().setConfigValue("transmitters.tx1.vswr.sidebands.2", 1.74);
+    store.getState().setConfigValue("transmitters.tx1.vswr.sidebands.3", 1.83);
+    expect(store.getState().applyConfigChanges()).toBe(true);
+    store.getState().setConfigValue("simulation.integralMonitorBypass", false);
+
+    const state = store.getState();
+    expect(evaluateDvor1150aScenario(state.scenario, state.derived, state.config).solved).toBe(true);
+  });
+
+  it("solves the DVOR 1150A carrier VSWR scenario by transferring service to TX2", () => {
+    const store = createVorPmdtStore();
+    const scenario = createTx1FaultChangeoverScenario();
+
+    expect(store.getState().login("SEC3", "THREE")).toBe(true);
+    store.getState().setScenarioAuthoringEnabled(true);
+    store.getState().replaceScenarioDraft(scenario);
+    expect(store.getState().applyScenario()).toBe(true);
+    expect(store.getState().derived.voting.activeTransmitter).toBe("tx1");
+
+    expect(store.getState().selectMainTransmitter("tx2")).toBe(true);
+    store.getState().setConfigValue("simulation.integralMonitorBypass", false);
+
+    const state = store.getState();
+    expect(state.derived.voting.activeTransmitter).toBe("tx2");
+    expect(state.data.transmitters.tx1.off).toBe("red");
+    expect(evaluateDvor1150aScenario(state.scenario, state.derived, state.config).solved).toBe(true);
   });
 });

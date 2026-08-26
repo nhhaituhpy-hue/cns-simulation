@@ -90,6 +90,9 @@ function Dvor1150aConfigPersistence() {
   useEffect(() => {
     return useVorPmdtStore.subscribe((state, previousState) => {
       if (!readyRef.current) return;
+      // Scenario baselines and student recoveries are intentionally isolated
+      // from the operator's persisted DVOR 1150A profile.
+      if (state.scenario.active || previousState.scenario.active) return;
 
       const nextConfig = extractDvor1150aConfig(state.config);
       const previousConfig = extractDvor1150aConfig(previousState.config);

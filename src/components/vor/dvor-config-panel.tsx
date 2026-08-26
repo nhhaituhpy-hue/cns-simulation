@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "@phosphor-icons/react/dist/csr/X";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   dvorConfigFieldCatalog,
   getDvorConfigValue,
@@ -15,18 +15,19 @@ function ConfigField({ field }: { field: DvorConfigFieldDefinition }) {
   const config = useVorPmdtStore((state) => state.configDraft);
   const securityLevel = useVorPmdtStore((state) => state.securityLevel);
   const local = useVorPmdtStore((state) => state.config.simulation.local);
+  const scenario = useVorPmdtStore((state) => state.scenario);
   const setConfigValue = useVorPmdtStore((state) => state.setConfigValue);
-  const canEdit = securityLevel >= 3 && local;
+  const scenarioAllowsField = !scenario.active
+    || Boolean(scenario.definition?.studentEditableFieldIds.includes(field.id));
+  const canEdit = securityLevel >= 3 && local && scenarioAllowsField;
   const value = getDvorConfigValue(config, field.id);
   const validationMessage = validateDvorConfigField(field, value);
   const [draftValue, setDraftValue] = useState(value === null ? "" : String(value));
   const [isEditing, setIsEditing] = useState(false);
   const controlId = `dvor-config-${field.id}`;
   const isTextEntry = field.type === "number" || field.type === "text";
-
-  useEffect(() => {
-    if (!isEditing) setDraftValue(value === null ? "" : String(value));
-  }, [value, isEditing]);
+  const committedValue = value === null ? "" : String(value);
+  const displayedValue = isEditing ? draftValue : committedValue;
 
   function update(rawValue: string | boolean) {
     if (typeof rawValue === "string") setDraftValue(rawValue);
@@ -47,11 +48,12 @@ function ConfigField({ field }: { field: DvorConfigFieldDefinition }) {
             name={field.id}
             type="checkbox"
             disabled={!canEdit}
+            title={!scenarioAllowsField ? "Scenario lock: examiner recovery controls only" : undefined}
             checked={Boolean(value)}
             onChange={(event) => update(event.currentTarget.checked)}
           />
         ) : field.type === "select" ? (
-          <select id={controlId} name={field.id} value={draftValue} disabled={!canEdit} onChange={(event) => update(event.currentTarget.value)}>
+          <select id={controlId} name={field.id} value={committedValue} disabled={!canEdit} title={!scenarioAllowsField ? "Scenario lock: examiner recovery controls only" : undefined} onChange={(event) => update(event.currentTarget.value)}>
             {field.options?.map((option) => <option key={option} value={option}>{option}</option>)}
           </select>
         ) : (
@@ -60,12 +62,16 @@ function ConfigField({ field }: { field: DvorConfigFieldDefinition }) {
             name={field.id}
             type={field.type === "number" ? "number" : "text"}
             disabled={!canEdit}
-            value={draftValue}
+            title={!scenarioAllowsField ? "Scenario lock: examiner recovery controls only" : undefined}
+            value={displayedValue}
             min={field.min}
             max={field.max}
             step={field.step}
             onChange={(event) => update(event.currentTarget.value)}
-            onFocus={isTextEntry ? () => setIsEditing(true) : undefined}
+            onFocus={isTextEntry ? () => {
+              setDraftValue(committedValue);
+              setIsEditing(true);
+            } : undefined}
             onBlur={isTextEntry ? () => setIsEditing(false) : undefined}
           />
         )}
@@ -84,8 +90,12 @@ export function DvorConfigPanel() {
   const securityLevel = useVorPmdtStore((state) => state.securityLevel);
   const local = useVorPmdtStore((state) => state.config.simulation.local);
   const derived = useVorPmdtStore((state) => state.derived);
+  const scenario = useVorPmdtStore((state) => state.scenario);
 
-  const sections = Array.from(new Set(dvorConfigFieldCatalog.map((field) => field.section)));
+  const visibleFields = scenario.active
+    ? dvorConfigFieldCatalog.filter((field) => scenario.definition?.studentEditableFieldIds.includes(field.id))
+    : dvorConfigFieldCatalog;
+  const sections = Array.from(new Set(visibleFields.map((field) => field.section)));
 
   return (
     <aside className="pmdt-config-panel" aria-label="DVOR 1150A simulation parameters">
@@ -98,15 +108,17 @@ export function DvorConfigPanel() {
       <div className="pmdt-config-summary">
         <span>Active Tx: <b>{derived.voting.activeTransmitter?.toUpperCase() ?? "NONE"}</b></span>
         <span>Voting: <b>{derived.voting.systemHealthy ? "NORMAL" : "ALARM"}</b></span>
+        {scenario.active ? <span className="pmdt-config-summary-warning">Scenario: {scenario.definition?.name} — recovery controls only</span> : null}
         {derived.validation.length > 0 ? <span className="pmdt-config-summary-warning">{derived.validation.length} validation issue(s)</span> : null}
         {securityLevel < 3 ? <span>GUEST: view-only</span> : !local ? <span>Enable Local to edit</span> : configDirty ? <span>Pending changes — press Apply (F7)</span> : <span>Ready</span>}
       </div>
       <div className="pmdt-config-panel-body">
+        {scenario.active && visibleFields.length === 0 ? <p className="pmdt-config-empty">This scenario is corrected by operational commands only.</p> : null}
         {sections.map((section) => (
           <details key={section} className="pmdt-config-section" open={section === "Station" || section === "Transmitter 1" || section === "Monitor control"}>
             <summary>{section}</summary>
             <div className="pmdt-config-section-body">
-              {dvorConfigFieldCatalog.filter((field) => field.section === section).map((field) => (
+              {visibleFields.filter((field) => field.section === section).map((field) => (
                 <ConfigField key={field.id} field={field} />
               ))}
             </div>

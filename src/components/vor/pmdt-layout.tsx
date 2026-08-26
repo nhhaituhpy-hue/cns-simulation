@@ -12,6 +12,8 @@ import { PmdtTitleBar } from "./pmdt-title-bar";
 import { DvorConfigPanel } from "./dvor-config-panel";
 import { AboutPmdtDialog } from "./about-pmdt-dialog";
 import { PmdtLoginDialog } from "./pmdt-login-dialog";
+import { Dvor1150aScenarioParametersPanel } from "./dvor1150a-scenario-parameters";
+import { Dvor1150aTrainingHud } from "./dvor1150a-training-hud";
 import { DisabledScreen } from "./screens/disabled-screen";
 import { HomeScreen } from "./screens/home-screen";
 import { MonitorConfigLayout } from "./screens/monitor-config-layout";
@@ -30,6 +32,7 @@ import { DiagnosticsWorkspace } from "./screens/diagnostics-workspace";
 export interface PmdtLayoutProps {
   mode?: VorPmdtMode;
   simulatorId?: Extract<SupportedSimulatorConfigId, "dvor-1150a">;
+  scenarioAuthoringEnabled?: boolean;
   children?: ReactNode;
   sidePanel?: ReactNode;
 }
@@ -57,11 +60,16 @@ function PmdtScreenRouter() {
 export function PmdtLayout({
   mode = "preview",
   simulatorId,
+  scenarioAuthoringEnabled = false,
   children,
   sidePanel,
 }: PmdtLayoutProps) {
   const setMode = useVorPmdtStore((state) => state.setMode);
   const configPanelOpen = useVorPmdtStore((state) => state.configPanelOpen);
+  const scenarioParametersOpen = useVorPmdtStore((state) => state.scenarioParametersOpen);
+  const scenario = useVorPmdtStore((state) => state.scenario);
+  const setScenarioParametersOpen = useVorPmdtStore((state) => state.setScenarioParametersOpen);
+  const setScenarioAuthoringEnabled = useVorPmdtStore((state) => state.setScenarioAuthoringEnabled);
   const aboutDialogOpen = useVorPmdtStore((state) => state.aboutDialogOpen);
   const loginDialogOpen = useVorPmdtStore((state) => state.loginDialogOpen);
   const applyConfigChanges = useVorPmdtStore((state) => state.applyConfigChanges);
@@ -70,6 +78,10 @@ export function PmdtLayout({
   useEffect(() => {
     setMode(mode);
   }, [mode, setMode]);
+
+  useEffect(() => {
+    setScenarioAuthoringEnabled(scenarioAuthoringEnabled);
+  }, [scenarioAuthoringEnabled, setScenarioAuthoringEnabled]);
 
   useEffect(() => {
     function handleFunctionKey(event: KeyboardEvent) {
@@ -88,7 +100,14 @@ export function PmdtLayout({
 
   return (
     <div className="pmdt-classic-viewport">
-      <section
+      <div className="dvor1150a-simulator-frame">
+        {mode === "preview" && (scenarioAuthoringEnabled || scenario.active) ? <nav className="dvor1150a-simulator-tools" aria-label="DVOR 1150A simulator tools">
+          {scenarioAuthoringEnabled ? <button type="button" onClick={() => setScenarioParametersOpen(true)}>Scenario Parameters</button> : null}
+          {scenarioAuthoringEnabled ? <span className="dvor1150a-scenario-role-badge">EXAMINER</span> : null}
+          <Dvor1150aTrainingHud examinerView={scenarioAuthoringEnabled} />
+          {scenarioAuthoringEnabled && scenario.active ? <span className="dvor1150a-scenario-active-badge">Scenario active: {scenario.definition?.name}</span> : null}
+        </nav> : null}
+        <section
         aria-label="VOR PMDT Simulator"
         className={`pmdt-classic-window ${
           sidePanel
@@ -115,10 +134,12 @@ export function PmdtLayout({
           <PmdtStatusBar />
         </div>
         {configPanelOpen ? <DvorConfigPanel /> : null}
+        {scenarioAuthoringEnabled && scenarioParametersOpen ? <Dvor1150aScenarioParametersPanel /> : null}
         {aboutDialogOpen ? <AboutPmdtDialog /> : null}
         {loginDialogOpen ? <PmdtLoginDialog /> : null}
         {mode === "preview" && simulatorId ? <SimulatorConfigPersistence simulatorId={simulatorId} /> : null}
       </section>
+      </div>
     </div>
   );
 }

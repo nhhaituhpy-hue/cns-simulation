@@ -477,3 +477,11 @@ export function validateDvorConfigField(field: DvorConfigFieldDefinition, value:
   }
   return null;
 }
+
+/** Validates every cataloged scalar field in a complete 1150A configuration. */
+export function validateDvorConfig(config: Dvor1150aConfig): string[] {
+  return dvorConfigFieldCatalog.flatMap((field) => {
+    const error = validateDvorConfigField(field, getDvorConfigValue(config, field.id));
+    return error ? [`${field.label}: ${error}`] : [];
+  });
+}

@@ -25,6 +25,14 @@ import {
   type DvorTransmitterId,
 } from "@/lib/dvor1150a";
 import {
+  configurationForDvor1150aScenario,
+  createDefaultDvor1150aScenarioDefinition,
+  getDvor1150aScenarioProtectedFieldChanges,
+  type Dvor1150aScenarioDefinition,
+  type Dvor1150aScenarioRuntime,
+  validateDvor1150aScenarioDefinition,
+} from "@/lib/dvor1150a/scenario";
+import {
   collectChangedConfigFields,
   createParameterChangeLogEntries,
   prependParameterChangeLogEntries,
@@ -71,6 +79,8 @@ export interface VorSessionInitialization {
 export interface VorPmdtStoreState {
   mode: VorPmdtMode;
   configPanelOpen: boolean;
+  scenarioParametersOpen: boolean;
+  scenarioAuthoringEnabled: boolean;
   aboutDialogOpen: boolean;
   config: Dvor1150aConfig;
   configDraft: Dvor1150aConfig;
@@ -98,12 +108,20 @@ export interface VorPmdtStoreState {
   studentFieldStates: VorFieldOverride[];
   attemptEvents: VorAttemptEvent[];
   answer: VorStudentAnswer;
+  scenario: Dvor1150aScenarioRuntime;
+  scenarioDraft: Dvor1150aScenarioDefinition;
 }
 
 export interface VorPmdtStoreActions {
   initializeSession: (initialization: VorSessionInitialization) => void;
   setMode: (mode: VorPmdtMode) => void;
   setConfigPanelOpen: (open: boolean) => void;
+  setScenarioParametersOpen: (open: boolean) => void;
+  setScenarioAuthoringEnabled: (enabled: boolean) => void;
+  replaceScenarioDraft: (definition: Dvor1150aScenarioDefinition) => void;
+  applyScenario: () => boolean;
+  restoreScenario: () => boolean;
+  endScenario: () => boolean;
   setAboutDialogOpen: (open: boolean) => void;
   openLogin: () => void;
   login: (userId: string, password: string) => boolean;
@@ -165,6 +183,8 @@ function initialState(): VorPmdtStoreState {
   return {
     mode: "preview",
     configPanelOpen: false,
+    scenarioParametersOpen: false,
+    scenarioAuthoringEnabled: false,
     aboutDialogOpen: false,
     config,
     configDraft: cloneDvor1150aConfig(config),
@@ -199,6 +219,8 @@ function initialState(): VorPmdtStoreState {
     studentFieldStates: [],
     attemptEvents: [],
     answer: { ...emptyAnswer },
+    scenario: { active: false, definition: null, startedAt: null },
+    scenarioDraft: createDefaultDvor1150aScenarioDefinition(),
   };
 }
 
@@ -349,6 +371,33 @@ export function createVorPmdtStore(
       return [...state.attemptEvents, event];
     };
 
+    const applyScenarioBaseline = (
+      definition: Dvor1150aScenarioDefinition,
+      message: string,
+      startedAt: string | null,
+    ) => {
+      const state = get();
+      const config = configurationForDvor1150aScenario(definition, state.config);
+      const derived = buildDvor1150aSnapshot(config);
+      set({
+        config,
+        configDraft: cloneDvor1150aConfig(config),
+        configurationBackup: cloneDvor1150aConfig(config),
+        configDirty: false,
+        needBackup: false,
+        data: derived.data,
+        derived,
+        scenario: {
+          active: true,
+          definition: structuredClone(definition),
+          startedAt: startedAt ?? now().toISOString(),
+        },
+        scenarioDraft: structuredClone(definition),
+        lastCommand: message,
+      });
+      return true;
+    };
+
     return {
       ...initialState(),
 
@@ -377,7 +426,89 @@ export function createVorPmdtStore(
 
       setMode: (mode) => set({ mode }),
 
-      setConfigPanelOpen: (open) => set({ configPanelOpen: open }),
+      setConfigPanelOpen: (open) => set((state) => ({
+        configPanelOpen: open,
+        scenarioParametersOpen: open ? false : state.scenarioParametersOpen,
+      })),
+
+      setScenarioParametersOpen: (open) => set((state) => ({
+        scenarioParametersOpen: open && state.scenarioAuthoringEnabled,
+        configPanelOpen: open ? false : state.configPanelOpen,
+        lastCommand: open && !state.scenarioAuthoringEnabled
+          ? "Scenario Parameters are restricted to Examiner accounts."
+          : state.lastCommand,
+      })),
+
+      setScenarioAuthoringEnabled: (enabled) => set((state) => ({
+        scenarioAuthoringEnabled: enabled,
+        scenarioParametersOpen: enabled ? state.scenarioParametersOpen : false,
+      })),
+
+      replaceScenarioDraft: (definition) => {
+        if (!get().scenarioAuthoringEnabled) {
+          set({ lastCommand: "Scenario editing is restricted to Examiner accounts." });
+          return;
+        }
+        set({ scenarioDraft: structuredClone(definition) });
+      },
+
+      applyScenario: () => {
+        const state = get();
+        if (!state.scenarioAuthoringEnabled) {
+          set({ lastCommand: "Scenario apply is restricted to Examiner accounts." });
+          return false;
+        }
+        const issues = validateDvor1150aScenarioDefinition(state.scenarioDraft);
+        if (issues.length > 0) {
+          set({ lastCommand: `Scenario apply failed: ${issues[0]}` });
+          return false;
+        }
+        return applyScenarioBaseline(
+          state.scenarioDraft,
+          `Scenario applied: ${state.scenarioDraft.name}`,
+          null,
+        );
+      },
+
+      restoreScenario: () => {
+        const state = get();
+        if (!state.scenario.active || !state.scenario.definition) return false;
+        return applyScenarioBaseline(
+          state.scenario.definition,
+          `Scenario restored: ${state.scenario.definition.name}`,
+          state.scenario.startedAt,
+        );
+      },
+
+      endScenario: () => {
+        const state = get();
+        if (!state.scenarioAuthoringEnabled || !state.scenario.active) {
+          if (!state.scenarioAuthoringEnabled) {
+            set({ lastCommand: "Scenario end is restricted to Examiner accounts." });
+          }
+          return false;
+        }
+        const config = createDefaultDvor1150aConfig();
+        config.simulation = {
+          ...state.config.simulation,
+          local: false,
+          integralMonitorBypass: false,
+        };
+        const derived = buildDvor1150aSnapshot(config);
+        set({
+          config,
+          configDraft: cloneDvor1150aConfig(config),
+          configurationBackup: cloneDvor1150aConfig(config),
+          configDirty: false,
+          needBackup: false,
+          data: derived.data,
+          derived,
+          scenario: { active: false, definition: null, startedAt: null },
+          scenarioDraft: createDefaultDvor1150aScenarioDefinition(),
+          lastCommand: "Scenario ended; Đài TEST/TST defaults restored",
+        });
+        return true;
+      },
 
       setAboutDialogOpen: (open) => set({ aboutDialogOpen: open }),
 
@@ -482,6 +613,13 @@ export function createVorPmdtStore(
         }
 
         if (!state.config.simulation.local) return;
+        if (
+          state.scenario.active
+          && !state.scenario.definition?.studentEditableFieldIds.includes(fieldId)
+        ) {
+          set({ lastCommand: "Scenario control locked: examiner recovery controls only" });
+          return;
+        }
         const result = applyDvorConfigPatches(state.configDraft, [{ fieldId, value }]);
         if (!result.ok) return;
         set({
@@ -501,6 +639,16 @@ export function createVorPmdtStore(
         }
         const result = applyDvorConfigPatches(state.configDraft);
         if (!result.ok) return false;
+        if (state.scenario.active && state.scenario.definition) {
+          const protectedChanges = getDvor1150aScenarioProtectedFieldChanges(
+            state.scenario.definition,
+            result.config,
+          );
+          if (protectedChanges.length > 0) {
+            set({ lastCommand: `Apply blocked: ${protectedChanges[0].label} is protected by the scenario.` });
+            return false;
+          }
+        }
         const automaticTransfer = result.config.simulation.integralMonitorBypass
           ? null
           : applyAutomaticMonitorTransfer(result.config, state.derived.mainTransmitter);
@@ -511,7 +659,8 @@ export function createVorPmdtStore(
           config: nextConfig,
           configDraft: cloneDvor1150aConfig(nextConfig),
           configDirty: false,
-          needBackup: true,
+          // A scenario is session-only and must never create a profile backup.
+          needBackup: state.scenario.active ? false : true,
           data: nextSnapshot.data,
           derived: nextSnapshot,
           lastCommand: automaticTransfer?.action === "transfer" && automaticTransfer.target
@@ -530,6 +679,7 @@ export function createVorPmdtStore(
 
       resetConfigDraft: () => {
         const state = get();
+        if (state.scenario.active) return get().restoreScenario();
         if (
           state.securityLevel < 3
           || !state.config.simulation.local
@@ -547,6 +697,7 @@ export function createVorPmdtStore(
 
       restoreDefaultConfig: () => {
         const state = get();
+        if (state.scenario.active) return get().restoreScenario();
         if (
           state.securityLevel < 3
           || !state.config.simulation.local
@@ -574,7 +725,7 @@ export function createVorPmdtStore(
 
       backupConfig: () => {
         const state = get();
-        if (state.securityLevel < 3 || !state.needBackup) return false;
+        if (state.securityLevel < 3 || !state.needBackup || state.scenario.active) return false;
         const changedFields = collectChangedConfigFields(
           extractDvor1150aConfig(state.configurationBackup),
           extractDvor1150aConfig(state.config),
@@ -596,6 +747,9 @@ export function createVorPmdtStore(
       },
 
       replaceConfig: (config, backupConfig = config, parameterChangeLogs) => {
+        // A delayed user-profile hydration must never overwrite a loaded
+        // examiner scenario or a student's recovery attempt.
+        if (get().scenario.active) return;
         const nextConfig = cloneDvor1150aConfig(config);
         const nextBackupConfig = cloneDvor1150aConfig(backupConfig);
         const derived = buildDvor1150aSnapshot(nextConfig);
