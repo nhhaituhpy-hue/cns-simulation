@@ -10,6 +10,7 @@ import type {
   DmeDigitalOutput,
   DmeDualIndicatorRow,
   DmeSecurityAccount,
+  Dme1119aSimulationFaults,
 } from "./dme-types";
 
 /** Default accounts documented for a fresh 1118A/1119A RMS installation. */
@@ -19,6 +20,34 @@ export const defaultDmeSecurityAccounts: DmeSecurityAccount[] = [
   { userId: "SEC3", password: "THREE", securityLevel: 3 },
   { userId: "SEC4", password: "FOUR", securityLevel: 4 },
 ];
+
+export function createDefaultDme1119aSimulationFaults(): Dme1119aSimulationFaults {
+  return {
+    transmitters: {
+      tx1: {
+        powerLossDb: 0,
+        replyDelayDriftUs: 0,
+        pulseSpacingDriftUs: 0,
+        frequencyErrorPpm: 0,
+        hpaFault: false,
+        rtcCommFault: false,
+        antennaVswr: null,
+      },
+      tx2: {
+        powerLossDb: 0,
+        replyDelayDriftUs: 0,
+        pulseSpacingDriftUs: 0,
+        frequencyErrorPpm: 0,
+        hpaFault: false,
+        rtcCommFault: false,
+        antennaVswr: null,
+      },
+    },
+    identSignal: "normal",
+    temperature: {},
+    acPowerFailed: false,
+  };
+}
 
 const alarmTrendRecords = [
   ["07/29/26 00:18:35", "Monitor 1"], ["07/28/26 23:21:39", "Monitor 2"],
@@ -185,6 +214,7 @@ export const defaultDmePmdtData: DmePmdtData = {
   connected: true,
   alert: false,
   manualAlertOverride: false,
+  simulationFaults: createDefaultDme1119aSimulationFaults(),
   local: false,
   timestamp: "08/09/26 09:10:05",
   transmitters: {

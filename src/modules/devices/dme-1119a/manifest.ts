@@ -8,11 +8,11 @@ export const DME_1119A_MODULE = {
   shortName: "DME 1119A",
   description: "Mô phỏng thiết bị và giao diện PMDT của hệ thống DME 1119A.",
   routes: {
-    admin: "/admin/dme",
-    student: "/student/dme",
+    admin: "/simulator/dme-1119a",
+    student: "/simulator/dme-1119a",
     simulator: "/simulator/dme-1119a",
-    authoring: "/admin/dme",
-    review: "/student/dme",
+    authoring: "/simulator/dme-1119a",
+    review: "/admin/dme/submissions",
   },
   legacyId: "dme",
 } as const satisfies SimulatorModuleDefinition<"dme-1119a">;

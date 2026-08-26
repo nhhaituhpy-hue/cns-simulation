@@ -10,6 +10,8 @@ import { PmdtSidebar } from "./pmdt-sidebar";
 import { PmdtStatusBar } from "./pmdt-status-bar";
 import { PmdtTitleBar } from "./pmdt-title-bar";
 import { DmeConfigPanel } from "./dme-config-panel";
+import { Dme1119aScenarioParametersPanel } from "./dme-scenario-parameters";
+import { Dme1119aTrainingHud } from "./dme1119a-training-hud";
 import { AboutPmdtDialog } from "./about-pmdt-dialog";
 import { DmePmdtLoginDialog } from "./pmdt-login-dialog";
 import { DmePmdtPasswordDialog } from "./pmdt-password-dialog";
@@ -34,6 +36,7 @@ import { TxDataLayout } from "./screens/tx-data-layout";
 export interface PmdtLayoutProps {
   mode?: DmePmdtMode;
   simulatorId?: Extract<SupportedSimulatorConfigId, "dme-1119a">;
+  scenarioAuthoringEnabled?: boolean;
   children?: ReactNode;
   sidePanel?: ReactNode;
 }
@@ -67,11 +70,17 @@ function PmdtScreenRouter() {
 export function PmdtLayout({
   mode = "preview",
   simulatorId,
+  scenarioAuthoringEnabled = false,
   children,
   sidePanel,
 }: PmdtLayoutProps) {
   const setMode = useDmePmdtStore((state) => state.setMode);
   const configPanelOpen = useDmePmdtStore((state) => state.configPanelOpen);
+  const scenarioParametersOpen = useDmePmdtStore((state) => state.scenarioParametersOpen);
+  const scenario = useDmePmdtStore((state) => state.scenario);
+  const setScenarioParametersOpen = useDmePmdtStore((state) => state.setScenarioParametersOpen);
+  const setScenarioAuthoringEnabled = useDmePmdtStore((state) => state.setScenarioAuthoringEnabled);
+  const setConfigPanelOpen = useDmePmdtStore((state) => state.setConfigPanelOpen);
   const aboutDialogOpen = useDmePmdtStore((state) => state.aboutDialogOpen);
   const loginDialogOpen = useDmePmdtStore((state) => state.loginDialogOpen);
   const passwordDialogOpen = useDmePmdtStore((state) => state.passwordDialogOpen);
@@ -86,6 +95,10 @@ export function PmdtLayout({
   useEffect(() => {
     setMode(mode);
   }, [mode, setMode]);
+
+  useEffect(() => {
+    setScenarioAuthoringEnabled(scenarioAuthoringEnabled);
+  }, [scenarioAuthoringEnabled, setScenarioAuthoringEnabled]);
 
   useEffect(() => {
     refreshClock();
@@ -127,7 +140,14 @@ export function PmdtLayout({
 
   return (
     <div className="pmdt-classic-viewport dme-pmdt-viewport">
-      <section
+      <div className="dme1119a-simulator-frame">
+        {mode === "preview" && (scenarioAuthoringEnabled || scenario.active) ? <nav className="dme1119a-simulator-tools" aria-label="DME 1119A simulator tools">
+          {scenarioAuthoringEnabled ? <button type="button" onClick={() => { setConfigPanelOpen(false); setScenarioParametersOpen(true); }}>Scenario Parameters</button> : null}
+          {scenarioAuthoringEnabled ? <span className="dme1119a-scenario-role-badge">EXAMINER</span> : null}
+          <Dme1119aTrainingHud examinerView={scenarioAuthoringEnabled} />
+          {scenarioAuthoringEnabled && scenario.active ? <span className="dme1119a-scenario-active-badge">Scenario active: {scenario.definition?.name}</span> : null}
+        </nav> : null}
+        <section
         aria-label="DME PMDT Simulator"
         className={`pmdt-classic-window dme-pmdt-window ${
           sidePanel
@@ -154,11 +174,13 @@ export function PmdtLayout({
           <PmdtStatusBar />
         </div>
         {configPanelOpen ? <DmeConfigPanel /> : null}
+        {scenarioAuthoringEnabled && scenarioParametersOpen ? <Dme1119aScenarioParametersPanel /> : null}
         {aboutDialogOpen ? <AboutPmdtDialog /> : null}
         {passwordDialogOpen ? <DmePmdtPasswordDialog /> : null}
         {loginDialogOpen ? <DmePmdtLoginDialog /> : null}
         {mode === "preview" && simulatorId ? <SimulatorConfigPersistence simulatorId={simulatorId} /> : null}
-      </section>
+        </section>
+      </div>
     </div>
   );
 }

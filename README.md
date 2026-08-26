@@ -55,7 +55,44 @@ Engine DME nằm riêng trong `src/lib/dme1119a/` và được gọi bởi store
 - LDES manual formulas được export (`SRE×12.36+10`, `−0.385×FUD−20`). Bản PMDT này không có input SRE/FUD, nên Window/Threshold do operator cấu hình là assumption huấn luyện được ghi rõ trong `DME_LDES_TRAINING_MODEL`; không giả lập giá trị site ngẫu nhiên.
 - Apply (F7) recompute toàn bộ derived data, có thể thực hiện transfer dual hot-standby theo alarm và đặt **Need Backup**; RMS → Config Backup xóa Need Backup; Restore/Reset xóa trạng thái này. Transfer TX1↔TX2 yêu cầu SEC2+ nhưng không yêu cầu Local/Bypass, còn chỉnh cấu hình vẫn yêu cầu Local + SEC3/4.
 
-Quality gate DME hiện tại: `tests/dme/dme1119a-derivation.test.ts`, `tests/dme/dme1119a-channel.test.ts`, `tests/dme/pmdt-shell.test.tsx` và `tests/state/dme-pmdt-store.test.ts` đạt **56/56 test**; `npm run typecheck` và `npm run build` đã pass. Đây là mô hình đào tạo xác định, không thay thế phép đo RF/hiệu chuẩn phần cứng thật.
+Quality gate DME hiện tại: nhóm regression lõi và Scenario Parameters đạt **106/106 test** trong focused suite; bộ regression mở rộng DME/layout đạt **134/134 test**; `npm run typecheck` và `npm run build` đã pass. Đây là mô hình đào tạo xác định, không thay thế phép đo RF/hiệu chuẩn phần cứng thật.
+
+#### DME 1119A — Scenario Parameters độc lập
+
+Scenario Parameters chạy tại `/simulator/dme-1119a` trên cùng cửa sổ PMDT, dùng baseline Đài TEST/TST và không thay thế dữ liệu author/exam legacy.
+
+- **Giám khảo (application role admin):** mở `Scenario Parameters`, chọn preset hoặc chỉnh draft, xem Preview, thiết lập `Starting policy`, fault injection, success criteria và whitelist trường học viên; có thể `Export JSON`/`Import JSON`.
+- **Apply:** dựng runtime mới từ TST → áp fault vật lý → áp Local/Bypass/route/Ident → tính lại Config → Monitor → Alarm. Trạng thái hiển thị trên HUD là `IN PROGRESS` hoặc `SOLVED`.
+- **Học viên:** chỉ thao tác các trường được whitelist; các trường alarm limit, voting, transfer, calibration và security bị khóa. Các lệnh PMDT vận hành (F7, F8/Reset, Bypass, Changeover, RMS Fan) vẫn đi qua security/local hiện hành.
+- **Restore Scenario:** dựng lại lỗi ban đầu từ JSON, bỏ mọi chỉnh sửa học viên. **End / Restore TST:** hủy runtime, trả về baseline TST và không ghi lên profile persistent.
+- `simulationFaults` (suy hao công suất, lệch delay/spacing/frequency, HPA/RTC, VSWR anten, Ident, nhiệt độ, AC) chỉ là dữ liệu session; `extractDme1119aConfig()` không serialize chúng. Persistence cũng bỏ qua hydrate/persist khi Scenario đang active hoặc vừa kết thúc.
+
+Preset chuẩn gồm: `tx1-low-output`, `tx1-delay-drift`, `rtc-prf-overload`, `tx1-hpa-changeover`, `ident-keying-loss`, `tx1-high-vswr`, `monitor-calibration-error` và `cabinet-overtemperature`. Mỗi preset có preview deterministic, tiêu chí xử lý và automated solve path; alarm limit không được dùng làm cách “chữa” fault vật lý.
+
+JSON Scenario dùng `schemaVersion: 1`. Một file tối thiểu có dạng (khung minh họa; khi Import phải thay placeholder bằng object cấu hình TST đầy đủ được tạo bằng `Export JSON`):
+
+```json
+{
+  "schemaVersion": 1,
+  "id": "tx1-low-output",
+  "name": "TX1 Low Output Power",
+  "description": "Restore output and release monitor bypass.",
+  "difficulty": "basic",
+  "configuration": "<Dme1119aPersistedConfig from TST>",
+  "faultInjections": [],
+  "startPolicy": {
+    "mainTransmitterId": "tx1",
+    "startLocal": true,
+    "integralMonitorBypassed": true,
+    "standbyMonitorBypassed": true,
+    "identMode": "normal"
+  },
+  "successCriteria": [],
+  "studentEditableFieldIds": ["txConfigNominal.rtcParameters.powerOutput"]
+}
+```
+
+Parser fail-closed với schema/version, reference, duplicate ID và miền giá trị; fault Temperature chỉ chấp nhận sáu sensor RMS thực tế. Ma trận chi tiết Config → Monitor → Alarm → recovery nằm trong [`doc/DME1119A/dme1119a_parameter_correlation.md`](doc/DME1119A/dme1119a_parameter_correlation.md).
 
 ### MOPIENS 220 DVOR và 320 DME
 
@@ -615,6 +652,7 @@ Khi kế hoạch nội bộ và manual nhà sản xuất khác nhau, manual là 
 - Mở rộng kiểm thử E2E, accessibility, hiệu năng và quan sát lỗi production.
 
 ## Session Log
+- [2026-08-26] Hoàn thiện **DME 1119A Standalone Scenario Parameters** tại `/simulator/dme-1119a`: tám preset deterministic, Import/Export JSON schema v1, Preview, fault-to-monitor derivation, success criteria, student whitelist, Training HUD, Restore Scenario và End/Restore TST. Scenario dùng baseline TST, chỉ tồn tại trong phiên và chặn mọi ghi profile/history; các entry point `/admin/dme`, `/admin/dme/create`, `/admin/dme/edit`, `/student/dme` và `/student/dme/session` chuyển hướng về simulator độc lập nhưng dữ liệu legacy vẫn giữ nguyên. Browser smoke đã kiểm tra Low Output/HPA/Overtemperature; focused DME suite **106/106**, regression mở rộng **134/134**, typecheck, targeted ESLint và production build đều đạt.
 - [2026-08-26] Tạo **DVOR1150A_Scenario_Manual.pdf** tại `public/manuals/`: tài liệu 14 trang A4 hướng dẫn Giám khảo/Học viên tạo scenario từ Đài TEST/TST, bốn preset tích hợp, ma trận Config -> Monitor -> recovery, whitelist tham số học viên, Import/Export JSON schema v1, quy trình Alarm -> F7/nhả Bypass -> `SOLVED`, Restore/F8/End Scenario và checklist xử lý lỗi. Tài liệu sử dụng 9 ảnh chụp trực tiếp từ DVOR 1150A Simulator bằng trình duyệt; toàn bộ 14 trang đã được render bằng Poppler, kiểm tra font tiếng Việt, bố cục, bảng và ảnh trước khi bàn giao.
 - [2026-08-26] Bổ sung bộ **Scenario Parameters** độc lập cho DVOR 1150A tại `/simulator/dvor-1150a`, thay cho việc phụ thuộc luồng VOR author/exam cũ: Giám khảo `admin` có thể tạo/chỉnh baseline toàn bộ cấu hình TST, policy TX/Local/Monitor Bypass, tiêu chí đạt và whitelist recovery control; hỗ trợ Import/Export JSON schema v1, Preview, Training HUD `IN PROGRESS`/`SOLVED`, Restore Scenario và End / Restore TST. Thêm bốn preset nghiệp vụ: suy giảm Carrier + 9960 Hz, suy giảm điều chế 30 Hz, Sideband VSWR Alarm và Carrier VSWR TX1 yêu cầu chuyển TX2. Scenario được cô lập theo phiên, không ghi vào profile lưu; học viên chỉ sửa được control được Giám khảo cho phép, còn monitor limits/calibration/raw values được khóa cả khi stage/Apply và khi đánh giá. Sửa lỗi Turbopack do thiếu export `validateDvorConfig`, lỗi ô số giữ giá trị preset trước và tăng độ tin cậy của nút tải JSON. UAT sau restart bằng tài khoản Giám khảo và PMDT Level 3 đã đạt toàn bộ chu trình JSON Export/Import, Apply → Alarm → khắc phục → F7/nhả Bypass → `SOLVED`, F8/Restore trả baseline và End trả Đài TEST/TST; console không có warning/error. Focused tests đạt **27/27**, `npm run typecheck` và production build Next.js 16.2.11 thành công với 68 route.
 - [2026-08-26] Căn đồng nhất thanh công cụ Scenario nền tối phía trên Simulator DVOR 1150 với khung PMDT tham chiếu bên dưới: đồng bộ chiều rộng frame từ 900 px về 850 px, gồm cả breakpoint màn hình hẹp. Không thay đổi kích thước hoặc hành vi của PMDT.

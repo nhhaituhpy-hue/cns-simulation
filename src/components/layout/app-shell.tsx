@@ -67,6 +67,9 @@ function trainingNavigationItems(mode: "authoring" | "review"): NavigationItem[]
     ...(mode === "authoring" && module.id === "ads-b"
       ? { activePrefixes: ["/admin/create", "/admin/edit"] }
       : {}),
+    ...(mode === "authoring" && module.id === "dme-1119a"
+      ? { activePrefixes: ["/admin/dme"] }
+      : {}),
     ...(mode === "review" && module.id === "ads-b"
       ? { activePrefixes: ["/student/simulation"] }
       : {}),

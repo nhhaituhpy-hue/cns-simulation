@@ -148,6 +148,18 @@ function transmitterOffset(data: DmePmdtData, parameter: string, transmitterId: 
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
+function simulationFaultFor(data: DmePmdtData, transmitterId: TransmitterId) {
+  return data.simulationFaults?.transmitters?.[transmitterId] ?? {
+    powerLossDb: 0,
+    replyDelayDriftUs: 0,
+    pulseSpacingDriftUs: 0,
+    frequencyErrorPpm: 0,
+    hpaFault: false,
+    rtcCommFault: false,
+    antennaVswr: null,
+  };
+}
+
 function baseRow(kind: MeasurementKind, label: string): DmeDualValueRow | undefined {
   const rows = kind === "integral" ? defaultDmePmdtData.integralData : defaultDmePmdtData.standbyData;
   return rows.find((row) => row.label === label);
@@ -156,16 +168,6 @@ function baseRow(kind: MeasurementKind, label: string): DmeDualValueRow | undefi
 function baseValue(kind: MeasurementKind, label: string, monitorNumber: 1 | 2): number | null {
   const row = baseRow(kind, label);
   return numeric(monitorNumber === 1 ? row?.mon1Value : row?.mon2Value);
-}
-
-function referenceValueError(
-  kind: MeasurementKind,
-  label: string,
-  monitorNumber: 1 | 2,
-  allocationValue: number,
-): number {
-  const value = baseValue(kind, label, monitorNumber);
-  return value === null ? 0 : value - allocationValue;
 }
 
 function getAlarmLimit(data: DmePmdtData, label: string): DmeAlarmLimitRow | undefined {
@@ -216,10 +218,14 @@ function returnLossToVswr(returnLoss: number): number {
  * changing one transmitter's scale must never attenuate the other RTC.
  */
 function amplifierFactor(data: DmePmdtData, transmitterId: TransmitterId): number {
-  if (data.rmsConfigStation.powerLevel === "Low Power") return 1;
-  return transmitterId === "tx1"
+  const enabled = data.rmsConfigStation.powerLevel === "Low Power"
+    ? 1
+    : transmitterId === "tx1"
     ? Number(data.txConfigNominal.powerAmplifiers.hpa1Enabled)
     : Number(data.txConfigNominal.powerAmplifiers.hpa2Enabled);
+  const fault = simulationFaultFor(data, transmitterId);
+  const lossFactor = Math.pow(10, -Math.max(0, fault.powerLossDb) / 10);
+  return enabled * (fault.hpaFault ? 0 : lossFactor);
 }
 
 function powerRatio(data: DmePmdtData): number {
@@ -327,6 +333,13 @@ function identStatusColor(data: DmePmdtData, kind: MeasurementKind, transmitterI
   const code = identCodeFor(data, kind, transmitterId);
   if (!code) return "red";
   if (data.identMode !== "normal") return "yellow";
+  const identSignal = data.simulationFaults?.identSignal ?? "normal";
+  if (identSignal === "missing") {
+    const ident = data.txConfigNominal.ident;
+    if (ident.keyerSource === "External Keying" && ident.selfKeyOnLoss) return "green";
+    return "red";
+  }
+  if (identSignal === "continuous") return "yellow";
   // The PMDT model has no external key-contact input.  Treat an external
   // keyer without self-key-on-loss as a visible warning, and a configured
   // shutdown-on-loss as an alarm; enabling self-key-on-loss keeps the
@@ -346,6 +359,7 @@ function numericValueForRow(
 ): number | null {
   const label = row.label;
   const transmitterId = transmitterForMonitor(data, kind);
+  const fault = simulationFaultFor(data, transmitterId);
   const base = baseValue(kind, label, monitorNumber);
   const parameter = data.txConfigNominal.rtcParameters;
 
@@ -358,6 +372,7 @@ function numericValueForRow(
       + timingDelta
       + parameter.replyDelayOffset
       + transmitterOffset(data, "Base Offset", transmitterId)
+      + fault.replyDelayDriftUs
       + monitorOffset(data, monitorNumber, "Delay Offset", kind),
     );
   }
@@ -368,6 +383,7 @@ function numericValueForRow(
     return round(
       (base ?? allocation.transmitterReplyPulseSpacingUs)
       + channelDelta
+      + fault.pulseSpacingDriftUs
       + monitorOffset(data, monitorNumber, "Spacing Offset", kind),
     );
   }
@@ -388,6 +404,7 @@ function numericValueForRow(
     return round(
       (base ?? 0)
       + powerTargetDeltaDb(data, transmitterId)
+      - Math.max(0, fault.powerLossDb)
       + attenuationDelta
       + couplerLossDelta
       + monitorOffset(data, monitorNumber, "ERP Offset", kind)
@@ -408,7 +425,7 @@ function numericValueForRow(
   if (label === "Tx Frequency") {
     const replyFrequency = allocation.transmitterReplyFrequencyMHz;
     const ppmOffset = monitorOffsetDelta(data, monitorNumber, "Tx Frequency Offset", kind);
-    return round(replyFrequency + (replyFrequency * ppmOffset) / 1_000_000, 3);
+    return round(replyFrequency + (replyFrequency * (ppmOffset + fault.frequencyErrorPpm)) / 1_000_000, 3);
   }
 
   if (label === "Rx LO Frequency") {
@@ -422,7 +439,7 @@ function numericValueForRow(
   }
 
   if (label === "Tx Frequency Error") {
-    return round((base ?? 0) + monitorOffset(data, monitorNumber, "Tx Frequency Offset", kind), 0);
+    return round((base ?? 0) + monitorOffset(data, monitorNumber, "Tx Frequency Offset", kind) + fault.frequencyErrorPpm, 0);
   }
 
   if (label === "Rx LO Frequency Error") {
@@ -433,6 +450,7 @@ function numericValueForRow(
   }
 
   if (label === "VSWR") {
+    if (fault.antennaVswr !== null) return round(Math.max(1, fault.antennaVswr), 2);
     const referenceReturnLoss = vswrToReturnLoss(referenceVswr);
     const referenceOffset = numeric(monitorOffsetsFor(defaultDmePmdtData, monitorNumber)
       .find((item) => item.parameter === "Return Loss Offset")?.[kind]) ?? 0;
@@ -570,6 +588,8 @@ function deriveDelayControl(data: DmePmdtData): DmePmdtData["delayControl"] {
   const referenceParameters = defaultDmePmdtData.txConfigNominal.rtcParameters;
   const tx1Bias = defaultDmePmdtData.delayControl.rtc1.propagationDelay - referenceParameters.nominalPropagationDelay;
   const tx2Bias = defaultDmePmdtData.delayControl.rtc2.propagationDelay - referenceParameters.nominalPropagationDelay;
+  const tx1Fault = simulationFaultFor(data, "tx1");
+  const tx2Fault = simulationFaultFor(data, "tx2");
   const tx1Center = parameters.nominalPropagationDelay + transmitterOffset(data, "Base Offset", "tx1");
   const tx2Center = parameters.nominalPropagationDelay
     + parameters.standbyPropagationOffset
@@ -577,13 +597,13 @@ function deriveDelayControl(data: DmePmdtData): DmePmdtData["delayControl"] {
   return {
     rtc1: {
       low: round(tx1Center - parameters.maxPropagationVariance, 2),
-      propagationDelay: round(tx1Center + tx1Bias, 2),
+      propagationDelay: round(tx1Center + tx1Bias + tx1Fault.replyDelayDriftUs, 2),
       high: round(tx1Center + parameters.maxPropagationVariance, 2),
       fixed: data.delayControl.rtc1.fixed,
     },
     rtc2: {
       low: round(tx2Center - parameters.maxPropagationVariance, 2),
-      propagationDelay: round(tx2Center + tx2Bias, 2),
+      propagationDelay: round(tx2Center + tx2Bias + tx2Fault.replyDelayDriftUs, 2),
       high: round(tx2Center + parameters.maxPropagationVariance, 2),
       fixed: data.delayControl.rtc2.fixed,
     },
@@ -648,8 +668,6 @@ function derivePaStatus(data: DmePmdtData): DmePmdtData["paStatus"] {
     const tx: TransmitterId = amplifierNumber === 1 ? "tx1" : "tx2";
     const available = transmitterAvailable(data, tx);
     const enabled = isHpa ? (amplifierNumber === 1 ? parameters.hpa1Enabled : parameters.hpa2Enabled) : true;
-    const target = targetPowerWatts(data, tx, 1);
-    const actual = target * amplifierFactor(data, tx);
     const lowPower = paOutputBelowAlertLimit(data, tx);
     const notApplicable = isHpa && data.rmsConfigStation.powerLevel === "Low Power";
     const stateColor: DmeIndicatorColor = !available || notApplicable ? "gray" : !enabled || lowPower ? "red" : "green";
@@ -799,9 +817,56 @@ function deriveDigitalIo(data: DmePmdtData): DmePmdtData["digitalInputs"] {
   });
 }
 
+function applyScenarioFacilityFaults(data: DmePmdtData): void {
+  const faults = data.simulationFaults;
+  if (!faults) return;
+
+  for (const row of data.rmsTemperatureData) {
+    const injected = faults.temperature[row.parameter];
+    if (typeof injected === "number" && Number.isFinite(injected)) {
+      row.value = injected;
+    } else {
+      const baseline = defaultDmePmdtData.rmsTemperatureData.find((candidate) => candidate.parameter === row.parameter);
+      if (baseline) row.value = baseline.value;
+    }
+  }
+
+  if (faults.acPowerFailed) {
+    data.rmsStatus.acFailure = true;
+    data.rmsStatus.onBattery = true;
+    data.rmsCurrentData = data.rmsCurrentData.map((row) => (
+      row.parameter === "AC Input" ? { ...row, amps: 0 } : row
+    ));
+    data.systemPowerStatus = data.systemPowerStatus.map((row) => {
+      if (row.name === "On Battery" || row.name === "Facilities") return { ...row, tx1: "yellow", tx2: "yellow" };
+      if (row.name === "LVPS") return { ...row, tx1: "red", tx2: "red" };
+      return row;
+    });
+  } else {
+    data.rmsStatus.acFailure = false;
+    data.rmsStatus.onBattery = false;
+    data.rmsCurrentData = data.rmsCurrentData.map((row) => {
+      const baseline = defaultDmePmdtData.rmsCurrentData.find((candidate) => candidate.parameter === row.parameter);
+      return baseline ? { ...row, amps: baseline.amps } : row;
+    });
+    data.systemPowerStatus = structuredClone(defaultDmePmdtData.systemPowerStatus);
+  }
+
+  const fan = data.rmsStatus.fanControl;
+  const fanRow = data.digitalOutputs.find((row) => row.name === "Fan Control");
+  if (fanRow) fanRow.status = fan === "On" ? "On" : fan === "Off" ? "Off" : "Automatic - Off";
+}
+
+function temperatureAlarmFor(data: DmePmdtData, transmitterId: TransmitterId): boolean {
+  const label = transmitterId === "tx1" ? "HPA #1 Temperature" : "HPA #2 Temperature";
+  const row = data.rmsTemperatureData.find((candidate) => candidate.parameter === label);
+  return Boolean(row && typeof row.high === "number" && row.value >= row.high);
+}
+
 function deriveRtcStatus(data: DmePmdtData): void {
   for (const tx of ["tx1", "tx2"] as const) {
     const available = transmitterAvailable(data, tx);
+    const fault = simulationFaultFor(data, tx);
     const state = derivePrfState(data, tx, 1);
     // An intentionally unavailable/off transmitter is represented as gray,
     // not as a false low-power measurement.  A low-power alarm applies only
@@ -818,12 +883,16 @@ function deriveRtcStatus(data: DmePmdtData): void {
     const identAlarm = data.identMode === "off"
       || (!standbyIdentDisabled && identCode.length < 2)
       || identStatusColor(data, identKind, tx) === "red";
+    data.rtcStatus.commFault[tx] = fault.rtcCommFault;
+    data.txStatus.commFault[tx] = fault.rtcCommFault;
     data.rtcStatus.overload[tx] = available && state.overload;
     // This is derived state, not a latched fault.  Recomputing a draft after
     // an operator fixes the source condition must clear the old alert.
     data.txStatus.maintenanceAlert[tx] = Boolean(
       powerAlarm
       || scaleAlarm
+      || fault.rtcCommFault
+      || temperatureAlarmFor(data, tx)
       || identAlarm
       || data.delayControl[tx === "tx1" ? "rtc1" : "rtc2"].fixed,
     );
@@ -832,6 +901,8 @@ function deriveRtcStatus(data: DmePmdtData): void {
     if (overloadRow) overloadRow[tx] = state.overload ? "yellow" : available ? "green" : "gray";
     const enabledRow = data.rtcMaintenanceAlerts.find((row) => row.label === "Tx Enabled");
     if (enabledRow) enabledRow[tx] = available ? "green" : "red";
+    const commRow = data.rtcMaintenanceAlerts.find((row) => row.label === "Monitor Comm Fault");
+    if (commRow) commRow[tx] = fault.rtcCommFault ? "red" : available ? "green" : "gray";
     const vswrRow = data.rtcMaintenanceAlerts.find((row) => row.label === "Monitor VSWR Fault");
     if (vswrRow) {
       const vswr = numeric((data.integralData.find((row) => row.label === "VSWR")?.[tx === "tx1" ? "mon1Value" : "mon2Value"])) ?? 1;
@@ -902,6 +973,7 @@ export function recomputeDmeDerivedData(source: DmePmdtData): DmePmdtData {
   data.decoderResults = deriveDecoderResults(data, allocation);
   data.delayControl = deriveDelayControl(data);
   data.trafficLoad = deriveTrafficLoad(data);
+  applyScenarioFacilityFaults(data);
   data.paStatus = derivePaStatus(data);
   data.monitorCalibrationData = deriveCalibrationData(data, allocation);
   data.monitors = deriveMonitorStates(data, data.integralData, data.standbyData);
@@ -921,6 +993,8 @@ export function recomputeDmeDerivedData(source: DmePmdtData): DmePmdtData {
   data.alert = Boolean(data.manualAlertOverride || rowAlert || monitorAlarm || data.txStatus.maintenanceAlert.tx1 || data.txStatus.maintenanceAlert.tx2);
   data.rmsStatus.maintenanceAlert = Boolean(
     data.local
+    || data.rmsStatus.acFailure
+    || data.rmsTemperatureData.some((row) => typeof row.high === "number" && row.value >= row.high)
     || data.txStatus.maintenanceAlert.tx1
     || data.txStatus.maintenanceAlert.tx2
     || rowAlert,

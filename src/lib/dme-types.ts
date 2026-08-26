@@ -35,6 +35,26 @@ export type DmeMonitorTriggerSource =
 export type DmeEditableValue = string | number | boolean | null;
 export type DmeSubmissionStatus = "draft" | "submitted" | "reviewed";
 
+/**
+ * Session-only physical stimuli used by examiner-controlled scenarios.
+ * These values are deliberately separate from the persisted PMDT
+ * configuration so an injected fault cannot leak into the operator profile.
+ */
+export interface Dme1119aSimulationFaults {
+  transmitters: Record<DmeTransmitterId, {
+    powerLossDb: number;
+    replyDelayDriftUs: number;
+    pulseSpacingDriftUs: number;
+    frequencyErrorPpm: number;
+    hpaFault: boolean;
+    rtcCommFault: boolean;
+    antennaVswr: number | null;
+  }>;
+  identSignal: "normal" | "missing" | "continuous";
+  temperature: Record<string, number | null>;
+  acPowerFailed: boolean;
+}
+
 export type DmeScreenId =
   | "home"
   | "rms-status"
@@ -402,6 +422,8 @@ export interface DmePmdtData {
   alert: boolean;
   /** Explicit simulator alert override; derived monitor alarms remain separate. */
   manualAlertOverride: boolean;
+  /** Session-only examiner stimuli; never extracted into simulator-config. */
+  simulationFaults: Dme1119aSimulationFaults;
   local: boolean;
   timestamp: string;
   transmitters: { tx1: DmeTransmitterSidebarState; tx2: DmeTransmitterSidebarState };

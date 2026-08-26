@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
+  canEditDmeScenarioField,
   dmeParameterFieldCatalog,
   getDmeParameterValue,
   parseDmeParameterInput,
@@ -48,6 +49,7 @@ export function DmeConfigControl({
   const securityLevel = useDmePmdtStore((state) => state.securityLevel);
   const local = useDmePmdtStore((state) => state.data.local);
   const loginDialogOpen = useDmePmdtStore((state) => state.loginDialogOpen);
+  const scenario = useDmePmdtStore((state) => state.scenario);
   const setParameterValue = useDmePmdtStore((state) => state.setParameterValue);
   const field = dmeParameterFieldCatalog.find((item) => item.id === fieldId);
   const value = getDmeParameterValue(configDraft, fieldId);
@@ -55,14 +57,21 @@ export function DmeConfigControl({
   const [draftValue, setDraftValue] = useState(formatValue(value, digits ?? field?.precision));
   const [isEditing, setIsEditing] = useState(false);
   const canEdit = !disabled
-    && securityLevel >= 3
-    && !loginDialogOpen
-    && local
     && Boolean(field)
-    && !field?.readOnly;
+    && canEditDmeScenarioField({
+      active: scenario.active,
+      editableFieldIds: scenario.definition?.studentEditableFieldIds ?? [],
+      fieldId,
+      readOnly: field?.readOnly,
+      securityLevel,
+      local,
+      loginDialogOpen,
+    });
   const valueClassName = `dme-pmdt-value dme-pmdt-value--gray ${className}`.trim();
 
   useEffect(() => {
+    // Keep the editable text buffer in sync with an external Apply/Restore.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!isEditing) setDraftValue(formatValue(value, digits ?? field?.precision));
   }, [value, digits, field?.precision, isEditing]);
 
@@ -82,6 +91,7 @@ export function DmeConfigControl({
     "data-dme-config-field-id": fieldId,
     "data-dme-field-value": String(value ?? ""),
     "data-dme-field-type": controlType,
+    title: scenario.active && !canEdit ? "Scenario lock: recovery fields only" : undefined,
   };
 
   if (controlType === "boolean") {

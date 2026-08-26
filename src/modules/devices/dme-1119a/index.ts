@@ -7,6 +7,8 @@ export { DmeSubmissionReview as Dme1119aSubmissionReview } from "@/components/dm
 export { DmeStudentDashboard as Dme1119aStudentDashboard } from "@/components/dme/student/dme-student-dashboard";
 export { DmeStudentSession as Dme1119aStudentSession } from "@/components/dme/student/dme-student-session";
 export { PmdtLayout as Dme1119aPmdtLayout } from "@/components/dme/pmdt-layout";
+export { Dme1119aScenarioParametersPanel } from "@/components/dme/dme-scenario-parameters";
+export { Dme1119aTrainingHud } from "@/components/dme/dme1119a-training-hud";
 export { useDmePmdtStore as useDme1119aPmdtStore } from "@/stores/dme-pmdt-store";
 export { useDmeScenarioStore as useDme1119aScenarioStore } from "@/stores/dme-scenario-store";
 export { useDmeSubmissionStore as useDme1119aSubmissionStore } from "@/stores/dme-submission-store";

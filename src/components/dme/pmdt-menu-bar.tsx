@@ -16,6 +16,7 @@ function MenuItemRow({ group, item, closeMenu }: MenuItemRowProps) {
   const openScreen = useDmePmdtStore((state) => state.openScreen);
   const openView = useDmePmdtStore((state) => state.openView);
   const setConfigPanelOpen = useDmePmdtStore((state) => state.setConfigPanelOpen);
+  const setScenarioParametersOpen = useDmePmdtStore((state) => state.setScenarioParametersOpen);
   const setAboutDialogOpen = useDmePmdtStore((state) => state.setAboutDialogOpen);
   const setPasswordDialogOpen = useDmePmdtStore((state) => state.setPasswordDialogOpen);
   const openLogin = useDmePmdtStore((state) => state.openLogin);
@@ -32,6 +33,7 @@ function MenuItemRow({ group, item, closeMenu }: MenuItemRowProps) {
   const loginDialogOpen = useDmePmdtStore((state) => state.loginDialogOpen);
   const local = useDmePmdtStore((state) => state.data.local);
   const needBackup = useDmePmdtStore((state) => state.needBackup);
+  const scenarioActive = useDmePmdtStore((state) => state.scenario.active);
   const hasSavedConfiguration = useDmePmdtStore((state) => state.savedConfiguration !== null);
   const hasChildren = Boolean(item.children?.length);
   const isCommandModeToggle = item.action === "rms-command"
@@ -55,6 +57,7 @@ function MenuItemRow({ group, item, closeMenu }: MenuItemRowProps) {
       || (item.action === "open-password-dialog" && (loginDialogOpen || securityLevel < 1 || !local))
       || (item.action === "config-backup" && (loginDialogOpen || securityLevel < 3 || !local || !needBackup))
       || (item.action === "config-restore" && (loginDialogOpen || securityLevel < 3 || !local))
+      || (scenarioActive && (item.action === "config-save" || item.action === "config-load" || item.action === "config-backup" || item.action === "config-restore"))
       || (isDeviceCommand
         && (loginDialogOpen || securityLevel < 2 || !local))
       || (item.action === "rms-command"
@@ -64,7 +67,9 @@ function MenuItemRow({ group, item, closeMenu }: MenuItemRowProps) {
 
   const disabledReason = !item.enabled
     ? disabledMenuTooltip
-    : loginDialogOpen
+      : scenarioActive && (item.action === "config-save" || item.action === "config-load" || item.action === "config-backup" || item.action === "config-restore")
+      ? "Persistent configuration actions are disabled while a Scenario is active"
+      : loginDialogOpen
       ? "Đăng nhập RMS để sử dụng mục này"
       : item.action === "config-save" && securityLevel < 1
         ? "Yêu cầu đăng nhập RMS"
@@ -102,6 +107,7 @@ function MenuItemRow({ group, item, closeMenu }: MenuItemRowProps) {
     if (unavailable || hasChildren) return;
     if (item.action === "open-config") {
       setAboutDialogOpen(false);
+      setScenarioParametersOpen(false);
       setConfigPanelOpen(true);
       closeMenu();
       return;

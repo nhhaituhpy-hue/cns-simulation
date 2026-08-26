@@ -4,6 +4,7 @@ import { X } from "@phosphor-icons/react/dist/csr/X";
 import { useEffect, useState } from "react";
 import {
   dmeParameterFieldCatalog,
+  canEditDmeScenarioField,
   formatDmeFrequency,
   getDmeParameterValue,
   getDmeStationChannelAllocation,
@@ -26,18 +27,30 @@ function parameterInputId(fieldId: string): string {
 
 function ParameterField({ field }: { field: DmeParameterFieldDefinition }) {
   const data = useDmePmdtStore((state) => state.configDraft);
+  const scenario = useDmePmdtStore((state) => state.scenario);
   const securityLevel = useDmePmdtStore((state) => state.securityLevel);
   const local = useDmePmdtStore((state) => state.data.local);
   const loginDialogOpen = useDmePmdtStore((state) => state.loginDialogOpen);
   const setParameterValue = useDmePmdtStore((state) => state.setParameterValue);
   const value = getDmeParameterValue(data, field.id);
   const validationMessage = field.readOnly ? null : validateDmeParameterField(field, value);
-  const canEdit = !field.readOnly && securityLevel >= 3 && !loginDialogOpen && local;
+  const canEdit = canEditDmeScenarioField({
+    active: scenario.active,
+    editableFieldIds: scenario.definition?.studentEditableFieldIds ?? [],
+    fieldId: field.id,
+    readOnly: field.readOnly,
+    securityLevel,
+    local,
+    loginDialogOpen,
+  });
   const inputId = parameterInputId(field.id);
   const [draftValue, setDraftValue] = useState(formatParameterValue(field, value));
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
+    // This local draft mirrors an external Zustand value after Apply/Restore;
+    // the synchronous update is intentional and guarded while editing.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!isEditing) setDraftValue(formatParameterValue(field, value));
   }, [field, value, isEditing]);
 
@@ -50,7 +63,7 @@ function ParameterField({ field }: { field: DmeParameterFieldDefinition }) {
   }
 
   return (
-    <label className="pmdt-config-field" data-read-only={!canEdit || undefined}>
+    <label className="pmdt-config-field" data-read-only={!canEdit || undefined} title={scenario.active && !canEdit ? "Scenario lock: recovery fields only" : field.description}>
       <span className="pmdt-config-field-label" title={field.description}>{field.label}</span>
       <span className="pmdt-config-field-control">
         {field.type === "boolean" ? (
@@ -100,6 +113,7 @@ function ParameterField({ field }: { field: DmeParameterFieldDefinition }) {
 
 export function DmeConfigPanel() {
   const data = useDmePmdtStore((state) => state.configDraft);
+  const scenario = useDmePmdtStore((state) => state.scenario);
   const setConfigPanelOpen = useDmePmdtStore((state) => state.setConfigPanelOpen);
   const restoreDefaultConfig = useDmePmdtStore((state) => state.restoreDefaultConfig);
   const applyConfigChanges = useDmePmdtStore((state) => state.applyConfigChanges);
@@ -110,9 +124,12 @@ export function DmeConfigPanel() {
   const loginDialogOpen = useDmePmdtStore((state) => state.loginDialogOpen);
   const lastCommand = useDmePmdtStore((state) => state.lastCommand);
   const canApply = configDirty && securityLevel >= 3 && !loginDialogOpen && local;
-  const sections = Array.from(new Set(dmeParameterFieldCatalog.map((field) => field.section)));
+  const visibleFields = scenario.active
+    ? dmeParameterFieldCatalog.filter((field) => scenario.definition?.studentEditableFieldIds.includes(field.id))
+    : dmeParameterFieldCatalog;
+  const sections = Array.from(new Set(visibleFields.map((field) => field.section)));
   const allocation = getDmeStationChannelAllocation(data.rmsConfigStation);
-  const validationCount = dmeParameterFieldCatalog.reduce((count, field) => (
+  const validationCount = visibleFields.reduce((count, field) => (
     !field.readOnly && validateDmeParameterField(field, getDmeParameterValue(data, field.id)) ? count + 1 : count
   ), 0);
 
@@ -148,11 +165,13 @@ export function DmeConfigPanel() {
           {allocation ? ` · INT/TX spacing: ${allocation.interrogatorPulseSpacingUs}/${allocation.transmitterReplyPulseSpacingUs} us · Delay: ${allocation.nominalReplyDelayUs} us` : ""}
         </span>
         {validationCount > 0 ? <span className="pmdt-config-summary-warning">{validationCount} validation issue(s)</span> : null}
+        {scenario.active ? <span className="pmdt-config-summary-warning">Scenario active: recovery controls only</span> : null}
         <span title={DME_LDES_TRAINING_MODEL.assumption}>LDES model: configured Window/Threshold (SRE/FUD not exposed)</span>
         {lastCommand?.startsWith("Configuration validation failed:") ? <span className="pmdt-config-summary-warning">{lastCommand}</span> : null}
         {loginDialogOpen || securityLevel < 3 ? <span>GUEST: view-only</span> : !local ? <span>Enable Local to edit</span> : configDirty ? <span>Pending changes - press Apply (F7)</span> : needBackup ? <span>Applied - run RMS &gt;&gt; Config Backup</span> : <span>Ready</span>}
       </div>
       <div className="pmdt-config-panel-body">
+        {scenario.active && visibleFields.length === 0 ? <p className="pmdt-config-empty">Scenario is corrected by operational commands only. Use Transmitters/RMS commands and monitor bypass controls.</p> : null}
         {sections.map((section) => (
           <details
             key={section}
@@ -161,7 +180,7 @@ export function DmeConfigPanel() {
           >
             <summary>{section}</summary>
             <div className="pmdt-config-section-body">
-              {dmeParameterFieldCatalog.filter((field) => field.section === section).map((field) => (
+              {visibleFields.filter((field) => field.section === section).map((field) => (
                 <ParameterField key={field.id} field={field} />
               ))}
             </div>

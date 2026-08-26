@@ -160,6 +160,15 @@ function Dme1119aConfigPersistence() {
         const backupConfig = dme1119aConfigAdapter.parseConfig(response.backupConfig ?? response.appliedConfig);
         if (!config || !backupConfig) throw new Error("Cấu hình DME 1119A từ server không hợp lệ.");
         if (cancelled) return;
+        // The examiner may apply a scenario while this network request is in
+        // flight. In that race, keep the session overlay authoritative and do
+        // not hydrate the persistent profile over it.
+        if (useDmePmdtStore.getState().scenario.active) {
+          revisionRef.current = response.revision;
+          readyRef.current = true;
+          setStatus("");
+          return;
+        }
         replaceConfig(config, backupConfig, parameterChangesFromHistory(response.history, "RMS"));
         revisionRef.current = response.revision;
         readyRef.current = true;
@@ -181,6 +190,9 @@ function Dme1119aConfigPersistence() {
   useEffect(() => {
     return useDmePmdtStore.subscribe((state, previousState) => {
       if (!readyRef.current) return;
+      // Scenario Parameters is an examiner-only, session-scoped overlay. Do
+      // not persist scenario apply/restore/student recovery operations.
+      if (state.scenario.active || previousState.scenario.active) return;
       const nextConfig = extractDme1119aConfig(state.data);
       const previousConfig = extractDme1119aConfig(previousState.data);
       const previousBackupConfig = extractDme1119aConfig(previousState.configurationBackup ?? previousState.data);

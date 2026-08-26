@@ -13,11 +13,21 @@ import {
 import {
   dmeParameterFieldCatalog,
   dmeTransferRequested,
+  applyDme1119aScenarioFaults,
+  cloneDme1119aScenarioDefinition,
+  configurationForDme1119aScenario,
+  createDefaultDme1119aScenarioDefinition,
+  evaluateDme1119aScenario,
+  getDme1119aScenarioProtectedFieldChanges,
+  previewDme1119aScenario,
+  validateDme1119aScenarioDefinition,
   getDmeParameterValue,
   recomputeDmeDerivedData,
   setDmeParameterValue,
   validateDmeParameterField,
   type DmeParameterValue,
+  type Dme1119aScenarioDefinition,
+  type Dme1119aScenarioRuntime,
 } from "@/lib/dme1119a";
 import type {
   DmeAttemptEvent,
@@ -84,6 +94,10 @@ export interface DmeSessionInitialization {
 export interface DmePmdtStoreState {
   mode: DmePmdtMode;
   configPanelOpen: boolean;
+  scenarioParametersOpen: boolean;
+  scenarioAuthoringEnabled: boolean;
+  scenarioDraft: Dme1119aScenarioDefinition;
+  scenario: Dme1119aScenarioRuntime;
   data: DmePmdtData;
   configDraft: DmePmdtData;
   configDirty: boolean;
@@ -128,6 +142,12 @@ export interface DmePmdtStoreActions {
   ) => void;
   setMode: (mode: DmePmdtMode) => void;
   setConfigPanelOpen: (open: boolean) => void;
+  setScenarioParametersOpen: (open: boolean) => void;
+  setScenarioAuthoringEnabled: (enabled: boolean) => void;
+  replaceScenarioDraft: (definition: Dme1119aScenarioDefinition) => void;
+  applyScenario: () => boolean;
+  restoreScenario: () => boolean;
+  endScenario: () => boolean;
   setAboutDialogOpen: (open: boolean) => void;
   setPasswordDialogOpen: (open: boolean) => void;
   openLogin: () => void;
@@ -251,6 +271,10 @@ function initialState(): DmePmdtStoreState {
   return {
     mode: "preview",
     configPanelOpen: false,
+    scenarioParametersOpen: false,
+    scenarioAuthoringEnabled: false,
+    scenarioDraft: createDefaultDme1119aScenarioDefinition(),
+    scenario: { active: false, definition: null, startedAt: null },
     data,
     configDraft: structuredClone(data),
     configDirty: false,
@@ -415,7 +439,10 @@ function setIdentMode(data: DmePmdtData, mode: "normal" | "off" | "continuous"):
   return recomputeDmeDerivedData(next);
 }
 
-function defaultConfigForSession(state: DmePmdtStoreState): DmePmdtData {
+function defaultConfigForSession(
+  state: DmePmdtStoreState,
+  mainTransmitterId?: DmeTransmitterId,
+): DmePmdtData {
   const defaults = cloneDefaultDmePmdtData();
   defaults.connected = state.data.connected;
   defaults.local = state.data.local;
@@ -427,7 +454,7 @@ function defaultConfigForSession(state: DmePmdtStoreState): DmePmdtData {
   };
   const routed = routeTransmitter(
     defaults,
-    state.data.monitorTransmitterStatus.mainSelect === 2 ? "tx2" : "tx1",
+    mainTransmitterId ?? (state.data.monitorTransmitterStatus.mainSelect === 2 ? "tx2" : "tx1"),
     "antenna",
   );
   syncMaintenanceAlert(routed);
@@ -476,6 +503,12 @@ function validateDmeConfiguration(data: DmePmdtData): string | null {
     return invalidField.label;
   }
   return validateSecurityAccounts(data.securityAccounts);
+}
+
+function isLiveDmeOperationalField(fieldId: string): boolean {
+  return fieldId === "monitorTransmitterStatus.mainSelect"
+    || fieldId === "monitorTransmitterStatus.antennaSelect"
+    || fieldId.startsWith("monitorTransmitterStatus.transmitterOn.");
 }
 
 const screenViewGroups: Partial<Record<DmeScreenId, readonly DmeViewId[]>> = {
@@ -590,6 +623,10 @@ export function createDmePmdtStore(
 
       replaceConfig: (persistedConfig, persistedBackup = persistedConfig, parameterChangeLogs) => {
         const state = get();
+        // Scenario Parameters is a session-only overlay. A profile hydrate
+        // must never replace an active examiner scenario or write it back to
+        // the persistent simulator configuration.
+        if (state.scenario.active) return;
         const data = hydrateDme1119aData(persistedConfig);
         const backupData = hydrateDme1119aData(persistedBackup);
         data.rmsStatus.logonLevel = state.securityLevel;
@@ -609,6 +646,98 @@ export function createDmePmdtStore(
       setMode: (mode) => set({ mode }),
 
       setConfigPanelOpen: (configPanelOpen) => set({ configPanelOpen }),
+
+      setScenarioParametersOpen: (scenarioParametersOpen) => {
+        const state = get();
+        if (scenarioParametersOpen && !state.scenarioAuthoringEnabled) return;
+        set({ scenarioParametersOpen });
+      },
+
+      setScenarioAuthoringEnabled: (scenarioAuthoringEnabled) => set({
+        scenarioAuthoringEnabled,
+        ...(scenarioAuthoringEnabled ? {} : { scenarioParametersOpen: false }),
+      }),
+
+      replaceScenarioDraft: (definition) => set({
+        scenarioDraft: cloneDme1119aScenarioDefinition(definition),
+      }),
+
+      applyScenario: () => {
+        const state = get();
+        if (!state.scenarioAuthoringEnabled || state.securityLevel < 3 || state.loginDialogOpen || !state.data.local) {
+          return false;
+        }
+        const definition = cloneDme1119aScenarioDefinition(state.scenarioDraft);
+        const issues = validateDme1119aScenarioDefinition(definition);
+        if (issues.length > 0) {
+          set({ lastCommand: `Scenario validation failed: ${issues[0]}` });
+          return false;
+        }
+        const preview = previewDme1119aScenario(definition);
+        const startingEvaluation = evaluateDme1119aScenario(
+          { active: true, definition, startedAt: null },
+          preview.data,
+        );
+        if (startingEvaluation.solved) {
+          set({ lastCommand: "Scenario validation failed: starting state is already solved" });
+          return false;
+        }
+        const baseline = configurationForDme1119aScenario(definition, state.data);
+        const data = applyDme1119aScenarioFaults(baseline, definition.faultInjections);
+        data.connected = state.data.connected;
+        data.timestamp = state.data.timestamp;
+        data.rmsStatus.logonLevel = state.securityLevel;
+        data.rmsStatus.localControlMode = data.local;
+        const startedAt = now().toISOString();
+        set({
+          data,
+          configDraft: structuredClone(data),
+          configDirty: false,
+          needBackup: false,
+          configurationBackup: state.configurationBackup,
+          scenario: { active: true, definition, startedAt },
+          scenarioParametersOpen: false,
+          lastCommand: `Scenario Apply: ${definition.name}`,
+        });
+        return true;
+      },
+
+      restoreScenario: () => {
+        const state = get();
+        if (!state.scenario.active || !state.scenario.definition) return false;
+        const baseline = configurationForDme1119aScenario(state.scenario.definition, state.data);
+        const data = applyDme1119aScenarioFaults(baseline, state.scenario.definition.faultInjections);
+        data.connected = state.data.connected;
+        data.timestamp = state.data.timestamp;
+        data.rmsStatus.logonLevel = state.securityLevel;
+        data.rmsStatus.localControlMode = data.local;
+        set({
+          data,
+          configDraft: structuredClone(data),
+          configDirty: false,
+          needBackup: false,
+          lastCommand: `Scenario Restore: ${state.scenario.definition.name}`,
+        });
+        return true;
+      },
+
+      endScenario: () => {
+        const state = get();
+        if (!state.scenario.active) return false;
+        const data = defaultConfigForSession(state, "tx1");
+        data.rmsStatus.logonLevel = state.securityLevel;
+        set({
+          data,
+          configDraft: structuredClone(data),
+          configDirty: false,
+          needBackup: false,
+          scenario: { active: false, definition: null, startedAt: null },
+          scenarioDraft: createDefaultDme1119aScenarioDefinition(),
+          scenarioParametersOpen: false,
+          lastCommand: "Scenario End - Restore TST",
+        });
+        return true;
+      },
 
       setAboutDialogOpen: (aboutDialogOpen) => set({ aboutDialogOpen }),
 
@@ -685,6 +814,10 @@ export function createDmePmdtStore(
           passwordDialogOpen: false,
           lastActivityAt: null,
           configPanelOpen: false,
+          scenarioParametersOpen: false,
+          scenarioAuthoringEnabled: false,
+          scenarioDraft: createDefaultDme1119aScenarioDefinition(),
+          scenario: { active: false, definition: null, startedAt: null },
           aboutDialogOpen: false,
           data,
           configDraft: structuredClone(data),
@@ -789,7 +922,13 @@ export function createDmePmdtStore(
           data.monitors.standby.bypass = false;
         }
         data = recomputeDmeDerivedData(data);
-        const automaticTransfer = !enabled ? applyAutomaticDmeTransfer(data) : null;
+        // Examiner scenarios intentionally let the trainee choose the
+        // recovery sequence (for example, manual changeover before releasing
+        // the standby bypass). Automatic transfer remains the normal PMDT
+        // behavior outside a scenario, but must not immediately undo a
+        // scenario's explicit TX selection because the injected fault is
+        // still present on the standby path.
+        const automaticTransfer = !enabled && !state.scenario.active ? applyAutomaticDmeTransfer(data) : null;
         data = automaticTransfer?.data ?? data;
         let configDraft = structuredClone(state.configDraft);
         configDraft.local = enabled;
@@ -833,6 +972,13 @@ export function createDmePmdtStore(
       setParameterValue: (fieldId, value) => {
         const state = get();
         if (state.securityLevel < 3 || state.loginDialogOpen || !state.data.local) return;
+        if (
+          state.scenario.active
+          && !isLiveDmeOperationalField(fieldId)
+          && !state.scenario.definition?.studentEditableFieldIds.includes(fieldId)
+        ) {
+          return;
+        }
         if (
           fieldId.startsWith("monitorTransmitterStatus.transmitterOn.")
           && value === false
@@ -884,6 +1030,13 @@ export function createDmePmdtStore(
       applyConfigChanges: () => {
         const state = get();
         if (!state.configDirty || state.securityLevel < 3 || state.loginDialogOpen || !state.data.local) return false;
+        if (state.scenario.active) {
+          const protectedChanges = getDme1119aScenarioProtectedFieldChanges(state.scenario.definition!, state.configDraft);
+          if (protectedChanges.length > 0) {
+            set({ lastCommand: `Scenario protected field blocked: ${protectedChanges[0].label}` });
+            return false;
+          }
+        }
         const validationError = validateDmeConfiguration(state.configDraft);
         if (validationError) {
           set({ lastCommand: `Configuration validation failed: ${validationError}` });
@@ -899,7 +1052,7 @@ export function createDmePmdtStore(
           data,
           configDraft: structuredClone(data),
           configDirty: false,
-          needBackup: true,
+          needBackup: state.scenario.active ? false : true,
           lastCommand: automaticTransfer.action === "transfer" && automaticTransfer.target
             ? `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}`
             : automaticTransfer.action === "shutdown"
@@ -923,7 +1076,9 @@ export function createDmePmdtStore(
 
       restoreDefaultConfig: () => {
         const state = get();
-        if (state.securityLevel < 3 || state.loginDialogOpen || !state.data.local) return false;
+        if (state.securityLevel < 3 || state.loginDialogOpen) return false;
+        if (state.scenario.active) return state.restoreScenario();
+        if (!state.data.local) return false;
         const data = defaultConfigForSession(state);
         data.rmsStatus.logonLevel = state.securityLevel;
         set({
@@ -938,6 +1093,7 @@ export function createDmePmdtStore(
 
       backupConfig: () => {
         const state = get();
+        if (state.scenario.active) return false;
         if (state.securityLevel < 3 || state.loginDialogOpen || !state.data.local || !state.needBackup) return false;
         const previousBackup = state.configurationBackup ?? state.data;
         const changedFields = collectChangedConfigFields(
@@ -962,6 +1118,7 @@ export function createDmePmdtStore(
 
       saveConfig: () => {
         const state = get();
+        if (state.scenario.active) return false;
         if (state.securityLevel < 1 || state.loginDialogOpen) return false;
         set({ savedConfiguration: structuredClone(state.data), lastCommand: "System Configuration Save" });
         return true;
@@ -969,6 +1126,7 @@ export function createDmePmdtStore(
 
       loadConfig: () => {
         const state = get();
+        if (state.scenario.active) return false;
         if (state.securityLevel < 3 || state.loginDialogOpen || !state.data.local || !state.savedConfiguration) return false;
         const data = restoreConfigForSession(state.savedConfiguration, state);
         set({ data, configDraft: structuredClone(data), configDirty: false, needBackup: true, lastCommand: "System Configuration Load" });
@@ -977,6 +1135,7 @@ export function createDmePmdtStore(
 
       restoreConfig: () => {
         const state = get();
+        if (state.scenario.active) return false;
         if (state.securityLevel < 3 || state.loginDialogOpen || !state.data.local) return false;
         const source = state.configurationBackup ?? cloneDefaultDmePmdtData();
         const data = restoreConfigForSession(source, state);
@@ -1012,7 +1171,7 @@ export function createDmePmdtStore(
         let data = structuredClone(state.data);
         data.monitors[monitor].bypass = enabled;
         data = recomputeDmeDerivedData(data);
-        const automaticTransfer = !enabled ? applyAutomaticDmeTransfer(data) : null;
+        const automaticTransfer = !enabled && !state.scenario.active ? applyAutomaticDmeTransfer(data) : null;
         data = automaticTransfer?.data ?? data;
         let configDraft = structuredClone(state.configDraft);
         configDraft.monitors[monitor].bypass = enabled;
@@ -1243,7 +1402,6 @@ export function createDmePmdtStore(
       },
 
       closeScreen: () => {
-        const state = get();
         set({
           activeScreen: "home",
           activeView: "home",
