@@ -2869,6 +2869,33 @@ input[type="checkbox"].dvor1150-control {
   white-space: nowrap;
 }
 
+.dvor1150-pmdt-page .dvor1150-scenario-role-badge,
+.dvor1150-pmdt-page .dvor1150-training-hud {
+  display: inline-flex;
+  align-items: center;
+  min-height: 18px;
+  padding: 0 6px;
+  border: 1px solid #6e8390;
+  color: #dfeaf0;
+  background: #2b3a43;
+  font: 700 10px Arial, sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.dvor1150-pmdt-page .dvor1150-training-hud {
+  gap: 7px;
+  border-color: #c69a20;
+  color: #fff3bc;
+  background: #3a341e;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+.dvor1150-pmdt-page .dvor1150-training-hud strong {
+  color: #ffe16a;
+  font-weight: 700;
+}
+
 .dvor1150-pmdt-page .dvor1150-scenario-parameters-panel {
   width: 430px;
 }
@@ -2904,6 +2931,17 @@ input[type="checkbox"].dvor1150-control {
 
 .dvor1150-pmdt-page .dvor1150-scenario-policy > label:has(input[type="checkbox"]) {
   display: flex;
+  gap: 4px;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-policy > p {
+  margin: 0;
+  color: #404040;
+}
+
+.dvor1150-pmdt-page .dvor1150-scenario-policy .pmdt-config-section-body > label {
+  display: flex;
+  align-items: center;
   gap: 4px;
 }
 

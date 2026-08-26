@@ -9,11 +9,18 @@ import { Dvor1150StatusBar } from "./pmdt-status-bar";
 import { Dvor1150TitleBar } from "./pmdt-title-bar";
 import { Dvor1150SimulationParametersPanel } from "./pmdt-simulation-parameters";
 import { Dvor1150ScenarioParametersPanel } from "./pmdt-scenario-parameters";
+import { Dvor1150TrainingHud } from "./pmdt-training-hud";
 import { useDvor1150PmdtStore } from "@/stores/dvor1150-pmdt-store";
 import type { Dvor1150PmdtMode } from "@/lib/dvor1150";
 import { Dvor1150ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
 
-export function Dvor1150PmdtLayout({ mode = "preview" }: { mode?: Dvor1150PmdtMode }) {
+export function Dvor1150PmdtLayout({
+  mode = "preview",
+  scenarioAuthoringEnabled = false,
+}: {
+  mode?: Dvor1150PmdtMode;
+  scenarioAuthoringEnabled?: boolean;
+}) {
   const setMode = useDvor1150PmdtStore((state) => state.setMode);
   const loginOpen = useDvor1150PmdtStore((state) => state.loginDialogOpen);
   const apply = useDvor1150PmdtStore((state) => state.applyConfigChanges);
@@ -24,9 +31,11 @@ export function Dvor1150PmdtLayout({ mode = "preview" }: { mode?: Dvor1150PmdtMo
   const simulationParametersOpen = useDvor1150PmdtStore((state) => state.simulationParametersOpen);
   const scenarioParametersOpen = useDvor1150PmdtStore((state) => state.scenarioParametersOpen);
   const setScenarioParametersOpen = useDvor1150PmdtStore((state) => state.setScenarioParametersOpen);
+  const setScenarioAuthoringEnabled = useDvor1150PmdtStore((state) => state.setScenarioAuthoringEnabled);
   const scenario = useDvor1150PmdtStore((state) => state.scenario);
 
   useEffect(() => { setMode(mode); }, [mode, setMode]);
+  useEffect(() => { setScenarioAuthoringEnabled(scenarioAuthoringEnabled); }, [scenarioAuthoringEnabled, setScenarioAuthoringEnabled]);
   useEffect(() => {
     refreshClock();
     const timer = window.setInterval(refreshClock, 1000);
@@ -45,10 +54,12 @@ export function Dvor1150PmdtLayout({ mode = "preview" }: { mode?: Dvor1150PmdtMo
 
   return <div className="pmdt-classic-viewport">
     <div className="dvor1150-simulator-frame">
-      <nav className="dvor1150-simulator-tools" aria-label="DVOR 1150 simulator tools">
-        <button type="button" onClick={() => setScenarioParametersOpen(true)}>Scenario Parameters</button>
-        {scenario.active ? <span className="dvor1150-scenario-active-badge">Scenario active: {scenario.definition?.name}</span> : null}
-      </nav>
+      {scenarioAuthoringEnabled || scenario.active ? <nav className="dvor1150-simulator-tools" aria-label="DVOR 1150 simulator tools">
+        {scenarioAuthoringEnabled ? <button type="button" onClick={() => setScenarioParametersOpen(true)}>Scenario Parameters</button> : null}
+        {scenarioAuthoringEnabled ? <span className="dvor1150-scenario-role-badge">EXAMINER</span> : null}
+        <Dvor1150TrainingHud examinerView={scenarioAuthoringEnabled} />
+        {scenarioAuthoringEnabled && scenario.active ? <span className="dvor1150-scenario-active-badge">Scenario active: {scenario.definition?.name}</span> : null}
+      </nav> : null}
       <section className="pmdt-classic-window pmdt-classic-window--standard dvor1150-pmdt-window" aria-label="DVOR 1150 PMDT Simulator">
         <div className="pmdt-titlebar-row"><Dvor1150TitleBar /></div>
         <div className="pmdt-menubar-row"><Dvor1150MenuBar /></div>
@@ -56,7 +67,7 @@ export function Dvor1150PmdtLayout({ mode = "preview" }: { mode?: Dvor1150PmdtMo
         <main className="pmdt-classic-main">{loginOpen ? <div className="pmdt-prelogin-workspace" aria-hidden /> : <Dvor1150ScreenRouter />}</main>
         <div className="pmdt-statusbar-row"><Dvor1150StatusBar /></div>
         {simulationParametersOpen ? <Dvor1150SimulationParametersPanel /> : null}
-        {scenarioParametersOpen ? <Dvor1150ScenarioParametersPanel /> : null}
+        {scenarioAuthoringEnabled && scenarioParametersOpen ? <Dvor1150ScenarioParametersPanel /> : null}
         {loginOpen ? <Dvor1150LoginDialog /> : null}
         {mode === "preview" ? <Dvor1150ConfigPersistenceBoundary /> : null}
       </section>

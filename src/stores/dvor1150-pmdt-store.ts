@@ -5,6 +5,7 @@ import {
   configurationForDvor1150Scenario,
   createDefaultDvor1150ScenarioDefinition,
   defaultDvor1150Config,
+  getDvor1150ScenarioProtectedFieldChanges,
   type Dvor1150ScenarioDefinition,
   type Dvor1150ScenarioRuntime,
   formatDvor1150Timestamp,
@@ -86,6 +87,7 @@ export interface Dvor1150PmdtStoreState {
   activeMenuPath: string[];
   simulationParametersOpen: boolean;
   scenarioParametersOpen: boolean;
+  scenarioAuthoringEnabled: boolean;
   scenario: Dvor1150ScenarioRuntime;
   scenarioDraft: Dvor1150ScenarioDefinition;
   lastCommand: string | null;
@@ -115,6 +117,7 @@ export interface Dvor1150PmdtStoreActions {
   openView: (screenId: Dvor1150ScreenId, viewId: Dvor1150ViewId, menuPath: readonly string[], title?: string) => void;
   setSimulationParametersOpen: (open: boolean) => void;
   setScenarioParametersOpen: (open: boolean) => void;
+  setScenarioAuthoringEnabled: (enabled: boolean) => void;
   replaceScenarioDraft: (definition: Dvor1150ScenarioDefinition) => void;
   applyScenario: () => boolean;
   restoreScenario: () => boolean;
@@ -154,6 +157,7 @@ function buildInitialState(now: () => Date): Dvor1150PmdtStoreState {
     activeMenuPath: [],
     simulationParametersOpen: false,
     scenarioParametersOpen: false,
+    scenarioAuthoringEnabled: false,
     scenario: { active: false, definition: null, startedAt: null },
     scenarioDraft: createDefaultDvor1150ScenarioDefinition(),
     lastCommand: null,
@@ -466,6 +470,13 @@ export function createDvor1150PmdtStore(
       setConfigValue: (fieldId, value) => {
         const state = get();
         if (state.securityLevel < 3 || !state.config.simulation.local) return;
+        if (
+          state.scenario.active
+          && !state.scenario.definition?.studentEditableFieldIds.includes(fieldId)
+        ) {
+          set({ lastCommand: "Scenario control locked: examiner recovery controls only" });
+          return;
+        }
         const configDraft = setDvor1150ConfigValue(state.configDraft, fieldId, value);
         set({
           configDraft,
@@ -479,6 +490,16 @@ export function createDvor1150PmdtStore(
         if (errors.length > 0) {
           set({ lastCommand: `Apply failed: ${errors[0]}` });
           return false;
+        }
+        if (state.scenario.active && state.scenario.definition) {
+          const protectedChanges = getDvor1150ScenarioProtectedFieldChanges(
+            state.scenario.definition,
+            state.configDraft,
+          );
+          if (protectedChanges.length > 0) {
+            set({ lastCommand: `Apply blocked: ${protectedChanges[0].label} is protected by the scenario.` });
+            return false;
+          }
         }
         const config = cloneDvor1150Config(state.configDraft);
         const automaticTransfer = config.simulation.integralMonitorBypass
@@ -667,12 +688,29 @@ export function createDvor1150PmdtStore(
         scenarioParametersOpen: open ? false : state.scenarioParametersOpen,
       })),
       setScenarioParametersOpen: (open) => set((state) => ({
-        scenarioParametersOpen: open,
+        scenarioParametersOpen: open && state.scenarioAuthoringEnabled,
         simulationParametersOpen: open ? false : state.simulationParametersOpen,
+        lastCommand: open && !state.scenarioAuthoringEnabled
+          ? "Scenario Parameters are restricted to Examiner accounts."
+          : state.lastCommand,
       })),
-      replaceScenarioDraft: (definition) => set({ scenarioDraft: structuredClone(definition) }),
+      setScenarioAuthoringEnabled: (enabled) => set({
+        scenarioAuthoringEnabled: enabled,
+        scenarioParametersOpen: enabled ? get().scenarioParametersOpen : false,
+      }),
+      replaceScenarioDraft: (definition) => {
+        if (!get().scenarioAuthoringEnabled) {
+          set({ lastCommand: "Scenario editing is restricted to Examiner accounts." });
+          return;
+        }
+        set({ scenarioDraft: structuredClone(definition) });
+      },
       applyScenario: () => {
         const state = get();
+        if (!state.scenarioAuthoringEnabled) {
+          set({ lastCommand: "Scenario apply is restricted to Examiner accounts." });
+          return false;
+        }
         const issues = validateDvor1150ScenarioDefinition(state.scenarioDraft);
         if (issues.length > 0) {
           set({ lastCommand: `Scenario apply failed: ${issues[0]}` });
@@ -695,6 +733,10 @@ export function createDvor1150PmdtStore(
       },
       endScenario: () => {
         const state = get();
+        if (!state.scenarioAuthoringEnabled) {
+          set({ lastCommand: "Scenario end is restricted to Examiner accounts." });
+          return false;
+        }
         if (!state.scenario.active) return false;
         const config = initialConfigurationForSession(state.config);
         const derived = recompute(config, state.derived);

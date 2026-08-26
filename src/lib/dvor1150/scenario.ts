@@ -1,13 +1,17 @@
 import { cloneDvor1150Config, defaultDvor1150Config } from "./defaults";
 import { buildDvor1150Snapshot } from "./engine";
-import { validateDvor1150Config } from "./config-utils";
+import {
+  dvor1150ConfigFieldCatalog,
+  getDvor1150ConfigValue,
+  validateDvor1150Config,
+} from "./config-utils";
 import type {
   Dvor1150Config,
   Dvor1150Snapshot,
   Dvor1150TransmitterId,
 } from "./types";
 
-export const DVOR1150_SCENARIO_SCHEMA_VERSION = 1 as const;
+export const DVOR1150_SCENARIO_SCHEMA_VERSION = 2 as const;
 
 export type Dvor1150ScenarioDifficulty = "basic" | "intermediate" | "advanced";
 
@@ -17,7 +21,7 @@ export type Dvor1150ScenarioDifficulty = "basic" | "intermediate" | "advanced";
  * the student receives at the beginning of an exercise.
  */
 export interface Dvor1150ScenarioDefinition {
-  schemaVersion: 1;
+  schemaVersion: 2;
   id: string;
   name: string;
   description: string;
@@ -34,6 +38,12 @@ export interface Dvor1150ScenarioDefinition {
     requireNoVswrExecutiveAlarm: boolean;
     requireMonitorBypassCleared: boolean;
   };
+  /**
+   * Physical recovery controls that the student may edit during this scenario.
+   * All remaining configuration fields are held at the examiner's baseline so
+   * an alarm cannot be cleared by altering monitor thresholds or calibration.
+   */
+  studentEditableFieldIds: string[];
 }
 
 export interface Dvor1150ScenarioRuntime {
@@ -52,6 +62,11 @@ export interface Dvor1150ScenarioEvaluation {
     detail: string;
   }>;
   blockers: string[];
+}
+
+export interface Dvor1150ScenarioProtectedFieldChange {
+  fieldId: string;
+  label: string;
 }
 
 export function createDefaultDvor1150ScenarioDefinition(): Dvor1150ScenarioDefinition {
@@ -73,6 +88,7 @@ export function createDefaultDvor1150ScenarioDefinition(): Dvor1150ScenarioDefin
       requireNoVswrExecutiveAlarm: true,
       requireMonitorBypassCleared: true,
     },
+    studentEditableFieldIds: [],
   };
 }
 
@@ -85,6 +101,10 @@ export function createLowCarrierAnd9960Scenario(): Dvor1150ScenarioDefinition {
   scenario.startPolicy.startLocal = true;
   scenario.startPolicy.startMonitorBypassed = true;
   scenario.configuration.transmitters.tx1.nominal.outputPower = 40;
+  scenario.studentEditableFieldIds = [
+    "transmitters.tx1.nominal.outputPower",
+    "transmitters.tx1.offsets.outputPowerScale",
+  ];
   return scenario;
 }
 
@@ -97,6 +117,10 @@ export function createReferenceModulationScenario(): Dvor1150ScenarioDefinition 
   scenario.startPolicy.startLocal = true;
   scenario.startPolicy.startMonitorBypassed = true;
   scenario.configuration.transmitters.tx1.nominal.referenceModulation = 25;
+  scenario.studentEditableFieldIds = [
+    "transmitters.tx1.nominal.referenceModulation",
+    "transmitters.tx1.offsets.referenceModulationScale",
+  ];
   return scenario;
 }
 
@@ -113,6 +137,10 @@ export function createSidebandVswrScenario(): Dvor1150ScenarioDefinition {
   scenario.configuration.monitor.numberOfAntennasInAlarm = 1;
   scenario.configuration.transmitters.tx1.offsets.sideband1RfLevelScale = 200;
   scenario.configuration.transmitters.tx1.offsets.sideband2RfLevelScale = 200;
+  scenario.studentEditableFieldIds = [
+    "transmitters.tx1.offsets.sideband1RfLevelScale",
+    "transmitters.tx1.offsets.sideband2RfLevelScale",
+  ];
   return scenario;
 }
 
@@ -154,9 +182,24 @@ export function previewDvor1150Scenario(definition: Dvor1150ScenarioDefinition):
   return { config, snapshot: buildDvor1150Snapshot(config) };
 }
 
+/** Returns fields changed outside the examiner-authorized recovery controls. */
+export function getDvor1150ScenarioProtectedFieldChanges(
+  definition: Dvor1150ScenarioDefinition,
+  currentConfiguration: Dvor1150Config,
+): Dvor1150ScenarioProtectedFieldChange[] {
+  const editable = new Set(definition.studentEditableFieldIds);
+  return dvor1150ConfigFieldCatalog.flatMap((field) => {
+    if (editable.has(field.id)) return [];
+    const expected = getDvor1150ConfigValue(definition.configuration, field.id);
+    const actual = getDvor1150ConfigValue(currentConfiguration, field.id);
+    return Object.is(expected, actual) ? [] : [{ fieldId: field.id, label: field.label }];
+  });
+}
+
 export function evaluateDvor1150Scenario(
   runtime: Dvor1150ScenarioRuntime,
   snapshot: Dvor1150Snapshot,
+  currentConfiguration?: Dvor1150Config,
 ): Dvor1150ScenarioEvaluation {
   const definition = runtime.definition;
   if (!runtime.active || !definition) return { solved: false, correctable: true, checks: [], blockers: [] };
@@ -190,11 +233,15 @@ export function evaluateDvor1150Scenario(
       detail: snapshot.data.monitorIntegral.bypass ? "Bypass active" : "Released",
     }] : []),
   ];
+  const protectedChanges = currentConfiguration
+    ? getDvor1150ScenarioProtectedFieldChanges(definition, currentConfiguration)
+    : [];
+  const blockers = protectedChanges.map((change) => `Protected configuration changed: ${change.label}.`);
   return {
-    solved: checks.length > 0 && checks.every((check) => check.passed),
+    solved: checks.length > 0 && checks.every((check) => check.passed) && blockers.length === 0,
     correctable: true,
     checks,
-    blockers: [],
+    blockers,
   };
 }
 
@@ -233,16 +280,41 @@ export function validateDvor1150ScenarioDefinition(definition: Dvor1150ScenarioD
   for (const [key, value] of Object.entries(definition.successCriteria)) {
     if (typeof value !== "boolean") issues.push(`Success criterion ${key} must be boolean.`);
   }
+  if (!Array.isArray(definition.studentEditableFieldIds)) {
+    issues.push("Student editable fields must be an array.");
+  } else {
+    const knownFieldIds = new Set(dvor1150ConfigFieldCatalog.map((field) => field.id));
+    for (const fieldId of definition.studentEditableFieldIds) {
+      if (typeof fieldId !== "string" || !knownFieldIds.has(fieldId)) {
+        issues.push(`Student editable field is invalid: ${String(fieldId)}.`);
+      }
+    }
+    if (new Set(definition.studentEditableFieldIds).size !== definition.studentEditableFieldIds.length) {
+      issues.push("Student editable fields must not contain duplicates.");
+    }
+  }
   issues.push(...validateDvor1150Config(definition.configuration));
   return [...new Set(issues)];
 }
 
+function inferLegacyStudentEditableFieldIds(configuration: Dvor1150Config): string[] {
+  return dvor1150ConfigFieldCatalog
+    .filter((field) => field.id.startsWith("transmitters."))
+    .filter((field) => !Object.is(
+      getDvor1150ConfigValue(configuration, field.id),
+      getDvor1150ConfigValue(defaultDvor1150Config, field.id),
+    ))
+    .map((field) => field.id);
+}
+
 export function parseDvor1150ScenarioDefinition(value: unknown): Dvor1150ScenarioDefinition | null {
   if (!value || typeof value !== "object") return null;
-  const candidate = value as Partial<Dvor1150ScenarioDefinition>;
+  const rawCandidate = value as Record<string, unknown>;
+  const candidate = rawCandidate as Partial<Dvor1150ScenarioDefinition>;
+  const schemaVersion = rawCandidate.schemaVersion;
   const reference = createDefaultDvor1150ScenarioDefinition();
   if (
-    candidate.schemaVersion !== DVOR1150_SCENARIO_SCHEMA_VERSION
+    (schemaVersion !== 1 && schemaVersion !== DVOR1150_SCENARIO_SCHEMA_VERSION)
     || typeof candidate.id !== "string"
     || typeof candidate.name !== "string"
     || typeof candidate.description !== "string"
@@ -252,7 +324,13 @@ export function parseDvor1150ScenarioDefinition(value: unknown): Dvor1150Scenari
     || !candidate.successCriteria
   ) return null;
 
-  const parsed = structuredClone(candidate) as Dvor1150ScenarioDefinition;
+  const parsed = {
+    ...structuredClone(candidate),
+    schemaVersion: DVOR1150_SCENARIO_SCHEMA_VERSION,
+    studentEditableFieldIds: schemaVersion === 1
+      ? inferLegacyStudentEditableFieldIds(candidate.configuration as Dvor1150Config)
+      : rawCandidate.studentEditableFieldIds,
+  } as Dvor1150ScenarioDefinition;
   try {
     return validateDvor1150ScenarioDefinition(parsed).length === 0 ? parsed : null;
   } catch {

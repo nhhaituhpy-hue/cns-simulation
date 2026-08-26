@@ -28,6 +28,7 @@ export {
   DVOR1150_BUILT_IN_SCENARIOS,
   DVOR1150_SCENARIO_SCHEMA_VERSION,
   evaluateDvor1150Scenario,
+  getDvor1150ScenarioProtectedFieldChanges,
   parseDvor1150ScenarioDefinition,
   previewDvor1150Scenario,
   validateDvor1150ScenarioDefinition,
@@ -36,6 +37,7 @@ export type {
   Dvor1150ScenarioDefinition,
   Dvor1150ScenarioDifficulty,
   Dvor1150ScenarioEvaluation,
+  Dvor1150ScenarioProtectedFieldChange,
   Dvor1150ScenarioRuntime,
 } from "./scenario";
 export type * from "./types";

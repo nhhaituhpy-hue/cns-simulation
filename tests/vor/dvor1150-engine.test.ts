@@ -3,6 +3,7 @@ import {
   buildDvor1150Snapshot,
   cloneDvor1150Config,
   createLowCarrierAnd9960Scenario,
+  createSidebandVswrScenario,
   defaultDvor1150Config,
   evaluateDvor1150Scenario,
   parseDvor1150ScenarioDefinition,
@@ -218,6 +219,7 @@ describe("DVOR 1150 configuration and PMDT engine", () => {
 
     const store = createDvor1150PmdtStore();
     expect(store.getState().login("SEC3", "THREE")).toBe(true);
+    store.getState().setScenarioAuthoringEnabled(true);
     store.getState().replaceScenarioDraft(scenario);
     expect(store.getState().applyScenario()).toBe(true);
 
@@ -226,14 +228,14 @@ describe("DVOR 1150 configuration and PMDT engine", () => {
     expect(state.config.transmitters.tx1.nominal.outputPower).toBe(40);
     expect(state.config.simulation).toMatchObject({ local: true, integralMonitorBypass: true });
     expect(state.needBackup).toBe(false);
-    expect(evaluateDvor1150Scenario(state.scenario, state.derived).solved).toBe(false);
+    expect(evaluateDvor1150Scenario(state.scenario, state.derived, state.config).solved).toBe(false);
 
     state.setConfigValue("transmitters.tx1.nominal.outputPower", 100);
     expect(state.applyConfigChanges()).toBe(true);
     expect(store.getState().needBackup).toBe(false);
     expect(store.getState().setMonitorBypass("mon1", false)).toBe(true);
     state = store.getState();
-    expect(evaluateDvor1150Scenario(state.scenario, state.derived).solved).toBe(true);
+    expect(evaluateDvor1150Scenario(state.scenario, state.derived, state.config).solved).toBe(true);
 
     expect(state.resetConfigDraft()).toBe(true);
     state = store.getState();
@@ -245,5 +247,42 @@ describe("DVOR 1150 configuration and PMDT engine", () => {
     expect(state.scenario.active).toBe(false);
     expect(state.config.transmitters.tx1.nominal.outputPower).toBe(100);
     expect(state.config.simulation.local).toBe(false);
+  });
+
+  it("permits only assigned physical recovery controls and rejects monitor-limit bypasses", () => {
+    const scenario = createSidebandVswrScenario();
+    const store = createDvor1150PmdtStore();
+    expect(store.getState().login("SEC3", "THREE")).toBe(true);
+    store.getState().setScenarioAuthoringEnabled(true);
+    store.getState().replaceScenarioDraft(scenario);
+    expect(store.getState().applyScenario()).toBe(true);
+
+    store.getState().setScenarioAuthoringEnabled(false);
+    store.getState().setConfigValue("monitor.sidebandVswrExecutiveAlarm", false);
+    let state = store.getState();
+    expect(state.configDraft.monitor.sidebandVswrExecutiveAlarm).toBe(true);
+    expect(state.lastCommand).toContain("Scenario control locked");
+    expect(state.endScenario()).toBe(false);
+
+    const bypassed = cloneDvor1150Config(state.config);
+    bypassed.monitor.sidebandVswrExecutiveAlarm = false;
+    bypassed.simulation.integralMonitorBypass = false;
+    const bypassEvaluation = evaluateDvor1150Scenario(
+      state.scenario,
+      buildDvor1150Snapshot(bypassed),
+      bypassed,
+    );
+    expect(bypassEvaluation.solved).toBe(false);
+    expect(bypassEvaluation.blockers).toContain("Protected configuration changed: VSWR Executive Alarm.");
+
+    state.setConfigValue("transmitters.tx1.offsets.sideband1RfLevelScale", 100);
+    state.setConfigValue("transmitters.tx1.offsets.sideband2RfLevelScale", 100);
+    expect(state.applyConfigChanges()).toBe(true);
+    expect(store.getState().setMonitorBypass("mon1", false)).toBe(true);
+    state = store.getState();
+    expect(evaluateDvor1150Scenario(state.scenario, state.derived, state.config).solved).toBe(true);
+
+    store.getState().setScenarioAuthoringEnabled(true);
+    expect(store.getState().endScenario()).toBe(true);
   });
 });

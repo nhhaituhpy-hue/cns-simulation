@@ -129,6 +129,7 @@ export function Dvor1150ScenarioParametersPanel() {
   const scenario = useDvor1150PmdtStore((state) => state.scenario);
   const scenarioDraft = useDvor1150PmdtStore((state) => state.scenarioDraft);
   const derived = useDvor1150PmdtStore((state) => state.derived);
+  const config = useDvor1150PmdtStore((state) => state.config);
   const replaceScenarioDraft = useDvor1150PmdtStore((state) => state.replaceScenarioDraft);
   const applyScenario = useDvor1150PmdtStore((state) => state.applyScenario);
   const restoreScenario = useDvor1150PmdtStore((state) => state.restoreScenario);
@@ -147,9 +148,9 @@ export function Dvor1150ScenarioParametersPanel() {
       return null;
     }
   }, [scenarioDraft, validationIssues.length]);
-  const activeEvaluation = evaluateDvor1150Scenario(scenario, derived);
+  const activeEvaluation = evaluateDvor1150Scenario(scenario, derived, config);
   const previewEvaluation = preview
-    ? evaluateDvor1150Scenario({ active: true, definition: scenarioDraft, startedAt: null }, preview.snapshot)
+    ? evaluateDvor1150Scenario({ active: true, definition: scenarioDraft, startedAt: null }, preview.snapshot, preview.config)
     : null;
   const fields = dvor1150ConfigFieldCatalog;
   const sections = Array.from(new Set(fields.map((field) => field.section)));
@@ -198,7 +199,7 @@ export function Dvor1150ScenarioParametersPanel() {
     if (!file) return;
     try {
       const imported = parseDvor1150ScenarioDefinition(JSON.parse(await file.text()));
-      if (!imported) throw new Error("The file does not match DVOR 1150 scenario schema version 1.");
+      if (!imported) throw new Error("The file does not match the DVOR 1150 scenario schema.");
       replaceScenarioDraft(imported);
       setMessage(`Imported scenario: ${imported.name}.`);
     } catch (error) {
@@ -254,6 +255,27 @@ export function Dvor1150ScenarioParametersPanel() {
         <label><input type="checkbox" checked={scenarioDraft.successCriteria.requireActiveTransmitter} onChange={(event) => update((next) => { next.successCriteria.requireActiveTransmitter = event.target.checked; })} /> Active transmitter on antenna</label>
         <label><input type="checkbox" checked={scenarioDraft.successCriteria.requireNoVswrExecutiveAlarm} onChange={(event) => update((next) => { next.successCriteria.requireNoVswrExecutiveAlarm = event.target.checked; })} /> No VSWR executive alarm</label>
         <label><input type="checkbox" checked={scenarioDraft.successCriteria.requireMonitorBypassCleared} onChange={(event) => update((next) => { next.successCriteria.requireMonitorBypassCleared = event.target.checked; })} /> Monitor Bypass released</label>
+      </section>
+
+      <section className="dvor1150-scenario-policy" aria-label="Student recovery controls">
+        <strong>Student recovery controls</strong>
+        <p>Only selected physical controls are available to the student. Monitor limits, alarm enablement, offsets, and calibration stay protected.</p>
+        {sections.map((section) => <details key={`student-controls-${section}`} className="pmdt-config-section">
+          <summary>{section}</summary>
+          <div className="pmdt-config-section-body">
+            {fields.filter((field) => field.section === section).map((field) => <label key={field.id}>
+              <input
+                type="checkbox"
+                checked={scenarioDraft.studentEditableFieldIds.includes(field.id)}
+                onChange={(event) => update((next) => {
+                  next.studentEditableFieldIds = event.target.checked
+                    ? [...next.studentEditableFieldIds, field.id]
+                    : next.studentEditableFieldIds.filter((id) => id !== field.id);
+                })}
+              /> {field.label}
+            </label>)}
+          </div>
+        </details>)}
       </section>
 
       <section className="dvor1150-scenario-preview" aria-label="Scenario preview">

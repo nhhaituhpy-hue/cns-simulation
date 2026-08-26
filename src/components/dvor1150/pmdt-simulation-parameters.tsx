@@ -19,7 +19,13 @@ function mirrorNominalField(field: Dvor1150ConfigFieldDefinition): readonly stri
   return [field.id.replace("transmitters.tx1.nominal.", "transmitters.tx2.nominal.")];
 }
 
-function SimulationParameterField({ field }: { field: Dvor1150ConfigFieldDefinition }) {
+function SimulationParameterField({
+  field,
+  mirrorNominal,
+}: {
+  field: Dvor1150ConfigFieldDefinition;
+  mirrorNominal: boolean;
+}) {
   return <label className="pmdt-config-field">
     <span className="pmdt-config-field-label" title={field.description}>{fieldLabel(field)}</span>
     <span className="pmdt-config-field-control">
@@ -27,7 +33,7 @@ function SimulationParameterField({ field }: { field: Dvor1150ConfigFieldDefinit
         fieldId={field.id}
         type={field.type}
         digits={field.digits}
-        mirrorFieldIds={mirrorNominalField(field)}
+        mirrorFieldIds={mirrorNominal ? mirrorNominalField(field) : undefined}
       />
       {field.unit ? <small>{field.unit}</small> : null}
     </span>
@@ -43,12 +49,16 @@ export function Dvor1150SimulationParametersPanel() {
   const loginDialogOpen = useDvor1150PmdtStore((state) => state.loginDialogOpen);
   const config = useDvor1150PmdtStore((state) => state.config);
   const derived = useDvor1150PmdtStore((state) => state.derived);
+  const scenario = useDvor1150PmdtStore((state) => state.scenario);
   const local = config.simulation.local;
   const applyConfigChanges = useDvor1150PmdtStore((state) => state.applyConfigChanges);
   const resetConfigDraft = useDvor1150PmdtStore((state) => state.resetConfigDraft);
   const canEdit = securityLevel >= 3 && !loginDialogOpen && local;
+  const permittedScenarioFields = new Set(scenario.definition?.studentEditableFieldIds ?? []);
   const fields = dvor1150ConfigFieldCatalog.filter((field) => (
-    !field.id.startsWith("transmitters.tx2.nominal.") && !field.id.endsWith("nominal.identCode")
+    !field.id.startsWith("transmitters.tx2.nominal.")
+    && !field.id.endsWith("nominal.identCode")
+    && (!scenario.active || permittedScenarioFields.has(field.id))
   ));
   const sections = Array.from(new Set(fields.map((field) => field.section)));
 
@@ -58,7 +68,7 @@ export function Dvor1150SimulationParametersPanel() {
       <button type="button" title="Close" aria-label="Close parameters" onClick={() => setOpen(false)}><X aria-hidden size={13} weight="bold" /></button>
     </header>
     <div className="pmdt-config-summary">
-      <span>Initial values: DVOR 1150 new baseline</span>
+      <span>{scenario.active ? "Scenario controls: examiner-authorized recovery fields only" : "Initial values: DVOR 1150 new baseline"}</span>
       <span>Active Tx: <b>{derived.activeTransmitter?.toUpperCase() ?? "NONE"}</b></span>
       <span>VSWR alarm: <b>&gt; 1.25 : 1</b></span>
       {derived.validation.length > 0 ? <span className="pmdt-config-summary-warning">{derived.validation.length} validation issue(s)</span> : null}
@@ -68,7 +78,7 @@ export function Dvor1150SimulationParametersPanel() {
     <div className="pmdt-config-panel-body">
       {sections.map((section) => <details key={section} className="pmdt-config-section" open={section === "Station" || section === "Transmitter Nominal" || section === "Monitor General"}>
         <summary>{section}</summary>
-        <div className="pmdt-config-section-body">{fields.filter((field) => field.section === section).map((field) => <SimulationParameterField key={field.id} field={field} />)}</div>
+        <div className="pmdt-config-section-body">{fields.filter((field) => field.section === section).map((field) => <SimulationParameterField key={field.id} field={field} mirrorNominal={!scenario.active} />)}</div>
       </details>)}
     </div>
     <footer className="pmdt-config-panel-footer">

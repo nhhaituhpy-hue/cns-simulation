@@ -35,13 +35,17 @@ export function Dvor1150ConfigControl({
   const config = useDvor1150PmdtStore((state) => state.configDraft);
   const security = useDvor1150PmdtStore((state) => state.securityLevel);
   const local = useDvor1150PmdtStore((state) => state.config.simulation.local);
+  const scenario = useDvor1150PmdtStore((state) => state.scenario);
   const setConfigValue = useDvor1150PmdtStore((state) => state.setConfigValue);
   const field = dvor1150ConfigFieldCatalog.find((item) => item.id === fieldId);
   const value = getDvor1150ConfigValue(config, fieldId);
   const controlType = type ?? field?.type ?? "text";
   const [draftValue, setDraftValue] = useState(formatValue(value, digits ?? field?.digits));
   const [editing, setEditing] = useState(false);
-  const canEdit = security >= 3 && local && Boolean(field);
+  const scenarioAllowsField = !scenario.active || Boolean(
+    scenario.definition?.studentEditableFieldIds.includes(fieldId),
+  );
+  const canEdit = security >= 3 && local && scenarioAllowsField && Boolean(field);
 
   useEffect(() => {
     if (!editing) setDraftValue(formatValue(value, digits ?? field?.digits));
