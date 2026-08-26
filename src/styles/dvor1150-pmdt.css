@@ -2824,8 +2824,10 @@ input[type="checkbox"].dvor1150-control {
 /* Examiner-only tools live outside the PMDT reference window, following the
  * same separation as the DVOR 220 simulator. */
 .dvor1150-pmdt-page .dvor1150-simulator-frame {
-  width: 900px;
-  min-width: 900px;
+  /* Keep the external scenario toolbar exactly aligned with the compact
+   * 850 px PMDT reference window below it. */
+  width: 850px;
+  min-width: 850px;
 }
 
 .dvor1150-pmdt-page .dvor1150-simulator-tools {
@@ -3022,6 +3024,6 @@ input[type="checkbox"].dvor1150-control {
 
 @media (max-width: 920px) {
   .dvor1150-pmdt-page .dvor1150-simulator-frame {
-    width: 900px;
+    width: 850px;
   }
 }
