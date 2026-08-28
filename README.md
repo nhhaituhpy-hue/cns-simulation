@@ -514,7 +514,7 @@ npm run clean:cache
 | Giám khảo | `/admin/vor` | `/admin/dme` | `/admin/ads-b` |
 | Học viên | `/student/vor` | `/student/dme` | `/student/ads-b` |
 
-Các route con xử lý tạo/sửa kịch bản, phiên thực hành, danh sách bài nộp và đánh giá kết quả.
+`/student/vor` là route ôn tập của DVOR 1150A. DVOR 1150 legacy có route học viên riêng tại `/student/dvor-1150`; route này dùng PMDT Model 1150 và không phải alias của DVOR 1150A. Các route con xử lý tạo/sửa kịch bản, phiên thực hành, danh sách bài nộp và đánh giá kết quả.
 
 Simulator phần mềm khai thác độc lập:
 
@@ -652,6 +652,7 @@ Khi kế hoạch nội bộ và manual nhà sản xuất khác nhau, manual là 
 - Mở rộng kiểm thử E2E, accessibility, hiệu năng và quan sát lỗi production.
 
 ## Session Log
+- [2026-08-28] Tách route ôn tập học viên của **DVOR 1150** khỏi DVOR 1150A: thêm `/student/dvor-1150` dùng PMDT Model 1150 ở chế độ `student`, cập nhật manifest `student/review` của module legacy, giữ `/student/vor` riêng cho DVOR 1150A và bổ sung kiểm thử chống trùng route.
 - [2026-08-26] Tạo **DME1119A_Scenario_Manual.pdf** tại `public/simulator_manuals/` (12 trang): hướng dẫn Giám khảo/Học viên tạo scenario từ TST, preset và fault injection, cấu hình success criteria/whitelist, Export/Import JSON, Apply -> IN PROGRESS -> SOLVED, xử lý VSWR/changeover/bypass, Restore/End và cô lập persistence. Tài liệu dùng ảnh chụp trực tiếp simulator DME 1119A bằng trình điều khiển trình duyệt, gồm PMDT SEC3, Scenario Parameters, preset VSWR, HUD IN PROGRESS/SOLVED và End/Restore TST; bản QA được render và kiểm tra trực quan trước khi phát hành.
 - [2026-08-26] Hoàn thiện **DME 1119A Standalone Scenario Parameters** tại `/simulator/dme-1119a`: tám preset deterministic, Import/Export JSON schema v1, Preview, fault-to-monitor derivation, success criteria, student whitelist, Training HUD, Restore Scenario và End/Restore TST. Scenario dùng baseline TST, chỉ tồn tại trong phiên và chặn mọi ghi profile/history; các entry point `/admin/dme`, `/admin/dme/create`, `/admin/dme/edit`, `/student/dme` và `/student/dme/session` chuyển hướng về simulator độc lập nhưng dữ liệu legacy vẫn giữ nguyên. Browser smoke đã kiểm tra Low Output/HPA/Overtemperature; focused DME suite **106/106**, regression mở rộng **134/134**, typecheck, targeted ESLint và production build đều đạt.
 - [2026-08-26] Tạo **DVOR1150A_Scenario_Manual.pdf** tại `public/manuals/`: tài liệu 14 trang A4 hướng dẫn Giám khảo/Học viên tạo scenario từ Đài TEST/TST, bốn preset tích hợp, ma trận Config -> Monitor -> recovery, whitelist tham số học viên, Import/Export JSON schema v1, quy trình Alarm -> F7/nhả Bypass -> `SOLVED`, Restore/F8/End Scenario và checklist xử lý lỗi. Tài liệu sử dụng 9 ảnh chụp trực tiếp từ DVOR 1150A Simulator bằng trình duyệt; toàn bộ 14 trang đã được render bằng Poppler, kiểm tra font tiếng Việt, bố cục, bảng và ảnh trước khi bàn giao.

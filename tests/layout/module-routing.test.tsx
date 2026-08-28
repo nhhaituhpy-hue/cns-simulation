@@ -2,6 +2,8 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { AdminDashboard } from "@/components/admin/admin-dashboard";
 import { StudentDashboard } from "@/components/qcms/student-dashboard";
+import { DVOR_1150_MODULE } from "@/modules/devices/dvor-1150";
+import { DVOR_1150A_MODULE } from "@/modules/devices/dvor-1150a";
 import { useScenarioStore } from "@/stores/scenario-store";
 import { useVorScenarioStore } from "@/stores/vor-scenario-store";
 import { useDmeScenarioStore } from "@/stores/dme-scenario-store";
@@ -32,6 +34,13 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe("CNS module routing", () => {
+  it("keeps legacy DVOR 1150 review separate from DVOR 1150A", () => {
+    expect(DVOR_1150_MODULE.routes.student).toBe("/student/dvor-1150");
+    expect(DVOR_1150_MODULE.routes.review).toBe("/student/dvor-1150");
+    expect(DVOR_1150A_MODULE.routes.student).toBe("/student/vor");
+    expect(DVOR_1150A_MODULE.routes.review).toBe("/student/vor");
+  });
+
   it("renders the selected admin module without an in-content tab bar", () => {
     const { container } = render(<AdminDashboard activeModule="dme" />);
 
