@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { BookOpenText } from "@phosphor-icons/react/dist/csr/BookOpenText";
 import { CalendarCheck } from "@phosphor-icons/react/dist/csr/CalendarCheck";
 import { CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
@@ -391,24 +392,25 @@ function PageTransition({ children }: { children: ReactNode }) {
   );
 }
 
-const standaloneSimulatorPaths = [
-  "/login",
-  "/simulator/dvor-1150",
-  "/simulator/dvor-1150a",
-  "/simulator/dme-1119a",
-  "/simulator/ads-b",
-  "/simulator/software/dvor-220",
-  "/simulator/software/dme-320",
-];
-
 export function AppShell({ children, currentUser }: AppShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const isLanding = pathname === "/";
+  const isLogin = pathname === "/login";
+  const isSimulatorDetail = pathname.startsWith("/simulator/");
 
-  if (standaloneSimulatorPaths.includes(pathname)) {
+  if (isLogin) {
     return <>{children}</>;
+  }
+
+  function goBackFromSimulator() {
+    if (window.history.length > 1) {
+      router.back();
+      return;
+    }
+    router.push("/simulator");
   }
 
   async function signOut() {
@@ -509,6 +511,23 @@ export function AppShell({ children, currentUser }: AppShellProps) {
           </div>
         </div>
       </header>
+
+      {isSimulatorDetail ? (
+        <div className="border-b border-[var(--border)] bg-[var(--surface-subtle)] print:hidden">
+          <div className="mx-auto flex min-h-12 max-w-[1600px] items-center px-4 sm:px-5 lg:px-8">
+            <button
+              type="button"
+              onClick={goBackFromSimulator}
+              aria-label="Quay lại trang trước"
+              title="Quay lại trang trước"
+              className="inline-flex min-h-10 items-center gap-2 rounded-md border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--text-primary)] transition-[background-color,border-color,color] duration-150 hover:border-[var(--accent-border)] hover:bg-[var(--accent-muted)] hover:text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 motion-reduce:transition-none"
+            >
+              <ArrowLeft aria-hidden size={16} weight="regular" />
+              Quay lại
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       <main id="main-content" tabIndex={-1} className="min-w-0">
         <PageTransition>{children}</PageTransition>

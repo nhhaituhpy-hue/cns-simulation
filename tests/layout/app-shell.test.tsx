@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppShell } from "@/components/layout/app-shell";
 
 const mockUsePathname = vi.hoisted(() => vi.fn());
-const mockRouter = vi.hoisted(() => ({ push: vi.fn(), refresh: vi.fn() }));
+const mockRouter = vi.hoisted(() => ({ back: vi.fn(), push: vi.fn(), refresh: vi.fn() }));
 
 vi.mock("next/navigation", () => ({
   usePathname: mockUsePathname,
@@ -125,15 +125,25 @@ describe("AppShell", () => {
   it.each([
     "/simulator/dvor-1150",
     "/simulator/dvor-1150a",
+    "/simulator/dme-1119a",
+    "/simulator/ads-b",
     "/simulator/software/dvor-220",
     "/simulator/software/dme-320",
-  ])("keeps the standalone simulator route %s outside the global app shell", (pathname) => {
+  ])("shows the global header and back action on simulator route %s", (pathname) => {
     mockUsePathname.mockReturnValue(pathname);
     renderShell();
 
     expect(screen.getByText("Nội dung kiểm thử")).toBeInTheDocument();
-    expect(
-      screen.queryByRole("navigation", { name: "Điều hướng chính" }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole("banner")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Quay lại trang trước" })).toBeInTheDocument();
+  });
+
+  it("falls back to the simulator catalog when browser history has no previous entry", () => {
+    mockUsePathname.mockReturnValue("/simulator/dvor-1150");
+    renderShell();
+
+    fireEvent.click(screen.getByRole("button", { name: "Quay lại trang trước" }));
+
+    expect(mockRouter.push).toHaveBeenCalledWith("/simulator");
   });
 });
