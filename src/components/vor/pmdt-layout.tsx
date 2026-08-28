@@ -34,6 +34,7 @@ export interface PmdtLayoutProps {
   simulatorId?: Extract<SupportedSimulatorConfigId, "dvor-1150a">;
   scenarioAuthoringEnabled?: boolean;
   children?: ReactNode;
+  leadingPanel?: ReactNode;
   sidePanel?: ReactNode;
 }
 
@@ -62,8 +63,13 @@ export function PmdtLayout({
   simulatorId,
   scenarioAuthoringEnabled = false,
   children,
+  leadingPanel,
   sidePanel,
 }: PmdtLayoutProps) {
+  const externalLeadingPanel = mode === "student" ? leadingPanel : null;
+  const externalSidePanel = mode === "student" ? sidePanel : null;
+  const hasExternalPanels = Boolean(externalLeadingPanel || externalSidePanel);
+  const inlineSidePanel = mode === "student" ? null : sidePanel;
   const setMode = useVorPmdtStore((state) => state.setMode);
   const configPanelOpen = useVorPmdtStore((state) => state.configPanelOpen);
   const scenarioParametersOpen = useVorPmdtStore((state) => state.scenarioParametersOpen);
@@ -99,7 +105,7 @@ export function PmdtLayout({
   }, [applyConfigChanges, restoreDefaultConfig]);
 
   return (
-    <div className="pmdt-classic-viewport">
+    <div className={`pmdt-classic-viewport ${hasExternalPanels ? "pmdt-classic-viewport--with-external-inspector" : ""}`}>
       <div className="dvor1150a-simulator-frame">
         {mode === "preview" && (scenarioAuthoringEnabled || scenario.active) ? <nav className="dvor1150a-simulator-tools" aria-label="DVOR 1150A simulator tools">
           {scenarioAuthoringEnabled ? <button type="button" onClick={() => setScenarioParametersOpen(true)}>Scenario Parameters</button> : null}
@@ -110,7 +116,7 @@ export function PmdtLayout({
         <section
         aria-label="VOR PMDT Simulator"
         className={`pmdt-classic-window ${
-          sidePanel
+          inlineSidePanel
             ? "pmdt-classic-window--with-inspector"
             : "pmdt-classic-window--standard"
         }`}
@@ -125,9 +131,9 @@ export function PmdtLayout({
         <main className="pmdt-classic-main">
           {loginDialogOpen ? <div className="pmdt-prelogin-workspace" aria-hidden="true" /> : (children ?? <PmdtScreenRouter />)}
         </main>
-        {sidePanel ? (
+        {inlineSidePanel ? (
           <aside aria-label={mode === "author" ? "Bảng xây dựng kịch bản" : "Nhật ký học viên"} className="pmdt-classic-inspector">
-            {sidePanel}
+            {inlineSidePanel}
           </aside>
         ) : null}
         <div className="pmdt-statusbar-row">
@@ -140,6 +146,16 @@ export function PmdtLayout({
         {mode === "preview" && simulatorId ? <SimulatorConfigPersistence simulatorId={simulatorId} /> : null}
       </section>
       </div>
+      {externalLeadingPanel ? (
+        <aside aria-label="Nhật ký học viên" className="pmdt-classic-inspector pmdt-classic-inspector--external pmdt-classic-inspector--external-leading">
+          {externalLeadingPanel}
+        </aside>
+      ) : null}
+      {externalSidePanel ? (
+        <aside aria-label="Màn hình và thao tác đã ghi nhận" className="pmdt-classic-inspector pmdt-classic-inspector--external">
+          {externalSidePanel}
+        </aside>
+      ) : null}
     </div>
   );
 }

@@ -9,17 +9,40 @@ import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
 
 interface VorStudentJournalProps {
   scenario: VorScenario;
+  showConclusion?: boolean;
+}
+
+interface VorStudentActivityProps {
   isSubmitting: boolean;
   onSubmit: () => Promise<void>;
   onContinue?: () => void;
 }
 
-export function VorStudentJournal({ scenario, isSubmitting, onSubmit, onContinue }: VorStudentJournalProps) {
+export function VorStudentJournal({ scenario, showConclusion = false }: VorStudentJournalProps) {
+  return (
+    <div className="text-[#e2e8f0]">
+      <header className="border-b border-[#334155] p-4">
+        <div className="flex items-center gap-2 text-[#93c5fd]">
+          <ClipboardText aria-hidden size={18} />
+          <h2 className="text-sm font-bold">Nhật ký học viên</h2>
+        </div>
+        <p className="mt-2 text-xs leading-5 text-[#94a3b8]">{scenario.prompt}</p>
+      </header>
+
+      {showConclusion ? (
+        <div className="p-4">
+          <VorStudentConclusion />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export function VorStudentActivity({ isSubmitting, onSubmit, onContinue }: VorStudentActivityProps) {
   const events = useVorPmdtStore((state) => state.attemptEvents);
   const answer = useVorPmdtStore((state) => state.answer);
   const updateEventAnnotation = useVorPmdtStore((state) => state.updateEventAnnotation);
   const removeEvent = useVorPmdtStore((state) => state.removeEvent);
-  const updateAnswer = useVorPmdtStore((state) => state.updateAnswer);
   const [error, setError] = useState("");
 
   async function submit() {
@@ -27,7 +50,7 @@ export function VorStudentJournal({ scenario, isSubmitting, onSubmit, onContinue
       setError("Hãy mở ít nhất một màn hình kiểm tra trước khi nộp bài.");
       return;
     }
-    if (!answer.suspectedFault.trim() || !answer.reasoning.trim() || !answer.remediation.trim()) {
+    if (!onContinue && (!answer.suspectedFault.trim() || !answer.reasoning.trim() || !answer.remediation.trim())) {
       setError("Vui lòng hoàn thành cả ba phần kết luận.");
       return;
     }
@@ -41,18 +64,10 @@ export function VorStudentJournal({ scenario, isSubmitting, onSubmit, onContinue
 
   return (
     <div className="flex min-h-full flex-col text-[#e2e8f0]">
-      <header className="border-b border-[#334155] p-4">
-        <div className="flex items-center gap-2 text-[#93c5fd]">
-          <ClipboardText aria-hidden size={18} />
-          <h2 className="text-sm font-bold">Nhật ký học viên</h2>
-        </div>
-        <p className="mt-2 text-xs leading-5 text-[#94a3b8]">{scenario.prompt}</p>
-      </header>
-
       <div className="flex-1 space-y-5 p-4">
         <section aria-labelledby="activity-title">
           <div className="flex items-center justify-between gap-2">
-            <h3 id="activity-title" className="text-xs font-bold uppercase tracking-wide text-[#cbd5e1]">Màn hình và thao tác đã ghi nhận</h3>
+            <h2 id="activity-title" className="text-xs font-bold uppercase tracking-wide text-[#cbd5e1]">Màn hình và thao tác đã ghi nhận</h2>
             <span className="rounded bg-[#1e293b] px-2 py-0.5 font-mono text-[10px] text-[#93c5fd]">{events.length}</span>
           </div>
           {events.length === 0 ? (
@@ -66,7 +81,7 @@ export function VorStudentJournal({ scenario, isSubmitting, onSubmit, onContinue
                   <button
                     type="button"
                     onClick={() => removeEvent(event.id)}
-                    className="absolute right-2 top-2 p-1 text-[#64748b] hover:text-[#ef4444] rounded hover:bg-[#1e293b] transition-colors"
+                    className="absolute right-2 top-2 rounded p-1 text-[#64748b] transition-colors hover:bg-[#1e293b] hover:text-[#ef4444]"
                     title="Xóa thao tác này"
                   >
                     <X size={14} />
@@ -98,13 +113,6 @@ export function VorStudentJournal({ scenario, isSubmitting, onSubmit, onContinue
             </ol>
           )}
         </section>
-
-        <section aria-labelledby="conclusion-title" className="space-y-3 border-t border-[#334155] pt-5">
-          <h3 id="conclusion-title" className="text-xs font-bold uppercase tracking-wide text-[#cbd5e1]">Kết luận sự cố</h3>
-          <AnswerField label="Vị trí / sự cố nghi ngờ" value={answer.suspectedFault} onChange={(value) => updateAnswer({ suspectedFault: value })} />
-          <AnswerField label="Căn cứ chẩn đoán" value={answer.reasoning} onChange={(value) => updateAnswer({ reasoning: value })} />
-          <AnswerField label="Hướng khắc phục" value={answer.remediation} onChange={(value) => updateAnswer({ remediation: value })} />
-        </section>
       </div>
 
       <footer className="sticky bottom-0 border-t border-[#334155] bg-[#111827] p-4">
@@ -113,13 +121,27 @@ export function VorStudentJournal({ scenario, isSubmitting, onSubmit, onContinue
           type="button"
           onClick={() => void submit()}
           disabled={isSubmitting}
-          className="inline-flex h-10 w-full items-center justify-center gap-2 rounded bg-[#2563eb] px-4 text-xs font-bold text-white hover:bg-[#1d4ed8] disabled:cursor-wait disabled:opacity-60"
+          className="pmdt-student-action-button inline-flex h-10 w-full items-center justify-center gap-1 rounded border border-[#60a5fa] bg-[#1d4ed8] px-2 text-[10px] font-semibold leading-4 text-[#f8fafc] whitespace-nowrap hover:bg-[#2563eb] disabled:cursor-wait disabled:opacity-60"
         >
           <CheckCircle aria-hidden size={17} />
-          {isSubmitting ? "Đang nộp…" : onContinue ? "Tiếp tục: Xác định phần cứng" : "Nộp bài cho giám khảo"}
+          {isSubmitting ? "Đang nộp…" : onContinue ? "Bước 2 - Xác định phần cứng lỗi" : "Nộp bài cho giám khảo"}
         </button>
       </footer>
     </div>
+  );
+}
+
+export function VorStudentConclusion() {
+  const answer = useVorPmdtStore((state) => state.answer);
+  const updateAnswer = useVorPmdtStore((state) => state.updateAnswer);
+
+  return (
+    <section aria-labelledby="conclusion-title" className="space-y-3 border-t border-[#334155] pt-5">
+      <h2 id="conclusion-title" className="text-xs font-bold uppercase tracking-wide text-[#cbd5e1]">Kết luận sự cố</h2>
+      <AnswerField label="Vị trí / sự cố nghi ngờ" value={answer.suspectedFault} onChange={(value) => updateAnswer({ suspectedFault: value })} />
+      <AnswerField label="Căn cứ chẩn đoán" value={answer.reasoning} onChange={(value) => updateAnswer({ reasoning: value })} />
+      <AnswerField label="Hướng khắc phục" value={answer.remediation} onChange={(value) => updateAnswer({ remediation: value })} />
+    </section>
   );
 }
 

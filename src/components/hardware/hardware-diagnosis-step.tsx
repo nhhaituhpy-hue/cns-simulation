@@ -3,7 +3,7 @@
 import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { Circuitry } from "@phosphor-icons/react/dist/csr/Circuitry";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type {
   EquipmentComponent,
   EquipmentDiagram,
@@ -18,6 +18,9 @@ interface HardwareDiagnosisStepProps {
   isSubmitting: boolean;
   onBack: () => void;
   onSubmit: (answer: HardwareDiagnosisAnswer) => Promise<void>;
+  backLabel?: string;
+  studentActionButtons?: boolean;
+  additionalConclusion?: ReactNode;
 }
 
 export function HardwareDiagnosisStep({
@@ -27,6 +30,9 @@ export function HardwareDiagnosisStep({
   isSubmitting,
   onBack,
   onSubmit,
+  backLabel = "Quay lại PMDT",
+  studentActionButtons = false,
+  additionalConclusion,
 }: HardwareDiagnosisStepProps) {
   const [selectedComponentIds, setSelectedComponentIds] = useState<string[]>([]);
   const [inspectedComponentIds, setInspectedComponentIds] = useState<string[]>([]);
@@ -74,7 +80,15 @@ export function HardwareDiagnosisStep({
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#60a5fa]">Bước 2 / 2 · Xác định phần cứng</p>
             <h1 className="mt-1 text-lg font-bold text-white">{scenarioTitle}</h1>
           </div>
-          <button type="button" onClick={onBack} className="inline-flex h-9 items-center gap-2 border border-[#475569] px-3 text-xs font-semibold hover:border-[#60a5fa]"><ArrowLeft aria-hidden size={16} />Quay lại PMDT</button>
+          <button
+            type="button"
+            onClick={onBack}
+            className={studentActionButtons
+              ? "pmdt-student-action-button inline-flex h-9 items-center gap-1 rounded border border-[#60a5fa] bg-[#1d4ed8] px-3 text-[10px] font-semibold leading-4 text-[#f8fafc] whitespace-nowrap hover:bg-[#2563eb]"
+              : "inline-flex h-9 items-center gap-2 border border-[#475569] px-3 text-xs font-semibold hover:border-[#60a5fa]"}
+          >
+            <ArrowLeft aria-hidden size={16} />{backLabel}
+          </button>
         </div>
       </header>
 
@@ -109,8 +123,18 @@ export function HardwareDiagnosisStep({
               className="resize-y border border-[#475569] bg-[#0a0e1a] p-3 text-sm font-normal leading-6 text-white outline-none focus:border-[#60a5fa]"
             />
           </label>
+          {additionalConclusion ? <div className="mt-6">{additionalConclusion}</div> : null}
           {error ? <p role="alert" className="mt-3 text-xs font-semibold text-[#fca5a5]">{error}</p> : null}
-          <button type="button" disabled={isSubmitting} onClick={() => void submit()} className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 bg-[#2563eb] px-4 text-sm font-bold text-white hover:bg-[#1d4ed8] disabled:cursor-wait disabled:opacity-60"><CheckCircle aria-hidden size={18} />{isSubmitting ? "Đang nộp…" : "Nộp bài cho giám khảo"}</button>
+          <button
+            type="button"
+            disabled={isSubmitting}
+            onClick={() => void submit()}
+            className={studentActionButtons
+              ? "pmdt-student-action-button mt-5 inline-flex h-11 w-full items-center justify-center gap-1 rounded border border-[#60a5fa] bg-[#1d4ed8] px-2 text-[10px] font-semibold leading-4 text-[#f8fafc] whitespace-nowrap hover:bg-[#2563eb] disabled:cursor-wait disabled:opacity-60"
+              : "mt-5 inline-flex h-11 w-full items-center justify-center gap-2 bg-[#2563eb] px-4 text-sm font-bold text-white hover:bg-[#1d4ed8] disabled:cursor-wait disabled:opacity-60"}
+          >
+            <CheckCircle aria-hidden size={18} />{isSubmitting ? "Đang nộp…" : "Nộp bài cho giám khảo"}
+          </button>
         </aside>
       </div>
     </main>

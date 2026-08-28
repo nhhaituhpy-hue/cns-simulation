@@ -14,7 +14,7 @@ import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
 import { useDmeScenarioStore } from "@/stores/dme-scenario-store";
 import { useDmeSubmissionStore } from "@/stores/dme-submission-store";
 import { PmdtLayout } from "../pmdt-layout";
-import { DmeStudentJournal } from "./dme-student-journal";
+import { DmeStudentActivity, DmeStudentConclusion, DmeStudentJournal } from "./dme-student-journal";
 
 interface DmeStudentSessionProps {
   scenarioId: string;
@@ -163,6 +163,9 @@ export function DmeStudentSession({ scenarioId, identity: authIdentity, official
         isSubmitting={isSubmitting}
         onBack={() => setStage("pmdt")}
         onSubmit={submit}
+        backLabel="Quay lại Bước 1 - Kiểm tra PMDT"
+        studentActionButtons
+        additionalConclusion={<DmeStudentConclusion />}
       />
     );
   }
@@ -170,14 +173,15 @@ export function DmeStudentSession({ scenarioId, identity: authIdentity, official
   return (
     <div className="bg-[#070a12]">
       {submitError ? <div role="alert" className="min-w-[1024px] border-b border-red-800 bg-red-950 px-4 py-2 text-sm text-red-100">{submitError}</div> : null}
-      <div className="min-w-[1024px] border-b border-[#334155] bg-[#111827] px-4 py-2 text-xs text-[#cbd5e1]">
+      <div className="min-w-[1024px] border-b border-[#334155] bg-[#111827] px-4 py-2 text-center text-xs text-[#cbd5e1]">
         <span className="font-bold text-white">{scenario.title}</span>
         <span className="mx-2 text-[#475569]">|</span>
         <span>{identity.studentName} | {identity.workUnit}</span>
       </div>
       <PmdtLayout
         mode="student"
-        sidePanel={<DmeStudentJournal scenario={scenario} isSubmitting={isSubmitting} onSubmit={submit} onContinue={scenario.hardwareTask ? () => setStage("hardware") : undefined} />}
+        leadingPanel={<DmeStudentJournal scenario={scenario} showConclusion={!scenario.hardwareTask} />}
+        sidePanel={<DmeStudentActivity isSubmitting={isSubmitting} onSubmit={submit} onContinue={scenario.hardwareTask ? () => setStage("hardware") : undefined} />}
       />
     </div>
   );

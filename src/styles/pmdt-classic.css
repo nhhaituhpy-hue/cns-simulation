@@ -11,6 +11,7 @@
 }
 
 .pmdt-classic-viewport {
+  position: relative;
   display: flex;
   min-height: 693px;
   width: 100%;
@@ -18,6 +19,7 @@
   justify-content: center;
   overflow: visible;
   padding: 0;
+  isolation: isolate;
 }
 
 .pmdt-classic-window {
@@ -89,6 +91,70 @@
   overflow-y: auto;
   border-left: 1px solid #808080;
   background: #ededed;
+}
+
+/* Keep the student journal beside the fixed PMDT window so it cannot reduce
+ * the simulator's client area or hide long journal/conclusion content. */
+.pmdt-classic-viewport--with-external-inspector {
+  display: block;
+}
+
+.pmdt-classic-viewport--with-external-inspector > .dvor1150a-simulator-frame,
+.pmdt-classic-viewport--with-external-inspector > .dme1119a-simulator-frame {
+  width: 900px;
+  margin-inline: auto;
+}
+
+.pmdt-classic-viewport--with-external-inspector > .pmdt-classic-inspector--external {
+  position: absolute;
+  top: 51px;
+  left: calc(50% + 462px);
+  width: 280px;
+  height: 620px;
+  overflow-x: hidden;
+  background: #070a12;
+}
+
+.pmdt-classic-viewport--with-external-inspector > .pmdt-classic-inspector--external-leading {
+  right: calc(50% + 462px);
+  left: auto;
+  height: auto;
+  max-height: 620px;
+  border: 1px solid #334155;
+}
+
+/* Keep the VOR/DME student actions on one compact, consistent type scale;
+ * this rule also wins over the global button reset outside Tailwind's layer. */
+.pmdt-student-action-button {
+  font-size: 10px !important;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+@media (max-width: 1220px) {
+  .pmdt-classic-viewport--with-external-inspector {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .pmdt-classic-viewport--with-external-inspector > .dvor1150a-simulator-frame,
+  .pmdt-classic-viewport--with-external-inspector > .dme1119a-simulator-frame {
+    flex: 0 0 900px;
+    margin-inline: 0;
+  }
+
+  .pmdt-classic-viewport--with-external-inspector > .pmdt-classic-inspector--external {
+    position: static;
+    flex: 0 0 620px;
+  }
+
+  .pmdt-classic-viewport--with-external-inspector > .pmdt-classic-inspector--external-leading {
+    flex: 0 0 auto;
+    height: auto;
+  }
 }
 
 .pmdt-config-panel {
