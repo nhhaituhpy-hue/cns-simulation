@@ -9,9 +9,9 @@ export const DVOR_1150_MODULE = {
   description: "Mô phỏng thiết bị và giao diện PMDT đơn giản của hệ thống Model 1150 DVOR.",
   routes: {
     admin: "/simulator/dvor-1150",
-    student: "/simulator/dvor-1150",
+    student: "/student/vor",
     simulator: "/simulator/dvor-1150",
     authoring: "/simulator/dvor-1150",
-    review: "/simulator/dvor-1150",
+    review: "/student/vor",
   },
 } as const satisfies SimulatorModuleDefinition<"dvor-1150">;
