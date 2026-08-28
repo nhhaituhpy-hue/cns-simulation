@@ -95,6 +95,7 @@ export interface Dvor1150PmdtStoreState {
 
 export interface Dvor1150PmdtStoreActions {
   setMode: (mode: Dvor1150PmdtMode) => void;
+  initializeStudentScenario: (definition: Dvor1150ScenarioDefinition) => boolean;
   openLogin: () => void;
   login: (userId: string, password: string) => boolean;
   logout: () => void;
@@ -328,6 +329,32 @@ export function createDvor1150PmdtStore(
     return {
       ...initial,
       setMode: (mode) => set({ mode }),
+      initializeStudentScenario: (definition) => {
+        const issues = validateDvor1150ScenarioDefinition(definition);
+        if (issues.length > 0) {
+          set({ lastCommand: `Student scenario initialization failed: ${issues[0]}` });
+          return false;
+        }
+        const studentState = buildInitialState(now);
+        const config = configurationForDvor1150Scenario(definition, studentState.config);
+        const derived = buildDvor1150Snapshot(config, now());
+        set({
+          ...studentState,
+          mode: "student",
+          config,
+          configDraft: cloneDvor1150Config(config),
+          configurationBackup: cloneDvor1150Config(config),
+          derived,
+          scenario: {
+            active: true,
+            definition: structuredClone(definition),
+            startedAt: config.simulation.timestamp,
+          },
+          scenarioDraft: structuredClone(definition),
+          lastCommand: null,
+        });
+        return true;
+      },
       openLogin: () => set({
         loginDialogOpen: true,
         loginError: null,

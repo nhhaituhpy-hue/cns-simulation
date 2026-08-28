@@ -151,6 +151,15 @@ export const DVOR1150_BUILT_IN_SCENARIOS = [
   { id: "sideband-vswr", label: "TX1 sideband VSWR executive alarm", create: createSidebandVswrScenario },
 ] as const;
 
+/** Student-facing exercises exclude the neutral baseline/template entry. */
+export const DVOR1150_STUDENT_SCENARIOS = DVOR1150_BUILT_IN_SCENARIOS.filter(
+  (scenario) => scenario.id !== "default",
+);
+
+export function createDvor1150StudentScenario(scenarioId: string): Dvor1150ScenarioDefinition | null {
+  return DVOR1150_STUDENT_SCENARIOS.find((scenario) => scenario.id === scenarioId)?.create() ?? null;
+}
+
 /** Applies a definition without carrying over student changes from a prior run. */
 export function configurationForDvor1150Scenario(
   definition: Dvor1150ScenarioDefinition,

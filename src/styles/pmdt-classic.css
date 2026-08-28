@@ -100,7 +100,8 @@
 }
 
 .pmdt-classic-viewport--with-external-inspector > .dvor1150a-simulator-frame,
-.pmdt-classic-viewport--with-external-inspector > .dme1119a-simulator-frame {
+.pmdt-classic-viewport--with-external-inspector > .dme1119a-simulator-frame,
+.pmdt-classic-viewport--with-external-inspector > .dvor1150-simulator-frame {
   width: 900px;
   margin-inline: auto;
 }
@@ -141,7 +142,8 @@
   }
 
   .pmdt-classic-viewport--with-external-inspector > .dvor1150a-simulator-frame,
-  .pmdt-classic-viewport--with-external-inspector > .dme1119a-simulator-frame {
+  .pmdt-classic-viewport--with-external-inspector > .dme1119a-simulator-frame,
+  .pmdt-classic-viewport--with-external-inspector > .dvor1150-simulator-frame {
     flex: 0 0 900px;
     margin-inline: 0;
   }

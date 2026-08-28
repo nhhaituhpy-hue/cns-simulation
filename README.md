@@ -514,7 +514,7 @@ npm run clean:cache
 | Giám khảo | `/admin/vor` | `/admin/dme` | `/admin/ads-b` |
 | Học viên | `/student/vor` | `/student/dme` | `/student/ads-b` |
 
-`/student/vor` là route ôn tập của DVOR 1150A. DVOR 1150 legacy có route học viên riêng tại `/student/dvor-1150`; route này dùng PMDT Model 1150 và không phải alias của DVOR 1150A. Các route con xử lý tạo/sửa kịch bản, phiên thực hành, danh sách bài nộp và đánh giá kết quả.
+`/student/vor` là route ôn tập của DVOR 1150A. DVOR 1150 legacy có route học viên riêng tại `/student/dvor-1150`; route này mở catalog kịch bản trước, sau đó chuyển sang `/student/dvor-1150/session?id=...` để chạy PMDT Model 1150 cùng các panel nhật ký và ghi nhận thao tác. Đây không phải alias của DVOR 1150A. Các route con khác xử lý tạo/sửa kịch bản, phiên thực hành, danh sách bài nộp và đánh giá kết quả.
 
 Simulator phần mềm khai thác độc lập:
 
@@ -652,6 +652,7 @@ Khi kế hoạch nội bộ và manual nhà sản xuất khác nhau, manual là 
 - Mở rộng kiểm thử E2E, accessibility, hiệu năng và quan sát lỗi production.
 
 ## Session Log
+- [2026-08-28] Sửa luồng ôn tập **DVOR 1150 legacy**: `/student/dvor-1150` hiển thị danh sách kịch bản hoặc empty state trước; chọn một bài mới mở `/student/dvor-1150/session?id=...`. Session dùng PMDT Model 1150, căn giữa simulator và đặt panel **Nhật ký học viên** bên trái cùng **Màn hình và thao tác đã ghi nhận** bên phải; bổ sung kiểm thử catalog/empty state và giữ nguyên route riêng `/student/vor` của DVOR 1150A.
 - [2026-08-28] Tách route ôn tập học viên của **DVOR 1150** khỏi DVOR 1150A: thêm `/student/dvor-1150` dùng PMDT Model 1150 ở chế độ `student`, cập nhật manifest `student/review` của module legacy, giữ `/student/vor` riêng cho DVOR 1150A và bổ sung kiểm thử chống trùng route.
 - [2026-08-26] Tạo **DME1119A_Scenario_Manual.pdf** tại `public/simulator_manuals/` (12 trang): hướng dẫn Giám khảo/Học viên tạo scenario từ TST, preset và fault injection, cấu hình success criteria/whitelist, Export/Import JSON, Apply -> IN PROGRESS -> SOLVED, xử lý VSWR/changeover/bypass, Restore/End và cô lập persistence. Tài liệu dùng ảnh chụp trực tiếp simulator DME 1119A bằng trình điều khiển trình duyệt, gồm PMDT SEC3, Scenario Parameters, preset VSWR, HUD IN PROGRESS/SOLVED và End/Restore TST; bản QA được render và kiểm tra trực quan trước khi phát hành.
 - [2026-08-26] Hoàn thiện **DME 1119A Standalone Scenario Parameters** tại `/simulator/dme-1119a`: tám preset deterministic, Import/Export JSON schema v1, Preview, fault-to-monitor derivation, success criteria, student whitelist, Training HUD, Restore Scenario và End/Restore TST. Scenario dùng baseline TST, chỉ tồn tại trong phiên và chặn mọi ghi profile/history; các entry point `/admin/dme`, `/admin/dme/create`, `/admin/dme/edit`, `/student/dme` và `/student/dme/session` chuyển hướng về simulator độc lập nhưng dữ liệu legacy vẫn giữ nguyên. Browser smoke đã kiểm tra Low Output/HPA/Overtemperature; focused DME suite **106/106**, regression mở rộng **134/134**, typecheck, targeted ESLint và production build đều đạt.
