@@ -12,6 +12,7 @@ import { Exam } from "@phosphor-icons/react/dist/csr/Exam";
 import { FilePlus } from "@phosphor-icons/react/dist/csr/FilePlus";
 import { House } from "@phosphor-icons/react/dist/csr/House";
 import { List } from "@phosphor-icons/react/dist/csr/List";
+import { Password } from "@phosphor-icons/react/dist/csr/Password";
 import { SignIn } from "@phosphor-icons/react/dist/csr/SignIn";
 import { SignOut } from "@phosphor-icons/react/dist/csr/SignOut";
 import { Student } from "@phosphor-icons/react/dist/csr/Student";
@@ -21,6 +22,7 @@ import type { Icon } from "@phosphor-icons/react/dist/lib/types";
 import { motion } from "motion/react";
 import { useState, type MouseEvent, type ReactNode } from "react";
 import { logoutAction } from "@/app/login/actions";
+import { ChangeOwnPasswordDialog } from "@/components/auth/change-own-password-dialog";
 import type { AuthProfile } from "@/lib/auth/profile";
 import { SIMULATOR_MODULES, TRAINING_MODULES } from "@/modules/core/registry";
 
@@ -396,6 +398,8 @@ export function AppShell({ children, currentUser }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const isLanding = pathname === "/";
   const isLogin = pathname === "/login";
@@ -421,6 +425,12 @@ export function AppShell({ children, currentUser }: AppShellProps) {
       console.error("Logout action failed", error);
       setSigningOut(false);
     }
+  }
+
+  function openPasswordDialog() {
+    setAccountMenuOpen(false);
+    setMobileNavigationOpen(false);
+    setPasswordDialogOpen(true);
   }
 
   return (
@@ -465,41 +475,72 @@ export function AppShell({ children, currentUser }: AppShellProps) {
 
           <div className="ml-auto hidden items-center gap-2 sm:flex">
             {currentUser ? (
-              <>
-                <div className="hidden max-w-48 text-right 2xl:block">
-                  <p
-                    className={[
-                      "truncate text-xs font-semibold",
-                      isLanding ? "text-white" : "text-[var(--text-primary)]",
-                    ].join(" ")}
-                  >
-                    {currentUser.fullName}
-                  </p>
-                  <p
-                    className={[
-                      "truncate text-[10px]",
-                      isLanding ? "text-white/60" : "text-[var(--text-muted)]",
-                    ].join(" ")}
-                  >
-                    {currentUser.workUnit}
-                  </p>
-                </div>
+              <div
+                className="relative"
+                onBlur={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                    setAccountMenuOpen(false);
+                  }
+                }}
+              >
                 <button
                   type="button"
-                  onClick={signOut}
-                  disabled={signingOut}
+                  onClick={() => setAccountMenuOpen((current) => !current)}
+                  aria-haspopup="menu"
+                  aria-expanded={accountMenuOpen}
+                  aria-label={`Tài khoản: ${currentUser.fullName}`}
                   className={[
-                    "inline-flex size-9 items-center justify-center rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-50",
+                    "flex min-h-11 items-center gap-2 rounded-lg px-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
                     isLanding
-                      ? "text-white/80 hover:bg-white/10 hover:text-red-200"
-                      : "text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--danger)]",
+                      ? "text-white hover:bg-white/10"
+                      : "text-[var(--text-primary)] hover:bg-[var(--surface-muted)]",
                   ].join(" ")}
-                  aria-label="Đăng xuất"
-                  title="Đăng xuất"
                 >
-                  <SignOut aria-hidden size={20} />
+                  <UserCircle aria-hidden size={25} weight="regular" className="shrink-0" />
+                  <span className="hidden max-w-48 min-w-0 lg:block">
+                    <span className="block truncate text-xs font-semibold">{currentUser.fullName}</span>
+                    <span className={[
+                      "block truncate text-[10px]",
+                      isLanding ? "text-white/60" : "text-[var(--text-muted)]",
+                    ].join(" ")}>{currentUser.workUnit}</span>
+                  </span>
+                  <CaretDown aria-hidden size={14} className={[
+                    "hidden shrink-0 transition-transform duration-150 lg:block motion-reduce:transition-none",
+                    accountMenuOpen ? "rotate-180" : "",
+                  ].join(" ")} />
                 </button>
-              </>
+
+                {accountMenuOpen ? (
+                  <div
+                    role="menu"
+                    aria-label="Tài khoản"
+                    className="absolute right-0 top-[calc(100%+0.5rem)] z-40 w-64 overflow-hidden rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] p-1.5 text-[var(--text-primary)] shadow-[var(--shadow-panel)]"
+                  >
+                    <div className="border-b border-[var(--border)] px-3 py-2.5 lg:hidden">
+                      <p className="truncate text-sm font-semibold">{currentUser.fullName}</p>
+                      <p className="mt-0.5 truncate text-xs text-[var(--text-muted)]">{currentUser.workUnit}</p>
+                    </div>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={openPasswordDialog}
+                      className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent)]"
+                    >
+                      <Password aria-hidden size={19} /> Đổi mật khẩu
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={signOut}
+                      disabled={signingOut}
+                      className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-[var(--danger)] hover:bg-[var(--color-danger-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--danger)] disabled:opacity-50"
+                    >
+                      <SignOut aria-hidden size={19} />
+                      {signingOut ? "Đang đăng xuất..." : "Đăng xuất"}
+                    </button>
+                  </div>
+                ) : null}
+              </div>
             ) : (
               <Link
                 href="/login"
@@ -574,15 +615,31 @@ export function AppShell({ children, currentUser }: AppShellProps) {
                 onNavigate={() => setMobileNavigationOpen(false)}
               />
               {currentUser ? (
-                <button
-                  type="button"
-                  onClick={signOut}
-                  disabled={signingOut}
-                  className="mt-4 inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--danger)] disabled:opacity-50"
-                >
-                  <SignOut aria-hidden size={18} />{" "}
-                  {signingOut ? "Đang đăng xuất..." : "Đăng xuất"}
-                </button>
+                <div className="mt-4 grid gap-2 border-t border-[var(--border-strong)] pt-4">
+                  <div className="flex items-center gap-3 px-1 pb-1">
+                    <UserCircle aria-hidden size={28} className="shrink-0 text-[var(--accent)]" />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-[var(--text-primary)]">{currentUser.fullName}</p>
+                      <p className="truncate text-xs text-[var(--text-muted)]">{currentUser.workUnit}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={openPasswordDialog}
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                  >
+                    <Password aria-hidden size={18} /> Đổi mật khẩu
+                  </button>
+                  <button
+                    type="button"
+                    onClick={signOut}
+                    disabled={signingOut}
+                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--danger)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger)] disabled:opacity-50"
+                  >
+                    <SignOut aria-hidden size={18} />{" "}
+                    {signingOut ? "Đang đăng xuất..." : "Đăng xuất"}
+                  </button>
+                </div>
               ) : null}
               <p className="mt-auto border-t border-[var(--border-strong)] pt-4 text-xs text-[var(--text-muted)]">
                 Công cụ đào tạo CNS
@@ -590,6 +647,13 @@ export function AppShell({ children, currentUser }: AppShellProps) {
             </div>
           </aside>
         </div>
+      ) : null}
+
+      {currentUser ? (
+        <ChangeOwnPasswordDialog
+          open={passwordDialogOpen}
+          onClose={() => setPasswordDialogOpen(false)}
+        />
       ) : null}
     </div>
   );

@@ -2,7 +2,7 @@
 
 > **Cập nhật:** 2026-09-01
 >
-> **Trạng thái:** 🟡 Đang thực hiện — checkpoint PostgreSQL foundation đã build thành công; chưa thay đổi Auth production, chưa cutover
+> **Trạng thái:** 🟢 Rehearsal đang chạy trên Oracle VM/Dokploy tại `mophongcns.hainh.io.vn`; DNS và HTTPS đã cutover cho dự án thử nghiệm, Supabase/Vercel nguồn vẫn giữ để rollback
 >
 > **Mục tiêu:** Chạy toàn bộ ứng dụng và PostgreSQL trong một Dokploy Project trên Oracle VM; không còn phụ thuộc Vercel, Supabase Database, Supabase Auth hoặc Supabase Storage.
 
@@ -335,11 +335,11 @@ Repo đang khai báo Supabase local database major version 17. Trước khi tạ
   - bind mount `/data/cns-simulator-postgres:/var/lib/postgresql/data`
   - health check `pg_isready`
 - [x] Tạo application placeholder `cns-simulator-web`; cấu hình repo/branch ở bước deploy.
-- [ ] Cấu hình runtime secrets.
+- [x] Cấu hình runtime secrets.
 - [x] Chạy database migrations sau khi PostgreSQL Healthy; không chạy migration trong Docker build.
 - [x] Cấu hình health/readiness endpoint `/api/health` cho web.
-- [ ] Cấu hình domain `mophongcns.hainh.io.vn` và HTTPS.
-- [ ] Đặt resource limit hợp lý và theo dõi lần build đầu trên VM không có swap.
+- [x] Cấu hình domain `mophongcns.hainh.io.vn` và HTTPS Let's Encrypt.
+- [x] Đặt resource limit 1 GiB / 1 CPU, reservation 256 MiB / 0,25 CPU và theo dõi lần build đầu trên VM không có swap.
 
 ### Phase 6 — Rehearsal trên Oracle VM
 
@@ -363,8 +363,8 @@ Repo đang khai báo Supabase local database major version 17. Trước khi tạ
 - [ ] Import vào PostgreSQL Oracle.
 - [ ] Tạo 3 user với UUID/role hiện tại và password tạm.
 - [ ] Chạy verification script; dừng nếu row count hoặc role không khớp.
-- [ ] Mở web service/domain Oracle.
-- [ ] Smoke test trước khi cho người dùng truy cập.
+- [x] Mở web service/domain Oracle cho môi trường rehearsal.
+- [x] Smoke test HTTPS, `/api/health`, kết nối PostgreSQL và trang đăng nhập.
 - [ ] Yêu cầu người dùng đổi mật khẩu ở lần đăng nhập đầu tiên.
 - [ ] Xóa `TEMP_INITIAL_PASSWORD` khỏi môi trường sau khi seed.
 

@@ -3,9 +3,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   consumePasswordVerificationTime: vi.fn(),
   createUserSession: vi.fn(),
+  getCurrentProfile: vi.fn(),
+  getCurrentProfileForPasswordChange: vi.fn(),
+  hashPassword: vi.fn(),
   query: vi.fn(),
   queryDatabase: vi.fn(),
   recordFailedLogin: vi.fn(),
+  replaceSessionsAfterPasswordChange: vi.fn(),
   verifyPassword: vi.fn(),
   withDatabaseTransaction: vi.fn(),
 }));
@@ -18,18 +22,19 @@ vi.mock("@/lib/auth/login-lockout", () => ({
 
 vi.mock("@/lib/auth/password", () => ({
   consumePasswordVerificationTime: mocks.consumePasswordVerificationTime,
-  hashPassword: vi.fn(),
+  hashPassword: mocks.hashPassword,
   validPassword: vi.fn(() => true),
   verifyPassword: mocks.verifyPassword,
 }));
 
 vi.mock("@/lib/auth/profile", () => ({
-  getCurrentProfileForPasswordChange: vi.fn(),
+  getCurrentProfile: mocks.getCurrentProfile,
+  getCurrentProfileForPasswordChange: mocks.getCurrentProfileForPasswordChange,
 }));
 
 vi.mock("@/lib/auth/session", () => ({
   createUserSession: mocks.createUserSession,
-  replaceSessionsAfterPasswordChange: vi.fn(),
+  replaceSessionsAfterPasswordChange: mocks.replaceSessionsAfterPasswordChange,
   revokeCurrentSession: vi.fn(),
 }));
 
@@ -43,7 +48,7 @@ vi.mock("next/navigation", () => ({
   RedirectType: { replace: "replace" },
 }));
 
-import { loginAction } from "@/app/login/actions";
+import { changeOwnPasswordAction, loginAction } from "@/app/login/actions";
 
 describe("loginAction", () => {
   beforeEach(() => {
@@ -99,5 +104,53 @@ describe("loginAction", () => {
     expect(mocks.consumePasswordVerificationTime).toHaveBeenCalledWith("InvalidPass2026");
     expect(mocks.createUserSession).not.toHaveBeenCalled();
     expect(result).toMatchObject({ ok: false, code: "INVALID_CREDENTIALS" });
+  });
+});
+
+describe("changeOwnPasswordAction", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getCurrentProfile.mockResolvedValue({
+      id: "10000000-0000-4000-8000-000000000001",
+      email: "admin@attech.com.vn",
+      fullName: "Quản trị viên",
+      workUnit: "Trung tâm CNS",
+      role: "admin",
+      mustChangePassword: false,
+    });
+    mocks.queryDatabase.mockResolvedValue({ rows: [{ password_hash: "stored-hash" }] });
+    mocks.hashPassword.mockResolvedValue("next-hash");
+  });
+
+  it("rejects an incorrect current password without changing sessions", async () => {
+    mocks.verifyPassword.mockResolvedValueOnce(false);
+
+    const result = await changeOwnPasswordAction({
+      currentPassword: "WrongPass2026",
+      password: "NextPass2026",
+      confirmPassword: "NextPass2026",
+    });
+
+    expect(result).toMatchObject({ ok: false, message: "Mật khẩu hiện tại không đúng." });
+    expect(mocks.replaceSessionsAfterPasswordChange).not.toHaveBeenCalled();
+    expect(mocks.createUserSession).not.toHaveBeenCalled();
+  });
+
+  it("changes the password, revokes old sessions, and creates a fresh session", async () => {
+    mocks.verifyPassword.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+
+    const result = await changeOwnPasswordAction({
+      currentPassword: "CurrentPass2026",
+      password: "NextPass2026",
+      confirmPassword: "NextPass2026",
+    });
+
+    expect(mocks.hashPassword).toHaveBeenCalledWith("NextPass2026");
+    expect(mocks.replaceSessionsAfterPasswordChange).toHaveBeenCalledWith(
+      "10000000-0000-4000-8000-000000000001",
+      "next-hash",
+    );
+    expect(mocks.createUserSession).toHaveBeenCalledWith("10000000-0000-4000-8000-000000000001");
+    expect(result).toMatchObject({ ok: true, code: "SUCCESS", role: "admin" });
   });
 });

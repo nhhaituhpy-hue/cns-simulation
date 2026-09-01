@@ -1,7 +1,10 @@
 "use server";
 
 import { redirect, RedirectType } from "next/navigation";
-import { getCurrentProfileForPasswordChange } from "@/lib/auth/profile";
+import {
+  getCurrentProfile,
+  getCurrentProfileForPasswordChange,
+} from "@/lib/auth/profile";
 import {
   attemptsRemaining,
   recordFailedLogin,
@@ -185,6 +188,51 @@ export async function changePasswordAction(input: {
     return { ok: true, code: "SUCCESS", message: "Mật khẩu đã được thay đổi.", role: profile.role };
   } catch (error) {
     return serverFailure("Password change failed", error);
+  }
+}
+
+export async function changeOwnPasswordAction(input: {
+  currentPassword: string;
+  password: string;
+  confirmPassword: string;
+}): Promise<AuthActionResult> {
+  if (!input.currentPassword || !input.password || !input.confirmPassword) {
+    return { ok: false, code: "INVALID_INPUT", message: "Vui lòng nhập đầy đủ thông tin." };
+  }
+  if (input.password !== input.confirmPassword) {
+    return { ok: false, code: "INVALID_INPUT", message: "Mật khẩu xác nhận không khớp." };
+  }
+  if (!validPassword(input.password)) {
+    return { ok: false, code: "INVALID_INPUT", message: "Mật khẩu cần ít nhất 8 ký tự, có chữ và số." };
+  }
+
+  try {
+    const profile = await getCurrentProfile();
+    if (!profile) {
+      return { ok: false, code: "INVALID_CREDENTIALS", message: "Phiên đăng nhập đã hết hạn." };
+    }
+
+    const current = await queryDatabase<{ password_hash: string }>(
+      "select password_hash from public.users where id = $1 and is_active",
+      [profile.id],
+    );
+    const passwordHash = current.rows[0]?.password_hash;
+    if (!passwordHash) {
+      return { ok: false, code: "INVALID_CREDENTIALS", message: "Tài khoản không còn hoạt động." };
+    }
+    if (!(await verifyPassword(input.currentPassword, passwordHash))) {
+      return { ok: false, code: "INVALID_CREDENTIALS", message: "Mật khẩu hiện tại không đúng." };
+    }
+    if (await verifyPassword(input.password, passwordHash)) {
+      return { ok: false, code: "INVALID_INPUT", message: "Mật khẩu mới phải khác mật khẩu hiện tại." };
+    }
+
+    const nextPasswordHash = await hashPassword(input.password);
+    await replaceSessionsAfterPasswordChange(profile.id, nextPasswordHash);
+    await createUserSession(profile.id);
+    return { ok: true, code: "SUCCESS", message: "Mật khẩu đã được thay đổi.", role: profile.role };
+  } catch (error) {
+    return serverFailure("Own password change failed", error);
   }
 }
 

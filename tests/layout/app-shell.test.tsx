@@ -17,6 +17,7 @@ const adminUser = {
   fullName: "Quản trị viên",
   workUnit: "Trung tâm Bảo đảm kỹ thuật",
   role: "admin" as const,
+  mustChangePassword: false,
 };
 
 beforeEach(() => {
@@ -106,6 +107,21 @@ describe("AppShell", () => {
         name: "Điều hướng trên thiết bị di động",
       }),
     ).not.toBeInTheDocument();
+  });
+
+  it("opens the account menu and change-password dialog from the user name", () => {
+    renderShell();
+
+    fireEvent.click(screen.getByRole("button", { name: "Tài khoản: Quản trị viên" }));
+    const accountMenu = screen.getByRole("menu", { name: "Tài khoản" });
+    expect(within(accountMenu).getByRole("menuitem", { name: "Đổi mật khẩu" })).toBeInTheDocument();
+
+    fireEvent.click(within(accountMenu).getByRole("menuitem", { name: "Đổi mật khẩu" }));
+    const dialog = screen.getByRole("dialog", { name: "Đổi mật khẩu" });
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getByLabelText("Mật khẩu hiện tại")).toHaveAttribute("autocomplete", "current-password");
+    expect(within(dialog).getByLabelText("Mật khẩu mới")).toHaveAttribute("autocomplete", "new-password");
+    expect(within(dialog).getByLabelText("Xác nhận mật khẩu mới")).toBeInTheDocument();
   });
 
   it("keeps only Simulator active on the DVOR 1150 block-diagram route", () => {
