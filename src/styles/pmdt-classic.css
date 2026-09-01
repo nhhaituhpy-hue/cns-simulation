@@ -1086,6 +1086,18 @@
   opacity: 1;
 }
 
+.simulator-toolbar-back-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.simulator-toolbar-back-button svg {
+  flex: 0 0 auto;
+}
+
 .pmdt-sidebar {
   min-height: 0;
   overflow-y: auto;

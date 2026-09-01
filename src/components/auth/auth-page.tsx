@@ -114,15 +114,12 @@ export function AuthPage({ nextPath }: { nextPath?: string; initialView?: AuthVi
                       name="username"
                       type="text"
                       value={username}
-                      onChange={(event) => setUsername(event.target.value.replace(/@attech\.com\.vn$/i, ""))}
+                      onChange={(event) => setUsername(event.target.value)}
                       autoComplete="username"
                       placeholder="Tên đăng nhập"
                       required
-                      className={`${AUTH_INPUT_CLASS} pr-[8.75rem] text-base`}
+                      className={`${AUTH_INPUT_CLASS} pr-4 text-base`}
                     />
-                    <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm font-normal text-slate-400">
-                      @attech.com.vn
-                    </span>
                   </span>
                 </label>
 

@@ -2,6 +2,7 @@
 
 import { useEffect, type ReactNode } from "react";
 import { SimulatorConfigPersistence } from "@/components/simulator/simulator-config-persistence";
+import { SimulatorToolbarBackButton } from "@/components/simulator/simulator-toolbar-back-button";
 import type { SupportedSimulatorConfigId } from "@/lib/simulator-config/types";
 import type { DmePmdtMode } from "@/lib/dme-types";
 import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
@@ -147,7 +148,8 @@ export function PmdtLayout({
   return (
     <div className={`pmdt-classic-viewport dme-pmdt-viewport ${hasExternalPanels ? "pmdt-classic-viewport--with-external-inspector" : ""}`}>
       <div className="dme1119a-simulator-frame">
-        {mode === "preview" && (scenarioAuthoringEnabled || scenario.active) ? <nav className="dme1119a-simulator-tools" aria-label="DME 1119A simulator tools">
+        {mode === "preview" ? <nav className="dme1119a-simulator-tools" aria-label="DME 1119A simulator tools">
+          <SimulatorToolbarBackButton />
           {scenarioAuthoringEnabled ? <button type="button" onClick={() => { setConfigPanelOpen(false); setScenarioParametersOpen(true); }}>Scenario Parameters</button> : null}
           {scenarioAuthoringEnabled ? <span className="dme1119a-scenario-role-badge">EXAMINER</span> : null}
           <Dme1119aTrainingHud examinerView={scenarioAuthoringEnabled} />

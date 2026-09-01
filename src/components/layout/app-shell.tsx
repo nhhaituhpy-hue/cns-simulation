@@ -31,6 +31,12 @@ type AppShellProps = {
   currentUser: AuthProfile | null;
 };
 
+const SIMULATOR_ROUTES_WITH_INLINE_BACK = new Set([
+  "/simulator/dvor-1150",
+  "/simulator/dvor-1150a",
+  "/simulator/dme-1119a",
+]);
+
 type NavigationItem = {
   href: string;
   label: string;
@@ -404,6 +410,7 @@ export function AppShell({ children, currentUser }: AppShellProps) {
   const isLanding = pathname === "/";
   const isLogin = pathname === "/login";
   const isSimulatorDetail = pathname.startsWith("/simulator/");
+  const hasInlineSimulatorBack = SIMULATOR_ROUTES_WITH_INLINE_BACK.has(pathname);
 
   if (isLogin) {
     return <>{children}</>;
@@ -553,7 +560,7 @@ export function AppShell({ children, currentUser }: AppShellProps) {
         </div>
       </header>
 
-      {isSimulatorDetail ? (
+      {isSimulatorDetail && !hasInlineSimulatorBack ? (
         <div className="border-b border-[var(--border)] bg-[var(--surface-subtle)] print:hidden">
           <div className="mx-auto flex min-h-12 max-w-[1600px] items-center px-4 sm:px-5 lg:px-8">
             <button

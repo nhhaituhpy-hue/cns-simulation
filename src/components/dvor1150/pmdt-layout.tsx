@@ -13,6 +13,7 @@ import { Dvor1150TrainingHud } from "./pmdt-training-hud";
 import { useDvor1150PmdtStore } from "@/stores/dvor1150-pmdt-store";
 import type { Dvor1150PmdtMode } from "@/lib/dvor1150";
 import { Dvor1150ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
+import { SimulatorToolbarBackButton } from "@/components/simulator/simulator-toolbar-back-button";
 
 export interface Dvor1150PmdtLayoutProps {
   mode?: Dvor1150PmdtMode;
@@ -64,7 +65,8 @@ export function Dvor1150PmdtLayout({
 
   return <div className={`pmdt-classic-viewport ${hasExternalPanels ? "pmdt-classic-viewport--with-external-inspector" : ""} ${mode === "student" ? "pmdt-classic-viewport--legacy-dvor1150" : ""}`}>
     <div className="dvor1150-simulator-frame">
-      {scenarioAuthoringEnabled || scenario.active ? <nav className="dvor1150-simulator-tools" aria-label="DVOR 1150 simulator tools">
+      {mode === "preview" || scenarioAuthoringEnabled || scenario.active ? <nav className="dvor1150-simulator-tools" aria-label="DVOR 1150 simulator tools">
+        {mode === "preview" ? <SimulatorToolbarBackButton /> : null}
         {scenarioAuthoringEnabled ? <button type="button" onClick={() => setScenarioParametersOpen(true)}>Scenario Parameters</button> : null}
         {scenarioAuthoringEnabled ? <span className="dvor1150-scenario-role-badge">EXAMINER</span> : null}
         <Dvor1150TrainingHud examinerView={scenarioAuthoringEnabled} />

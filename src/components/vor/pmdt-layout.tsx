@@ -2,6 +2,7 @@
 
 import { useEffect, type ReactNode } from "react";
 import { SimulatorConfigPersistence } from "@/components/simulator/simulator-config-persistence";
+import { SimulatorToolbarBackButton } from "@/components/simulator/simulator-toolbar-back-button";
 import type { SupportedSimulatorConfigId } from "@/lib/simulator-config/types";
 import type { VorPmdtMode } from "@/lib/vor-types";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
@@ -107,7 +108,8 @@ export function PmdtLayout({
   return (
     <div className={`pmdt-classic-viewport ${hasExternalPanels ? "pmdt-classic-viewport--with-external-inspector" : ""}`}>
       <div className="dvor1150a-simulator-frame">
-        {mode === "preview" && (scenarioAuthoringEnabled || scenario.active) ? <nav className="dvor1150a-simulator-tools" aria-label="DVOR 1150A simulator tools">
+        {mode === "preview" ? <nav className="dvor1150a-simulator-tools" aria-label="DVOR 1150A simulator tools">
+          <SimulatorToolbarBackButton />
           {scenarioAuthoringEnabled ? <button type="button" onClick={() => setScenarioParametersOpen(true)}>Scenario Parameters</button> : null}
           {scenarioAuthoringEnabled ? <span className="dvor1150a-scenario-role-badge">EXAMINER</span> : null}
           <Dvor1150aTrainingHud examinerView={scenarioAuthoringEnabled} />

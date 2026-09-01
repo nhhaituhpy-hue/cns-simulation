@@ -139,9 +139,6 @@ describe("AppShell", () => {
   });
 
   it.each([
-    "/simulator/dvor-1150",
-    "/simulator/dvor-1150a",
-    "/simulator/dme-1119a",
     "/simulator/ads-b",
     "/simulator/software/dvor-220",
     "/simulator/software/dme-320",
@@ -154,8 +151,19 @@ describe("AppShell", () => {
     expect(screen.getByRole("button", { name: "Quay lại trang trước" })).toBeInTheDocument();
   });
 
+  it.each([
+    "/simulator/dvor-1150",
+    "/simulator/dvor-1150a",
+    "/simulator/dme-1119a",
+  ])("leaves the back action to the PMDT toolbar on simulator route %s", (pathname) => {
+    mockUsePathname.mockReturnValue(pathname);
+    renderShell();
+
+    expect(screen.queryByRole("button", { name: "Quay lại trang trước" })).not.toBeInTheDocument();
+  });
+
   it("falls back to the simulator catalog when browser history has no previous entry", () => {
-    mockUsePathname.mockReturnValue("/simulator/dvor-1150");
+    mockUsePathname.mockReturnValue("/simulator/ads-b");
     renderShell();
 
     fireEvent.click(screen.getByRole("button", { name: "Quay lại trang trước" }));
