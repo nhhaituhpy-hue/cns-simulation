@@ -1,0 +1,39 @@
+# ── Build context exclusions ──
+.git
+.next
+node_modules
+out
+output
+tmp
+test-results
+playwright-report
+
+# ── Documentation & manuals (not needed at runtime) ──
+doc
+docs
+pdf_extracts
+skills
+
+# ── Tool databases & caches ──
+.codegraph
+.wrangler
+
+# ── IDE & config ──
+.vscode
+.idea
+.agents
+
+# ── Keep README for reference but exclude other markdown ──
+*.md
+!README.md
+
+# ── Dev/test config ──
+vitest.config.mts
+playwright.config.ts
+eslint.config.mjs
+tsconfig.tsbuildinfo
+
+# ── Environment files (injected via Dokploy env vars) ──
+.env
+.env.local
+.env.*.local

@@ -419,9 +419,9 @@ Trình duyệt
 - Next.js 16 App Router, React 19 và TypeScript
 - Tailwind CSS 4, Geist, Motion và Phosphor Icons
 - Zustand cho trạng thái phía client
-- Supabase Database và Storage
+- Supabase Database và Storage trong giai đoạn chuyển tiếp; PostgreSQL 17 là nền tảng đích trên Oracle VM
 - Vitest, Testing Library, Playwright và axe-core
-- Vercel cho hosting và GitHub Actions cho quality gate
+- Self-hosted trên Oracle VM (Dokploy/Docker) và GitHub Actions cho quality gate
 
 ## Chạy trên máy cục bộ
 
@@ -430,6 +430,7 @@ Trình duyệt
 - Node.js 20.9 trở lên; dự án gần nhất được xác minh với Node.js 24.
 - npm.
 - Một Supabase project nếu cần đồng bộ dữ liệu cloud. Có thể chạy giao diện bằng fallback cục bộ khi chưa cấu hình Supabase.
+- Docker Desktop là tùy chọn để chạy PostgreSQL 17 local trong quá trình migration; ứng dụng hiện tại vẫn chạy với Supabase khi chưa bật database mới.
 
 ### Cài đặt
 
@@ -507,6 +508,25 @@ Chỉ dọn cache mà không khởi động dev server:
 npm run clean:cache
 ```
 
+### Nền tảng PostgreSQL đích đang triển khai
+
+Checkpoint đầu tiên của migration đã thêm PostgreSQL driver, connection pool server-only, migration runner có checksum/advisory lock và schema `users`/`user_sessions`. Luồng ứng dụng hiện vẫn dùng Supabase cho đến khi từng domain được port và kiểm tra xong.
+
+Sau khi Docker Desktop khả dụng, bổ sung các biến PostgreSQL từ `.env.example` vào `.env.local`, rồi chạy:
+
+```bash
+npm run db:dev:up
+npm run db:migrate
+```
+
+Dừng container mà không xóa named volume:
+
+```bash
+npm run db:dev:down
+```
+
+Chi tiết migration và quy tắc không lưu secrets trong Git nằm tại `docs/oracle-vm-migration.md` và `database/README.md`.
+
 ## Các route chính
 
 | Vai trò | VOR | DME | ADS-B |
@@ -559,9 +579,44 @@ Theo workflow của dự án, sau khi sửa giao diện hoặc logic hãy kiểm
 
 ## Triển khai
 
-Repository được liên kết với Vercel và tự động triển khai khi nhánh `main` được cập nhật. `vercel.json` đặt vùng chạy Functions/SSR tại Singapore (`sin1`); tài nguyên tĩnh vẫn được phân phối qua CDN toàn cầu.
+### Oracle VM (self-hosted — primary)
 
-Trước khi triển khai:
+Ứng dụng được triển khai trên Oracle Cloud VM (ARM64, 3 OCPU / 16 GB RAM) thông qua Dokploy. Docker image được build tự động khi push nhánh `main`.
+
+> Trạng thái chuyển tiếp: Docker image hiện vẫn nhận cấu hình Supabase. Kiến trúc đích là một Dokploy Project/Environment chứa `cns-simulator-web` và PostgreSQL riêng; chỉ bỏ các biến Supabase sau khi schema, dữ liệu, đăng nhập nội bộ và workflow kỳ thi đã được port/kiểm tra.
+
+Biến môi trường cần thiết trên Dokploy:
+
+| Biến | Loại | Bắt buộc |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Build arg + Runtime | ✅ |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Build arg + Runtime | ✅ |
+| `SUPABASE_SECRET_KEY` | Runtime only | ✅ |
+
+`NEXT_PUBLIC_*` phải được truyền cả lúc build (Next.js inline) lẫn runtime. `SUPABASE_SECRET_KEY` chỉ cần ở runtime.
+
+Build Docker image thủ công:
+
+```bash
+docker build \
+  --build-arg NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co \
+  --build-arg NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx \
+  -t cns-simulator .
+```
+
+Chạy container:
+
+```bash
+docker run -p 3000:3000 \
+  -e SUPABASE_SECRET_KEY=sb_secret_xxx \
+  cns-simulator
+```
+
+### Vercel (legacy)
+
+Repository từng được liên kết với Vercel và tự động triển khai khi nhánh `main` được cập nhật. `vercel.json` đặt vùng chạy Functions/SSR tại Singapore (`sin1`).
+
+Trước khi triển khai trên Vercel:
 
 1. Xác nhận các biến môi trường Supabase trên Vercel.
 2. Áp dụng migration cần thiết trong `supabase/migrations/`.
@@ -652,6 +707,8 @@ Khi kế hoạch nội bộ và manual nhà sản xuất khác nhau, manual là 
 - Mở rộng kiểm thử E2E, accessibility, hiệu năng và quan sát lỗi production.
 
 ## Session Log
+- [2026-09-01] Duyệt và khởi động migration từ Vercel + Supabase sang Oracle VM theo kiến trúc một Dokploy Project/Environment gồm Next.js web và PostgreSQL riêng. Làm sạch API key khỏi kế hoạch, thiết kế `users`/`user_sessions`, bắt buộc đổi mật khẩu tạm lần đầu và ghi rõ phương án thay RLS/RPC Supabase. Triển khai checkpoint nền tảng: thêm `pg`/`@next/env`, PostgreSQL 17 compose cho local, migration runner transaction + checksum + advisory lock, migration `0001_users_and_sessions.sql`, connection pool/transaction helper server-only và tài liệu database. CodeGraph không phát hiện test hiện hữu bị ảnh hưởng; production build Next.js 16.2.11 thành công với 70 route. Chưa chạy migration thực tế vì máy local không có Docker CLI/PostgreSQL/WSL distro; chưa thay luồng Supabase production và chưa thao tác Oracle VM.
+- [2026-09-01] Chuẩn bị di chuyển hosting từ Vercel sang Oracle VM self-hosted: khảo sát codegraph (up to date, 592 files / 7.156 nodes), tạo `.github/copilot-instructions.md` cho GitHub Copilot/ChatGPT hiểu kiến trúc 5 simulator và convention dự án, bật `output: "standalone"` trong `next.config.ts`, tạo `Dockerfile` multi-stage cho ARM64 và `.dockerignore`. Cập nhật README phần Triển khai thêm Oracle VM (Dokploy) là primary và Vercel là legacy.
 - [2026-08-28] Bổ sung header ứng dụng và nút `← Quay lại` dùng browser history cho toàn bộ route chi tiết dưới `/simulator/`, gồm simulator thiết bị, simulator phần mềm và các trang sơ đồ khối; giữ catalog `/simulator` và `/login` theo giao diện riêng. Kiểm tra trực tiếp luồng `/simulator` → simulator → quay lại thành công; focused AppShell tests đạt **12/12** và production build thành công.
 - [2026-08-28] Sửa luồng ôn tập **DVOR 1150 legacy**: `/student/dvor-1150` hiển thị danh sách kịch bản hoặc empty state trước; chọn một bài mới mở `/student/dvor-1150/session?id=...`. Session dùng PMDT Model 1150, căn giữa simulator và đặt panel **Nhật ký học viên** bên trái cùng **Màn hình và thao tác đã ghi nhận** bên phải; bổ sung kiểm thử catalog/empty state và giữ nguyên route riêng `/student/vor` của DVOR 1150A.
 - [2026-08-28] Tách route ôn tập học viên của **DVOR 1150** khỏi DVOR 1150A: thêm `/student/dvor-1150` dùng PMDT Model 1150 ở chế độ `student`, cập nhật manifest `student/review` của module legacy, giữ `/student/vor` riêng cho DVOR 1150A và bổ sung kiểm thử chống trùng route.

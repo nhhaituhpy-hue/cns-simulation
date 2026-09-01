@@ -6,6 +6,9 @@
     "dev": "next dev",
     "dev:clean": "npm run clean:cache && next dev",
     "clean:cache": "node -e \"require('node:fs').rmSync('.next', { recursive: true, force: true })\"",
+    "db:dev:up": "docker compose --env-file .env.local -f compose.database.dev.yml up -d",
+    "db:dev:down": "docker compose --env-file .env.local -f compose.database.dev.yml down",
+    "db:migrate": "node scripts/run-database-migrations.mjs",
     "media:guides": "node scripts/generate-guidance-media.mjs",
     "media:upload:v3": "node scripts/upload-training-media.mjs",
     "build": "next build",
@@ -19,12 +22,14 @@
     "check": "npm run lint && npm run typecheck && npm run test:run && npm run build"
   },
   "dependencies": {
+    "@next/env": "^16.2.11",
     "@phosphor-icons/react": "^2.1.10",
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.110.6",
     "geist": "^1.7.2",
     "motion": "^12.42.2",
     "next": "16.2.11",
+    "pg": "^8.23.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "zustand": "^5.0.14"
@@ -38,6 +43,7 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^20",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.3",
