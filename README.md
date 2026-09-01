@@ -6,6 +6,10 @@ Hệ thống mô phỏng giao diện PMDT, QCMS, terminal bảo trì và sơ đ�
 
 > Đây là hệ thống đào tạo, không kết nối thiết bị thật và không mở phiên SSH thật. Tài khoản ứng dụng sử dụng Supabase Auth; tài khoản terminal bên trong bài mô phỏng vẫn chỉ là dữ liệu của kịch bản đào tạo.
 
+### Nguồn phát triển mặc định
+
+Từ ngày 2026-09-01, repository chính để phát triển và triển khai dự án là [`nhhaituhpy-hue/cns-simulation`](https://github.com/nhhaituhpy-hue/cns-simulation), nhánh `main`. Remote Git local `deploy` trỏ tới repository này và là đích push mặc định; `origin` cũ được giữ lại để tương thích/lưu trữ, không phải nguồn phát triển chính.
+
 ## Trạng thái hiện tại
 
 Dự án đang ở giai đoạn **MVP hoạt động đầy đủ cho đào tạo nội bộ**. Ba module đã có route riêng cho giám khảo và học viên, xác thực email công vụ qua Supabase, dữ liệu cloud trên Supabase và lớp fallback cục bộ khi không thể đồng bộ.
@@ -659,6 +663,7 @@ Khi kế hoạch nội bộ và manual nhà sản xuất khác nhau, manual là 
 - Mở rộng kiểm thử E2E, accessibility, hiệu năng và quan sát lỗi production.
 
 ## Session Log
+- [2026-09-01] Chốt repository phát triển mặc định của CNS Simulator là [`nhhaituhpy-hue/cns-simulation`](https://github.com/nhhaituhpy-hue/cns-simulation) → `main`; cấu hình local Git dùng remote `deploy` làm đích push mặc định, giữ `origin` cũ để tương thích.
 - [2026-09-01] Đổi tab quản trị **Tạo kịch bản** thành **Kịch bản** và thay bộ tạo chỉ thị cảnh báo cũ bằng bảng quản lý Scenario Parameters theo từng simulation tại `/authoring`. Admin có thể chọn đúng adapter, import JSON export từ PMDT, kiểm tra schema/version, upsert theo cặp `module_id + scenario_id`, tải lại JSON, xóa hoặc mở thẳng simulator bằng `scenarioId`; dữ liệu được lưu JSONB qua migration `database/migrations/0004_simulator_scenario_parameters.sql` và API server-only. Adapter hiện có: DVOR 1150, DVOR 1150A, DME 1119A và DVOR 220; DME 320/ADS-B được hiển thị rõ là chưa có adapter. Luồng này quản lý Scenario Parameters độc lập, chưa thay thế danh mục scenario legacy trong Exam Set.
 - [2026-09-01] Bổ sung bằng chứng thao tác kỹ thuật cho phiên học viên VOR/DME: ghi login thành công/thất bại, Local/Remote, Bypass, cấu hình stage/Apply, transmitter/delay/command, chuyển màn hình/sidebar và cả lệnh bị PMDT từ chối; mỗi event giữ actor, thời gian, menu path, input an toàn cùng snapshot trước/sau để giải thích cách đưa cảnh báo về trạng thái bình thường. Khi nộp bài, `actionHistory` và `resolution` (SOLVED/IN PROGRESS, elapsed time, final checks, blockers) đi cùng kết quả official exam hoặc submission legacy; journal học viên và màn hình giám khảo hiển thị timeline kỹ thuật, còn điểm/nhận xét chính thức vẫn do giám khảo quyết định. Bằng chứng legacy được lưu/đọc qua các cột JSONB trong migration `0005_submission_action_evidence.sql` và migration Supabase tương ứng. Regression focused đạt **18 file, 122/122 test**, targeted ESLint cho các file tính năng đạt, `npm run typecheck` và production build Next.js 16.2.11 thành công.
 - [2026-09-01] Áp dụng thực tế migration portable `0004_simulator_scenario_parameters.sql` và `0005_submission_action_evidence.sql` vào PostgreSQL 17.11 của Oracle VM rehearsal bằng migration runner có transaction, advisory lock và checksum. Ledger database đã đủ `0001–0005`; bảng Scenario Parameters, các cột `action_history`/`resolution` và constraint liên quan đều đã có, web `mophongcns.hainh.io.vn/api/health` vẫn trả `200` với database `ok`, và chưa có dữ liệu Scenario Parameters nào được import.

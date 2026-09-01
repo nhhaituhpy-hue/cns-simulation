@@ -510,13 +510,20 @@ Với mỗi phase có thay đổi code/logic:
 4. Sau khi kiểm tra thành công, cập nhật README/walkthrough rồi thực hiện một lượt Git add/commit/push theo quy định project.
 5. Sau khi source thay đổi, chạy `codegraph sync`; không commit artifact runtime trong `.codegraph`.
 
-Remote nguồn chuẩn phải giữ:
+Repository phát triển mặc định từ ngày 2026-09-01:
+
+```text
+deploy = https://github.com/nhhaituhpy-hue/cns-simulation.git
+branch = main
+```
+
+Remote tương thích vẫn được giữ:
 
 ```text
 origin = git@github-hainokinguyen:hainokinguyen-coder/cns-simulator.git
 ```
 
-Không tự đổi `origin` sang HTTPS hoặc tài khoản GitHub khác.
+Push/pull thông thường phải dùng repository `deploy` → `main`; không đổi URL của `origin` hoặc `deploy` nếu chưa có quyết định mới.
 
 ---
 

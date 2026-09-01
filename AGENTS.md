@@ -19,12 +19,13 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - **Bước 3 (Kiểm tra lỗi):** Chỉ khi người dùng xác nhận "ok" (chấp nhận thay đổi), bạn mới tiến hành chạy kiểm tra tự động:
   - **Với thay đổi liên quan đến Logic:** Chỉ chạy các file test bị ảnh hưởng trực tiếp (ví dụ: `npx vitest run tests/exams/`) và chạy `npm run build` để kiểm tra biên dịch.
   - **Với thay đổi chỉ liên quan đến UI/CSS/HTML tĩnh:** KHÔNG cần chạy bộ test tự động toàn bộ (`npm run test:run`) hay `npm run build` để tránh mất thời gian, trừ khi thay đổi cấu trúc component lớn hoặc có nguy cơ lỗi kiểu dữ liệu.
-- **Bước 4 (Cập nhật tài liệu & Git & Push):** Sau khi các kiểm tra cần thiết ở Bước 3 thành công (hoặc được bỏ qua đối với UI tĩnh), tiến hành cập nhật đầy đủ nhật ký phiên làm việc vào `README.md` (và tệp `walkthrough.md` nếu có). Sau đó thực hiện duy nhất một lần `git add .`, `git commit` (theo chuẩn Conventional Commits) và `git push` toàn bộ cả mã nguồn và tài liệu lên repository.
+- **Bước 4 (Cập nhật tài liệu & Git & Push):** Sau khi các kiểm tra cần thiết ở Bước 3 thành công (hoặc được bỏ qua đối với UI tĩnh), tiến hành cập nhật đầy đủ nhật ký phiên làm việc vào `README.md` (và tệp `walkthrough.md` nếu có). Sau đó thực hiện duy nhất một lần `git add .`, `git commit` (theo chuẩn Conventional Commits) và `git push` toàn bộ cả mã nguồn và tài liệu lên repository phát triển mặc định `nhhaituhpy-hue/cns-simulation`, nhánh `main`.
 
 # Git & Multi-Account SSH Workflow
 - **Remote Host:** Repository này được cấu hình sử dụng khóa SSH độc lập với host `github-hainokinguyen` cho tài khoản `hainokinguyen-coder`.
-- **Remote URL Chuẩn:** Lời gọi git push/pull phải luôn duy trì `origin` ở dạng: `git@github-hainokinguyen:hainokinguyen-coder/cns-simulator.git`.
+- **Repository phát triển mặc định:** `nhhaituhpy-hue/cns-simulation` nhánh `main`, truy cập qua remote `deploy` (`https://github.com/nhhaituhpy-hue/cns-simulation.git`).
+- **Remote tương thích:** Giữ `origin` ở dạng `git@github-hainokinguyen:hainokinguyen-coder/cns-simulator.git`, nhưng không dùng `origin` làm đích push mặc định cho các thay đổi mới.
 - **Local Identity:** Giữ nguyên local git identity của repo:
   - `user.name`: `hainokinguyen-coder`
   - `user.email`: `305681347+hainokinguyen-coder@users.noreply.github.com`
-- **Nguyên tắc:** Không tự ý chuyển `origin` sang HTTPS hoặc tài khoản khác để tránh lỗi xung đột quyền 403 / OAuth scope.
+- **Nguyên tắc:** Không tự ý đổi URL của `origin` hoặc `deploy`; push/pull thông thường phải đi theo repository phát triển mặc định và không làm mất remote tương thích.
