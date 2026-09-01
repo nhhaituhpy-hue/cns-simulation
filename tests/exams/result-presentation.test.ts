@@ -18,6 +18,18 @@ describe("official exam result presentation", () => {
         },
         { id: "broken-row" },
       ],
+      actionHistory: [{
+        id: "action-1",
+        sequence: 1,
+        occurredAt: "2026-07-18T08:01:00.000Z",
+        actor: "student",
+        kind: "control",
+        menuPath: ["Sidebar", "Local"],
+        label: "Local Mode",
+        accepted: true,
+        before: { local: false },
+        after: { local: true },
+      }],
       answer: {
         suspectedFault: "Monitor 1",
         reasoning: "Giá trị vượt giới hạn.",
@@ -27,6 +39,8 @@ describe("official exam result presentation", () => {
 
     expect(result).not.toBeNull();
     expect(result?.events).toHaveLength(1);
+    expect(result?.actionHistory).toHaveLength(1);
+    expect(result?.actionHistory[0]).toMatchObject({ id: "action-1", label: "Local Mode", accepted: true });
     expect(result?.events[0]).toMatchObject({
       id: "event-1",
       viewId: "monitor-data",

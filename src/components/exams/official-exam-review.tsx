@@ -6,6 +6,7 @@ import { Circle } from "@phosphor-icons/react/dist/ssr/Circle";
 import { WarningCircle } from "@phosphor-icons/react/dist/ssr/WarningCircle";
 import Link from "next/link";
 import { HardwareReview } from "@/components/hardware/hardware-review";
+import { ScenarioActionTimeline } from "@/components/scenario/scenario-action-timeline";
 import { StepDiff } from "@/components/grading/step-diff";
 import { DME_EQUIPMENT_DIAGRAMS } from "@/lib/dme-hardware-model";
 import type { DmeScenario } from "@/lib/dme-types";
@@ -103,6 +104,18 @@ function PmdtEvidence({
       </div>
 
       <div className="grid content-start gap-5">
+        {result.actionHistory.length > 0 ? <ScenarioActionTimeline events={result.actionHistory} title="Timeline kỹ thuật / cách xử lý cảnh báo" /> : null}
+        {result.resolution ? (
+          <ReviewCard title="Kết quả kỹ thuật của scenario">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className={`rounded-full px-3 py-1 text-xs font-bold ${result.resolution.solved ? "bg-[#dcfce7] text-[#166534]" : "bg-[#fef3c7] text-[#92400e]"}`}>{result.resolution.solved ? "SOLVED" : "IN PROGRESS"}</span>
+              {typeof result.resolution.elapsedMs === "number" ? <span className="font-mono text-xs text-[var(--text-secondary)]">{Math.round(result.resolution.elapsedMs / 1000)} giây</span> : null}
+            </div>
+            {result.resolution.finalChecks.length > 0 ? <ul className="mt-4 space-y-2 text-sm">{result.resolution.finalChecks.map((check) => <li key={check.id} className="flex gap-2"><span className={check.passed ? "text-[#16a34a]" : "text-[#dc2626]"}>{check.passed ? "✓" : "✕"}</span><span className="text-[var(--text-primary)]">{check.label}: <span className="text-[var(--text-secondary)]">{check.detail}</span></span></li>)}</ul> : <p className="mt-3 text-sm text-[var(--text-muted)]">Chưa có bộ kiểm tra kỹ thuật tự động.</p>}
+            {result.resolution.blockers.length > 0 ? <div className="mt-4 rounded-md border border-[#fecaca] bg-[#fef2f2] p-3 text-xs leading-5 text-[#991b1b]"><strong>Blocker:</strong> {result.resolution.blockers.join(" ")}</div> : null}
+            <p className="mt-4 text-xs leading-5 text-[var(--text-muted)]">Kết quả kỹ thuật chỉ hỗ trợ đối chiếu. Giám khảo vẫn nhập điểm và nhận xét chính thức ở cuối trang.</p>
+          </ReviewCard>
+        ) : null}
         <ReviewCard title="Checkpoint tham khảo">
           <p className="mb-4 text-xs leading-5 text-[var(--text-muted)]">Checkpoint hỗ trợ giám khảo đối chiếu, không tự quyết định điểm chính thức.</p>
           {scenario.expectedCheckpoints.length ? (

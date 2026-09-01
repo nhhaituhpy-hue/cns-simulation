@@ -39,7 +39,7 @@ export const SIMULATOR_MODULES = [
   VSAT_SOFTWARE_MODULE,
 ] as const;
 
-/** Keep Simulator, Tạo kịch bản and Ôn tập in the same module order. */
+/** Keep Simulator, Kịch bản and Ôn tập in the same module order. */
 export const TRAINING_MODULES = SIMULATOR_MODULES;
 
 const modulesById = new Map<SimulatorModuleId, SimulatorModuleDefinition>(

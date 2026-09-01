@@ -1,5 +1,12 @@
 import { isHardwareDiagnosisAnswer, type HardwareDiagnosisAnswer } from "@/lib/equipment-diagram-types";
 import type { RecordedAction, RecordedActionKind } from "@/lib/types";
+import type {
+  ScenarioActionEvent,
+  ScenarioEvidenceSnapshot,
+  ScenarioEvidenceValue,
+  ScenarioResolution,
+  ScenarioResolutionCheck,
+} from "@/lib/scenario-evidence";
 
 type Row = Record<string, unknown>;
 
@@ -20,6 +27,8 @@ export interface PmdtResultPresentation {
   startedAt: string | null;
   submittedAt: string | null;
   events: PmdtResultEvent[];
+  actionHistory: ScenarioActionEvent[];
+  resolution?: ScenarioResolution;
   answer: {
     suspectedFault: string;
     reasoning: string;
@@ -55,6 +64,67 @@ function stringList(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
 }
 
+function isEvidenceValue(value: unknown): value is ScenarioEvidenceValue {
+  if (value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean") return true;
+  if (Array.isArray(value)) return value.every(isEvidenceValue);
+  return Boolean(value && typeof value === "object" && Object.values(value).every(isEvidenceValue));
+}
+
+function evidenceSnapshot(value: unknown): ScenarioEvidenceSnapshot | undefined {
+  return value && typeof value === "object" && !Array.isArray(value) && Object.values(value).every(isEvidenceValue)
+    ? value as ScenarioEvidenceSnapshot
+    : undefined;
+}
+
+function parseScenarioAction(value: unknown, index: number): ScenarioActionEvent | null {
+  const action = row(value);
+  const actor = action.actor;
+  const kind = action.kind;
+  const label = text(action.label);
+  if (!(["student", "system", "instructor"] as const).includes(actor as ScenarioActionEvent["actor"]) || !(["view", "control", "configuration", "authentication", "system"] as const).includes(kind as ScenarioActionEvent["kind"]) || !label || typeof action.accepted !== "boolean") return null;
+  const input = action.input === undefined || isEvidenceValue(action.input) ? action.input : undefined;
+  const before = evidenceSnapshot(action.before);
+  const after = evidenceSnapshot(action.after);
+  return {
+    id: text(action.id) || `action-${index + 1}`,
+    sequence: typeof action.sequence === "number" && Number.isFinite(action.sequence) ? action.sequence : index + 1,
+    occurredAt: text(action.occurredAt),
+    actor: actor as ScenarioActionEvent["actor"],
+    kind: kind as ScenarioActionEvent["kind"],
+    ...(typeof action.controlId === "string" ? { controlId: action.controlId } : {}),
+    menuPath: stringList(action.menuPath),
+    label,
+    ...(input !== undefined ? { input } : {}),
+    accepted: action.accepted,
+    ...(typeof action.reason === "string" ? { reason: action.reason } : {}),
+    ...(before ? { before } : {}),
+    ...(after ? { after } : {}),
+  };
+}
+
+function parseScenarioResolution(value: unknown): ScenarioResolution | undefined {
+  const resolution = row(value);
+  if (typeof resolution.active !== "boolean" || typeof resolution.solved !== "boolean") return undefined;
+  const checks = Array.isArray(resolution.finalChecks)
+    ? resolution.finalChecks.flatMap((check): ScenarioResolutionCheck[] => {
+      const item = row(check);
+      return typeof item.id === "string" && typeof item.label === "string" && typeof item.passed === "boolean" && typeof item.detail === "string"
+        ? [{ id: item.id, label: item.label, passed: item.passed, detail: item.detail }]
+        : [];
+    })
+    : [];
+  const blockers = stringList(resolution.blockers);
+  return {
+    active: resolution.active,
+    solved: resolution.solved,
+    startedAt: nullableText(resolution.startedAt),
+    ...(typeof resolution.solvedAt === "string" ? { solvedAt: resolution.solvedAt } : {}),
+    ...(typeof resolution.elapsedMs === "number" && Number.isFinite(resolution.elapsedMs) ? { elapsedMs: resolution.elapsedMs } : {}),
+    finalChecks: checks,
+    blockers,
+  };
+}
+
 function resultValue(value: unknown): PmdtResultEvent["resultValue"] {
   return value === null || typeof value === "string" || typeof value === "number" || typeof value === "boolean"
     ? value
@@ -88,11 +158,17 @@ export function presentPmdtResult(result: Record<string, unknown> | null): PmdtR
   const events = Array.isArray(result.events)
     ? result.events.map(parsePmdtEvent).filter((event): event is PmdtResultEvent => event !== null)
     : [];
+  const actionHistory = Array.isArray(result.actionHistory)
+    ? result.actionHistory.map(parseScenarioAction).filter((event): event is ScenarioActionEvent => event !== null)
+    : [];
+  const resolution = parseScenarioResolution(result.resolution);
   const hardwareAnswer = isHardwareDiagnosisAnswer(result.hardwareAnswer) ? result.hardwareAnswer : undefined;
   return {
     startedAt: nullableText(result.startedAt),
     submittedAt: nullableText(result.submittedAt),
     events,
+    actionHistory,
+    ...(resolution ? { resolution } : {}),
     answer: {
       suspectedFault: text(answer.suspectedFault),
       reasoning: text(answer.reasoning),

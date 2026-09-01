@@ -14,6 +14,7 @@ import {
   type Dvor220Command,
   type Dvor220CommandResult,
   type Dvor220DeviceState,
+  type Dvor220ScenarioDefinition,
   type Dvor220Snapshot,
 } from "../domain/types";
 import { formatDvor220Status, toneForDvor220Status } from "./main-screens";
@@ -26,6 +27,7 @@ export interface Dvor220ControlDialogsProps {
   device: Dvor220DeviceState;
   snapshot: Dvor220Snapshot;
   dispatch: (command: Dvor220Command) => Dvor220CommandResult;
+  scenarioDefinition?: Dvor220ScenarioDefinition | null;
   onClose: () => void;
 }
 
@@ -34,6 +36,7 @@ export function Dvor220ControlDialogs({
   device,
   snapshot,
   dispatch,
+  scenarioDefinition,
   onClose,
 }: Dvor220ControlDialogsProps) {
   function execute(command: Dvor220Command, close = false) {
@@ -171,6 +174,7 @@ export function Dvor220ControlDialogs({
         device={device}
         snapshot={snapshot}
         dispatch={dispatch}
+        initialScenario={scenarioDefinition}
         onClose={onClose}
       />
     </>

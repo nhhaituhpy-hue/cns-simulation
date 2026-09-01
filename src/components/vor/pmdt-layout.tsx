@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { Suspense, useEffect, type ReactNode } from "react";
 import { SimulatorConfigPersistence } from "@/components/simulator/simulator-config-persistence";
 import { SimulatorToolbarBackButton } from "@/components/simulator/simulator-toolbar-back-button";
+import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
 import type { SupportedSimulatorConfigId } from "@/lib/simulator-config/types";
 import type { VorPmdtMode } from "@/lib/vor-types";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
@@ -77,6 +78,7 @@ export function PmdtLayout({
   const scenario = useVorPmdtStore((state) => state.scenario);
   const setScenarioParametersOpen = useVorPmdtStore((state) => state.setScenarioParametersOpen);
   const setScenarioAuthoringEnabled = useVorPmdtStore((state) => state.setScenarioAuthoringEnabled);
+  const replaceScenarioDraft = useVorPmdtStore((state) => state.replaceScenarioDraft);
   const aboutDialogOpen = useVorPmdtStore((state) => state.aboutDialogOpen);
   const loginDialogOpen = useVorPmdtStore((state) => state.loginDialogOpen);
   const applyConfigChanges = useVorPmdtStore((state) => state.applyConfigChanges);
@@ -107,6 +109,16 @@ export function PmdtLayout({
 
   return (
     <div className={`pmdt-classic-viewport ${hasExternalPanels ? "pmdt-classic-viewport--with-external-inspector" : ""}`}>
+      <Suspense fallback={null}>
+        <ScenarioParametersRouteLoader
+          moduleId="dvor-1150a"
+          enabled={scenarioAuthoringEnabled}
+          onLoaded={(definition) => {
+            replaceScenarioDraft(definition);
+            setScenarioParametersOpen(true);
+          }}
+        />
+      </Suspense>
       <div className="dvor1150a-simulator-frame">
         {mode === "preview" ? <nav className="dvor1150a-simulator-tools" aria-label="DVOR 1150A simulator tools">
           <SimulatorToolbarBackButton />

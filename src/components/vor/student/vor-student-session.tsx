@@ -8,7 +8,9 @@ import { HardwareDiagnosisStep } from "@/components/hardware/hardware-diagnosis-
 import type { HardwareDiagnosisAnswer } from "@/lib/equipment-diagram-types";
 import { completeExamAttemptItemAction } from "@/lib/exams/actions";
 import type { OfficialExamScenarioContext } from "@/lib/exams/client-types";
+import { evaluateDvor1150aScenario } from "@/lib/dvor1150a";
 import type { VorScenario } from "@/lib/vor-types";
+import { scenarioResolutionFromEvaluation, type ScenarioResolutionCheck } from "@/lib/scenario-evidence";
 import { VOR_EQUIPMENT_DIAGRAMS } from "@/lib/vor-hardware-model";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
 import { useVorScenarioStore } from "@/stores/vor-scenario-store";
@@ -32,6 +34,45 @@ interface ActiveIdentity {
   studentName: string;
   workUnit: string;
   startedAt: string;
+}
+
+function buildResolution(
+  state: ReturnType<typeof useVorPmdtStore.getState>,
+  startedAt: string,
+  submittedAt: string,
+) {
+  const evaluation = evaluateDvor1150aScenario(state.scenario, state.derived, state.config);
+  const last = state.actionHistory.at(-1)?.after;
+  const checks: ScenarioResolutionCheck[] = state.scenario.active
+    ? evaluation.checks
+    : [
+      {
+        id: "integral-monitor",
+        label: "Integral Monitor",
+        passed: last?.monitorNormal === true || state.derived.data.monitorIntegral.normal,
+        detail: (last?.monitorNormal === true || state.derived.data.monitorIntegral.normal) ? "Normal" : "Alarm active or not verified",
+      },
+      {
+        id: "monitor-bypass",
+        label: "Monitor Bypass",
+        passed: last?.monitorBypass === false || !state.derived.data.monitorIntegral.bypass,
+        detail: (last?.monitorBypass === false || !state.derived.data.monitorIntegral.bypass) ? "Released" : "Bypass active",
+      },
+      {
+        id: "action-history",
+        label: "Recorded PMDT actions",
+        passed: state.actionHistory.some((event) => event.kind !== "view"),
+        detail: `${state.actionHistory.filter((event) => event.kind !== "view").length} technical action(s) recorded`,
+      },
+    ];
+  return scenarioResolutionFromEvaluation({
+    active: Boolean(state.scenarioId),
+    solved: state.scenario.active ? evaluation.solved : checks.every((check) => check.passed),
+    startedAt: state.scenario.startedAt ?? startedAt,
+    checks,
+    blockers: evaluation.blockers,
+    now: submittedAt,
+  });
 }
 
 export function VorStudentSession({ scenarioId, identity: authIdentity, officialExam, officialScenario }: VorStudentSessionProps) {
@@ -117,14 +158,17 @@ export function VorStudentSession({ scenarioId, identity: authIdentity, official
     setIsSubmitting(true);
     setSubmitError(null);
     const state = useVorPmdtStore.getState();
+    const submittedAt = new Date().toISOString();
+    const resolution = buildResolution(state, identity.startedAt, submittedAt);
     if (officialExam) {
-      const submittedAt = new Date().toISOString();
       const result = await completeExamAttemptItemAction(officialExam.attemptItemId, {
         result: {
           moduleCode: "vor",
           startedAt: identity.startedAt,
           submittedAt,
           events: state.attemptEvents,
+          actionHistory: state.actionHistory,
+          resolution,
           answer: state.answer,
           ...(hardwareAnswer ? { hardwareAnswer } : {}),
         },
@@ -145,8 +189,10 @@ export function VorStudentSession({ scenarioId, identity: authIdentity, official
       workUnit: identity.workUnit,
       status: "submitted",
       startedAt: identity.startedAt,
-      submittedAt: new Date().toISOString(),
+      submittedAt,
       events: state.attemptEvents,
+      actionHistory: state.actionHistory,
+      resolution,
       answer: state.answer,
       ...(hardwareAnswer ? { hardwareAnswer } : {}),
     });
@@ -180,7 +226,7 @@ export function VorStudentSession({ scenarioId, identity: authIdentity, official
       </div>
       <PmdtLayout
         mode="student"
-        leadingPanel={<VorStudentJournal scenario={scenario} showConclusion={!scenario.hardwareTask} />}
+        leadingPanel={<VorStudentJournal scenario={scenario} showConclusion />}
         sidePanel={<VorStudentActivity isSubmitting={isSubmitting} onSubmit={submit} onContinue={scenario.hardwareTask ? () => setStage("hardware") : undefined} />}
       />
     </div>

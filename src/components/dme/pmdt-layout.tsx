@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { Suspense, useEffect, type ReactNode } from "react";
 import { SimulatorConfigPersistence } from "@/components/simulator/simulator-config-persistence";
 import { SimulatorToolbarBackButton } from "@/components/simulator/simulator-toolbar-back-button";
+import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
 import type { SupportedSimulatorConfigId } from "@/lib/simulator-config/types";
 import type { DmePmdtMode } from "@/lib/dme-types";
 import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
@@ -87,6 +88,7 @@ export function PmdtLayout({
   const scenario = useDmePmdtStore((state) => state.scenario);
   const setScenarioParametersOpen = useDmePmdtStore((state) => state.setScenarioParametersOpen);
   const setScenarioAuthoringEnabled = useDmePmdtStore((state) => state.setScenarioAuthoringEnabled);
+  const replaceScenarioDraft = useDmePmdtStore((state) => state.replaceScenarioDraft);
   const setConfigPanelOpen = useDmePmdtStore((state) => state.setConfigPanelOpen);
   const aboutDialogOpen = useDmePmdtStore((state) => state.aboutDialogOpen);
   const loginDialogOpen = useDmePmdtStore((state) => state.loginDialogOpen);
@@ -147,6 +149,16 @@ export function PmdtLayout({
 
   return (
     <div className={`pmdt-classic-viewport dme-pmdt-viewport ${hasExternalPanels ? "pmdt-classic-viewport--with-external-inspector" : ""}`}>
+      <Suspense fallback={null}>
+        <ScenarioParametersRouteLoader
+          moduleId="dme-1119a"
+          enabled={scenarioAuthoringEnabled}
+          onLoaded={(definition) => {
+            replaceScenarioDraft(definition);
+            setScenarioParametersOpen(true);
+          }}
+        />
+      </Suspense>
       <div className="dme1119a-simulator-frame">
         {mode === "preview" ? <nav className="dme1119a-simulator-tools" aria-label="DME 1119A simulator tools">
           <SimulatorToolbarBackButton />

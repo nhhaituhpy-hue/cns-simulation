@@ -4,6 +4,7 @@ import { CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { ClipboardText } from "@phosphor-icons/react/dist/csr/ClipboardText";
 import { X } from "@phosphor-icons/react/dist/csr/X";
 import { useState } from "react";
+import { ScenarioActionTimeline } from "@/components/scenario/scenario-action-timeline";
 import type { VorScenario } from "@/lib/vor-types";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
 
@@ -40,6 +41,7 @@ export function VorStudentJournal({ scenario, showConclusion = false }: VorStude
 
 export function VorStudentActivity({ isSubmitting, onSubmit, onContinue }: VorStudentActivityProps) {
   const events = useVorPmdtStore((state) => state.attemptEvents);
+  const actionHistory = useVorPmdtStore((state) => state.actionHistory);
   const answer = useVorPmdtStore((state) => state.answer);
   const updateEventAnnotation = useVorPmdtStore((state) => state.updateEventAnnotation);
   const removeEvent = useVorPmdtStore((state) => state.removeEvent);
@@ -113,6 +115,7 @@ export function VorStudentActivity({ isSubmitting, onSubmit, onContinue }: VorSt
             </ol>
           )}
         </section>
+        <ScenarioActionTimeline events={actionHistory} title="Nhật ký kỹ thuật / cách xử lý cảnh báo" />
       </div>
 
       <footer className="sticky bottom-0 border-t border-[#334155] bg-[#111827] p-4">
@@ -124,7 +127,7 @@ export function VorStudentActivity({ isSubmitting, onSubmit, onContinue }: VorSt
           className="pmdt-student-action-button inline-flex h-10 w-full items-center justify-center gap-1 rounded border border-[#60a5fa] bg-[#1d4ed8] px-2 text-[10px] font-semibold leading-4 text-[#f8fafc] whitespace-nowrap hover:bg-[#2563eb] disabled:cursor-wait disabled:opacity-60"
         >
           <CheckCircle aria-hidden size={17} />
-          {isSubmitting ? "Đang nộp…" : onContinue ? "Bước 2 - Xác định phần cứng lỗi" : "Nộp bài cho giám khảo"}
+          {isSubmitting ? "Đang nộp…" : onContinue ? "Tiếp tục: Xác định phần cứng" : "Nộp bài cho giám khảo"}
         </button>
       </footer>
     </div>

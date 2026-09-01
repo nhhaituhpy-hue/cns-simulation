@@ -39,6 +39,11 @@ import {
   type SimulatorParameterChangeLogEntry,
 } from "@/lib/simulator-config/parameter-change";
 import { extractDvor1150aConfig } from "@/lib/simulator-config/dvor-1150a";
+import type {
+  ScenarioActionEvent,
+  ScenarioEvidenceSnapshot,
+  ScenarioEvidenceValue,
+} from "@/lib/scenario-evidence";
 import { create, type StoreApi, type UseBoundStore } from "zustand";
 
 const emptyAnswer: VorStudentAnswer = {
@@ -107,6 +112,7 @@ export interface VorPmdtStoreState {
   expectedCheckpoints: VorExpectedCheckpoint[];
   studentFieldStates: VorFieldOverride[];
   attemptEvents: VorAttemptEvent[];
+  actionHistory: ScenarioActionEvent[];
   answer: VorStudentAnswer;
   scenario: Dvor1150aScenarioRuntime;
   scenarioDraft: Dvor1150aScenarioDefinition;
@@ -218,6 +224,7 @@ function initialState(): VorPmdtStoreState {
     expectedCheckpoints: [],
     studentFieldStates: [],
     attemptEvents: [],
+    actionHistory: [],
     answer: { ...emptyAnswer },
     scenario: { active: false, definition: null, startedAt: null },
     scenarioDraft: createDefaultDvor1150aScenarioDefinition(),
@@ -340,6 +347,23 @@ export function resolveVorStatus<T extends VorIndicatorColor | VorParameterStatu
   return status as T;
 }
 
+function vorEvidenceSnapshot(state: VorPmdtStoreState): ScenarioEvidenceSnapshot {
+  return {
+    screen: state.activeScreen,
+    view: state.activeView,
+    local: state.config.simulation.local,
+    monitorBypass: state.data.monitorIntegral.bypass,
+    monitorNormal: state.data.monitorIntegral.normal,
+    primaryMonitorAlarm: state.data.monitorIntegral.priAlarm,
+    secondaryMonitorAlarm: state.data.monitorIntegral.secAlarm,
+    activeTransmitter: state.derived.voting.activeTransmitter,
+    sidebandVswrAlarm: Object.values(state.derived.monitors).some(
+      (monitor) => monitor.enabled && monitor.parameters.sidebandVswr.status === "alarm",
+    ),
+    activeAlerts: state.data.generalAlerts.filter((alert) => alert.checked).map((alert) => alert.label),
+  };
+}
+
 export function createVorPmdtStore(
   options: VorPmdtStoreOptions = {},
 ): UseBoundStore<StoreApi<VorPmdtStore>> {
@@ -347,6 +371,37 @@ export function createVorPmdtStore(
   const generateId = options.generateId ?? defaultId;
 
   return create<VorPmdtStore>()((set, get) => {
+    const recordAction = (input: {
+      actor?: ScenarioActionEvent["actor"];
+      kind: ScenarioActionEvent["kind"];
+      controlId?: string;
+      menuPath?: readonly string[];
+      label: string;
+      input?: ScenarioEvidenceValue;
+      accepted: boolean;
+      reason?: string;
+      before?: ScenarioEvidenceSnapshot;
+    }) => {
+      const state = get();
+      if (state.mode !== "student" && input.actor !== "system") return;
+      const event: ScenarioActionEvent = {
+        id: generateId(),
+        sequence: state.actionHistory.length + 1,
+        occurredAt: now().toISOString(),
+        actor: input.actor ?? "student",
+        kind: input.kind,
+        ...(input.controlId ? { controlId: input.controlId } : {}),
+        menuPath: [...(input.menuPath ?? state.activeMenuPath)],
+        label: input.label,
+        ...(input.input !== undefined ? { input: structuredClone(input.input) } : {}),
+        accepted: input.accepted,
+        ...(input.reason ? { reason: input.reason } : {}),
+        ...(input.before ? { before: structuredClone(input.before) } : {}),
+        after: vorEvidenceSnapshot(state),
+      };
+      set({ actionHistory: [...state.actionHistory, event] });
+    };
+
     const recordVisit = (
       screenId: VorScreenId,
       viewId: VorViewId,
@@ -520,6 +575,7 @@ export function createVorPmdtStore(
       }),
 
       login: (userId, password) => {
+        const before = vorEvidenceSnapshot(get());
         const credentials: Array<{ userId: string; password: string; securityLevel: VorSecurityLevel }> = [
           { userId: "GUEST", password: "", securityLevel: 1 },
           { userId: "SEC3", password: "THREE", securityLevel: 3 },
@@ -530,6 +586,15 @@ export function createVorPmdtStore(
         );
         if (!identity) {
           set({ loginError: "Invalid User ID or Password." });
+          recordAction({
+            kind: "authentication",
+            controlId: "pmdt-login",
+            label: "PMDT login",
+            input: { userId: userId.trim() },
+            accepted: false,
+            reason: "Invalid User ID or Password.",
+            before,
+          });
           return false;
         }
         set({
@@ -537,6 +602,14 @@ export function createVorPmdtStore(
           authenticatedUserId: identity.userId,
           securityLevel: identity.securityLevel,
           loginError: null,
+        });
+        recordAction({
+          kind: "authentication",
+          controlId: "pmdt-login",
+          label: "PMDT login",
+          input: { userId: identity.userId, securityLevel: identity.securityLevel },
+          accepted: true,
+          before,
         });
         return true;
       },
@@ -554,11 +627,18 @@ export function createVorPmdtStore(
         const state = get();
         const isLocalModeField = fieldId === "simulation.local";
         const isBypassField = fieldId === "simulation.integralMonitorBypass";
+        const before = vorEvidenceSnapshot(state);
 
-        if (state.securityLevel < 3) return;
+        if (state.securityLevel < 3) {
+          recordAction({ kind: "configuration", controlId: fieldId, label: `Set ${fieldId}`, input: { fieldId, value: String(value) }, accepted: false, reason: "Security level is insufficient.", before });
+          return;
+        }
 
         if (isLocalModeField || isBypassField) {
-          if (isBypassField && value === true && !state.config.simulation.local) return;
+          if (isBypassField && value === true && !state.config.simulation.local) {
+            recordAction({ kind: "control", controlId: fieldId, label: `Set ${fieldId}`, input: { fieldId, value: String(value) }, accepted: false, reason: "Local mode is required before enabling Monitor Bypass.", before });
+            return;
+          }
           const patches = [{ fieldId, value }];
           const shouldEvaluateAutomaticTransfer = (isBypassField && value === false)
             || (isLocalModeField && value === false);
@@ -566,7 +646,10 @@ export function createVorPmdtStore(
             patches.push({ fieldId: "simulation.integralMonitorBypass", value: false });
           }
           const result = applyDvorConfigPatches(state.config, patches);
-          if (!result.ok) return;
+          if (!result.ok) {
+            recordAction({ kind: "configuration", controlId: fieldId, label: `Set ${fieldId}`, input: { fieldId, value: String(value) }, accepted: false, reason: "PMDT rejected the configuration value.", before });
+            return;
+          }
           const automaticTransfer = shouldEvaluateAutomaticTransfer
             ? applyAutomaticMonitorTransfer(result.config, state.derived.mainTransmitter)
             : null;
@@ -609,36 +692,53 @@ export function createVorPmdtStore(
                 ? { lastCommand: "Automatic monitor shutdown: both transmitters off" }
                 : {}),
           });
+          recordAction({ kind: "control", controlId: fieldId, label: `Set ${fieldId}`, input: { fieldId, value: String(value) }, accepted: true, before });
+          if (automaticTransfer?.action) {
+            recordAction({ actor: "system", kind: "system", controlId: "automatic-monitor-transfer", label: automaticTransfer.action === "transfer" && automaticTransfer.target ? `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}` : "Automatic monitor shutdown", accepted: true, reason: "PMDT automatic protection response.", before: vorEvidenceSnapshot(get()) });
+          }
           return;
         }
 
-        if (!state.config.simulation.local) return;
+        if (!state.config.simulation.local) {
+          recordAction({ kind: "configuration", controlId: fieldId, label: `Set ${fieldId}`, input: { fieldId, value: String(value) }, accepted: false, reason: "Local mode is disabled.", before });
+          return;
+        }
         if (
           state.scenario.active
           && !state.scenario.definition?.studentEditableFieldIds.includes(fieldId)
         ) {
           set({ lastCommand: "Scenario control locked: examiner recovery controls only" });
+          recordAction({ kind: "configuration", controlId: fieldId, label: `Set ${fieldId}`, input: { fieldId, value: String(value) }, accepted: false, reason: "Scenario recovery controls only.", before });
           return;
         }
         const result = applyDvorConfigPatches(state.configDraft, [{ fieldId, value }]);
-        if (!result.ok) return;
+        if (!result.ok) {
+          recordAction({ kind: "configuration", controlId: fieldId, label: `Set ${fieldId}`, input: { fieldId, value: String(value) }, accepted: false, reason: "PMDT rejected the configuration value.", before });
+          return;
+        }
         set({
           configDraft: result.config,
           configDirty: JSON.stringify(result.config) !== JSON.stringify(state.config),
         });
+        recordAction({ kind: "configuration", controlId: fieldId, label: `Stage ${fieldId}`, input: { fieldId, value: String(value) }, accepted: true, before });
       },
 
       applyConfigChanges: () => {
         const state = get();
+        const before = vorEvidenceSnapshot(state);
         if (
           !state.configDirty
           || state.securityLevel < 3
           || !state.config.simulation.local
         ) {
+          recordAction({ kind: "configuration", controlId: "config-apply", label: "Configuration Apply", accepted: false, reason: "PMDT is not ready to Apply the draft.", before });
           return false;
         }
         const result = applyDvorConfigPatches(state.configDraft);
-        if (!result.ok) return false;
+        if (!result.ok) {
+          recordAction({ kind: "configuration", controlId: "config-apply", label: "Configuration Apply", accepted: false, reason: "Configuration validation failed.", before });
+          return false;
+        }
         if (state.scenario.active && state.scenario.definition) {
           const protectedChanges = getDvor1150aScenarioProtectedFieldChanges(
             state.scenario.definition,
@@ -646,6 +746,7 @@ export function createVorPmdtStore(
           );
           if (protectedChanges.length > 0) {
             set({ lastCommand: `Apply blocked: ${protectedChanges[0].label} is protected by the scenario.` });
+            recordAction({ kind: "configuration", controlId: "config-apply", label: "Configuration Apply", accepted: false, reason: `Protected field: ${protectedChanges[0].label}.`, before });
             return false;
           }
         }
@@ -669,6 +770,10 @@ export function createVorPmdtStore(
               ? "Automatic monitor shutdown: both transmitters off"
               : "Configuration Apply",
         });
+        recordAction({ kind: "configuration", controlId: "config-apply", label: "Configuration Apply", accepted: true, before });
+        if (automaticTransfer?.action) {
+          recordAction({ actor: "system", kind: "system", controlId: "automatic-monitor-transfer", label: automaticTransfer.action === "transfer" && automaticTransfer.target ? `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}` : "Automatic monitor shutdown", accepted: true, reason: "PMDT automatic protection response.", before: vorEvidenceSnapshot(get()) });
+        }
         return true;
       },
 
@@ -768,19 +873,28 @@ export function createVorPmdtStore(
 
       setTransmitterMode: (transmitterId, mode) => {
         const state = get();
-        if (state.securityLevel < 3) return false;
+        const before = vorEvidenceSnapshot(state);
+        if (state.securityLevel < 3) {
+          recordAction({ kind: "control", controlId: `transmitter-${transmitterId}-${mode}`, label: `TX ${transmitterId.toUpperCase()} ${mode}`, accepted: false, reason: "Security level is insufficient.", before });
+          return false;
+        }
         if (state.config.station.transmitterConfig === "Single Transmitter" && transmitterId === "tx2") {
+          recordAction({ kind: "control", controlId: `transmitter-${transmitterId}-${mode}`, label: `TX ${transmitterId.toUpperCase()} ${mode}`, accepted: false, reason: "TX2 is unavailable in Single Transmitter mode.", before });
           return false;
         }
         if (
           mode !== "main"
           && !state.config.simulation.local
         ) {
+          recordAction({ kind: "control", controlId: `transmitter-${transmitterId}-${mode}`, label: `TX ${transmitterId.toUpperCase()} ${mode}`, accepted: false, reason: "Local mode is required for this routing command.", before });
           return false;
         }
 
         const target = state.config.transmitters[transmitterId];
-        if (mode !== "off" && (!target.enabled || target.faults.disabled)) return false;
+        if (mode !== "off" && (!target.enabled || target.faults.disabled)) {
+          recordAction({ kind: "control", controlId: `transmitter-${transmitterId}-${mode}`, label: `TX ${transmitterId.toUpperCase()} ${mode}`, accepted: false, reason: "Target transmitter is unavailable.", before });
+          return false;
+        }
 
         const patches = mode === "main"
           ? [
@@ -795,7 +909,10 @@ export function createVorPmdtStore(
             ];
 
         const result = applyDvorConfigPatches(state.config, patches);
-        if (!result.ok) return false;
+        if (!result.ok) {
+          recordAction({ kind: "control", controlId: `transmitter-${transmitterId}-${mode}`, label: `TX ${transmitterId.toUpperCase()} ${mode}`, accepted: false, reason: "PMDT rejected the routing command.", before });
+          return false;
+        }
         const draftResult = applyDvorConfigPatches(state.configDraft, patches);
         const mainTransmitter = mode === "main" ? transmitterId : state.derived.mainTransmitter;
         const snapshot = buildDvor1150aSnapshot(result.config, undefined, mainTransmitter ?? undefined);
@@ -805,6 +922,7 @@ export function createVorPmdtStore(
           data: snapshot.data,
           derived: snapshot,
         });
+        recordAction({ kind: "control", controlId: `transmitter-${transmitterId}-${mode}`, label: `TX ${transmitterId.toUpperCase()} ${mode}`, input: { transmitterId, mode }, accepted: true, before });
         return true;
       },
 
@@ -812,21 +930,25 @@ export function createVorPmdtStore(
 
       openScreen: (screenId, menuPath, title) => {
         const viewId = defaultViews[screenId];
+        const before = vorEvidenceSnapshot(get());
         set({
           activeScreen: screenId,
           activeView: viewId,
           activeMenuPath: [...menuPath],
           attemptEvents: recordVisit(screenId, viewId, menuPath, title),
         });
+        recordAction({ kind: "view", controlId: viewId, menuPath, label: title, accepted: true, before });
       },
 
       openView: (screenId, viewId, menuPath, title) => {
+        const before = vorEvidenceSnapshot(get());
         set({
           activeScreen: screenId,
           activeView: viewId,
           activeMenuPath: [...menuPath],
           attemptEvents: recordVisit(screenId, viewId, menuPath, title),
         });
+        recordAction({ kind: "view", controlId: viewId, menuPath, label: title, accepted: true, before });
       },
 
       setOverride: (fieldId, value, status) => {
@@ -879,6 +1001,7 @@ export function createVorPmdtStore(
       interactWithSidebar: (fieldId, title, resultValue, resultStatus) => {
         const state = get();
         if (state.mode !== "student") return;
+        const before = vorEvidenceSnapshot(state);
         const event: VorAttemptEvent = {
           id: generateId(),
           sequence: state.attemptEvents.length + 1,
@@ -900,6 +1023,7 @@ export function createVorPmdtStore(
           ],
           attemptEvents: [...state.attemptEvents, event],
         });
+        recordAction({ kind: "control", controlId: fieldId, menuPath: ["Sidebar", title], label: title, input: { fieldId, value: String(resultValue), status: resultStatus }, accepted: true, before });
       },
 
       updateEventAnnotation: (eventId, annotation) =>

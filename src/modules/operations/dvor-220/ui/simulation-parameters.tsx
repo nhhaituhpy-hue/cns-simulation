@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import {
   MopiensBeveledButton,
   MopiensModal,
@@ -141,6 +141,7 @@ export interface Dvor220SimulationParametersDialogProps {
   device: Dvor220DeviceState;
   snapshot: Dvor220Snapshot;
   dispatch: (command: Dvor220Command) => Dvor220CommandResult;
+  initialScenario?: Dvor220ScenarioDefinition | null;
   onClose: () => void;
 }
 
@@ -149,10 +150,11 @@ export function Dvor220SimulationParametersDialog({
   device,
   snapshot,
   dispatch,
+  initialScenario,
   onClose,
 }: Dvor220SimulationParametersDialogProps) {
   const [tab, setTab] = useState<ScenarioTab>("overview");
-  const [scenario, setScenario] = useState<Dvor220ScenarioDefinition>(createDefaultDvor220ScenarioDefinition);
+  const [scenario, setScenario] = useState<Dvor220ScenarioDefinition>(() => initialScenario ? cloneDvor220(initialScenario) : createDefaultDvor220ScenarioDefinition());
   const [selectedTx, setSelectedTx] = useState<Dvor220TransmitterId>("tx1");
   const [selectedMonitor, setSelectedMonitor] = useState<Dvor220MonitorId>("mon1");
   const [selectedChannel, setSelectedChannel] = useState<Dvor220MonitorChannelId>("cha");
@@ -161,6 +163,10 @@ export function Dvor220SimulationParametersDialog({
   const [antennaNumber, setAntennaNumber] = useState(1);
   const [message, setMessage] = useState<string | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (initialScenario) setScenario(cloneDvor220(initialScenario));
+  }, [initialScenario]);
 
   const validationIssues = useMemo(() => {
     try {

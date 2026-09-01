@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useStore } from "zustand";
 import { Dvor220ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
+import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
 import {
   MopiensBeveledButton,
   MopiensConnectionDialog,
@@ -19,6 +20,7 @@ import {
   type Dvor220Command,
   type Dvor220CommandResult,
   type Dvor220ConnectionProfile,
+  type Dvor220ScenarioDefinition,
 } from "./domain/types";
 import { createDvor220Store, type Dvor220StoreApi } from "./store/dvor220-store";
 import { Dvor220ControlDialogs } from "./ui/control-dialogs";
@@ -133,6 +135,7 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
   const [hiddenBeforeLogId, setHiddenBeforeLogId] = useState(0);
   const [simulatorToolsOpen, setSimulatorToolsOpen] = useState(false);
   const [activeSimulatorTool, setActiveSimulatorTool] = useState<Dvor220SimulatorToolScreen | null>(null);
+  const [preloadedScenario, setPreloadedScenario] = useState<Dvor220ScenarioDefinition | null>(null);
 
   useEffect(() => {
     if (providedStore) return;
@@ -351,6 +354,16 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
 
   return (
     <div className={styles.simulatorRoot} data-view-mode={viewMode}>
+      <Suspense fallback={null}>
+        <ScenarioParametersRouteLoader
+          moduleId="dvor-220"
+          enabled
+          onLoaded={(definition) => {
+            setPreloadedScenario(definition);
+            setActiveDialog("simulation-parameters");
+          }}
+        />
+      </Suspense>
       <Dvor220ConfigPersistenceBoundary store={store} />
       <section className={styles.simulatorTools} aria-label="Simulator Tools">
         <button
@@ -456,7 +469,7 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
         onLogin={login}
         onClose={() => { setLoginOpen(false); setDialogError(null); }}
       />
-      <Dvor220ControlDialogs activeDialog={activeDialog} device={device} snapshot={snapshot} dispatch={dispatch} onClose={() => setActiveDialog(null)} />
+      <Dvor220ControlDialogs activeDialog={activeDialog} device={device} snapshot={snapshot} dispatch={dispatch} scenarioDefinition={preloadedScenario} onClose={() => setActiveDialog(null)} />
     </div>
   );
 }

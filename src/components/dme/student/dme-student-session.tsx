@@ -8,7 +8,9 @@ import { HardwareDiagnosisStep } from "@/components/hardware/hardware-diagnosis-
 import type { HardwareDiagnosisAnswer } from "@/lib/equipment-diagram-types";
 import { completeExamAttemptItemAction } from "@/lib/exams/actions";
 import type { OfficialExamScenarioContext } from "@/lib/exams/client-types";
+import { evaluateDme1119aScenario } from "@/lib/dme1119a";
 import type { DmeScenario } from "@/lib/dme-types";
+import { scenarioResolutionFromEvaluation, type ScenarioResolutionCheck } from "@/lib/scenario-evidence";
 import { DME_EQUIPMENT_DIAGRAMS } from "@/lib/dme-hardware-model";
 import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
 import { useDmeScenarioStore } from "@/stores/dme-scenario-store";
@@ -32,6 +34,53 @@ interface ActiveIdentity {
   studentName: string;
   workUnit: string;
   startedAt: string;
+}
+
+function buildResolution(
+  state: ReturnType<typeof useDmePmdtStore.getState>,
+  startedAt: string,
+  submittedAt: string,
+) {
+  const evaluation = evaluateDme1119aScenario(state.scenario, state.data);
+  const last = state.actionHistory.at(-1)?.after;
+  const checks: ScenarioResolutionCheck[] = state.scenario.active
+    ? evaluation.checks
+    : [
+      {
+        id: "integral-monitor",
+        label: "Integral Monitor",
+        passed: last?.monitorIntegralNormal === true || state.data.monitors.integral.normal,
+        detail: (last?.monitorIntegralNormal === true || state.data.monitors.integral.normal) ? "Normal" : "Alarm active or not verified",
+      },
+      {
+        id: "standby-monitor",
+        label: "Standby Monitor",
+        passed: last?.monitorStandbyNormal === true || state.data.monitors.standby.normal,
+        detail: (last?.monitorStandbyNormal === true || state.data.monitors.standby.normal) ? "Normal" : "Alarm active or not verified",
+      },
+      {
+        id: "monitor-bypass",
+        label: "Monitor Bypass",
+        passed: (last?.monitorIntegralBypass === false && last?.monitorStandbyBypass === false)
+          || (!state.data.monitors.integral.bypass && !state.data.monitors.standby.bypass),
+        detail: ((last?.monitorIntegralBypass === false && last?.monitorStandbyBypass === false)
+          || (!state.data.monitors.integral.bypass && !state.data.monitors.standby.bypass)) ? "Released" : "Bypass active",
+      },
+      {
+        id: "action-history",
+        label: "Recorded PMDT actions",
+        passed: state.actionHistory.some((event) => event.kind !== "view"),
+        detail: `${state.actionHistory.filter((event) => event.kind !== "view").length} technical action(s) recorded`,
+      },
+    ];
+  return scenarioResolutionFromEvaluation({
+    active: Boolean(state.scenarioId),
+    solved: state.scenario.active ? evaluation.solved : checks.every((check) => check.passed),
+    startedAt: state.scenario.startedAt ?? startedAt,
+    checks,
+    blockers: evaluation.blockers,
+    now: submittedAt,
+  });
 }
 
 export function DmeStudentSession({ scenarioId, identity: authIdentity, officialExam, officialScenario }: DmeStudentSessionProps) {
@@ -117,14 +166,17 @@ export function DmeStudentSession({ scenarioId, identity: authIdentity, official
     setIsSubmitting(true);
     setSubmitError(null);
     const state = useDmePmdtStore.getState();
+    const submittedAt = new Date().toISOString();
+    const resolution = buildResolution(state, identity.startedAt, submittedAt);
     if (officialExam) {
-      const submittedAt = new Date().toISOString();
       const result = await completeExamAttemptItemAction(officialExam.attemptItemId, {
         result: {
           moduleCode: "dme",
           startedAt: identity.startedAt,
           submittedAt,
           events: state.attemptEvents,
+          actionHistory: state.actionHistory,
+          resolution,
           answer: state.answer,
           ...(hardwareAnswer ? { hardwareAnswer } : {}),
         },
@@ -145,8 +197,10 @@ export function DmeStudentSession({ scenarioId, identity: authIdentity, official
       workUnit: identity.workUnit,
       status: "submitted",
       startedAt: identity.startedAt,
-      submittedAt: new Date().toISOString(),
+      submittedAt,
       events: state.attemptEvents,
+      actionHistory: state.actionHistory,
+      resolution,
       answer: state.answer,
       ...(hardwareAnswer ? { hardwareAnswer } : {}),
     });
@@ -180,7 +234,7 @@ export function DmeStudentSession({ scenarioId, identity: authIdentity, official
       </div>
       <PmdtLayout
         mode="student"
-        leadingPanel={<DmeStudentJournal scenario={scenario} showConclusion={!scenario.hardwareTask} />}
+        leadingPanel={<DmeStudentJournal scenario={scenario} showConclusion />}
         sidePanel={<DmeStudentActivity isSubmitting={isSubmitting} onSubmit={submit} onContinue={scenario.hardwareTask ? () => setStage("hardware") : undefined} />}
       />
     </div>

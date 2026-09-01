@@ -9,6 +9,12 @@ import type {
 import { isHardwareDiagnosisAnswer, type HardwareDiagnosisAnswer } from "./equipment-diagram-types";
 import { normalizeHardwareDiagnosisAnswer } from "./equipment-diagram-compatibility";
 import type { VorStorageLike } from "./vor-scenario-storage";
+import {
+  isScenarioActionEvent,
+  isScenarioResolution,
+  type ScenarioActionEvent,
+  type ScenarioResolution,
+} from "./scenario-evidence";
 
 export const VOR_SUBMISSION_STORAGE_KEY = "cns-training:vor-submissions";
 export const VOR_SUBMISSION_STORAGE_VERSION = 2 as const;
@@ -85,6 +91,10 @@ function isEvent(value: unknown): value is VorAttemptEvent {
   );
 }
 
+function isActionHistory(value: unknown): value is ScenarioActionEvent[] {
+  return Array.isArray(value) && value.every(isScenarioActionEvent);
+}
+
 export function isVorSubmission(value: unknown): value is VorSubmission {
   if (!isRecord(value)) return false;
   const validScore =
@@ -105,6 +115,8 @@ export function isVorSubmission(value: unknown): value is VorSubmission {
     isString(value.startedAt) &&
     validOptionalStrings &&
     Array.isArray(value.events) && value.events.every(isEvent) &&
+    (value.actionHistory === undefined || isActionHistory(value.actionHistory)) &&
+    (value.resolution === undefined || isScenarioResolution(value.resolution)) &&
     isAnswer(value.answer) &&
     (value.hardwareAnswer === undefined || isHardwareDiagnosisAnswer(value.hardwareAnswer)) &&
     validScore &&
@@ -157,8 +169,14 @@ function jsonField(row: Record<string, unknown>, field: string): unknown {
   return typeof value === "string" ? JSON.parse(value) as unknown : value;
 }
 
+function optionalJsonField(row: Record<string, unknown>, field: string): unknown {
+  return row[field] === undefined || row[field] === null ? undefined : jsonField(row, field);
+}
+
 export function mapRowToVorSubmission(row: unknown): VorSubmission {
   if (!isRecord(row)) throw new Error("VOR submission row must be an object.");
+  const actionHistory = optionalJsonField(row, "action_history");
+  const resolution = optionalJsonField(row, "resolution");
   const candidate: VorSubmission = {
     id: requiredString(row, "id"),
     scenarioId: requiredString(row, "scenario_id"),
@@ -168,6 +186,8 @@ export function mapRowToVorSubmission(row: unknown): VorSubmission {
     status: requiredString(row, "status") as VorSubmissionStatus,
     startedAt: requiredString(row, "started_at"),
     events: jsonField(row, "events") as VorAttemptEvent[],
+    ...(actionHistory !== undefined ? { actionHistory: actionHistory as ScenarioActionEvent[] } : {}),
+    ...(resolution !== undefined ? { resolution: resolution as ScenarioResolution } : {}),
     answer: jsonField(row, "answer") as VorStudentAnswer,
     ...(row.hardware_answer ? { hardwareAnswer: normalizeHardwareDiagnosisAnswer("vor", jsonField(row, "hardware_answer") as HardwareDiagnosisAnswer) } : {}),
     ...(row.submitted_at ? { submittedAt: requiredString(row, "submitted_at") } : {}),
@@ -192,6 +212,8 @@ export function vorSubmissionToRow(submission: VorSubmission) {
     submitted_at: submission.submittedAt ?? null,
     reviewed_at: submission.reviewedAt ?? null,
     events: submission.events,
+    action_history: submission.actionHistory ?? [],
+    resolution: submission.resolution ?? null,
     answer: submission.answer,
     hardware_answer: submission.hardwareAnswer ?? null,
     score: submission.score ?? null,

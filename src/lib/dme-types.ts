@@ -1,4 +1,5 @@
 import type { HardwareDiagnosisAnswer, HardwareDiagnosisTask } from "./equipment-diagram-types";
+import type { ScenarioActionEvent, ScenarioResolution } from "./scenario-evidence";
 
 export const DME_INDICATOR_COLORS = ["green", "yellow", "red", "gray"] as const;
 export type DmeIndicatorColor = (typeof DME_INDICATOR_COLORS)[number];
@@ -572,6 +573,9 @@ export interface DmeSubmission {
   submittedAt?: string;
   reviewedAt?: string;
   events: DmeAttemptEvent[];
+  /** Technical PMDT audit trail; unlike editable journal annotations it is append-only during the session. */
+  actionHistory?: ScenarioActionEvent[];
+  resolution?: ScenarioResolution;
   answer: DmeStudentAnswer;
   hardwareAnswer?: HardwareDiagnosisAnswer;
   score?: number;

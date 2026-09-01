@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { Suspense, useEffect, type ReactNode } from "react";
 import { Dvor1150MenuBar } from "./pmdt-menu-bar";
 import { Dvor1150LoginDialog } from "./pmdt-login-dialog";
 import { Dvor1150ScreenRouter } from "./pmdt-screens";
@@ -14,6 +14,7 @@ import { useDvor1150PmdtStore } from "@/stores/dvor1150-pmdt-store";
 import type { Dvor1150PmdtMode } from "@/lib/dvor1150";
 import { Dvor1150ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
 import { SimulatorToolbarBackButton } from "@/components/simulator/simulator-toolbar-back-button";
+import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
 
 export interface Dvor1150PmdtLayoutProps {
   mode?: Dvor1150PmdtMode;
@@ -43,6 +44,7 @@ export function Dvor1150PmdtLayout({
   const scenarioParametersOpen = useDvor1150PmdtStore((state) => state.scenarioParametersOpen);
   const setScenarioParametersOpen = useDvor1150PmdtStore((state) => state.setScenarioParametersOpen);
   const setScenarioAuthoringEnabled = useDvor1150PmdtStore((state) => state.setScenarioAuthoringEnabled);
+  const replaceScenarioDraft = useDvor1150PmdtStore((state) => state.replaceScenarioDraft);
   const scenario = useDvor1150PmdtStore((state) => state.scenario);
 
   useEffect(() => { setMode(mode); }, [mode, setMode]);
@@ -64,6 +66,16 @@ export function Dvor1150PmdtLayout({
   }, [apply, close, next, reset]);
 
   return <div className={`pmdt-classic-viewport ${hasExternalPanels ? "pmdt-classic-viewport--with-external-inspector" : ""} ${mode === "student" ? "pmdt-classic-viewport--legacy-dvor1150" : ""}`}>
+    <Suspense fallback={null}>
+      <ScenarioParametersRouteLoader
+        moduleId="dvor-1150"
+        enabled={scenarioAuthoringEnabled}
+        onLoaded={(definition) => {
+          replaceScenarioDraft(definition);
+          setScenarioParametersOpen(true);
+        }}
+      />
+    </Suspense>
     <div className="dvor1150-simulator-frame">
       {mode === "preview" || scenarioAuthoringEnabled || scenario.active ? <nav className="dvor1150-simulator-tools" aria-label="DVOR 1150 simulator tools">
         {mode === "preview" ? <SimulatorToolbarBackButton /> : null}

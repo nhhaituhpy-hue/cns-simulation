@@ -6,6 +6,7 @@ import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import Link from "next/link";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { HardwareReview } from "@/components/hardware/hardware-review";
+import { ScenarioActionTimeline } from "@/components/scenario/scenario-action-timeline";
 import { DME_EQUIPMENT_DIAGRAMS } from "@/lib/dme-hardware-model";
 import { useDmeScenarioStore } from "@/stores/dme-scenario-store";
 import { useDmeSubmissionStore } from "@/stores/dme-submission-store";
@@ -109,6 +110,8 @@ export function DmeSubmissionReview({ submissionId }: DmeSubmissionReviewProps) 
               ))}
             </ol>
           </ReviewSection>
+          {submission.actionHistory?.length ? <ScenarioActionTimeline events={submission.actionHistory} title="Timeline kỹ thuật / cách xử lý cảnh báo" /> : null}
+          {submission.resolution ? <ReviewSection title="Kết quả kỹ thuật của scenario"><p className="text-sm font-semibold text-[var(--text-primary)]">{submission.resolution.solved ? "SOLVED" : "IN PROGRESS"}</p><ul className="mt-3 space-y-2 text-sm">{submission.resolution.finalChecks.map((check) => <li key={check.id} className={check.passed ? "text-[#166534]" : "text-[#991b1b]"}>{check.passed ? "✓" : "✕"} {check.label}: {check.detail}</li>)}</ul></ReviewSection> : null}
 
           <ReviewSection title="Câu trả lời của học viên">
             <Answer title="Vị trí / sự cố nghi ngờ" value={submission.answer.suspectedFault} />

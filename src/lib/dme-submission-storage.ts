@@ -9,6 +9,12 @@ import type {
 import { isHardwareDiagnosisAnswer, type HardwareDiagnosisAnswer } from "./equipment-diagram-types";
 import { normalizeHardwareDiagnosisAnswer } from "./equipment-diagram-compatibility";
 import type { DmeStorageLike } from "./dme-scenario-storage";
+import {
+  isScenarioActionEvent,
+  isScenarioResolution,
+  type ScenarioActionEvent,
+  type ScenarioResolution,
+} from "./scenario-evidence";
 
 export const DME_SUBMISSION_STORAGE_KEY = "cns-training:dme-submissions";
 export const DME_SUBMISSION_STORAGE_VERSION = 2 as const;
@@ -98,6 +104,10 @@ function isEvent(value: unknown): value is DmeAttemptEvent {
   );
 }
 
+function isActionHistory(value: unknown): value is ScenarioActionEvent[] {
+  return Array.isArray(value) && value.every(isScenarioActionEvent);
+}
+
 export function isDmeSubmission(value: unknown): value is DmeSubmission {
   if (!isRecord(value)) return false;
   const validScore =
@@ -118,6 +128,8 @@ export function isDmeSubmission(value: unknown): value is DmeSubmission {
     isString(value.startedAt) &&
     validOptionalStrings &&
     Array.isArray(value.events) && value.events.every(isEvent) &&
+    (value.actionHistory === undefined || isActionHistory(value.actionHistory)) &&
+    (value.resolution === undefined || isScenarioResolution(value.resolution)) &&
     isAnswer(value.answer) &&
     (value.hardwareAnswer === undefined || isHardwareDiagnosisAnswer(value.hardwareAnswer)) &&
     validScore &&
@@ -170,8 +182,14 @@ function jsonField(row: Record<string, unknown>, field: string): unknown {
   return typeof value === "string" ? JSON.parse(value) as unknown : value;
 }
 
+function optionalJsonField(row: Record<string, unknown>, field: string): unknown {
+  return row[field] === undefined || row[field] === null ? undefined : jsonField(row, field);
+}
+
 export function mapRowToDmeSubmission(row: unknown): DmeSubmission {
   if (!isRecord(row)) throw new Error("DME submission row must be an object.");
+  const actionHistory = optionalJsonField(row, "action_history");
+  const resolution = optionalJsonField(row, "resolution");
   const candidate: DmeSubmission = {
     id: requiredString(row, "id"),
     scenarioId: requiredString(row, "scenario_id"),
@@ -181,6 +199,8 @@ export function mapRowToDmeSubmission(row: unknown): DmeSubmission {
     status: requiredString(row, "status") as DmeSubmissionStatus,
     startedAt: requiredString(row, "started_at"),
     events: jsonField(row, "events") as DmeAttemptEvent[],
+    ...(actionHistory !== undefined ? { actionHistory: actionHistory as ScenarioActionEvent[] } : {}),
+    ...(resolution !== undefined ? { resolution: resolution as ScenarioResolution } : {}),
     answer: jsonField(row, "answer") as DmeStudentAnswer,
     ...(row.hardware_answer ? { hardwareAnswer: normalizeHardwareDiagnosisAnswer("dme", jsonField(row, "hardware_answer") as HardwareDiagnosisAnswer) } : {}),
     ...(row.submitted_at ? { submittedAt: requiredString(row, "submitted_at") } : {}),
@@ -205,6 +225,8 @@ export function dmeSubmissionToRow(submission: DmeSubmission) {
     submitted_at: submission.submittedAt ?? null,
     reviewed_at: submission.reviewedAt ?? null,
     events: submission.events,
+    action_history: submission.actionHistory ?? [],
+    resolution: submission.resolution ?? null,
     answer: submission.answer,
     hardware_answer: submission.hardwareAnswer ?? null,
     score: submission.score ?? null,

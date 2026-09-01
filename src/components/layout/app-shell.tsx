@@ -101,7 +101,7 @@ const navigationItems: NavigationItem[] = [
   { href: "/simulator", label: "Simulator", icon: DesktopTower },
   {
     href: "/authoring",
-    label: "Tạo kịch bản",
+    label: "Kịch bản",
     icon: FilePlus,
     // Some unfinished module manifests temporarily point authoring back to a
     // simulator URL. Only explicit aliases should affect this top-level tab;

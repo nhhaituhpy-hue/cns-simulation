@@ -8,7 +8,7 @@ export type TrainingWorkspaceMode = "authoring" | "review";
 
 const workspaceCopy = {
   authoring: {
-    title: "Tạo kịch bản",
+    title: "Kịch bản",
     availableAction: "Quản lý kịch bản",
     plannedAction: "Mở khung kịch bản",
   },

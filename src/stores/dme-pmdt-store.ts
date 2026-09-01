@@ -48,6 +48,11 @@ import type {
   DmeTransmitterMode,
   DmeViewId,
 } from "@/lib/dme-types";
+import type {
+  ScenarioActionEvent,
+  ScenarioEvidenceSnapshot,
+  ScenarioEvidenceValue,
+} from "@/lib/scenario-evidence";
 import { create, type StoreApi, type UseBoundStore } from "zustand";
 
 const emptyAnswer: DmeStudentAnswer = {
@@ -130,6 +135,7 @@ export interface DmePmdtStoreState {
   expectedCheckpoints: DmeExpectedCheckpoint[];
   studentFieldStates: DmeFieldOverride[];
   attemptEvents: DmeAttemptEvent[];
+  actionHistory: ScenarioActionEvent[];
   answer: DmeStudentAnswer;
 }
 
@@ -306,6 +312,7 @@ function initialState(): DmePmdtStoreState {
     expectedCheckpoints: [],
     studentFieldStates: [],
     attemptEvents: [],
+    actionHistory: [],
     answer: { ...emptyAnswer },
     // A disk/file save is only available after the explicit System
     // Configuration Save command. Keep it distinct from the simulated RMS
@@ -568,6 +575,28 @@ export function resolveDmeStatus<T extends DmeIndicatorColor | DmeParameterStatu
   return status as T;
 }
 
+function dmeEvidenceSnapshot(state: DmePmdtStoreState): ScenarioEvidenceSnapshot {
+  return {
+    screen: state.activeScreen,
+    view: state.activeView,
+    local: state.data.local,
+    monitorIntegralBypass: state.data.monitors.integral.bypass,
+    monitorStandbyBypass: state.data.monitors.standby.bypass,
+    monitorIntegralNormal: state.data.monitors.integral.normal,
+    monitorStandbyNormal: state.data.monitors.standby.normal,
+    primaryMonitorAlarm: state.data.monitors.integral.priAlarm || state.data.monitors.standby.priAlarm,
+    secondaryMonitorAlarm: state.data.monitors.integral.secAlarm || state.data.monitors.standby.secAlarm,
+    activeTransmitter: `TX${state.data.monitorTransmitterStatus.mainSelect}`,
+    transmitterOn: {
+      tx1: state.data.monitorTransmitterStatus.transmitterOn.tx1,
+      tx2: state.data.monitorTransmitterStatus.transmitterOn.tx2,
+    },
+    identMode: state.data.identMode,
+    alarm: state.data.alert,
+    activeAlarms: state.data.alarmLogs.filter((entry) => entry.state !== "Normal").map((entry) => entry.alarm),
+  };
+}
+
 export function createDmePmdtStore(
   options: DmePmdtStoreOptions = {},
 ): UseBoundStore<StoreApi<DmePmdtStore>> {
@@ -575,6 +604,37 @@ export function createDmePmdtStore(
   const generateId = options.generateId ?? defaultId;
 
   return create<DmePmdtStore>()((set, get) => {
+    const recordAction = (input: {
+      actor?: ScenarioActionEvent["actor"];
+      kind: ScenarioActionEvent["kind"];
+      controlId?: string;
+      menuPath?: readonly string[];
+      label: string;
+      input?: ScenarioEvidenceValue;
+      accepted: boolean;
+      reason?: string;
+      before?: ScenarioEvidenceSnapshot;
+    }) => {
+      const state = get();
+      if (state.mode !== "student" && input.actor !== "system") return;
+      const event: ScenarioActionEvent = {
+        id: generateId(),
+        sequence: state.actionHistory.length + 1,
+        occurredAt: now().toISOString(),
+        actor: input.actor ?? "student",
+        kind: input.kind,
+        ...(input.controlId ? { controlId: input.controlId } : {}),
+        menuPath: [...(input.menuPath ?? state.activeMenuPath)],
+        label: input.label,
+        ...(input.input !== undefined ? { input: structuredClone(input.input) } : {}),
+        accepted: input.accepted,
+        ...(input.reason ? { reason: input.reason } : {}),
+        ...(input.before ? { before: structuredClone(input.before) } : {}),
+        after: dmeEvidenceSnapshot(state),
+      };
+      set({ actionHistory: [...state.actionHistory, event] });
+    };
+
     const recordVisit = (
       screenId: DmeScreenId,
       viewId: DmeViewId,
@@ -754,9 +814,11 @@ export function createDmePmdtStore(
       login: (userId, password) => {
         const currentTime = now().getTime();
         const state = get();
+        const before = dmeEvidenceSnapshot(state);
         if (state.loginBlockedUntil !== null && currentTime < state.loginBlockedUntil) {
           const remainingMinutes = Math.max(1, Math.ceil((state.loginBlockedUntil - currentTime) / 60000));
           set({ loginError: `Logon blocked. Try again in ${remainingMinutes} minute(s).` });
+          recordAction({ kind: "authentication", controlId: "pmdt-login", label: "PMDT login", input: { userId: userId.trim() }, accepted: false, reason: "Logon is temporarily blocked.", before });
           return false;
         }
         const blockExpired = state.loginBlockedUntil !== null && currentTime >= state.loginBlockedUntil;
@@ -777,6 +839,7 @@ export function createDmePmdtStore(
             failedLoginAttempts: failedAttempts,
             loginBlockedUntil: blockedUntil,
           });
+          recordAction({ kind: "authentication", controlId: "pmdt-login", label: "PMDT login", input: { userId: userId.trim() }, accepted: false, reason: "Invalid User ID or Password.", before });
           return false;
         }
         const data = setLogonLevel(state.data, identity.securityLevel);
@@ -800,6 +863,7 @@ export function createDmePmdtStore(
             }
             : {}),
         });
+        recordAction({ kind: "authentication", controlId: "pmdt-login", label: "PMDT login", input: { userId: identity.userId, securityLevel: identity.securityLevel }, accepted: true, before });
         return true;
       },
 
@@ -913,7 +977,11 @@ export function createDmePmdtStore(
 
       setLocalMode: (enabled) => {
         const state = get();
-        if (state.securityLevel < 3 || state.loginDialogOpen) return false;
+        const before = dmeEvidenceSnapshot(state);
+        if (state.securityLevel < 3 || state.loginDialogOpen) {
+          recordAction({ kind: "control", controlId: enabled ? "local-on" : "local-off", label: enabled ? "Local Mode" : "Remote Mode", accepted: false, reason: "Security level or login state does not allow this command.", before });
+          return false;
+        }
         let data = structuredClone(state.data);
         data.local = enabled;
         data.rmsStatus.localControlMode = enabled;
@@ -955,6 +1023,10 @@ export function createDmePmdtStore(
               ? "Automatic monitor shutdown: both transmitters off"
               : enabled ? "Local Mode" : "Remote Mode",
         });
+        recordAction({ kind: "control", controlId: enabled ? "local-on" : "local-off", label: enabled ? "Local Mode" : "Remote Mode", accepted: true, before });
+        if (automaticTransfer?.action) {
+          recordAction({ actor: "system", kind: "system", controlId: "automatic-monitor-transfer", label: automaticTransfer.action === "transfer" && automaticTransfer.target ? `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}` : "Automatic monitor shutdown", accepted: true, reason: "PMDT automatic protection response.", before });
+        }
         return true;
       },
 
@@ -971,12 +1043,17 @@ export function createDmePmdtStore(
 
       setParameterValue: (fieldId, value) => {
         const state = get();
-        if (state.securityLevel < 3 || state.loginDialogOpen || !state.data.local) return;
+        const before = dmeEvidenceSnapshot(state);
+        if (state.securityLevel < 3 || state.loginDialogOpen || !state.data.local) {
+          recordAction({ kind: "configuration", controlId: fieldId, label: `Set ${fieldId}`, input: { fieldId, value: String(value) }, accepted: false, reason: "Local mode, login or security requirement is not satisfied.", before });
+          return;
+        }
         if (
           state.scenario.active
           && !isLiveDmeOperationalField(fieldId)
           && !state.scenario.definition?.studentEditableFieldIds.includes(fieldId)
         ) {
+          recordAction({ kind: "configuration", controlId: fieldId, label: `Set ${fieldId}`, input: { fieldId, value: String(value) }, accepted: false, reason: "Scenario recovery controls only.", before });
           return;
         }
         if (
@@ -987,6 +1064,7 @@ export function createDmePmdtStore(
         ) {
           // The dual 1119A normal state keeps both RTCs powered. Use the
           // Transmitters >> Commands menu for an explicit maintenance Off.
+          recordAction({ kind: "control", controlId: fieldId, label: `Set ${fieldId}`, input: { fieldId, value: String(value) }, accepted: false, reason: "Hot-standby transmitter power is controlled from the Commands menu.", before });
           return;
         }
         let nextDraft = setDmeParameterValue(state.configDraft, fieldId, value);
@@ -1025,21 +1103,28 @@ export function createDmePmdtStore(
           configDraft: nextDraft,
           configDirty: JSON.stringify(nextDraft) !== JSON.stringify(state.data),
         });
+        recordAction({ kind: "configuration", controlId: fieldId, label: `Stage ${fieldId}`, input: { fieldId, value: String(value) }, accepted: true, before });
       },
 
       applyConfigChanges: () => {
         const state = get();
-        if (!state.configDirty || state.securityLevel < 3 || state.loginDialogOpen || !state.data.local) return false;
+        const before = dmeEvidenceSnapshot(state);
+        if (!state.configDirty || state.securityLevel < 3 || state.loginDialogOpen || !state.data.local) {
+          recordAction({ kind: "configuration", controlId: "config-apply", label: "Configuration Apply", accepted: false, reason: "PMDT is not ready to Apply the draft.", before });
+          return false;
+        }
         if (state.scenario.active) {
           const protectedChanges = getDme1119aScenarioProtectedFieldChanges(state.scenario.definition!, state.configDraft);
           if (protectedChanges.length > 0) {
             set({ lastCommand: `Scenario protected field blocked: ${protectedChanges[0].label}` });
+            recordAction({ kind: "configuration", controlId: "config-apply", label: "Configuration Apply", accepted: false, reason: `Protected field: ${protectedChanges[0].label}.`, before });
             return false;
           }
         }
         const validationError = validateDmeConfiguration(state.configDraft);
         if (validationError) {
           set({ lastCommand: `Configuration validation failed: ${validationError}` });
+          recordAction({ kind: "configuration", controlId: "config-apply", label: "Configuration Apply", accepted: false, reason: validationError, before });
           return false;
         }
         // §6.2.8: a primary monitor alarm requests one dual hot-standby
@@ -1059,6 +1144,10 @@ export function createDmePmdtStore(
               ? "Automatic monitor shutdown: both transmitters off"
               : "Configuration Apply",
         });
+        recordAction({ kind: "configuration", controlId: "config-apply", label: "Configuration Apply", accepted: true, before });
+        if (automaticTransfer.action) {
+          recordAction({ actor: "system", kind: "system", controlId: "automatic-monitor-transfer", label: automaticTransfer.action === "transfer" && automaticTransfer.target ? `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}` : "Automatic monitor shutdown", accepted: true, reason: "PMDT automatic protection response.", before });
+        }
         return true;
       },
 
@@ -1152,9 +1241,16 @@ export function createDmePmdtStore(
 
       setTransmitterMode: (transmitterId, mode) => {
         const state = get();
+        const before = dmeEvidenceSnapshot(state);
         const requiresLocal = mode !== "antenna";
-        if (state.securityLevel < 2 || state.loginDialogOpen || (requiresLocal && !state.data.local)) return false;
-        if (transmitterId === "tx2" && state.data.rmsConfigStation.transmitterConfig === "Single Transmitter") return false;
+        if (state.securityLevel < 2 || state.loginDialogOpen || (requiresLocal && !state.data.local)) {
+          recordAction({ kind: "control", controlId: `transmitter-${transmitterId}-${mode}`, label: `TX${transmitterId === "tx1" ? "1" : "2"} ${mode}`, accepted: false, reason: "Security level, login or Local requirement is not satisfied.", before });
+          return false;
+        }
+        if (transmitterId === "tx2" && state.data.rmsConfigStation.transmitterConfig === "Single Transmitter") {
+          recordAction({ kind: "control", controlId: `transmitter-${transmitterId}-${mode}`, label: `TX2 ${mode}`, accepted: false, reason: "TX2 is unavailable in Single Transmitter mode.", before });
+          return false;
+        }
         const data = routeTransmitter(state.data, transmitterId, mode);
         const configDraft = routeTransmitter(state.configDraft, transmitterId, mode);
         set({
@@ -1162,12 +1258,17 @@ export function createDmePmdtStore(
           configDraft,
           lastCommand: `TX${transmitterId === "tx1" ? "1" : "2"} ${mode}`,
         });
+        recordAction({ kind: "control", controlId: `transmitter-${transmitterId}-${mode}`, label: `TX${transmitterId === "tx1" ? "1" : "2"} ${mode}`, input: { transmitterId, mode }, accepted: true, before });
         return true;
       },
 
       setMonitorBypass: (monitor, enabled) => {
         const state = get();
-        if (state.securityLevel < 2 || state.loginDialogOpen || !state.data.local) return false;
+        const before = dmeEvidenceSnapshot(state);
+        if (state.securityLevel < 2 || state.loginDialogOpen || !state.data.local) {
+          recordAction({ kind: "control", controlId: `${monitor}-monitor-bypass`, label: `${monitor === "integral" ? "Integral" : "Standby"} Monitor Bypass ${enabled ? "On" : "Off"}`, accepted: false, reason: "Security level, login or Local requirement is not satisfied.", before });
+          return false;
+        }
         let data = structuredClone(state.data);
         data.monitors[monitor].bypass = enabled;
         data = recomputeDmeDerivedData(data);
@@ -1186,12 +1287,20 @@ export function createDmePmdtStore(
               ? "Automatic monitor shutdown: both transmitters off"
               : `${monitor === "integral" ? "Integral" : "Standby"} Monitor Bypass ${enabled ? "On" : "Off"}`,
         });
+        recordAction({ kind: "control", controlId: `${monitor}-monitor-bypass`, label: `${monitor === "integral" ? "Integral" : "Standby"} Monitor Bypass ${enabled ? "On" : "Off"}`, input: { monitor, enabled }, accepted: true, before });
+        if (automaticTransfer?.action) {
+          recordAction({ actor: "system", kind: "system", controlId: "automatic-monitor-transfer", label: automaticTransfer.action === "transfer" && automaticTransfer.target ? `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}` : "Automatic monitor shutdown", accepted: true, reason: "PMDT automatic protection response.", before });
+        }
         return true;
       },
 
       setDelayMode: (transmitterId, mode) => {
         const state = get();
-        if (state.securityLevel < 2 || state.loginDialogOpen || !state.data.local) return false;
+        const before = dmeEvidenceSnapshot(state);
+        if (state.securityLevel < 2 || state.loginDialogOpen || !state.data.local) {
+          recordAction({ kind: "control", controlId: `delay-${transmitterId}`, label: `TX${transmitterId === "tx1" ? "1" : "2"} Delay ${mode}`, accepted: false, reason: "Security level, login or Local requirement is not satisfied.", before });
+          return false;
+        }
         const data = structuredClone(state.data);
         const rtcKey = transmitterId === "tx1" ? "rtc1" : "rtc2";
         data.delayControl[rtcKey].fixed = mode === "fixed";
@@ -1202,16 +1311,24 @@ export function createDmePmdtStore(
         syncMaintenanceAlert(data);
         syncMaintenanceAlert(configDraft);
         set({ data, configDraft, lastCommand: `TX${transmitterId === "tx1" ? "1" : "2"} Delay ${mode}` });
+        recordAction({ kind: "control", controlId: `delay-${transmitterId}`, label: `TX${transmitterId === "tx1" ? "1" : "2"} Delay ${mode}`, input: { transmitterId, mode }, accepted: true, before });
         return true;
       },
 
       executeRmsCommand: (commandId) => {
         const state = get();
-        if (state.securityLevel < 2 || state.loginDialogOpen) return false;
+        const before = dmeEvidenceSnapshot(state);
+        if (state.securityLevel < 2 || state.loginDialogOpen) {
+          recordAction({ kind: "control", controlId: commandId, label: commandId, accepted: false, reason: "Security level or login state does not allow this command.", before });
+          return false;
+        }
         if (commandId === "rms-command-enable-mode") return state.setLocalMode(true);
         if (commandId === "rms-command-disable-mode") return state.setLocalMode(false);
         if (commandId === "tx-command-transfer") {
-          if (state.data.rmsConfigStation.transmitterConfig === "Single Transmitter") return false;
+          if (state.data.rmsConfigStation.transmitterConfig === "Single Transmitter") {
+            recordAction({ kind: "control", controlId: commandId, label: "TX Transfer", accepted: false, reason: "TX Transfer is unavailable in Single Transmitter mode.", before });
+            return false;
+          }
           const current = state.data.monitorTransmitterStatus.mainSelect;
           const target: DmeTransmitterId = current === 1 ? "tx2" : "tx1";
           const data = routeTransmitter(state.data, target, "antenna");
@@ -1221,9 +1338,13 @@ export function createDmePmdtStore(
             configDraft,
             lastCommand: `TX Transfer -> TX${target === "tx1" ? "1" : "2"}`,
           });
+          recordAction({ kind: "control", controlId: commandId, label: `TX Transfer -> TX${target === "tx1" ? "1" : "2"}`, accepted: true, before });
           return true;
         }
-        if (!state.data.local) return false;
+        if (!state.data.local) {
+          recordAction({ kind: "control", controlId: commandId, label: commandId, accepted: false, reason: "Local mode is disabled.", before });
+          return false;
+        }
 
         const updateOperationalState = (mutate: (data: DmePmdtData) => void, lastCommand: string) => {
           const data = structuredClone(state.data);
@@ -1231,6 +1352,7 @@ export function createDmePmdtStore(
           mutate(data);
           mutate(configDraft);
           set({ data, configDraft, lastCommand });
+          recordAction({ kind: "control", controlId: commandId, label: lastCommand, accepted: true, input: { commandId }, before });
           return true;
         };
 
@@ -1296,6 +1418,7 @@ export function createDmePmdtStore(
           const data = setIdentMode(state.data, mode);
           const configDraft = setIdentMode(state.configDraft, mode);
           set({ data, configDraft, lastCommand: `Transmitter Ident ${mode}` });
+          recordAction({ kind: "control", controlId: commandId, label: `Transmitter Ident ${mode}`, input: { mode }, accepted: true, before });
           return true;
         }
         if (commandId === "rms-command-bcps-1-reset" || commandId === "rms-command-bcps-2-reset") {
@@ -1303,12 +1426,14 @@ export function createDmePmdtStore(
           if (commandId.endsWith("1-reset")) data.bcpsCommFaults.bcps1 = false;
           else data.bcpsCommFaults.bcps2 = false;
           set({ data, configDraft: structuredClone(data), lastCommand: commandId });
+          recordAction({ kind: "control", controlId: commandId, label: commandId, accepted: true, before });
           return true;
         }
         if (commandId === "rms-command-reset-intrusion" || commandId === "rms-command-reset-smoke") {
           const data = structuredClone(state.data);
           data.alert = false;
           set({ data, configDraft: structuredClone(data), lastCommand: commandId });
+          recordAction({ kind: "control", controlId: commandId, label: commandId, accepted: true, before });
           return true;
         }
         if (commandId === "rms-command-reset-rms"
@@ -1343,9 +1468,11 @@ export function createDmePmdtStore(
                 ? "Reset Station Hardware"
                 : "Reset RMS Hardware",
           });
+          recordAction({ kind: "control", controlId: commandId, label: commandId === "rms-command-reset-rms-cpu" ? "Reset RMS CPU" : commandId === "rms-command-reset-station-hardware" ? "Reset Station Hardware" : "Reset RMS Hardware", accepted: true, before });
           return true;
         }
         set({ lastCommand: commandId });
+        recordAction({ kind: "control", controlId: commandId, label: commandId, accepted: true, before });
         return true;
       },
 
@@ -1394,39 +1521,47 @@ export function createDmePmdtStore(
         const menuPath = state.activeMenuPath.length > 1
           ? [...state.activeMenuPath.slice(0, -1), nextView]
           : [nextView];
+        const before = dmeEvidenceSnapshot(state);
         set({
           activeView: nextView,
           activeMenuPath: menuPath,
           attemptEvents: recordVisit(state.activeScreen, nextView, menuPath, nextView),
         });
+        recordAction({ kind: "view", controlId: nextView, menuPath, label: nextView, accepted: true, before });
       },
 
       closeScreen: () => {
+        const before = dmeEvidenceSnapshot(get());
         set({
           activeScreen: "home",
           activeView: "home",
           activeMenuPath: ["Home"],
           attemptEvents: recordVisit("home", "home", ["Home"], "Home"),
         });
+        recordAction({ kind: "view", controlId: "home", menuPath: ["Home"], label: "Home", accepted: true, before });
       },
 
       openScreen: (screenId, menuPath, title) => {
         const viewId = defaultViews[screenId];
+        const before = dmeEvidenceSnapshot(get());
         set({
           activeScreen: screenId,
           activeView: viewId,
           activeMenuPath: [...menuPath],
           attemptEvents: recordVisit(screenId, viewId, menuPath, title),
         });
+        recordAction({ kind: "view", controlId: viewId, menuPath, label: title, accepted: true, before });
       },
 
       openView: (screenId, viewId, menuPath, title) => {
+        const before = dmeEvidenceSnapshot(get());
         set({
           activeScreen: screenId,
           activeView: viewId,
           activeMenuPath: [...menuPath],
           attemptEvents: recordVisit(screenId, viewId, menuPath, title),
         });
+        recordAction({ kind: "view", controlId: viewId, menuPath, label: title, accepted: true, before });
       },
 
       setOverride: (fieldId, value, status) => {
@@ -1479,6 +1614,7 @@ export function createDmePmdtStore(
       interactWithSidebar: (fieldId, title, resultValue, resultStatus) => {
         const state = get();
         if (state.mode !== "student") return;
+        const before = dmeEvidenceSnapshot(state);
         const event: DmeAttemptEvent = {
           id: generateId(),
           sequence: state.attemptEvents.length + 1,
@@ -1500,6 +1636,7 @@ export function createDmePmdtStore(
           ],
           attemptEvents: [...state.attemptEvents, event],
         });
+        recordAction({ kind: "control", controlId: fieldId, menuPath: ["Sidebar", title], label: title, input: { fieldId, value: String(resultValue), status: resultStatus }, accepted: true, before });
       },
 
       updateEventAnnotation: (eventId, annotation) =>

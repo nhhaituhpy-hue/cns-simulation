@@ -37,7 +37,7 @@ function desktopNavigation() {
 }
 
 describe("AppShell", () => {
-  it("shows the horizontal admin navigation and marks Tạo kịch bản active", () => {
+  it("shows the horizontal admin navigation and marks Kịch bản active", () => {
     renderShell();
 
     const navigation = desktopNavigation();
@@ -46,13 +46,13 @@ describe("AppShell", () => {
     ).toEqual([
       "Trang chủ",
       "Simulator",
-      "Tạo kịch bản",
+      "Kịch bản",
       "Ôn tập",
       "Giám khảo",
       "Thí sinh",
     ]);
     expect(
-      within(navigation).getByRole("link", { name: "Tạo kịch bản" }),
+      within(navigation).getByRole("link", { name: "Kịch bản" }),
     ).toHaveAttribute("aria-current", "page");
 
     const header = screen.getByRole("banner");
