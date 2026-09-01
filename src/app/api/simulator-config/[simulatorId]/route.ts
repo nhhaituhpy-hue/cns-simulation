@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
-import { createClient } from "@/lib/supabase/server";
+import { queryDatabase } from "@/lib/db";
 import { getSimulatorConfigAdapter } from "@/lib/simulator-config/registry";
 import {
   SIMULATOR_CONFIG_SCHEMA_VERSION,
@@ -22,7 +22,7 @@ function errorMessage(error: unknown): string {
 function unwrapRecord(value: unknown): SimulatorConfigRecord {
   const candidate = Array.isArray(value) ? value[0] : value;
   if (!candidate || typeof candidate !== "object") {
-    throw new Error("Supabase returned an empty simulator configuration record.");
+    throw new Error("PostgreSQL returned an empty simulator configuration record.");
   }
   return candidate as SimulatorConfigRecord;
 }
@@ -97,14 +97,13 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 
   try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("user_simulator_configs")
-      .select("*")
-      .eq("user_id", profile.id)
-      .eq("simulator_id", simulatorId)
-      .maybeSingle();
-    if (error) throw error;
+    const configResult = await queryDatabase<SimulatorConfigRecord>(
+      `select * from public.user_simulator_configs
+       where user_id = $1 and simulator_id = $2
+       limit 1`,
+      [profile.id, simulatorId],
+    );
+    const data = configResult.rows[0];
 
     if (!data) {
       const defaultConfig = adapter.getDefaultConfig();
@@ -121,18 +120,18 @@ export async function GET(_request: Request, context: RouteContext) {
       });
     }
 
-    const { data: historyRows, error: historyError } = await supabase
-      .from("user_simulator_config_history")
-      .select("id, action, changed_fields, operator_user_id, session_id, revision, created_at")
-      .eq("user_id", profile.id)
-      .eq("simulator_id", simulatorId)
-      .order("created_at", { ascending: false })
-      .limit(200);
-    if (historyError) throw historyError;
+    const historyResult = await queryDatabase(
+      `select id, action, changed_fields, operator_user_id, session_id, revision, created_at
+       from public.user_simulator_config_history
+       where user_id = $1 and simulator_id = $2
+       order by created_at desc
+       limit 200`,
+      [profile.id, simulatorId],
+    );
 
     return NextResponse.json({
       ...responseFromRecord(unwrapRecord(data), simulatorId as SupportedSimulatorConfigId, adapter),
-      history: parseHistoryRows(historyRows),
+      history: parseHistoryRows(historyResult.rows),
     });
   } catch (error) {
     console.error("Simulator configuration fetch failed:", error);
@@ -155,16 +154,13 @@ export async function POST(_request: Request, context: RouteContext) {
   }
 
   try {
-    const supabase = await createClient();
-    const { data, error } = await supabase.rpc("initialize_user_simulator_config", {
-      p_simulator_id: simulatorId,
-      p_schema_version: adapter.schemaVersion,
-      p_default_config: adapter.getDefaultConfig(),
-    });
-    if (error) throw error;
+    const result = await queryDatabase<SimulatorConfigRecord>(
+      `select (public.initialize_user_simulator_config($1, $2, $3, $4)).*`,
+      [profile.id, simulatorId, adapter.schemaVersion, adapter.getDefaultConfig()],
+    );
 
     return NextResponse.json(
-      responseFromRecord(unwrapRecord(data), simulatorId as SupportedSimulatorConfigId, adapter),
+      responseFromRecord(unwrapRecord(result.rows[0]), simulatorId as SupportedSimulatorConfigId, adapter),
       { status: 201 },
     );
   } catch (error) {
@@ -213,27 +209,21 @@ export async function PUT(request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Payload cấu hình simulator không hợp lệ." }, { status: 400 });
     }
 
-    const supabase = await createClient();
-    const { data, error } = await supabase.rpc("save_user_simulator_config", {
-      p_simulator_id: simulatorId,
-      p_schema_version: adapter.schemaVersion,
-      p_applied_config: config,
-      p_expected_revision: expectedRevision,
-      p_action: action,
-      p_changed_fields: changedFields ?? [],
-      p_operator_user_id: operatorUserId ?? null,
-      p_session_id: sessionId ?? null,
-      p_backup_config: backupConfig,
-    });
-
-    if (error) {
-      if (error.message.includes("CONFIG_REVISION_CONFLICT")) {
+    let data: SimulatorConfigRecord;
+    try {
+      const result = await queryDatabase<SimulatorConfigRecord>(
+        `select (public.save_user_simulator_config($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)).*`,
+        [profile.id, simulatorId, adapter.schemaVersion, config, expectedRevision, action, changedFields ?? [], operatorUserId ?? null, sessionId ?? null, backupConfig],
+      );
+      data = result.rows[0];
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("CONFIG_REVISION_CONFLICT")) {
         return NextResponse.json(
-          { error: "Cấu hình đã thay đổi ở phiên khác.", currentRevision: Number(error.details) || null },
+          { error: "Cấu hình đã thay đổi ở phiên khác." },
           { status: 409 },
         );
       }
-      if (error.message.includes("SIMULATOR_CONFIG_NOT_INITIALIZED")) {
+      if (error instanceof Error && error.message.includes("SIMULATOR_CONFIG_NOT_INITIALIZED")) {
         return NextResponse.json({ error: "Cấu hình simulator chưa được khởi tạo." }, { status: 409 });
       }
       throw error;

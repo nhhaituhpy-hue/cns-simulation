@@ -1,9 +1,9 @@
 import "server-only";
 
-import { createHash } from "node:crypto";
-import { createAdminClient } from "@/lib/supabase/admin";
+import type { PoolClient } from "pg";
 
-const MAX_FAILURES = 5;
+export const MAX_LOGIN_FAILURES = 5;
+const LOCK_MINUTES = 5;
 
 export interface LoginLockStatus {
   failedCount: number;
@@ -11,56 +11,30 @@ export interface LoginLockStatus {
   isLocked: boolean;
 }
 
-function emailDigest(email: string) {
-  return createHash("sha256").update(email.trim().toLowerCase()).digest("hex");
-}
-
-function statusFromRow(row: { failed_count?: unknown; locked_until?: unknown } | null): LoginLockStatus {
-  const failedCount = typeof row?.failed_count === "number" ? row.failed_count : 0;
-  const lockedUntil = typeof row?.locked_until === "string" ? row.locked_until : null;
+export function statusFromUser(row: { failed_login_count: number; locked_until: Date | string | null }): LoginLockStatus {
+  const lockedUntil = row.locked_until ? new Date(row.locked_until).toISOString() : null;
   return {
-    failedCount,
+    failedCount: row.failed_login_count,
     lockedUntil,
     isLocked: Boolean(lockedUntil && new Date(lockedUntil).getTime() > Date.now()),
   };
 }
 
-export async function getLoginLockStatus(email: string): Promise<LoginLockStatus> {
-  const admin = createAdminClient();
-  const { data, error } = await admin
-    .from("auth_login_attempts")
-    .select("failed_count,locked_until")
-    .eq("email_hash", emailDigest(email))
-    .maybeSingle();
-
-  if (error) throw error;
-  return statusFromRow(data);
-}
-
-export async function recordFailedLogin(email: string): Promise<LoginLockStatus> {
-  const admin = createAdminClient();
-  const { data, error } = await admin.rpc("record_failed_login", {
-    p_email_hash: emailDigest(email),
-  });
-
-  if (error) throw error;
-  const result = data && typeof data === "object" ? data as Record<string, unknown> : {};
-  return statusFromRow({
-    failed_count: result.failed_count,
-    locked_until: result.locked_until,
-  });
-}
-
-export async function clearFailedLogins(email: string): Promise<void> {
-  const admin = createAdminClient();
-  const { error } = await admin
-    .from("auth_login_attempts")
-    .delete()
-    .eq("email_hash", emailDigest(email));
-
-  if (error) throw error;
+export async function recordFailedLogin(client: PoolClient, userId: string) {
+  const result = await client.query<{ failed_login_count: number; locked_until: Date | string | null }>(
+    `update public.users
+     set failed_login_count = failed_login_count + 1,
+         locked_until = case
+           when failed_login_count + 1 >= $2 then now() + make_interval(mins => $3)
+           else locked_until
+         end
+     where id = $1
+     returning failed_login_count, locked_until`,
+    [userId, MAX_LOGIN_FAILURES, LOCK_MINUTES],
+  );
+  return statusFromUser(result.rows[0]);
 }
 
 export function attemptsRemaining(status: LoginLockStatus) {
-  return Math.max(0, MAX_FAILURES - status.failedCount);
+  return Math.max(0, MAX_LOGIN_FAILURES - status.failedCount);
 }

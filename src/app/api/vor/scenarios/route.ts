@@ -4,8 +4,8 @@ import {
   mapRowToVorScenario,
   vorScenarioToRow,
 } from "@/modules/devices/dvor-1150a/server";
-import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
+import { queryDatabase, upsertDatabaseRow } from "@/lib/db";
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unknown VOR scenario error";
@@ -16,14 +16,8 @@ export async function GET() {
   if (!profile) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
 
   try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("vor_scenarios")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-    return NextResponse.json((data ?? []).map(mapRowToVorScenario));
+    const result = await queryDatabase("select * from public.vor_scenarios order by created_at desc");
+    return NextResponse.json(result.rows.map(mapRowToVorScenario));
   } catch (error: unknown) {
     console.error("VOR scenario fetch failed:", error);
     return NextResponse.json(
@@ -47,15 +41,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("vor_scenarios")
-      .upsert(vorScenarioToRow(payload), { onConflict: "id" })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return NextResponse.json(mapRowToVorScenario(data));
+    const result = await upsertDatabaseRow("vor_scenarios", vorScenarioToRow(payload));
+    return NextResponse.json(mapRowToVorScenario(result.rows[0]));
   } catch (error: unknown) {
     console.error("VOR scenario write failed:", error);
     return NextResponse.json(
@@ -76,12 +63,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Thiếu mã kịch bản VOR." }, { status: 400 });
     }
 
-    const supabase = await createClient();
-    const { error } = await supabase
-      .from("vor_scenarios")
-      .delete()
-      .eq("id", scenarioId);
-    if (error) throw error;
+    await queryDatabase("delete from public.vor_scenarios where id = $1", [scenarioId]);
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
     console.error("VOR scenario delete failed:", error);

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
+import { queryDatabase, upsertDatabaseRow } from "@/lib/db";
 import { mapRowToScenario } from "@/lib/supabase/scenarios";
 import type { Scenario } from "@/lib/types";
 
@@ -41,19 +41,12 @@ export async function GET() {
   }
 
   try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("scenarios")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-
-    return NextResponse.json((data ?? []).map(mapRowToScenario));
+    const result = await queryDatabase("select * from public.scenarios order by created_at desc");
+    return NextResponse.json(result.rows.map(mapRowToScenario));
   } catch (error: unknown) {
-    console.error("Supabase scenario fetch error:", error);
+    console.error("PostgreSQL scenario fetch error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch scenarios from Supabase", details: errorMessage(error) },
+      { error: "Failed to fetch scenarios", details: errorMessage(error) },
       { status: 500 },
     );
   }
@@ -75,20 +68,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true, scenario, testMode: true });
     }
 
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("scenarios")
-      .upsert(toRow(scenario), { onConflict: "id" })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return NextResponse.json({ success: true, scenario: mapRowToScenario(data) });
+    const result = await upsertDatabaseRow("scenarios", toRow(scenario));
+    return NextResponse.json({ success: true, scenario: mapRowToScenario(result.rows[0]) });
   } catch (error: unknown) {
-    console.error("Supabase scenario write error:", error);
+    console.error("PostgreSQL scenario write error:", error);
     return NextResponse.json(
-      { error: "Failed to save scenario to Supabase", details: errorMessage(error) },
+      { error: "Failed to save scenario", details: errorMessage(error) },
       { status: 500 },
     );
   }
@@ -110,16 +95,13 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: true, testMode: true });
     }
 
-    const supabase = await createClient();
-    const { error } = await supabase.from("scenarios").delete().eq("id", id);
-
-    if (error) throw error;
+    await queryDatabase("delete from public.scenarios where id = $1", [id]);
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
-    console.error("Supabase scenario delete error:", error);
+    console.error("PostgreSQL scenario delete error:", error);
     return NextResponse.json(
-      { error: "Failed to delete scenario from Supabase", details: errorMessage(error) },
+      { error: "Failed to delete scenario", details: errorMessage(error) },
       { status: 500 },
     );
   }

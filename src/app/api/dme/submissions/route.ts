@@ -5,8 +5,8 @@ import {
   dmeSubmissionToRow,
 } from "@/modules/devices/dme-1119a/server";
 import type { DmeSubmissionStatus } from "@/modules/devices/dme-1119a/server";
-import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
+import { insertDatabaseRow, queryDatabase, upsertDatabaseRow } from "@/lib/db";
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unknown DME submission error";
@@ -24,17 +24,14 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Trạng thái bài nộp không hợp lệ." }, { status: 400 });
     }
 
-    const supabase = await createClient();
-    let query = supabase.from("dme_submissions").select("*");
-    if (scenarioId) query = query.eq("scenario_id", scenarioId);
-    if (status) query = query.eq("status", status);
-    const { data, error } = await query.order("submitted_at", {
-      ascending: false,
-      nullsFirst: false,
-    });
-
-    if (error) throw error;
-    return NextResponse.json((data ?? []).map(mapRowToDmeSubmission));
+    const conditions: string[] = [];
+    const values: unknown[] = [];
+    if (profile.role !== "admin") { values.push(profile.id); conditions.push(`user_id = $${values.length}`); }
+    if (scenarioId) { values.push(scenarioId); conditions.push(`scenario_id = $${values.length}`); }
+    if (status) { values.push(status); conditions.push(`status = $${values.length}`); }
+    const where = conditions.length ? `where ${conditions.join(" and ")}` : "";
+    const result = await queryDatabase(`select * from public.dme_submissions ${where} order by submitted_at desc nulls last`, values);
+    return NextResponse.json(result.rows.map(mapRowToDmeSubmission));
   } catch (error: unknown) {
     console.error("DME submission fetch failed:", error);
     return NextResponse.json(
@@ -66,14 +63,11 @@ export async function POST(request: Request) {
           score: undefined,
           examinerComment: undefined,
         };
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("dme_submissions")
-      .upsert(dmeSubmissionToRow(securedPayload), { onConflict: "id" })
-      .select()
-      .single();
-    if (error) throw error;
-    return NextResponse.json(mapRowToDmeSubmission(data));
+    const row = dmeSubmissionToRow(securedPayload);
+    const result = profile.role === "admin"
+      ? await upsertDatabaseRow("dme_submissions", row)
+      : await insertDatabaseRow("dme_submissions", row);
+    return NextResponse.json(mapRowToDmeSubmission(result.rows[0]));
   } catch (error: unknown) {
     console.error("DME submission write failed:", error);
     return NextResponse.json(

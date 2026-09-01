@@ -4,8 +4,8 @@ import {
   mapRowToDmeScenario,
   dmeScenarioToRow,
 } from "@/modules/devices/dme-1119a/server";
-import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
+import { queryDatabase, upsertDatabaseRow } from "@/lib/db";
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unknown DME scenario error";
@@ -16,14 +16,8 @@ export async function GET() {
   if (!profile) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
 
   try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("dme_scenarios")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-    return NextResponse.json((data ?? []).map(mapRowToDmeScenario));
+    const result = await queryDatabase("select * from public.dme_scenarios order by created_at desc");
+    return NextResponse.json(result.rows.map(mapRowToDmeScenario));
   } catch (error: unknown) {
     console.error("DME scenario fetch failed:", error);
     return NextResponse.json(
@@ -47,15 +41,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("dme_scenarios")
-      .upsert(dmeScenarioToRow(payload), { onConflict: "id" })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return NextResponse.json(mapRowToDmeScenario(data));
+    const result = await upsertDatabaseRow("dme_scenarios", dmeScenarioToRow(payload));
+    return NextResponse.json(mapRowToDmeScenario(result.rows[0]));
   } catch (error: unknown) {
     console.error("DME scenario write failed:", error);
     return NextResponse.json(
@@ -76,12 +63,7 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Thiếu mã kịch bản DME." }, { status: 400 });
     }
 
-    const supabase = await createClient();
-    const { error } = await supabase
-      .from("dme_scenarios")
-      .delete()
-      .eq("id", scenarioId);
-    if (error) throw error;
+    await queryDatabase("delete from public.dme_scenarios where id = $1", [scenarioId]);
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
     console.error("DME scenario delete failed:", error);

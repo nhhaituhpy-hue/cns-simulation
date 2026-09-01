@@ -1,16 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  createClient: vi.fn(),
   getCurrentProfile: vi.fn(),
+  queryDatabase: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/profile", () => ({
   getCurrentProfile: mocks.getCurrentProfile,
 }));
 
-vi.mock("@/lib/supabase/server", () => ({
-  createClient: mocks.createClient,
+vi.mock("@/lib/db", () => ({
+  queryDatabase: mocks.queryDatabase,
 }));
 
 import { getStudentAttemptItem } from "@/lib/exams/queries";
@@ -19,12 +19,6 @@ const examId = "10000000-0000-4000-8000-000000000001";
 const candidateSubjectId = "20000000-0000-4000-8000-000000000001";
 const attemptId = "30000000-0000-4000-8000-000000000001";
 const attemptItemId = "40000000-0000-4000-8000-000000000001";
-
-function queryResult(data: unknown) {
-  const maybeSingle = vi.fn().mockResolvedValue({ data, error: null });
-  const eq = vi.fn(() => ({ maybeSingle }));
-  return { select: vi.fn(() => ({ eq })) };
-}
 
 describe("getStudentAttemptItem", () => {
   beforeEach(() => {
@@ -35,6 +29,7 @@ describe("getStudentAttemptItem", () => {
       fullName: "Student",
       workUnit: "Unit",
       role: "student",
+      mustChangePassword: false,
     });
   });
 
@@ -73,16 +68,18 @@ describe("getStudentAttemptItem", () => {
       submitted_at: null,
       exam_attempt_items: [item],
     };
-    const from = vi.fn((table: string) => {
-      if (table === "exam_attempt_items") return queryResult(item);
-      if (table === "exam_candidate_subjects") return queryResult(subject);
-      if (table === "exam_attempts") return queryResult(attempt);
-      throw new Error(`Unexpected table: ${table}`);
-    });
-    mocks.createClient.mockResolvedValue({ from });
+    mocks.queryDatabase
+      .mockResolvedValueOnce({ rows: [item] })
+      .mockResolvedValueOnce({ rows: [subject] })
+      .mockResolvedValueOnce({ rows: [attempt] });
 
     const detail = await getStudentAttemptItem(attemptItemId);
 
+    expect(mocks.queryDatabase).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining("where i.id = $1 and a.user_id = $2"),
+      [attemptItemId, "50000000-0000-4000-8000-000000000001"],
+    );
     expect(detail).toMatchObject({
       id: attemptItemId,
       status: "submitted",

@@ -366,18 +366,18 @@ Các quan hệ vật lý phải xác định, giải thích được và ưu ti�
 
 ### Tài khoản và phân quyền
 
-- Đăng ký bằng email đúng miền `@attech.com.vn`, mật khẩu tối thiểu 8 ký tự có chữ và số.
-- Xác thực đăng ký và quên mật khẩu bằng mã OTP 6 số gửi qua Supabase Auth/Resend SMTP.
-- Tài khoản mới luôn có vai trò ứng dụng `student`; vai trò được lưu trong `public.profiles`, không chỉnh trường hệ thống `auth.users.role`.
-- Route `/student/*`, `/admin/*` và các API kịch bản/bài nộp được kiểm tra phiên và vai trò ở phía server; RLS tiếp tục là lớp bảo vệ dữ liệu cuối cùng.
-- Sau 5 lần nhập sai thông tin đăng nhập qua ứng dụng, email bị khóa 5 phút. Khi hết thời gian, bộ đếm bắt đầu lại và có thể khóa tiếp sau 5 lần sai mới.
+- Không mở đăng ký công khai trong giai đoạn đầu; tài khoản được quản lý trong `public.users` với username, role `admin`/`student` và password hash scrypt.
+- Tài khoản migration phải đổi mật khẩu tạm ở lần đăng nhập đầu tiên; chưa hỗ trợ OTP hoặc quên mật khẩu qua email.
+- Route `/student/*`, `/admin/*`, Server Action và API kịch bản/bài nộp đều kiểm tra session/role ở phía server.
+- Sau 5 lần nhập sai, tài khoản bị khóa 5 phút; truy vấn login dùng transaction và khóa hàng để tránh cập nhật cạnh tranh.
+- PostgreSQL không mở cổng public; constraint, trigger và function tiếp tục bảo vệ tính toàn vẹn dữ liệu.
 
 ### Giao diện và khả năng sử dụng
 
 - Giao diện tiếng Việt theo hướng Windows 11/Fluent, tối ưu cho dashboard nghiệp vụ mật độ cao.
 - Điều hướng riêng cho vai trò giám khảo và học viên, với các section VOR, DME và ADS-B.
 - Hỗ trợ desktop, mobile, điều hướng bàn phím, reduced motion và độ tương phản hướng tới WCAG AA.
-- Video và thuyết minh trên trang chủ được phân phối qua Supabase Storage/CDN.
+- Video và thuyết minh được lưu trên bind storage của Oracle VM cùng checksum manifest.
 
 ## Kiến trúc dữ liệu
 
@@ -386,40 +386,37 @@ Trình duyệt
   ├─ Zustand stores
   ├─ localStorage (cache/fallback)
   └─ Next.js API routes
-       └─ Supabase
-            ├─ Auth + profiles (student/admin)
+       └─ PostgreSQL 17
+            ├─ users + user_sessions (student/admin)
             ├─ scenarios / vor_scenarios / dme_scenarios
             ├─ vor_submissions / dme_submissions
             ├─ exam_sets / exam_papers / exam_paper_scenarios
             ├─ exams / exam_examiners / exam_candidates
             ├─ exam_candidate_subjects / exam_attempts / exam_attempt_items
-            ├─ auth_login_attempts
             ├─ user_simulator_configs / user_simulator_config_history
-            └─ training media storage
+            └─ /app/storage → /data/cns-simulator-storage
 ```
 
-- Supabase Auth quản lý thông tin đăng nhập; `public.profiles` quản lý họ tên, đơn vị và vai trò ứng dụng.
-- Supabase Database lưu kịch bản ADS-B, VOR, DME và bài nộp VOR/DME.
-- Supabase Database lưu snapshot cấu hình theo application user và audit history thay đổi parameter của simulator.
-- `localStorage` giữ bản dữ liệu cục bộ có phiên bản và đóng vai trò fallback khi API hoặc Supabase không khả dụng.
-- Luồng **thi chính thức** là ngoại lệ: kỳ thi, phân đề, tiến độ và kịch bản đang thi luôn được đọc/ghi trực tiếp từ Supabase; hệ thống không dùng dữ liệu `localStorage` thay thế khi Supabase lỗi. Điểm chính thức chỉ được giám khảo nhập sau khi thí sinh nộp môn thi.
-- Các migration và seed data được quản lý trong `supabase/migrations/`.
-- Media phát hành không được commit trong `public/media/`; frontend sử dụng URL Supabase Storage.
+- Đăng nhập do ứng dụng quản lý bằng `public.users` và session token ngẫu nhiên; PostgreSQL chỉ lưu SHA-256 của token cookie.
+- PostgreSQL lưu kịch bản, bài nộp, cấu hình simulator và toàn bộ workflow kỳ thi.
+- `localStorage` chỉ giữ cache/fallback cho các luồng luyện tập phù hợp; luồng **thi chính thức** luôn dùng PostgreSQL server-side.
+- Migration PostgreSQL portable nằm trong `database/migrations/`; migration Supabase cũ được giữ làm lịch sử trong `supabase/migrations/`.
+- Media không commit vào Git; Dokploy gắn bind mount `/data/cns-simulator-storage:/app/storage`.
 
 ### Giới hạn bảo mật cần lưu ý
 
-- Supabase Free không cung cấp Password Verification Hook. Cơ chế khóa 5 phút hiện nằm trong Server Action của ứng dụng nên ngăn đăng nhập qua giao diện này, nhưng không thể khóa tuyệt đối một người gọi trực tiếp Supabase Auth endpoint bằng publishable key.
-- `SUPABASE_SECRET_KEY` chỉ được dùng ở server để ghi bộ đếm đăng nhập sai. Tuyệt đối không thêm tiền tố `NEXT_PUBLIC_`, log giá trị hoặc commit vào Git.
-- Quota/rate limit email của Supabase và Resend vẫn áp dụng. Giao diện có cooldown gửi lại nhưng production nên tiếp tục theo dõi abuse và cân nhắc CAPTCHA.
-- Tài khoản terminal mô phỏng không phải tài khoản Supabase và không được dùng làm thông tin xác thực thật.
-- Chưa có màn hình quản trị người dùng và audit log thay đổi vai trò; lần cấp quyền admin đầu tiên cần thực hiện trong SQL Editor.
+- Cookie session là `HttpOnly`, `SameSite=Lax`, bật `Secure` ở production và có thời hạn tuyệt đối.
+- Lockout 5 lần/5 phút và kiểm tra role được thực hiện lại trong Server Action/API, không chỉ dựa vào giao diện hoặc Proxy.
+- Tất cả tài khoản chuyển đổi phải đổi mật khẩu tạm ở lần đăng nhập đầu tiên.
+- Tài khoản terminal mô phỏng không phải tài khoản ứng dụng và không được dùng làm thông tin xác thực thật.
+- Chưa có màn hình quản trị người dùng và audit log thay đổi vai trò; thao tác quản trị trực tiếp phải được kiểm soát ở PostgreSQL.
 
 ## Công nghệ
 
 - Next.js 16 App Router, React 19 và TypeScript
 - Tailwind CSS 4, Geist, Motion và Phosphor Icons
 - Zustand cho trạng thái phía client
-- Supabase Database và Storage trong giai đoạn chuyển tiếp; PostgreSQL 17 là nền tảng đích trên Oracle VM
+- PostgreSQL 17 và bind storage trên Oracle VM
 - Vitest, Testing Library, Playwright và axe-core
 - Self-hosted trên Oracle VM (Dokploy/Docker) và GitHub Actions cho quality gate
 
@@ -429,8 +426,8 @@ Trình duyệt
 
 - Node.js 20.9 trở lên; dự án gần nhất được xác minh với Node.js 24.
 - npm.
-- Một Supabase project nếu cần đồng bộ dữ liệu cloud. Có thể chạy giao diện bằng fallback cục bộ khi chưa cấu hình Supabase.
-- Docker Desktop là tùy chọn để chạy PostgreSQL 17 local trong quá trình migration; ứng dụng hiện tại vẫn chạy với Supabase khi chưa bật database mới.
+- Một PostgreSQL 17 instance có schema trong `database/migrations/`.
+- Docker Desktop là tùy chọn thuận tiện để chạy PostgreSQL local; có thể dùng database dev khác qua `DATABASE_URL`.
 
 ### Cài đặt
 
@@ -438,55 +435,17 @@ Trình duyệt
 npm ci
 ```
 
-Sao chép `.env.example` thành `.env.local` và điền hai khóa public/client cùng một khóa server-only của Supabase:
+Sao chép `.env.example` thành `.env.local` và cấu hình PostgreSQL/session:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key
-SUPABASE_SECRET_KEY=sb_secret_your_key
+DATABASE_URL=postgresql://cns_simulator:<password>@127.0.0.1:5433/cns_simulator
+DATABASE_POOL_MAX=5
+DATABASE_SSL=false
+SESSION_COOKIE_NAME=cns_session
+SESSION_TTL_HOURS=12
 ```
 
-Lấy secret key tại **Supabase Dashboard → Project Settings → API Keys → Secret keys**. Không đưa database password, secret key hoặc secret khác vào biến môi trường public có tiền tố `NEXT_PUBLIC_`. Resend API key đã được cấu hình trong Supabase Custom SMTP thì không cần và không nên lưu thêm trong frontend.
-
-### Thiết lập Supabase Auth
-
-1. Áp dụng migration `supabase/migrations/202607180001_add_auth_profiles_and_security.sql` bằng Supabase CLI hoặc SQL Editor. Migration này chủ động xóa toàn bộ bài nộp thử nghiệm cũ trong `vor_submissions` và `dme_submissions`; cache bài nộp định dạng cũ trong trình duyệt cũng bị loại ở lần tải tiếp theo.
-2. Áp dụng migration `supabase/migrations/202607180002_create_exam_management.sql` để tạo danh mục môn, bộ đề, kỳ thi, phân công thí sinh, lượt thi và toàn bộ policy RLS/RPC liên quan.
-3. Trong **Authentication → Providers → Email**, bật Email/Password và yêu cầu xác nhận email.
-4. Trong **Authentication → Email Templates → Confirm signup**, thay liên kết xác nhận bằng mã OTP, ví dụ:
-
-   ```html
-   <h2>Mã xác thực đăng ký</h2>
-   <p>Nhập mã sau vào THỰC HÀNH MÔ PHỎNG CNS:</p>
-   <p style="font-size: 28px; font-weight: 700; letter-spacing: 8px;">{{ .Token }}</p>
-   <p>Nếu bạn không đăng ký, hãy bỏ qua email này.</p>
-   ```
-
-5. Trong **Authentication → Email Templates → Reset password**, cũng dùng `{{ .Token }}` thay cho `{{ .ConfirmationURL }}`:
-
-   ```html
-   <h2>Mã đặt lại mật khẩu</h2>
-   <p>Nhập mã sau vào màn hình Quên mật khẩu:</p>
-   <p style="font-size: 28px; font-weight: 700; letter-spacing: 8px;">{{ .Token }}</p>
-   <p>Nếu bạn không yêu cầu đổi mật khẩu, hãy bỏ qua email này.</p>
-   ```
-
-6. Trong **Authentication → Hooks → Before User Created**, chọn Postgres function `public.hook_restrict_attech_signup`. Hook này chặn đăng ký ngoài miền `@attech.com.vn` ở phía server và có trên Supabase Free.
-7. Kiểm tra **Authentication → URL Configuration**: đặt Site URL cho production và thêm `http://localhost:3000/**` vào Redirect URLs khi phát triển.
-
-Frontend đã dùng `verifyOtp` với loại `signup` cho đăng ký và `recovery` cho quên mật khẩu. Không giữ `{{ .ConfirmationURL }}` trong hai template trên nếu muốn người dùng luôn nhập mã 6 số thay vì bấm liên kết.
-
-### Cấp tài khoản quản trị đầu tiên
-
-Mọi tài khoản mới mặc định là `student`. Sau khi tài khoản đã đăng ký và xác thực OTP, chạy trong Supabase SQL Editor:
-
-```sql
-update public.profiles
-set role = 'admin', updated_at = now()
-where email = 'ten-quan-tri@attech.com.vn';
-```
-
-Đăng xuất rồi đăng nhập lại để giao diện nhận quyền mới. Chỉ đổi `public.profiles.role`; không đổi `auth.users.role` và không gán `service_role` cho người dùng.
+Không commit connection string hoặc password. Tài khoản ban đầu được tạo bằng quy trình migration server-only; không còn đăng ký, OTP hoặc phục hồi mật khẩu qua email trong giai đoạn đầu.
 
 Khởi động môi trường phát triển:
 
@@ -508,11 +467,9 @@ Chỉ dọn cache mà không khởi động dev server:
 npm run clean:cache
 ```
 
-### Nền tảng PostgreSQL đích đang triển khai
+### PostgreSQL local
 
-Checkpoint đầu tiên của migration đã thêm PostgreSQL driver, connection pool server-only, migration runner có checksum/advisory lock và schema `users`/`user_sessions`. Luồng ứng dụng hiện vẫn dùng Supabase cho đến khi từng domain được port và kiểm tra xong.
-
-Sau khi Docker Desktop khả dụng, bổ sung các biến PostgreSQL từ `.env.example` vào `.env.local`, rồi chạy:
+Bổ sung các biến PostgreSQL từ `.env.example` vào `.env.local`, rồi chạy:
 
 ```bash
 npm run db:dev:up
@@ -581,34 +538,29 @@ Theo workflow của dự án, sau khi sửa giao diện hoặc logic hãy kiểm
 
 ### Oracle VM (self-hosted — primary)
 
-Ứng dụng được triển khai trên Oracle Cloud VM (ARM64, 3 OCPU / 16 GB RAM) thông qua Dokploy. Docker image được build tự động khi push nhánh `main`.
-
-> Trạng thái chuyển tiếp: Docker image hiện vẫn nhận cấu hình Supabase. Kiến trúc đích là một Dokploy Project/Environment chứa `cns-simulator-web` và PostgreSQL riêng; chỉ bỏ các biến Supabase sau khi schema, dữ liệu, đăng nhập nội bộ và workflow kỳ thi đã được port/kiểm tra.
+Ứng dụng được triển khai trên Oracle Cloud VM ARM64 thông qua Dokploy. Một Project/Environment chứa `cns-simulator-web`, PostgreSQL 17 private và storage bind mount.
 
 Biến môi trường cần thiết trên Dokploy:
 
 | Biến | Loại | Bắt buộc |
 | --- | --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Build arg + Runtime | ✅ |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Build arg + Runtime | ✅ |
-| `SUPABASE_SECRET_KEY` | Runtime only | ✅ |
-
-`NEXT_PUBLIC_*` phải được truyền cả lúc build (Next.js inline) lẫn runtime. `SUPABASE_SECRET_KEY` chỉ cần ở runtime.
+| `DATABASE_URL` | Runtime secret | ✅ |
+| `DATABASE_POOL_MAX` | Runtime | ✅ |
+| `DATABASE_SSL` | Runtime | ✅ |
+| `SESSION_COOKIE_NAME` | Runtime | ✅ |
+| `SESSION_TTL_HOURS` | Runtime | ✅ |
 
 Build Docker image thủ công:
 
 ```bash
-docker build \
-  --build-arg NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co \
-  --build-arg NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxx \
-  -t cns-simulator .
+docker build -t cns-simulator .
 ```
 
 Chạy container:
 
 ```bash
 docker run -p 3000:3000 \
-  -e SUPABASE_SECRET_KEY=sb_secret_xxx \
+  -e DATABASE_URL=postgresql://user:password@database-host:5432/cns_simulator \
   cns-simulator
 ```
 
@@ -625,7 +577,7 @@ Trước khi triển khai trên Vercel:
 
 ### Cập nhật media
 
-Media trang chủ được lưu trên Supabase Storage với đường dẫn có phiên bản. Khi thay video, poster hoặc thuyết minh, hãy phát hành vào một thư mục phiên bản mới và cập nhật URL trong frontend để tránh trình duyệt/CDN tiếp tục dùng nội dung cache cũ.
+Media đã được chuyển sang `/data/cns-simulator-storage/training-media` và có manifest SHA-256. Khi thay video, poster hoặc thuyết minh, phải cập nhật theo thư mục phiên bản mới và tạo lại checksum manifest trước khi kích hoạt.
 
 ## Cấu trúc dự án
 
@@ -642,7 +594,7 @@ src/
     terminal/           Terminal SA/MA mô phỏng
     hardware/           Sơ đồ và bài chẩn đoán phần cứng
     grading/            So sánh thao tác và kết quả chấm điểm
-  lib/                  Domain model, engine, storage và Supabase mapping
+  lib/                  Domain model, engine, PostgreSQL data access và mapping
   stores/               Zustand stores theo từng module
 supabase/
   migrations/           Schema, policy, migration và seed data
@@ -707,6 +659,7 @@ Khi kế hoạch nội bộ và manual nhà sản xuất khác nhau, manual là 
 - Mở rộng kiểm thử E2E, accessibility, hiệu năng và quan sát lỗi production.
 
 ## Session Log
+- [2026-09-01] Hoàn thiện rehearsal chuyển CNS Simulator sang Oracle VM/Dokploy: tạo repo private `nhhaituhpy-hue/cns-simulation` nhánh `main`, Project/Environment Dokploy, PostgreSQL 17 private và hai bind mount `/data/cns-simulator-postgres` + `/data/cns-simulator-storage`. Port Auth/session, scenario API, simulator config và workflow kỳ thi sang PostgreSQL; thêm migration portable `0002`/`0003`, health route và bắt buộc đổi mật khẩu lần đầu. Import/đối soát 21 bảng với **143 bản ghi**, 3 user đúng UUID/username/role, 34 foreign key không orphan; chuyển **18 media / 7.583.122 byte** và xác minh SHA-256/UID 1001. Targeted tests đạt **12/12**, password regression đạt **3/3**, production build Next.js 16.2.11 thành công với **71 route**. Web chưa được mở tại thời điểm ghi log này; Supabase/Vercel nguồn vẫn giữ nguyên để rollback.
 - [2026-09-01] Duyệt và khởi động migration từ Vercel + Supabase sang Oracle VM theo kiến trúc một Dokploy Project/Environment gồm Next.js web và PostgreSQL riêng. Làm sạch API key khỏi kế hoạch, thiết kế `users`/`user_sessions`, bắt buộc đổi mật khẩu tạm lần đầu và ghi rõ phương án thay RLS/RPC Supabase. Triển khai checkpoint nền tảng: thêm `pg`/`@next/env`, PostgreSQL 17 compose cho local, migration runner transaction + checksum + advisory lock, migration `0001_users_and_sessions.sql`, connection pool/transaction helper server-only và tài liệu database. CodeGraph không phát hiện test hiện hữu bị ảnh hưởng; production build Next.js 16.2.11 thành công với 70 route. Chưa chạy migration thực tế vì máy local không có Docker CLI/PostgreSQL/WSL distro; chưa thay luồng Supabase production và chưa thao tác Oracle VM.
 - [2026-09-01] Chuẩn bị di chuyển hosting từ Vercel sang Oracle VM self-hosted: khảo sát codegraph (up to date, 592 files / 7.156 nodes), tạo `.github/copilot-instructions.md` cho GitHub Copilot/ChatGPT hiểu kiến trúc 5 simulator và convention dự án, bật `output: "standalone"` trong `next.config.ts`, tạo `Dockerfile` multi-stage cho ARM64 và `.dockerignore`. Cập nhật README phần Triển khai thêm Oracle VM (Dokploy) là primary và Vercel là legacy.
 - [2026-08-28] Bổ sung header ứng dụng và nút `← Quay lại` dùng browser history cho toàn bộ route chi tiết dưới `/simulator/`, gồm simulator thiết bị, simulator phần mềm và các trang sơ đồ khối; giữ catalog `/simulator` và `/login` theo giao diện riêng. Kiểm tra trực tiếp luồng `/simulator` → simulator → quay lại thành công; focused AppShell tests đạt **12/12** và production build thành công.

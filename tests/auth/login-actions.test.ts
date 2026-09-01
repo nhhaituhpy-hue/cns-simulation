@@ -1,26 +1,41 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  clearFailedLogins: vi.fn(),
-  createAdminClient: vi.fn(),
-  createClient: vi.fn(),
-  getLoginLockStatus: vi.fn(),
+  consumePasswordVerificationTime: vi.fn(),
+  createUserSession: vi.fn(),
+  query: vi.fn(),
+  queryDatabase: vi.fn(),
   recordFailedLogin: vi.fn(),
+  verifyPassword: vi.fn(),
+  withDatabaseTransaction: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/login-lockout", () => ({
   attemptsRemaining: vi.fn(() => 4),
-  clearFailedLogins: mocks.clearFailedLogins,
-  getLoginLockStatus: mocks.getLoginLockStatus,
   recordFailedLogin: mocks.recordFailedLogin,
+  statusFromUser: vi.fn(() => ({ failedCount: 0, lockedUntil: null, isLocked: false })),
 }));
 
-vi.mock("@/lib/supabase/server", () => ({
-  createClient: mocks.createClient,
+vi.mock("@/lib/auth/password", () => ({
+  consumePasswordVerificationTime: mocks.consumePasswordVerificationTime,
+  hashPassword: vi.fn(),
+  validPassword: vi.fn(() => true),
+  verifyPassword: mocks.verifyPassword,
 }));
 
-vi.mock("@/lib/supabase/admin", () => ({
-  createAdminClient: mocks.createAdminClient,
+vi.mock("@/lib/auth/profile", () => ({
+  getCurrentProfileForPasswordChange: vi.fn(),
+}));
+
+vi.mock("@/lib/auth/session", () => ({
+  createUserSession: mocks.createUserSession,
+  replaceSessionsAfterPasswordChange: vi.fn(),
+  revokeCurrentSession: vi.fn(),
+}));
+
+vi.mock("@/lib/db", () => ({
+  queryDatabase: mocks.queryDatabase,
+  withDatabaseTransaction: mocks.withDatabaseTransaction,
 }));
 
 vi.mock("next/navigation", () => ({
@@ -28,103 +43,61 @@ vi.mock("next/navigation", () => ({
   RedirectType: { replace: "replace" },
 }));
 
-import { checkSignupEmailAction, loginAction, signUpAction } from "@/app/login/actions";
+import { loginAction } from "@/app/login/actions";
 
 describe("loginAction", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.getLoginLockStatus.mockResolvedValue({ isLocked: false });
-    mocks.clearFailedLogins.mockResolvedValue(undefined);
+    mocks.withDatabaseTransaction.mockImplementation(
+      async (work: (client: { query: typeof mocks.query }) => Promise<unknown>) => work({ query: mocks.query }),
+    );
   });
 
-  it("loads only the authenticated admin profile by user id", async () => {
-    const single = vi.fn().mockResolvedValue({
-      data: { role: "admin" },
-      error: null,
-    });
-    const eq = vi.fn(() => ({ single }));
-    const select = vi.fn(() => ({ eq }));
-    const from = vi.fn(() => ({ select }));
-    const signInWithPassword = vi.fn().mockResolvedValue({
-      data: { user: { id: "admin-user-id" } },
-      error: null,
-    });
-
-    mocks.createClient.mockResolvedValue({
-      auth: {
-        signInWithPassword,
-        signOut: vi.fn(),
-      },
-      from,
-    });
+  it("loads the internal account by normalized username and creates an opaque session", async () => {
+    mocks.query
+      .mockResolvedValueOnce({
+        rows: [{
+          id: "10000000-0000-4000-8000-000000000001",
+          password_hash: "stored-hash",
+          role: "admin",
+          is_active: true,
+          must_change_password: false,
+          temporary_password_expires_at: null,
+          failed_login_count: 0,
+          locked_until: null,
+        }],
+      })
+      .mockResolvedValueOnce({ rows: [] });
+    mocks.verifyPassword.mockResolvedValue(true);
 
     const result = await loginAction({
-      username: "tuh",
+      username: "  TUH@attech.com.vn ",
       password: "ValidPass2026",
     });
 
-    expect(signInWithPassword).toHaveBeenCalledWith({
-      email: "tuh@attech.com.vn",
-      password: "ValidPass2026",
-    });
-    expect(from).toHaveBeenCalledWith("profiles");
-    expect(select).toHaveBeenCalledWith("role");
-    expect(eq).toHaveBeenCalledWith("id", "admin-user-id");
-    expect(single).toHaveBeenCalledOnce();
+    expect(mocks.query).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining("where username = $1"),
+      ["tuh"],
+    );
+    expect(mocks.verifyPassword).toHaveBeenCalledWith("ValidPass2026", "stored-hash");
+    expect(mocks.createUserSession).toHaveBeenCalledWith("10000000-0000-4000-8000-000000000001");
     expect(result).toEqual({
       ok: true,
       code: "SUCCESS",
       message: "Đăng nhập thành công.",
       role: "admin",
-    });
-  });
-});
-
-describe("signup email validation", () => {
-  function mockRegisteredEmail() {
-    const maybeSingle = vi.fn().mockResolvedValue({
-      data: { id: "existing-user-id" },
-      error: null,
-    });
-    const eq = vi.fn(() => ({ maybeSingle }));
-    const select = vi.fn(() => ({ eq }));
-    const from = vi.fn(() => ({ select }));
-    mocks.createAdminClient.mockReturnValue({ from });
-    return { from, select, eq, maybeSingle };
-  }
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("detects an email that is already registered before sign-up", async () => {
-    const query = mockRegisteredEmail();
-
-    const result = await checkSignupEmailAction("existing@attech.com.vn");
-
-    expect(query.from).toHaveBeenCalledWith("profiles");
-    expect(query.select).toHaveBeenCalledWith("id");
-    expect(query.eq).toHaveBeenCalledWith("email", "existing@attech.com.vn");
-    expect(result).toMatchObject({
-      ok: false,
-      code: "EMAIL_ALREADY_REGISTERED",
+      mustChangePassword: false,
     });
   });
 
-  it("blocks a duplicate email when the registration form is submitted", async () => {
-    mockRegisteredEmail();
+  it("uses a dummy password check when the username does not exist", async () => {
+    mocks.query.mockResolvedValueOnce({ rows: [] });
 
-    const result = await signUpAction({
-      fullName: "Nguyễn Văn A",
-      email: "existing@attech.com.vn",
-      password: "ValidPass2026",
-      workUnit: "Đài DVOR/DME",
-    });
+    const result = await loginAction({ username: "missing", password: "InvalidPass2026" });
 
-    expect(mocks.createClient).not.toHaveBeenCalled();
-    expect(result).toMatchObject({
-      ok: false,
-      code: "EMAIL_ALREADY_REGISTERED",
-    });
+    expect(mocks.consumePasswordVerificationTime).toHaveBeenCalledWith("InvalidPass2026");
+    expect(mocks.createUserSession).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ ok: false, code: "INVALID_CREDENTIALS" });
   });
 });

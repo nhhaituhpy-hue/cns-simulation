@@ -76,14 +76,14 @@ Tài nguyên hiện đủ cho một Next.js service và một PostgreSQL service
 | Supabase Auth | `users` + `user_sessions` | Đăng nhập username/password, session cookie, role guard |
 | Supabase RPC | PostgreSQL functions gọi trực tiếp | Giữ các transaction quan trọng, bỏ phụ thuộc `auth.uid()` |
 | Supabase RLS | Phân quyền tại Next.js server | DB không public; giữ constraint/trigger bảo vệ dữ liệu |
-| Supabase Storage | Static assets hoặc bind mount | Chuyển 18 file hiện có và kiểm tra checksum |
+| Supabase Storage | Bind mount `/data/cns-simulator-storage` | Đã chuyển 18 file và kiểm tra checksum manifest |
 | Supabase/Vercel secrets | Dokploy secrets | Chỉ dùng runtime variables, không ghi vào Git |
 
-### Mức độ phụ thuộc hiện tại
+### Mức độ phụ thuộc sau khi port
 
-- 11 file server đang gọi Supabase server/admin client.
-- Khoảng 61 truy vấn Supabase Database.
-- 10 lời gọi Supabase RPC.
+- Luồng runtime chính đã chuyển sang `pg`, `users`/`user_sessions` và PostgreSQL functions portable.
+- Các module Supabase cũ được giữ tạm trong source để hỗ trợ rollback, nhưng không còn được import bởi luồng đăng nhập/API chính.
+- Supabase/Vercel nguồn chưa bị xóa trong thời gian rehearsal và quan sát.
 - 14 thao tác Supabase Auth.
 - Không có component trình duyệt nào đang import Supabase browser client.
 
@@ -270,20 +270,20 @@ Repo đang khai báo Supabase local database major version 17. Trước khi tạ
 - [x] Không ghi plaintext mật khẩu tạm vào Git.
 - [x] Chốt mô hình `users` + `user_sessions`.
 - [x] Chốt role ban đầu là `admin` và `student`.
-- [ ] Xác nhận thời hạn mật khẩu tạm.
-- [ ] Xác nhận PostgreSQL major version từ Supabase Cloud.
-- [ ] Xác nhận cách lưu 18 file media: static assets hay `/data/cns-simulator-storage`.
-- [ ] Xác nhận Dokploy có quyền đọc repo `origin` hiện tại.
+- [x] Dùng thời hạn 7 ngày cho mật khẩu tạm rehearsal; tạo lại thời hạn tại cutover.
+- [x] Xác nhận Supabase Cloud và đích đều dùng PostgreSQL major 17.
+- [x] Lưu 18 file media tại `/data/cns-simulator-storage` cùng checksum manifest.
+- [x] Xác nhận Dokploy GitHub App đọc được repo private `nhhaituhpy-hue/cns-simulation`.
 
 ### Phase 1 — Tạo PostgreSQL schema portable
 
 - [x] Tạo thư mục `database/migrations`.
-- [ ] Chuyển 23 bảng ứng dụng sang migration PostgreSQL thuần.
+- [x] Chuyển 21 bảng ứng dụng cần giữ sang migration PostgreSQL thuần; thay `profiles` bằng `users` và bỏ `auth_login_attempts` tạm.
 - [x] Tạo `users` và `user_sessions`.
-- [ ] Chuyển foreign key từ `auth.users` sang `public.users`.
-- [ ] Loại bỏ Supabase roles/policies khỏi migration mới.
-- [ ] Giữ các constraint, trigger và function bảo vệ trạng thái kỳ thi.
-- [ ] Chuyển các function dùng `auth.uid()` sang tham số user ID rõ ràng.
+- [x] Chuyển foreign key từ `auth.users` sang `public.users`.
+- [x] Loại bỏ Supabase roles/policies khỏi migration mới.
+- [x] Giữ các constraint, trigger và function bảo vệ trạng thái kỳ thi.
+- [x] Chuyển các function dùng `auth.uid()` sang tham số user ID rõ ràng.
 - [x] Tạo migration runner có bảng theo dõi version, checksum và advisory lock.
 
 ### Phase 2 — Tạo database access layer cho Next.js
@@ -297,56 +297,56 @@ Repo đang khai báo Supabase local database major version 17. Trước khi tạ
   2. scenarios/submissions
   3. simulator configs
   4. exam queries/actions
-- [ ] Giữ nguyên API/UI contract khi có thể để giảm phạm vi ảnh hưởng.
+- [x] Giữ nguyên API/UI contract khi có thể để giảm phạm vi ảnh hưởng.
 
 ### Phase 3 — Chuyển đăng nhập sang bảng `users`
 
-- [ ] Tạo password hashing/verification server-only.
-- [ ] Tạo session service và cookie an toàn.
-- [ ] Chuyển `getCurrentProfile()` sang `users` + `user_sessions`.
-- [ ] Thay Supabase session refresh trong `src/proxy.ts`.
-- [ ] Proxy chỉ hỗ trợ redirect sớm; layout/API vẫn phải xác thực session thật ở server.
-- [ ] Chuyển login/logout actions.
-- [ ] Tạo trang bắt buộc đổi mật khẩu lần đầu.
-- [ ] Bỏ UI/action đăng ký, OTP và phục hồi password qua email.
-- [ ] Giữ lockout 5 lần/5 phút.
+- [x] Tạo password hashing/verification server-only.
+- [x] Tạo session service và cookie an toàn.
+- [x] Chuyển `getCurrentProfile()` sang `users` + `user_sessions`.
+- [x] Thay Supabase session refresh trong `src/proxy.ts`.
+- [x] Proxy chỉ hỗ trợ redirect sớm; layout/API vẫn phải xác thực session thật ở server.
+- [x] Chuyển login/logout actions.
+- [x] Tạo trang bắt buộc đổi mật khẩu lần đầu.
+- [x] Bỏ UI/action đăng ký, OTP và phục hồi password qua email.
+- [x] Giữ lockout 5 lần/5 phút.
 - [ ] Viết test cho session, role, đổi mật khẩu và lockout.
 
 ### Phase 4 — Chuẩn bị data migration
 
-- [ ] Export các bảng ứng dụng từ Supabase.
-- [ ] Không migrate session, refresh token hoặc OTP của Supabase.
-- [ ] Có thể bỏ dữ liệu `auth_login_attempts` cũ vì đây là trạng thái tạm.
-- [ ] Export mapping user/profile với UUID và role.
-- [ ] Tạo user mới bằng `TEMP_INITIAL_PASSWORD` tại thời điểm migration.
-- [ ] Download 18 media files và tạo checksum manifest.
-- [ ] Tạo báo cáo row count theo từng bảng.
-- [ ] Chạy ít nhất một dry-run import trên PostgreSQL tạm.
+- [x] Export các bảng ứng dụng từ Supabase.
+- [x] Không migrate session, refresh token hoặc OTP của Supabase.
+- [x] Bỏ dữ liệu `auth_login_attempts` cũ vì đây là trạng thái tạm.
+- [x] Export mapping user/profile với UUID và role.
+- [x] Tạo user mới bằng `TEMP_INITIAL_PASSWORD` tại thời điểm rehearsal.
+- [x] Download 18 media files và tạo checksum manifest.
+- [x] Tạo báo cáo row count theo từng bảng.
+- [x] Chạy dry-run import trên PostgreSQL Oracle trước khi deploy web.
 
 ### Phase 5 — Tạo hạ tầng Dokploy
 
-- [ ] Kiểm tra lại public IP, `/data`, RAM và Docker trước khi thao tác.
-- [ ] Tạo Project `cns-simulator`.
-- [ ] Tạo Environment `production`.
-- [ ] Tạo `/data/cns-simulator-postgres` với đúng UID/GID của image PostgreSQL.
-- [ ] Tạo PostgreSQL service:
+- [x] Kiểm tra lại public IP, `/data`, RAM và Docker trước khi thao tác.
+- [x] Tạo Project `cns-simulator`.
+- [x] Tạo Environment `production`.
+- [x] Tạo `/data/cns-simulator-postgres` với đúng UID/GID của image PostgreSQL.
+- [x] Tạo PostgreSQL service:
   - internal port `5432`
   - không public port/domain
   - bind mount `/data/cns-simulator-postgres:/var/lib/postgresql/data`
   - health check `pg_isready`
-- [ ] Tạo application `cns-simulator-web` từ repo/branch đã duyệt.
+- [x] Tạo application placeholder `cns-simulator-web`; cấu hình repo/branch ở bước deploy.
 - [ ] Cấu hình runtime secrets.
-- [ ] Chạy database migrations sau khi PostgreSQL Healthy; không chạy migration trong Docker build.
-- [ ] Cấu hình health/readiness endpoint cho web.
+- [x] Chạy database migrations sau khi PostgreSQL Healthy; không chạy migration trong Docker build.
+- [x] Cấu hình health/readiness endpoint `/api/health` cho web.
 - [ ] Cấu hình domain `mophongcns.hainh.io.vn` và HTTPS.
 - [ ] Đặt resource limit hợp lý và theo dõi lần build đầu trên VM không có swap.
 
 ### Phase 6 — Rehearsal trên Oracle VM
 
-- [ ] Import bản snapshot thử nghiệm.
-- [ ] So sánh row count từng bảng.
-- [ ] So sánh media file count/checksum.
-- [ ] Kiểm tra ba tài khoản migration có đúng username/role.
+- [x] Import bản snapshot thử nghiệm.
+- [x] So sánh row count từng bảng: 21 bảng / 143 bản ghi khớp.
+- [x] So sánh media file count/checksum: 18 file / 7.583.122 byte khớp.
+- [x] Kiểm tra ba tài khoản migration có đúng UUID/username/role.
 - [ ] Kiểm tra password tạm chỉ cho vào trang đổi password.
 - [ ] Kiểm tra admin/student không truy cập chéo quyền.
 - [ ] Kiểm tra toàn bộ simulator, scenario, config và workflow kỳ thi.
