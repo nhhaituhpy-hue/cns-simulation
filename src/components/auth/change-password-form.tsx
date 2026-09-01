@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { changePasswordAction, type AuthActionResult } from "@/app/login/actions";
 
-export function ChangePasswordForm({ role }: { role: "admin" | "student" }) {
+export function ChangePasswordForm() {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -18,7 +18,7 @@ export function ChangePasswordForm({ role }: { role: "admin" | "student" }) {
       const response = await changePasswordAction({ password, confirmPassword });
       setResult(response);
       if (response.ok) {
-        router.replace(role === "admin" ? "/admin" : "/student/exams");
+        router.replace("/");
         router.refresh();
       }
     } finally {

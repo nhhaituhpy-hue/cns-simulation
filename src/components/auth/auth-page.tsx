@@ -17,7 +17,7 @@ const INPUT_CLASS = "h-12 w-full rounded-xl border border-white/15 bg-[#061720]/
 function destination(result: AuthActionResult, nextPath?: string) {
   if (result.mustChangePassword) return "/change-password";
   if (nextPath?.startsWith("/") && !nextPath.startsWith("//")) return nextPath;
-  return result.role === "admin" ? "/admin" : "/student/exams";
+  return "/";
 }
 
 export function AuthPage({ nextPath }: { nextPath?: string; initialView?: AuthView }) {
