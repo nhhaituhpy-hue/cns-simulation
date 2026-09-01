@@ -5,12 +5,14 @@ import { CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
 import { FilePlus } from "@phosphor-icons/react/dist/csr/FilePlus";
 import { Funnel } from "@phosphor-icons/react/dist/csr/Funnel";
+import { Info } from "@phosphor-icons/react/dist/csr/Info";
 import { Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { UploadSimple } from "@phosphor-icons/react/dist/csr/UploadSimple";
 import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { X } from "@phosphor-icons/react/dist/csr/X";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { getSimulatorIconImage } from "@/modules/core/simulator-icon-images";
 import { SIMULATOR_MODULES } from "@/modules/core/registry";
 import type { SimulatorModuleDefinition } from "@/modules/core/types";
@@ -60,7 +62,7 @@ function responseMessage(response: Response, fallback: string) {
 }
 
 function actionButtonClass(tone: "primary" | "default" | "danger" = "default") {
-  const base = "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md border px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-50";
+  const base = "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border px-3 text-xs font-semibold shadow-sm transition-[background-color,border-color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-50";
   if (tone === "primary") return `${base} border-[var(--accent)] bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]`;
   if (tone === "danger") return `${base} border-[#fecaca] bg-white text-[#b91c1c] hover:bg-[#fef2f2]`;
   return `${base} border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-primary)] hover:bg-[var(--surface-muted)]`;
@@ -76,6 +78,7 @@ export function ScenarioManagementWorkspace() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
 
   async function loadScenarios() {
     setIsLoading(true);
@@ -103,6 +106,27 @@ export function ScenarioManagementWorkspace() {
     void loadScenarios();
   }, []);
 
+  useEffect(() => {
+    if (!isGuideOpen) return;
+
+    const previousActiveElement = document.activeElement;
+    const previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleGuideKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      setIsGuideOpen(false);
+    }
+
+    document.addEventListener("keydown", handleGuideKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleGuideKeyDown);
+      document.body.style.overflow = previousBodyOverflow;
+      if (previousActiveElement instanceof HTMLElement) previousActiveElement.focus();
+    };
+  }, [isGuideOpen]);
+
   const rows = useMemo<ManagementRow[]>(() => {
     const byModule = new Map<string, StoredScenarioParameters[]>();
     for (const scenario of scenarios) {
@@ -126,12 +150,6 @@ export function ScenarioManagementWorkspace() {
       return [{ module, scenario: null }];
     });
   }, [moduleFilter, query, scenarios]);
-
-  const supportedCount = useMemo(
-    () => new Set(scenarios.map((scenario) => scenario.moduleId)).size,
-    [scenarios],
-  );
-  const latestImport = scenarios[0]?.updatedAt ?? null;
 
   async function importScenario(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.currentTarget.files?.[0];
@@ -202,15 +220,16 @@ export function ScenarioManagementWorkspace() {
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-3xl">
             <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--accent)]">Kịch bản / Scenario Parameters</p>
-            <h1 className="mt-2 text-2xl font-bold tracking-tight text-[var(--text-primary)] sm:text-3xl">Quản lý kịch bản mô phỏng</h1>
+            <h1 className="mt-2 text-2xl font-bold tracking-tight text-[var(--text-primary)] sm:text-3xl">Trung tâm quản lý kịch bản</h1>
             <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
-              Import trực tiếp file JSON được export từ Scenario Parameters trên PMDT. File được kiểm tra đúng schema trước khi lưu; không còn dùng bộ chỉ thị cảnh báo cũ để tạo tình huống.
+              Quản trị, kiểm tra và mở các tình huống Scenario Parameters được export từ PMDT. Mỗi file được kiểm tra đúng schema trước khi lưu để sẵn sàng cho đào tạo và đánh giá.
             </p>
           </div>
-          <div className="grid shrink-0 gap-2 sm:grid-cols-3 lg:min-w-[28rem]">
-            <Metric label="Scenario đã lưu" value={String(scenarios.length)} />
-            <Metric label="Simulation đã có scenario" value={`${supportedCount}/${SCENARIO_PARAMETERS_MODULES.length}`} />
-            <Metric label="Import gần nhất" value={formatDate(latestImport)} compact />
+          <div className="flex shrink-0">
+            <button type="button" className={actionButtonClass()} onClick={() => setIsGuideOpen(true)}>
+              <Info aria-hidden size={17} />
+              Hướng dẫn sử dụng
+            </button>
           </div>
         </div>
       </header>
@@ -295,12 +314,83 @@ export function ScenarioManagementWorkspace() {
           <span className="inline-flex items-center gap-1.5"><CheckCircle aria-hidden size={15} className="text-[#16a34a]" />Import hợp lệ mới được ghi vào kho</span>
         </footer>
       </section>
+
+      {isGuideOpen ? <ScenarioGuideModal onClose={() => setIsGuideOpen(false)} /> : null}
     </main>
   );
 }
 
-function Metric({ label, value, compact = false }: { label: string; value: string; compact?: boolean }) {
-  return <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-3"><p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">{label}</p><p className={`mt-1 font-mono font-bold text-[var(--text-primary)] ${compact ? "text-xs" : "text-xl"}`}>{value}</p></div>;
+function GuideStep({ number, title, children }: { number: string; title: string; children: ReactNode }) {
+  return (
+    <li className="rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] p-3">
+      <div className="flex items-start gap-2.5">
+        <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-xs font-bold text-white" aria-hidden="true">{number}</span>
+        <div className="min-w-0">
+          <h3 className="text-sm font-bold leading-5 text-[var(--text-primary)]">{title}</h3>
+          <p className="mt-1.5 text-xs leading-5 text-[var(--text-secondary)]">{children}</p>
+        </div>
+      </div>
+    </li>
+  );
+}
+
+function ScenarioGuideModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+      <div aria-hidden="true" className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onMouseDown={onClose} />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="scenario-guide-modal-title"
+        aria-describedby="scenario-guide-modal-description"
+        className="relative flex max-h-[min(90vh,56rem)] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-[var(--border-strong)] bg-[var(--surface)] shadow-2xl"
+      >
+        <header className="flex items-start justify-between gap-4 border-b border-[var(--border)] bg-[var(--surface-muted)] px-5 py-5 sm:px-7 sm:py-6">
+          <div className="max-w-3xl">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--accent)]">Examiner playbook · Scenario Parameters</p>
+            <h2 id="scenario-guide-modal-title" className="mt-2 text-xl font-bold tracking-tight text-[var(--text-primary)] sm:text-2xl">Cẩm nang quản trị kịch bản</h2>
+            <p id="scenario-guide-modal-description" className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">Quy trình chuẩn để tiếp nhận, kiểm tra và sử dụng tình huống mô phỏng trong các phiên đào tạo và đánh giá.</p>
+          </div>
+          <button
+            type="button"
+            autoFocus
+            aria-label="Đóng hướng dẫn"
+            className="inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-secondary)] shadow-sm transition-colors hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+            onClick={onClose}
+          >
+            <X aria-hidden size={20} />
+          </button>
+        </header>
+        <div className="overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
+          <ol className="grid gap-3 md:grid-cols-2">
+            <GuideStep number="1" title="Tạo và xuất JSON">
+              Trong simulator PMDT, tạo hoặc chỉnh tình huống rồi dùng <strong>Export JSON</strong>. Nên giữ file gốc làm bản sao dự phòng.
+            </GuideStep>
+            <GuideStep number="2" title="Chọn đúng simulation">
+              Chọn đúng thiết bị ở ô <strong>Simulation nhận file</strong>. Kiểm tra cả phiên bản schema hiển thị cạnh tên simulation.
+            </GuideStep>
+            <GuideStep number="3" title="Import và kiểm tra">
+              Bấm <strong>Chọn file JSON</strong>. Hệ thống sẽ kiểm tra schema; nếu trùng cặp simulation và mã scenario, bản ghi cũ sẽ được thay thế.
+            </GuideStep>
+            <GuideStep number="4" title="Rà soát trước khi dùng">
+              Tìm lại tình huống trong bảng, dùng <strong>Tải JSON</strong> để lưu bản đã nhận và <strong>Mở simulator</strong> để kiểm tra điểm bắt đầu.
+            </GuideStep>
+            <GuideStep number="5" title="Theo dõi kết quả">
+              Khi học viên thực hành VOR/DME, hệ thống tự ghi lịch sử thao tác và trạng thái xử lý để giám khảo xem lại sau khi nộp bài.
+            </GuideStep>
+          </ol>
+          <div className="mt-5 grid gap-3 lg:grid-cols-2">
+            <div className="rounded-xl border border-[var(--accent-border)] bg-[var(--accent-muted)]/45 p-4 text-xs leading-5 text-[var(--text-secondary)]">
+              <strong className="text-[var(--text-primary)]">Quy tắc cập nhật:</strong> Import lại cùng mã scenario sẽ cập nhật bản ghi hiện có, không tạo thêm một dòng trùng. Nếu JSON sai simulation hoặc schema, hãy chọn lại simulation trước khi import.
+            </div>
+            <div className="rounded-xl border border-[#fde68a] bg-[#fffbeb] p-4 text-xs leading-5 text-[#854d0e]">
+              <strong>Phạm vi sử dụng:</strong> Kho Scenario Parameters này độc lập với danh mục scenario legacy trong Exam Set. Hãy tiếp tục cấu hình phần gán bài thi ở khu vực Exam Set nếu phiên thi yêu cầu.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function LoadingRows() {
