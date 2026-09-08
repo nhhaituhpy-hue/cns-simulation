@@ -28,6 +28,7 @@ export function Dvor1150Sidebar() {
   const monitors = useDvor1150PmdtStore((state) => state.derived.monitors);
   const config = useDvor1150PmdtStore((state) => state.config);
   const needBackup = useDvor1150PmdtStore((state) => state.needBackup);
+  const monitorAlarm = useDvor1150PmdtStore((state) => state.derived.monitorAnnunciation.alarm);
   const loginOpen = useDvor1150PmdtStore((state) => state.loginDialogOpen);
   const security = useDvor1150PmdtStore((state) => state.securityLevel);
   const local = useDvor1150PmdtStore((state) => state.config.simulation.local);
@@ -69,7 +70,7 @@ export function Dvor1150Sidebar() {
   return <aside className="pmdt-sidebar">
     <section aria-label="Connection" className="pmdt-sidebar-section">
       <span className={`pmdt-connection-badge ${loginOpen ? "pmdt-connection-badge--locked" : data.connected ? "" : "pmdt-connection-badge--offline"}`}>{connected}</span>
-      <div className={`dvor1150-backup-alert ${needBackup ? "dvor1150-backup-alert--active" : ""}`} aria-hidden={loginOpen || undefined}>{needBackup ? "Need Backup" : ""}</div>
+      <div className={`dvor1150-backup-alert ${!loginOpen && (monitorAlarm || needBackup) ? "dvor1150-backup-alert--active" : ""} ${!loginOpen && monitorAlarm ? "dvor1150-backup-alert--alarm" : ""}`} role="status" aria-hidden={loginOpen || undefined}>{loginOpen ? "" : monitorAlarm ? "Alarm" : needBackup ? "Need Backup" : ""}</div>
       <div className="dvor1150-maintenance-controls" aria-hidden={loginOpen || undefined}>
         <div className={`dvor1150-maintenance-alert ${data.alert ? "dvor1150-maintenance-alert--active" : ""}`}>
           {loginOpen ? null : <><Indicator color={data.alert ? "yellow" : "gray"} /><span>Alert</span></>}

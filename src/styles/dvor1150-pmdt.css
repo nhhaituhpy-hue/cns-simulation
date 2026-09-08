@@ -144,6 +144,12 @@
   font-weight: 700;
 }
 
+.dvor1150-pmdt-window .dvor1150-backup-alert--alarm {
+  background: #c00000;
+  color: #fff;
+  border-color: #800000;
+}
+
 .dvor1150-pmdt-window .dvor1150-maintenance-alert {
   display: flex;
   min-height: 17px;

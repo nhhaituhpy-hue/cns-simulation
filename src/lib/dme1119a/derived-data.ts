@@ -139,7 +139,7 @@ function monitorOffsetDelta(
 function monitorPowerScale(data: DmePmdtData, monitorNumber: 1 | 2, kind: MeasurementKind): number {
   const row = monitorOffsetsFor(data, monitorNumber).find((item) => item.parameter === "Tx Power Scale");
   const value = row?.[kind];
-  return typeof value === "number" && value > 0 ? value : referenceMonitorPowerScale[kind];
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : referenceMonitorPowerScale[kind];
 }
 
 function transmitterOffset(data: DmePmdtData, parameter: string, transmitterId: TransmitterId): number {
@@ -238,11 +238,11 @@ function powerScaleRatio(data: DmePmdtData, transmitterId: TransmitterId): numbe
 }
 
 function powerTargetDeltaDb(data: DmePmdtData, transmitterId: TransmitterId): number {
-  const scaleRatio = powerScaleRatio(data, transmitterId);
-  const scaleDelta = scaleRatio > 0 ? 10 * Math.log10(scaleRatio) : -60;
-  return data.txConfigNominal.rtcParameters.powerOutput
-    - defaultDmePmdtData.txConfigNominal.rtcParameters.powerOutput
-    + scaleDelta;
+  // ERP follows RF output, not the monitor's calibrated watt readout.
+  const stationRatio = data.rmsConfigStation.powerLevel === "High Power" ? 1 : 0.1;
+  const ratio = stationRatio * powerRatio(data) * powerScaleRatio(data, transmitterId)
+    * amplifierFactor(data, transmitterId);
+  return 10 * Math.log10(Math.max(ratio, 1e-6));
 }
 
 function targetPowerWatts(data: DmePmdtData, transmitterId: TransmitterId, monitorNumber: 1 | 2): number {
@@ -404,7 +404,6 @@ function numericValueForRow(
     return round(
       (base ?? 0)
       + powerTargetDeltaDb(data, transmitterId)
-      - Math.max(0, fault.powerLossDb)
       + attenuationDelta
       + couplerLossDelta
       + monitorOffset(data, monitorNumber, "ERP Offset", kind)

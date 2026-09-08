@@ -439,6 +439,7 @@ export interface Dvor1150Snapshot {
   mainTransmitter: Dvor1150TransmitterId | null;
   effectiveTransmitters: Record<Dvor1150TransmitterId, Dvor1150EffectiveTransmitter>;
   monitors: Record<Dvor1150MonitorId, Dvor1150MonitorResult>;
+  monitorAnnunciation: { preAlarm: boolean; alarm: boolean };
   transfer: Dvor1150TransferState;
   validation: Dvor1150ConfigValidationIssue[];
 }

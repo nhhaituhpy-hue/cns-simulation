@@ -161,6 +161,14 @@ function monitorResult(
     ? config.transmitters[active.id].offsets.carrierSidebandPhaseOffset
     : 0;
   const carrierSidebandModulationDelta = carrierSidebandModulationAdjustment(carrierSidebandPhaseOffset);
+  // Training approximation: four equal RF voltage contributions. Losing one
+  // branch gives 75% of nominal modulation (30% -> 22.5%); losing all gives 0.
+  // This operational response is not a manufacturer-specified transfer curve.
+  const sidebandAmplitudeRatio = active
+    ? average(active.sidebandPower.map((power) => Math.sqrt(Math.max(0, power) / (monitorSourceReference.sboRfLevel / 30))))
+    : 0;
+  const recovered9960 = Math.max(0, monitorSourceReference.hz9960Modulation + referenceDelta + carrierSidebandModulationDelta)
+    * sidebandAmplitudeRatio;
 
   /*
    * PMDT configuration influence matrix (applied after Apply/F7):
@@ -168,8 +176,8 @@ function monitorResult(
    *   SBO/sideband scales form the common signal seen by both monitors.
    * - Monitor offsets are per-monitor source corrections.
    * - Field Detector offset/scale values are the final per-monitor calibration.
-   * - Carrier power/scale strongly affects the effective SBO level: a 10 W
-   *   change at the 100 W reference produces about 0.94% at 9960 Hz.
+   * - Carrier power/scale drives SBO power and hence the four RF amplitudes.
+   * - RF Level follows carrier power only, independently of sideband tuning.
    * - Carrier-to-sideband phase creates a bounded, non-linear 9960 Hz change;
    *   other TX phase offsets feed ground-check and sideband VSWR.
    * - Cabinet temperature feeds RMS temperature data; ident modulation drives
@@ -182,11 +190,9 @@ function monitorResult(
     // small calibration offset such as +0.03°.
     azimuth: monitorSourceReference.azimuth + (active?.azimuthIndex ?? 0) + offsets.azimuth + calibration.azimuthAngleOffset,
     hz30Modulation: (monitorSourceReference.hz30Modulation + referenceDelta + offsets.hz30Modulation) * calibration.hz30ModulationScale / 100,
-    hz9960Modulation: (monitorSourceReference.hz9960Modulation + referenceDelta + sboDelta * 0.2 + carrierSidebandModulationDelta + offsets.hz9960Modulation) * calibration.hz9960ModulationScale / 100,
+    hz9960Modulation: (recovered9960 + offsets.hz9960Modulation) * calibration.hz9960ModulationScale / 100,
     deviation: (monitorSourceReference.deviation + (active?.voiceModulation ?? 0) * 0.12 + sboDelta * 0.01 + offsets.deviation) * calibration.hz9960DeviationScale / 100,
-    rfLevel: (active
-      ? monitorSourceReference.rfLevel + relativePowerDb(active.outputPower) + sboDelta * 0.02
-      : -0.2) + offsets.rfLevel + calibration.rfLevelOffset,
+    rfLevel: monitorSourceReference.rfLevel + relativePowerDb(active?.outputPower ?? 0) + offsets.rfLevel + calibration.rfLevelOffset,
   };
   const parameters = Object.fromEntries(DVOR1150_MONITOR_PARAMETERS.map((parameter) => {
     const value = rawValues[parameter];
@@ -198,7 +204,7 @@ function monitorResult(
   })) as Dvor1150MonitorResult["parameters"];
   const identNormal = Boolean(active && active.identCode.trim() && active.identModulation >= 2);
   const healthy = installed
-    && Object.values(parameters).every((parameter) => parameter.status === "normal")
+    && Object.values(parameters).every((parameter) => parameter.status !== "alarm")
     && (!config.monitor.identMonitoringEnabled || identNormal)
     && Boolean(active);
   return {
@@ -469,6 +475,12 @@ export function buildDvor1150Snapshot(
       ? monitors.mon1.healthy && monitors.mon2.healthy
       : monitors.mon1.healthy || monitors.mon2.healthy;
   const systemHealthy = monitorHealthy && !vswrExecutiveAlarm;
+  // Annunciation is independent of relay voting and Bypass.
+  const installedMonitors = DVOR1150_MONITOR_IDS.filter((id) => isInstalledMonitor(config, id)).map((id) => monitors[id]);
+  const monitorAnnunciation = {
+    preAlarm: installedMonitors.some((monitor) => Object.values(monitor.parameters).some((parameter) => parameter.status === "warning")),
+    alarm: installedMonitors.some((monitor) => !monitor.healthy) || vswrExecutiveAlarm,
+  };
   const txPower = [
     { parameter: "Carrier", tx1: effectiveTransmitters.tx1.active ? effectiveTransmitters.tx1.outputPower : 0, tx2: effectiveTransmitters.tx2.active ? effectiveTransmitters.tx2.outputPower : 0, unit: "Watts" },
     ...[0, 1, 2, 3].map((index) => ({
@@ -511,7 +523,7 @@ export function buildDvor1150Snapshot(
   const monitorTestResults = buildMonitorTestResults(config);
   const certificationResults = buildCertificationResults(config, monitors);
   const faultHistory = buildFaultHistory(config, monitors, timestamp, effectiveTransmitters);
-  const maintenanceAlert = config.simulation.alert || !systemHealthy;
+  const maintenanceAlert = config.simulation.alert || monitorAnnunciation.preAlarm || monitorAnnunciation.alarm;
   const data: Dvor1150Snapshot["data"] = {
     connected: config.simulation.connected,
     local: config.simulation.local,
@@ -571,5 +583,5 @@ export function buildDvor1150Snapshot(
     txFrequency,
     txVswr,
   };
-  return { data, activeTransmitter: activeId, mainTransmitter: mainId, effectiveTransmitters, monitors, transfer, validation: buildValidation(config) };
+  return { data, activeTransmitter: activeId, mainTransmitter: mainId, effectiveTransmitters, monitors, monitorAnnunciation, transfer, validation: buildValidation(config) };
 }

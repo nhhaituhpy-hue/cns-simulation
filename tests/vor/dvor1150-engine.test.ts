@@ -36,7 +36,7 @@ describe("DVOR 1150 configuration and PMDT engine", () => {
     expect(snapshot.activeTransmitter).toBe("tx2");
     expect(snapshot.effectiveTransmitters.tx2.outputPower).toBe(70);
     expect(snapshot.data.txPower[0]).toMatchObject({ tx1: 0, tx2: 70 });
-    expect(snapshot.monitors.mon1.parameters.rfLevel.value).toBeCloseTo(-1.631, 3);
+    expect(snapshot.monitors.mon1.parameters.rfLevel.value).toBeCloseTo(0.2 + 10 * Math.log10(0.7), 3);
   });
 
   it("keeps an imported On-Air/Load conflict deterministic and visible to validation", () => {
@@ -139,9 +139,9 @@ describe("DVOR 1150 configuration and PMDT engine", () => {
 
     const { mon1, mon2 } = store.getState().derived.monitors;
     expect(mon1.parameters.hz30Modulation.value).toBeCloseTo(31, 2);
-    expect(mon1.parameters.hz9960Modulation.value).toBeCloseTo(32.88, 2);
+    expect(mon1.parameters.hz9960Modulation.value).toBeCloseTo(31 * Math.sqrt(1.2), 2);
     expect(mon1.parameters.deviation.value).toBeCloseTo(17.294, 3);
-    expect(mon1.parameters.rfLevel.value).toBeCloseTo(1.18, 2);
+    expect(mon1.parameters.rfLevel.value).toBeCloseTo(0.2 + 10 * Math.log10(1.2), 2);
     expect(mon2.parameters.rfLevel.value).toBeCloseTo(mon1.parameters.rfLevel.value, 5);
   });
 
@@ -150,17 +150,17 @@ describe("DVOR 1150 configuration and PMDT engine", () => {
     outputPower.transmitters.tx1.nominal.outputPower = 110;
 
     const nominalPowerSnapshot = buildDvor1150Snapshot(outputPower);
-    expect(nominalPowerSnapshot.monitors.mon1.parameters.hz9960Modulation.value).toBeCloseTo(30.94, 2);
+    expect(nominalPowerSnapshot.monitors.mon1.parameters.hz9960Modulation.value).toBeCloseTo(30 * Math.sqrt(1.1), 2);
 
     const outputScale = cloneDvor1150Config(defaultDvor1150Config);
     outputScale.transmitters.tx1.offsets.outputPowerScale = 110;
-    expect(buildDvor1150Snapshot(outputScale).monitors.mon1.parameters.hz9960Modulation.value).toBeCloseTo(30.94, 2);
+    expect(buildDvor1150Snapshot(outputScale).monitors.mon1.parameters.hz9960Modulation.value).toBeCloseTo(30 * Math.sqrt(1.1), 2);
 
     outputPower.transmitters.tx1.offsets.carrierSidebandPhaseOffset = 90;
-    expect(buildDvor1150Snapshot(outputPower).monitors.mon1.parameters.hz9960Modulation.value).toBeCloseTo(31.54, 2);
+    expect(buildDvor1150Snapshot(outputPower).monitors.mon1.parameters.hz9960Modulation.value).toBeCloseTo(30.6 * Math.sqrt(1.1), 2);
 
     outputPower.transmitters.tx1.offsets.carrierSidebandPhaseOffset = -90;
-    expect(buildDvor1150Snapshot(outputPower).monitors.mon1.parameters.hz9960Modulation.value).toBeCloseTo(30.34, 2);
+    expect(buildDvor1150Snapshot(outputPower).monitors.mon1.parameters.hz9960Modulation.value).toBeCloseTo(29.4 * Math.sqrt(1.1), 2);
   });
 
   it("restores Reset (F8) to Simulation Parameters baseline", () => {

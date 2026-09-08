@@ -199,7 +199,7 @@ function Dme1119aConfigPersistence() {
       const configChanged = !areJsonEqual(nextConfig, previousConfig);
       const backupChanged = !areJsonEqual(state.configurationBackup, previousState.configurationBackup);
       let action: "apply" | "restore" | "backup" | null = null;
-      if (state.lastCommand === "Configuration Apply" && previousState.configDirty && !state.configDirty && configChanged) {
+      if ((state.lastCommand === "Configuration Apply" || state.lastCommand?.startsWith("Configuration Apply: ")) && previousState.configDirty && !state.configDirty && configChanged) {
         action = "apply";
       } else if (state.lastCommand === "RMS Config Restore" && configChanged) {
         action = "restore";

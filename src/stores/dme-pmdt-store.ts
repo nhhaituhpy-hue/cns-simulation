@@ -1139,9 +1139,9 @@ export function createDmePmdtStore(
           configDirty: false,
           needBackup: state.scenario.active ? false : true,
           lastCommand: automaticTransfer.action === "transfer" && automaticTransfer.target
-            ? `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}`
+            ? `Configuration Apply: Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}`
             : automaticTransfer.action === "shutdown"
-              ? "Automatic monitor shutdown: both transmitters off"
+              ? "Configuration Apply: Automatic monitor shutdown: both transmitters off"
               : "Configuration Apply",
         });
         recordAction({ kind: "configuration", controlId: "config-apply", label: "Configuration Apply", accepted: true, before });

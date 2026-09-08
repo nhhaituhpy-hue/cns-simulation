@@ -97,7 +97,9 @@ export function deriveDme320MonitorReadings(
     frequencyMhz: reading(allocation.replyFrequencyMhz, state.nowMs),
     peakPowerWatts: reading(nominalPower, state.nowMs),
     vswr: reading(1.15, state.nowMs),
-    erpDb: reading(0, state.nowMs),
+    // Fixed training reference: 1000 W = 0 dB; changing the setpoint must
+    // not silently re-zero the radiated-power reading.
+    erpDb: reading(10 * Math.log10(Math.max(nominalPower / 1_000, 1e-6)), state.nowMs),
     identCode: reading(
       transmitter.identKeying === "off" ? "" : config.station.identCode,
       state.nowMs,
@@ -123,7 +125,7 @@ export function deriveDme320MonitorReadings(
   if (hasFault(state.faults, "hpa-low-output", sourceTransponder)) {
     readings.peakPowerWatts.value = nominalPower * 0.4;
     readings.replyEfficiencyPct.value = 60;
-    readings.erpDb.value = -4;
+    readings.erpDb.value = 10 * Math.log10(Math.max(nominalPower * 0.4 / 1_000, 1e-6));
   }
   if (hasFault(state.faults, "rxu-sensitivity", sourceTransponder)) {
     readings.replyEfficiencyPct.value = 50;
@@ -173,6 +175,17 @@ export function deriveDme320MonitorReadings(
   }
   if (hasFault(state.faults, "monitor-failure", monitorId)) {
     setInvalid(readings, state.nowMs);
+  }
+
+  // Equipment faults cannot restore RF after Off/shutdown/interlock. Explicit
+  // training measurement overrides below retain their intentional priority.
+  if (!operational) {
+    for (const parameter of ["timeDelayUs", "replyEfficiencyPct", "transmissionRatePps", "pulseRiseUs", "pulseDurationUs", "pulseDecayUs", "pulseSpacingUs", "peakPowerWatts", "erpDb", "identCode"] as const) {
+      if (readings[parameter].valid) {
+        readings[parameter].value = parameter === "identCode" ? "" : parameter === "erpDb" ? -20 : 0;
+      }
+    }
+    if (!transmitter.present || transmitter.dcPower === "off") setInvalid(readings, state.nowMs);
   }
 
   for (const override of state.measurementOverrides) {

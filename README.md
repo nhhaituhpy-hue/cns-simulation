@@ -12,6 +12,24 @@ Từ ngày 2026-09-01, repository chính để phát triển và triển khai d�
 
 ## Trạng thái hiện tại
 
+### DME — sửa ma trận ngày 2026-09-08
+
+- 1119A: ERP giữ baseline và bù từng Monitor, theo công suất RF gồm High/Low Power, scale TX và trạng thái/suy hao HPA; sàn tỷ số công suất -60 dB. Monitor Tx Power Scale bằng 0 không còn bị thay bằng mặc định.
+- 1119A: Alarm trên các hàng Monitor hiện tại ưu tiên hiển thị tại ô Need Backup, không xóa cờ backup, độc lập voting/Bypass. Apply kèm automatic transfer/shutdown giữ tiền tố `Configuration Apply: ` để subscriber vẫn lưu config; không thay persistence của simulator khác.
+- 320: ERP theo công suất trạm và % Output từng TX, mốc đào tạo cố định 1000 W = 0 dB; HPA low output dùng tỷ số 0,4. Fault không làm sống lại số đo RF khi TX Off/shutdown/interlock; measurement override chủ động vẫn có ưu tiên cuối. Giữ mô hình fault detector/antenna hiện hữu.
+- Theo phạm vi đã duyệt: không sửa SDES/LDES, Dead Time, timer 1119A hoặc quy trình Calibration. Sửa scale 0 chỉ xử lý giá trị đã được catalog cho phép.
+- Đã thêm regression `tests/dme/power-erp-matrix.test.ts`. Quality gate chung DVOR 1150/DME: 11 file test liên quan đạt 96/96; `npm run build` thành công (TypeScript và 72/72 trang). Đã cập nhật bốn kỳ vọng tên lệnh Apply có transfer/shutdown. Chưa xác minh giao diện và lưu server end-to-end trên production.
+
+### DVOR 1150 không A — rà ma trận ngày 2026-09-08
+
+- Đã có: Nominal đồng bộ TX1/TX2 trên form; offsets/scales riêng từng TX; monitor lấy TX đang On-Air; hiệu chuẩn Field Detector riêng Monitor 1/2 trước khi xét ngưỡng.
+- Đã sửa: 9960 Hz dùng trung bình biên độ bốn nhánh RF (`sqrt(P/P_ref)`), mất một nhánh từ 30% xuống 22,5%, mất bốn về 0% trước bù/hiệu chuẩn. Đây là mô hình đào tạo theo kinh nghiệm khai thác, không phải đường đặc tính được manual định lượng.
+- Carrier power và Output Power Scale vẫn kéo theo Sideband; riêng chỉnh Sideband không đổi Carrier/RF Level. RF Level dùng `0,2 + 10 log10(P/100 W)` và bù Monitor, với sàn -60 dB cho tỷ số công suất.
+- PreAlarm bật Alert nhưng không làm monitor unhealthy/chuyển máy. Alarm hiển thị chữ trắng nền đỏ thay Need Backup, không xóa cờ backup; annunciation độc lập voting và Bypass.
+- Giữ nguyên phase đơn và phase theo cặp của bản không A; không sao chép Coarse/Fine của 1150A.
+- Chưa hoàn tất nhánh Test Generator/Certification: bốn bù/scale Test Generator đã đi vào Test Results, nhưng RF Level Offset chưa có đầu ra; Certification hiện lấy số đo Field Detector, chưa mô phỏng phép quét ngưỡng riêng. Cần đối chiếu manual 1150 trước khi chọn mô hình, không nối nhầm vào đường giám sát anten. Timer khởi động/dừng monitor vẫn chưa được đánh giá trong đợt sửa này.
+- Đã bổ sung regression và cập nhật kỳ vọng công thức; hai file test DVOR 1150 đạt trong quality gate 96/96 test cùng DME, production build thành công. Các khoảng trống Test Generator/Certification nêu trên vẫn giữ nguyên, chưa xác minh production.
+
 Dự án đang ở giai đoạn **MVP hoạt động đầy đủ cho đào tạo nội bộ**. Ba module đã có route riêng cho giám khảo và học viên, xác thực email công vụ qua Supabase, dữ liệu cloud trên Supabase và lớp fallback cục bộ khi không thể đồng bộ.
 
 | Module | Phạm vi đã triển khai | Cách đánh giá |

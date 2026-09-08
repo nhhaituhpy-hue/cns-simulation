@@ -92,6 +92,10 @@ export function PmdtSidebar() {
   const alert = resolveDmeField(data.alert, "alert", overrides);
   const alertStatus = resolveDmeStatus(alert ? "yellow" : "gray", "alert", overrides);
   const local = interactiveState("local", data.local, "yellow");
+  // Raw installed-monitor rows announce alarms even if voting/Bypass keeps
+  // the relay from acting. Unavailable rows are gray, not alarms.
+  const monitorAlarm = [...data.integralData, ...data.standbyData].some((row) =>
+    row.mon1Status === "alarm" || row.mon2Status === "alarm" || row.mon1Status === "red" || row.mon2Status === "red");
 
   return (
     <aside className="pmdt-sidebar dme-pmdt-sidebar">
@@ -103,12 +107,12 @@ export function PmdtSidebar() {
           {loginDialogOpen ? "" : connected ? "Connected" : "Disconnected"}
         </span>
         <div
-          className={`pmdt-sidebar-spacer ${!loginDialogOpen && needBackup ? "pmdt-sidebar-spacer--backup" : !loginDialogOpen && data.local ? "pmdt-sidebar-spacer--local" : ""}`}
+          className={`pmdt-sidebar-spacer ${!loginDialogOpen && (monitorAlarm || needBackup) ? "pmdt-sidebar-spacer--backup" : !loginDialogOpen && data.local ? "pmdt-sidebar-spacer--local" : ""}`}
           aria-live="polite"
-          title={needBackup ? "Configuration đã Apply nhưng chưa Config Backup" : data.local ? "Hệ thống đang ở Local mode" : undefined}
+          title={monitorAlarm ? "Monitor Alarm" : needBackup ? "Configuration đã Apply nhưng chưa Config Backup" : data.local ? "Hệ thống đang ở Local mode" : undefined}
         >
-          {!loginDialogOpen && data.local && !needBackup ? <span className="pmdt-sidebar-warning-item pmdt-sidebar-warning-item--local">LOCAL</span> : null}
-          {!loginDialogOpen && needBackup ? <span className="pmdt-sidebar-warning-item pmdt-sidebar-warning-item--backup">Need Backup</span> : null}
+          {!loginDialogOpen && data.local && !needBackup && !monitorAlarm ? <span className="pmdt-sidebar-warning-item pmdt-sidebar-warning-item--local">LOCAL</span> : null}
+          {!loginDialogOpen && (monitorAlarm || needBackup) ? <span className="pmdt-sidebar-warning-item pmdt-sidebar-warning-item--backup">{monitorAlarm ? "Alarm" : "Need Backup"}</span> : null}
         </div>
         <div className="mt-2 grid grid-cols-2 gap-1">
           <span {...dmeFieldMetadata("alert", "Alert", alert, alertStatus)} className="pmdt-sidebar-state">

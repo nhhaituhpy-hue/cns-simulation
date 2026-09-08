@@ -255,7 +255,7 @@ describe("DME 1119A CONFIG -> MONITOR derivation", () => {
     expect(store.getState().data.monitorTransmitterStatus.transmitterOn).toEqual({ tx1: false, tx2: true });
     expect(store.getState().data.transmitters.tx1).toMatchObject({ main: "green", off: "red" });
     expect(store.getState().data.transmitters.tx2.antenna).toBe("green");
-    expect(store.getState().lastCommand).toBe("Automatic monitor transfer to TX2");
+    expect(store.getState().lastCommand).toBe("Configuration Apply: Automatic monitor transfer to TX2");
   });
 
   it("turns both DME transmitters Off when the standby path alarms too", () => {
@@ -269,7 +269,7 @@ describe("DME 1119A CONFIG -> MONITOR derivation", () => {
     expect(store.getState().data.monitorTransmitterStatus.transmitterOn).toEqual({ tx1: false, tx2: false });
     expect(store.getState().data.transmitters.tx1.off).toBe("red");
     expect(store.getState().data.transmitters.tx2.off).toBe("red");
-    expect(store.getState().lastCommand).toBe("Automatic monitor shutdown: both transmitters off");
+    expect(store.getState().lastCommand).toBe("Configuration Apply: Automatic monitor shutdown: both transmitters off");
   });
 
   it("keeps the relay on the current transmitter when the alarmed monitors are bypassed", () => {
