@@ -19,7 +19,7 @@ function NumberRow({
   return (
     <tr>
       <th scope="row">{label}</th>
-      <td><PmdtConfigControl displayFieldId={fieldId} configFieldId={configFieldId} type="number" digits={digits} className="pmdt-classic-control" /></td>
+      <td><PmdtConfigControl displayFieldId={fieldId} configFieldId={configFieldId} mirrorFieldIds={[configFieldId.replace("transmitters.tx1.", "transmitters.tx2.")]} type="number" digits={digits} className="pmdt-classic-control" /></td>
       <td>{unit}</td>
     </tr>
   );
@@ -78,12 +78,12 @@ export function TxConfigNominal() {
             <tbody>
               <tr>
                 <th scope="row">Main Ident Code</th>
-                <td><PmdtConfigControl displayFieldId="txConfigNominal.ident.mainIdentCode" configFieldId="transmitters.tx1.nominal.mainIdentCode" className="pmdt-classic-control" /></td>
+                <td><PmdtConfigControl displayFieldId="txConfigNominal.ident.mainIdentCode" configFieldId="transmitters.tx1.nominal.mainIdentCode" mirrorFieldIds={["transmitters.tx2.nominal.mainIdentCode"]} className="pmdt-classic-control" /></td>
               </tr>
               <tr>
                 <th scope="row">Standby Ident Code</th>
                 <td>
-                  <PmdtConfigControl displayFieldId="txConfigNominal.ident.standbyIdentCode" configFieldId="transmitters.tx1.nominal.standbyIdentCode" className="pmdt-tx-ident-control" />
+                  <PmdtConfigControl displayFieldId="txConfigNominal.ident.standbyIdentCode" configFieldId="transmitters.tx1.nominal.standbyIdentCode" mirrorFieldIds={["transmitters.tx2.nominal.standbyIdentCode"]} className="pmdt-tx-ident-control" />
                 </td>
               </tr>
             </tbody>

@@ -59,6 +59,34 @@ describe("VOR PMDT store", () => {
     store.getState().setConfigValue("simulation.integralMonitorBypass", true);
   }
 
+  it("rejects shared Nominal atomically when the mirrored field is scenario-locked", () => {
+    const store = createVorPmdtStore();
+    enterMaintenanceMode(store);
+    store.setState({
+      scenario: {
+        active: true,
+        startedAt: null,
+        definition: {
+          ...store.getState().scenarioDraft,
+          studentEditableFieldIds: ["transmitters.tx1.nominal.outputPower"],
+        },
+      },
+    });
+    const draft = store.getState().configDraft;
+    store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 75, ["transmitters.tx2.nominal.outputPower"]);
+    expect(store.getState().configDraft).toBe(draft);
+    expect(store.getState().configDirty).toBe(false);
+  });
+
+  it("keeps transmitter-specific offsets independent", () => {
+    const store = createVorPmdtStore();
+    enterMaintenanceMode(store);
+    const tx2Scale = store.getState().configDraft.transmitters.tx2.offsets.outputPowerScale;
+    store.getState().setConfigValue("transmitters.tx1.offsets.outputPowerScale", 90);
+    expect(store.getState().configDraft.transmitters.tx1.offsets.outputPowerScale).toBe(90);
+    expect(store.getState().configDraft.transmitters.tx2.offsets.outputPowerScale).toBe(tx2Scale);
+  });
+
   it("applies typed overlays without mutating the baseline", () => {
     const store = createVorPmdtStore();
     store.getState().setOverride("txPower.0.tx1", 0, "red");

@@ -12,6 +12,7 @@ import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
 interface PmdtConfigControlProps {
   displayFieldId: string;
   configFieldId: string;
+  mirrorFieldIds?: readonly string[];
   type?: DvorConfigFieldType;
   digits?: number;
   className?: string;
@@ -27,6 +28,7 @@ function formatValue(value: string | number | boolean | null, digits?: number): 
 export function PmdtConfigControl({
   displayFieldId,
   configFieldId,
+  mirrorFieldIds = [],
   type,
   digits,
   className = "",
@@ -43,7 +45,7 @@ export function PmdtConfigControl({
   const [draftValue, setDraftValue] = useState(formatValue(value, digits));
   const [isEditing, setIsEditing] = useState(false);
   const scenarioAllowsField = !scenario.active
-    || Boolean(scenario.definition?.studentEditableFieldIds.includes(configFieldId));
+    || [configFieldId, ...mirrorFieldIds].every((id) => scenario.definition?.studentEditableFieldIds.includes(id));
   const canEdit = !disabled && scenarioAllowsField && securityLevel >= 3 && local && Boolean(field);
   const lockedByScenario = scenario.active && !scenarioAllowsField;
   const isTextEntry = controlType === "number" || controlType === "text";
@@ -54,7 +56,7 @@ export function PmdtConfigControl({
     setDraftValue(typeof rawValue === "boolean" ? String(rawValue) : rawValue);
     if (!field) return;
     const parsed = parseDvorConfigInput(field, rawValue);
-    if (parsed !== null || field.type !== "number") setConfigValue(configFieldId, parsed);
+    if (parsed !== null || field.type !== "number") setConfigValue(configFieldId, parsed, mirrorFieldIds);
   }
 
   const metadata = {

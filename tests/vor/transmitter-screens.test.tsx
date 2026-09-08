@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "vitest";
 import { TxConfigLayout } from "@/components/vor/screens/tx-config-layout";
@@ -23,6 +23,34 @@ describe("Transmitter screens", () => {
       "aria-disabled",
       "true",
     );
+  });
+
+  it.each(["tx1", "tx2"] as const)("applies shared Nominal to both transmitters while %s is on air", async (activeTx) => {
+    const user = userEvent.setup();
+    const store = useVorPmdtStore;
+    store.getState().login("SEC3", "THREE");
+    store.getState().setConfigValue("simulation.local", true);
+    store.getState().setConfigValue("simulation.integralMonitorBypass", true);
+    store.getState().selectMainTransmitter(activeTx);
+    store.getState().openScreen("tx-config", ["Transmitters", "Configuration"], "Configuration");
+    const before = store.getState();
+    const beforeRf = before.derived.monitors.mon1.parameters.rfLevel.value;
+    render(<TxConfigLayout />);
+
+    const input = screen.getByLabelText("txConfigNominal.audioGenParams.outputPower");
+    await user.clear(input);
+    await user.type(input, "75");
+    expect(store.getState().configDraft.transmitters.tx1.nominal.outputPower).toBe(75);
+    expect(store.getState().configDraft.transmitters.tx2.nominal.outputPower).toBe(75);
+    expect(store.getState().config).toBe(before.config);
+    expect(store.getState().derived.monitors.mon1.parameters.rfLevel.value).toBe(beforeRf);
+
+    act(() => { expect(store.getState().applyConfigChanges()).toBe(true); });
+    expect(store.getState().config.transmitters.tx1.nominal.outputPower).toBe(75);
+    expect(store.getState().config.transmitters.tx2.nominal.outputPower).toBe(75);
+    expect(store.getState().derived.voting.activeTransmitter).toBe(activeTx);
+    expect(store.getState().derived.monitors.mon1.parameters.rfLevel.value).not.toBe(beforeRf);
+    expect(store.getState().configDirty).toBe(false);
   });
 
   it("switches between nominal configuration and all transmitter offsets", async () => {

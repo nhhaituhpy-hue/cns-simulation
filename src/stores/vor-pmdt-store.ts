@@ -132,7 +132,7 @@ export interface VorPmdtStoreActions {
   openLogin: () => void;
   login: (userId: string, password: string) => boolean;
   logout: () => void;
-  setConfigValue: (fieldId: string, value: DvorConfigValue) => void;
+  setConfigValue: (fieldId: string, value: DvorConfigValue, mirrorFieldIds?: readonly string[]) => void;
   applyConfigChanges: () => boolean;
   discardConfigChanges: () => void;
   resetConfigDraft: () => boolean;
@@ -623,7 +623,7 @@ export function createVorPmdtStore(
         aboutDialogOpen: false,
       }),
 
-      setConfigValue: (fieldId, value) => {
+      setConfigValue: (fieldId, value, mirrorFieldIds = []) => {
         const state = get();
         const isLocalModeField = fieldId === "simulation.local";
         const isBypassField = fieldId === "simulation.integralMonitorBypass";
@@ -703,15 +703,21 @@ export function createVorPmdtStore(
           recordAction({ kind: "configuration", controlId: fieldId, label: `Set ${fieldId}`, input: { fieldId, value: String(value) }, accepted: false, reason: "Local mode is disabled.", before });
           return;
         }
+        const fieldIds = [...new Set([fieldId, ...mirrorFieldIds])];
         if (
           state.scenario.active
-          && !state.scenario.definition?.studentEditableFieldIds.includes(fieldId)
+          && fieldIds.some((id) => !state.scenario.definition?.studentEditableFieldIds.includes(id))
         ) {
           set({ lastCommand: "Scenario control locked: examiner recovery controls only" });
           recordAction({ kind: "configuration", controlId: fieldId, label: `Set ${fieldId}`, input: { fieldId, value: String(value) }, accepted: false, reason: "Scenario recovery controls only.", before });
           return;
         }
-        const result = applyDvorConfigPatches(state.configDraft, [{ fieldId, value }]);
+        // Shared Nominal controls stage both transmitters atomically. Keep the
+        // engine untouched until Apply, and never bypass either scenario lock.
+        const result = applyDvorConfigPatches(
+          state.configDraft,
+          fieldIds.map((id) => ({ fieldId: id, value })),
+        );
         if (!result.ok) {
           recordAction({ kind: "configuration", controlId: fieldId, label: `Set ${fieldId}`, input: { fieldId, value: String(value) }, accepted: false, reason: "PMDT rejected the configuration value.", before });
           return;
