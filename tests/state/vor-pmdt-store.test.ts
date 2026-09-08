@@ -281,7 +281,8 @@ describe("VOR PMDT store", () => {
       });
     }
 
-    expect(previewDvor1150aScenario(scenarios[0]).snapshot.monitors.mon1.parameters.hz9960Modulation.value).toBeCloseTo(23.2, 1);
+    // All four branch amplitudes follow the scenario's 10 W / 70 W power ratio.
+    expect(previewDvor1150aScenario(scenarios[0]).snapshot.monitors.mon1.parameters.hz9960Modulation.value).toBeCloseTo(29.6 * Math.sqrt(10 / 70), 5);
     expect(previewDvor1150aScenario(scenarios[1]).snapshot.monitors.mon1.parameters.hz30Modulation.value).toBeCloseTo(21.7, 1);
     expect(previewDvor1150aScenario(scenarios[2]).snapshot.monitors.mon1.parameters.sidebandVswr.status).toBe("alarm");
   });

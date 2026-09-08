@@ -169,14 +169,20 @@ function effectiveIdentCode(config: Dvor1150aConfig, transmitterId: DvorTransmit
   return nominal.mainIdentCode;
 }
 
+// Fixed calibration references, not the user's mutable draft/profile. Each
+// transmitter keeps its original baseline when its power controls are unchanged.
+const referenceCarrierSettings = {
+  tx1: { nominalPower: 70, outputPowerScale: 84 },
+  tx2: { nominalPower: 70, outputPowerScale: 93.5 },
+} as const;
+
 function effectiveTransmitter(
   config: Dvor1150aConfig,
   transmitterId: DvorTransmitterId,
 ): DvorEffectiveTransmitter {
-  // The manual describes the nominal CSB output setting as also affecting the
-  // SBO level proportionally. Keep the reference at the supplied station
-  // setting so the default PMDT values remain aligned with the sample screen.
-  const referenceNominalOutputPower = 70;
+  // Confirmed training model: both Nominal power and this TX's power scale
+  // drive carrier and sideband power together, relative to its calibration.
+  const reference = referenceCarrierSettings[transmitterId];
   const tx = config.transmitters[transmitterId];
   const nominal = tx.nominal;
   const offsets = tx.offsets;
@@ -194,7 +200,8 @@ function effectiveTransmitter(
   const effectiveReferenceModulation = enabled ? nominal.referenceModulation * offsets.referenceModulationScale / 100 : 0;
   const effectiveSboRfLevel = enabled
     ? nominal.sboRfLevel
-      * (nominal.outputPower / referenceNominalOutputPower)
+      * (nominal.outputPower / reference.nominalPower)
+      * (offsets.outputPowerScale / reference.outputPowerScale)
       * offsets.txSidebandRfLevelScale / 100
     : 0;
   const sidebandScale = [
@@ -265,14 +272,16 @@ function wrapPhaseDegrees(value: number): number {
 }
 
 /**
- * The manual tunes SBO RF level and carrier-to-sideband phase against the
- * monitor's 9960 Hz reading.  This calibrated relationship keeps the supplied
- * PMDT reference value unchanged while exposing both tuning controls in the
- * simulator.
+ * Training approximation calibrated to the operator's observation: losing one
+ * of four RF branches takes a 30% reading to roughly 20-25%. Equal coherent
+ * amplitude contributions give 22.5%; losing all four gives zero. This is not
+ * a reproduction of the equipment DSP or its spatial commutation waveform.
+ * Individual RF controls are voltage scales, so use sqrt(power / reference).
  */
-function sidebandModulationAdjustment(
+function sidebandModulationValue(
   config: Dvor1150aConfig,
   transmitter: DvorEffectiveTransmitter,
+  baselineModulation: number,
 ): number {
   const offsets = config.transmitters[transmitter.id].offsets;
   const reference = referenceSidebandSettings[transmitter.id];
@@ -283,9 +292,15 @@ function sidebandModulationAdjustment(
       - reference.phaseFine,
   );
   const phaseEfficiency = Math.cos((phaseError * Math.PI) / 180);
-  const sboRfAdjustment = (transmitter.effectiveSboRfLevel - reference.sboRfLevel) * 0.12;
+  const referenceBranchPower = reference.sboRfLevel / 41;
+  const amplitudeRatio = transmitter.sidebandPower.reduce(
+    (sum, power) => sum + Math.sqrt(Math.max(0, power) / referenceBranchPower),
+    0,
+  ) / 4;
   const phaseAdjustment = (phaseEfficiency - 1) * 2;
-  return sboRfAdjustment + phaseAdjustment;
+  // Scale the whole recovered signal, rather than subtracting a small delta:
+  // raw/reference modulation must not survive a complete sideband loss.
+  return Math.max(0, baselineModulation + phaseAdjustment) * amplitudeRatio;
 }
 
 function sourceMeasurement(
@@ -307,14 +322,27 @@ function sourceMeasurement(
   const monitorReferencePower = 70.8 / 0.99;
   const inputAttenuationDelta = 14 - antenna.inputAttenuation;
   const primaryAzimuth = raw.azimuth + txAzimuthDelta;
-  const primaryRfLevel = raw.rfLevel + sboDelta * 0.02 + inputAttenuationDelta;
+  const carrierReference = transmitter ? referenceCarrierSettings[transmitter.id] : null;
+  const carrierPowerRatio = transmitter && carrierReference
+    ? transmitter.effectiveOutputPower
+      / (carrierReference.nominalPower * carrierReference.outputPowerScale / 100)
+    : 0;
+  // RF Level is field strength expressed in dB: use the carrier power ratio,
+  // not a linear SBO delta (which would double-count coupled power changes).
+  // A finite -60 dB relative floor models no signal without log10(0)/Infinity.
+  const carrierRfDeltaDb = 10 * Math.log10(Math.max(carrierPowerRatio, 1e-6));
+  const calibratedRfBaseline = transmitter
+    ? (referenceSidebandSettings[transmitter.id].sboRfLevel - 62.075) * 0.02
+    : 0;
+  const rfSourceLevel = raw.rfLevel + calibratedRfBaseline + carrierRfDeltaDb;
+  const primaryRfLevel = rfSourceLevel + inputAttenuationDelta;
   // The manual allows a second field-monitor antenna with its own radial and
   // input attenuation.  The simulator represents the two receiver paths as
   // an equal-weight measurement; the default (antenna 2 disabled) remains
   // exactly the supplied reference trace.
   const secondAntennaEnabled = antenna.secondAntennaEnabled;
   const secondAzimuth = primaryAzimuth + (antenna.secondAzimuthAngle - antenna.azimuthAngle);
-  const secondRfLevel = raw.rfLevel + sboDelta * 0.02 + (14 - antenna.secondInputAttenuation);
+  const secondRfLevel = rfSourceLevel + (14 - antenna.secondInputAttenuation);
   const measuredAzimuth = secondAntennaEnabled
     ? (primaryAzimuth + secondAzimuth) / 2
     : primaryAzimuth;
@@ -328,7 +356,9 @@ function sourceMeasurement(
   return {
     azimuth: measuredAzimuth,
     hz30Modulation: raw.hz30Modulation + referenceDelta,
-    hz9960Modulation: raw.hz9960Modulation + referenceDelta + (transmitter ? sidebandModulationAdjustment(config, transmitter) : 0),
+    hz9960Modulation: transmitter
+      ? sidebandModulationValue(config, transmitter, raw.hz9960Modulation + referenceDelta)
+      : 0,
     deviation: raw.deviation + sboDelta * 0.01 + voiceDeviationDelta,
     rfLevel: measuredRfLevel,
     identModulation: raw.identModulation + identDelta * 0.9,
@@ -892,6 +922,15 @@ export function buildDvor1150aSnapshot(
     mon1: monitorResult(config, "mon1", active, baseline.notchData),
     mon2: monitorResult(config, "mon2", active, baseline.notchData),
   };
+  // Annunciate either installed/enabled monitor's measured condition. Voting
+  // and Bypass govern protection actions, not visibility of a bad measurement.
+  const monitoredParameters = Object.values(monitors)
+    .filter((monitor) => monitor.enabled)
+    .flatMap((monitor) => Object.values(monitor.parameters));
+  const monitorAnnunciation = {
+    preAlarm: monitoredParameters.some((parameter) => parameter.status === "warning"),
+    alarm: monitoredParameters.some((parameter) => parameter.status === "alarm"),
+  };
   const monitorOffsets = {
     mon1: buildMonitorOffsets(config, "mon1"),
     mon2: buildMonitorOffsets(config, "mon2"),
@@ -918,7 +957,7 @@ export function buildDvor1150aSnapshot(
   const transferRequested = !config.simulation.integralMonitorBypass && alarmRequestsTransfer;
 
   data.connected = config.simulation.connected;
-  data.alert = config.simulation.alert || !systemHealthy;
+  data.alert = config.simulation.alert || monitorAnnunciation.preAlarm;
   data.local = config.simulation.local;
   data.timestamp = config.simulation.timestamp;
   data.integralData = buildIntegralData(monitors, active);
@@ -1034,6 +1073,7 @@ export function buildDvor1150aSnapshot(
     mainTransmitter: mainId,
     effectiveTransmitters,
     monitors,
+    monitorAnnunciation,
     monitorOffsets,
     groundChecks,
     voting: {

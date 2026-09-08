@@ -230,6 +230,8 @@ export interface Dvor1150aSnapshot {
   mainTransmitter: DvorTransmitterId | null;
   effectiveTransmitters: Record<DvorTransmitterId, DvorEffectiveTransmitter>;
   monitors: Record<DvorMonitorId, DvorMonitorResult>;
+  /** Measurement annunciation, independent of relay voting and Bypass. */
+  monitorAnnunciation: { preAlarm: boolean; alarm: boolean };
   monitorOffsets: Record<DvorMonitorId, VorMonitorOffsetRow[]>;
   groundChecks: Record<DvorTransmitterId, DvorGroundCheckResult>;
   voting: DvorVotingResult;

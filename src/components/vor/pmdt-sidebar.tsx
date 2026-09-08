@@ -98,6 +98,7 @@ export function PmdtSidebar() {
   const studentFieldStates = useVorPmdtStore((state) => state.studentFieldStates);
   const securityLevel = useVorPmdtStore((state) => state.securityLevel);
   const needBackup = useVorPmdtStore((state) => state.needBackup);
+  const monitorAlarm = useVorPmdtStore((state) => state.derived.monitorAnnunciation.alarm);
   const loginDialogOpen = useVorPmdtStore((state) => state.loginDialogOpen);
   const interactWithSidebar = useVorPmdtStore((state) => state.interactWithSidebar);
   const setConfigValue = useVorPmdtStore((state) => state.setConfigValue);
@@ -180,23 +181,28 @@ export function PmdtSidebar() {
         </span>
         <div
           className={`pmdt-sidebar-spacer ${
-            !loginDialogOpen && needBackup
+            !loginDialogOpen && (monitorAlarm || needBackup)
               ? "pmdt-sidebar-spacer--backup"
               : !loginDialogOpen && data.local
                 ? "pmdt-sidebar-spacer--local"
                 : ""
           }`}
           aria-live="polite"
-          title={needBackup ? "Configuration đã Apply nhưng chưa Config Backup" : data.local ? "Hệ thống đang ở Local mode" : undefined}
+          title={monitorAlarm
+            ? `Monitor vượt ngưỡng Alarm${needBackup ? "; cấu hình vẫn cần Config Backup" : ""}`
+            : needBackup ? "Configuration đã Apply nhưng chưa Config Backup" : data.local ? "Hệ thống đang ở Local mode" : undefined}
         >
-          {!loginDialogOpen && data.local ? (
+          {!loginDialogOpen && monitorAlarm ? (
+            <span className="pmdt-sidebar-warning-item pmdt-sidebar-warning-item--backup">Alarm</span>
+          ) : null}
+          {!loginDialogOpen && !monitorAlarm && data.local ? (
             needBackup ? null : (
               <span className="pmdt-sidebar-warning-item pmdt-sidebar-warning-item--local">
                 LOCAL
               </span>
             )
           ) : null}
-          {!loginDialogOpen && needBackup ? (
+          {!loginDialogOpen && !monitorAlarm && needBackup ? (
             <span className="pmdt-sidebar-warning-item pmdt-sidebar-warning-item--backup">
               Need Backup
             </span>
