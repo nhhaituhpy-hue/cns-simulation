@@ -103,6 +103,16 @@ export function applyDvorConfigPatches(
 
   for (const transmitterId of ["tx1", "tx2"] as const) {
     const transmitter = config.transmitters[transmitterId];
+    // Also validate loaded/legacy drafts at Apply, not just newly edited fields.
+    // Do not silently round or clamp previously saved phase settings.
+    for (const key of (patches.length === 0
+      ? ["carrierSidebandPhaseOffsetCoarse", "carrierSidebandPhaseOffsetFine"] as const
+      : [])) {
+      const fieldId = `transmitters.${transmitterId}.offsets.${key}`;
+      const field = dvorConfigFieldCatalog.find((item) => item.id === fieldId)!;
+      const error = validateDvorConfigField(field, transmitter.offsets[key]);
+      if (error) return { ok: false, error: `${field.label}: ${error}`, fieldId };
+    }
     if (transmitter.onAir && transmitter.load) {
       return {
         ok: false,

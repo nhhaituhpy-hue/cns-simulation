@@ -215,10 +215,11 @@ const txFields = (transmitter: DvorTransmitterId): DvorConfigFieldDefinition[] =
     section: transmitter === "tx1" ? "Transmitter 1" : "Transmitter 2",
     type: "number",
     unit: "°",
-    min: -360,
-    max: 360,
-    step: 0.1,
-    description: "Offset pha carrier sideband thô.",
+    min: 0,
+    max: 270,
+    step: 90,
+    options: ["0", "90", "180", "270"],
+    description: "Pha thô chọn 0/90/180/270 độ theo 571150A-0002E §9.7.13.5.",
   },
   {
     id: `transmitters.${transmitter}.offsets.carrierSidebandPhaseOffsetFine`,
@@ -226,10 +227,10 @@ const txFields = (transmitter: DvorTransmitterId): DvorConfigFieldDefinition[] =
     section: transmitter === "tx1" ? "Transmitter 1" : "Transmitter 2",
     type: "number",
     unit: "°",
-    min: -360,
-    max: 360,
+    min: -45,
+    max: 45,
     step: 0.1,
-    description: "Offset pha carrier sideband tinh.",
+    description: "Pha tinh -45 đến +45 độ, bước 0.1 độ trong simulator; §2.3.2.1.1 mô tả dải analog tối thiểu ±45 độ.",
   },
   ...([1, 2, 3, 4] as const).map((sideband) => ({
     id: `transmitters.${transmitter}.offsets.sideband${sideband}PhaseOffset`,
@@ -463,6 +464,11 @@ export function validateDvorConfigField(field: DvorConfigFieldDefinition, value:
     if (typeof value !== "number" || !Number.isFinite(value)) return "Giá trị phải là số hữu hạn.";
     if (field.min !== undefined && value < field.min) return `Giá trị tối thiểu là ${field.min}.`;
     if (field.max !== undefined && value > field.max) return `Giá trị tối đa là ${field.max}.`;
+    if (field.options && !field.options.includes(String(value))) return "Giá trị lựa chọn không hợp lệ.";
+    if (field.id.endsWith(".carrierSidebandPhaseOffsetFine")
+      && Math.abs(value * 10 - Math.round(value * 10)) > 1e-8) {
+      return "Pha tinh phải theo bước 0.1 độ.";
+    }
   }
   if (
     field.type === "text"

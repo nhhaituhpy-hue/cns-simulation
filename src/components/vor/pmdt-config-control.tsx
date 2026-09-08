@@ -81,16 +81,19 @@ export function PmdtConfigControl({
     );
   }
 
-  if (controlType === "select") {
+  if (controlType === "select" || (controlType === "number" && field?.options)) {
     return (
       <select
         {...metadata}
-        value={committedValue}
+        value={String(value ?? "")}
         disabled={!canEdit}
         title={lockedByScenario ? "Scenario lock: examiner recovery controls only" : undefined}
         onChange={(event) => update(event.currentTarget.value)}
         className={className}
       >
+        {field?.options && !field.options.includes(String(value)) ? (
+          <option value={String(value)} disabled>{String(value)} (ngoài phạm vi)</option>
+        ) : null}
         {field?.options?.map((option) => <option key={option} value={option}>{option}</option>)}
       </select>
     );
@@ -101,6 +104,15 @@ export function PmdtConfigControl({
       {...metadata}
       type={controlType === "number" ? "text" : "text"}
       inputMode={controlType === "number" ? "decimal" : undefined}
+      onKeyDown={configFieldId.endsWith(".carrierSidebandPhaseOffsetFine") ? (event) => {
+        if (!canEdit || (event.key !== "ArrowUp" && event.key !== "ArrowDown")) return;
+        event.preventDefault();
+        const current = Number(displayedValue);
+        if (!Number.isFinite(current)) return;
+        const next = Math.min(field?.max ?? 45, Math.max(field?.min ?? -45,
+          current + (event.key === "ArrowUp" ? 0.1 : -0.1)));
+        update(next.toFixed(1));
+      } : undefined}
       value={displayedValue}
       disabled={!canEdit}
       title={lockedByScenario ? "Scenario lock: examiner recovery controls only" : undefined}
