@@ -1,771 +1,205 @@
-# Hệ thống kiểm tra mô phỏng CNS
-
-Ứng dụng web phục vụ xây dựng kịch bản, thực hành chẩn đoán và đánh giá kỹ thuật viên trên ba nhóm thiết bị CNS: **VOR**, **DME** và **ADS-B**.
-
-Hệ thống mô phỏng giao diện PMDT, QCMS, terminal bảo trì và sơ đồ phần cứng trong một môi trường đào tạo xác định trước. Giám khảo có thể cấu hình tình trạng thiết bị và đáp án tham chiếu; học viên thực hiện quy trình kiểm tra, ghi lại bằng chứng và nộp kết quả để chấm điểm.
-
-> Đây là hệ thống đào tạo, không kết nối thiết bị thật và không mở phiên SSH thật. Tài khoản ứng dụng sử dụng Supabase Auth; tài khoản terminal bên trong bài mô phỏng vẫn chỉ là dữ liệu của kịch bản đào tạo.
-
-### Nguồn phát triển mặc định
-
-Từ ngày 2026-09-01, repository chính để phát triển và triển khai dự án là [`nhhaituhpy-hue/cns-simulation`](https://github.com/nhhaituhpy-hue/cns-simulation), nhánh `main`. Remote Git local `deploy` trỏ tới repository này và là đích push mặc định; `origin` cũ được giữ lại để tương thích/lưu trữ, không phải nguồn phát triển chính.
-
-## Trạng thái hiện tại
-
-### DME — sửa ma trận ngày 2026-09-08
-
-- 1119A: ERP giữ baseline và bù từng Monitor, theo công suất RF gồm High/Low Power, scale TX và trạng thái/suy hao HPA; sàn tỷ số công suất -60 dB. Monitor Tx Power Scale bằng 0 không còn bị thay bằng mặc định.
-- 1119A: Alarm trên các hàng Monitor hiện tại ưu tiên hiển thị tại ô Need Backup, không xóa cờ backup, độc lập voting/Bypass. Apply kèm automatic transfer/shutdown giữ tiền tố `Configuration Apply: ` để subscriber vẫn lưu config; không thay persistence của simulator khác.
-- 320: ERP theo công suất trạm và % Output từng TX, mốc đào tạo cố định 1000 W = 0 dB; HPA low output dùng tỷ số 0,4. Fault không làm sống lại số đo RF khi TX Off/shutdown/interlock; measurement override chủ động vẫn có ưu tiên cuối. Giữ mô hình fault detector/antenna hiện hữu.
-- Theo phạm vi đã duyệt: không sửa SDES/LDES, Dead Time, timer 1119A hoặc quy trình Calibration. Sửa scale 0 chỉ xử lý giá trị đã được catalog cho phép.
-- Đã thêm regression `tests/dme/power-erp-matrix.test.ts`. Quality gate chung DVOR 1150/DME: 11 file test liên quan đạt 96/96; `npm run build` thành công (TypeScript và 72/72 trang). Đã cập nhật bốn kỳ vọng tên lệnh Apply có transfer/shutdown. Chưa xác minh giao diện và lưu server end-to-end trên production.
-
-### DVOR 1150 không A — rà ma trận ngày 2026-09-08
-
-- Đã có: Nominal đồng bộ TX1/TX2 trên form; offsets/scales riêng từng TX; monitor lấy TX đang On-Air; hiệu chuẩn Field Detector riêng Monitor 1/2 trước khi xét ngưỡng.
-- Đã sửa: 9960 Hz dùng trung bình biên độ bốn nhánh RF (`sqrt(P/P_ref)`), mất một nhánh từ 30% xuống 22,5%, mất bốn về 0% trước bù/hiệu chuẩn. Đây là mô hình đào tạo theo kinh nghiệm khai thác, không phải đường đặc tính được manual định lượng.
-- Carrier power và Output Power Scale vẫn kéo theo Sideband; riêng chỉnh Sideband không đổi Carrier/RF Level. RF Level dùng `0,2 + 10 log10(P/100 W)` và bù Monitor, với sàn -60 dB cho tỷ số công suất.
-- PreAlarm bật Alert nhưng không làm monitor unhealthy/chuyển máy. Alarm hiển thị chữ trắng nền đỏ thay Need Backup, không xóa cờ backup; annunciation độc lập voting và Bypass.
-- Giữ nguyên phase đơn và phase theo cặp của bản không A; không sao chép Coarse/Fine của 1150A.
-- Chưa hoàn tất nhánh Test Generator/Certification: bốn bù/scale Test Generator đã đi vào Test Results, nhưng RF Level Offset chưa có đầu ra; Certification hiện lấy số đo Field Detector, chưa mô phỏng phép quét ngưỡng riêng. Cần đối chiếu manual 1150 trước khi chọn mô hình, không nối nhầm vào đường giám sát anten. Timer khởi động/dừng monitor vẫn chưa được đánh giá trong đợt sửa này.
-- Đã bổ sung regression và cập nhật kỳ vọng công thức; hai file test DVOR 1150 đạt trong quality gate 96/96 test cùng DME, production build thành công. Các khoảng trống Test Generator/Certification nêu trên vẫn giữ nguyên, chưa xác minh production.
-
-Dự án đang ở giai đoạn **MVP hoạt động đầy đủ cho đào tạo nội bộ**. Ba module đã có route riêng cho giám khảo và học viên, xác thực email công vụ qua Supabase, dữ liệu cloud trên Supabase và lớp fallback cục bộ khi không thể đồng bộ.
-
-| Module | Phạm vi đã triển khai | Cách đánh giá |
-| --- | --- | --- |
-| VOR | PMDT DVOR 1150A, DVOR 1150 và simulator MOPIENS 220 DVOR; cấu hình kịch bản, checkpoint, alarm/changeover, Local/Bypass và chẩn đoán phần cứng | Giám khảo xem bằng chứng, đối chiếu checkpoint và nhập điểm thủ công |
-| DME | PMDT Model 1118A/1119A và simulator MOPIENS 320 DME; cấu hình, monitor voting, alarm/changeover, bảo trì và sơ đồ Dual High Power | Giám khảo xem bằng chứng, đối chiếu checkpoint và nhập điểm thủ công |
-| ADS-B | QCMS, terminal SA/MA, trạng thái site/sensor, sự cố phần cứng, ghi nhận và sắp xếp thao tác | Chấm tự động theo ngữ cảnh menu, thứ tự thao tác và dữ liệu nhập |
-
-### Nhật ký phát triển PMDT DVOR 1150A
-
-Bản redesigner DVOR 1150A được triển khai theo giao diện PMDT cổ điển trong ảnh mẫu và các quy luật vận hành từ manual `doc/DVOR1150A/571150A-0002E.pdf`:
-
-- Route mô phỏng độc lập: `/simulator/dvor-1150a`, cửa sổ PMDT có title bar, menu nhiều tầng, sidebar trạng thái, toolbar F5–F8 và status bar thời gian thực.
-- Trước khi đăng nhập, vùng dữ liệu/Connected/đèn trạng thái bị khóa và để trống. `GUEST` (mật khẩu rỗng) chỉ xem; `SEC3/THREE` và `SEC4/FOUR` được phép thao tác bảo trì.
-- Local phải bật trước Bypass; Local hiển thị màu vàng, Need Backup hiển thị màu đỏ và thay thế LOCAL. Chuyển Main TX1 ↔ TX2 không yêu cầu Local/Bypass; Load và Off loại trừ lẫn nhau.
-- Engine DVOR 1150A cho phép chỉnh tham số cấu hình, giữ draft khi nhập, áp dụng bằng Apply (F7), khôi phục bằng Reset (F8)/RMS > Config Restore, sao lưu bằng RMS > Config Backup và tính lại công suất, tần số, điều chế, monitor, alarm, voting và VSWR.
-- Màn hình `Monitor 1/2 → Offsets and Scale Factors` cho phép hiệu chỉnh trực tiếp 12 trường calibration của từng monitor (offset/scale), giữ draft theo cấu hình và áp dụng cùng luồng alarm/voting/automatic transfer. Alarm do một monitor calibration có thể vẫn còn sau khi đổi máy nhưng không làm tắt nhầm standby; chỉ shutdown khi mọi monitor đang enable vẫn Alarm.
-- VSWR được giữ ở miền vật lý hợp lệ (≥ 1), đi theo transmitter đang phát và anten/monitor tương ứng; dữ liệu Monitor 2 không bị gán nhầm vào cột phát chính.
-- Trạng thái mô phỏng và bài thực hành được cô lập trong Zustand store của từng phiên trình duyệt; scenario/submission có lớp lưu cục bộ và API/Supabase khi cấu hình cloud. Quy trình chi tiết được lưu trong skill `dvor-1150a-pmdt-simulator` của Codex.
-
-Quality gate cho bản DVOR này: **9 file test, 45/45 test đạt**. Phần DME có quality gate và phạm vi kiểm thử riêng ở mục dưới; các derived engine được giữ tách biệt để hai simulator chạy song song.
-
-### DVOR 1150 — PMDT đơn giản theo mục 3.4
-
-Bản DVOR 1150 được xây dựng độc lập từ mục 3.4 của `doc/DVOR1150/DVOR 1150.pdf`, dùng lại ngôn ngữ PMDT cổ điển nhưng không dùng engine/state của DVOR 1150A:
-
-- Route mô phỏng: `/simulator/dvor-1150`. Phạm vi lõi gồm title/menu/sidebar/status bar, login, RMS Status/Data/Logs/Configuration, Monitor Data/Configuration, Transmitter Data/Configuration và Diagnostics.
-- Tài khoản PMDT: `GUEST` không mật khẩu và chỉ xem; `SEC3/THREE`, `SEC4/FOUR` được phép chuyển máy và thao tác bảo trì. Model 1150 không có nút Local riêng trên sidebar; chỉnh Configuration và Apply yêu cầu Security Level 3/4 cùng Integral Monitor Bypass. Trước login, Connected, tham số và các đèn G/Y/R được che trống.
-- Chuyển TX1 ↔ TX2 sang Main không cần Local/Bypass. Load và Off của cùng máy phát là hai trạng thái loại trừ; các lệnh transmitter vẫn bị giới hạn bởi Security Level.
-- Config nhập vào `configDraft`, cho phép xóa rồi nhập lại, Apply (F7) mới cập nhật engine. Apply đặt Need Backup màu đỏ; RMS > Config Backup lưu snapshot EEPROM mô phỏng và xóa cảnh báo; RMS > Config Restore khôi phục snapshot đã backup; Reset (F8) hủy draft hiện tại.
-- Derived engine liên kết Output Power/Scale, SBO, modulation, frequency, monitor alarm/voting, 48 anten Sideband VSWR và cột transmitter đang phát. Nominal Output Power làm thay đổi Carrier, SBO/sideband và RF Level; Voice/Reference Modulation tác động các giá trị điều chế tương ứng. VSWR luôn được giới hạn trong miền vật lý `>= 1` và cảnh báo khi vượt `1.25:1`.
-- Trạng thái runtime DVOR 1150 chỉ nằm trong Zustand store của tab trình duyệt; snapshot cấu hình và lịch sử Backup được lưu theo application user qua API/Supabase. Vì vậy nhiều người hoặc nhiều tab có cấu hình riêng, còn reload khởi tạo lại runtime từ cấu hình đã lưu.
-
-Quality gate trực tiếp cho module: `tests/vor/dvor1150-engine.test.ts`, `tests/layout/app-shell.test.tsx`, `tests/layout/module-routing.test.tsx` và `tests/vor/vor-integration.test.tsx` đạt **15/15 test**; `npm run typecheck` và `npm run build` đạt.
-
-### DME 1119A — CONFIG → MONITOR derivation
-
-Engine DME nằm riêng trong `src/lib/dme1119a/` và được gọi bởi store DME, không sửa engine DVOR 1150A. Bảng truy vết đầy đủ từ từng trường cấu hình đến màn hình/row bị ảnh hưởng được export bởi `dmeConfigDerivationMap` trong `src/lib/dme1119a/config.ts` và hiển thị trong panel **System → Simulation Parameters…**.
-
-- Table 9-5 là nguồn cho channel X/Y: RX/INT `1024+n`, RX LO `899+n`, TX theo dải X/Y, spacing và reply delay 50/56 us. Đổi channel rebases monitor, decoder, calibration và Delay/Spacing nominal/alarm.
-- `Power Output` là target RTC chung; `TX1 Power Output Scale` và `TX2 Power Output Scale` là hai hệ số độc lập. Target từng máy = baseline trạm × RTC dB ratio × scale máy / scale factory. Monitor Tx Power tiếp tục áp dụng scale/offset của monitor; ERP theo active-TX path và VSWR luôn được clamp ≥ 1. Sửa TX1 không đổi TX2 và ngược lại; relay transfer đổi đúng Integral/Standby/sidebar.
-- PRF dùng Minimum Squitter, Maximum PRF, dead-time và trần phần cứng 5500 ppps; gain reduction bắt đầu tại 90% capacity và target 95%. SDES/LDES, traffic bands, Total/Monitor Replies và LDES Triggers được tính lại xác định.
-- Delay/Spacing dùng limits dạng offset so với nominal. Integrity test dùng Low Low/Low High/High Low/High High theo bốn công thức §3.6.9.2.1. Tắt integrity không xóa lỗi: row chuyển cảnh báo vàng và station alert vẫn quan sát được.
-- Decoder giữ usable range Rx Sensitivity −94…−72 dBm và limits ±3 dB. Baseline mặc định của bản training là −94 dBm để khớp capture PMDT; manual §6.4.5.1 nêu thêm default site −82/−87 dBm theo mức công suất, có thể nhập trong cùng range.
-- LDES manual formulas được export (`SRE×12.36+10`, `−0.385×FUD−20`). Bản PMDT này không có input SRE/FUD, nên Window/Threshold do operator cấu hình là assumption huấn luyện được ghi rõ trong `DME_LDES_TRAINING_MODEL`; không giả lập giá trị site ngẫu nhiên.
-- Apply (F7) recompute toàn bộ derived data, có thể thực hiện transfer dual hot-standby theo alarm và đặt **Need Backup**; RMS → Config Backup xóa Need Backup; Restore/Reset xóa trạng thái này. Transfer TX1↔TX2 yêu cầu SEC2+ nhưng không yêu cầu Local/Bypass, còn chỉnh cấu hình vẫn yêu cầu Local + SEC3/4.
-
-Quality gate DME hiện tại: nhóm regression lõi và Scenario Parameters đạt **106/106 test** trong focused suite; bộ regression mở rộng DME/layout đạt **134/134 test**; `npm run typecheck` và `npm run build` đã pass. Đây là mô hình đào tạo xác định, không thay thế phép đo RF/hiệu chuẩn phần cứng thật.
-
-#### DME 1119A — Scenario Parameters độc lập
-
-Scenario Parameters chạy tại `/simulator/dme-1119a` trên cùng cửa sổ PMDT, dùng baseline Đài TEST/TST và không thay thế dữ liệu author/exam legacy.
-
-- **Giám khảo (application role admin):** mở `Scenario Parameters`, chọn preset hoặc chỉnh draft, xem Preview, thiết lập `Starting policy`, fault injection, success criteria và whitelist trường học viên; có thể `Export JSON`/`Import JSON`.
-- **Apply:** dựng runtime mới từ TST → áp fault vật lý → áp Local/Bypass/route/Ident → tính lại Config → Monitor → Alarm. Trạng thái hiển thị trên HUD là `IN PROGRESS` hoặc `SOLVED`.
-- **Học viên:** chỉ thao tác các trường được whitelist; các trường alarm limit, voting, transfer, calibration và security bị khóa. Các lệnh PMDT vận hành (F7, F8/Reset, Bypass, Changeover, RMS Fan) vẫn đi qua security/local hiện hành.
-- **Restore Scenario:** dựng lại lỗi ban đầu từ JSON, bỏ mọi chỉnh sửa học viên. **End / Restore TST:** hủy runtime, trả về baseline TST và không ghi lên profile persistent.
-- `simulationFaults` (suy hao công suất, lệch delay/spacing/frequency, HPA/RTC, VSWR anten, Ident, nhiệt độ, AC) chỉ là dữ liệu session; `extractDme1119aConfig()` không serialize chúng. Persistence cũng bỏ qua hydrate/persist khi Scenario đang active hoặc vừa kết thúc.
-
-Preset chuẩn gồm: `tx1-low-output`, `tx1-delay-drift`, `rtc-prf-overload`, `tx1-hpa-changeover`, `ident-keying-loss`, `tx1-high-vswr`, `monitor-calibration-error` và `cabinet-overtemperature`. Mỗi preset có preview deterministic, tiêu chí xử lý và automated solve path; alarm limit không được dùng làm cách “chữa” fault vật lý.
-
-JSON Scenario dùng `schemaVersion: 1`. Một file tối thiểu có dạng (khung minh họa; khi Import phải thay placeholder bằng object cấu hình TST đầy đủ được tạo bằng `Export JSON`):
-
-```json
-{
-  "schemaVersion": 1,
-  "id": "tx1-low-output",
-  "name": "TX1 Low Output Power",
-  "description": "Restore output and release monitor bypass.",
-  "difficulty": "basic",
-  "configuration": "<Dme1119aPersistedConfig from TST>",
-  "faultInjections": [],
-  "startPolicy": {
-    "mainTransmitterId": "tx1",
-    "startLocal": true,
-    "integralMonitorBypassed": true,
-    "standbyMonitorBypassed": true,
-    "identMode": "normal"
-  },
-  "successCriteria": [],
-  "studentEditableFieldIds": ["txConfigNominal.rtcParameters.powerOutput"]
-}
-```
-
-Parser fail-closed với schema/version, reference, duplicate ID và miền giá trị; fault Temperature chỉ chấp nhận sáu sensor RMS thực tế. Ma trận chi tiết Config → Monitor → Alarm → recovery nằm trong [`doc/DME1119A/dme1119a_parameter_correlation.md`](doc/DME1119A/dme1119a_parameter_correlation.md).
-
-### MOPIENS 220 DVOR và 320 DME
-
-Hai simulator phần mềm khai thác được xây dựng độc lập từ `doc/DVOR220/220 DVOR Tech Manual 20240320.pdf`, các ảnh tham chiếu DVOR và `doc/DME320/310320_DME_Tech_Manual 2022-12-19.pdf`. Chúng không dùng engine, security level hoặc phím tắt F7/F8 của thiết bị SELEX:
-
-- Route độc lập: `/simulator/software/dvor-220` và `/simulator/software/dme-320`. PMDT và LMI cùng đọc/ghi một store thiết bị trong mỗi simulator.
-- Tài khoản nhà máy: `Administrator` / `1234`, Security Level 3. `Guest` với mật khẩu trống mở phiên Level 0 chỉ đọc. Quyền Local/REM/MAINT được đánh giá độc lập với security level.
-- Cấu hình đi qua ba lớp Draft → Running bằng **Apply** → Flash/Profile bằng **Profile Save**; power cycle/reboot khôi phục profile không mất điện mô phỏng.
-- DVOR 220 bao phủ dual transmitter, antenna/dummy load routing, CMA/SMA/SYN/PDC, 48 antenna, monitor voting, bypass, timed changeover/shutdown, calibration, ground check, flight inspection, fault injection và history.
-- DME 320 bao phủ channel 1–126 X/Y, dual transponder, executive/standby monitor, SCU/TCU/RXU/TXU/HPA/RFG/PMU, power/battery/EMU, calibration/certification, BITE self-test, squitter, IDENT, RF loopback, spacing offset, fault propagation và history.
-- Cả hai simulator có menu **System → Simulation Parameters...** để chọn Monitor/Channel, nhập raw measurement overrides, Apply hoặc Reset về giá trị engine mặc định. Các raw measurement overrides này chỉ nằm trong bộ nhớ phiên mô phỏng, tách khỏi Setup/Profile Save/Flash; snapshot cấu hình Setup/Profile được persistence theo application user.
-- Engine hai thiết bị là deterministic và tách biệt; phần dùng chung trong `src/modules/operations/mopiens-pmdt/` chỉ là presentation shell/component.
-
-Quality gate ngày **10/08/2026**: **21 file, 103/103 test đạt**, targeted ESLint đạt không warning, `npm run typecheck` và `npm run build` thành công. Smoke check HTTP trả 200 và đúng marker cho cả hai route cùng fallback VHF. Browser backend không khả dụng trong phiên xác minh, vì vậy kiểm tra tương tác dùng component workflow tests; cần kiểm tra trực quan desktop/narrow ở phiên có Browser trước khi phát hành UI ra người dùng cuối.
-
-### Lưu cấu hình và lịch sử Parameter Change
-
-- Cấu hình simulator được lưu theo từng tài khoản ứng dụng trong `user_simulator_configs`, tách riêng snapshot khởi tạo, cấu hình đã Apply/Restore và bản Backup/Profile Save.
-- Mỗi thao tác ghi cấu hình tạo một dòng trong `user_simulator_config_history` với action, danh sách `changed_fields`, revision, session và `operator_user_id` của tài khoản đăng nhập bên trong simulator.
-- DVOR 1150A, DVOR 1150, DVOR 220, DME 1119A và DME 320 hiển thị các thay đổi sau Backup/Profile Save trong màn hình **Parameter Change**; lịch sử được nạp lại theo đúng application user sau khi reload.
-- ADS-B vẫn dùng persistence cấu hình chung nhưng không hiển thị màn hình Parameter Change theo phạm vi thiết kế.
-
-Quality gate cho phần này ngày **10/08/2026**: **33 file, 188/188 test đạt**; `npm run typecheck` và `npm run build` đều thành công.
-
-## Kiến trúc tạo simulator và ma trận ảnh hưởng CONFIG
-
-### Nguyên tắc tổng quát
-
-Repository không tạo simulator hoàn toàn bằng một factory chung. Mỗi simulator được ghép từ các lớp sau:
-
-```text
-Manifest/Registry
-    ↓
-Next.js route
-    ↓
-React simulator component
-    ↓
-Zustand store
-    ↓
-Domain engine / command reducer
-    ↓
-Derived snapshot
-    ↓
-PMDT, LMI, QCMS hoặc terminal screens
-```
-
-Registry chịu trách nhiệm tạo danh sách module và route metadata; nó không tự tạo ra hành vi thiết bị. Manifest được gom trong `src/modules/core/registry.ts`, trang `/simulator` hiển thị catalog từ `SIMULATOR_MODULES`, còn route động `/simulator/software/[moduleId]` chọn implementation DVOR 220, DME 320 hoặc placeholder bằng module ID.
-
-Route `/simulator/*` được bảo vệ bởi `src/app/simulator/layout.tsx`. Khi simulator được mở, phần hiển thị và state chạy ở client; API/ Supabase chủ yếu cung cấp cấu hình đã lưu, backup và lịch sử thay đổi. Repository không mở kết nối serial/TCP/SSH tới thiết bị thật trong luồng mô phỏng.
-
-### Hai thế hệ kiến trúc
-
-Nhóm thiết bị PMDT legacy gồm DVOR 1150, DVOR 1150A và DME 1119A. Layout tại `src/components/vor` hoặc `src/components/dme` dựng shell cổ điển; Zustand store giữ session, config, draft, màn hình và derived data; engine nằm trong `src/lib/dvor1150`, `src/lib/dvor1150a` hoặc `src/lib/dme1119a`.
-
-Nhóm phần mềm vận hành mới gồm DVOR 220 và DME 320. Mỗi module tách rõ:
-
-- `domain/types.ts`: kiểu dữ liệu thiết bị.
-- `domain/defaults.ts`: trạng thái khởi tạo.
-- `domain/commands.ts`: command, quyền và reducer.
-- `domain/engine.ts`: alarm, fault, thời gian, changeover và snapshot.
-- `store/*-store.ts`: adapter Zustand mỏng.
-- `ui/*`: màn hình PMDT/LMI.
-
-DVOR 220 và DME 320 dùng chung vỏ `src/modules/operations/mopiens-pmdt/`. Vỏ này chỉ cung cấp title bar, menu, toolbar, navigation, tabs, output log và status bar; luật của từng thiết bị vẫn nằm trong domain engine riêng.
-
-ADS-B là nhánh khác: `/simulator/ads-b` dùng `createTerminalStore` và `TerminalWindow`, không dùng PMDT shell.
-
-### Luồng DVOR 1150A
-
-```text
-/simulator/dvor-1150a
-    → Dvor1150aPmdtLayout
-    → useVorPmdtStore
-    → setConfigValue / Apply / transmitter commands
-    → buildDvor1150aSnapshot(config)
-    → derived.data và derived measurements
-    → PmdtScreenRouter
-```
-
-`buildDvor1150aSnapshot()` tính transmitter active, công suất, tần số, điều chế, monitor, VSWR, alarm, voting, yêu cầu transfer (`transferRequested`) và dữ liệu sidebar. Khi Apply được thực hiện ở trạng thái không Bypass, hoặc khi Bypass được nhả, Zustand store đánh giá yêu cầu này một lần và tự chuyển sang TX dự phòng hợp lệ của cấu hình dual; nếu mọi monitor đang enable vẫn Alarm sau khi chuyển thì tắt cả hai máy, còn Alarm dai dẳng của một monitor calibration không bị coi nhầm là lỗi standby. Alarm vẫn hiển thị trong khi Bypass đang bật. Màn hình chỉ đọc snapshot, không tự hardcode giá trị phụ thuộc thiết bị.
-
-### Luồng DVOR 1150
-
-DVOR 1150 có engine đơn giản hơn tại `src/lib/dvor1150/engine.ts`. Khi TX2 được chọn làm Main và `outputPowerScale = 70`, snapshot hiện tại cho TX2 output power bằng 70, TX1 bằng 0 và RF Level của monitor đi theo TX2. Cấu hình transmitter, monitor limits và active path được tính lại qua `buildDvor1150Snapshot()`.
-
-DVOR 1150 là model rút gọn: nó không khai báo `frequencyErrorPpm`; carrier và sideband chủ ý chỉ lấy `station.frequencyMHz`. Ma trận dependency và test regression vẫn phải phát hiện các field có control nhưng chưa có tác động thực tế.
-
-### Luồng DME 1119A
-
-```text
-setDmeParameterValue(fieldId, value)
-    → cập nhật config/draft
-    → synchronizeDmeChannelData() nếu đổi channel
-    → recomputeDmeDerivedData()
-    → Monitor, Decoder, RTC, PA, Sidebar, Alert và Transfer
-```
-
-DME 1119A đã có `dmeDerivationRules`, `dmeConfigDerivationMap` và metadata `affects/formula/alarmStatus` trong `src/lib/dme1119a/config.ts`. Metadata giúp audit và kiểm thử từng control; công thức thực tế nằm trong `recomputeDmeDerivedData()`.
-
-### Ma trận CONFIG → DERIVED theo code hiện tại
-
-Đây là ma trận **as-built** của source hiện tại, không phải danh sách hành vi lý tưởng suy ra từ manual. Một dependency chỉ được xem là đã triển khai khi field nguồn thật sự được engine/reducer đọc và làm thay đổi output. Field chỉ xuất hiện trên form, được lưu hoặc được validation nhưng chưa tham gia phép tính phải được ghi rõ là **control/display-only** hoặc **chưa nối engine**.
-
-Mỗi quan hệ cần truy được đủ chuỗi:
-
-```text
-source config/runtime field
-    → công thức hoặc invariant
-    → derived measurement
-    → alarm/voting/status
-    → routing hoặc automatic action (nếu đã triển khai)
-```
-
-| Simulator | Nguồn live | Điểm tái tính chính | Nguồn audit |
-| --- | --- | --- | --- |
-| DVOR 1150A | `config` sau Apply | `buildDvor1150aSnapshot()` | `src/lib/dvor1150a/engine.ts`; chưa có metadata map riêng |
-| DVOR 1150 | `config` sau Apply | `buildDvor1150Snapshot()` | `src/lib/dvor1150/engine.ts`; chưa có metadata map riêng |
-| DME 1119A | `data`/`configDraft` | `recomputeDmeDerivedData()` | `dmeConfigDerivationMap` bao phủ toàn bộ catalog và được test đối chiếu |
-| DVOR 220 | `configuration.running` | `deriveDvor220Snapshot()` và executive state machine | Draft chỉ có hiệu lực sau Apply; Flash chỉ đổi sau Profile Save |
-| DME 320 | `config.running` | `refreshDme320Simulation()` → `evaluateMonitors()` | Draft chỉ có hiệu lực sau Apply; Flash chỉ đổi sau Profile Save |
-
-ADS-B không có mô hình RF CONFIG → DERIVED tương đương nên nằm ngoài ma trận này. Persistence của ADS-B vẫn hoạt động độc lập.
-
-Không ghi ngược hàng loạt giá trị dẫn xuất vào config. Config giữ giá trị nguồn; Tx Power, RF Level, Delay, ERP, VSWR và alarm status phải được tái tính xác định. Chỉ invariant cấu trúc mới được sửa các field nguồn liên quan, ví dụ:
-
-- DVOR chọn một TX On-Air/Antenna thì đường TX còn lại phải rời antenna; On-Air và Load của cùng một TX loại trừ nhau.
-- DVOR 1150/1150A tắt Local thì Bypass bị tắt.
-- DME 1119A đổi channel thì rebase channel allocation, Delay/Spacing nominal và calibration delta.
-- DME 1119A chọn Single Transmitter thì TX còn lại cùng Standby data trở thành không khả dụng.
-- MOPIENS giữ ba lớp Draft → Running → Flash; Apply chỉ cập nhật Running, Profile Save mới cập nhật Flash.
-
-Với DVOR 1150/1150A và DME 1119A, thay đổi bền vững đi qua draft → Apply (F7) → Need Backup → Config Backup. Với DVOR 220/DME 320, luồng tương ứng là Draft → Apply → Running → Profile Save → Flash. Simulation measurement override của hai MOPIENS là runtime-only, không đi vào Profile Save và bị xóa khi reboot/power-cycle.
-
-#### Ma trận DVOR 1150A
-
-Ký hiệu `<tx>` là `tx1` hoặc `tx2`; `<mon>` là `mon1` hoặc `mon2`. Chỉ TX đang `onAir` cấp dữ liệu live cho các cột TX/monitor.
-
-| Nguồn | Công thức/quan hệ đã triển khai | Output trực tiếp | Alarm/status/action |
-| --- | --- | --- | --- |
-| `station.frequencyMHz`; `transmitters.<tx>.frequencyErrorPpm` | `carrier = station × (1 + ppm / 1_000_000)`; sideband lấy carrier −0.0099/+0.0100 MHz | Carrier/sideband frequency và monitor Tx Frequency Error của TX active | Calibration/limits của Tx Frequency Error đổi status; fault frequency làm Ident Status và các TX alert liên quan chuyển lỗi |
-| `nominal.outputPower`; `offsets.outputPowerScale` | `effectiveOutput = nominal × scale / 100`; cả hai kéo theo SBO, scale chuẩn TX1=84%, TX2=93.5% | Carrier/monitor Tx Power; RF Level thay đổi `10 × log10(P/P0)` so với baseline riêng TX (sàn tương đối -60 dB khi mất tín hiệu) | Tx Power/RF limits → status; TX không phát không cấp số đo live |
-| `nominal.sboRfLevel`; `nominal.outputPower`; `offsets.outputPowerScale`; `offsets.txSidebandRfLevelScale` | `effectiveSBO = nominalSBO × (nominalPower / 70) × (outputScale / referenceScale) × sidebandScale / 100` | SBO, Deviation và nguồn tính sideband power; điều khiển riêng SBO không thay Carrier/RF Level | Các limits tương ứng phân loại warning/alarm và có thể tạo `transferRequested` |
-| `offsets.sideband1..4RfLevelScale` | `Pi = effectiveSBO × (scale / 100)^2 / 41`; hệ số 9960 Hz = `Σsqrt(Pi/Pi0) / 4`, nhân toàn bộ mức điều chế đã hiệu chỉnh pha/reference | Công suất Sideband #1…#4 và 9960 Hz đúng TX; mất 1 nhánh còn 75%, mất 4 nhánh về 0 | Mô hình huấn luyện theo quan sát khai thác, không phải bản sao DSP manual; 30% → 22.5% khi mất 1 nhánh |
-| `nominal.referenceModulation` + `referenceModulationScale`; `nominal.identModulation` + `identModulationScale` | Reference delta cộng vào 30 Hz/9960 Hz; Ident delta đi qua hệ số 0.9 rồi calibration monitor | 30 Hz, 9960 Hz và Ident Modulation | Limit từng parameter → indicator/health/voting theo routing |
-| `nominal.azimuthIndex`; `offsets.azimuthAngleOffset`; `monitor.antennas.<mon>.*` | Azimuth lấy TX delta và trung bình hai antenna nếu antenna 2 bật; RF Level cộng attenuation delta của đường antenna | Azimuth/RF riêng từng monitor | Azimuth limits/RF limits → status; antenna disabled làm monitor không healthy |
-| `monitor.rawMeasurements.<mon>.*`; `monitor.calibration.<mon>.*` | Raw → scale/offset của đúng monitor; không lan sang monitor còn lại | Toàn bộ measurement của `<mon>`, notch và 48 giá trị sideband VSWR | Classify sau calibration; routing quyết định measurement nào tham gia health |
-| Carrier-sideband coarse/fine; sideband #1…#4 phase; `carrierPllControl`; azimuth offset | Coarse/fine đổi hiệu suất pha của 9960 Hz; phase từng sideband tạo quadrantal/octantal; PLL/azimuth tạo ground-check bias | 9960 Hz và 16 điểm Ground Check/error spread | Phase sai có thể bật TX phase/sideband alerts; Ground Check hiện là kết quả đo, không tự transfer |
-| `transmitters.<tx>.vswr.*`; sideband VSWR offsets; raw VSWR monitor; odd/even return-loss calibration | Carrier/sideband VSWR luôn clamp `>= 1`; TX active tạo delta lên profile monitor | TX VSWR và profile 48 antenna; màn hình tổng dùng Monitor 1 | Pre-alarm/alarm theo số antenna vượt ngưỡng; carrier/sideband faults cập nhật TX alerts |
-| `monitor.alarmLimits.*`; `azimuthLimits`; `routing`; `votingLogic`; `transfer` | Limits chỉ classify, không sửa measurement; health chỉ xét parameter được route; AND/OR tổng hợp monitor | Indicator, primary/secondary health, system health | Sinh `transferRequested`; Zustand store tự đổi relay sang TX standby khi không Bypass, giữ Alarm hiển thị và shutdown cả hai nếu mọi monitor enable vẫn Alarm sau transfer |
-| `transmitters.<tx>.enabled/onAir/load/faults.*` | Chọn active path, khóa TX fault/disabled và xóa dữ liệu live ở cột Off | TX Data, Monitor Data, sidebar, power/frequency/VSWR | Cập nhật validation, maintenance/TX alerts và voting source |
-
-Ví dụ mặc định: nominal output 70 W, output scale 84%. Đổi nominal thành 100 W tạo effective output `100 × 84% = 84 W`; sau hệ số tham chiếu và calibration Monitor 1, Tx Power hiển thị khoảng 101.14 W. Đây là một chuỗi tính dẫn xuất, không phải thao tác sửa đồng thời nhiều field config.
-
-#### Ma trận DVOR 1150
-
-| Nguồn | Công thức/quan hệ đã triển khai | Output trực tiếp | Alarm/status/action |
-| --- | --- | --- | --- |
-| `nominal.outputPower`; `offsets.outputPowerScale` | `output = nominal × scale / 100` | Carrier power của TX và RF Level monitor khi TX đó active | RF/monitor limits → health/voting/maintenance alert |
-| `nominal.outputPower`; `nominal.sboRfLevel`; `sideband1..4RfLevelScale` | SBO scale theo `nominalPower / referencePower`; sideband power dùng bình phương RF scale | SBO và Sideband #1…#4 | VSWR synthetic cũng phản ứng với RF scale/phase; không có RF power alarm state machine riêng |
-| `nominal.referenceModulation`; `nominal.voiceModulation`; các modulation scale | Reference → 30 Hz/9960 Hz; Voice → Deviation | Monitor measurement của cả hai monitor, cộng offset riêng | Alarm bands phân loại normal/warning/alarm |
-| `station.frequencyMHz` | Carrier = station; lower/upper = station ±0.00996 MHz | TX frequency của cột active | Model không có `frequencyErrorPpm`; tần số chỉ theo station |
-| `monitor.offsets.<mon>.*` | Cộng offset độc lập sau giá trị nguồn | Azimuth, modulation, deviation, RF của đúng monitor | Status được tính lại sau offset; không làm đổi monitor còn lại |
-| `monitor.alarmLimits.*`; `votingLogic` | Limits chỉ classify; AND/OR tổng hợp health | Indicator, sidebar, monitor integral | Maintenance alert thay đổi; chưa có automatic transfer |
-| `station.transmitterConfig`; `transmitters.*.enabled/onAir/load` | Single Transmitter vô hiệu TX2; active path quyết định cột live | Main/Load/Off, TX data, monitor path, 48 VSWR | Không có TX active thì monitor unhealthy và validation cảnh báo |
-
-DVOR 1150 là model rút gọn. Các field có control nhưng chưa nối engine phải nằm trong bảng khoảng trống bên dưới thay vì được suy diễn từ manual.
-
-#### Ma trận DME 1119A
-
-`dmeConfigDerivationMap` trong `src/lib/dme1119a/config.ts` là bản kê canonical theo từng field. Bảng dưới gom theo nhóm để README dễ đọc; metadata chi tiết vẫn là nguồn dùng cho audit/test tự động.
-
-| Nguồn | Công thức/quan hệ đã triển khai | Output trực tiếp | Alarm/status/action |
-| --- | --- | --- | --- |
-| `rmsConfigStation.channelType/channelNumber` | Table 9-5: INT/RX `1024+n`, RX LO `899+n`, TX theo dải X/Y; Delay 50/56 µs và spacing theo type | Channel allocation, Monitor, Decoder, RTC, calibration baseline, sidebar | Rebase Delay/Spacing nominal và limits nhưng giữ calibration delta |
-| `transmitterConfig/monitorConfig/hotStandby`; relay selectors | Single/dual gate availability; TX antenna là Integral, TX còn lại là Standby/Load trong dual hot-standby | TX state, Integral/Standby rows, RTC traffic | Disabled path chuyển gray; automatic transfer chỉ có khi dual path khả dụng |
-| `rtcParameters.powerOutput`; `txOffsets.0.*`; HPA enable/low-output limit | Target theo station baseline × RTC dB ratio × scale riêng TX; HPA disabled làm giảm đúng TX | RTC/PA output, Monitor Tx Power, ERP, sidebar | PA/Tx Power/ERP status và maintenance alert; TX1/TX2 không dùng chung scale |
-| `replyDelayOffset`; propagation/base/standby offsets | Delay = channel nominal + reply offset + TX base + monitor offset | Monitor Delay và RTC Prop Delay | Delay alarm có thể tạo yêu cầu transfer khi Apply |
-| `minimumSquitter`; `maximumPrf`; `deadTime`; SDES/LDES | Effective PRF bị chặn bởi max, `1_000_000/deadTime` và 5500 ppps; echo suppression giảm traffic xác định | PRF, capacity, traffic bands, replies, gain reduction | Overload/RTC status và maintenance alert |
-| `monitorOffsets.*`; reply attenuation; directional-coupler loss | Offset/scale riêng monitor cho Delay, Spacing, Power, Efficiency, PRF, frequency, ERP; Return Loss đổi sang VSWR và clamp `>=1` | Integral/Standby/calibration/sidebar | Classify từng cột monitor sau calibration |
-| `alarmLimits.*`; integrity enable/config | Delay/Spacing limits là offset quanh nominal; integrity dùng bốn công thức 1/10 của §3.6.9.2.1 | Limit rows và Integrity Results | Alarm/warning, primary/secondary state và station alert |
-| `rmsConfigGeneral.votingLogic/transfer`; `monitorConfigGeneral.*` | AND/OR tổng hợp monitor; routing xác định Primary/Secondary | Monitor Normal/Pri/Sec | Apply (F7) thực hiện transfer dual hot-standby khi rule thỏa |
-| `txConfigNominal.ident.*`; `identMode` | Chọn primary/secondary/standby ident; Off/Continuous/keyer-loss đổi status | Ident Code/Status và RTC data | Ident maintenance/station alert |
-| Security, Local, timestamp và các field metadata `controlOnly` | Chỉ điều khiển session/status/presentation | Login, RMS status, clock | Không tạo measurement RF giả |
-
-Ví dụ đổi 117X sang 117Y làm nominal Delay 50 → 56 µs, reply spacing 12 → 30 µs, interrogation spacing 12 → 36 µs và TX reply frequency 1204 → 1078 MHz. Engine giữ calibration delta rồi tái tính toàn bộ data thay vì ghi đè mù các giá trị đã hiệu chuẩn.
-
-#### Ma trận MOPIENS DVOR 220
-
-Với monitor reading, thứ tự ưu tiên là `measurement override > injected monitor fault > engine baseline`, sau đó mới classify theo limits. Vì vậy Simulation Parameters có thể cố ý che giá trị của một fault cùng ô; Reset override sẽ làm fault/baseline hiện lại.
-
-| Nguồn | Công thức/quan hệ đã triển khai | Output trực tiếp | Alarm/status/action |
-| --- | --- | --- | --- |
-| `station.frequencyMHz` | Carrier = station; USB/LSB = station ±0.00996 MHz; band Carrier Frequency được shift cùng station | TX frequencies và monitor Carrier Frequency | Giữ nguyên khoảng tolerance tương đối khi đổi tần số |
-| `station.carrierPowerW`; `transmitters.<tx>.carrierScalePercent`; calibration factors | True carrier = setpoint × setpoint factor; TX reading = true carrier × reading factor. RF Level = `10 × log10(true carrier / nominal carrier)` cộng bias/calibration của từng monitor. Setpoint Calibration tự bù setpoint theo tỷ lệ factor cũ/mới để giữ true RF | Carrier forward power và RF Level từng TX/path | Carrier-power band phân loại trực tiếp trạng thái CMA/TX/PDC; RF Level tiếp tục qua monitor limits |
-| `transmitters.<tx>.sidebandPowerW.*`; calibration factors | True sideband lấy setpoint riêng từng nhánh × setpoint factor; `AM 9960 Hz = 150 × √(tổng true sideband / true carrier)`. TX Reading factor chỉ đổi indication | USB/LSB Cos/Sin power và AM 9960 Hz | Sideband-power band phân loại SMA/TX/PDC; RF output Off đưa power về 0 và làm FM/9960/distortion monitor báo lỗi theo limits |
-| Transmitter Helper `Sync/Tracking/Same` | Sync nhân bốn sideband theo tỷ lệ Carrier trong phiên chỉnh; Tracking lưu theo TX và tiếp tục nhân sideband khi Carrier đổi ở lần Apply sau | Helper Apply chỉ cập nhật Running RAM; Helper Save chỉ ghi nhóm setpoint TX vào Flash | Close bỏ edit chưa Apply; Reset/power-cycle nạp lại Flash nếu chưa Save |
-| `useStationModulation/useStationAzimuth/useStationIdent` và giá trị station/TX tương ứng | Chọn nguồn cho AM 30 Hz, bearing error và Ident 1020 Hz | Monitor baseline theo active hoặc standby path | Channel limits phân loại; `identCodeAlarmSeverity` đổi Primary/Secondary của Ident |
-| MON Calibration; `monitor.channels.<channel>.type/limits/executiveAction`; `warningRangePercent` | MON factor nhân reading theo từng MON/channel/parameter; RF Level dùng offset cộng. Warning threshold = nominal + (alarm − nominal) × warning-range %; Disabled channel bị loại | Channel reading/status, primary/secondary alarms | Chỉ primary alarm của channel có `executiveAction` mới vote; calibration không đổi true RF và reset sample buffer |
-| `measurementAverageCount`; `monitor.votingLogic`; executive delay; power-on/post-changeover holdoff | Lấy mẫu cố định 100 ms, rolling average 2–10 mẫu; chỉ classify sau đủ N mẫu. AND cần cả hai monitor vote, OR cần một | Trước đủ N hiển thị Stabilizing/Unknown; sau đủ N mới có executive phase/service status | Holdoff vẫn tích lũy mẫu nhưng chặn action; executive delay bắt đầu khi averaged primary alarm xuất hiện |
-| PDC Power/VSWR Calibration; `transmitterLimits.vswrUpperWarning/vswrUpperAlarm`; antenna fault | Power factor nhân true carrier tại PDC; VSWR giữ sàn vật lý `1 + (trueVswr − 1) × factor`; worst USB/LSB của 48 antenna so với hai ngưỡng | PDC carrier power/VSWR và antenna profile/status | PDC calibration chỉ đổi indication; PDC alarm tham gia executive/service status |
-| `optionalUnits.standbyMonitor`; Standby channel type | Standby chỉ được enable khi unit có mặt và channel khác Disabled | Standby Monitor và Standby Monitor Limit trong navigation | Profile mặc định Đài TEST/TST đặt Standby Monitor Disable và ẩn hai màn hình |
-| `thermal.<tx>.*`; `battery.*`; configured communication shutdown | Fan hysteresis, thermal trip/restart, battery warning/alarm/cutoff và delay link fault. Simulator Tools có Thermal Test để đưa từng CMA/SMA qua Fan Start → Shutdown → Restart → Normal | Unit/power status, RF output, battery runtime và event/alarm history | Có thể shutdown TX/system hoặc đổi service status; thermal trip tắt đúng Carrier/USB/LSB của unit và tự bật lại tại ngưỡng restart |
-| `measurementOverrides`; typed faults; Local/REM/MAINT và bypass | Override thay đúng Monitor/Channel/Parameter; fault/status vẫn đi theo engine; MAINT tạo effective bypass | PMDT/LMI monitor readings và equipment status | Giá trị mới đi qua rolling average trước khi classify; bypass giữ indication nhưng chặn executive vote |
-
-#### Ma trận MOPIENS DME 320
-
-Measurement override cũng có ưu tiên cuối cùng so với baseline và fault-derived value. Sau đó engine classify, chạy alarm delay, voting và monitor action.
-
-| Nguồn | Công thức/quan hệ đã triển khai | Output trực tiếp | Alarm/status/action |
-| --- | --- | --- | --- |
-| `station.channel` | Allocation đủ 1X–126Y: interrogation `1024+n`; reply ±63 MHz; X/Y quyết định spacing và Delay 50/56 µs | Frequency, Delay, pulse spacing và self-test nominal | Apply tự rebase limits Time Delay, Pulse Spacing và Frequency theo channel mới, đồng thời giữ calibration delta của người dùng |
-| `station.powerOutputWatts`; `transmitters.<tx>.outputPowerPercent` | `peakPower = stationPower × percent / 100` theo source transponder của channel | Peak Power của Executive/Standby | HPA-low-output fault giảm còn 40%, kéo Efficiency/ERP và alarm liên quan |
-| `station.delayOffsetUs`; runtime `spacingOffsetUs` | Delay = channel nominal + station offset; spacing = channel reply spacing + offset của TX nguồn | Time Delay và Pulse Spacing | Classify theo limits; RXU fault cộng 1.2 µs vào Delay |
-| `station.minimumPulseRatePps`; runtime Squitter/Ident Keying | Continuous Ident = 1350 pps; Squitter On = `max(700, minimumPulseRate)`; Off = 0 | Transmission Rate, Efficiency, Ident Code | Runtime state/fault có thể đưa value về 0 và sinh alarm |
-| `station.identCode`; runtime `identKeying` | Ident Off trả chuỗi rỗng; trạng thái khác trả station code | Ident reading | `identFaultDelayMs` áp dụng riêng Ident alarm |
-| TX route/power/RF/shutdown/interlock; active/standby mapping | Executive channel đọc TX trên antenna, Standby channel đọc TX còn lại; unavailable path trả 0 hoặc invalid | Toàn bộ monitor readings của path | Invalid/fault → alarm; severe TX fault chặn changeover |
-| `monitor.limits.*` và per-limit `alarmDelayMs` | Classify normal/warning/alarm; alarm đi pending → active sau delay | Alarm state và overall monitor status | ERP active mask mọi reading trừ ERP; primary active mới tạo vote |
-| `monitor.votingLogic`; `monitorActionDelayMs`; holdoffs; monitor mode | AND/OR tổng hợp primary vote của Executive channel; Bypass vẫn hiện alarm nhưng không vote | Monitor action state | Khi delay đủ: changeover nếu standby khả dụng, nếu không thì shutdown; lần action tiếp theo không hồi sinh TX đã latched fault |
-| Battery/system/environment config và runtime fault | Battery thresholds/cutoff, configured link-fault delay, EMU enable và environmental inputs | Power/environment/service status | Có thể warning/alarm hoặc shutdown hệ thống |
-| `measurementOverrides`; fault injection | Override đúng Monitor/Channel/Parameter được áp sau fault transformation | Reading được chọn | Alarm, ERP masking, voting và action được tính lại ngay; override bị xóa khi reboot |
-
-#### Khoảng trống dependency phát hiện khi audit
-
-Các mục này đã có field/control nhưng chưa tạo đủ quan hệ dẫn xuất. README ghi rõ để không nhầm “đã lưu được” với “đã mô phỏng được”.
-
-| Module | Field/control chưa nối đủ | Hệ quả hiện tại |
-| --- | --- | --- |
-| DVOR 1150A | `monitor.integrity.maxConsecutiveFailures`; keyer mode | Voice đã tác động Deviation, timer được chốt display-only và relay transfer đã có; hai field này vẫn control-only cho đến khi có rule training cụ thể |
-| DVOR 1150 | Ident modulation không có Ident monitor; automatic transfer | Model rút gọn chỉ hiển thị health/voting, không mô phỏng hai feature này |
-| DVOR 220 | Voice modulation, IDENT code/keyer/sync, RF phase, channel reference azimuth, RF gain và IDENT delay | Carrier/sideband power, RF Level, AM 9960 Hz, power-limit classification, warning-range, moving average, calibration và Helper Tracking đã nối engine; các field còn liệt kê vẫn chủ yếu validation/display/persistence và chưa làm đổi đầy đủ measurement/alarm tương ứng |
-| DME 320 | Auto Delay Calibration, SDES/LDES/dead-time/equalizer, `useStation*`, station IDENT keyer/sync | Các field này hiện chủ yếu validation/display/persistence; channel-dependent limits đã tự rebase nhưng các model RF/calibration còn lại cần rule training xác nhận |
-| DME 1119A | Không có field catalog bị bỏ trống metadata | Mỗi field đều có derivation metadata hoặc được đánh dấu `controlOnly`; công thức thực tế vẫn phải được regression test khi sửa engine |
-
-### Nguyên tắc mở rộng ma trận
-
-Khi thêm tham số mới:
-
-1. Thêm field có kiểu và default trong domain model.
-2. Thêm catalog metadata, parse, min/max/step và validation.
-3. Ghi một dependency entry gồm: source path, lifecycle Draft/Running/Flash, công thức, output, alarm/action, phạm vi TX/Monitor và trạng thái `implemented`/`controlOnly`/`planned`.
-4. Đặt quan hệ vật lý trong engine, không đặt trong JSX; khai báo rõ thứ tự ưu tiên nếu có baseline, calibration, fault và override.
-5. Tính lại snapshot sau Apply và kiểm tra cả active/inactive transmitter, Integral/Standby hoặc Monitor 1/2.
-6. Thêm test dương cho output phải đổi, test âm cho output không được đổi và test downstream cho alarm/voting/transfer khi có.
-7. Chỉ xóa một mục khỏi bảng khoảng trống sau khi công thức, UI projection và regression test đều đã có.
-
-Các quan hệ vật lý phải xác định, giải thích được và ưu tiên theo thứ tự: hành vi đã xác nhận cùng ảnh tham chiếu; manual thiết bị; sau đó mới đến quy ước của source/test hiện tại. Một số giá trị trong engine là training approximation đã hiệu chuẩn theo ảnh PMDT, không phải mô hình RF đầy đủ của thiết bị thật.
-
-## Chức năng chính
-
-### Dành cho giám khảo
-
-- Quản lý kịch bản độc lập cho VOR, DME và ADS-B.
-- Tạo bộ đề theo môn, trong đó mỗi đề có thể chứa nhiều kịch bản; môn VOR-DME có thể kết hợp kịch bản của cả hai module.
-- Tạo, khóa và lưu trữ kỳ thi; quản lý giám khảo, danh sách thí sinh, phân môn, phân đề và kết quả chính thức.
-- Mở bài thi chính thức theo từng môn để đối chiếu nhật ký PMDT, câu trả lời, checkpoint, chuỗi terminal và chẩn đoán phần cứng trước khi nhập điểm.
-- Cấu hình giá trị, trạng thái cảnh báo và checkpoint trực tiếp trên giao diện PMDT VOR/DME.
-- Tạo quy trình thao tác tham chiếu cho terminal ADS-B.
-- Bổ sung bài chẩn đoán phần cứng tùy chọn bằng sơ đồ tín hiệu tương tác.
-- Theo dõi bài nộp VOR/DME, so sánh bằng chứng và ghi điểm nhận xét.
-- Tạo, sửa, xóa và đồng bộ kịch bản với Supabase khi môi trường cloud khả dụng.
-
-### Dành cho học viên
-
-- Chọn bài thực hành theo từng module thiết bị.
-- Thao tác trên PMDT VOR/DME hoặc QCMS và terminal ADS-B mô phỏng.
-- Ghi nhật ký màn hình, trạng thái và thao tác đã thực hiện.
-- Chọn component nghi ngờ trên sơ đồ phần cứng và trình bày phương án xử lý.
-- Nộp kết quả để giám khảo đánh giá hoặc nhận điểm tự động tùy module.
-- Tên thí sinh và đơn vị công tác được lấy từ hồ sơ đã xác thực, không nhập lại khi bắt đầu bài VOR/DME.
-- Vào kỳ thi đang mở bằng email công vụ đã đăng ký, chọn môn được phân và thực hiện lần lượt các kịch bản trong đề thi.
-
-### Tài khoản và phân quyền
-
-- Không mở đăng ký công khai trong giai đoạn đầu; tài khoản được quản lý trong `public.users` với username, role `admin`/`student` và password hash scrypt.
-- Tài khoản migration phải đổi mật khẩu tạm ở lần đăng nhập đầu tiên; chưa hỗ trợ OTP hoặc quên mật khẩu qua email.
-- Route `/student/*`, `/admin/*`, Server Action và API kịch bản/bài nộp đều kiểm tra session/role ở phía server.
-- Sau 5 lần nhập sai, tài khoản bị khóa 5 phút; truy vấn login dùng transaction và khóa hàng để tránh cập nhật cạnh tranh.
-- PostgreSQL không mở cổng public; constraint, trigger và function tiếp tục bảo vệ tính toàn vẹn dữ liệu.
-
-### Giao diện và khả năng sử dụng
-
-- Giao diện tiếng Việt theo hướng Windows 11/Fluent, tối ưu cho dashboard nghiệp vụ mật độ cao.
-- Điều hướng riêng cho vai trò giám khảo và học viên, với các section VOR, DME và ADS-B.
-- Hỗ trợ desktop, mobile, điều hướng bàn phím, reduced motion và độ tương phản hướng tới WCAG AA.
-- Video và thuyết minh được lưu trên bind storage của Oracle VM cùng checksum manifest.
-
-## Kiến trúc dữ liệu
-
-```text
-Trình duyệt
-  ├─ Zustand stores
-  ├─ localStorage (cache/fallback)
-  └─ Next.js API routes
-       └─ PostgreSQL 17
-            ├─ users + user_sessions (student/admin)
-            ├─ scenarios / vor_scenarios / dme_scenarios
-            ├─ vor_submissions / dme_submissions
-            ├─ exam_sets / exam_papers / exam_paper_scenarios
-            ├─ exams / exam_examiners / exam_candidates
-            ├─ exam_candidate_subjects / exam_attempts / exam_attempt_items
-            ├─ user_simulator_configs / user_simulator_config_history
-            └─ /app/storage → /data/cns-simulator-storage
-```
-
-- Đăng nhập do ứng dụng quản lý bằng `public.users` và session token ngẫu nhiên; PostgreSQL chỉ lưu SHA-256 của token cookie.
-- PostgreSQL lưu kịch bản, bài nộp, cấu hình simulator và toàn bộ workflow kỳ thi.
-- `localStorage` chỉ giữ cache/fallback cho các luồng luyện tập phù hợp; luồng **thi chính thức** luôn dùng PostgreSQL server-side.
-- Migration PostgreSQL portable nằm trong `database/migrations/`; migration Supabase cũ được giữ làm lịch sử trong `supabase/migrations/`.
-- Media không commit vào Git; Dokploy gắn bind mount `/data/cns-simulator-storage:/app/storage`.
-
-### Giới hạn bảo mật cần lưu ý
-
-- Cookie session là `HttpOnly`, `SameSite=Lax`, bật `Secure` ở production và có thời hạn tuyệt đối.
-- Lockout 5 lần/5 phút và kiểm tra role được thực hiện lại trong Server Action/API, không chỉ dựa vào giao diện hoặc Proxy.
-- Tất cả tài khoản chuyển đổi phải đổi mật khẩu tạm ở lần đăng nhập đầu tiên.
-- Tài khoản terminal mô phỏng không phải tài khoản ứng dụng và không được dùng làm thông tin xác thực thật.
-- Chưa có màn hình quản trị người dùng và audit log thay đổi vai trò; thao tác quản trị trực tiếp phải được kiểm soát ở PostgreSQL.
-
-## Công nghệ
-
-- Next.js 16 App Router, React 19 và TypeScript
-- Tailwind CSS 4, Geist, Motion và Phosphor Icons
-- Zustand cho trạng thái phía client
-- PostgreSQL 17 và bind storage trên Oracle VM
-- Vitest, Testing Library, Playwright và axe-core
-- Self-hosted trên Oracle VM (Dokploy/Docker) và GitHub Actions cho quality gate
-
-## Chạy trên máy cục bộ
-
-### Yêu cầu
-
-- Node.js 20.9 trở lên; dự án gần nhất được xác minh với Node.js 24.
-- npm.
-- Một PostgreSQL 17 instance có schema trong `database/migrations/`.
-- Docker Desktop là tùy chọn thuận tiện để chạy PostgreSQL local; có thể dùng database dev khác qua `DATABASE_URL`.
-
-### Cài đặt
-
+# Hệ thống kiểm tra mô phỏng CNS (CNS Simulation Lab)
+
+Ứng dụng web phục vụ xây dựng kịch bản, thực hành chẩn đoán sự cố kỹ thuật và sát hạch/đánh giá kỹ thuật viên trên các nhóm thiết bị bảo đảm hoạt động bay (CNS): **VOR**, **DME** và **ADS-B**.
+
+---
+
+## 1. Thông tin chung về dự án
+
+### 1.1. Mục đích ứng dụng
+- **Mô phỏng chân thực và an toàn:** Giả lập trung thực giao diện PMDT (Selex Model 1150/1150A, Mopiens), LMI, QCMS, terminal bảo trì SA/MA và sơ đồ khối phần cứng tương tác. Môi trường hoạt động hoàn toàn cục bộ/container độc lập, không kết nối thiết bị thật và không mở phiên SSH/serial vật lý ra ngoài.
+- **Phục vụ đào tạo & sát hạch kỹ thuật viên:**
+  - *Dành cho Giám khảo:* Thiết lập kịch bản sự cố (fault injection), cấu hình dung sai và đáp án tham chiếu, tổ chức bộ đề, quản lý kỳ thi chính thức và chấm điểm dựa trên bằng chứng kỹ thuật.
+  - *Dành cho Học viên:* Luyện tập quy trình kiểm tra tham số, thao tác chuyển đổi chế độ, sửa chữa hư hỏng theo whitelist quy định, ghi nhận bằng chứng thao tác và nộp bài đánh giá.
+- **Tài khoản ứng dụng:** Hệ thống quản lý tài khoản nội bộ trên PostgreSQL với 2 tài khoản: **admin** (dành cho quản trị / giám khảo) và **user** (dành cho học viên / thực hành). Tài khoản terminal bên trong bài mô phỏng chỉ là dữ liệu của kịch bản đào tạo, không phải tài khoản hệ thống.
+
+### 1.2. Công nghệ ứng dụng
+- **Giao diện & Ứng dụng (Frontend):**
+  - Framework: Next.js 16.2.11 (App Router, kiến trúc standalone output tối ưu container Docker).
+  - Thư viện hiển thị: React 19.2.4, TypeScript 5, Tailwind CSS 4, Motion (micro-animations), Geist Font và Phosphor Icons.
+  - Phong cách thiết kế: Fluent / Windows 11 dark mode, tối ưu cho dashboard nghiệp vụ mật độ thông tin cao.
+  - Quản lý trạng thái client: Zustand 5 quản lý store độc lập cho từng simulator và phiên thi.
+- **Cơ sở dữ liệu & Xác thực (Backend):**
+  - Database: PostgreSQL 17 self-hosted container trên máy chủ Oracle Cloud VM ARM64.
+  - Data Access & Session: Node-pg connection pool server-only, xác thực phiên qua cookie HttpOnly (`cns_session`, `SameSite=Lax`, `Secure` trên production, TTL 12h).
+  - Schema & Migration: Hệ thống migration SQL portable (`database/migrations/0001–0005`), quản lý version và checksum chặt chẽ.
+- **Công cụ kiểm thử & Đồ thị tri thức:**
+  - Vitest, React Testing Library, Playwright (E2E) và CodeGraph CLI (quản lý đồ thị phụ thuộc mã nguồn).
+
+### 1.3. Repository ứng dụng & Nguồn phát triển
+- **Repository phát triển mặc định:** [`nhhaituhpy-hue/cns-simulation`](https://github.com/nhhaituhpy-hue/cns-simulation), nhánh `main`.
+- **Tài khoản phát triển:** `nhhaituhpy-hue`.
+- **Remote Git local:** `deploy` (`https://github.com/nhhaituhpy-hue/cns-simulation.git`) là đích fetch/push mặc định. Remote `origin` cũ được giữ lại chỉ để tương thích/lưu trữ.
+
+### 1.4. Khởi chạy trên máy cục bộ (Local Development)
 ```bash
+# Cài đặt thư viện phụ thuộc
 npm ci
-```
 
-Sao chép `.env.example` thành `.env.local` và cấu hình PostgreSQL/session:
-
-```env
+# Cấu hình biến môi trường cục bộ (.env.local)
 DATABASE_URL=postgresql://cns_simulator:<password>@127.0.0.1:5433/cns_simulator
 DATABASE_POOL_MAX=5
 DATABASE_SSL=false
 SESSION_COOKIE_NAME=cns_session
 SESSION_TTL_HOURS=12
-```
 
-Không commit connection string hoặc password. Tài khoản ban đầu được tạo bằng quy trình migration server-only; không còn đăng ký, OTP hoặc phục hồi mật khẩu qua email trong giai đoạn đầu.
+# Khởi chạy PostgreSQL local (Docker Compose) và chạy migration
+npm run db:dev:up
+npm run db:migrate
 
-Khởi động môi trường phát triển:
-
-```bash
+# Chạy ứng dụng chế độ dev (mở http://localhost:3000)
 npm run dev
 ```
 
-Mở [http://localhost:3000](http://localhost:3000).
+---
 
-Nếu cache Turbopack tăng bất thường, dừng dev server rồi khởi động lại với cache sạch:
+## 2. Quy tắc thay đổi, tự động deploy và kiểm thử production
 
-```bash
-npm run dev:clean
-```
+### 2.1. Quy trình phát triển và thay đổi mã nguồn (Workflow)
+1. **Lập kế hoạch trước khi lập trình:** Mọi yêu cầu thay đổi giao diện, cấu trúc component hoặc logic nghiệp vụ đều phải lập kế hoạch ngắn gọn (phân tích, phạm vi ảnh hưởng, giải pháp), chờ người dùng duyệt trước khi sửa file.
+2. **Kiểm tra cục bộ có trọng tâm:**
+   - *Thay đổi liên quan đến Logic/Engine:* Chạy file test bị ảnh hưởng trực tiếp (ví dụ: `npx vitest run tests/vor/`) và chạy `npm run build` để kiểm tra biên dịch và kiểu dữ liệu TypeScript.
+   - *Thay đổi chỉ liên quan đến UI/CSS/tài liệu tĩnh:* Không chạy toàn bộ bộ test tự động (`npm run test:run`) để tiết kiệm thời gian và tài nguyên.
+3. **Cập nhật tài liệu & Commit chuẩn hóa:** Cập nhật nhật ký vào `README.md`, sau đó thực hiện đúng 1 lần:
+   ```bash
+   git add .
+   git commit -m "<type>(<scope>): <short description>"
+   git push deploy main
+   ```
 
-Chỉ dọn cache mà không khởi động dev server:
+### 2.2. Cơ chế Tự động Deploy trên Dokploy
+- Repository liên kết trực tiếp với Dokploy cài đặt trên máy chủ **Oracle Cloud VM ARM64**.
+- Mọi commit push lên nhánh `main` của repository phát triển mặc định `nhhaituhpy-hue/cns-simulation` qua remote `deploy` sẽ **tự động kích hoạt webhook của Dokploy**.
+- Dokploy tự động build Docker image theo multi-stage `Dockerfile`, khởi động lại container `cns-simulator-web` và kết nối với PostgreSQL 17 private cùng bind mount lưu trữ `/data/cns-simulator-storage`.
 
-```bash
-npm run clean:cache
-```
+### 2.3. Quy tắc kiểm thử trực tiếp trên Production
+- **Không yêu cầu môi trường dev trung gian:** Môi trường phát triển cục bộ không duy trì toàn bộ cơ sở dữ liệu và kịch bản thực tế. Do đó, **sau khi commit được push và Dokploy hoàn tất quá trình tự động deploy, việc kiểm tra chức năng, tính đúng đắn của dữ liệu và giao diện thực tế sẽ được tiến hành trực tiếp trên môi trường Production (Live URL)**.
+- **Quy trình xử lý sự cố:** Nếu phát hiện lỗi trên production:
+  1. Kiểm tra log container trực tiếp trên bảng điều khiển Dokploy.
+  2. Xác định nguyên nhân gốc rễ (root cause) cục bộ, tái hiện và kiểm tra fix có trọng tâm.
+  3. Commit và push bản vá lên `deploy/main` để Dokploy tự động deploy lại.
 
-### PostgreSQL local
+---
 
-Bổ sung các biến PostgreSQL từ `.env.example` vào `.env.local`, rồi chạy:
+## 3. Quy tắc xây dựng bộ công cụ Simulation bám sát tài liệu
 
-```bash
-npm run db:dev:up
-npm run db:migrate
-```
+### 3.1. Nguồn tài liệu kỹ thuật bắt buộc
+Mọi hành vi mô phỏng, công thức toán học, giao diện điều khiển, dải tham số và quy luật cảnh báo của từng simulator bắt buộc phải đối soát tuyệt đối với các tài liệu kỹ thuật gốc trong thư mục `C:\Test\cns-simulator\doc\`:
+- **SELEX DVOR 1150A:** `doc/DVOR1150A/571150A-0002E.pdf` và các ảnh chụp màn hình PMDT thực tế tại đài trạm.
+- **SELEX DVOR 1150:** `doc/DVOR1150/DVOR 1150.pdf` (đặc biệt mục 3.4 PMDT và quy trình Integral Monitor Bypass).
+- **SELEX DME 1118A/1119A:** `doc/DME1119A/1119A-0001M.pdf`, `571118A-0001 Rev. M` và Table 9-5 (Channel Allocation).
+- **MOPIENS 220 DVOR:** `doc/DVOR220/220 DVOR Tech Manual 20240320.pdf` và bộ ảnh tham chiếu giao diện khai thác Cam Ranh.
+- **MOPIENS 320 DME:** `doc/DME320/310320_DME_Tech_Manual 2022-12-19.pdf`.
+- **ADS-B Sensor:** QCMS User Manual, Sensor SA/MA User Manual, Quadrant Hardware & Installation Guide V1.5.
 
-Dừng container mà không xóa named volume:
+### 3.2. Nghiêm cấm bịa đặt công thức và logic RF
+- **Không tự sáng tác hành vi kỹ thuật:** Nghiêm cấm tự nghĩ ra các công thức RF, tự đặt dải đo, hoặc tùy tiện thay đổi thứ tự ưu tiên cảnh báo không có trong tài liệu.
+- **Thứ tự ưu tiên nguồn sự thật:**
+  1. *Ảnh chụp màn hình PMDT/LMI đang khai thác thực tế tại các đài trạm.*
+  2. *Sổ tay kỹ thuật (Technical Manual) chính thức của nhà sản xuất.*
+  3. *Quy ước mô hình đào tạo (Training Model Assumptions) đã được thống nhất.*
 
-```bash
-npm run db:dev:down
-```
+### 3.3. Nguyên tắc làm rõ khi tài liệu chưa đầy đủ
+- Khi gặp tham số hoặc quy trình không được manual lượng hóa rõ (ví dụ: công thức nội suy suy giảm nhánh, quan hệ nhiệt độ - quạt làm mát, thuật toán voting đặc thù), **TUYỆT ĐỐI KHÔNG tự suy đoán hay giả lập giá trị ngẫu nhiên**.
+- **Phải dừng lại và hỏi kỹ ý kiến người dùng** để thống nhất quy ước đào tạo. Mọi quy ước bắt buộc phải được ghi rõ trong mã nguồn (dưới dạng hằng số/comment chuẩn hóa) và cập nhật vào tài liệu dự án.
 
-Chi tiết migration và quy tắc không lưu secrets trong Git nằm tại `docs/oracle-vm-migration.md` và `database/README.md`.
+---
 
-## Các route chính
+## 4. Kiến trúc dự án & Các Route chính
 
-| Vai trò | VOR | DME | ADS-B |
-| --- | --- | --- | --- |
-| Giám khảo | `/admin/vor` | `/admin/dme` | `/admin/ads-b` |
-| Học viên | `/student/vor` | `/student/dme` | `/student/ads-b` |
-
-`/student/vor` là route ôn tập của DVOR 1150A. DVOR 1150 legacy có route học viên riêng tại `/student/dvor-1150`; route này mở catalog kịch bản trước, sau đó chuyển sang `/student/dvor-1150/session?id=...` để chạy PMDT Model 1150 cùng các panel nhật ký và ghi nhận thao tác. Đây không phải alias của DVOR 1150A. Các route con khác xử lý tạo/sửa kịch bản, phiên thực hành, danh sách bài nộp và đánh giá kết quả.
-
-Simulator phần mềm khai thác độc lập:
-
-| Thiết bị | Route | Trạng thái |
-| --- | --- | --- |
-| MOPIENS 220 DVOR | `/simulator/software/dvor-220` | Simulator sẵn sàng; Authoring/Review đang lập kế hoạch |
-| MOPIENS 320 DME | `/simulator/software/dme-320` | Simulator sẵn sàng; Authoring/Review đang lập kế hoạch |
-
-Các route quản lý và vào thi chính thức:
-
-| Chức năng | Route |
-| --- | --- |
-| Admin quản lý kỳ thi | `/admin/exams` |
-| Admin quản lý bộ đề | `/admin/exam-sets` |
-| Thí sinh vào thi | `/student/exams` |
-
-Route thi chính thức kiểm tra lại email, phân công môn, đề và thứ tự kịch bản ở phía server. Route luyện tập VOR, DME và ADS-B vẫn hoạt động độc lập như trước.
-
-## Kiểm tra chất lượng
-
-```bash
-npm run lint
-npm run typecheck
-npm run test:run
-npm run build
-npm run test:e2e
-```
-
-Chạy bốn quality gate chính:
-
-```bash
-npm run check
-```
-
-Playwright cần Chromium trong lần thiết lập đầu tiên:
-
-```bash
-npx playwright install chromium
-```
-
-Theo workflow của dự án, sau khi sửa giao diện hoặc logic hãy kiểm tra trực tiếp trên môi trường dev trước. Chỉ chạy test/build khi thay đổi đã được xác nhận.
-
-## Triển khai
-
-### Oracle VM (self-hosted — primary)
-
-Ứng dụng được triển khai trên Oracle Cloud VM ARM64 thông qua Dokploy. Một Project/Environment chứa `cns-simulator-web`, PostgreSQL 17 private và storage bind mount.
-
-Biến môi trường cần thiết trên Dokploy:
-
-| Biến | Loại | Bắt buộc |
-| --- | --- | --- |
-| `DATABASE_URL` | Runtime secret | ✅ |
-| `DATABASE_POOL_MAX` | Runtime | ✅ |
-| `DATABASE_SSL` | Runtime | ✅ |
-| `SESSION_COOKIE_NAME` | Runtime | ✅ |
-| `SESSION_TTL_HOURS` | Runtime | ✅ |
-
-Build Docker image thủ công:
-
-```bash
-docker build -t cns-simulator .
-```
-
-Chạy container:
-
-```bash
-docker run -p 3000:3000 \
-  -e DATABASE_URL=postgresql://user:password@database-host:5432/cns_simulator \
-  cns-simulator
-```
-
-### Vercel (legacy)
-
-Repository từng được liên kết với Vercel và tự động triển khai khi nhánh `main` được cập nhật. `vercel.json` đặt vùng chạy Functions/SSR tại Singapore (`sin1`).
-
-Trước khi triển khai trên Vercel:
-
-1. Xác nhận các biến môi trường Supabase trên Vercel.
-2. Áp dụng migration cần thiết trong `supabase/migrations/`.
-3. Chạy các quality gate của dự án.
-4. Kiểm tra policy RLS nếu schema hoặc quyền truy cập dữ liệu thay đổi.
-
-### Cập nhật media
-
-Media đã được chuyển sang `/data/cns-simulator-storage/training-media` và có manifest SHA-256. Khi thay video, poster hoặc thuyết minh, phải cập nhật theo thư mục phiên bản mới và tạo lại checksum manifest trước khi kích hoạt.
-
-## Cấu trúc dự án
-
+### 4.1. Cấu trúc thư mục mã nguồn
 ```text
-src/
-  app/                  Route, layout và API của Next.js
-    admin/              Không gian giám khảo
-    student/            Không gian học viên
-    api/                API cho kịch bản và bài nộp
-  components/
-    vor/                PMDT và workflow VOR
-    dme/                PMDT và workflow DME
-    qcms/               Dashboard QCMS ADS-B
-    terminal/           Terminal SA/MA mô phỏng
-    hardware/           Sơ đồ và bài chẩn đoán phần cứng
-    grading/            So sánh thao tác và kết quả chấm điểm
-  lib/                  Domain model, engine, PostgreSQL data access và mapping
-  stores/               Zustand stores theo từng module
-supabase/
-  migrations/           Schema, policy, migration và seed data
-tests/                  Unit, component, integration và E2E tests
-public/                 Tài nguyên tĩnh được commit
-doc/                    Manual, kế hoạch và tài liệu kỹ thuật cục bộ (gitignored)
+cns-simulator/
+├── database/migrations/  # SQL migrations cho PostgreSQL portable (0001–0005)
+├── doc/                  # Sổ tay kỹ thuật, manual gốc của các thiết bị (gitignored)
+├── public/               # Tài nguyên tĩnh, ảnh catalogue, manuals PDF hướng dẫn
+├── src/
+│   ├── app/              # Next.js App Router (admin, student, simulator, api, login)
+│   ├── components/       # Giao diện PMDT Selex, QCMS, Terminal, Sơ đồ khối SVG
+│   ├── lib/              # Domain engines (dvor1150a, dvor1150, dme1119a), db, auth
+│   ├── modules/          # Module thiết bị Mopiens (devices/dvor220, devices/dme320, operations)
+│   └── stores/           # Zustand stores quản lý trạng thái client cho từng simulator
+└── tests/                # Bộ kiểm thử Unit, Component, Integration và E2E
 ```
 
-## Quy tắc mô phỏng
+### 4.2. Kiến trúc dữ liệu cốt lõi (PostgreSQL 17)
+```text
+PostgreSQL 17
+ ├── users / user_sessions                # Tài khoản nội bộ, vai trò, phiên cookie
+ ├── scenarios / vor_scenarios / dme_...   # Kịch bản đào tạo và cấu hình mẫu
+ ├── exam_sets / exam_papers / exams      # Cấu trúc đợt thi, bộ đề, phân công môn
+ ├── exam_candidates / exam_attempts      # Danh sách thí sinh, bài làm và kết quả thi
+ ├── user_simulator_configs / _history    # Cấu hình lưu trữ theo người dùng và lịch sử thay đổi
+ └── simulator_scenario_parameters        # Bộ tham số kịch bản độc lập (JSONB schema v1/v2)
+```
 
-- VOR và DME ghi lại các màn hình/checkpoint học viên đã truy cập nhưng không tự quyết định điểm cuối cùng.
-- ADS-B chấm điểm theo số bước đúng, đúng thứ tự và không có thao tác thừa.
-- Phiên terminal ADS-B chấp nhận `sysadmin` và `maintenance`; thí sinh có thể đăng xuất rồi đổi tài khoản trong cùng một phiên mà không làm mất mode hoặc cấu hình máy thu.
-- Đăng nhập không phải là một phần của đáp án chấm điểm.
-- `RETURN`, phím Enter rỗng và `0` được chuẩn hóa thành cùng một hành động; `x`/`X` đăng xuất tài khoản hiện tại và đưa terminal trở lại dấu nhắc `login:`.
-- Working copy ADS-B của từng thí sinh được lưu theo phiên trong cache trình duyệt; dữ liệu chuẩn của trình giả lập Admin chỉ thay đổi trong bộ nhớ và được khôi phục khi khởi động lại phiên.
-- Các sơ đồ phần cứng là mô hình tương tác do dự án xây dựng từ tài liệu tham chiếu, không phải ảnh sao chép từ manual nhà sản xuất.
+### 4.3. Bảng tổng hợp các Route chính
 
-## Tài liệu tham chiếu
+| Phân hệ | Mục đích | Route URL | Mô tả chức năng |
+|---|---|---|---|
+| **Xác thực** | Đăng nhập & Đổi mật khẩu | `/login`, `/change-password` | Form xác thực PostgreSQL, đổi mật khẩu lần đầu bắt buộc và đổi mật khẩu chủ động |
+| **Giám khảo** | Quản trị kỳ thi | `/admin/exams`, `/admin/exam-sets` | Tạo kỳ thi, cấu hình đề thi theo môn, quản lý thí sinh và giám khảo chấm |
+| | Trung tâm kịch bản | `/admin/vor`, `/admin/dme`, `/admin/ads-b` | Quản lý kịch bản nghiệp vụ, chấm điểm bài nộp và xem timeline thao tác |
+| | Quản lý Scenario Parameters | `/authoring` | Import/Export JSON kịch bản, cấu hình fault injection, whitelist cho từng simulator |
+| **Học viên** | Vào thi chính thức | `/student/exams` | Thực hiện các kịch bản trong đề thi được phân công theo thời gian thực |
+| | Ôn tập tự do VOR/DME | `/student/vor`, `/student/dme`, `/student/ads-b` | Luyện tập thao tác trên simulator và nộp bài thử nghiệm |
+| | Ôn tập DVOR 1150 | `/student/dvor-1150`, `/session?id=...` | Luồng danh mục bài tập và phòng thực hành riêng cho dòng máy 1150 legacy |
+| **Simulator** | SELEX DVOR 1150A | `/simulator/dvor-1150a` | PMDT Selex 1150A đầy đủ, 12 tham số calibration, failover dual TX |
+| | SELEX DVOR 1150 | `/simulator/dvor-1150` | PMDT Model 1150 tối giản theo mục 3.4 manual, Integral Monitor Bypass |
+| | SELEX DME 1119A | `/simulator/dme-1119a` | PMDT DME 1119A, Table 9-5, công suất PA/RTC, 8 preset lỗi độc lập |
+| | MOPIENS DVOR 220 | `/simulator/software/dvor-220` | PMDT/LMI Mopiens 220, Draft-Running-Flash, rolling average, VSWR 48 anten |
+| | MOPIENS DME 320 | `/simulator/software/dme-320` | PMDT/LMI DME 320, 126 kênh X/Y, BITE Self-Test, trễ changeover |
+| | ADS-B Sensor | `/simulator/ads-b` | QCMS Dashboard & Terminal SA/MA mô phỏng dòng lệnh hệ thống |
+| **Sơ đồ khối** | 5 thiết bị & ADS-B | `/simulator/[thiết-bị]/block-diagram` | Sơ đồ khối tương tác SVG, cabinet front/rear, faceplate module và test points |
 
-Manual nhà sản xuất, sơ đồ hệ thống và tài liệu triển khai nội bộ nằm trong thư mục `doc/`. Thư mục này được Git bỏ qua để tránh đưa tài liệu có thể bị giới hạn bản quyền hoặc dữ liệu nội bộ lên repository.
+---
 
-Các tài liệu chính gồm:
+## 5. Mô tả kiến trúc từng thiết bị & Ma trận tham số
 
-- QCMS User Manual.
-- Sensor SA/MA User Manual.
-- VOR và DME PMDT User Manual.
-- MOPIENS 220 DVOR Technical Manual và bộ ảnh PMDT tham chiếu.
-- MOPIENS 320 DME Technical Manual.
-- Sơ đồ hệ thống, sơ đồ khối và kế hoạch triển khai mô phỏng.
+Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Data, cơ chế giám sát/voting và kịch bản bài tập của từng thiết bị được bóc tách và duy trì độc lập trong thư mục `docs/simulators/`:
 
-Khi kế hoạch nội bộ và manual nhà sản xuất khác nhau, manual là nguồn tham chiếu ưu tiên.
+| Thiết bị | Loại trạm | Phần mềm điều khiển | Tài liệu kỹ thuật chi tiết |
+| :--- | :--- | :--- | :--- |
+| **SELEX DVOR 1150A** | Đài dẫn đường đa hướng DVOR | PMDT (Portable Maintenance Data Terminal) | [Tài liệu kỹ thuật SELEX 1150A](docs/simulators/dvor-1150a.md) |
+| **SELEX DVOR 1150** | Đài dẫn đường đa hướng DVOR | PMDT Model 1150 | [Tài liệu kỹ thuật SELEX 1150](docs/simulators/dvor-1150.md) |
+| **SELEX DME 1119A** | Thiết bị đo cự ly hàng không DME | PMDT DME 1119A | [Tài liệu kỹ thuật SELEX 1119A](docs/simulators/dme-1119a.md) |
+| **MOPIENS MARU 220** | Đài dẫn đường đa hướng DVOR | LMI / PMDT Mopiens | [Tài liệu kỹ thuật MOPIENS 220](docs/simulators/dvor-220.md) |
+| **MOPIENS MARU 320** | Thiết bị đo cự ly hàng không DME | LMI / PMDT Mopiens | [Tài liệu kỹ thuật MOPIENS 320](docs/simulators/dme-320.md) |
+| **Module ADS-B** | Trạm giám sát phát sóng tự động | QCMS & Terminal Console VT100 | [Tài liệu kỹ thuật ADS-B](docs/simulators/ads-b.md) |
 
-## Roadmap
+### 5.1. SELEX DVOR 1150A (PMDT)
+- **Ma trận tham số:** Tần số sóng mang Carrier và Sideband; công suất phát quy đổi RF Level ($P_{\text{ref}} = 100\text{ W}$, sàn $-60\text{ dB}$); 4 nhánh Sideband độc lập xác định độ sâu điều chế AM 9960 Hz theo công thức $\frac{1}{4}\sum\sqrt{P_i / P_0}$; góc pha Coarse ($0/90/180/270^\circ$) và Fine ($-45^\circ \dots +45^\circ$).
+- **Hệ thống giám sát:** 12 tham số chuẩn hóa (Calibration Offsets & Scale Factors) độc lập trên Mon 1 và Mon 2; cơ chế chuyển đổi tự động Dual TX khi hai Monitor cùng báo động Alarm.
+- **Kịch bản & Bài làm:** Định dạng JSON Schema v1; whitelist `studentEditableFieldIds` chống gian lận; lưu vết toàn bộ chuỗi sự kiện `actionHistory` vào database.
+- *Xem chi tiết:* [`docs/simulators/dvor-1150a.md`](docs/simulators/dvor-1150a.md)
 
-### Ưu tiên 1 — Hoàn thiện quản trị và bảo mật
+### 5.2. SELEX DVOR 1150 (PMDT)
+- **Ma trận tham số:** Mô hình đơn giản hóa theo Mục 3.4 tài liệu vận hành. Đồng bộ giá trị Nominal giữa TX1 và TX2; hệ số scale công suất độc lập cho từng máy phát. Carrier kéo theo SBO và 4 nhánh Sideband.
+- **Hệ thống giám sát:** Bù trừ sai lệch nguồn phát (Monitor Offset); phân cấp Pre-Alarm (vàng) và Alarm (đỏ). Bắt buộc phải kích hoạt **Integral Monitor Bypass** mới được phép Apply cấu hình mới.
+- **Kịch bản & Bài làm:** Định dạng JSON Schema v2; kịch bản suy giảm sóng mang + điều chế 9960 Hz và lỗi VSWR anten; lưu trữ theo cặp `module_id + scenario_id`.
+- *Xem chi tiết:* [`docs/simulators/dvor-1150.md`](docs/simulators/dvor-1150.md)
 
-- Bổ sung màn hình quản trị hồ sơ, cấp/thu hồi vai trò và vô hiệu hóa tài khoản.
-- Thêm audit log cho đăng nhập, đổi vai trò, thay đổi kịch bản và chấm điểm.
-- Bổ sung CAPTCHA/rate limiting theo IP cho đăng ký, đăng nhập và quên mật khẩu.
-- Đánh giá nâng cấp Supabase để dùng Password Verification Hook nếu cần khóa đăng nhập ở cấp Auth thay vì chỉ tại ứng dụng.
+### 5.3. SELEX DME 1119A (PMDT)
+- **Ma trận tham số:** Bảng phân bổ kênh Table 9-5 (1X–126Y) tự động suy diễn tần số thu/phát, giãn cách xung và độ trễ Reply Delay danh định ($50/56\ \mu\text{s}$). Công suất RTC Target và HPA; tính toán bức xạ hiệu dụng ERP (sàn $-60\text{ dB}$); kiểm soát xung PRF và bộ triệt phản xạ LDES/SDES.
+- **Hệ thống giám sát:** 4 công thức tính toán kiểm tra toàn vẹn (Integrity Test); cờ cảnh báo `Need Backup` đỏ khi Apply cấu hình có lỗi; tự động xóa khi chạy RMS Config Backup.
+- **Kịch bản & Bài làm:** 8 kịch bản định sẵn chuẩn hóa (sụt công suất, trôi trễ, nghẽn PRF, hỏng HPA, mất Ident, VSWR cao, lệch chuẩn calibration, quá nhiệt buồng máy).
+- *Xem chi tiết:* [`docs/simulators/dme-1119a.md`](docs/simulators/dme-1119a.md)
 
-### Ưu tiên 2 — Quản lý đào tạo và báo cáo
+### 5.4. MOPIENS MARU 220 DVOR (LMI / PMDT)
+- **Ma trận tham số:** Kiến trúc quản trị 3 tầng cấu hình: **Draft** $\to$ Apply thành **Running (RAM)** $\to$ Profile Save thành **Flash**. Điều chế $\text{AM 9960 Hz} = 150 \times \sqrt{\sum P_{\text{sideband}} / P_{\text{carrier}}}$; công cụ Transmitter Helper với tính năng bám đuổi Sideband Tracking.
+- **Hệ thống giám sát:** Bộ đệm trượt trung bình đo lường (2–10 mẫu, chu kỳ 100 ms) chống chập chờn trước khi so sánh ngưỡng; bảo vệ VSWR PDC; chu trình nhiệt quạt làm mát ($40^\circ\text{C}$ bật, $95^\circ\text{C}$ ngắt RF, $80^\circ\text{C}$ khởi động lại). Chế độ khóa `MAINT` tự động đưa Monitor vào trạng thái Effective Bypass.
+- **Kịch bản & Bài làm:** Quản lý kịch bản suy giảm công suất RF, sự cố dàn 48 anten và quá nhiệt; khóa quyền ghi vào Flash trong suốt buổi thi.
+- *Xem chi tiết:* [`docs/simulators/dvor-220.md`](docs/simulators/dvor-220.md)
 
-- Lưu lịch sử phiên học và trạng thái tiến độ thống nhất cho cả ba module.
-- Bổ sung dashboard thống kê theo học viên, thiết bị, kịch bản và thời gian.
-- Xuất báo cáo kết quả và lưu vết thao tác của giám khảo.
-- Quản lý lớp học, nhóm học viên và lịch tổ chức bài kiểm tra.
+### 5.5. MOPIENS MARU 320 DME (LMI / PMDT)
+- **Ma trận tham số:** Đầy đủ 252 kênh 1X–126Y theo tiêu chuẩn ICAO Annex 10; công suất đỉnh Peak Power và ERP theo % đặt; lỗi HPA Low Output ghìm công suất về tỷ số 0.4; lỗi RXU kéo giãn trôi $+1.2\ \mu\text{s}$ độ trễ phát đáp.
+- **Hệ thống giám sát:** Hai kênh giám sát độc lập trên mỗi Monitor: kênh Executive (giám sát máy On-Air) và Standby (giám sát máy trên tải giả). Trễ hành động `alarmDelayMs`; voting `AND`/`OR` điều khiển timed changeover hoặc shutdown; chức năng BITE Monitor Self-Test.
+- **Kịch bản & Bài làm:** Mô phỏng sự cố khối nguồn, bộ dao động, công suất phát và trôi trễ; kiểm tra quy trình xử lý phục hồi của học viên qua LMI/PMDT.
+- *Xem chi tiết:* [`docs/simulators/dme-320.md`](docs/simulators/dme-320.md)
 
-### Ưu tiên 3 — Độ tin cậy dữ liệu
+### 5.6. Module Giám sát ADS-B (QCMS & Terminal Console)
+- **Kiến trúc mô phỏng:** Tái lập môi trường dòng lệnh ký tự ANSI (74 cột) trạm ADS-B Côn Sơn/Cam Ranh và trung tâm QCMS. Phân định rõ hai phân quyền vận hành: `OPERATIONAL` và `MAINTENANCE`.
+- **Hệ thống giám sát:** Bảng điều khiển QCMS hiển thị trạng thái cảm biến theo 4 mã màu: Green (bình thường), Yellow (mất dữ liệu tàu bay hoặc RF suy giảm), Orange (quá nhiệt cảm biến $> 55^\circ\text{C}$), Red (mất nguồn AC hoặc đứt mạng LAN).
+- **Kịch bản & Chấm điểm tự động:** 10 kịch bản sự cố phần cứng chuẩn hóa; thuật toán quy hoạch động LCS (Longest Common Subsequence) so khớp chính xác từng thao tác dòng lệnh (đúng, sai, thiếu, thừa), đảm bảo tính khách quan tuyệt đối khi thi tuyển.
+- *Xem chi tiết:* [`docs/simulators/ads-b.md`](docs/simulators/ads-b.md)
 
-- Chuẩn hóa cơ chế đồng bộ Supabase/`localStorage` giữa các module.
-- Xử lý xung đột, retry, trạng thái offline và thông báo lỗi đồng bộ rõ ràng.
-- Thêm versioning, import/export và sao lưu/khôi phục kịch bản.
-- Bổ sung audit log cho các thay đổi quan trọng.
-
-### Ưu tiên 4 — Mở rộng mô phỏng
-
-- Mở rộng các màn hình và luồng menu VOR, DME, ADS-B theo manual đã đối chiếu.
-- Bổ sung fault preset, topology và tiêu chí chẩn đoán cho nhiều cấu hình thiết bị/site.
-- Chuẩn hóa tiêu chí chấm điểm giữa phần thao tác PMDT, phần cứng và câu trả lời kỹ thuật.
-- Mở rộng kiểm thử E2E, accessibility, hiệu năng và quan sát lỗi production.
-
-## Session Log
-- [2026-09-08] Chuẩn hóa Carrier-Sideband Phase Offset cho DVOR 1150A: Coarse là dropdown số 0/90/180/270 độ theo bước 90 độ trong manual §9.7.13.5; Fine giới hạn simulator -45…+45 độ, bước 0.1 độ, hỗ trợ phím lên/xuống. Manual §2.3.2.1.1 mô tả dải analog tối thiểu ±45 độ, không khẳng định giới hạn UI tuyệt đối. Catalog/parser giữ kiểu số, validation chặn coarse ngoài bốn mức và fine ngoài range/step. Draft cũ ngoài phạm vi không bị tự ghi đè; cho sửa từng trường, Apply kiểm tra cả hai TX. Regression **5 file, 54/54 test đạt**, TypeScript/production build Next.js 16.2.11 thành công (72/72 trang), diff check đạt. Chưa xác minh deployment/kiểm tra UI production.
-- [2026-09-08] Quality gate đợt power/monitor correlations: **6 file, 61/61 test đạt**, production build Next.js 16.2.11 và TypeScript thành công, sinh 72/72 trang; `git diff --check` đạt. Kiểm tra production chờ Dokploy triển khai commit mới.
-- [2026-09-08] Nối Output Power Scale riêng TX1/TX2 vào công suất sideband và 9960 Hz; RF Level dùng tỷ số carrier power theo dB, giữ baseline. Bổ sung mô hình bốn nhánh RF theo biên độ: mất một nhánh giảm 25% độ điều chế, mất cả bốn về 0; chỉnh riêng SBO/sideband không đổi Carrier Power hoặc RF Level khi giữ TX active. Monitor PreAlarm bật Alert vàng; Alarm từ monitor enable hiện đỏ tại dòng phía trên theo ưu tiên Alarm > Need Backup > LOCAL, độc lập Bypass/voting, không xóa cờ backup. Rà 24 đường calibration Monitor 1/2; chưa tách Notch PreAlarm/Alarm chung field, chưa mở calibration Standby/Test Generator hoặc mô phỏng timer. Regression thêm trường hợp TX1/TX2, branch loss, RF dB, inactive TX và calibration/annunciation; cập nhật kỳ vọng kịch bản 10 W từ công thức cũ sang `29.6 × sqrt(10/70)`. Chưa xác minh deployment/smoke test production; lỗi persistence khi Apply kèm automatic transfer/shutdown vẫn nằm ngoài phạm vi.
-- [2026-09-08] Sửa DVOR 1150A: các trường chỉnh sửa trên Transmitter Configuration > Nominal (audio generator và Ident) cập nhật cùng giá trị cho TX1/TX2 trong một thao tác bản nháp; monitor chỉ tính lại sau Apply (F7). Offsets vẫn riêng từng TX; giữ kiểm tra quyền Local/security và chặn toàn bộ thao tác chung nếu một trường bị khóa bởi kịch bản. Bổ sung regression cho TX1/TX2 on-air, draft/Apply, scenario lock và offsets độc lập: **3 file, 44/44 test đạt**, production build Next.js 16.2.11 thành công (72/72 trang). Dev local chưa có DATABASE_URL/PostgreSQL nên chưa kiểm tra đăng nhập thực tế; người dùng chọn kiểm tra trên production sau deploy, không tiếp tục cài database local. Lỗi persistence khi Apply kèm automatic transfer/shutdown được ghi nhận riêng, chưa sửa trong phạm vi này. Push không đồng nghĩa đã xác minh triển khai hoặc smoke test production.
-- [2026-09-01] Tinh chỉnh trang **Kịch bản** cho giám khảo: đổi tiêu đề thành **Trung tâm quản lý kịch bản**, thay phần hướng dẫn inline bằng nút một chạm mở modal **Cẩm nang quản trị kịch bản**, bỏ các thẻ KPI và làm mềm toàn bộ nút thao tác bằng bo góc lớn hơn. Modal hỗ trợ đóng bằng nút, click nền, phím `Escape`, khóa cuộn nền và focus rõ ràng. Affected focused tests đạt **5 file, 20/20 test**, targeted ESLint đạt và production build Next.js 16.2.11 thành công với **72 route**.
-- [2026-09-01] Chốt repository phát triển mặc định của CNS Simulator là [`nhhaituhpy-hue/cns-simulation`](https://github.com/nhhaituhpy-hue/cns-simulation) → `main`; cấu hình local Git dùng remote `deploy` làm đích push mặc định, giữ `origin` cũ để tương thích.
-- [2026-09-01] Đổi tab quản trị **Tạo kịch bản** thành **Kịch bản** và thay bộ tạo chỉ thị cảnh báo cũ bằng bảng quản lý Scenario Parameters theo từng simulation tại `/authoring`. Admin có thể chọn đúng adapter, import JSON export từ PMDT, kiểm tra schema/version, upsert theo cặp `module_id + scenario_id`, tải lại JSON, xóa hoặc mở thẳng simulator bằng `scenarioId`; dữ liệu được lưu JSONB qua migration `database/migrations/0004_simulator_scenario_parameters.sql` và API server-only. Adapter hiện có: DVOR 1150, DVOR 1150A, DME 1119A và DVOR 220; DME 320/ADS-B được hiển thị rõ là chưa có adapter. Luồng này quản lý Scenario Parameters độc lập, chưa thay thế danh mục scenario legacy trong Exam Set.
-- [2026-09-01] Bổ sung bằng chứng thao tác kỹ thuật cho phiên học viên VOR/DME: ghi login thành công/thất bại, Local/Remote, Bypass, cấu hình stage/Apply, transmitter/delay/command, chuyển màn hình/sidebar và cả lệnh bị PMDT từ chối; mỗi event giữ actor, thời gian, menu path, input an toàn cùng snapshot trước/sau để giải thích cách đưa cảnh báo về trạng thái bình thường. Khi nộp bài, `actionHistory` và `resolution` (SOLVED/IN PROGRESS, elapsed time, final checks, blockers) đi cùng kết quả official exam hoặc submission legacy; journal học viên và màn hình giám khảo hiển thị timeline kỹ thuật, còn điểm/nhận xét chính thức vẫn do giám khảo quyết định. Bằng chứng legacy được lưu/đọc qua các cột JSONB trong migration `0005_submission_action_evidence.sql` và migration Supabase tương ứng. Regression focused đạt **18 file, 122/122 test**, targeted ESLint cho các file tính năng đạt, `npm run typecheck` và production build Next.js 16.2.11 thành công.
-- [2026-09-01] Áp dụng thực tế migration portable `0004_simulator_scenario_parameters.sql` và `0005_submission_action_evidence.sql` vào PostgreSQL 17.11 của Oracle VM rehearsal bằng migration runner có transaction, advisory lock và checksum. Ledger database đã đủ `0001–0005`; bảng Scenario Parameters, các cột `action_history`/`resolution` và constraint liên quan đều đã có, web `mophongcns.hainh.io.vn/api/health` vẫn trả `200` với database `ok`, và chưa có dữ liệu Scenario Parameters nào được import.
-- [2026-09-01] Hoàn thành tài liệu kế hoạch migration Oracle VM/Dokploy tại [`docs/oracle-vm-migration.md`](docs/oracle-vm-migration.md), bao gồm kiến trúc PostgreSQL portable, mô hình users/session, quy trình rehearsal/cutover/rollback, checklist verification và quy tắc vận hành an toàn.
-- [2026-09-01] Tinh gọn giao diện đăng nhập và điều hướng simulator: bỏ hậu tố gợi ý `@attech.com.vn` để ô username nhận đúng tài khoản do quản trị viên cấp; chuyển nút **Quay lại** từ thanh AppShell riêng vào ngay bên trái **Scenario Parameters** trên toolbar của DVOR 1150, DVOR 1150A và DME 1119A. Nút dùng chung giữ browser history, fallback về catalog `/simulator`, đồng bộ kiểu classic PMDT và không xuất hiện trong phiên học viên/authoring; các simulator không có toolbar này tiếp tục dùng back action toàn cục. Targeted UI/auth tests đạt **36/36** và production build Next.js 16.2.11 thành công với **71 route**.
-- [2026-09-01] Khôi phục giao diện `/login` theo thiết kế CNS Simulation Lab ngày 11/08: ảnh nền sân bay `cns-image.webp`, lớp phủ tối, khối nhận diện/hero bên trái và form kính bên phải; giữ nguyên cơ chế xác thực PostgreSQL, khóa tài khoản, đổi mật khẩu và redirect hiện tại. Giao diện responsive bổ sung accessible name, trạng thái focus, nút hiện/ẩn mật khẩu; các chức năng tự đăng ký/quên mật khẩu cũ được thay bằng hướng dẫn liên hệ quản trị viên. Targeted auth tests đạt **3/3** và production build Next.js 16.2.11 thành công với **71 route**.
-- [2026-09-01] Chuẩn hóa đích sau đăng nhập về trang chủ `/` cho cả admin và student; vẫn ưu tiên `nextPath` nội bộ khi người dùng bị chuyển sang login từ một route được bảo vệ, và vẫn bắt buộc đi qua `/change-password` nếu tài khoản còn cờ mật khẩu tạm. Sau khi hoàn tất đổi mật khẩu tạm, người dùng cũng được đưa về trang chủ. Bổ sung regression test cho ba nhánh redirect; targeted auth tests đạt **7/7**, production build Next.js 16.2.11 thành công với **71 route**.
-- [2026-09-01] Bổ sung đổi mật khẩu chủ động sau lần đăng nhập đầu: tên/avatar trên AppShell mở menu tài khoản có **Đổi mật khẩu** và **Đăng xuất**; desktop/mobile dùng chung modal yêu cầu mật khẩu hiện tại, mật khẩu mới và xác nhận, có hiện/ẩn mật khẩu, focus/keyboard semantics và trạng thái lỗi/thành công. Server xác thực lại mật khẩu hiện tại, giữ policy tối thiểu 8 ký tự có chữ + số, từ chối dùng lại mật khẩu cũ, thu hồi toàn bộ session và cấp lại session hiện tại. Targeted auth/layout tests đạt **17/17**; production build Next.js 16.2.11 thành công với **71 route**.
-- [2026-09-01] Hoàn thiện rehearsal chuyển CNS Simulator sang Oracle VM/Dokploy: tạo repo private `nhhaituhpy-hue/cns-simulation` nhánh `main`, Project/Environment Dokploy, PostgreSQL 17 private và hai bind mount `/data/cns-simulator-postgres` + `/data/cns-simulator-storage`. Port Auth/session, scenario API, simulator config và workflow kỳ thi sang PostgreSQL; thêm migration portable `0002`/`0003`, health route và bắt buộc đổi mật khẩu lần đầu. Import/đối soát 21 bảng với **143 bản ghi**, 3 user đúng UUID/username/role, 34 foreign key không orphan; chuyển **18 media / 7.583.122 byte** và xác minh SHA-256/UID 1001. Targeted tests đạt **12/12**, password regression đạt **3/3**, production build Next.js 16.2.11 thành công với **71 route**. Web chưa được mở tại thời điểm ghi log này; Supabase/Vercel nguồn vẫn giữ nguyên để rollback.
-- [2026-09-01] Duyệt và khởi động migration từ Vercel + Supabase sang Oracle VM theo kiến trúc một Dokploy Project/Environment gồm Next.js web và PostgreSQL riêng. Làm sạch API key khỏi kế hoạch, thiết kế `users`/`user_sessions`, bắt buộc đổi mật khẩu tạm lần đầu và ghi rõ phương án thay RLS/RPC Supabase. Triển khai checkpoint nền tảng: thêm `pg`/`@next/env`, PostgreSQL 17 compose cho local, migration runner transaction + checksum + advisory lock, migration `0001_users_and_sessions.sql`, connection pool/transaction helper server-only và tài liệu database. CodeGraph không phát hiện test hiện hữu bị ảnh hưởng; production build Next.js 16.2.11 thành công với 70 route. Chưa chạy migration thực tế vì máy local không có Docker CLI/PostgreSQL/WSL distro; chưa thay luồng Supabase production và chưa thao tác Oracle VM.
-- [2026-09-01] Chuẩn bị di chuyển hosting từ Vercel sang Oracle VM self-hosted: khảo sát codegraph (up to date, 592 files / 7.156 nodes), tạo `.github/copilot-instructions.md` cho GitHub Copilot/ChatGPT hiểu kiến trúc 5 simulator và convention dự án, bật `output: "standalone"` trong `next.config.ts`, tạo `Dockerfile` multi-stage cho ARM64 và `.dockerignore`. Cập nhật README phần Triển khai thêm Oracle VM (Dokploy) là primary và Vercel là legacy.
-- [2026-08-28] Bổ sung header ứng dụng và nút `← Quay lại` dùng browser history cho toàn bộ route chi tiết dưới `/simulator/`, gồm simulator thiết bị, simulator phần mềm và các trang sơ đồ khối; giữ catalog `/simulator` và `/login` theo giao diện riêng. Kiểm tra trực tiếp luồng `/simulator` → simulator → quay lại thành công; focused AppShell tests đạt **12/12** và production build thành công.
-- [2026-08-28] Sửa luồng ôn tập **DVOR 1150 legacy**: `/student/dvor-1150` hiển thị danh sách kịch bản hoặc empty state trước; chọn một bài mới mở `/student/dvor-1150/session?id=...`. Session dùng PMDT Model 1150, căn giữa simulator và đặt panel **Nhật ký học viên** bên trái cùng **Màn hình và thao tác đã ghi nhận** bên phải; bổ sung kiểm thử catalog/empty state và giữ nguyên route riêng `/student/vor` của DVOR 1150A.
-- [2026-08-28] Tách route ôn tập học viên của **DVOR 1150** khỏi DVOR 1150A: thêm `/student/dvor-1150` dùng PMDT Model 1150 ở chế độ `student`, cập nhật manifest `student/review` của module legacy, giữ `/student/vor` riêng cho DVOR 1150A và bổ sung kiểm thử chống trùng route.
-- [2026-08-26] Tạo **DME1119A_Scenario_Manual.pdf** tại `public/simulator_manuals/` (12 trang): hướng dẫn Giám khảo/Học viên tạo scenario từ TST, preset và fault injection, cấu hình success criteria/whitelist, Export/Import JSON, Apply -> IN PROGRESS -> SOLVED, xử lý VSWR/changeover/bypass, Restore/End và cô lập persistence. Tài liệu dùng ảnh chụp trực tiếp simulator DME 1119A bằng trình điều khiển trình duyệt, gồm PMDT SEC3, Scenario Parameters, preset VSWR, HUD IN PROGRESS/SOLVED và End/Restore TST; bản QA được render và kiểm tra trực quan trước khi phát hành.
-- [2026-08-26] Hoàn thiện **DME 1119A Standalone Scenario Parameters** tại `/simulator/dme-1119a`: tám preset deterministic, Import/Export JSON schema v1, Preview, fault-to-monitor derivation, success criteria, student whitelist, Training HUD, Restore Scenario và End/Restore TST. Scenario dùng baseline TST, chỉ tồn tại trong phiên và chặn mọi ghi profile/history; các entry point `/admin/dme`, `/admin/dme/create`, `/admin/dme/edit`, `/student/dme` và `/student/dme/session` chuyển hướng về simulator độc lập nhưng dữ liệu legacy vẫn giữ nguyên. Browser smoke đã kiểm tra Low Output/HPA/Overtemperature; focused DME suite **106/106**, regression mở rộng **134/134**, typecheck, targeted ESLint và production build đều đạt.
-- [2026-08-26] Tạo **DVOR1150A_Scenario_Manual.pdf** tại `public/manuals/`: tài liệu 14 trang A4 hướng dẫn Giám khảo/Học viên tạo scenario từ Đài TEST/TST, bốn preset tích hợp, ma trận Config -> Monitor -> recovery, whitelist tham số học viên, Import/Export JSON schema v1, quy trình Alarm -> F7/nhả Bypass -> `SOLVED`, Restore/F8/End Scenario và checklist xử lý lỗi. Tài liệu sử dụng 9 ảnh chụp trực tiếp từ DVOR 1150A Simulator bằng trình duyệt; toàn bộ 14 trang đã được render bằng Poppler, kiểm tra font tiếng Việt, bố cục, bảng và ảnh trước khi bàn giao.
-- [2026-08-26] Bổ sung bộ **Scenario Parameters** độc lập cho DVOR 1150A tại `/simulator/dvor-1150a`, thay cho việc phụ thuộc luồng VOR author/exam cũ: Giám khảo `admin` có thể tạo/chỉnh baseline toàn bộ cấu hình TST, policy TX/Local/Monitor Bypass, tiêu chí đạt và whitelist recovery control; hỗ trợ Import/Export JSON schema v1, Preview, Training HUD `IN PROGRESS`/`SOLVED`, Restore Scenario và End / Restore TST. Thêm bốn preset nghiệp vụ: suy giảm Carrier + 9960 Hz, suy giảm điều chế 30 Hz, Sideband VSWR Alarm và Carrier VSWR TX1 yêu cầu chuyển TX2. Scenario được cô lập theo phiên, không ghi vào profile lưu; học viên chỉ sửa được control được Giám khảo cho phép, còn monitor limits/calibration/raw values được khóa cả khi stage/Apply và khi đánh giá. Sửa lỗi Turbopack do thiếu export `validateDvorConfig`, lỗi ô số giữ giá trị preset trước và tăng độ tin cậy của nút tải JSON. UAT sau restart bằng tài khoản Giám khảo và PMDT Level 3 đã đạt toàn bộ chu trình JSON Export/Import, Apply → Alarm → khắc phục → F7/nhả Bypass → `SOLVED`, F8/Restore trả baseline và End trả Đài TEST/TST; console không có warning/error. Focused tests đạt **27/27**, `npm run typecheck` và production build Next.js 16.2.11 thành công với 68 route.
-- [2026-08-26] Căn đồng nhất thanh công cụ Scenario nền tối phía trên Simulator DVOR 1150 với khung PMDT tham chiếu bên dưới: đồng bộ chiều rộng frame từ 900 px về 850 px, gồm cả breakpoint màn hình hẹp. Không thay đổi kích thước hoặc hành vi của PMDT.
-- [2026-08-26] Tạo tài liệu **DVOR1150_Simulator_Scenario.pdf** gồm 13 trang hướng dẫn Scenario Parameters: quyền Giám khảo/Học viên, schema JSON v2 và migrate v1, whitelist recovery controls, ma trận Config -> Monitor -> bảo vệ, preset tích hợp, quy trình VSWR Alarm -> SOLVED, F8/End Scenario và checklist. Ảnh minh họa được chụp trực tiếp từ production bằng Chrome trong UAT; PDF được render/kiểm tra trực quan trước khi phát hành. Đưa hai tài liệu theo dõi vào `public/simulator_manuals/`: DVOR1150_Simulator_Scenario.pdf và DVOR220_Simulator_Scenario.pdf.
-- [2026-08-26] Khắc phục các gap an toàn và nghiệp vụ của **DVOR 1150 Scenario Parameters**: phân quyền author theo `role` ứng dụng Supabase (`admin` là Giám khảo, `student` không thấy/không gọi được Scenario Parameters), tách khỏi PMDT SEC3/SEC4; giữ Home PMDT trống và thêm Training HUD ngoài khung PMDT khi có bài đang chạy. Scenario JSON nâng schema v2 (đọc/migrate được v1); Giám khảo chọn whitelist `studentEditableFieldIds` cho từng bài. Trong scenario, chỉ các recovery control này xuất hiện cho học viên; monitor limit, VSWR executive alarm, calibration/offset và các config khác được bảo vệ cả khi stage/Apply lẫn khi đánh giá kết quả. Bổ sung test chống bypass VSWR và luồng khắc phục vật lý; targeted DVOR 1150 tests đạt **13/13**, production build Next.js 16.2.11 thành công. UAT Chrome production với tài khoản Giám khảo đã đạt: template VSWR Alarm → danh sách recovery chỉ còn Sideband 1/2 RF Scale → 200→100% → Apply → nhả Bypass → `LIVE RESULT: SOLVED`; F8 trả baseline 200/200 và End Scenario trả Đài TEST/TST. UAT tiếp với tài khoản Student: trước/sau PMDT login SEC3, toolbar không có Scenario Parameters và menu System chỉ còn Logon RMS, Logoff/Disconnect, Simulation Parameters. Không có lỗi ứng dụng trên console (chỉ có log từ extension Chrome).
-- [2026-08-26] Bổ sung bộ **Scenario Parameters** độc lập cho DVOR 1150 tại `/simulator/dvor-1150`, không thay đổi DVOR 1150A. Giám khảo có thể tạo/chỉnh toàn bộ cấu hình khởi tạo, policy TX/Local/Monitor Bypass và tiêu chí đạt; export/import JSON schema v1; hoặc dùng preset TX1 low Carrier + 9960 Hz, low 30 Hz reference modulation và Sideband VSWR executive alarm. Scenario được cô lập theo phiên: Apply Scenario và mọi hiệu chỉnh PMDT của học viên không ghi vào profile lưu; F8/RMS Restore đưa scenario đang chạy về baseline của bài; End Scenario trả về Default Đài TEST/TST. Bổ sung đánh giá LIVE `IN PROGRESS`/`SOLVED`, preview cảnh báo và coverage lifecycle scenario. Quality gate: `tests/vor/dvor1150-engine.test.ts` **12/12** đạt; production build Next.js 16.2.11 thành công với 68 route.
-- [2026-08-26] Bổ sung `Scenario Parameters` cho MOPIENS DVOR 220 trong Simulator Tools: tạo baseline huấn luyện session-only từ toàn bộ cấu hình TST, RF/30 Hz/9960 Hz, Monitor limits/voting/averaging, VSWR antenna 1–48, nhiệt độ, AC/battery/environment, typed faults và Advanced Raw Monitor. Thêm preset `TX1 Carrier and 9960 Hz Degradation` (Carrier 50 W, RF Level -3,03 dB, 9960 Hz 24%), Preview Normal/Alarm, đánh giá `IN PROGRESS`/`SOLVED`, Import/Export JSON schema v1, `Restore Scenario`, `End Scenario / Restore TST`, Reset về đầu bài và persistence guard không ghi scenario vào profile người dùng. Khóa Profile Save và Transmitter Helper Save trong phiên; raw override được đánh dấu Non-correctable. QA Chrome đạt chu trình Apply → Alarm → PMDT correction 100%/1 W → Normal/Solved → Restore → End, cùng preview VSWR/nhiệt/fault/raw override; console sạch. Targeted DVOR 220 tests đạt **50/50** trên 9 file và production build Next.js 16.2.11 thành công với 68 route.
-- [2026-08-26] Hoàn thiện đợt 3 DVOR 220 theo các màn hình PMDT thực tế trang 1–5: dựng lại Home, Equipment, PDC/CMA/SMA/SYN, Monitor CH.A/CH.B.1/CH.B.2, Self-Test, Power Supply và Environmental với panel thu gọn, limit bar, cặp MON1/MON2 và BITE chi tiết. Nối công suất Carrier/Sideband vào engine: `RF Level = 10 × log10(P/Pnom)`, `AM 9960 Hz = 150 × √(ΣPsideband/Pcarrier)` và đưa power-limit bands vào status CMA/SMA/TX/PDC. Bổ sung Antenna/VSWR Test và Thermal Test trong Simulator Tools. QA trực tiếp bằng Chrome đã đạt các luồng vận hành: chuyển TX1/TX2; tăng/giảm Carrier 90↔110 W; điều chế 30 Hz 29↔31%; điều chế 9960 Hz 29↔31%; VSWR Normal→3.10/2.80 Alarm→Clear; nhiệt CMA 40°C bật quạt, 95°C thermal shutdown, 80°C RF restart và 35°C dừng quạt. Reset trả profile Đài TEST/TST về 30%/30% và RF Level ≈ 0 dB. Targeted tests DVOR 220 đạt **46/46**, ESLint và `git diff --check` đạt, production build Next.js 16.2.11 thành công với 68 route.
-- [2026-08-25] Hoàn thiện đợt 2 DVOR 220: thêm rolling average cố định 100 ms với cửa sổ 2–10 mẫu, trạng thái Stabilizing/Unknown trước đủ N, reset buffer khi reset/changeover/Apply/calibration và chỉ bắt đầu executive delay sau averaged primary alarm; holdoff vẫn tích lũy mẫu nhưng không action. Bổ sung Transmitter Helper tách biệt với Same TX1/TX2, Sideband Same, Sync, Tracking và vòng đời Apply vào RAM/Save setpoint vào Flash/Close discard; Reset hoặc power-cycle nạp lại cấu hình và calibration non-volatile. Thêm migration `trackingEnabled=false` cho profile cũ. Đã sửa lỗi Turbopack parser tại type assertion trong Helper và QA trực tiếp bằng Chrome: Sync 100→90% tạo bốn sideband 1→0,9 W, Close discard, Apply RAM, Reset restore; Change Over hiển thị Stabilizing 1/10 rồi Normal. Targeted tests DVOR 220 đạt **44/44**, production build Next.js 16.2.11 thành công với 68 route, console Chrome không có error và `git diff --check` đạt.
-- [2026-08-25] Triển khai đợt 1 đồng bộ DVOR 220 theo ảnh PMDT Cam Ranh và hướng dẫn hiệu chỉnh: đổi profile mặc định thành Đài TEST/TST, Disable/ẩn Standby Monitor theo profile, tổ chức lại navigation Main/Setup/Maintenance/Flight/History, gom Monitor Certification/Antenna Tests/Automatic Ground Error Check vào Advanced Controls và tách Raw Parameters/Fault Injection/Flight Results/Config Audit sang Simulator Tools ngoài client PMDT. Bổ sung Transmitter Limit, Environmental, Miscellaneous, PDC Calibration; triển khai PDC Power/VSWR factor, MON factor/RF-Level offset, Warning Range, calibration Initialize/Calculate/Save/Close và TX Setpoint auto-compensation giữ true output. Người dùng đã kiểm tra trực tiếp và xác nhận `ok`; targeted tests DVOR 220 đạt **43/43**, production build Next.js 16.2.11 thành công với 68 route, `git diff --check` và CodeGraph đạt.
-- [2026-08-17] Dựng lại và QA DVOR 1150 PMDT theo bộ ảnh khai thác mới: mở rộng khung PMDT, hiệu chỉnh menu cấp 1/2/3 không chồng chéo, các màn hình cấu hình có control tăng/giảm và luồng Local → Bypass → Apply; giữ **System → Simulation Parameters** làm baseline cho Reset (F8) và RMS Config Restore. Hoàn thiện ma trận CONFIG → MONITOR/TX, gồm Output Power hoặc Output Power Scale tăng 10 W/10% làm 9960 Hz Mod tăng xấp xỉ 0,9%, Carrier-Sideband Phase Offset tạo biến thiên phi tuyến có thể lặp lại theo hai chiều, và sidebar biểu diễn đúng trạng thái Main/Antenna/Load/Off. Bỏ DME khỏi sidebar DVOR 1150, sửa key trùng ở RMS A/D Data và QA trực tiếp trên trình duyệt: baseline 30,0%, 110 W/110% là 30,9%, phase +90° là 30,6%, phase -90° là 29,4%; Reset trả phase 0,00°, scale 100,0% và 9960 Hz Mod 30,0%. Quality gate: `tests/vor/dvor1150-engine.test.ts` đạt 11/11, TypeScript và production build Next.js 16.2.11 thành công với 68 route; CodeGraph sync, `git diff --check` và console QA không có error mới.
-- [2026-08-16] Bổ sung hiệu chỉnh Monitor Offsets/Scale Factors cho DVOR 1150A: 12 ô Integral trên Monitor 1/2 nối vào `configDraft` và catalog calibration, Apply cập nhật measurement/status theo từng monitor. Sửa lỗi failover khi calibration của một monitor tạo Alarm: TX standby vẫn được đưa lên Antenna thay vì bị shutdown nhầm; chỉ shutdown khi tất cả monitor enable cùng Alarm và chặn đảo máy lặp lại. Regression test tập trung đạt **38/38**, production build Next.js 16.2.11 thành công với 68 route; `git diff --check` và CodeGraph đều đạt.
-- [2026-08-16] Hoàn thiện logic PMDT cho DVOR 1150, DVOR 1150A và DME 1119A: bật Local là chỉnh/Apply cấu hình trực tiếp, còn Bypass chỉ ngăn automatic transfer nhưng vẫn giữ Alarm; automatic transfer chỉ thực hiện một lần, nếu máy dự phòng cũng Alarm thì tắt cả hai để tránh vòng lặp TX1↔TX2. Đồng bộ Sidebar theo Main logic và đường Antenna thực tế (kịch bản failover hiển thị Main TX1 xanh, OFF TX1 đỏ, Antenna TX2 xanh), đồng thời cải thiện nền sáng cho checkbox/radio. Bổ sung targeted tests cho Local/Bypass, transfer, shutdown và no-loop; 7 file đạt 98/98, production build Next.js 16.2.11 thành công với 68 route, CodeGraph đã sync và `git diff --check` đạt.
-- [2026-08-16] Dọn dữ liệu cấu hình PMDT đã lưu theo `user_id` trong Supabase: cập nhật 4 snapshot user của DVOR 1150A/DME 1119A và 18 bản ghi history, thay toàn bộ chuỗi nhận diện Tuy Hòa/`TUH`/`117X` cũ bằng `TST`; DVOR 1150 không có bản ghi legacy. Thêm migration `202608160001_cleanup_user_pmdt_station_defaults.sql` để các môi trường khác áp dụng cùng quy tắc, giữ nguyên channel/frequency dạng số.
-- [2026-08-16] Chuẩn hóa dữ liệu mặc định nhận diện trạm của PMDT DVOR 1150A và DME 1119A từ Tuy Hòa/`TUH`/`117X` sang `TST`; cập nhật tên trạm, mã Ident, snapshot/fallback giao diện và bỏ logic tự sinh lại tên Tuy Hòa khi đổi kênh. DVOR 1150 đã dùng default tổng quát nên không cần đổi. Quality gate: 6 file test liên quan đạt 67/67; production build Next.js 16.2.11 thành công với 68 route.
-- [2026-08-13] Hiệu chỉnh trang khám phá sơ đồ khối DME 1119A tại `/simulator/dme-1119a/block-diagram` theo manual 571118A-0001 Rev. M: chỉ giữ cấu hình Dual High Power và cabinet Front/Rear; bổ sung Preselector trước LNA trên tuyến thu, tách nhãn Circulator và tinh chỉnh đường tín hiệu/mũi tên để không còn chồng lấn. Dựng lại hai cabinet theo Figure 1-3/Figure 1-4 với đúng tỷ lệ, vị trí LCU, HPA, tám assembly low-power, 1A24/1A25, AC Monitor 1A22, RF/backplane, BCPS và status display 1A26; LCU mặt trước bám Figure 3-54 và toàn bộ hotspot được hiệu chỉnh theo cùng hệ tọa độ SVG. Bổ sung regression test cho topology tuyến thu, hai bề mặt cabinet, mapping assembly/hotspot và thao tác chọn Preselector/LNA. Quality gate: `tests/hardware-diagrams.test.tsx`, `tests/dme/dme1119a-block-diagram-data.test.ts` và `tests/dme/dme1119a-block-diagram.test.tsx` đạt 14/14; production build Next.js 16.2.11 thành công với 68 trang static được tạo.
-- [2026-08-13] Bổ sung trang khám phá sơ đồ khối ADS-B ngoài trời tại `/simulator/ads-b/block-diagram` theo COMSOFT Quadrant Hardware and Installation Guide V1.5: dựng SVG tương tác cho mô hình lắp đặt mast/shelter Figure 20 và topology dẫn xuất từ Figure 2, phân biệt rõ luồng RF, GPS/NMEA timing, LAN/data, AC/DC power và protective ground. Catalog chuẩn hóa tám thiết bị hoặc điểm kết nối gồm antenna 1090 MHz, antenna amplifier tùy chọn, lightning protector được khuyến nghị, GPS Receiver có điều kiện, Quadrant Sensor, nguồn AC tại site, bộ nguồn 24 VDC tùy chọn và LAN switch/router; chọn block hoặc hotspot sẽ đồng bộ highlight và mở hình thiết bị, đúng thứ tự năm connector Sensor, giới hạn chiều dài cáp, ghi chú kỹ thuật cùng nguồn manual. Giữ riêng cấu hình outdoor tổng quát với cấu hình rack indoor Con Son, không công khai ảnh/manual proprietary; bổ sung CTA từ card ADS-B, thao tác chuột/bàn phím, thông báo selection cho assistive technology và reduced-motion. Quality gate: `tests/adsb/block-diagram-data.test.ts`, `tests/adsb/block-diagram.test.tsx` và `tests/layout/home-page.test.tsx` đạt 13/13; production build Next.js 16.2.11 thành công và nhận route mới.
-- [2026-08-13] Bổ sung trang khám phá sơ đồ khối DME 320 tại `/simulator/software/dme-320/block-diagram` theo Technical Manual 320 DME (2022-12-19): dựng cabinet Front/Rear Rev. A có hotspot đồng bộ, giữ đúng hai AC/DC được lắp, và năm sơ đồ tương tác Tổng thể, TX/RF, Monitor, Control, Power. Catalog ánh xạ đầy đủ 78 occurrence cabinet/schematic cho hai transponder, MON1/MON2, nguồn và chuỗi RF; chọn block sẽ mở đúng bề mặt, vị trí LRU, dữ liệu manual và một trong 17 loại faceplate, gồm các assembly RF phía sau. Bổ sung waveform Figure 6-4 dạng WebP local, CTA từ card DME 320, thao tác chuột/bàn phím và ghi chú rõ các xung đột nhãn/part number giữa ảnh cabinet, hình kỹ thuật và phần mô tả của manual. Quality gate: `tests/dme320/block-diagram-data.test.ts` cùng `tests/layout/home-page.test.tsx` đạt 7/7; production build Next.js 16.2.11 thành công và nhận route mới.
-- [2026-08-12] Bổ sung trang khám phá sơ đồ khối DVOR 220 tại `/simulator/software/dvor-220/block-diagram` theo Technical Manual 220 DVOR (2024-03-20): dựng SVG tương tác cho cabinet Front/Rear, ASU và năm sơ đồ Tổng thể, Máy phát & RF, Monitor, ASU, Nguồn & điều khiển; chọn trực tiếp occurrence TX1/TX2 trên sơ đồ sẽ tự chuyển bề mặt và làm sáng đúng LRU, còn chọn cabinet mở faceplate cùng dữ liệu manual. Hoàn thiện catalog các khối LMI/CSP/control, CMA/SMA/SYN/MON/MSG, PDC/PMU/AC-DC, RF/antenna/field monitor; dựng faceplate đúng tỷ lệ theo từng loại và bổ sung 12 waveform gốc từ manual dưới dạng WebP local. Card DVOR 220 có CTA mở trang sơ đồ khối; không công khai manual hoặc tải media lên storage từ xa. Quality gate: targeted tests đạt 6/6, `npm run typecheck` và production build Next.js 16.2.11 thành công với 66/66 route.
-- [2026-08-12] Bổ sung trang khám phá sơ đồ khối DME 1119A tại `/simulator/dme-1119a/block-diagram` theo manual 571118A-0001 Rev. M: dựng SVG cabinet Front/Rear/Side và hai chế độ Figure 1-10/Figure 2-4 từ topology DME dùng chung; chọn trực tiếp block để tự chuyển mặt cabinet và làm sáng đúng LRU riêng cho TX1/TX2. Dựng faceplate tĩnh đúng tỷ lệ cho LCU, HPA, LPA/Synthesizer, RTC, Monitor/Interrogator, RMS, Facilities cùng các assembly nguồn/RF/interface; bổ sung mô tả, chỉ thị, connector, test point và sáu waveform Figure 7-7 đến 7-12. Card DME 1119A có CTA mở trang sơ đồ khối; media dẫn xuất được giữ local, không công khai manual. Đã kiểm tra trực quan desktop/mobile và các ánh xạ HPA1→Front/1A3, LNA→Side/1A8A2, Interface/Ethernet→Rear/1A19; targeted tests đạt 9/9 và production build Next.js 16.2.11 thành công với 65/65 route.
-- [2026-08-12] Bổ sung trang khám phá sơ đồ khối DVOR 1150 tại `/simulator/dvor-1150/block-diagram` theo Figure 1-4, Figure 1-5 và Figure 2-2 của manual Rev. F: cabinet điện tử và commutator rack dựng bằng SVG có hotspot, chọn trực tiếp block để làm sáng đúng vị trí module, hiển thị faceplate/dữ liệu bảo dưỡng và waveform Chapter 7. Hoàn thiện chuỗi Field Monitor Antenna → Field Detector → Monitor A8/A24 → SCIP/RMS; sửa active top navigation để chỉ Simulator sáng; bỏ hàng điều hướng thiết bị khỏi trang để giao diện gọn; mở rộng cột sơ đồ, tăng cỡ chữ và dời nhãn khỏi đường tín hiệu/mũi tên. Media đang dùng asset local có provenance manual; chưa tải manual hoặc media lên storage công khai. Đã kiểm tra trực quan desktop/breakpoint hẹp, console không lỗi; `tests/layout/app-shell.test.tsx` đạt 9/9 và production build Next.js 16.2.11 thành công với 64/64 route.
-- [2026-08-12] Hoàn thiện phần chi tiết phần cứng của trang sơ đồ khối DVOR 1150A: dựng lại bằng SVG/React các faceplate BCPS, Carrier Amplifier, Monitor CCA, RMS, Synthesizer, Audio Generator, RF Monitor và Sideband theo Figure 3-64 đến Figure 3-73, giữ tỷ lệ riêng của từng card, nhãn/điểm đo/connector/part number và loại bỏ callout ngoài panel của RMS. Thay thanh VOLUME trên LCU bằng núm vặn kim loại nhưng giữ nguyên input range và hành vi. Bổ sung skill tái sử dụng `skills/build-simulator-block-diagrams` gồm workflow, tài liệu tham chiếu và script render manual/kiểm kê ảnh. Đã kiểm tra trực quan desktop/mobile, console không lỗi, skill qua `quick_validate` và production build Next.js 16.2.11 thành công với 63/63 route.
-- [2026-08-12] Bổ sung trang khám phá sơ đồ khối DVOR 1150A tại `/simulator/dvor-1150a/block-diagram`: liên kết từ thẻ simulator, cabinet trước/sau có hotspot đồng bộ với Figure 2-2/2-3, hiển thị vị trí cụm đang chọn và chi tiết module theo manual. Dựng lại LCU dạng HTML/CSS với logic MAIN/ANTENNA/OFF đã xác nhận; rà lại điện áp Synthesizer và Sideband; bổ sung waveform đo thực tế cho Sideband TP2/TP8, Monitor J3/TEST và Carrier Amplifier P1 CSB Sample dưới dạng thumbnail/lightbox. Chuẩn hóa bề rộng rear cabinet theo front cabinet bằng phép biến đổi hình học dùng chung cho ảnh và hotspot, giữ nguyên topology kỹ thuật. Đã kiểm tra trực tiếp desktop/mobile, chuyển tab, hotspot, lightbox/Escape và console; bỏ qua test/build vì đây là thay đổi UI tĩnh theo pipeline dự án.
-- [2026-08-11] Bổ sung CTA nhỏ **Mở simulator** ở giữa mỗi thẻ khả dụng trong carousel trang chủ; thẻ chưa sẵn sàng hiển thị trạng thái **Đang hoàn thiện** và không tạo liên kết rỗng. Tách vùng chọn thẻ và CTA để giữ HTML/accessibility hợp lệ, đồng thời bảo toàn thao tác kéo/xoay carousel. Khắc phục lỗi `Unexpected token '<'` khi mở simulator bằng cách loại `/api/*` khỏi Proxy, giúp Route Handler trả JSON trực tiếp thay vì trang 404 HTML. Cập nhật `tests/layout/home-page.test.tsx` theo carousel và CTA hiện tại; targeted test đạt 2/2, production build Next.js 16.2.11 đạt (62/62 route).
-- [2026-08-11] Đồng bộ trang `/login` với nhận diện tối của CNS Simulation Lab: logo ATTECH, nền CNS, panel kính gọn và các form Đăng nhập, Đăng ký, Quên mật khẩu, OTP, Đặt mật khẩu mới theo phong cách tối giản. Form đăng ký kiểm tra email ATTECH phía server khi rời ô nhập và kiểm tra lại khi gửi form; email đã tồn tại hiển thị liên kết trực tiếp đến Quên mật khẩu. Bổ sung test cho email trùng. Quality gate: `tests/auth/login-actions.test.ts` 3/3 đạt, production build Next.js 16.2.11 đạt (62/62 route).
-- [2026-08-11] Thiết kế lại trang chủ **CNS Simulation Lab** theo hướng landing page tối, nhận diện ATTECH: menu ngang được căn giữa trên header, dark mode là mặc định, hero CBTA rút gọn và thêm trang `/about`. Thay danh sách thiết bị bằng carousel 360° cho 8 simulator, hỗ trợ kéo/lăn chuột/phím mũi tên mà không cuộn trang; thẻ đang chọn nổi bật và đồng bộ ảnh catalogue xuống phần mô tả chi tiết. Dùng cùng bộ icon cho tab Simulator và Ôn tập. Sáu ảnh catalogue được import tĩnh để Next.js tạo URL content-hash, giúp thay ảnh cùng tên nhận bản mới sau HMR/refresh thay vì giữ cache optimizer cũ. Production build Next.js 16.2.11 đạt (62/62 route).
-- [2026-08-10] Tối ưu correlation engine 5 simulator: DVOR 1150A nối Voice Modulation → Deviation, Single/Dual TX/monitor, automatic transfer khi nhả Bypass và giữ station IDENT khi TX2 takeover; DVOR 1150 giữ invariant On-Air/Load và loại Monitor 2 khỏi voting trong Single Monitor; DME 1119A loại monitor bypass khỏi transfer vote; DVOR 220 khởi tạo/cô lập đúng Single Equipment và standby monitor; DME 320 tự rebase giới hạn phụ thuộc channel. Ghi backlog RF/calibration chưa có specification vào `TODO.md`. Quality gate: 62/62 targeted tests, `npm run typecheck` và `npm run build` đạt.
-- [2026-08-10] Rà soát và bổ sung chương kiến trúc/ma trận CONFIG → DERIVED theo code as-built: registry/route/component/store/engine/snapshot, lifecycle legacy và MOPIENS, ma trận bốn tầng source → formula → measurement → alarm/action cho DVOR 1150A, DVOR 1150, DME 1119A, DVOR 220 và DME 320; ghi rõ thứ tự override/fault, invariant, phạm vi từng TX/Monitor và các field hiện mới validation/display hoặc chưa nối automatic action.
-- [2026-08-10] Bổ sung Parameter Change history cho DVOR 1150A, DVOR 1150, DVOR 220, DME 1119A và DME 320: ghi từng field thay đổi sau Apply rồi Backup/Profile Save, hydrate lại theo application user từ `user_simulator_config_history`, bổ sung màn hình Parameter Change cho MOPIENS và sửa layout bảng 5 cột của DVOR 1150A. ADS-B không hiển thị màn hình này. Quality gate: 188/188 test, `npm run typecheck` và `npm run build` đạt.
-- [2026-08-10] Mở rộng persistence cấu hình theo user ID cho các simulator DVOR 1150, DVOR 220, DME 320 và ADS-B. Supabase bổ sung `backup_config`, RPC ghi `apply`/`restore`/`backup`/`flash-save`, revision/history; frontend hydrate khi mở simulator và lưu sau Apply, Backup/Restore, Profile Save hoặc Power-cycle. Migration `202608100002_extend_simulator_config_backup.sql` đã được áp dụng lên remote Supabase. Đồng thời sửa route recovery password để POST Server Action `/login` không bị proxy redirect thành `307`.
-- [2026-08-10] Bổ sung **System → Simulation Parameters...** cho MOPIENS 220 DVOR và 320 DME: chọn Monitor/Channel, chỉnh raw measurement values, Apply và Reset to Defaults. DVOR 220 thêm measurement override vào engine; DME 320 tái sử dụng override hiện có và xóa override khi reboot. Tính năng chưa lưu persistence theo yêu cầu để chờ triển khai đồng bộ toàn bộ simulator. Test ảnh hưởng trực tiếp: **27/27 đạt**; `npm run build` thành công.
-- [2026-08-10] Căn giữa lại các trang PMDT `/simulator/dvor-1150a` và `/simulator/dme-1119a` theo DVOR 1150; tách `/simulator/ads-b` khỏi AppShell, đặt terminal trong trang độc lập có khung căn giữa và điều chỉnh chiều cao khi không còn navigation chung. Test `tests/layout/app-shell.test.tsx`: **9/9 đạt**; `npm run build` thành công.
-- [2026-08-10] Tinh chỉnh trang chủ và tab `Simulator`: đưa `CNS Simulation Lab` lên header, rút gọn mô tả, thay khu vực mô phỏng trên trang chủ bằng 8 thẻ icon nhỏ có liên kết trực tiếp đến simulator tương ứng, đồng thời dùng ảnh trong `public/images/simulator-icons` cho cả thẻ trang chủ và catalog Simulator với kích thước phù hợp. Giữ nguyên registry, trạng thái và route của từng module. Cập nhật test layout theo dashboard mới; `npm run typecheck`, production build và targeted layout tests đạt `13/13`.
-- [2026-08-10] Khắc phục các lỗi hiển thị chung của shell MOPIENS PMDT trên `/simulator/software/dvor-220` và `/simulator/software/dme-320`: giữ focus đúng ô Password khi nhập, hiển thị brand/title bar không bị bóp, sửa cột icon rỗng để label sidebar không còn thành `H...`/`E...`, và tách selector icon của các section đáy để `Maintenance`, `History Log`, `Administrator Logout` không bị cắt. Test trực tiếp `tests/mopiens-pmdt/presentation.test.tsx`: **8/8 đạt**; không chạy build vì đây là thay đổi UI/CSS nhỏ.
-- [2026-08-10] Hoàn thiện hai simulator MOPIENS 220 DVOR và 320 DME tại `/simulator/software/dvor-220` và `/simulator/software/dme-320`: PMDT/LMI dùng chung state thiết bị, security Level 0–3, Local/REM/MAINT, Draft/Running/Profile, dual transmitter/transponder routing, monitor voting, timed alarm/changeover/shutdown, power/environment, calibration/certification, fault injection và history. DME bổ sung BITE Monitor Self-Test cùng Figure 4-114 Squitter/IDENT/RF Loopback/Spacing; sửa shutdown cause để thermal restart không hồi sinh TX bị monitor khóa. Hai engine MOPIENS tách hoàn toàn khỏi SELEX. Quality gate: 21 file, 103/103 test, targeted ESLint, typecheck và production build đạt; HTTP smoke check hai route trả 200. Browser backend không khả dụng nên visual QA desktop/narrow được ghi là bước xác nhận thủ công còn lại.
-- [2026-08-09] Xây dựng DVOR 1150 Simulator độc lập theo mục 3.4 của `doc/DVOR1150/DVOR 1150.pdf`: bổ sung route `/simulator/dvor-1150`, PMDT shell/sidebar/menu/login, RMS/Monitor/Transmitter/Diagnostics core, state/config engine riêng, derived CONFIG → MONITOR, chuyển TX1/TX2, Integral Monitor Bypass, Apply/Need Backup/Config Backup/Restore và Reset (F8). Đồng hồ chạy theo thời gian thực; pre-login che Connected/tham số/đèn trạng thái; menu nhiều cấp mở sang phải. Quality gate trực tiếp: 15/15 test, `npm run typecheck`, `npm run build` đạt.
-- [2026-08-09] Rà soát QA theo các mục 3.4.2.3.1, 3.4.2.7, 3.4.2.10 và 3.4.2.16 của manual Model 1150: khóa mọi control cấu hình và Apply khi chưa bật Integral Monitor Bypass; hiển thị lỗi Apply; cho phép Output Power mô phỏng đến 250 W để phục vụ kịch bản huấn luyện; nối Nominal Output Power với Carrier, SBO/sideband, RF Level và nối Azimuth/Voice/Reference với monitor. Kiểm tra lại đạt 15/15 test, `npm run typecheck` và `npm run build`.
-- [2026-08-09] Hoàn thiện luồng chỉnh sửa CONFIG trực tiếp trên các màn hình DME 1119A: giá trị có thể xoá/nhập lại, stage vào `configDraft`, Apply (F7) áp dụng và phát sinh Need Backup. Bổ sung Reset (F8) khôi phục factory default tương tự DVOR, còn RMS > Config Restore khôi phục bản Config Backup; cả hai thao tác khôi phục đều xoá Need Backup.
-- [2026-08-09] Hoàn thiện mapping CONFIG → MONITOR cho DME 1119A theo `doc/DME1119A/1119A-0001M.pdf`: channel Table 9-5, delay/spacing integrity, PRF/dead-time/SDES-LDES, propagation, PA/ident, monitor offsets/ERP/VSWR và voting/transfer. Tách độc lập `TX1 Power Output Scale`/`TX2 Power Output Scale`, kiểm tra Apply/Need Backup/Config Backup và transfer sau khi đổi từng máy; giữ nguyên engine DVOR 1150A.
-- [2026-07-20] Hoàn thành tích hợp toàn bộ các màn hình PMDT của VOR và DME còn thiếu theo tài liệu `PMDT Capture.docx`.
-- [2026-07-20] Khắc phục lỗi crash runtime trên trình duyệt khi giám khảo nhấn "Áp dụng" (Apply) ghi đè trị đo lường bằng cách bổ sung metadata data attributes và lập trình phòng thủ `Number(value).toFixed(...)`.
-- [2026-07-20] Tinh gọn lựa chọn màu/trạng thái sự cố trong Author Panel của VOR và DME chỉ còn: Giữ nguyên, Màu xanh, Màu vàng, Màu đỏ, Màu xám. Tích hợp bộ map tự động thông minh trong Store giúp tương thích ngược hoàn toàn và loại bỏ khả năng lỗi crash.
-- [2026-07-20] Xử lý triệt để lỗi hiển thị checkbox bị mờ xám đè màu (General Alerts, Config Layout...) bằng cách dùng `readOnly` + `pointer-events-none` thay thế cho `disabled` và áp dụng CSS dynamic accent color / text color đồng bộ theo trạng thái sự cố.
-- [2026-07-20] Cập nhật giao diện danh sách kịch bản VOR và DME trên Dashboard Giám khảo: Loại bỏ thông tin số lượng cảnh báo PMDT và thay thế bằng hiển thị số lượng bước kiểm tra PMDT, số lượng khối phần cứng gặp sự cố, cùng ngày tạo kịch bản được định dạng (`vi-VN`).
-- [2026-07-20] Phát triển tính năng "In kết quả" bằng biểu tượng máy in tại danh sách thí sinh: Tích hợp Server Action phân tích bài làm (checkpoint VOR/DME, lệnh terminal ADS-B, phần cứng bị sự cố), thiết kế giao diện in ấn biểu mẫu hành chính A4 chuẩn có khu vực ký tên và dùng CSS `@media print` để ẩn phần mềm, xuất bản trang in vật lý đẹp mắt.
-- [2026-07-20] Tối ưu hóa in ấn kết quả thi: Ẩn hoàn toàn tiêu đề trang (`ExamPageHeader`), thanh sidebar và thanh top-header của ứng dụng bằng các quy tắc `@media print` trong `app-shell.tsx` và `shared.tsx`. Khắc phục lỗi nhảy trang trắng thứ hai bằng cách loại bỏ các thuộc tính chiều cao cứng (`min-h-[297mm]`) và hạn chế đệm padding dư thừa. Loại bỏ các đường kẻ viền phân tách không cần thiết, thu gọn khoảng cách dòng kẻ quốc hiệu sát lên 50%, thiết lập font chữ Times New Roman (size 12) và lùi lề trái phần thân kết quả thêm 1cm. Đồng thời, tinh chỉnh cỡ chữ phần tên công ty (`11pt`) và tên nước (`11.5pt`) kết hợp `whitespace-nowrap` giúp tiêu đề nằm gọn gàng trên một dòng, không bị ngắt dòng. Bổ sung mục hiển thị văn bản trả lời chẩn đoán của thí sinh (Vị trí / sự cố nghi ngờ, Căn cứ chẩn đoán, Hướng khắc phục) trực tiếp từ database nộp bài. Khắc phục triệt để lỗi in lọt chữ "Chuyển đến nội dung chính" và cấu hình `break-inside: avoid` cho khu vực chữ ký để không bị cắt rời trang.
-- [2026-07-20] Tinh chỉnh Custom Developer Workflow trong `AGENTS.md`: Cho phép bỏ qua chạy toàn bộ bộ test hoặc build đối với các chỉnh sửa giao diện/CSS tĩnh nhỏ nhằm tiết kiệm tài nguyên và thời gian, chỉ tập trung chạy các file test bị ảnh hưởng trực tiếp khi thay đổi logic.
-- [2026-07-20] Mọi kiểm tra TypeScript, Linting và Production Build đều vượt qua thành công 100%. Đã commit và push code lên repository.
-- [2026-07-21] Tinh chỉnh hiệu ứng đăng nhập thành công: Chỉnh thời gian xuất hiện (fade-in 0.5s), thời gian hiển thị (1.5s), loại bỏ fade-out để tránh lộ trang đăng nhập cũ. Tích hợp `router.prefetch` để tải ngầm trang chủ. Đồng thời sửa lỗi chữ nhảy bị đứng yên ở môi trường production bằng cách khai báo rõ `initial={{ y: 0 }}` cho Framer Motion.
-- [2026-07-23] Bổ sung trình giả lập ADS-B chuẩn tại `/admin/ads-b/simulator`, hỗ trợ đăng nhập `sysadmin`/`maintenance`, tái sử dụng chung terminal engine với bài thi và giữ bộ dữ liệu chuẩn của Admin độc lập với working copy lưu trong cache trình duyệt của từng thí sinh.
-- [2026-07-23] Tích hợp 12 kịch bản thực hành ADS-B Nội Bài; mở rộng workflow terminal, dữ liệu cảm biến, menu SA/MA và các màn hình kết quả theo tài liệu tham chiếu, gồm cấu hình hệ thống đầy đủ, trạng thái thiết bị, Surveillance Clients 20 dòng, thống kê client và Customisation ở Operational Mode.
-- [2026-07-23] Chuẩn hóa giao diện terminal một màu, sửa luồng khôi phục Action Builder và cập nhật kiểm thử theo đặc tả mới. Kết quả xác nhận: 54 test liên quan vượt qua và `npm run build` thành công với Next.js 16.2.10.
-- [2026-07-23] Hoàn thiện engine ADS-B theo mode: bổ sung menu System Statistics, Surveillance Clients, Customisation và End-to-End Test theo dữ liệu mẫu; tách rõ giao diện Operational/Maintenance và giữ kết quả thay đổi trong working copy của phiên thí sinh.
-- [2026-07-23] Hoàn thiện bài 6-8: cấu hình IP có bước đăng nhập lại bằng IP mới và xác nhận; đổi tên máy thu; cấu hình SAC/SIC với toàn bộ danh sách UAP CAT21 trước dấu nhắc nhập.
-- [2026-07-23] Cho phép chuyển `sysadmin` ↔ `maintenance` trong cùng phiên terminal. Lệnh `X` lưu trạng thái thiết bị rồi trở về `login:`, trong khi mode, IP, tên máy thu và SAC/SIC tiếp tục được giữ đến khi khởi động lại hoặc nộp bài.
-- [2026-07-23] Kiểm tra phiên bản ổn định ADS-B: 58 test trực tiếp vượt qua và production build hoàn tất thành công với Next.js 16.2.10.
-- [2026-07-23] Hoàn thiện bài 9-12 theo menu Quadrant thực tế: cấu hình Surveillance Client 20 dòng với UDP/TCP và loại bản tin; xuất cấu hình qua SCP; đặt ngưỡng RF End-to-End; lấy tọa độ Actual Position từ GPS Nội Bài (`21.212983`, `105.831922`, `29.900000`). Các bài đều kết thúc bằng việc đưa máy thu từ Maintenance về Operational.
-- [2026-07-23] Bổ sung bài 13 xử lý lỗi xuất/nhập cấu hình bằng `Reset SSH Known Hosts`; mở rộng quy tắc seed để tự đồng bộ đủ 13 bài ADS-B vào dữ liệu hiện có mà không ghi đè kịch bản tự tạo.
-- [2026-07-23] Chuẩn hóa menu `sysadmin` theo Operational/Maintenance, menu Configuration Import/Export, Configure End-to-End và General Settings của tài khoản `maintenance`; mọi thay đổi cấu hình tiếp tục được cô lập trong cache phiên thí sinh.
-- [2026-07-23] Xác minh mốc bài 9-13: 57 test liên quan trực tiếp ở terminal engine, terminal templates và scenario store vượt qua; `npm run build` hoàn tất thành công với 40 route trên Next.js 16.2.10.
-- [2026-07-23] Gỡ bỏ tích hợp Understand Anything khỏi dự án: xóa dữ liệu phân tích `.ua` và loại bỏ workflow liên quan khỏi `AGENTS.md` để giảm thời gian xử lý và mức sử dụng token.
-- [2026-07-23] Khởi tạo CodeGraph cho 332 file nguồn, nâng cấp CLI lên `1.5.0` và bổ sung workflow `status → explore/impact → kiểm tra source → affected → sync` trong `AGENTS.md`. Database index được giữ cục bộ và loại khỏi Git.
-- [2026-07-24] Đồng bộ bước 4/5 của trình tạo kịch bản ADS-B với engine mới: phiên đầu mặc định ở Operational Mode, cho phép `0/RETURN` quay lại menu sau khi đổi mode, cho phép `X` đăng xuất và chuyển `sysadmin` ↔ `maintenance` mà vẫn giữ trạng thái máy thu, đồng thời replay được đáp án qua nhiều tài khoản.
-- [2026-07-24] Action Builder sử dụng đúng data profile của sensor mục tiêu nên terminal hiển thị chính xác version Nội Bài `1-14-1` hoặc version tùy chỉnh ở bước 2. Kết quả xác nhận cuối: toàn bộ 235 test vượt qua, production build thành công với 40 route trên Next.js 16.2.11 và `npm audit --omit=dev` không còn lỗ hổng; PostCSS/sharp được khóa ở phiên bản đã vá trong phạm vi dependency của Next.
-- [2026-08-04] Nâng cấp hệ thống theme (Theme Switcher, Inline Script chống FOUC), tinh chỉnh App Shell layout, tối ưu giao diện Dashboard/QCMS/Exam và tái cấu trúc các module phần mềm (`src/modules/`, `/software/`). Kiểm tra TypeScript và build tĩnh 63/63 trang thành công 100%.
-- [2026-08-04] Thiết lập cấu hình SSH Key độc lập (`id_ed25519_hainokinguyen`) cho repository `hainokinguyen-coder/cns-simulator.git`, kiểm tra kết nối SSH thành công và đã push toàn bộ mã nguồn lên branch `main` của GitHub.
