@@ -1,6 +1,8 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { useStore } from "zustand";
 import { Dvor220ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
@@ -123,6 +125,7 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
   const [activeSectionId, setActiveSectionId] = useState("main");
   const [activeScreenId, setActiveScreenId] = useState<Dvor220ScreenId>("home");
   const [openTabs, setOpenTabs] = useState<Dvor220ScreenId[]>(["home"]);
+  const router = useRouter();
   const [activeDialog, setActiveDialog] = useState<Dvor220DialogId | null>(null);
   const [connectionOpen, setConnectionOpen] = useState(true);
   const [selectedProfileId, setSelectedProfileId] = useState(connectionProfiles[0].id);
@@ -366,6 +369,16 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
       </Suspense>
       <Dvor220ConfigPersistenceBoundary store={store} />
       <section className={styles.simulatorTools} aria-label="Simulator Tools">
+        <button
+          type="button"
+          className={styles.simulatorBackButton}
+          onClick={() => router.push("/")}
+          aria-label="Quay lại trang chủ"
+          title="Quay lại trang chủ"
+        >
+          <ArrowLeft aria-hidden size={12} weight="bold" />
+          <span>Quay lại</span>
+        </button>
         <div className={styles.simulatorToolsCluster}>
           <button
             type="button"
