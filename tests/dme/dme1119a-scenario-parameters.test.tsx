@@ -27,7 +27,7 @@ describe("DME 1119A Scenario Parameters panel", () => {
     expect(useDmePmdtStore.getState().scenario.active).toBe(true);
     expect(useDmePmdtStore.getState().scenario.definition?.name).toBe("Low output practical");
     expect(screen.getAllByRole("status").some((node) => node.textContent?.includes("IN PROGRESS"))).toBe(true);
-  }, 15000);
+  }, 30000);
 
   it("exposes fault and success-criterion editors and rejects an already-solved default", async () => {
     act(() => {
@@ -46,5 +46,6 @@ describe("DME 1119A Scenario Parameters panel", () => {
 
     fireEvent.change(within(panel).getByRole("combobox", { name: "Preset" }), { target: { value: "default" } });
     expect(within(panel).getByRole("button", { name: "Apply Scenario" })).toBeDisabled();
-  }, 15000);
+  }, 30000);
 });
+

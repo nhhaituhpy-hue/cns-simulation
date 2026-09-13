@@ -22,6 +22,8 @@ function formatLimitValue(parameter: string, value: number): string {
 }
 
 function ReadOnlyValue({ fieldId, value, unit = "", prefix = "", digits, configFieldId }: { fieldId: string; value: number; unit?: string; prefix?: string; digits?: number; configFieldId?: string }) {
+  const overrides = useVorPmdtStore((state) => state.overrides);
+
   if (configFieldId) {
     return (
       <span className="pmdt-alarm-value" data-vor-field-id={fieldId}>
@@ -31,7 +33,6 @@ function ReadOnlyValue({ fieldId, value, unit = "", prefix = "", digits, configF
       </span>
     );
   }
-  const overrides = useVorPmdtStore((state) => state.overrides);
   const resolved = resolveVorField(value, fieldId, overrides);
   const display = digits === undefined ? String(resolved) : Number(resolved).toFixed(digits);
 
@@ -45,12 +46,14 @@ function ReadOnlyValue({ fieldId, value, unit = "", prefix = "", digits, configF
 }
 
 function ReadOnlyCheck({ fieldId, checked, configFieldId }: { fieldId: string; checked: boolean; configFieldId?: string }) {
+  const overrides = useVorPmdtStore((state) => state.overrides);
+
   if (configFieldId) {
     return <PmdtConfigControl displayFieldId={fieldId} configFieldId={configFieldId} type="boolean" className="pmdt-alarm-checkbox" />;
   }
-  const overrides = useVorPmdtStore((state) => state.overrides);
   return <input aria-label={fieldId} type="checkbox" disabled checked={resolveVorField(checked, fieldId, overrides)} />;
 }
+
 
 export function MonitorAlarmLimits() {
   const data = useVorPmdtStore((state) => state.data);

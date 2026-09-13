@@ -63,6 +63,7 @@ function ConfigInput({
   type?: string;
   className?: string;
 }) {
+  const overrides = useVorPmdtStore((state) => state.overrides);
   const configFieldId = rmsConfigFieldMap[fieldId];
   if (configFieldId) {
     return (
@@ -75,7 +76,6 @@ function ConfigInput({
     );
   }
 
-  const overrides = useVorPmdtStore((state) => state.overrides);
   const resolved = resolveVorField(value, fieldId, overrides);
 
   if (type === "checkbox") {

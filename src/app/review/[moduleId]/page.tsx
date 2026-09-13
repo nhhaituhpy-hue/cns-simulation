@@ -13,13 +13,14 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: ReviewModulePageProps): Promise<Metadata> {
   const { moduleId } = await params;
-  const module = getOperationsSoftwareModule(moduleId);
-  return { title: module ? `Ôn tập ${module.shortName}` : "Module không tồn tại" };
+  const softwareModule = getOperationsSoftwareModule(moduleId);
+  return { title: softwareModule ? `Ôn tập ${softwareModule.shortName}` : "Module không tồn tại" };
 }
 
 export default async function ReviewModulePage({ params }: ReviewModulePageProps) {
   const { moduleId } = await params;
-  const module = getOperationsSoftwareModule(moduleId);
-  if (!module) notFound();
-  return <TrainingModulePlaceholder module={module} mode="review" />;
+  const softwareModule = getOperationsSoftwareModule(moduleId);
+  if (!softwareModule) notFound();
+  return <TrainingModulePlaceholder module={softwareModule} mode="review" />;
 }
+

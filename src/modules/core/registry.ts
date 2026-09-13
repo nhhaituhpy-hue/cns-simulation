@@ -59,20 +59,21 @@ export function getSimulatorModule(moduleId: string): SimulatorModuleDefinition 
 export function getDeviceSimulatorModule(
   moduleId: DeviceSimulatorModuleId,
 ): (typeof DEVICE_SIMULATOR_MODULES)[number] {
-  const module = modulesById.get(moduleId);
-  if (!module || module.category !== "device") {
+  const foundModule = modulesById.get(moduleId);
+  if (!foundModule || foundModule.category !== "device") {
     throw new Error(`Unknown device simulator module: ${moduleId}`);
   }
-  return module as (typeof DEVICE_SIMULATOR_MODULES)[number];
+  return foundModule as (typeof DEVICE_SIMULATOR_MODULES)[number];
 }
 
 export function getDeviceModuleByLegacyId(
   legacyId: LegacyCnsModuleId,
 ): (typeof DEVICE_SIMULATOR_MODULES)[number] {
-  const module = devicesByLegacyId.get(legacyId);
-  if (!module) throw new Error(`Unknown legacy CNS module: ${legacyId}`);
-  return module;
+  const foundModule = devicesByLegacyId.get(legacyId);
+  if (!foundModule) throw new Error(`Unknown legacy CNS module: ${legacyId}`);
+  return foundModule;
 }
+
 
 export function isOperationsSoftwareModuleId(
   moduleId: string,
