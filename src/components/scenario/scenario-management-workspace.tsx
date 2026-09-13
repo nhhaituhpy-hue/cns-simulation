@@ -102,7 +102,6 @@ export function ScenarioManagementWorkspace() {
   useEffect(() => {
     // Initial API hydration is an external synchronization, so the state update
     // intentionally happens from the async loader rather than during render.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadScenarios();
   }, []);
 

@@ -161,11 +161,6 @@ export function PmdtSidebar() {
   const alert = resolveVorField(data.alert, "alert", overrides);
   const alertColor = resolveVorStatus(alert ? "yellow" : "gray", "alert", overrides);
   const localState = displayInteractiveField("local", data.local, "yellow");
-  const bypassState = displayInteractiveField(
-    "monitorIntegral.bypass",
-    data.monitorIntegral.bypass,
-    "yellow",
-  );
   // Main selection is a transmitter transfer command. It is available to
   // SEC3/SEC4 without forcing the maintenance Local/Bypass state first.
   const canOperate = securityLevel >= 3;

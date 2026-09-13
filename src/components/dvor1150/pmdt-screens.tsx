@@ -62,7 +62,7 @@ const parameterOrder: readonly Dvor1150MonitorParameter[] = [
 ];
 
 const alarmBands = ["alarmLow", "preAlarmLow", "nominal", "preAlarmHigh", "alarmHigh"] as const;
-type AlarmBand = (typeof alarmBands)[number];
+// alarmBands array is used directly; no separate type alias needed
 
 function statusClass(indicator: Dvor1150IndicatorColor): string {
   return `dvor1150-status-cell--${indicator}`;
@@ -282,7 +282,6 @@ function Dvor1150CertificationResults() {
 }
 
 function Dvor1150NotchMonitor() {
-  const active = useDvor1150PmdtStore((state) => state.activeView);
   const data = useDvor1150PmdtStore((state) => state.derived.data);
   const executeCommand = useDvor1150PmdtStore((state) => state.executeCommand);
   const config = useDvor1150PmdtStore((state) => state.configDraft);

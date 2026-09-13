@@ -80,6 +80,7 @@ export function AdsbSimulatorLab() {
       cancelled = true;
       setPersistenceReady(false);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- individual terminal methods listed explicitly
   }, [terminal.initialize, terminal.getPersistentState]);
 
   useEffect(() => {
@@ -108,6 +109,7 @@ export function AdsbSimulatorLab() {
         console.error("ADS-B configuration persistence failed:", error);
         setPersistenceStatus("error");
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- individual terminal properties listed explicitly
   }, [
     persistenceReady,
     terminal.authPhase,

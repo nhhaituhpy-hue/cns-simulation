@@ -1,32 +1,12 @@
 "use client";
 
 import type { DmeIndicatorColor, DmeViewId } from "@/lib/dme-types";
-import type { DmeDualValueRow } from "@/lib/dme-types";
 import { formatDmeFrequency, getDmeStationChannelAllocation } from "@/lib/dme1119a";
 import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
 import { PmdtToolbar } from "../pmdt-toolbar";
 import { DmeIndicator, DmeValueCell, ScreenTabs } from "./screen-primitives";
 
 type DetailTab = "integral" | "standby" | "maintenance" | "status";
-
-const detailProfiles: Record<1 | 2, Record<"integral" | "standby", DmeDualValueRow[]>> = {
-  1: {
-    integral: [
-      ["Delay", "49.99", "normal", "us"], ["Spacing", "11.98", "normal", "us"], ["Tx Power", "1014", "normal", "Watts"], ["ERP", "0.0", "normal", "dB"], ["Efficiency", "100.0", "normal", "%"], ["PRF", "804", "normal", "ppps"], ["Tx Frequency", "1203.996", "gray", "MHz"], ["Tx Frequency Error", "-2", "normal", "ppm"], ["Rx LO Frequency", "1015.988", "gray", "MHz"], ["Rx LO Frequency Error", "-1", "normal", "ppm"], ["Rx Frequency", "1140.988", "gray", "MHz"], ["VSWR", "1.3", "normal", ":1"], ["Ident Status", "Normal", "green", ""], ["Ident Code", "TST", "green", ""],
-    ].map(([label, value, status, unit]) => ({ label, mon1Value: value, mon1Status: status as DmeDualValueRow["mon1Status"], mon2Value: value, mon2Status: status as DmeDualValueRow["mon2Status"], unit })),
-    standby: [
-      ["Delay", "49.99", "normal", "us"], ["Spacing", "11.99", "normal", "us"], ["Tx Power", "968", "normal", "Watts"], ["Efficiency", "99.5", "normal", "%"], ["PRF", "786", "normal", "ppps"], ["Tx Frequency", "1203.996", "gray", "MHz"], ["Tx Frequency Error", "-2", "normal", "ppm"], ["Rx LO Frequency", "1015.978", "gray", "MHz"], ["Rx LO Frequency Error", "-10", "normal", "ppm"], ["Rx Frequency", "1140.978", "gray", "MHz"], ["Ident Status", "Normal", "green", ""], ["Ident Code", "TST", "green", ""],
-    ].map(([label, value, status, unit]) => ({ label, mon1Value: value, mon1Status: status as DmeDualValueRow["mon1Status"], mon2Value: value, mon2Status: status as DmeDualValueRow["mon2Status"], unit })),
-  },
-  2: {
-    integral: [
-      ["Delay", "50.00", "normal", "us"], ["Spacing", "11.98", "normal", "us"], ["Tx Power", "1033", "normal", "Watts"], ["ERP", "0.0", "normal", "dB"], ["Efficiency", "99.5", "normal", "%"], ["PRF", "798", "normal", "ppps"], ["Tx Frequency", "1203.996", "gray", "MHz"], ["Tx Frequency Error", "-2", "normal", "ppm"], ["Rx LO Frequency", "1015.991", "gray", "MHz"], ["Rx LO Frequency Error", "2", "normal", "ppm"], ["Rx Frequency", "1140.991", "gray", "MHz"], ["VSWR", "1.3", "normal", ":1"], ["Ident Status", "Normal", "green", ""], ["Ident Code", "TST", "green", ""],
-    ].map(([label, value, status, unit]) => ({ label, mon1Value: value, mon1Status: status as DmeDualValueRow["mon1Status"], mon2Value: value, mon2Status: status as DmeDualValueRow["mon2Status"], unit })),
-    standby: [
-      ["Delay", "50.01", "normal", "us"], ["Spacing", "11.99", "normal", "us"], ["Tx Power", "963", "normal", "Watts"], ["Efficiency", "100.0", "normal", "%"], ["PRF", "810", "normal", "ppps"], ["Tx Frequency", "1204.001", "gray", "MHz"], ["Tx Frequency Error", "1", "normal", "ppm"], ["Rx LO Frequency", "1015.982", "gray", "MHz"], ["Rx LO Frequency Error", "-7", "normal", "ppm"], ["Rx Frequency", "1140.982", "gray", "MHz"], ["Ident Status", "Normal", "green", ""], ["Ident Code", "TST", "green", ""],
-    ].map(([label, value, status, unit]) => ({ label, mon1Value: value, mon1Status: status as DmeDualValueRow["mon1Status"], mon2Value: value, mon2Status: status as DmeDualValueRow["mon2Status"], unit })),
-  },
-};
 
 const detailLimits: Record<string, [string, string, string, string, string]> = {
   Delay: ["49.60", "49.68", "", "50.32", "50.40"],

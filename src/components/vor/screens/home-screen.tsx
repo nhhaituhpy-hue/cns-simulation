@@ -1,9 +1,11 @@
 "use client";
 
+import Image from "next/image";
+
 export function HomeScreen() {
   return (
     <section className="pmdt-home-screen" aria-labelledby="vor-home-title">
-      <img
+      <Image
         id="vor-home-title"
         className="pmdt-selex-logo"
         src="/images/dvor1150a-selex-home.png"

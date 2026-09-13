@@ -50,7 +50,6 @@ function ParameterField({ field }: { field: DmeParameterFieldDefinition }) {
   useEffect(() => {
     // This local draft mirrors an external Zustand value after Apply/Restore;
     // the synchronous update is intentional and guarded while editing.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!isEditing) setDraftValue(formatParameterValue(field, value));
   }, [field, value, isEditing]);
 

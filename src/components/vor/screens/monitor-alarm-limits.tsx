@@ -14,13 +14,6 @@ const alarmParameterKeys: Record<string, string> = {
   "Tx Frequency Error": "txFrequencyError",
 };
 
-function formatLimitValue(parameter: string, value: number): string {
-  if (parameter === "9960 Hz Deviation") return value.toFixed(2);
-  if (parameter === "Tx Power") return value.toFixed(1);
-  if (parameter === "Tx Frequency Error") return value.toFixed(0);
-  return value.toFixed(1);
-}
-
 function ReadOnlyValue({ fieldId, value, unit = "", prefix = "", digits, configFieldId }: { fieldId: string; value: number; unit?: string; prefix?: string; digits?: number; configFieldId?: string }) {
   const overrides = useVorPmdtStore((state) => state.overrides);
 

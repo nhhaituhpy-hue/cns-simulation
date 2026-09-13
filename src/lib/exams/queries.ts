@@ -60,11 +60,6 @@ function nullableNumber(value: unknown): number | null {
   return value === null || value === undefined ? null : number(value);
 }
 
-function fail(context: string, error: unknown): never {
-  console.error(context, error);
-  throw new Error("Không thể tải dữ liệu kỳ thi. Vui lòng thử lại.");
-}
-
 async function requireAuthenticated() {
   const profile = await getCurrentProfile();
   if (!profile) throw new Error("Bạn chưa đăng nhập.");

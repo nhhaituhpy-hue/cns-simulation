@@ -37,14 +37,6 @@ const parameterLabels: Record<Dvor1150MonitorParameter, string> = {
   rfLevel: "RF Level",
 };
 
-const parameterDigits: Record<Dvor1150MonitorParameter, number> = {
-  azimuth: 2,
-  hz30Modulation: 1,
-  hz9960Modulation: 1,
-  deviation: 1,
-  rfLevel: 1,
-};
-
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }

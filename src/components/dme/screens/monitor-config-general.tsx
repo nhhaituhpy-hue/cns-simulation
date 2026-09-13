@@ -25,7 +25,6 @@ export function MonitorConfigGeneral() {
         </thead>
         <tbody>
           {rows.map(({ row, sourceIndex }, index) => {
-            const frequencyRow = row.parameter.includes("Frequency Error");
             const standbyDisabled = row.parameter === "ERP";
             return (
               <tr key={row.parameter}>

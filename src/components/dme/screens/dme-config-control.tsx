@@ -71,7 +71,6 @@ export function DmeConfigControl({
 
   useEffect(() => {
     // Keep the editable text buffer in sync with an external Apply/Restore.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!isEditing) setDraftValue(formatValue(value, digits ?? field?.precision));
   }, [value, digits, field?.precision, isEditing]);
 

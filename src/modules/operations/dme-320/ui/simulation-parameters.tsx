@@ -74,6 +74,7 @@ export function Dme320SimulationParametersDialog({
     if (!open) return;
     setValues(valuesFromSimulation(simulation, monitorId, channel));
     setMessage(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally scoped to open/channel changes
   }, [open, monitorId, channel, refreshToken]);
 
   function selectMonitor(nextMonitorId: Dme320MonitorId) {
