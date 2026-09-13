@@ -417,11 +417,7 @@ export function AppShell({ children, currentUser }: AppShellProps) {
   }
 
   function goBackFromSimulator() {
-    if (window.history.length > 1) {
-      router.back();
-      return;
-    }
-    router.push("/simulator");
+    router.push("/");
   }
 
   async function signOut() {
@@ -561,17 +557,17 @@ export function AppShell({ children, currentUser }: AppShellProps) {
       </header>
 
       {isSimulatorDetail && !hasInlineSimulatorBack ? (
-        <div className="border-b border-[var(--border)] bg-[var(--surface-subtle)] print:hidden">
-          <div className="mx-auto flex min-h-12 max-w-[1600px] items-center px-4 sm:px-5 lg:px-8">
+        <div className="border-b border-[var(--border)] bg-[var(--surface-subtle)]/80 py-1.5 backdrop-blur-xs print:hidden">
+          <div className="mx-auto flex min-h-7 max-w-[1600px] items-center px-4 sm:px-5 lg:px-8">
             <button
               type="button"
               onClick={goBackFromSimulator}
-              aria-label="Quay lại trang trước"
-              title="Quay lại trang trước"
-              className="inline-flex min-h-10 items-center gap-2 rounded-md border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--text-primary)] transition-[background-color,border-color,color] duration-150 hover:border-[var(--accent-border)] hover:bg-[var(--accent-muted)] hover:text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 motion-reduce:transition-none"
+              aria-label="Quay lại trang chủ"
+              title="Quay lại trang chủ"
+              className="group inline-flex h-7 items-center gap-1.5 rounded border border-[var(--border)] bg-[var(--surface)]/90 px-2.5 text-[11px] font-medium text-[var(--text-secondary)] shadow-xs transition-all duration-150 hover:border-[var(--accent-border)] hover:bg-[var(--accent-muted)] hover:text-[var(--accent)] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-1.5 focus-visible:ring-[var(--accent)] motion-reduce:transition-none"
             >
-              <ArrowLeft aria-hidden size={16} weight="regular" />
-              Quay lại
+              <ArrowLeft aria-hidden size={13} weight="bold" className="transition-transform duration-150 group-hover:-translate-x-0.5" />
+              <span>Quay lại</span>
             </button>
           </div>
         </div>

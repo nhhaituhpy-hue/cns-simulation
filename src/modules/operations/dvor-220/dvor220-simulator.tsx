@@ -366,25 +366,27 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
       </Suspense>
       <Dvor220ConfigPersistenceBoundary store={store} />
       <section className={styles.simulatorTools} aria-label="Simulator Tools">
-        <button
-          type="button"
-          className={styles.simulatorToolsToggle}
-          aria-expanded={simulatorToolsOpen}
-          aria-controls="dvor220-simulator-tools"
-          onClick={() => setSimulatorToolsOpen((open) => !open)}
-        >
-          Simulator Tools
-        </button>
-        {simulatorToolsOpen ? (
-          <div id="dvor220-simulator-tools" className={styles.simulatorToolsActions}>
-            <button type="button" onClick={() => setActiveDialog("simulation-parameters")}>Scenario Parameters</button>
-            <button type="button" onClick={() => setActiveSimulatorTool("maintenance-faults")}>Fault Injection</button>
-            <button type="button" onClick={() => setActiveSimulatorTool("maintenance-antenna")}>Antenna / VSWR Test</button>
-            <button type="button" onClick={() => setActiveSimulatorTool("maintenance-thermal")}>Thermal Test</button>
-            <button type="button" onClick={() => setActiveSimulatorTool("flight-results")}>Flight Results</button>
-            <button type="button" onClick={() => setActiveSimulatorTool("history-parameter-change")}>Config Audit</button>
-          </div>
-        ) : null}
+        <div className={styles.simulatorToolsCluster}>
+          <button
+            type="button"
+            className={styles.simulatorToolsToggle}
+            aria-expanded={simulatorToolsOpen}
+            aria-controls="dvor220-simulator-tools"
+            onClick={() => setSimulatorToolsOpen((open) => !open)}
+          >
+            Simulator Tools
+          </button>
+          {simulatorToolsOpen ? (
+            <div id="dvor220-simulator-tools" className={styles.simulatorToolsActions}>
+              <button type="button" onClick={() => setActiveDialog("simulation-parameters")}>Scenario Parameters</button>
+              <button type="button" onClick={() => setActiveSimulatorTool("maintenance-faults")}>Fault Injection</button>
+              <button type="button" onClick={() => setActiveSimulatorTool("maintenance-antenna")}>Antenna / VSWR Test</button>
+              <button type="button" onClick={() => setActiveSimulatorTool("maintenance-thermal")}>Thermal Test</button>
+              <button type="button" onClick={() => setActiveSimulatorTool("flight-results")}>Flight Results</button>
+              <button type="button" onClick={() => setActiveSimulatorTool("history-parameter-change")}>Config Audit</button>
+            </div>
+          ) : null}
+        </div>
         {device.scenario.active ? (
           <span className={styles.scenarioActiveBadge} role="status">
             Scenario Active · {device.scenario.definition?.name}

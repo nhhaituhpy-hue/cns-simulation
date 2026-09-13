@@ -15,15 +15,24 @@
 }
 
 .simulatorTools {
+  position: relative;
   display: flex;
-  min-height: 34px;
+  min-height: 36px;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
   border: 1px solid #4c5660;
   border-bottom: 0;
   background: #242b31;
-  padding: 4px 6px;
+  padding: 4px 12px;
   color: #f4f7f9;
+}
+
+.simulatorToolsCluster {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .simulatorTools button,
@@ -56,18 +65,31 @@
 
 .simulatorToolsActions {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: 5px;
 }
 
 .scenarioActiveBadge {
-  margin-left: auto;
+  position: absolute;
+  right: 12px;
   padding: 4px 8px;
   border: 1px solid #ffc45f;
   background: #6b4500;
   color: #fff3ce;
   font-weight: 800;
   line-height: 1.25;
+}
+
+@media (max-width: 1100px) {
+  .simulatorTools {
+    justify-content: flex-start;
+  }
+
+  .scenarioActiveBadge {
+    position: static;
+    margin-left: auto;
+  }
 }
 
 .simulatorToolPanel {
