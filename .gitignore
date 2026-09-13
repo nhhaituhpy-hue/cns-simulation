@@ -55,6 +55,7 @@ yarn-error.log*
 /docs/
 /pdf_extracts/
 /tmp/
+/History/
 
 # Wrangler & local database mocks
 .wrangler/
