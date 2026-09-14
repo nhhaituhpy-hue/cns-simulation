@@ -207,6 +207,12 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-09-14 — Đồng nhất thanh công cụ Scenario của DME 320 với DVOR 220
+- Gộp nút `Quay lại` và cụm `Simulator Tools` vào cùng thanh nền xám đậm kiểu PMDT DVOR 220.
+- Thêm toggle `Simulator Tools`, đưa `Scenario Parameters` vào cụm chức năng, giữ badge trạng thái scenario ở phía phải và bổ sung responsive/focus-visible cho màn hình hẹp.
+- Nút quay lại dùng điều hướng App Router về trang chủ; không thay đổi logic scenario hay dữ liệu mô phỏng.
+- Đã chạy focused ESLint, typecheck, `git diff --check` và `npm run build` thành công (72/72 routes). Không chạy UI test theo yêu cầu trước đó.
+
 ### 2026-09-14 — Hoàn thiện Scenario Parameters cho MOPIENS DME 320
 - Bổ sung schema Scenario Parameters v1, preset Low Power/ERP, Pulse Spacing và HPA Fault; hỗ trợ import/export JSON và kho quản trị dùng chung tại `/authoring`.
 - Bổ sung vòng đời `Apply → Restore/Reset/Reboot → End`, đánh giá Service/Monitor/Primary Alarm/Active Fault và preview detached qua engine DME 320 hiện hữu.

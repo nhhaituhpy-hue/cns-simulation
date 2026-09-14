@@ -1,6 +1,8 @@
 "use client";
 
 import { Suspense, useCallback, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { useStore } from "zustand";
 import { Dme320ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
@@ -178,6 +180,7 @@ export function Dme320Simulator({
   const [activeSectionId, setActiveSectionId] = useState("main");
   const [activeScreenId, setActiveScreenId] = useState<Dme320ScreenId>("home");
   const [openTabs, setOpenTabs] = useState<Dme320ScreenId[]>(["home"]);
+  const router = useRouter();
   const [activeDialog, setActiveDialog] = useState<Dme320DialogId | null>(null);
   const [preloadedScenario, setPreloadedScenario] = useState<Dme320ScenarioDefinition | null>(null);
   const loadScenario = useCallback((definition: Dme320ScenarioDefinition) => {
@@ -195,6 +198,7 @@ export function Dme320Simulator({
   const [commandError, setCommandError] = useState<string | null>(null);
   const [outputFilter, setOutputFilter] = useState("all");
   const [hiddenBeforeSequence, setHiddenBeforeSequence] = useState(0);
+  const [simulatorToolsOpen, setSimulatorToolsOpen] = useState(false);
 
   const dispatch = useCallback(
     (command: Dme320Command): Dme320CommandResult => {
@@ -454,11 +458,38 @@ export function Dme320Simulator({
         <ScenarioParametersRouteLoader moduleId="dme-320" enabled onLoaded={loadScenario} />
       </Suspense>
       <Dme320ConfigPersistenceBoundary store={store} />
-      <section className={styles.scenarioTools} aria-label="Simulator Tools">
-        <button type="button" onClick={() => setActiveDialog("simulation-parameters")}>Scenario Parameters</button>
+      <section className={styles.simulatorTools} aria-label="Simulator Tools">
+        <button
+          type="button"
+          className={styles.simulatorBackButton}
+          onClick={() => router.push("/")}
+          aria-label="Quay lại trang chủ"
+          title="Quay lại trang chủ"
+        >
+          <ArrowLeft aria-hidden size={12} weight="bold" />
+          <span>Quay lại</span>
+        </button>
+        <div className={styles.simulatorToolsCluster}>
+          <button
+            type="button"
+            className={styles.simulatorToolsToggle}
+            aria-expanded={simulatorToolsOpen}
+            aria-controls="dme320-simulator-tools"
+            onClick={() => setSimulatorToolsOpen((open) => !open)}
+          >
+            Simulator Tools
+          </button>
+          {simulatorToolsOpen ? (
+            <div id="dme320-simulator-tools" className={styles.simulatorToolsActions}>
+              <button type="button" onClick={() => setActiveDialog("simulation-parameters")}>Scenario Parameters</button>
+            </div>
+          ) : null}
+        </div>
         {simulation.scenario.active ? (
-          <span role="status">Scenario Active · {simulation.scenario.definition?.name} · {scenarioEvaluation.solved ? "SOLVED" : "IN PROGRESS"} · Profile Save disabled</span>
-        ) : <span>Session-only training tools</span>}
+          <span className={styles.scenarioActiveBadge} role="status">
+            Scenario Active · {simulation.scenario.definition?.name} · {scenarioEvaluation.solved ? "SOLVED" : "IN PROGRESS"} · Profile Save disabled
+          </span>
+        ) : null}
       </section>
       {viewMode === "pmdt" ? (
         <MopiensPmdtShell

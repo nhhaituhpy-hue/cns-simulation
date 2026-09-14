@@ -15,31 +15,84 @@
   background: #fff;
 }
 
-.scenarioTools {
+.simulatorTools {
+  position: relative;
   display: flex;
+  min-height: 36px;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  padding: 6px 10px;
-  border-bottom: 1px solid var(--dme-border);
-  background: var(--dme-surface);
-  color: var(--dme-text);
+  justify-content: center;
+  border: 1px solid #4c5660;
+  border-bottom: 0;
+  background: #242b31;
+  padding: 4px 12px;
+  color: #f4f7f9;
 }
 
-.scenarioTools button {
-  min-height: 32px;
-  border: 1px solid var(--dme-border);
-  border-radius: 4px;
-  padding: 4px 10px;
-  background: #fff;
-  color: var(--dme-blue-dark);
+.simulatorToolsCluster {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.simulatorTools button,
+.simulatorToolPanelHeader button {
+  min-height: 25px;
+  border: 1px solid #7e8a94;
+  border-radius: 2px;
+  background: linear-gradient(#f8f9fa, #cdd2d6);
+  padding: 3px 10px;
+  color: #1f2b33;
   font: inherit;
+  font-weight: 700;
   cursor: pointer;
 }
 
-.scenarioTools button:focus-visible {
-  outline: 2px solid var(--dme-blue-dark);
+.simulatorTools button:hover,
+.simulatorToolPanelHeader button:hover {
+  background: linear-gradient(#fff, #e2e6e9);
+}
+
+.simulatorTools button:focus-visible,
+.simulatorToolPanelHeader button:focus-visible {
+  outline: 2px solid #75b7ff;
   outline-offset: 2px;
+}
+
+.simulatorToolsToggle { min-width: 124px; }
+
+.simulatorToolsActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.scenarioActiveBadge {
+  position: absolute;
+  right: 12px;
+  padding: 4px 8px;
+  border: 1px solid #ffc45f;
+  background: #6b4500;
+  color: #fff3ce;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.simulatorBackButton {
+  position: absolute;
+  left: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+@media (max-width: 1100px) {
+  .simulatorTools { justify-content: flex-start; }
+  .simulatorBackButton { position: static; }
+  .scenarioActiveBadge { position: static; margin-left: auto; }
 }
 
 .scenarioDialog {
@@ -249,7 +302,6 @@
 .scenarioTable th {
   background: #edf4f8;
 }
-.scenarioTools button:hover,
 .scenarioTabs button:hover {
   background: #e4eef4;
 }
