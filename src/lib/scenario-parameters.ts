@@ -14,6 +14,8 @@ import {
   parseDvor220ScenarioDefinition,
 } from "@/modules/operations/dvor-220/domain/scenario";
 import type { Dvor220ScenarioDefinition } from "@/modules/operations/dvor-220/domain/types";
+import { parseDme320ScenarioDefinition } from "@/modules/operations/dme-320/domain/scenario";
+import type { Dme320ScenarioDefinition } from "@/modules/operations/dme-320/domain/types";
 
 /** Simulator modules whose PMDT exposes the versioned Scenario Parameters file. */
 export const SCENARIO_PARAMETERS_MODULES = [
@@ -41,6 +43,12 @@ export const SCENARIO_PARAMETERS_MODULES = [
     category: "MOPIENS / PMDT",
     schemaVersion: 1,
   },
+  {
+    moduleId: "dme-320",
+    label: "DME 320",
+    category: "MOPIENS / PMDT",
+    schemaVersion: 1,
+  },
 ] as const;
 
 export type ScenarioParametersModuleId =
@@ -50,7 +58,8 @@ export type ScenarioParametersDefinition =
   | Dvor1150ScenarioDefinition
   | Dvor1150aScenarioDefinition
   | Dme1119aScenarioDefinition
-  | Dvor220ScenarioDefinition;
+  | Dvor220ScenarioDefinition
+  | Dme320ScenarioDefinition;
 
 export type ScenarioParametersDefinitionFor<
   TModuleId extends ScenarioParametersModuleId,
@@ -60,7 +69,9 @@ export type ScenarioParametersDefinitionFor<
     ? Dvor1150aScenarioDefinition
     : TModuleId extends "dme-1119a"
       ? Dme1119aScenarioDefinition
-      : Dvor220ScenarioDefinition;
+      : TModuleId extends "dvor-220"
+        ? Dvor220ScenarioDefinition
+        : Dme320ScenarioDefinition;
 
 type ScenarioParametersParser<TDefinition extends ScenarioParametersDefinition> =
   (value: unknown) => TDefinition | null;
@@ -94,6 +105,10 @@ const adapters: {
   "dvor-220": {
     moduleId: "dvor-220",
     parse: parseDvor220ScenarioDefinition,
+  },
+  "dme-320": {
+    moduleId: "dme-320",
+    parse: parseDme320ScenarioDefinition,
   },
 };
 

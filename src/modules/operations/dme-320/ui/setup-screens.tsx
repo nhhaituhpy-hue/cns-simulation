@@ -60,7 +60,7 @@ function SetupFrame({ props, children }: { props: Dme320ScreenProps; children: R
   const [message, setMessage] = useState<string | null>(null);
   const issues = validateDme320Config(props.simulation.config.draft);
   const editable = canDme320(props.simulation, "setup");
-  const profileWritable = canDme320(props.simulation, "profile");
+  const profileWritable = !props.simulation.scenario.active && canDme320(props.simulation, "profile");
 
   function execute(type: "apply-draft" | "restore-draft" | "save-running-to-flash") {
     const result = type === "apply-draft"

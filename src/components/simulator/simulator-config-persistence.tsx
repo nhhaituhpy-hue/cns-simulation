@@ -27,9 +27,10 @@ import {
 import {
   dme320ConfigAdapter,
   extractDme320Config,
+  getDme320ConfigPersistenceAction,
 } from "@/lib/simulator-config/dme-320";
 import type { SupportedSimulatorConfigId } from "@/lib/simulator-config/types";
-import type { Dme320StoreApi } from "@/modules/operations/dme-320/store/dme320-store";
+import { hydrateDme320ProfilesWhenIdle, type Dme320StoreApi } from "@/modules/operations/dme-320/store/dme320-store";
 import type { Dvor220StoreApi } from "@/modules/operations/dvor-220/store/dvor220-store";
 import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
 import { useDvor1150PmdtStore } from "@/stores/dvor1150-pmdt-store";
@@ -456,6 +457,7 @@ function Dme320ConfigPersistence({ store }: { store: Dme320StoreApi }) {
     sessionIdRef.current = createSessionId();
     readyRef.current = false;
     let cancelled = false;
+    let deferredHydration: (() => void) | null = null;
 
     async function hydrate() {
       setStatus("loading");
@@ -466,14 +468,15 @@ function Dme320ConfigPersistence({ store }: { store: Dme320StoreApi }) {
         const flash = dme320ConfigAdapter.parseConfig(response.backupConfig ?? response.appliedConfig);
         if (!running || !flash) throw new Error("Cấu hình DME 320 từ server không hợp lệ.");
         if (cancelled) return;
-        store.getState().replaceConfigurationProfiles(
-          running,
-          flash,
-          parameterChangesFromHistory(response.history, "RMS"),
+        if (store.getState().simulation.scenario.active) setStatus("");
+        deferredHydration = hydrateDme320ProfilesWhenIdle(
+          store, running, flash, parameterChangesFromHistory(response.history, "RMS"),
+          () => {
+            revisionRef.current = response.revision;
+            readyRef.current = true;
+            setStatus("saved");
+          },
         );
-        revisionRef.current = response.revision;
-        readyRef.current = true;
-        setStatus("saved");
       } catch (error) {
         if (cancelled) return;
         console.error("DME 320 configuration hydration failed:", error);
@@ -485,6 +488,7 @@ function Dme320ConfigPersistence({ store }: { store: Dme320StoreApi }) {
     return () => {
       cancelled = true;
       readyRef.current = false;
+      deferredHydration?.();
     };
   }, [store]);
 
@@ -493,20 +497,7 @@ function Dme320ConfigPersistence({ store }: { store: Dme320StoreApi }) {
       if (!readyRef.current) return;
       const current = state.simulation.config;
       const previous = previousState.simulation.config;
-      const runningChanged = !areJsonEqual(current.running, previous.running);
-      const flashChanged = !areJsonEqual(current.flash, previous.flash);
-      if (!runningChanged && !flashChanged) return;
-
-      let action: "apply" | "restore" | "flash-save" | null = null;
-      if (previous.draftDirty && !current.draftDirty && runningChanged) {
-        action = "apply";
-      } else if (previous.flashDirty && !current.flashDirty && flashChanged) {
-        action = "flash-save";
-      } else if (!current.draftDirty && !current.flashDirty && runningChanged && areJsonEqual(current.running, current.flash)) {
-        action = "restore";
-      } else if (!current.draftDirty && runningChanged) {
-        action = "apply";
-      }
+      const action = getDme320ConfigPersistenceAction(state.simulation, previousState.simulation);
       if (!action) return;
 
       const running = extractDme320Config(current.running);

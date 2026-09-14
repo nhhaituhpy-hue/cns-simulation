@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { Suspense, useCallback, useMemo, useState } from "react";
 import { useStore } from "zustand";
 import { Dme320ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
+import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
+import { evaluateDme320Scenario } from "./domain/scenario";
 import {
   MopiensConnectionDialog,
   MopiensLoginDialog,
@@ -20,6 +22,7 @@ import type {
   Dme320ControlOrigin,
   Dme320LogCategory,
   Dme320SimulationState,
+  Dme320ScenarioDefinition,
   Dme320TransponderId,
 } from "./domain/types";
 import { createDme320Store, type Dme320StoreApi } from "./store/dme320-store";
@@ -176,6 +179,11 @@ export function Dme320Simulator({
   const [activeScreenId, setActiveScreenId] = useState<Dme320ScreenId>("home");
   const [openTabs, setOpenTabs] = useState<Dme320ScreenId[]>(["home"]);
   const [activeDialog, setActiveDialog] = useState<Dme320DialogId | null>(null);
+  const [preloadedScenario, setPreloadedScenario] = useState<Dme320ScenarioDefinition | null>(null);
+  const loadScenario = useCallback((definition: Dme320ScenarioDefinition) => {
+    setPreloadedScenario(definition);
+    setActiveDialog("simulation-parameters");
+  }, []);
   const [connected, setConnected] = useState(false);
   const [connectionOpen, setConnectionOpen] = useState(true);
   const [selectedProfileId, setSelectedProfileId] = useState(connectionProfiles[0].id);
@@ -217,6 +225,8 @@ export function Dme320Simulator({
   ) ?? connectionProfiles[0];
   const sessionActive = guestSession || simulation.session.userId !== null;
   const hasControl = controlAvailable(simulation);
+  const profileSaveAvailable = simulation.config.flashDirty && !simulation.scenario.active;
+  const scenarioEvaluation = evaluateDme320Scenario(simulation);
   const bothMonitorsBypassed = Object.values(simulation.monitors).every(
     (monitor) => monitor.mode === "bypass",
   );
@@ -231,7 +241,7 @@ export function Dme320Simulator({
       authenticated: sessionActive,
       controlAvailable: hasControl,
       draftDirty: simulation.config.draftDirty,
-      flashDirty: simulation.config.flashDirty,
+      flashDirty: profileSaveAvailable,
       bypassed: bothMonitorsBypassed,
       viewMode,
       keylock: simulation.keylock,
@@ -242,7 +252,7 @@ export function Dme320Simulator({
       hasControl,
       sessionActive,
       simulation.config.draftDirty,
-      simulation.config.flashDirty,
+      profileSaveAvailable,
       simulation.keylock,
       viewMode,
     ],
@@ -253,14 +263,14 @@ export function Dme320Simulator({
       authenticated: sessionActive,
       controlAvailable: hasControl,
       bypassed: bothMonitorsBypassed,
-      flashDirty: simulation.config.flashDirty,
+      flashDirty: profileSaveAvailable,
     }),
     [
       bothMonitorsBypassed,
       connected,
       hasControl,
       sessionActive,
-      simulation.config.flashDirty,
+      profileSaveAvailable,
     ],
   );
 
@@ -440,7 +450,16 @@ export function Dme320Simulator({
 
   return (
     <div className={styles.simulatorRoot} data-view-mode={viewMode}>
+      <Suspense fallback={null}>
+        <ScenarioParametersRouteLoader moduleId="dme-320" enabled onLoaded={loadScenario} />
+      </Suspense>
       <Dme320ConfigPersistenceBoundary store={store} />
+      <section className={styles.scenarioTools} aria-label="Simulator Tools">
+        <button type="button" onClick={() => setActiveDialog("simulation-parameters")}>Scenario Parameters</button>
+        {simulation.scenario.active ? (
+          <span role="status">Scenario Active · {simulation.scenario.definition?.name} · {scenarioEvaluation.solved ? "SOLVED" : "IN PROGRESS"} · Profile Save disabled</span>
+        ) : <span>Session-only training tools</span>}
+      </section>
       {viewMode === "pmdt" ? (
         <MopiensPmdtShell
           ariaLabel="MOPIENS 320 DME PMDT"
@@ -557,6 +576,7 @@ export function Dme320Simulator({
         activeDialog={activeDialog}
         simulation={simulation}
         dispatch={dispatch}
+        scenarioDefinition={preloadedScenario}
         onClose={() => setActiveDialog(null)}
       />
     </div>

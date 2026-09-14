@@ -359,6 +359,48 @@ export interface Dme320MeasurementOverride {
   valid?: boolean;
 }
 
+/** Training inputs only; never part of a saved station profile. */
+export interface Dme320ScenarioDefinition {
+  schemaVersion: 1;
+  id: string;
+  name: string;
+  description: string;
+  difficulty: "basic" | "intermediate" | "advanced";
+  configuration: Dme320Config;
+  runtime: {
+    mainTransponder: Dme320TransponderId;
+    startMonitorBypassed: boolean;
+    acAvailable: boolean;
+    batteries: Record<"battery1" | "battery2", Pick<Dme320BatteryState, "connected" | "voltage" | "temperatureC">>;
+    temperaturesC: Record<Dme320TransponderId, number>;
+    spacingOffsetsUs: Record<Dme320TransponderId, number>;
+    environment: Pick<Dme320EnvironmentState, "present" | "temperatureC" | "smokeDetected" | "intrusionDetected">;
+    faults: Array<Omit<Dme320Fault, "active" | "injectedAtMs">>;
+    measurementOverrides: Dme320MeasurementOverride[];
+  };
+  successCriteria: {
+    requireServiceNormal: boolean;
+    requireMonitorChannelsNormal: boolean;
+    requireNoPrimaryAlarm: boolean;
+    requireNoActiveFaults: boolean;
+  };
+}
+
+export interface Dme320ScenarioRuntime {
+  active: boolean;
+  definition: Dme320ScenarioDefinition | null;
+  startedAtMs: number | null;
+  /** Retain the operator's Draft/Running/Flash, including unsaved edits. */
+  returnConfiguration: Dme320ConfigProfiles | null;
+}
+
+export interface Dme320ScenarioEvaluation {
+  solved: boolean;
+  correctable: boolean;
+  checks: Array<{ id: string; label: string; passed: boolean; detail: string }>;
+  blockers: string[];
+}
+
 export interface Dme320MonitorActionState {
   votePendingSinceMs: number | null;
   automaticActionLatched: boolean;
@@ -455,6 +497,7 @@ export interface Dme320SimulationState {
   serviceStatus: "normal" | "warning" | "alarm" | "shutdown";
   faults: Dme320Fault[];
   measurementOverrides: Dme320MeasurementOverride[];
+  scenario: Dme320ScenarioRuntime;
   calibration: Dme320CalibrationState;
   lastManualTest: Dme320ManualTestResult | null;
   lastCertification: Dme320CertificationResult | null;
@@ -494,6 +537,9 @@ export type Dme320Command =
   | { type: "load-running-config"; config: Dme320Config }
   | { type: "save-running-to-flash" }
   | { type: "reboot" }
+  | { type: "apply-scenario"; scenario: Dme320ScenarioDefinition }
+  | { type: "restart-scenario" }
+  | { type: "end-scenario" }
   | { type: "inject-fault"; fault: Omit<Dme320Fault, "active" | "injectedAtMs"> }
   | { type: "clear-fault"; faultId: string }
   | { type: "inject-measurement"; override: Dme320MeasurementOverride }

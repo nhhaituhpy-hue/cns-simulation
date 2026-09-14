@@ -59,7 +59,7 @@ export function mapRowToStoredScenarioParameters(row: unknown): StoredScenarioPa
     moduleId,
     scenarioId: requiredString(row, "scenario_id"),
     name: requiredString(row, "name"),
-    description: requiredString(row, "description"),
+    description: typeof row.description === "string" ? row.description : requiredString(row, "description"),
     difficulty: requiredString(row, "difficulty"),
     schemaVersion: requiredInteger(row, "schema_version"),
     definition,

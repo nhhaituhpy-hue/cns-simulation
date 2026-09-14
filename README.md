@@ -194,7 +194,7 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 ### 5.5. MOPIENS MARU 320 DME (LMI / PMDT)
 - **Ma trận tham số:** Đầy đủ 252 kênh 1X–126Y theo tiêu chuẩn ICAO Annex 10; công suất đỉnh Peak Power và ERP theo % đặt; lỗi HPA Low Output ghìm công suất về tỷ số 0.4; lỗi RXU kéo giãn trôi $+1.2\ \mu\text{s}$ độ trễ phát đáp.
 - **Hệ thống giám sát:** Hai kênh giám sát độc lập trên mỗi Monitor: kênh Executive (giám sát máy On-Air) và Standby (giám sát máy trên tải giả). Trễ hành động `alarmDelayMs`; voting `AND`/`OR` điều khiển timed changeover hoặc shutdown; chức năng BITE Monitor Self-Test.
-- **Kịch bản & Bài làm:** Mô phỏng sự cố khối nguồn, bộ dao động, công suất phát và trôi trễ; kiểm tra quy trình xử lý phục hồi của học viên qua LMI/PMDT.
+- **Kịch bản & Bài làm:** Scenario Parameters v1 có preset, preview, import/export JSON, kho `/authoring`, Apply/Restore/End và đánh giá phục hồi qua LMI/PMDT. Bài tập chỉ chạy trong phiên; khóa Profile Save và bảo toàn cấu hình trước bài.
 - *Xem chi tiết:* [`docs/simulators/dme-320.md`](docs/simulators/dme-320.md)
 
 ### 5.6. Module Giám sát ADS-B (QCMS & Terminal Console)
@@ -203,3 +203,14 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 - **Kịch bản & Chấm điểm tự động:** 10 kịch bản sự cố phần cứng chuẩn hóa; thuật toán quy hoạch động LCS (Longest Common Subsequence) so khớp chính xác từng thao tác dòng lệnh (đúng, sai, thiếu, thừa), đảm bảo tính khách quan tuyệt đối khi thi tuyển.
 - *Xem chi tiết:* [`docs/simulators/ads-b.md`](docs/simulators/ads-b.md)
 
+---
+
+## 6. Nhật ký phiên làm việc
+
+### 2026-09-14 — Hoàn thiện Scenario Parameters cho MOPIENS DME 320
+- Bổ sung schema Scenario Parameters v1, preset Low Power/ERP, Pulse Spacing và HPA Fault; hỗ trợ import/export JSON và kho quản trị dùng chung tại `/authoring`.
+- Bổ sung vòng đời `Apply → Restore/Reset/Reboot → End`, đánh giá Service/Monitor/Primary Alarm/Active Fault và preview detached qua engine DME 320 hiện hữu.
+- Bổ sung editor theo nhóm Signal & Channel, Monitor & Limits, Power/Thermal, Faults và Advanced Raw; giữ nguyên công thức Peak Power/ERP, channel allocation, voting và alarm delay hiện có.
+- Scenario là session-only: khóa Profile Save, không ghi fault/measurement override vào cấu hình; bảo toàn Draft/Running/Flash trước bài và trì hoãn hydrate server nếu response về muộn.
+- Trong bài tập, Apply cấu hình không tự dịch ngưỡng Monitor theo setpoint mới để học viên có thể sửa đúng độ trễ theo ngưỡng đã soạn; ngoài scenario vẫn giữ cơ chế tự căn ngưỡng cũ. Thêm nút `Advance 1 s / 5 s` cho đồng hồ bài tập thủ công.
+- Hướng dẫn thao tác, preset và ranh giới dữ liệu: [DME 320 Scenario Parameters](docs/simulators/dme-320.md#6-scenario-parameters-v1).

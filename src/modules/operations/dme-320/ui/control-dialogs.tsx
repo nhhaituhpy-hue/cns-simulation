@@ -11,6 +11,7 @@ import type {
   Dme320Command,
   Dme320CommandResult,
   Dme320SimulationState,
+  Dme320ScenarioDefinition,
 } from "../domain/types";
 import type { Dme320DialogId } from "./navigation";
 import { formatStatus } from "./presentation";
@@ -25,6 +26,7 @@ export interface Dme320ControlDialogsProps {
   activeDialog: Dme320DialogId | null;
   simulation: Dme320SimulationState;
   dispatch: (command: Dme320Command) => Dme320CommandResult;
+  scenarioDefinition?: Dme320ScenarioDefinition | null;
   onClose: () => void;
 }
 
@@ -32,6 +34,7 @@ export function Dme320ControlDialogs({
   activeDialog,
   simulation,
   dispatch,
+  scenarioDefinition,
   onClose,
 }: Dme320ControlDialogsProps) {
   function execute(command: Dme320Command, close = false) {
@@ -175,6 +178,7 @@ export function Dme320ControlDialogs({
         open={activeDialog === "simulation-parameters"}
         simulation={simulation}
         dispatch={dispatch}
+        initialScenario={scenarioDefinition}
         onClose={onClose}
       />
     </>

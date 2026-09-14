@@ -39,6 +39,27 @@ export interface Dme320StoreState {
 
 export type Dme320StoreApi = StoreApi<Dme320StoreState>;
 
+/** Defer a late server response until End Scenario without touching its RAM. */
+export function hydrateDme320ProfilesWhenIdle(
+  store: Dme320StoreApi,
+  running: Dme320SimulationState["config"]["running"],
+  flash: Dme320SimulationState["config"]["flash"],
+  parameterChangeLogs: readonly SimulatorParameterChangeLogEntry[],
+  onHydrated: () => void,
+): () => void {
+  let unsubscribe = () => {};
+  const hydrate = () => {
+    unsubscribe();
+    store.getState().replaceConfigurationProfiles(running, flash, parameterChangeLogs);
+    onHydrated();
+  };
+  if (!store.getState().simulation.scenario.active) hydrate();
+  else unsubscribe = store.subscribe((state) => {
+    if (!state.simulation.scenario.active) hydrate();
+  });
+  return () => unsubscribe();
+}
+
 /**
  * A thin vanilla Zustand adapter. It deliberately owns no equipment rules; all
  * transitions go through the pure deterministic engine and can be replayed.
@@ -99,6 +120,8 @@ export function createDme320Store(options: Dme320StoreOptions = {}): Dme320Store
         set({ simulation: structuredClone(simulation), lastCommandResult: null });
       },
       replaceConfigurationProfiles(running, flash, parameterChangeLogs) {
+        // Late server hydration must not replace an examiner's active exercise.
+        if (get().simulation.scenario.active) return;
         const simulation = replaceDme320Configuration(get().simulation, running, flash);
         if (parameterChangeLogs) simulation.parameterChangeLogs = structuredClone([...parameterChangeLogs]);
         set({

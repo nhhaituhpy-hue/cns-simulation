@@ -9,6 +9,7 @@ import {
 } from "./defaults";
 import { getDme320ChannelAllocation } from "./channel-allocation";
 import { dme320FaultBlocksCalibrationStep } from "./faults";
+import { parseDme320ScenarioDefinition } from "./scenario";
 import {
   deriveDme320MonitorReadings,
   deriveDme320OverallStatus,
@@ -39,6 +40,7 @@ import type {
   Dme320MonitorSelfTestState,
   Dme320MonitorState,
   Dme320SimulationState,
+  Dme320ScenarioDefinition,
   Dme320TransponderId,
   Dme320TransponderState,
 } from "./types";
@@ -229,6 +231,7 @@ export function createDme320SimulationState(
     serviceStatus: "normal",
     faults: [],
     measurementOverrides: [],
+    scenario: { active: false, definition: null, startedAtMs: null, returnConfiguration: null },
     calibration: createIdleDme320Calibration(),
     lastManualTest: null,
     lastCertification: null,
@@ -686,6 +689,94 @@ export function advanceDme320Simulation(
   return refreshDme320Simulation(state);
 }
 
+function preserveDme320TrainingContext(next: Dme320SimulationState, current: Dme320SimulationState): void {
+  next.equipmentResetRevision = current.equipmentResetRevision + 1;
+  next.keylock = current.keylock;
+  next.session = structuredClone(current.session);
+  next.accounts = structuredClone(current.accounts);
+  next.logs = structuredClone(current.logs);
+  next.parameterChangeLogs = structuredClone(current.parameterChangeLogs);
+}
+
+function injectDme320Fault(state: Dme320SimulationState, input: Omit<Dme320Fault, "active" | "injectedAtMs">): void {
+  const fault: Dme320Fault = { ...input, active: true, injectedAtMs: state.nowMs };
+  state.faults = [...state.faults.filter((candidate) => candidate.id !== fault.id), fault];
+  if (fault.kind === "ac-mains-failure") state.power.acAvailable = false;
+  if (fault.kind === "battery-low" && (fault.target === "battery1" || fault.target === "battery2")) {
+    state.power.batteries[fault.target].voltage = state.config.running.battery.alarmVoltage;
+  }
+  if (fault.kind === "battery-overtemperature" && (fault.target === "battery1" || fault.target === "battery2")) {
+    state.power.batteries[fault.target].temperatureC = state.config.running.battery.alarmTemperatureC;
+  }
+  if (fault.kind === "emu-smoke") state.environment.smokeDetected = true;
+  if (fault.kind === "emu-intrusion") state.environment.intrusionDetected = true;
+  if (["ac-mains-failure", "battery-low", "battery-overtemperature"].includes(fault.kind)) updatePowerForElapsedTime(state, 0);
+}
+
+function startDme320Scenario(current: Dme320SimulationState, definition: Dme320ScenarioDefinition): Dme320SimulationState {
+  const scenario = structuredClone(definition);
+  // Seed with Bypass so zero-delay faults cannot execute against the default
+  // TX1 routing before the scenario's main transponder/runtime is installed.
+  const seedConfig = cloneDme320Config(scenario.configuration);
+  seedConfig.station.bypassMonitorsOnBoot = true;
+  const next = createDme320SimulationState({ nowMs: current.nowMs, config: seedConfig });
+  preserveDme320TrainingContext(next, current);
+  next.config.running = cloneDme320Config(scenario.configuration);
+  next.config.draft = cloneDme320Config(scenario.configuration);
+  const returnConfiguration = structuredClone(current.scenario.returnConfiguration ?? current.config);
+  // A scenario changes RAM, never the operator's non-volatile profile.
+  next.config.flash = cloneDme320Config(returnConfiguration.flash);
+  next.config.flashDirty = JSON.stringify(next.config.running) !== JSON.stringify(next.config.flash);
+  next.scenario = { active: true, definition: scenario, startedAtMs: current.nowMs, returnConfiguration };
+  const main = scenario.runtime.mainTransponder;
+  const standby = otherTransponder(main);
+  const outputOn = scenario.configuration.station.transmitterOutputOnBoot;
+  next.mainTransponder = main;
+  next.transmitters[main] = createTransmitter("antenna", outputOn);
+  next.transmitters[standby] = createTransmitter("load", outputOn && scenario.configuration.station.standbyMode === "hot");
+  for (const id of TRANSPONDER_IDS) {
+    next.transmitters[id].temperatureC = scenario.runtime.temperaturesC[id];
+    next.transmitters[id].spacingOffsetUs = scenario.runtime.spacingOffsetsUs[id];
+  }
+  for (const id of MONITOR_IDS) {
+    next.monitors[id].mode = scenario.runtime.startMonitorBypassed || next.keylock === "MAINT" ? "bypass" : "auto";
+  }
+  next.power.acAvailable = scenario.runtime.acAvailable;
+  for (const id of ["battery1", "battery2"] as const) Object.assign(next.power.batteries[id], scenario.runtime.batteries[id]);
+  Object.assign(next.environment, scenario.runtime.environment);
+  for (const fault of scenario.runtime.faults) injectDme320Fault(next, fault);
+  next.measurementOverrides = structuredClone(scenario.runtime.measurementOverrides);
+  updatePowerForElapsedTime(next, 0);
+  updateThermalState(next, 0);
+  appendLog(next, "event", `Scenario started: ${scenario.name}`, "INSTRUCTOR");
+  return refreshDme320Simulation(next);
+}
+
+function endDme320Scenario(current: Dme320SimulationState): Dme320SimulationState {
+  const profiles = structuredClone(current.scenario.returnConfiguration ?? current.config);
+  const next = createDme320SimulationState({ nowMs: current.nowMs, config: profiles.running });
+  preserveDme320TrainingContext(next, current);
+  next.config = profiles;
+  if (next.keylock === "MAINT") {
+    for (const id of MONITOR_IDS) next.monitors[id].mode = "bypass";
+  }
+  appendLog(next, "control", "Scenario ended; previous Draft/Running/Flash configuration restored.", "INSTRUCTOR");
+  return refreshDme320Simulation(next);
+}
+
+/** Preview is detached from the live store and uses the existing timed engine. */
+export function previewDme320Scenario(definition: Dme320ScenarioDefinition): Dme320SimulationState {
+  const parsed = parseDme320ScenarioDefinition(definition);
+  if (!parsed) throw new Error("Invalid DME 320 scenario.");
+  let state = startDme320Scenario(createDme320SimulationState(), parsed);
+  const monitor = parsed.configuration.monitor;
+  const settleMs = Math.max(1_000, monitor.powerOnHoldoffMs, monitor.identFaultDelayMs,
+    ...Object.values(monitor.limits).map((limit) => limit.alarmDelayMs));
+  state = advanceDme320Simulation(state, settleMs);
+  state = advanceDme320Simulation(state, state.nowMs + monitor.monitorActionDelayMs);
+  return state;
+}
+
 function permissionForCommand(command: Dme320Command): Dme320Permission | null {
   switch (command.type) {
     case "add-account":
@@ -779,7 +870,7 @@ function rebaseDme320MonitorLimit(
  * intact, while frequency windows still follow their frequency-based default
  * tolerance rather than retaining the old channel's window width.
  */
-function rebaseChannelDependentMonitorLimits(
+export function rebaseChannelDependentMonitorLimits(
   previous: Dme320Config,
   next: Dme320Config,
 ): void {
@@ -976,6 +1067,9 @@ export function executeDme320Command(
   }
 
   const state = structuredClone(source);
+  if (state.scenario.active && command.type === "save-running-to-flash") {
+    return reject(source, "Profile Save is disabled during a session-only training scenario.");
+  }
   const permission = permissionForCommand(command);
   if (permission) {
     const denial = getDme320PermissionDenial(state, permission);
@@ -984,6 +1078,23 @@ export function executeDme320Command(
   touchSession(state);
 
   switch (command.type) {
+    // Simulator tools are independent of PMDT equipment credentials, as for
+    // DVOR 220. Ordinary student Setup/Control commands retain their permissions.
+    case "apply-scenario": {
+      const definition = parseDme320ScenarioDefinition(command.scenario);
+      if (!definition) return reject(source, "Invalid DME 320 scenario definition.");
+      return accept(startDme320Scenario(state, definition), "Scenario applied; student changes are session-only.", false);
+    }
+    case "restart-scenario": {
+      if (!state.scenario.active || !state.scenario.definition) return reject(source, "No scenario is active.");
+      const next = startDme320Scenario(state, state.scenario.definition);
+      appendLog(next, "control", "Scenario restored to its starting baseline.", "INSTRUCTOR");
+      return accept(next, "Scenario restored.", false);
+    }
+    case "end-scenario": {
+      if (!state.scenario.active) return reject(source, "No scenario is active.");
+      return accept(endDme320Scenario(state), "Scenario ended; previous configuration restored.", false);
+    }
     case "set-keylock": {
       state.keylock = command.mode;
       if (command.mode === "MAINT") {
@@ -1102,6 +1213,9 @@ export function executeDme320Command(
     }
 
     case "reset-system": {
+      if (state.scenario.active && state.scenario.definition) {
+        return accept(startDme320Scenario(state, state.scenario.definition), "System reset to scenario baseline.", false);
+      }
       resetEquipmentFromRunningConfig(state);
       appendLog(state, "control", "System reset executed.");
       return accept(state, "System reset completed.");
@@ -1242,7 +1356,9 @@ export function executeDme320Command(
         return reject(source, error instanceof Error ? error.message : "Invalid configuration.");
       }
       const nextRunningConfig = cloneDme320Config(state.config.draft);
-      rebaseChannelDependentMonitorLimits(state.config.running, nextRunningConfig);
+      // In an exercise the examiner's limits are the reference. Re-centering
+      // them on a student's correction would make a delay-offset fault persist.
+      if (!state.scenario.active) rebaseChannelDependentMonitorLimits(state.config.running, nextRunningConfig);
       state.config.running = nextRunningConfig;
       state.config.draft = cloneDme320Config(nextRunningConfig);
       state.config.draftDirty = false;
@@ -1286,6 +1402,14 @@ export function executeDme320Command(
     }
 
     case "reboot": {
+      if (state.scenario.active && state.scenario.definition) {
+        const next = startDme320Scenario(state, state.scenario.definition);
+        next.session.userId = null;
+        next.session.level = 0;
+        next.session.loggedInAtMs = null;
+        appendLog(next, "event", "Equipment rebooted to the active scenario baseline.", "SYSTEM");
+        return accept(next, "Reboot completed; scenario remains active.", false);
+      }
       state.config.running = cloneDme320Config(state.config.flash);
       state.config.draft = cloneDme320Config(state.config.flash);
       state.config.draftDirty = false;
@@ -1301,31 +1425,8 @@ export function executeDme320Command(
     }
 
     case "inject-fault": {
-      const fault: Dme320Fault = {
-        ...command.fault,
-        active: true,
-        injectedAtMs: state.nowMs,
-      };
-      state.faults = [...state.faults.filter((candidate) => candidate.id !== fault.id), fault];
-      if (fault.kind === "ac-mains-failure") {
-        state.power.acAvailable = false;
-        updatePowerForElapsedTime(state, 0);
-      }
-      if (fault.kind === "battery-low" && (fault.target === "battery1" || fault.target === "battery2")) {
-        state.power.batteries[fault.target].voltage = state.config.running.battery.alarmVoltage;
-        updatePowerForElapsedTime(state, 0);
-      }
-      if (
-        fault.kind === "battery-overtemperature" &&
-        (fault.target === "battery1" || fault.target === "battery2")
-      ) {
-        state.power.batteries[fault.target].temperatureC =
-          state.config.running.battery.alarmTemperatureC;
-        updatePowerForElapsedTime(state, 0);
-      }
-      if (fault.kind === "emu-smoke") state.environment.smokeDetected = true;
-      if (fault.kind === "emu-intrusion") state.environment.intrusionDetected = true;
-      appendLog(state, "event", `Fault ${fault.id} injected on ${fault.target}.`, "INSTRUCTOR");
+      injectDme320Fault(state, command.fault);
+      appendLog(state, "event", `Fault ${command.fault.id} injected on ${command.fault.target}.`, "INSTRUCTOR");
       return accept(state, "Fault injected.");
     }
 

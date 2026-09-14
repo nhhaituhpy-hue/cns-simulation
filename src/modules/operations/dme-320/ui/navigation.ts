@@ -183,7 +183,7 @@ export function buildDme320Menus(options: {
       id: "system",
       label: "System",
       commands: [
-        { id: "simulation-parameters", label: "Simulation Parameters..." },
+        { id: "simulation-parameters", label: "Scenario Parameters..." },
       ],
     },
     {

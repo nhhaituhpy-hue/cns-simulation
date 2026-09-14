@@ -174,7 +174,7 @@ function LmiMonitor({ simulation }: { simulation: Dme320SimulationState }) {
 
 function LmiSetup({ simulation, execute }: { simulation: Dme320SimulationState; execute: (command: Dme320Command) => Dme320CommandResult }) {
   const canApply = canDme320(simulation, "setup");
-  const canSaveProfile = canDme320(simulation, "profile");
+  const canSaveProfile = !simulation.scenario.active && canDme320(simulation, "profile");
   return <div className={styles.lmiPage}>
     <fieldset className={styles.lmiControlGroup}><legend>Keylock Simulation</legend><div className={styles.actionRow}>{(["LOCAL", "REM", "MAINT"] as const).map((mode) => <MopiensBeveledButton key={mode} pressed={simulation.keylock === mode} onClick={() => execute({ type: "set-keylock", mode })}>{mode}</MopiensBeveledButton>)}</div></fieldset>
     <fieldset className={styles.lmiControlGroup}><legend>Monitor Action</legend><div className={styles.lmiSwitchRow}>{(["mon1", "mon2"] as const).map((monitorId) => <MopiensSlideSwitch key={monitorId} label={`${monitorId.toUpperCase()} Mode`} checked={simulation.monitors[monitorId].mode === "auto"} onLabel="AUTO" offLabel="BYPASS" tone={simulation.monitors[monitorId].mode === "auto" ? "normal" : "warning"} onCheckedChange={(automatic) => execute({ type: "set-monitor-mode", monitorId, mode: automatic ? "auto" : "bypass" })} />)}</div></fieldset>

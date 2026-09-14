@@ -15,6 +15,275 @@
   background: #fff;
 }
 
+.scenarioTools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--dme-border);
+  background: var(--dme-surface);
+  color: var(--dme-text);
+}
+
+.scenarioTools button {
+  min-height: 32px;
+  border: 1px solid var(--dme-border);
+  border-radius: 4px;
+  padding: 4px 10px;
+  background: #fff;
+  color: var(--dme-blue-dark);
+  font: inherit;
+  cursor: pointer;
+}
+
+.scenarioTools button:focus-visible {
+  outline: 2px solid var(--dme-blue-dark);
+  outline-offset: 2px;
+}
+
+.scenarioDialog {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.scenarioSummaryBar,
+.scenarioTabs,
+.scenarioInlineFields {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.scenarioSummaryBar {
+  padding: 6px;
+  border: 1px solid #b7c1c8;
+  background: #f4f6f7;
+}
+.scenarioIsolationNote,
+.inlineNotice,
+.inlineError,
+.scenarioDangerNotice {
+  margin: 0;
+  font-size: 11px;
+}
+.scenarioIsolationNote {
+  color: #4b5962;
+}
+.scenarioTabs {
+  border-bottom: 1px solid #aeb9c0;
+}
+.scenarioTabs button {
+  min-height: 32px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 4px 9px;
+  background: transparent;
+  color: #31566f;
+  font: inherit;
+  cursor: pointer;
+}
+.scenarioTabs button[aria-selected="true"] {
+  border-bottom-color: var(--dme-blue-dark);
+  background: #e4eef4;
+  font-weight: 700;
+}
+.scenarioTabs button:focus-visible {
+  outline: 2px solid var(--dme-blue-dark);
+  outline-offset: 1px;
+}
+.scenarioTwoColumns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.scenarioSection {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 9px;
+  border: 1px solid #b7c1c8;
+  background: #fbfcfc;
+}
+.scenarioSection h3 {
+  margin: 0;
+  color: #174c6a;
+  font-size: 13px;
+}
+.scenarioField {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+  color: #34434d;
+  font-size: 11px;
+  font-weight: 700;
+}
+.scenarioField > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.scenarioField small {
+  color: #52616b;
+  font-weight: 400;
+}
+.scenarioField input,
+.scenarioField select,
+.scenarioField textarea,
+.scenarioRawField input {
+  min-height: 28px;
+  min-width: 0;
+  border: 1px solid #97a6af;
+  border-radius: 2px;
+  padding: 3px 6px;
+  background: #fff;
+  color: #1e2a32;
+  font: inherit;
+}
+.scenarioField textarea {
+  min-height: 52px;
+  resize: vertical;
+}
+.scenarioField input:focus-visible,
+.scenarioField select:focus-visible,
+.scenarioField textarea:focus-visible,
+.scenarioRawField input:focus-visible {
+  outline: 2px solid var(--dme-blue-dark);
+  outline-offset: 1px;
+}
+.scenarioCheck {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: #34434d;
+  font-size: 11px;
+  font-weight: 400;
+}
+.scenarioCheck input {
+  margin-top: 2px;
+  accent-color: var(--dme-blue-dark);
+}
+.scenarioCheckList {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-top: 1px solid #d1d8dc;
+  padding-top: 6px;
+  font-size: 11px;
+}
+.scenarioCheckList [data-passed="true"] {
+  color: #206b3a;
+}
+.scenarioCheckList [data-passed="false"] {
+  color: #9f211a;
+}
+.scenarioPreviewStrip {
+  margin: 0;
+  padding: 6px;
+  background: #edf4f8;
+  color: #3c535f;
+  font-size: 11px;
+}
+.inlineNotice {
+  color: #4b5962;
+}
+.inlineError,
+.scenarioDangerNotice {
+  border: 1px solid #c97b72;
+  background: #fff0ed;
+  padding: 6px;
+  color: #8f281f;
+}
+.scenarioFaultRow {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-bottom: 1px solid #d8dde0;
+  padding-bottom: 5px;
+}
+.scenarioFaultRow strong {
+  color: #31566f;
+  font-size: 11px;
+}
+.scenarioRawGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+.scenarioRawField {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+  border: 1px solid #d1d8dc;
+  padding: 5px;
+  background: #fff;
+  font-size: 10px;
+}
+.scenarioRawField small {
+  color: #52616b;
+}
+.scenarioTableWrap {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.scenarioTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  text-align: left;
+}
+.scenarioTable caption {
+  padding: 5px;
+  color: #174c6a;
+  text-align: left;
+  font-weight: 700;
+}
+.scenarioTable th,
+.scenarioTable td {
+  border: 1px solid #c4cdd3;
+  padding: 4px;
+}
+.scenarioTable th {
+  background: #edf4f8;
+}
+.scenarioTools button:hover,
+.scenarioTabs button:hover {
+  background: #e4eef4;
+}
+.scenarioCheck input:focus-visible {
+  outline: 2px solid var(--dme-blue-dark);
+  outline-offset: 2px;
+}
+.scenarioField input[aria-invalid="true"] {
+  border-color: #9f211a;
+}
+.scenarioSection {
+  overflow-wrap: anywhere;
+}
+.visuallyHiddenInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+@media (max-width: 720px) {
+  .scenarioTwoColumns {
+    grid-template-columns: 1fr;
+  }
+  .scenarioRawGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 440px) {
+  .scenarioRawGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .outputLog table {
   width: 100%;
   border-collapse: collapse;
