@@ -207,6 +207,11 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-09-14 — Sửa nút Quay lại bị render trùng trên DME 320
+- Bổ sung route `/simulator/software/dme-320` vào danh sách simulator đã có thanh `Quay lại` nội tuyến để AppShell không render thêm thanh quay lại chung.
+- Giữ lại đúng một thanh công cụ kiểu DVOR 220 cho DME 320; không thay đổi logic scenario.
+- Kiểm tra: focused ESLint, TypeScript, `git diff --check` và đồng bộ CodeGraph đều đạt. Không chạy test UI/build cho thay đổi hiển thị nhỏ này.
+
 ### 2026-09-14 — Đồng nhất thanh công cụ Scenario của DME 320 với DVOR 220
 - Gộp nút `Quay lại` và cụm `Simulator Tools` vào cùng thanh nền xám đậm kiểu PMDT DVOR 220.
 - Thêm toggle `Simulator Tools`, đưa `Scenario Parameters` vào cụm chức năng, giữ badge trạng thái scenario ở phía phải và bổ sung responsive/focus-visible cho màn hình hẹp.

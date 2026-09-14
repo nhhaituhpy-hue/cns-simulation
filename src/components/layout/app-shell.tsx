@@ -36,6 +36,7 @@ const SIMULATOR_ROUTES_WITH_INLINE_BACK = new Set([
   "/simulator/dvor-1150a",
   "/simulator/dme-1119a",
   "/simulator/software/dvor-220",
+  "/simulator/software/dme-320",
 ]);
 
 type NavigationItem = {
