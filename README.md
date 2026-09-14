@@ -207,6 +207,13 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-09-14 — Đơn giản hóa tab Kịch bản và lưu sửa nhanh theo thiết bị
+- Thay màn hình tile/card bằng một bảng phẳng duy nhất, nhóm theo năm module có adapter Scenario Parameters: DVOR 1150, DVOR 1150A, DME 1119A, DVOR 220 và DME 320.
+- Mỗi nhóm thiết bị có nút `Thêm kịch bản` và input JSON riêng; file export từ Scenario trong simulator được parse theo đúng module trước khi ghi.
+- Bấm từng scenario để mở hàng chi tiết và xem nội dung JSON; `Sửa nhanh` cho phép đổi tên, mô tả, độ khó rồi lưu lại qua API upsert, giữ nguyên mã và tham số kỹ thuật.
+- Dữ liệu lưu theo khóa `moduleId + scenarioId`, nên scenario của thiết bị này không ghi đè thiết bị khác; import cùng mã trong cùng thiết bị sẽ cập nhật bản ghi cũ.
+- Đã kiểm tra: focused ESLint, TypeScript, 46/46 test liên quan, build 72/72 routes, `git diff --check` và CodeGraph. Không chạy UI test.
+
 ### 2026-09-14 — Sửa nút Quay lại bị render trùng trên DME 320
 - Bổ sung route `/simulator/software/dme-320` vào danh sách simulator đã có thanh `Quay lại` nội tuyến để AppShell không render thêm thanh quay lại chung.
 - Giữ lại đúng một thanh công cụ kiểu DVOR 220 cho DME 320; không thay đổi logic scenario.
