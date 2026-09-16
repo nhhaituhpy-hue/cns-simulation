@@ -207,6 +207,12 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-09-16 - Tạo sổ tay Word hướng dẫn Scenario DVOR 1150A
+- Tạo file Word 23 trang dành cho giám khảo và người xây dựng bài thực hành, giải thích toàn bộ vòng đời Scenario Parameters bằng tiếng Việt.
+- Chèn 9 ảnh chụp thực tế từ DVOR 1150A Simulator, gồm trạng thái TEST/TST, quyền Examiner, cửa sổ Scenario Parameters, recovery controls, trạng thái IN PROGRESS, SOLVED và khôi phục sau khi kết thúc bài.
+- Giải thích chi tiết Start policy, Success criteria, Student recovery controls, Preview, Station, Transmitter, Monitor limits, Monitor control, Monitor antennas, Monitor calibration, Monitor raw measurements và Monitor routing.
+- Đã render và kiểm tra trực tiếp toàn bộ 23 trang; kiểm tra accessibility đạt 0 lỗi mức high, medium và low. File bàn giao: [Hướng dẫn xây dựng Scenario DVOR 1150A](output/word/DVOR1150A_Huong_dan_xay_dung_Scenario.docx).
+
 ### 2026-09-16 — Bổ sung hướng dẫn xây dựng Scenario DVOR 1150A
 - Thêm tài liệu tiếng Việt hướng dẫn đầy đủ vòng đời Draft → Preview → Apply → Restore/End và cách kiểm tra trạng thái `IN PROGRESS`/`SOLVED`.
 - Giải thích nhãn quyền `EXAMINER`, sự khác biệt với tài khoản PMDT `SEC3`/`SEC4`, cùng ý nghĩa của Start policy, Success criteria và Student recovery controls.
