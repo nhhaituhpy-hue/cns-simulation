@@ -207,6 +207,14 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-09-16 — Mở giao diện ôn tập DVOR 220 và DME 320
+- Chuyển riêng trạng thái hai module DVOR 220 và DME 320 trong tab `Ôn tập` từ `Chuẩn bị` sang `Sẵn sàng`; tab `Kịch bản` vẫn giữ nguyên trạng thái hiện tại.
+- Thay trang giữ chỗ bằng bảng danh sách tình huống thống nhất với DVOR 1150, DVOR 1150A và DME 1119A, gồm các cột STT, Tiêu đề, Mức độ và Thao tác.
+- Hiện chưa tạo dữ liệu tình huống: mỗi bảng hiển thị `0 bài` và thông báo chưa có tình huống nào được gắn vào ôn tập.
+- Component đã nhận danh sách tình huống qua props để sẵn sàng nối dữ liệu phân bổ về sau, nhưng chưa xây API hoặc chức năng gắn kịch bản trong phiên này.
+- Kiến trúc dự kiến: giám khảo tạo kho kịch bản, chọn một tập con để gắn vào ôn tập theo từng thiết bị; thí sinh chỉ nhìn thấy và thực hành các kịch bản đã được gắn. Các kịch bản chưa gắn có thể được giữ riêng cho kỳ thi thật.
+- Kiểm tra: focused ESLint, 9/9 test giao diện liên quan và build 72/72 routes đều đạt.
+
 ### 2026-09-16 - Tạo sổ tay Word hướng dẫn Scenario DVOR 1150A
 - Tạo file Word 23 trang dành cho giám khảo và người xây dựng bài thực hành, giải thích toàn bộ vòng đời Scenario Parameters bằng tiếng Việt.
 - Chèn 9 ảnh chụp thực tế từ DVOR 1150A Simulator, gồm trạng thái TEST/TST, quyền Examiner, cửa sổ Scenario Parameters, recovery controls, trạng thái IN PROGRESS, SOLVED và khôi phục sau khi kết thúc bài.

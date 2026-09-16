@@ -5,6 +5,7 @@ export const DVOR_220_SOFTWARE_MODULE = {
   category: "operations-software",
   status: "available",
   trainingStatus: "planned",
+  reviewStatus: "available",
   name: "Phần mềm khai thác DVOR 220",
   shortName: "DVOR 220",
   description: "Mô phỏng PMDT/LMI vận hành, bảo dưỡng và chẩn đoán MOPIENS 220 DVOR.",

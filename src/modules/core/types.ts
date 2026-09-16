@@ -44,6 +44,8 @@ export interface SimulatorModuleDefinition<
    * the training workspaces inherit `status` for backward compatibility.
    */
   trainingStatus?: SimulatorModuleStatus;
+  /** Review can be released independently while scenario authoring remains planned. */
+  reviewStatus?: SimulatorModuleStatus;
   name: string;
   shortName: string;
   description: string;

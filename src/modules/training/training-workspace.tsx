@@ -6,6 +6,14 @@ import type { SimulatorModuleDefinition } from "@/modules/core/types";
 
 export type TrainingWorkspaceMode = "authoring" | "review";
 
+function getWorkspaceStatus(
+  module: SimulatorModuleDefinition,
+  mode: TrainingWorkspaceMode,
+) {
+  if (mode === "review" && module.reviewStatus) return module.reviewStatus;
+  return module.trainingStatus ?? module.status;
+}
+
 const workspaceCopy = {
   authoring: {
     title: "Kịch bản",
@@ -26,7 +34,10 @@ export function TrainingWorkspaceCatalog({ mode }: { mode: TrainingWorkspaceMode
     <div className="w-full max-w-none px-4 py-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
       <section aria-label={`Danh sách module ${copy.title}`} className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {TRAINING_MODULES.map((module) => {
-          const trainingStatus = (module as SimulatorModuleDefinition).trainingStatus ?? module.status;
+          const trainingStatus = getWorkspaceStatus(
+            module as SimulatorModuleDefinition,
+            mode,
+          );
           const trainingAvailable = trainingStatus === "available";
           const moduleIcon = getSimulatorIconImage(module.id);
           return (

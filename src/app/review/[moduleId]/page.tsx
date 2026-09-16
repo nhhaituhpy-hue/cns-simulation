@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getOperationsSoftwareModule, OPERATIONS_SOFTWARE_MODULES } from "@/modules/core/registry";
+import { OperationsReviewDashboard } from "@/modules/training/operations-review-dashboard";
 import { TrainingModulePlaceholder } from "@/modules/training/training-workspace";
 
 interface ReviewModulePageProps {
@@ -21,6 +22,8 @@ export default async function ReviewModulePage({ params }: ReviewModulePageProps
   const { moduleId } = await params;
   const softwareModule = getOperationsSoftwareModule(moduleId);
   if (!softwareModule) notFound();
+  if (softwareModule.id === "dvor-220" || softwareModule.id === "dme-320") {
+    return <OperationsReviewDashboard moduleId={softwareModule.id} />;
+  }
   return <TrainingModulePlaceholder module={softwareModule} mode="review" />;
 }
-

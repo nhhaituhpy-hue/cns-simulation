@@ -5,6 +5,7 @@ export const DME_320_SOFTWARE_MODULE = {
   category: "operations-software",
   status: "available",
   trainingStatus: "planned",
+  reviewStatus: "available",
   name: "Phần mềm khai thác DME 320",
   shortName: "DME 320",
   description: "Mô phỏng PMDT/LMI vận hành, bảo dưỡng và chẩn đoán MOPIENS 320 DME.",

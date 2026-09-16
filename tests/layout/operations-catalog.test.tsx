@@ -24,4 +24,19 @@ describe("operations software availability", () => {
     expect(cardForHeading("DVOR 220").getByText("Chuẩn bị")).toBeInTheDocument();
     expect(cardForHeading("DME 320").getByText("Chuẩn bị")).toBeInTheDocument();
   });
+
+  it("marks the DVOR 220 and DME 320 review workspaces as available", () => {
+    render(<TrainingWorkspaceCatalog mode="review" />);
+
+    expect(cardForHeading("DVOR 220").getByText("Sẵn sàng")).toBeInTheDocument();
+    expect(cardForHeading("DVOR 220").getByRole("link", { name: "Mở bài ôn tập" })).toHaveAttribute(
+      "href",
+      "/review/dvor-220",
+    );
+    expect(cardForHeading("DME 320").getByText("Sẵn sàng")).toBeInTheDocument();
+    expect(cardForHeading("DME 320").getByRole("link", { name: "Mở bài ôn tập" })).toHaveAttribute(
+      "href",
+      "/review/dme-320",
+    );
+  });
 });
