@@ -22,7 +22,7 @@
 - **Cơ sở dữ liệu & Xác thực (Backend):**
   - Database: PostgreSQL 17 self-hosted container trên máy chủ Oracle Cloud VM ARM64.
   - Data Access & Session: Node-pg connection pool server-only, xác thực phiên qua cookie HttpOnly (`cns_session`, `SameSite=Lax`, `Secure` trên production, TTL 12h).
-  - Schema & Migration: Hệ thống migration SQL portable (`database/migrations/0001–0005`), quản lý version và checksum chặt chẽ.
+  - Schema & Migration: Hệ thống migration SQL portable (`database/migrations/0001–0006`), quản lý version và checksum chặt chẽ.
 - **Công cụ kiểm thử & Đồ thị tri thức:**
   - Vitest, React Testing Library, Playwright (E2E) và CodeGraph CLI (quản lý đồ thị phụ thuộc mã nguồn).
 
@@ -110,7 +110,7 @@ Mọi hành vi mô phỏng, công thức toán học, giao diện điều khiể
 ### 4.1. Cấu trúc thư mục mã nguồn
 ```text
 cns-simulator/
-├── database/migrations/  # SQL migrations cho PostgreSQL portable (0001–0005)
+├── database/migrations/  # SQL migrations cho PostgreSQL portable (0001–0006)
 ├── doc/                  # Sổ tay kỹ thuật, manual gốc của các thiết bị (gitignored)
 ├── public/               # Tài nguyên tĩnh, ảnh catalogue, manuals PDF hướng dẫn
 ├── src/
@@ -130,7 +130,8 @@ PostgreSQL 17
  ├── exam_sets / exam_papers / exams      # Cấu trúc đợt thi, bộ đề, phân công môn
  ├── exam_candidates / exam_attempts      # Danh sách thí sinh, bài làm và kết quả thi
  ├── user_simulator_configs / _history    # Cấu hình lưu trữ theo người dùng và lịch sử thay đổi
- └── simulator_scenario_parameters        # Bộ tham số kịch bản độc lập (JSONB schema v1/v2)
+ ├── simulator_scenario_parameters        # Bộ tham số kịch bản độc lập (JSONB schema v1/v2)
+ └── simulator_review_scenario_assignments # Tập con kịch bản được giám khảo publish cho Ôn tập
 ```
 
 ### 4.3. Bảng tổng hợp các Route chính
@@ -142,6 +143,7 @@ PostgreSQL 17
 | | Trung tâm kịch bản | `/admin/vor`, `/admin/dme`, `/admin/ads-b` | Quản lý kịch bản nghiệp vụ, chấm điểm bài nộp và xem timeline thao tác |
 | | Quản lý Scenario Parameters | `/authoring` | Import/Export JSON kịch bản, cấu hình fault injection, whitelist cho từng simulator |
 | **Học viên** | Vào thi chính thức | `/student/exams` | Thực hiện các kịch bản trong đề thi được phân công theo thời gian thực |
+| | Ôn tập Scenario Parameters | `/review/[moduleId]` | Chỉ hiển thị tập con kịch bản đã được giám khảo gắn theo từng thiết bị |
 | | Ôn tập tự do VOR/DME | `/student/vor`, `/student/dme`, `/student/ads-b` | Luyện tập thao tác trên simulator và nộp bài thử nghiệm |
 | | Ôn tập DVOR 1150 | `/student/dvor-1150`, `/session?id=...` | Luồng danh mục bài tập và phòng thực hành riêng cho dòng máy 1150 legacy |
 | **Simulator** | SELEX DVOR 1150A | `/simulator/dvor-1150a` | PMDT Selex 1150A đầy đủ, 12 tham số calibration, failover dual TX |
@@ -206,6 +208,14 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 ---
 
 ## 6. Nhật ký phiên làm việc
+
+### 2026-09-16 — Phân bổ Scenario Parameters vào Ôn tập
+- Thêm migration `0006_simulator_review_scenario_assignments.sql`: lưu tập con kịch bản được publish theo thiết bị, thứ tự hiển thị, người gắn và thời điểm gắn; khóa ngoại ghép chặn phân bổ chéo thiết bị và tự dọn phân bổ khi kịch bản gốc bị xóa.
+- Thêm API `/api/review-scenarios`: người đã đăng nhập được đọc danh sách đã publish; chỉ admin được thay thế danh sách của một thiết bị trong transaction. API kho kịch bản chỉ cho học viên đọc chi tiết khi kịch bản đó đã được publish.
+- Mở giao diện Ôn tập thống nhất cho DVOR 1150, DVOR 1150A, DME 1119A, DVOR 220 và DME 320. Giám khảo dùng modal checkbox `Thêm kịch bản`; học viên chỉ thấy các hàng đã gắn.
+- Nút bắt đầu mở simulator đúng thiết bị với `scenarioId` và cờ `review=1`; Scenario Parameters được nạp và Apply tự động, không mở editor dành cho giám khảo.
+- Migration `0006` đã áp dụng trực tiếp trên PostgreSQL production bằng một transaction và được đăng ký checksum; không restart hay tái tạo service.
+- Kiểm tra cục bộ: 77/77 test liên quan và build 74/74 route đạt trước khi kiểm thử browser production.
 
 ### 2026-09-16 — Mở giao diện ôn tập DVOR 220 và DME 320
 - Chuyển trạng thái hai module DVOR 220 và DME 320 trong tab `Ôn tập` từ `Chuẩn bị` sang `Sẵn sàng`.

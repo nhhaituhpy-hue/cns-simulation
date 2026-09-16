@@ -24,14 +24,29 @@ function isE2eTestMode() {
 export async function GET(request: Request) {
   const profile = await getCurrentProfile();
   if (!profile) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
-  if (profile.role !== "admin") return NextResponse.json({ error: "Không có quyền quản lý kịch bản." }, { status: 403 });
+  const id = new URL(request.url).searchParams.get("id")?.trim();
+  if (profile.role !== "admin" && !id) {
+    return NextResponse.json({ error: "Không có quyền quản lý kịch bản." }, { status: 403 });
+  }
   if (isE2eTestMode()) return NextResponse.json([]);
 
-  const id = new URL(request.url).searchParams.get("id")?.trim();
   try {
-    const result = id
-      ? await queryDatabase("select * from public.simulator_scenario_parameters where id = $1", [id])
-      : await queryDatabase("select * from public.simulator_scenario_parameters order by updated_at desc, created_at desc");
+    const result = id && profile.role !== "admin"
+      ? await queryDatabase(
+        `select sp.*
+         from public.simulator_scenario_parameters sp
+         where sp.id = $1
+           and exists (
+             select 1
+             from public.simulator_review_scenario_assignments a
+             where a.scenario_parameters_id = sp.id
+               and a.module_id = sp.module_id
+           )`,
+        [id],
+      )
+      : id
+        ? await queryDatabase("select * from public.simulator_scenario_parameters where id = $1", [id])
+        : await queryDatabase("select * from public.simulator_scenario_parameters order by updated_at desc, created_at desc");
     if (id && result.rows.length === 0) {
       return NextResponse.json({ error: "Không tìm thấy Scenario Parameters." }, { status: 404 });
     }

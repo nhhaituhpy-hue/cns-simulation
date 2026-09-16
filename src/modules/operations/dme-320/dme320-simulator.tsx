@@ -455,7 +455,14 @@ export function Dme320Simulator({
   return (
     <div className={styles.simulatorRoot} data-view-mode={viewMode}>
       <Suspense fallback={null}>
-        <ScenarioParametersRouteLoader moduleId="dme-320" enabled onLoaded={loadScenario} />
+        <ScenarioParametersRouteLoader
+          moduleId="dme-320"
+          enabled
+          onLoaded={(definition, context) => {
+            if (context.review) dispatch({ type: "apply-scenario", scenario: definition });
+            else loadScenario(definition);
+          }}
+        />
       </Suspense>
       <Dme320ConfigPersistenceBoundary store={store} />
       <section className={styles.simulatorTools} aria-label="Simulator Tools">

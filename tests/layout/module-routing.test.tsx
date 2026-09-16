@@ -37,9 +37,9 @@ afterEach(() => cleanup());
 describe("CNS module routing", () => {
   it("keeps legacy DVOR 1150 review separate from DVOR 1150A", () => {
     expect(DVOR_1150_MODULE.routes.student).toBe("/student/dvor-1150");
-    expect(DVOR_1150_MODULE.routes.review).toBe("/student/dvor-1150");
+    expect(DVOR_1150_MODULE.routes.review).toBe("/review/dvor-1150");
     expect(DVOR_1150A_MODULE.routes.student).toBe("/student/vor");
-    expect(DVOR_1150A_MODULE.routes.review).toBe("/student/vor");
+    expect(DVOR_1150A_MODULE.routes.review).toBe("/review/dvor-1150a");
   });
 
   it("shows the DVOR 1150 scenario catalog before opening the simulator", () => {

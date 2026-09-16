@@ -5,10 +5,13 @@ import { OperationsReviewDashboard } from "@/modules/training/operations-review-
 
 describe("OperationsReviewDashboard", () => {
   it.each([
+    ["dvor-1150", "DVOR 1150"],
+    ["dvor-1150a", "DVOR 1150A"],
+    ["dme-1119a", "DME 1119A"],
     ["dvor-220", "DVOR 220"],
     ["dme-320", "DME 320"],
   ] as const)("renders an empty scenario table for %s", (moduleId, shortName) => {
-    render(<OperationsReviewDashboard moduleId={moduleId} />);
+    render(<OperationsReviewDashboard moduleId={moduleId} loadFromApi={false} />);
 
     expect(
       screen.getByRole("heading", { name: `Thực hành xử lý sự cố ${shortName}` }),
@@ -25,6 +28,7 @@ describe("OperationsReviewDashboard", () => {
     render(
       <OperationsReviewDashboard
         moduleId="dvor-220"
+        loadFromApi={false}
         scenarios={[
           {
             id: "review-1",

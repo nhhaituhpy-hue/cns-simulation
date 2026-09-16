@@ -361,9 +361,12 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
         <ScenarioParametersRouteLoader
           moduleId="dvor-220"
           enabled
-          onLoaded={(definition) => {
-            setPreloadedScenario(definition);
-            setActiveDialog("simulation-parameters");
+          onLoaded={(definition, context) => {
+            if (context.review) dispatch({ type: "apply-scenario", scenario: definition });
+            else {
+              setPreloadedScenario(definition);
+              setActiveDialog("simulation-parameters");
+            }
           }}
         />
       </Suspense>

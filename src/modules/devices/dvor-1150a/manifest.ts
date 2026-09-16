@@ -12,7 +12,7 @@ export const DVOR_1150A_MODULE = {
     student: "/student/vor",
     simulator: "/simulator/dvor-1150a",
     authoring: "/admin/vor",
-    review: "/student/vor",
+    review: "/review/dvor-1150a",
   },
   legacyId: "vor",
 } as const satisfies SimulatorModuleDefinition<"dvor-1150a">;

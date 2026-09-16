@@ -13,7 +13,10 @@ interface ScenarioParametersRouteLoaderProps<
 > {
   moduleId: TModuleId;
   enabled: boolean;
-  onLoaded: (definition: ScenarioParametersDefinitionFor<TModuleId>) => void;
+  onLoaded: (
+    definition: ScenarioParametersDefinitionFor<TModuleId>,
+    context: { review: boolean },
+  ) => void;
 }
 
 /** Loads a row opened from the Kịch bản table into the simulator's draft. */
@@ -22,6 +25,7 @@ export function ScenarioParametersRouteLoader<
 >({ moduleId, enabled, onLoaded }: ScenarioParametersRouteLoaderProps<TModuleId>) {
   const searchParams = useSearchParams();
   const scenarioId = searchParams?.get("scenarioId")?.trim() ?? "";
+  const review = searchParams?.get("review") === "1";
   const [message, setMessage] = useState<string | null>(null);
   const loadedRef = useRef<string | null>(null);
 
@@ -45,8 +49,10 @@ export function ScenarioParametersRouteLoader<
           : null;
         if (!definition) throw new Error("Scenario Parameters không khớp với simulation đang mở.");
         if (cancelled) return;
-        onLoaded(definition);
-        setMessage("Đã nạp Scenario Parameters từ kho quản lý. Hãy mở panel và Apply để chạy tình huống.");
+        onLoaded(definition, { review });
+        setMessage(review
+          ? "Đã nạp kịch bản ôn tập vào simulator."
+          : "Đã nạp Scenario Parameters từ kho quản lý. Hãy mở panel và Apply để chạy tình huống.");
       } catch (error) {
         if (cancelled) return;
         loadedRef.current = null;
@@ -58,7 +64,7 @@ export function ScenarioParametersRouteLoader<
     return () => {
       cancelled = true;
     };
-  }, [enabled, moduleId, onLoaded, scenarioId]);
+  }, [enabled, moduleId, onLoaded, review, scenarioId]);
 
   return message ? <span role="status" className="sr-only">{message}</span> : null;
 }

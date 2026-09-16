@@ -1,29 +1,38 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getOperationsSoftwareModule, OPERATIONS_SOFTWARE_MODULES } from "@/modules/core/registry";
+import { getCurrentProfile } from "@/lib/auth/profile";
+import {
+  isScenarioParametersModuleId,
+  SCENARIO_PARAMETERS_MODULES,
+} from "@/lib/scenario-parameters";
+import { getSimulatorModule } from "@/modules/core/registry";
 import { OperationsReviewDashboard } from "@/modules/training/operations-review-dashboard";
-import { TrainingModulePlaceholder } from "@/modules/training/training-workspace";
 
 interface ReviewModulePageProps {
   params: Promise<{ moduleId: string }>;
 }
 
 export function generateStaticParams() {
-  return OPERATIONS_SOFTWARE_MODULES.map((module) => ({ moduleId: module.id }));
+  return SCENARIO_PARAMETERS_MODULES.map((module) => ({ moduleId: module.moduleId }));
 }
 
 export async function generateMetadata({ params }: ReviewModulePageProps): Promise<Metadata> {
   const { moduleId } = await params;
-  const softwareModule = getOperationsSoftwareModule(moduleId);
-  return { title: softwareModule ? `Ôn tập ${softwareModule.shortName}` : "Module không tồn tại" };
+  const simulatorModule = getSimulatorModule(moduleId);
+  return { title: simulatorModule ? `Ôn tập ${simulatorModule.shortName}` : "Module không tồn tại" };
 }
 
 export default async function ReviewModulePage({ params }: ReviewModulePageProps) {
   const { moduleId } = await params;
-  const softwareModule = getOperationsSoftwareModule(moduleId);
-  if (!softwareModule) notFound();
-  if (softwareModule.id === "dvor-220" || softwareModule.id === "dme-320") {
-    return <OperationsReviewDashboard moduleId={softwareModule.id} />;
-  }
-  return <TrainingModulePlaceholder module={softwareModule} mode="review" />;
+  if (!isScenarioParametersModuleId(moduleId)) notFound();
+  const simulatorModule = getSimulatorModule(moduleId);
+  if (!simulatorModule) notFound();
+  const profile = await getCurrentProfile();
+  if (!profile) notFound();
+  return (
+    <OperationsReviewDashboard
+      moduleId={moduleId}
+      canManage={profile.role === "admin"}
+    />
+  );
 }
