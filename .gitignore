@@ -53,6 +53,11 @@ yarn-error.log*
 # Local documentation
 /doc/
 /docs/
+!/docs/
+/docs/*
+!/docs/simulators/
+/docs/simulators/*
+!/docs/simulators/dvor-1150a-scenario-authoring.md
 /pdf_extracts/
 /tmp/
 /History/

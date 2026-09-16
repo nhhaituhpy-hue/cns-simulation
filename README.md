@@ -207,6 +207,12 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-09-16 — Bổ sung hướng dẫn xây dựng Scenario DVOR 1150A
+- Thêm tài liệu tiếng Việt hướng dẫn đầy đủ vòng đời Draft → Preview → Apply → Restore/End và cách kiểm tra trạng thái `IN PROGRESS`/`SOLVED`.
+- Giải thích nhãn quyền `EXAMINER`, sự khác biệt với tài khoản PMDT `SEC3`/`SEC4`, cùng ý nghĩa của Start policy, Success criteria và Student recovery controls.
+- Mô tả toàn bộ chín nhóm cấu hình từ Station, TX1/TX2, Monitor limits/control/antennas/calibration/raw measurements đến Monitor routing; bổ sung hai ví dụ công suất thấp và chuyển máy do Carrier VSWR.
+- Tài liệu mới bám theo schema v1 hiện hành và được liên kết trực tiếp tại [hướng dẫn xây dựng Scenario](docs/simulators/dvor-1150a-scenario-authoring.md).
+
 ### 2026-09-14 — Đơn giản hóa tab Kịch bản và lưu sửa nhanh theo thiết bị
 - Thay màn hình tile/card bằng một bảng phẳng duy nhất, nhóm theo năm module có adapter Scenario Parameters: DVOR 1150, DVOR 1150A, DME 1119A, DVOR 220 và DME 320.
 - Mỗi nhóm thiết bị có nút `Thêm kịch bản` và input JSON riêng; file export từ Scenario trong simulator được parse theo đúng module trước khi ghi.
