@@ -126,6 +126,7 @@ export interface VorPmdtStoreActions {
   setScenarioAuthoringEnabled: (enabled: boolean) => void;
   replaceScenarioDraft: (definition: Dvor1150aScenarioDefinition) => void;
   applyScenario: () => boolean;
+  startReviewScenario: (definition: Dvor1150aScenarioDefinition) => boolean;
   restoreScenario: () => boolean;
   endScenario: () => boolean;
   setAboutDialogOpen: (open: boolean) => void;
@@ -523,6 +524,21 @@ export function createVorPmdtStore(
           `Scenario applied: ${state.scenarioDraft.name}`,
           null,
         );
+      },
+
+      startReviewScenario: (definition) => {
+        const issues = validateDvor1150aScenarioDefinition(definition);
+        if (issues.length > 0) {
+          set({ lastCommand: `Review scenario initialization failed: ${issues[0]}` });
+          return false;
+        }
+        const applied = applyScenarioBaseline(
+          definition,
+          `Review scenario started: ${definition.name}`,
+          null,
+        );
+        if (applied) set({ mode: "student", scenarioParametersOpen: false });
+        return applied;
       },
 
       restoreScenario: () => {

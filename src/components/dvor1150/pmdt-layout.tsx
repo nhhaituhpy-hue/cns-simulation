@@ -45,7 +45,7 @@ export function Dvor1150PmdtLayout({
   const setScenarioParametersOpen = useDvor1150PmdtStore((state) => state.setScenarioParametersOpen);
   const setScenarioAuthoringEnabled = useDvor1150PmdtStore((state) => state.setScenarioAuthoringEnabled);
   const replaceScenarioDraft = useDvor1150PmdtStore((state) => state.replaceScenarioDraft);
-  const applyScenario = useDvor1150PmdtStore((state) => state.applyScenario);
+  const initializeStudentScenario = useDvor1150PmdtStore((state) => state.initializeStudentScenario);
   const scenario = useDvor1150PmdtStore((state) => state.scenario);
 
   useEffect(() => { setMode(mode); }, [mode, setMode]);
@@ -72,9 +72,11 @@ export function Dvor1150PmdtLayout({
         moduleId="dvor-1150"
         enabled
         onLoaded={(definition, context) => {
-          replaceScenarioDraft(definition);
-          if (context.review) applyScenario();
-          else setScenarioParametersOpen(true);
+          if (context.review) initializeStudentScenario(definition);
+          else {
+            replaceScenarioDraft(definition);
+            setScenarioParametersOpen(true);
+          }
         }}
       />
     </Suspense>

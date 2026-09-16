@@ -152,6 +152,7 @@ export interface DmePmdtStoreActions {
   setScenarioAuthoringEnabled: (enabled: boolean) => void;
   replaceScenarioDraft: (definition: Dme1119aScenarioDefinition) => void;
   applyScenario: () => boolean;
+  startReviewScenario: (definition: Dme1119aScenarioDefinition) => boolean;
   restoreScenario: () => boolean;
   endScenario: () => boolean;
   setAboutDialogOpen: (open: boolean) => void;
@@ -659,6 +660,48 @@ export function createDmePmdtStore(
       return [...state.attemptEvents, event];
     };
 
+    const applyScenarioDefinition = (
+      definitionInput: Dme1119aScenarioDefinition,
+      mode?: DmePmdtMode,
+    ) => {
+      const state = get();
+      const definition = cloneDme1119aScenarioDefinition(definitionInput);
+      const issues = validateDme1119aScenarioDefinition(definition);
+      if (issues.length > 0) {
+        set({ lastCommand: `Scenario validation failed: ${issues[0]}` });
+        return false;
+      }
+      const preview = previewDme1119aScenario(definition);
+      const startingEvaluation = evaluateDme1119aScenario(
+        { active: true, definition, startedAt: null },
+        preview.data,
+      );
+      if (startingEvaluation.solved) {
+        set({ lastCommand: "Scenario validation failed: starting state is already solved" });
+        return false;
+      }
+      const baseline = configurationForDme1119aScenario(definition, state.data);
+      const data = applyDme1119aScenarioFaults(baseline, definition.faultInjections);
+      data.connected = state.data.connected;
+      data.timestamp = state.data.timestamp;
+      data.rmsStatus.logonLevel = state.securityLevel;
+      data.rmsStatus.localControlMode = data.local;
+      const startedAt = now().toISOString();
+      set({
+        ...(mode ? { mode } : {}),
+        data,
+        configDraft: structuredClone(data),
+        configDirty: false,
+        needBackup: false,
+        configurationBackup: state.configurationBackup,
+        scenario: { active: true, definition, startedAt },
+        scenarioDraft: cloneDme1119aScenarioDefinition(definition),
+        scenarioParametersOpen: false,
+        lastCommand: `${mode === "student" ? "Review scenario started" : "Scenario Apply"}: ${definition.name}`,
+      });
+      return true;
+    };
+
     return {
       ...initialState(),
 
@@ -727,40 +770,10 @@ export function createDmePmdtStore(
         if (!state.scenarioAuthoringEnabled || state.securityLevel < 3 || state.loginDialogOpen || !state.data.local) {
           return false;
         }
-        const definition = cloneDme1119aScenarioDefinition(state.scenarioDraft);
-        const issues = validateDme1119aScenarioDefinition(definition);
-        if (issues.length > 0) {
-          set({ lastCommand: `Scenario validation failed: ${issues[0]}` });
-          return false;
-        }
-        const preview = previewDme1119aScenario(definition);
-        const startingEvaluation = evaluateDme1119aScenario(
-          { active: true, definition, startedAt: null },
-          preview.data,
-        );
-        if (startingEvaluation.solved) {
-          set({ lastCommand: "Scenario validation failed: starting state is already solved" });
-          return false;
-        }
-        const baseline = configurationForDme1119aScenario(definition, state.data);
-        const data = applyDme1119aScenarioFaults(baseline, definition.faultInjections);
-        data.connected = state.data.connected;
-        data.timestamp = state.data.timestamp;
-        data.rmsStatus.logonLevel = state.securityLevel;
-        data.rmsStatus.localControlMode = data.local;
-        const startedAt = now().toISOString();
-        set({
-          data,
-          configDraft: structuredClone(data),
-          configDirty: false,
-          needBackup: false,
-          configurationBackup: state.configurationBackup,
-          scenario: { active: true, definition, startedAt },
-          scenarioParametersOpen: false,
-          lastCommand: `Scenario Apply: ${definition.name}`,
-        });
-        return true;
+        return applyScenarioDefinition(state.scenarioDraft);
       },
+
+      startReviewScenario: (definition) => applyScenarioDefinition(definition, "student"),
 
       restoreScenario: () => {
         const state = get();

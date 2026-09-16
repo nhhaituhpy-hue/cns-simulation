@@ -19,6 +19,20 @@ function createAuthenticatedLocalStore() {
 }
 
 describe("DME 1119A Scenario Parameters store", () => {
+  it("starts a published review scenario without examiner PMDT login", () => {
+    const store = createDmePmdtStore();
+    const scenario = createLowOutputDme1119aScenario();
+
+    expect(store.getState().startReviewScenario(scenario)).toBe(true);
+    expect(store.getState().mode).toBe("student");
+    expect(store.getState().scenario).toMatchObject({
+      active: true,
+      definition: { id: scenario.id, name: scenario.name },
+    });
+    expect(store.getState().scenarioAuthoringEnabled).toBe(false);
+    expect(store.getState().scenarioParametersOpen).toBe(false);
+  });
+
   it("keeps scenario authoring session-only and blocks persistent config writes", () => {
     const store = createAuthenticatedLocalStore();
     const scenario = createLowOutputDme1119aScenario();

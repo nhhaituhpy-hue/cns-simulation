@@ -216,6 +216,7 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 - Nút bắt đầu mở simulator đúng thiết bị với `scenarioId` và cờ `review=1`; Scenario Parameters được nạp và Apply tự động, không mở editor dành cho giám khảo.
 - Migration `0006` đã áp dụng trực tiếp trên PostgreSQL production bằng một transaction và được đăng ký checksum; không restart hay tái tạo service.
 - Sửa lỗi runtime khi chọn checkbox trong modal: chụp trạng thái `checked` trước callback state để không tham chiếu `event.currentTarget` đã bị React giải phóng; bổ sung test tương tác chống tái phát.
+- Tách action bắt đầu Ôn tập khỏi quyền biên soạn Scenario: kịch bản đã được API xác nhận publish có thể khởi tạo chế độ `student` mà không yêu cầu tài khoản PMDT cấp 3 hoặc bật editor giám khảo; schema và điều kiện trạng thái ban đầu vẫn được validate trước khi Apply.
 - Kiểm tra cục bộ: 77/77 test liên quan và build 74/74 route đạt trước khi kiểm thử browser production.
 
 ### 2026-09-16 — Mở giao diện ôn tập DVOR 220 và DME 320

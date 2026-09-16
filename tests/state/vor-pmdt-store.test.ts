@@ -18,6 +18,20 @@ import {
 } from "@/stores/vor-pmdt-store";
 
 describe("VOR PMDT defaults", () => {
+  it("starts a published review scenario without examiner authoring rights", () => {
+    const store = createVorPmdtStore();
+    const scenario = createLowCarrierAnd9960Scenario();
+
+    expect(store.getState().startReviewScenario(scenario)).toBe(true);
+    expect(store.getState().mode).toBe("student");
+    expect(store.getState().scenario).toMatchObject({
+      active: true,
+      definition: { id: scenario.id, name: scenario.name },
+    });
+    expect(store.getState().scenarioAuthoringEnabled).toBe(false);
+    expect(store.getState().scenarioParametersOpen).toBe(false);
+  });
+
   it("keeps the documented table sizes and menu hierarchy", () => {
     expect(defaultVorPmdtData.generalAlerts).toHaveLength(15);
     expect(defaultVorPmdtData.monitorAgenAlerts).toHaveLength(8);

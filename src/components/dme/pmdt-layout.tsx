@@ -89,7 +89,7 @@ export function PmdtLayout({
   const setScenarioParametersOpen = useDmePmdtStore((state) => state.setScenarioParametersOpen);
   const setScenarioAuthoringEnabled = useDmePmdtStore((state) => state.setScenarioAuthoringEnabled);
   const replaceScenarioDraft = useDmePmdtStore((state) => state.replaceScenarioDraft);
-  const applyScenario = useDmePmdtStore((state) => state.applyScenario);
+  const startReviewScenario = useDmePmdtStore((state) => state.startReviewScenario);
   const setConfigPanelOpen = useDmePmdtStore((state) => state.setConfigPanelOpen);
   const aboutDialogOpen = useDmePmdtStore((state) => state.aboutDialogOpen);
   const loginDialogOpen = useDmePmdtStore((state) => state.loginDialogOpen);
@@ -155,9 +155,11 @@ export function PmdtLayout({
           moduleId="dme-1119a"
           enabled
           onLoaded={(definition, context) => {
-            replaceScenarioDraft(definition);
-            if (context.review) applyScenario();
-            else setScenarioParametersOpen(true);
+            if (context.review) startReviewScenario(definition);
+            else {
+              replaceScenarioDraft(definition);
+              setScenarioParametersOpen(true);
+            }
           }}
         />
       </Suspense>

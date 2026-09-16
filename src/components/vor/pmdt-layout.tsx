@@ -79,7 +79,7 @@ export function PmdtLayout({
   const setScenarioParametersOpen = useVorPmdtStore((state) => state.setScenarioParametersOpen);
   const setScenarioAuthoringEnabled = useVorPmdtStore((state) => state.setScenarioAuthoringEnabled);
   const replaceScenarioDraft = useVorPmdtStore((state) => state.replaceScenarioDraft);
-  const applyScenario = useVorPmdtStore((state) => state.applyScenario);
+  const startReviewScenario = useVorPmdtStore((state) => state.startReviewScenario);
   const aboutDialogOpen = useVorPmdtStore((state) => state.aboutDialogOpen);
   const loginDialogOpen = useVorPmdtStore((state) => state.loginDialogOpen);
   const applyConfigChanges = useVorPmdtStore((state) => state.applyConfigChanges);
@@ -115,9 +115,11 @@ export function PmdtLayout({
           moduleId="dvor-1150a"
           enabled
           onLoaded={(definition, context) => {
-            replaceScenarioDraft(definition);
-            if (context.review) applyScenario();
-            else setScenarioParametersOpen(true);
+            if (context.review) startReviewScenario(definition);
+            else {
+              replaceScenarioDraft(definition);
+              setScenarioParametersOpen(true);
+            }
           }}
         />
       </Suspense>
