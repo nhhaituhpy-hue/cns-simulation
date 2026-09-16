@@ -1,0 +1,564 @@
+{
+  "schemaVersion": 1,
+  "id": "qa-dvor220-carrier",
+  "name": "QA DVOR 220 - Suy giảm Carrier",
+  "description": "Khôi phục Carrier và điều chế 9960 Hz trên TX1.",
+  "difficulty": "intermediate",
+  "configuration": {
+    "station": {
+      "stationName": "Đài TEST",
+      "equipmentVersion": "dual",
+      "frequencyMHz": 113,
+      "carrierPowerW": 100,
+      "am30HzPercent": 30,
+      "identModulationPercent": 8,
+      "voiceModulationPercent": 0,
+      "azimuthOffsetDeg": 0,
+      "identCode": "TST",
+      "identKeyer": "independent",
+      "identSync": "code",
+      "playbackSource": "on-antenna",
+      "standbyMode": "hot",
+      "bypassMonitorsOnBoot": true,
+      "transmitterOutputOnBoot": true
+    },
+    "transmitters": {
+      "tx1": {
+        "carrierScalePercent": 50,
+        "sidebandPowerW": {
+          "usbCos": 0.32,
+          "usbSin": 0.32,
+          "lsbCos": 0.32,
+          "lsbSin": 0.32
+        },
+        "trackingEnabled": false,
+        "rfPhaseDeg": {
+          "usbCosToSin": 176,
+          "lsbCosToSin": 130,
+          "carrierToSideband": 123
+        },
+        "standbyRfPhaseDeg": {
+          "usbCosToSin": 119,
+          "lsbCosToSin": 160,
+          "carrierToSideband": 110
+        },
+        "useStationModulation": true,
+        "useStationAzimuth": true,
+        "useStationIdent": true,
+        "am30HzPercent": 30,
+        "identModulationPercent": 8,
+        "voiceModulationPercent": 0,
+        "azimuthOffsetDeg": 0,
+        "identCode": "TST",
+        "identKeyer": "independent",
+        "identSync": "code"
+      },
+      "tx2": {
+        "carrierScalePercent": 100,
+        "sidebandPowerW": {
+          "usbCos": 1,
+          "usbSin": 1,
+          "lsbCos": 1,
+          "lsbSin": 1
+        },
+        "trackingEnabled": false,
+        "rfPhaseDeg": {
+          "usbCosToSin": 135,
+          "lsbCosToSin": 57.5,
+          "carrierToSideband": 206
+        },
+        "standbyRfPhaseDeg": {
+          "usbCosToSin": 90,
+          "lsbCosToSin": 82,
+          "carrierToSideband": 35
+        },
+        "useStationModulation": true,
+        "useStationAzimuth": true,
+        "useStationIdent": true,
+        "am30HzPercent": 30,
+        "identModulationPercent": 8,
+        "voiceModulationPercent": 0,
+        "azimuthOffsetDeg": 0,
+        "identCode": "TST",
+        "identKeyer": "independent",
+        "identSync": "code"
+      }
+    },
+    "transmitterLimits": {
+      "carrierPower": {
+        "lowerAlarm": 60,
+        "lowerWarning": 80,
+        "nominal": 100,
+        "upperWarning": 110,
+        "upperAlarm": 120,
+        "severity": "primary"
+      },
+      "sidebandPower": {
+        "lowerAlarm": 0.3,
+        "lowerWarning": 0.7,
+        "nominal": 1,
+        "upperWarning": 1.4,
+        "upperAlarm": 3,
+        "severity": "primary"
+      },
+      "vswrUpperWarning": 1.7,
+      "vswrUpperAlarm": 2.5
+    },
+    "thermal": {
+      "tx1": {
+        "fanMode": "auto",
+        "fanStartC": 40,
+        "fanStopC": 35,
+        "shutdownC": {
+          "cma": 95,
+          "usb": 95,
+          "lsb": 95
+        },
+        "restartC": {
+          "cma": 80,
+          "usb": 80,
+          "lsb": 80
+        }
+      },
+      "tx2": {
+        "fanMode": "auto",
+        "fanStartC": 40,
+        "fanStopC": 35,
+        "shutdownC": {
+          "cma": 95,
+          "usb": 95,
+          "lsb": 95
+        },
+        "restartC": {
+          "cma": 80,
+          "usb": 80,
+          "lsb": 80
+        }
+      }
+    },
+    "monitor": {
+      "votingLogic": "AND",
+      "executiveAlarmDelayMs": 12000,
+      "postChangeoverHoldoffMs": 15000,
+      "powerOnHoldoffMs": 15000,
+      "measurementAverageCount": 2,
+      "warningRangePercent": 80,
+      "dcdcAlarmSeverity": "secondary",
+      "identCodeAlarmSeverity": "secondary",
+      "identCodeAlarmDelayMs": 20000,
+      "channels": {
+        "cha": {
+          "type": "FFM",
+          "referenceAzimuthDeg": 0,
+          "executiveAction": true,
+          "limits": {
+            "bearingError": {
+              "lowerAlarm": -1,
+              "lowerWarning": -0.8,
+              "nominal": 0,
+              "upperWarning": 0.8,
+              "upperAlarm": 1,
+              "severity": "primary"
+            },
+            "fmIndex": {
+              "lowerAlarm": 15,
+              "lowerWarning": 15.2,
+              "nominal": 16,
+              "upperWarning": 16.8,
+              "upperAlarm": 17,
+              "severity": "primary"
+            },
+            "am30Hz": {
+              "lowerAlarm": 28,
+              "lowerWarning": 28.4,
+              "nominal": 30,
+              "upperWarning": 31.6,
+              "upperAlarm": 32,
+              "severity": "primary"
+            },
+            "am9960Hz": {
+              "lowerAlarm": 28,
+              "lowerWarning": 28.4,
+              "nominal": 30,
+              "upperWarning": 31.6,
+              "upperAlarm": 32,
+              "severity": "primary"
+            },
+            "ident1020Hz": {
+              "lowerAlarm": 6,
+              "lowerWarning": 6.4,
+              "nominal": 8,
+              "upperWarning": 9.6,
+              "upperAlarm": 10,
+              "severity": "primary"
+            },
+            "rfLevel": {
+              "lowerAlarm": -3,
+              "lowerWarning": -2.4,
+              "nominal": 0,
+              "upperWarning": 2.4,
+              "upperAlarm": 3,
+              "severity": "primary"
+            },
+            "distortion9960Hz": {
+              "lowerAlarm": null,
+              "lowerWarning": null,
+              "nominal": 0,
+              "upperWarning": 80,
+              "upperAlarm": 100,
+              "severity": "secondary"
+            },
+            "carrierFrequency": {
+              "lowerAlarm": 112.99887,
+              "lowerWarning": 112.99921,
+              "nominal": 113,
+              "upperWarning": 113.00079,
+              "upperAlarm": 113.00113,
+              "severity": "secondary"
+            },
+            "subcarrierFrequency": {
+              "lowerAlarm": 9955,
+              "lowerWarning": 9957,
+              "nominal": 9960,
+              "upperWarning": 9963,
+              "upperAlarm": 9965,
+              "severity": "secondary"
+            }
+          }
+        },
+        "chb1": {
+          "type": "FFM",
+          "referenceAzimuthDeg": 0,
+          "executiveAction": false,
+          "limits": {
+            "bearingError": {
+              "lowerAlarm": -1,
+              "lowerWarning": -0.8,
+              "nominal": 0,
+              "upperWarning": 0.8,
+              "upperAlarm": 1,
+              "severity": "primary"
+            },
+            "fmIndex": {
+              "lowerAlarm": 15,
+              "lowerWarning": 15.2,
+              "nominal": 16,
+              "upperWarning": 16.8,
+              "upperAlarm": 17,
+              "severity": "primary"
+            },
+            "am30Hz": {
+              "lowerAlarm": 28,
+              "lowerWarning": 28.4,
+              "nominal": 30,
+              "upperWarning": 31.6,
+              "upperAlarm": 32,
+              "severity": "primary"
+            },
+            "am9960Hz": {
+              "lowerAlarm": 28,
+              "lowerWarning": 28.4,
+              "nominal": 30,
+              "upperWarning": 31.6,
+              "upperAlarm": 32,
+              "severity": "primary"
+            },
+            "ident1020Hz": {
+              "lowerAlarm": 6,
+              "lowerWarning": 6.4,
+              "nominal": 8,
+              "upperWarning": 9.6,
+              "upperAlarm": 10,
+              "severity": "primary"
+            },
+            "rfLevel": {
+              "lowerAlarm": -3,
+              "lowerWarning": -2.4,
+              "nominal": 0,
+              "upperWarning": 2.4,
+              "upperAlarm": 3,
+              "severity": "primary"
+            },
+            "distortion9960Hz": {
+              "lowerAlarm": null,
+              "lowerWarning": null,
+              "nominal": 0,
+              "upperWarning": 80,
+              "upperAlarm": 100,
+              "severity": "secondary"
+            },
+            "carrierFrequency": {
+              "lowerAlarm": 112.99887,
+              "lowerWarning": 112.99921,
+              "nominal": 113,
+              "upperWarning": 113.00079,
+              "upperAlarm": 113.00113,
+              "severity": "secondary"
+            },
+            "subcarrierFrequency": {
+              "lowerAlarm": 9955,
+              "lowerWarning": 9957,
+              "nominal": 9960,
+              "upperWarning": 9963,
+              "upperAlarm": 9965,
+              "severity": "secondary"
+            }
+          }
+        },
+        "chb2": {
+          "type": "FFM",
+          "referenceAzimuthDeg": 0,
+          "executiveAction": false,
+          "limits": {
+            "bearingError": {
+              "lowerAlarm": -1,
+              "lowerWarning": -0.8,
+              "nominal": 0,
+              "upperWarning": 0.8,
+              "upperAlarm": 1,
+              "severity": "primary"
+            },
+            "fmIndex": {
+              "lowerAlarm": 15,
+              "lowerWarning": 15.2,
+              "nominal": 16,
+              "upperWarning": 16.8,
+              "upperAlarm": 17,
+              "severity": "primary"
+            },
+            "am30Hz": {
+              "lowerAlarm": 28,
+              "lowerWarning": 28.4,
+              "nominal": 30,
+              "upperWarning": 31.6,
+              "upperAlarm": 32,
+              "severity": "primary"
+            },
+            "am9960Hz": {
+              "lowerAlarm": 28,
+              "lowerWarning": 28.4,
+              "nominal": 30,
+              "upperWarning": 31.6,
+              "upperAlarm": 32,
+              "severity": "primary"
+            },
+            "ident1020Hz": {
+              "lowerAlarm": 6,
+              "lowerWarning": 6.4,
+              "nominal": 8,
+              "upperWarning": 9.6,
+              "upperAlarm": 10,
+              "severity": "primary"
+            },
+            "rfLevel": {
+              "lowerAlarm": -3,
+              "lowerWarning": -2.4,
+              "nominal": 0,
+              "upperWarning": 2.4,
+              "upperAlarm": 3,
+              "severity": "primary"
+            },
+            "distortion9960Hz": {
+              "lowerAlarm": null,
+              "lowerWarning": null,
+              "nominal": 0,
+              "upperWarning": 80,
+              "upperAlarm": 100,
+              "severity": "secondary"
+            },
+            "carrierFrequency": {
+              "lowerAlarm": 112.99887,
+              "lowerWarning": 112.99921,
+              "nominal": 113,
+              "upperWarning": 113.00079,
+              "upperAlarm": 113.00113,
+              "severity": "secondary"
+            },
+            "subcarrierFrequency": {
+              "lowerAlarm": 9955,
+              "lowerWarning": 9957,
+              "nominal": 9960,
+              "upperWarning": 9963,
+              "upperAlarm": 9965,
+              "severity": "secondary"
+            }
+          }
+        },
+        "standby": {
+          "type": "disabled",
+          "referenceAzimuthDeg": 0,
+          "executiveAction": false,
+          "limits": {
+            "bearingError": {
+              "lowerAlarm": -1,
+              "lowerWarning": -0.8,
+              "nominal": 0,
+              "upperWarning": 0.8,
+              "upperAlarm": 1,
+              "severity": "primary"
+            },
+            "fmIndex": {
+              "lowerAlarm": 15,
+              "lowerWarning": 15.2,
+              "nominal": 16,
+              "upperWarning": 16.8,
+              "upperAlarm": 17,
+              "severity": "primary"
+            },
+            "am30Hz": {
+              "lowerAlarm": 28,
+              "lowerWarning": 28.4,
+              "nominal": 30,
+              "upperWarning": 31.6,
+              "upperAlarm": 32,
+              "severity": "primary"
+            },
+            "am9960Hz": {
+              "lowerAlarm": 28,
+              "lowerWarning": 28.4,
+              "nominal": 30,
+              "upperWarning": 31.6,
+              "upperAlarm": 32,
+              "severity": "primary"
+            },
+            "ident1020Hz": {
+              "lowerAlarm": 6,
+              "lowerWarning": 6.4,
+              "nominal": 8,
+              "upperWarning": 9.6,
+              "upperAlarm": 10,
+              "severity": "primary"
+            },
+            "rfLevel": {
+              "lowerAlarm": -3,
+              "lowerWarning": -2.4,
+              "nominal": 0,
+              "upperWarning": 2.4,
+              "upperAlarm": 3,
+              "severity": "primary"
+            },
+            "distortion9960Hz": {
+              "lowerAlarm": null,
+              "lowerWarning": null,
+              "nominal": 0,
+              "upperWarning": 80,
+              "upperAlarm": 100,
+              "severity": "secondary"
+            },
+            "carrierFrequency": {
+              "lowerAlarm": 112.99887,
+              "lowerWarning": 112.99921,
+              "nominal": 113,
+              "upperWarning": 113.00079,
+              "upperAlarm": 113.00113,
+              "severity": "secondary"
+            },
+            "subcarrierFrequency": {
+              "lowerAlarm": 9955,
+              "lowerWarning": 9957,
+              "nominal": 9960,
+              "upperWarning": 9963,
+              "upperAlarm": 9965,
+              "severity": "secondary"
+            }
+          }
+        }
+      },
+      "rfGainDb": {
+        "mon1": {
+          "cha": -26.5,
+          "chb1": -27.5,
+          "chb2": -28,
+          "standby": -31.5,
+          "tsg": -30.5
+        },
+        "mon2": {
+          "cha": -25.5,
+          "chb1": -26.5,
+          "chb2": -27,
+          "standby": -31.5,
+          "tsg": -30.5
+        }
+      }
+    },
+    "system": {
+      "allowSimultaneousLogin": true,
+      "allowGuestAccess": false,
+      "automaticLogoutMinutes": 60,
+      "identWhenMonitorBypassed": "no-change",
+      "settingsOnlyWhenMonitorBypassed": true,
+      "settingsOnlyAtLocal": false,
+      "shutdownOnRcuFault": false,
+      "shutdownOnLmiFault": false,
+      "shutdownOnCspFault": false,
+      "controlFaultShutdownDelayMs": 3000
+    },
+    "communication": {
+      "remoteConnectionLimit": 8,
+      "localConnectionLimit": 1,
+      "pmdtRs232BaudRate": 115200,
+      "scuRemote": {
+        "scu1": {
+          "type": "rs232",
+          "baudRate": 115200,
+          "flowControl": false
+        },
+        "scu2": {
+          "type": "rs232",
+          "baudRate": 57600,
+          "flowControl": false
+        }
+      },
+      "rcuLineType": "ethernet",
+      "localIpStart": "172.16.1.5",
+      "localIpEnd": "172.16.1.253"
+    },
+    "battery": {
+      "voltageWarningV": 22,
+      "voltageAlarmV": 21,
+      "temperatureWarningC": 40,
+      "temperatureAlarmC": 50,
+      "chargingCurrentA": 10,
+      "cutoffVoltageV": 20,
+      "backupRuntimeMinutes": 240
+    },
+    "optionalUnits": {
+      "emu": true,
+      "niu": true,
+      "vau": false,
+      "battery": true,
+      "standbyMonitor": false
+    }
+  },
+  "runtime": {
+    "mainTransmitterId": "tx1",
+    "startMonitorBypassed": true,
+    "acAvailable": true,
+    "batteryRemainingMinutes": 240,
+    "temperaturesC": {
+      "tx1": {
+        "cma": 35.5,
+        "usb": 36,
+        "lsb": 36.2
+      },
+      "tx2": {
+        "cma": 34.8,
+        "usb": 35.2,
+        "lsb": 35.4
+      }
+    },
+    "environment": {
+      "temperatureC": 24,
+      "smoke": false,
+      "intrusion": false
+    },
+    "antennaVswr": [],
+    "faults": [],
+    "measurementOverrides": []
+  },
+  "successCriteria": {
+    "requireServiceNormal": true,
+    "requireEnabledMonitorChannelsNormal": true,
+    "requireNoPrimaryAlarm": true
+  }
+}

@@ -18,11 +18,19 @@ describe("operations software availability", () => {
     expect(cardForHeading("Phần mềm khai thác DME 320").getByText("Sẵn sàng")).toBeInTheDocument();
   });
 
-  it("keeps authoring and review planned until their workflows exist", () => {
+  it("marks DVOR 220 and DME 320 authoring workspaces as available", () => {
     render(<TrainingWorkspaceCatalog mode="authoring" />);
 
-    expect(cardForHeading("DVOR 220").getByText("Chuẩn bị")).toBeInTheDocument();
-    expect(cardForHeading("DME 320").getByText("Chuẩn bị")).toBeInTheDocument();
+    expect(cardForHeading("DVOR 220").getByText("Sẵn sàng")).toBeInTheDocument();
+    expect(cardForHeading("DVOR 220").getByRole("link", { name: "Quản lý kịch bản" })).toHaveAttribute(
+      "href",
+      "/authoring/dvor-220",
+    );
+    expect(cardForHeading("DME 320").getByText("Sẵn sàng")).toBeInTheDocument();
+    expect(cardForHeading("DME 320").getByRole("link", { name: "Quản lý kịch bản" })).toHaveAttribute(
+      "href",
+      "/authoring/dme-320",
+    );
   });
 
   it("marks the DVOR 220 and DME 320 review workspaces as available", () => {

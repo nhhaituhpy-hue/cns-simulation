@@ -4,7 +4,7 @@ export const DVOR_220_SOFTWARE_MODULE = {
   id: "dvor-220",
   category: "operations-software",
   status: "available",
-  trainingStatus: "planned",
+  trainingStatus: "available",
   reviewStatus: "available",
   name: "Phần mềm khai thác DVOR 220",
   shortName: "DVOR 220",

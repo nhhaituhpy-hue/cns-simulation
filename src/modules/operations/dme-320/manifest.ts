@@ -4,7 +4,7 @@ export const DME_320_SOFTWARE_MODULE = {
   id: "dme-320",
   category: "operations-software",
   status: "available",
-  trainingStatus: "planned",
+  trainingStatus: "available",
   reviewStatus: "available",
   name: "Phần mềm khai thác DME 320",
   shortName: "DME 320",

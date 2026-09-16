@@ -1,0 +1,314 @@
+{
+  "schemaVersion": 1,
+  "id": "qa-dme320-low-power",
+  "name": "QA DME 320 - Công suất thấp",
+  "description": "Khôi phục công suất TX1 và ERP về giới hạn bình thường.",
+  "difficulty": "intermediate",
+  "configuration": {
+    "station": {
+      "stationName": "MOPIENS 320 DME",
+      "runwayDesignator": "",
+      "channel": {
+        "number": 100,
+        "suffix": "X"
+      },
+      "powerOutputWatts": 1000,
+      "delayOffsetUs": 0,
+      "autoDelayCalibration": "never",
+      "sensitivityDbm": -91,
+      "minimumPulseRatePps": 800,
+      "sdesEnabled": true,
+      "sdesDurationUs": 6,
+      "ldesEnabled": false,
+      "ldesDurationUs": 200,
+      "ldesThresholdDbm": -80,
+      "deadTimeUs": 60,
+      "identCode": "MOP",
+      "identKeyer": "independent",
+      "identSync": "code",
+      "identSound": "ON ANTENNA",
+      "equalizerPulseEnabled": false,
+      "interlockEnabled": false,
+      "standbyMode": "hot",
+      "bypassMonitorsOnBoot": true,
+      "transmitterOutputOnBoot": true
+    },
+    "transmitters": {
+      "tx1": {
+        "outputPowerPercent": 40,
+        "useStationPulseRate": true,
+        "useStationEchoSuppression": true,
+        "useStationIdent": true
+      },
+      "tx2": {
+        "outputPowerPercent": 100,
+        "useStationPulseRate": true,
+        "useStationEchoSuppression": true,
+        "useStationIdent": true
+      }
+    },
+    "thermal": {
+      "fanMode": "on",
+      "fanStartC": 45,
+      "fanStopC": 40,
+      "txuShutdownC": 90,
+      "txuRestartC": 80
+    },
+    "monitor": {
+      "votingLogic": "OR",
+      "monitorActionDelayMs": 4000,
+      "postChangeoverHoldoffMs": 2000,
+      "identFaultDelayMs": 40000,
+      "selfTestHoldoffMs": 2000,
+      "powerOnHoldoffMs": 2000,
+      "limits": {
+        "timeDelayUs": {
+          "alarmLow": 49.6,
+          "warningLow": 49.8,
+          "nominal": 50,
+          "warningHigh": 50.2,
+          "alarmHigh": 50.4,
+          "classification": "primary",
+          "alarmDelayMs": 1000,
+          "unit": "µs"
+        },
+        "replyEfficiencyPct": {
+          "alarmLow": 70,
+          "warningLow": 75,
+          "nominal": 85,
+          "warningHigh": 98,
+          "alarmHigh": 100,
+          "classification": "secondary",
+          "alarmDelayMs": 1000,
+          "unit": "%"
+        },
+        "transmissionRatePps": {
+          "alarmLow": 700,
+          "warningLow": 750,
+          "nominal": 800,
+          "warningHigh": 5200,
+          "alarmHigh": 5400,
+          "classification": "secondary",
+          "alarmDelayMs": 1000,
+          "unit": "pp/s"
+        },
+        "pulseRiseUs": {
+          "alarmLow": 2,
+          "warningLow": 2.2,
+          "nominal": 2.5,
+          "warningHigh": 2.8,
+          "alarmHigh": 3,
+          "classification": "secondary",
+          "alarmDelayMs": 1000,
+          "unit": "µs"
+        },
+        "pulseDurationUs": {
+          "alarmLow": 3,
+          "warningLow": 3.2,
+          "nominal": 3.5,
+          "warningHigh": 3.8,
+          "alarmHigh": 4,
+          "classification": "secondary",
+          "alarmDelayMs": 1000,
+          "unit": "µs"
+        },
+        "pulseDecayUs": {
+          "alarmLow": 2,
+          "warningLow": 2.2,
+          "nominal": 2.5,
+          "warningHigh": 2.8,
+          "alarmHigh": 3,
+          "classification": "secondary",
+          "alarmDelayMs": 1000,
+          "unit": "µs"
+        },
+        "pulseSpacingUs": {
+          "alarmLow": 11.6,
+          "warningLow": 11.8,
+          "nominal": 12,
+          "warningHigh": 12.2,
+          "alarmHigh": 12.4,
+          "classification": "primary",
+          "alarmDelayMs": 1000,
+          "unit": "µs"
+        },
+        "frequencyMhz": {
+          "alarmLow": 1186.98813,
+          "warningLow": 1186.994065,
+          "nominal": 1187,
+          "warningHigh": 1187.005935,
+          "alarmHigh": 1187.01187,
+          "classification": "secondary",
+          "alarmDelayMs": 1000,
+          "unit": "MHz"
+        },
+        "peakPowerWatts": {
+          "alarmLow": 500,
+          "warningLow": 750,
+          "nominal": 1000,
+          "warningHigh": null,
+          "alarmHigh": null,
+          "classification": "secondary",
+          "alarmDelayMs": 1000,
+          "unit": "W"
+        },
+        "vswr": {
+          "alarmLow": null,
+          "warningLow": null,
+          "nominal": 1.15,
+          "warningHigh": 2,
+          "alarmHigh": 3,
+          "classification": "secondary",
+          "alarmDelayMs": 1000,
+          "unit": ":1"
+        },
+        "erpDb": {
+          "alarmLow": -3,
+          "warningLow": -2,
+          "nominal": 0,
+          "warningHigh": 2,
+          "alarmHigh": 3,
+          "classification": "secondary",
+          "alarmDelayMs": 1000,
+          "unit": "dB"
+        },
+        "identCode": {
+          "alarmLow": null,
+          "warningLow": null,
+          "nominal": "MOP",
+          "warningHigh": null,
+          "alarmHigh": null,
+          "classification": "secondary",
+          "alarmDelayMs": 1000,
+          "unit": ""
+        }
+      }
+    },
+    "system": {
+      "allowSimultaneousLogin": false,
+      "allowGuestAccess": true,
+      "automaticLogoutMinutes": 0,
+      "modifyOnlyWhenBypassed": true,
+      "modifyOnlyAtLocal": true,
+      "shutdownOnRcuFault": false,
+      "shutdownOnLmiFault": false,
+      "shutdownOnCspFault": false,
+      "communicationFaultShutdownDelayMs": 4000
+    },
+    "communication": {
+      "remoteConnectionLimit": 4,
+      "localConnectionLimit": 4,
+      "localPmdtBaudRate": 115200,
+      "scu1RemoteType": "RS-232",
+      "scu1BaudRate": 115200,
+      "scu1FlowControl": false,
+      "scu2RemoteType": "RS-232",
+      "scu2BaudRate": 115200,
+      "scu2FlowControl": false,
+      "rcuLineType": "Ethernet",
+      "localIpStart": "172.16.1.1",
+      "localIpEnd": "172.16.1.254"
+    },
+    "battery": {
+      "warningVoltage": 22,
+      "alarmVoltage": 21,
+      "warningTemperatureC": 45,
+      "alarmTemperatureC": 55,
+      "chargingCurrentLimitA": 20,
+      "cutoffVoltage": 20,
+      "fullyChargedVoltage": 27,
+      "simulatedDischargeVoltsPerHour": 1,
+      "simulatedChargeVoltsPerHour": 2
+    },
+    "environment": {
+      "emuEnabled": true,
+      "analogInputsEnabled": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "digitalInputsEnabled": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "expansionDigitalInputsEnabled": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ],
+      "digitalOutputsEnabled": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "runtime": {
+    "mainTransponder": "tx1",
+    "startMonitorBypassed": true,
+    "acAvailable": true,
+    "batteries": {
+      "battery1": {
+        "connected": true,
+        "voltage": 27,
+        "temperatureC": 25
+      },
+      "battery2": {
+        "connected": true,
+        "voltage": 27,
+        "temperatureC": 25
+      }
+    },
+    "temperaturesC": {
+      "tx1": 35,
+      "tx2": 35
+    },
+    "spacingOffsetsUs": {
+      "tx1": 0,
+      "tx2": 0
+    },
+    "environment": {
+      "present": true,
+      "temperatureC": 24,
+      "smokeDetected": false,
+      "intrusionDetected": false
+    },
+    "faults": [],
+    "measurementOverrides": []
+  },
+  "successCriteria": {
+    "requireServiceNormal": true,
+    "requireMonitorChannelsNormal": true,
+    "requireNoPrimaryAlarm": true,
+    "requireNoActiveFaults": true
+  }
+}

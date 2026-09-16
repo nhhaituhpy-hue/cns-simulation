@@ -1,0 +1,411 @@
+{
+  "schemaVersion": 1,
+  "id": "qa-dme1119a-delay-drift",
+  "name": "QA DME 1119A - Trôi Reply Delay",
+  "description": "Chẩn đoán và hiệu chỉnh sai lệch Reply Delay.",
+  "difficulty": "intermediate",
+  "configuration": {
+    "alarmLimits": [
+      {
+        "parameter": "Delay",
+        "alarmLow": -0.4,
+        "preAlarmLow": -0.32,
+        "nominal": 50,
+        "preAlarmHigh": 0.32,
+        "alarmHigh": 0.4,
+        "unit": "us"
+      },
+      {
+        "parameter": "Spacing",
+        "alarmLow": -0.4,
+        "preAlarmLow": -0.32,
+        "nominal": 12,
+        "preAlarmHigh": 0.32,
+        "alarmHigh": 0.4,
+        "unit": "us"
+      },
+      {
+        "parameter": "Tx Power",
+        "alarmLow": 500,
+        "preAlarmLow": 550,
+        "nominal": 1000,
+        "preAlarmHigh": 1225,
+        "alarmHigh": 1250,
+        "unit": "Watts"
+      },
+      {
+        "parameter": "ERP",
+        "alarmLow": -3,
+        "preAlarmLow": -2.7,
+        "nominal": 0,
+        "preAlarmHigh": 0.9,
+        "alarmHigh": 1,
+        "unit": "dB"
+      },
+      {
+        "parameter": "Efficiency",
+        "alarmLow": 60,
+        "preAlarmLow": 73,
+        "nominal": 100,
+        "preAlarmHigh": null,
+        "alarmHigh": null,
+        "unit": "%"
+      },
+      {
+        "parameter": "PRF",
+        "alarmLow": 720,
+        "preAlarmLow": 730,
+        "nominal": 800,
+        "preAlarmHigh": 6000,
+        "alarmHigh": 6000,
+        "unit": "ppps"
+      },
+      {
+        "parameter": "Tx Frequency Error",
+        "alarmLow": -20,
+        "preAlarmLow": -18,
+        "nominal": 0,
+        "preAlarmHigh": 18,
+        "alarmHigh": 20,
+        "unit": "ppm"
+      },
+      {
+        "parameter": "Rx Frequency Error",
+        "alarmLow": -20,
+        "preAlarmLow": -18,
+        "nominal": 0,
+        "preAlarmHigh": 18,
+        "alarmHigh": 20,
+        "unit": "ppm"
+      },
+      {
+        "parameter": "VSWR",
+        "alarmLow": null,
+        "preAlarmLow": null,
+        "nominal": 1.1,
+        "preAlarmHigh": 3,
+        "alarmHigh": 4,
+        "unit": ":1"
+      }
+    ],
+    "delayControl": {
+      "rtc1": {
+        "low": 9.04,
+        "propagationDelay": 9.62,
+        "high": 10.04,
+        "fixed": false
+      },
+      "rtc2": {
+        "low": 9.04,
+        "propagationDelay": 9.46,
+        "high": 10.04,
+        "fixed": false
+      }
+    },
+    "monitorCalibrationData": {
+      "monitor1": [
+        {
+          "parameter": "Delay",
+          "baseline": 50,
+          "actual": 50.01,
+          "offset": 0.01,
+          "scale": 1,
+          "unit": "us"
+        },
+        {
+          "parameter": "Spacing",
+          "baseline": 12,
+          "actual": 12.02,
+          "offset": 0.02,
+          "scale": 1,
+          "unit": "us"
+        },
+        {
+          "parameter": "Peak Power",
+          "baseline": 1000,
+          "actual": 998,
+          "offset": -2,
+          "scale": 1,
+          "unit": "W"
+        },
+        {
+          "parameter": "Efficiency",
+          "baseline": 80,
+          "actual": 80.1,
+          "offset": 0.1,
+          "scale": 1,
+          "unit": "%"
+        },
+        {
+          "parameter": "PRF",
+          "baseline": 800,
+          "actual": 801,
+          "offset": 1,
+          "scale": 1,
+          "unit": "Hz"
+        }
+      ],
+      "monitor2": [
+        {
+          "parameter": "Delay",
+          "baseline": 50,
+          "actual": 50.02,
+          "offset": 0.02,
+          "scale": 1,
+          "unit": "us"
+        },
+        {
+          "parameter": "Spacing",
+          "baseline": 12,
+          "actual": 12.01,
+          "offset": 0.01,
+          "scale": 1,
+          "unit": "us"
+        },
+        {
+          "parameter": "Peak Power",
+          "baseline": 1000,
+          "actual": 1001,
+          "offset": 1,
+          "scale": 1,
+          "unit": "W"
+        },
+        {
+          "parameter": "Efficiency",
+          "baseline": 80,
+          "actual": 80,
+          "offset": 0,
+          "scale": 1,
+          "unit": "%"
+        },
+        {
+          "parameter": "PRF",
+          "baseline": 800,
+          "actual": 800,
+          "offset": 0,
+          "scale": 1,
+          "unit": "Hz"
+        }
+      ]
+    },
+    "monitorConfigGeneral": [
+      {
+        "parameter": "Delay",
+        "primary": true,
+        "secondary": false
+      },
+      {
+        "parameter": "Spacing",
+        "primary": true,
+        "secondary": false
+      },
+      {
+        "parameter": "Tx Power",
+        "primary": true,
+        "secondary": false
+      },
+      {
+        "parameter": "ERP",
+        "primary": true,
+        "secondary": false
+      },
+      {
+        "parameter": "Efficiency",
+        "primary": true,
+        "secondary": false
+      },
+      {
+        "parameter": "PRF",
+        "primary": true,
+        "secondary": false
+      },
+      {
+        "parameter": "Ident Status",
+        "primary": true,
+        "secondary": false
+      },
+      {
+        "parameter": "Ident Code",
+        "primary": true,
+        "secondary": false
+      },
+      {
+        "parameter": "Tx Frequency Error",
+        "primary": false,
+        "secondary": true
+      },
+      {
+        "parameter": "Rx Frequency Error",
+        "primary": false,
+        "secondary": true
+      }
+    ],
+    "monitorSystemSettings": {
+      "efficiencyCertificationLevel": 70,
+      "monitor1ReplyAttenuation": 22,
+      "monitor2ReplyAttenuation": 22,
+      "directionalCouplerLoss": -29.67
+    },
+    "monitorTimers": {
+      "integralShutdownDelay": 7,
+      "standbyShutdownDelay": 7,
+      "continuousIdent": 5,
+      "noIdent": 65
+    },
+    "monitorTransmitterStatus": {
+      "monitorAlarmShutdown": false,
+      "enabledMonitors": {
+        "monitor1": true,
+        "monitor2": true
+      },
+      "antennaSelect": 1,
+      "mainSelect": 1,
+      "transmitterOn": {
+        "tx1": true,
+        "tx2": true
+      }
+    },
+    "rmsConfigGeneral": {
+      "monitorIntegrityTestsEnabled": true,
+      "votingLogic": "AND",
+      "transfer": "on Primary Alarm",
+      "automaticRestartsEnabled": false,
+      "firstRestartDelay": 50,
+      "numberOfAutomaticRestarts": 2,
+      "rcsuPresent": true,
+      "rcsuConnectionType": "Dedicated Modem",
+      "interlockControl": "Not Applicable",
+      "spiFilterType": "Normal",
+      "smokeAlarmInstalled": false,
+      "intrusionAlarmInstalled": false,
+      "exitDelay": 30,
+      "entryDelay": 5,
+      "remoteResetEnabledSmoke": true,
+      "remoteResetEnabledIntrusion": true,
+      "spareInputs": [
+        "Not Present",
+        "Not Present",
+        "Not Present",
+        "Not Present"
+      ],
+      "rmmConnectionType": "PSTN Modem",
+      "dialInRings": 3,
+      "dialOutOnStatusChange": "Dial out to SELEX RSMS",
+      "dialOutPhoneNumber": "6811",
+      "toneDialOut": true
+    },
+    "rmsConfigStation": {
+      "powerLevel": "High Power",
+      "transmitterConfig": "Dual Transmitters",
+      "monitorConfig": "Dual Monitors",
+      "hotStandby": true,
+      "channelType": "X",
+      "channelNumber": 117,
+      "stationDescription": "TST"
+    },
+    "txConfigNominal": {
+      "rtcParameters": {
+        "powerOutput": -1,
+        "minimumSquitter": 800,
+        "maximumPrf": 5400,
+        "ldesWindow": 150,
+        "ldesThreshold": -70,
+        "deadTime": 60,
+        "replyDelayOffset": 0,
+        "rxSensitivity": -94,
+        "nominalPropagationDelay": 9.54,
+        "maxPropagationVariance": 0.5,
+        "standbyPropagationOffset": 0
+      },
+      "operation": {
+        "timing": "1st Pulse",
+        "squitterEnabled": true,
+        "sdesEnabled": false,
+        "ldesEnabled": false,
+        "equalizationPulsesEnabled": true
+      },
+      "powerAmplifiers": {
+        "lowOutputPowerAlertLimit": 15,
+        "hpa1Enabled": true,
+        "hpa2Enabled": true
+      },
+      "ident": {
+        "keyerIo": "Active High/Open",
+        "windowedKeying": false,
+        "keyerSource": "Internal Keying",
+        "selfKeyOnLoss": false,
+        "shutdownOnLoss": false,
+        "restartWhenSignalResumes": false,
+        "primaryIdentCode": "TST",
+        "secondaryIdentEnabled": true,
+        "secondaryIdentCode": "TST",
+        "standbyIdent": "Same as Main Ident"
+      }
+    },
+    "txOffsets": [
+      {
+        "parameter": "Power Output Scale",
+        "tx1": 51.3,
+        "tx2": 53.4,
+        "unit": "%"
+      },
+      {
+        "parameter": "Rx Sensitivity Offset",
+        "tx1": 0,
+        "tx2": 0,
+        "unit": "dB"
+      },
+      {
+        "parameter": "Base Offset",
+        "tx1": 0,
+        "tx2": 0,
+        "unit": "us"
+      }
+    ]
+  },
+  "faultInjections": [
+    {
+      "id": "tx1-delay",
+      "kind": "reply-delay-drift",
+      "transmitter": "tx1",
+      "driftUs": 0.6
+    }
+  ],
+  "startPolicy": {
+    "mainTransmitterId": "tx1",
+    "startLocal": true,
+    "integralMonitorBypassed": true,
+    "standbyMonitorBypassed": true,
+    "identMode": "normal"
+  },
+  "successCriteria": [
+    {
+      "id": "integral-monitor-normal",
+      "kind": "monitor-normal",
+      "monitor": "integral"
+    },
+    {
+      "id": "active-transmitter",
+      "kind": "active-transmitter",
+      "expected": "any"
+    },
+    {
+      "id": "active-path-healthy",
+      "kind": "active-path-healthy"
+    },
+    {
+      "id": "integral-bypass-cleared",
+      "kind": "bypass-cleared",
+      "monitor": "integral"
+    },
+    {
+      "id": "standby-bypass-cleared",
+      "kind": "bypass-cleared",
+      "monitor": "standby"
+    }
+  ],
+  "studentEditableFieldIds": [
+    "txConfigNominal.rtcParameters.replyDelayOffset",
+    "txOffsets.2.tx1"
+  ]
+}
