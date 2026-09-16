@@ -243,7 +243,10 @@ export function OperationsReviewDashboard({
               {available.length === 0 ? <p className="border border-dashed border-[var(--border-strong)] bg-[var(--surface-muted)] p-5 text-sm text-[var(--text-secondary)]">Kho chưa có kịch bản cho {copy.shortName}. Hãy tạo hoặc import kịch bản tại tab Kịch bản trước.</p> : (
                 <fieldset className="grid gap-2"><legend className="sr-only">Danh sách kịch bản có thể gắn vào ôn tập</legend>{available.map((scenario) => {
                   const checked = selectedIds.includes(scenario.id);
-                  return <label key={scenario.id} className={`flex min-h-14 cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${checked ? "border-[var(--accent)] bg-[var(--accent-muted)]" : "border-[var(--border)] hover:bg-[var(--surface-muted)]"}`}><input type="checkbox" checked={checked} onChange={(event) => setSelectedIds((current) => event.currentTarget.checked ? [...current, scenario.id] : current.filter((id) => id !== scenario.id))} className="mt-1 size-4 accent-[var(--accent)]" /><span className="min-w-0"><span className="block font-semibold text-[var(--text-primary)]">{scenario.name}</span><span className="mt-0.5 block text-xs leading-5 text-[var(--text-secondary)]">{scenario.description || "Không có mô tả."}</span></span></label>;
+                  return <label key={scenario.id} className={`flex min-h-14 cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${checked ? "border-[var(--accent)] bg-[var(--accent-muted)]" : "border-[var(--border)] hover:bg-[var(--surface-muted)]"}`}><input type="checkbox" checked={checked} onChange={(event) => {
+                    const nextChecked = event.currentTarget.checked;
+                    setSelectedIds((current) => nextChecked ? [...current, scenario.id] : current.filter((id) => id !== scenario.id));
+                  }} className="mt-1 size-4 accent-[var(--accent)]" /><span className="min-w-0"><span className="block font-semibold text-[var(--text-primary)]">{scenario.name}</span><span className="mt-0.5 block text-xs leading-5 text-[var(--text-secondary)]">{scenario.description || "Không có mô tả."}</span></span></label>;
                 })}</fieldset>
               )}
             </div>

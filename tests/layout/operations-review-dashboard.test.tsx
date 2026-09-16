@@ -1,9 +1,11 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { OperationsReviewDashboard } from "@/modules/training/operations-review-dashboard";
 
 describe("OperationsReviewDashboard", () => {
+  afterEach(() => vi.unstubAllGlobals());
   it.each([
     ["dvor-1150", "DVOR 1150"],
     ["dvor-1150a", "DVOR 1150A"],
@@ -47,5 +49,37 @@ describe("OperationsReviewDashboard", () => {
       "href",
       "/review/dvor-220/session?id=review-1",
     );
+  });
+
+  it("allows an examiner to select a scenario without losing the checkbox event", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      assigned: [],
+      canManage: true,
+      available: [{
+        id: "row-1",
+        moduleId: "dvor-220",
+        scenarioId: "scenario-1",
+        name: "Suy giảm Carrier",
+        description: "Khôi phục Carrier.",
+        difficulty: "intermediate",
+        schemaVersion: 1,
+        definition: {},
+        sourceFileName: "scenario.json",
+        createdAt: "2026-09-16T00:00:00.000Z",
+        updatedAt: "2026-09-16T00:00:00.000Z",
+      }],
+    }), { status: 200 })));
+    render(
+      <OperationsReviewDashboard
+        moduleId="dvor-220"
+      />,
+    );
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "Thêm kịch bản" })).toBeEnabled());
+    await user.click(screen.getByRole("button", { name: "Thêm kịch bản" }));
+    await user.click(screen.getByRole("checkbox", { name: /Suy giảm Carrier/ }));
+    expect(screen.getByRole("checkbox", { name: /Suy giảm Carrier/ })).toBeChecked();
+    expect(screen.getByRole("button", { name: "Lưu 1 kịch bản" })).toBeInTheDocument();
   });
 });
