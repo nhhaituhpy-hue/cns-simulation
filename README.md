@@ -209,6 +209,9 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-09-17 — Bổ sung quy tắc chống tái phát lỗi GitHub Actions CI
+- Ghi `GitHub Actions CI Regression Guard` vào `AGENTS.md`: yêu cầu kiểm tra full pipeline Node 24 khi đụng App Router/MOPIENS UI/test setup; nêu mock `useRouter` + `useSearchParams`, kỳ vọng nút quay lại nội tuyến và ranh giới giữa warning `act(...)` với lỗi test.
+
 ### 2026-09-17 — Khôi phục GitHub Actions CI cho MOPIENS và AppShell
 - Sửa test harness cho UI workflow DVOR 220 và DME 320: mock `next/navigation` cung cấp App Router và search params rỗng khi render component độc lập trong Vitest.
 - Đồng bộ test dispatcher MOPIENS với cùng router mock.
