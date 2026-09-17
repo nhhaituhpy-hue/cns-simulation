@@ -138,36 +138,35 @@ describe("AppShell", () => {
     ).not.toBeInTheDocument();
   });
 
-  it.each([
-    "/simulator/ads-b",
-    "/simulator/software/dvor-220",
-    "/simulator/software/dme-320",
-  ])("shows the global header and back action on simulator route %s", (pathname) => {
+  it("shows the global header and home back action on the ADS-B simulator route", () => {
+    const pathname = "/simulator/ads-b";
     mockUsePathname.mockReturnValue(pathname);
     renderShell();
 
     expect(screen.getByText("Nội dung kiểm thử")).toBeInTheDocument();
     expect(screen.getByRole("banner")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Quay lại trang trước" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Quay lại trang chủ" })).toBeInTheDocument();
   });
 
   it.each([
     "/simulator/dvor-1150",
     "/simulator/dvor-1150a",
     "/simulator/dme-1119a",
-  ])("leaves the back action to the PMDT toolbar on simulator route %s", (pathname) => {
+    "/simulator/software/dvor-220",
+    "/simulator/software/dme-320",
+  ])("leaves the home back action to the PMDT toolbar on simulator route %s", (pathname) => {
     mockUsePathname.mockReturnValue(pathname);
     renderShell();
 
-    expect(screen.queryByRole("button", { name: "Quay lại trang trước" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Quay lại trang chủ" })).not.toBeInTheDocument();
   });
 
-  it("falls back to the simulator catalog when browser history has no previous entry", () => {
+  it("returns to the home page from a simulator detail route", () => {
     mockUsePathname.mockReturnValue("/simulator/ads-b");
     renderShell();
 
-    fireEvent.click(screen.getByRole("button", { name: "Quay lại trang trước" }));
+    fireEvent.click(screen.getByRole("button", { name: "Quay lại trang chủ" }));
 
-    expect(mockRouter.push).toHaveBeenCalledWith("/simulator");
+    expect(mockRouter.push).toHaveBeenCalledWith("/");
   });
 });

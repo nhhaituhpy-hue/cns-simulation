@@ -1,11 +1,23 @@
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { DME_320_SOFTWARE_MODULE } from "@/modules/operations/dme-320";
 import { DVOR_220_SOFTWARE_MODULE } from "@/modules/operations/dvor-220";
 import { OperationsSoftwareSimulator } from "@/modules/operations/software-module-pages";
 import { VHF_SOFTWARE_MODULE } from "@/modules/operations/vhf";
 import { VSAT_SOFTWARE_MODULE } from "@/modules/operations/vsat";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    back: vi.fn(),
+    forward: vi.fn(),
+    prefetch: vi.fn(),
+    push: vi.fn(),
+    refresh: vi.fn(),
+    replace: vi.fn(),
+  }),
+  useSearchParams: () => new URLSearchParams(),
+}));
 
 afterEach(cleanup);
 

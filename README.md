@@ -209,6 +209,12 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-09-17 — Khôi phục GitHub Actions CI cho MOPIENS và AppShell
+- Sửa test harness cho UI workflow DVOR 220 và DME 320: mock `next/navigation` cung cấp App Router và search params rỗng khi render component độc lập trong Vitest.
+- Đồng bộ test dispatcher MOPIENS với cùng router mock.
+- Cập nhật kỳ vọng AppShell theo hành vi hiện hành: DVOR 220/DME 320 đã có nút quay lại nội tuyến để tránh render trùng; thanh chung chỉ hiện cho simulator không có thanh riêng và điều hướng về trang chủ.
+- Xác nhận pipeline tương đương GitHub Actions với Node 24: `lint`, `typecheck`, 109/109 test files (620/620 tests) và build 75/75 routes đều đạt.
+
 ### 2026-09-16 — Tách danh sách thiết bị và kho Kịch bản
 - Đổi `/authoring` thành catalog gồm đúng năm thiết bị có Scenario Parameters: DVOR 1150, DVOR 1150A, DME 1119A, DVOR 220 và DME 320; card tái sử dụng bố cục, trạng thái và điều hướng của tab `Ôn tập`.
 - Mỗi card mở `/authoring/[moduleId]`, hiển thị bảng kịch bản, import JSON, sửa nhanh, tải JSON, mở simulator và xóa chỉ cho thiết bị đã chọn; thêm điều hướng quay về danh sách thiết bị.

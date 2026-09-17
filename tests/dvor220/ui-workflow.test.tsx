@@ -1,8 +1,20 @@
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { Dvor220Simulator } from "@/modules/operations/dvor-220/dvor220-simulator";
 import { createDefaultDvor220Configuration } from "@/modules/operations/dvor-220/domain/defaults";
 import { createDvor220Store, type Dvor220StoreApi } from "@/modules/operations/dvor-220/store/dvor220-store";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    back: vi.fn(),
+    forward: vi.fn(),
+    prefetch: vi.fn(),
+    push: vi.fn(),
+    refresh: vi.fn(),
+    replace: vi.fn(),
+  }),
+  useSearchParams: () => new URLSearchParams(),
+}));
 
 afterEach(() => cleanup());
 
