@@ -11,7 +11,7 @@ export const DME_1119A_MODULE = {
     admin: "/simulator/dme-1119a",
     student: "/student/dme",
     simulator: "/simulator/dme-1119a",
-    authoring: "/simulator/dme-1119a",
+    authoring: "/authoring/dme-1119a",
     review: "/review/dme-1119a",
   },
   legacyId: "dme",

@@ -11,7 +11,7 @@ export const DVOR_1150_MODULE = {
     admin: "/simulator/dvor-1150",
     student: "/student/dvor-1150",
     simulator: "/simulator/dvor-1150",
-    authoring: "/simulator/dvor-1150",
+    authoring: "/authoring/dvor-1150",
     review: "/review/dvor-1150",
   },
 } as const satisfies SimulatorModuleDefinition<"dvor-1150">;

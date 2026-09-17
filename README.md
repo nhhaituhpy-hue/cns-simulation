@@ -141,7 +141,7 @@ PostgreSQL 17
 | **Xác thực** | Đăng nhập & Đổi mật khẩu | `/login`, `/change-password` | Form xác thực PostgreSQL, đổi mật khẩu lần đầu bắt buộc và đổi mật khẩu chủ động |
 | **Giám khảo** | Quản trị kỳ thi | `/admin/exams`, `/admin/exam-sets` | Tạo kỳ thi, cấu hình đề thi theo môn, quản lý thí sinh và giám khảo chấm |
 | | Trung tâm kịch bản | `/admin/vor`, `/admin/dme`, `/admin/ads-b` | Quản lý kịch bản nghiệp vụ, chấm điểm bài nộp và xem timeline thao tác |
-| | Quản lý Scenario Parameters | `/authoring` | Import/Export JSON kịch bản, cấu hình fault injection, whitelist cho từng simulator |
+| | Quản lý Scenario Parameters | `/authoring`, `/authoring/[moduleId]` | Chọn thiết bị trước, rồi import/export JSON, sửa nhanh và quản lý kịch bản riêng theo từng simulator |
 | **Học viên** | Vào thi chính thức | `/student/exams` | Thực hiện các kịch bản trong đề thi được phân công theo thời gian thực |
 | | Ôn tập Scenario Parameters | `/review/[moduleId]` | Chỉ hiển thị tập con kịch bản đã được giám khảo gắn theo từng thiết bị |
 | | Ôn tập tự do VOR/DME | `/student/vor`, `/student/dme`, `/student/ads-b` | Luyện tập thao tác trên simulator và nộp bài thử nghiệm |
@@ -208,6 +208,11 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 ---
 
 ## 6. Nhật ký phiên làm việc
+
+### 2026-09-16 — Tách danh sách thiết bị và kho Kịch bản
+- Đổi `/authoring` thành catalog gồm đúng năm thiết bị có Scenario Parameters: DVOR 1150, DVOR 1150A, DME 1119A, DVOR 220 và DME 320; card tái sử dụng bố cục, trạng thái và điều hướng của tab `Ôn tập`.
+- Mỗi card mở `/authoring/[moduleId]`, hiển thị bảng kịch bản, import JSON, sửa nhanh, tải JSON, mở simulator và xóa chỉ cho thiết bị đã chọn; thêm điều hướng quay về danh sách thiết bị.
+- Chuyển route authoring của ba PMDT Selex về namespace `/authoring/*`; không thay đổi API, schema, dữ liệu kịch bản hoặc dữ liệu Ôn tập.
 
 ### 2026-09-16 — Phân bổ Scenario Parameters vào Ôn tập
 - Thêm migration `0006_simulator_review_scenario_assignments.sql`: lưu tập con kịch bản được publish theo thiết bị, thứ tự hiển thị, người gắn và thời điểm gắn; khóa ngoại ghép chặn phân bổ chéo thiết bị và tự dọn phân bổ khi kịch bản gốc bị xóa.

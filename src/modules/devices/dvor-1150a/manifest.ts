@@ -11,7 +11,7 @@ export const DVOR_1150A_MODULE = {
     admin: "/admin/vor",
     student: "/student/vor",
     simulator: "/simulator/dvor-1150a",
-    authoring: "/admin/vor",
+    authoring: "/authoring/dvor-1150a",
     review: "/review/dvor-1150a",
   },
   legacyId: "vor",

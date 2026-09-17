@@ -27,13 +27,20 @@ const workspaceCopy = {
   },
 } as const;
 
-export function TrainingWorkspaceCatalog({ mode }: { mode: TrainingWorkspaceMode }) {
+export function TrainingWorkspaceCatalog({
+  mode,
+  modules,
+}: {
+  mode: TrainingWorkspaceMode;
+  modules?: readonly SimulatorModuleDefinition[];
+}) {
   const copy = workspaceCopy[mode];
+  const catalogModules = modules ?? TRAINING_MODULES;
 
   return (
     <div className="w-full max-w-none px-4 py-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
       <section aria-label={`Danh sách module ${copy.title}`} className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {TRAINING_MODULES.map((module) => {
+        {catalogModules.map((module) => {
           const trainingStatus = getWorkspaceStatus(
             module as SimulatorModuleDefinition,
             mode,

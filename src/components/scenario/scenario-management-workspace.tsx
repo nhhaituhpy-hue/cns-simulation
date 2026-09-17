@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/csr/ArrowSquareOut";
+import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
 import { PencilSimple } from "@phosphor-icons/react/dist/csr/PencilSimple";
@@ -10,23 +11,16 @@ import { Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { getSimulatorModule } from "@/modules/core/registry";
 import type { SimulatorModuleDefinition } from "@/modules/core/types";
 import {
   getScenarioParametersModule,
   parseScenarioParameters,
-  SCENARIO_PARAMETERS_MODULES,
   scenarioParametersMetadata,
   type ScenarioParametersModuleId,
 } from "@/lib/scenario-parameters";
 import type { StoredScenarioParameters } from "@/lib/scenario-parameters-storage";
-
-type ScenarioModule = {
-  module: SimulatorModuleDefinition;
-  moduleId: ScenarioParametersModuleId;
-  schemaVersion: number;
-};
 
 type ScenarioDifficulty = "basic" | "intermediate" | "advanced";
 
@@ -37,21 +31,6 @@ type QuickEditDraft = {
   description: string;
   difficulty: ScenarioDifficulty;
 };
-
-const scenarioModules: ScenarioModule[] = SCENARIO_PARAMETERS_MODULES.flatMap(
-  (entry) => {
-    const simulatorModule = getSimulatorModule(entry.moduleId);
-    return simulatorModule
-      ? [
-          {
-            module: simulatorModule,
-            moduleId: entry.moduleId,
-            schemaVersion: entry.schemaVersion,
-          },
-        ]
-      : [];
-  },
-);
 
 function formatDate(value: string | null) {
   if (!value) return "—";
@@ -102,7 +81,17 @@ function actionButtonClass(tone: "primary" | "default" | "danger" = "default") {
   return `${base} border-[var(--border-strong)] bg-transparent text-[var(--text-primary)] hover:bg-[var(--surface-muted)]`;
 }
 
-export function ScenarioManagementWorkspace() {
+export function ScenarioManagementWorkspace({
+  moduleId,
+}: {
+  moduleId: ScenarioParametersModuleId;
+}) {
+  const simulatorModule = getSimulatorModule(moduleId)!;
+  const scenarioModule = getScenarioParametersModule(moduleId);
+  if (!scenarioModule) {
+    throw new Error(`Unsupported Scenario Parameters module: ${moduleId}.`);
+  }
+
   const importInputRefs = useRef<
     Partial<Record<ScenarioParametersModuleId, HTMLInputElement | null>>
   >({});
@@ -149,18 +138,9 @@ export function ScenarioManagementWorkspace() {
     void loadScenarios();
   }, []);
 
-  const scenariosByModule = useMemo(() => {
-    const grouped = new Map<
-      ScenarioParametersModuleId,
-      StoredScenarioParameters[]
-    >();
-    for (const scenario of scenarios) {
-      const moduleScenarios = grouped.get(scenario.moduleId) ?? [];
-      moduleScenarios.push(scenario);
-      grouped.set(scenario.moduleId, moduleScenarios);
-    }
-    return grouped;
-  }, [scenarios]);
+  const moduleScenarios = scenarios.filter(
+    (scenario) => scenario.moduleId === moduleId,
+  );
 
   async function importScenario(
     moduleId: ScenarioParametersModuleId,
@@ -352,15 +332,24 @@ export function ScenarioManagementWorkspace() {
   return (
     <main className="mx-auto w-full max-w-[1680px] px-4 py-6 sm:px-6 lg:px-8">
       <header className="border-b border-[var(--border)] pb-5">
+        <nav aria-label="Đường dẫn kịch bản" className="mb-4">
+          <Link
+            href="/authoring"
+            className="inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+          >
+            <ArrowLeft aria-hidden size={17} />
+            Danh sách thiết bị
+          </Link>
+        </nav>
         <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--accent)]">
           Kịch bản / Scenario Parameters
         </p>
         <h1 className="mt-2 text-2xl font-bold tracking-tight text-[var(--text-primary)] sm:text-3xl">
-          Danh sách kịch bản
+          Kịch bản {simulatorModule.shortName}
         </h1>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--text-secondary)]">
-          Chọn thiết bị để nạp JSON đã export từ Scenario trong simulator. Bấm
-          vào từng tình huống để xem đầy đủ chi tiết.
+          Quản lý các Scenario Parameters của {simulatorModule.shortName}. Bấm vào từng
+          tình huống để xem đầy đủ chi tiết.
         </p>
       </header>
 
@@ -386,7 +375,7 @@ export function ScenarioManagementWorkspace() {
       <div className="mt-5 overflow-x-auto border-y border-[var(--border)]">
         <table className="w-full min-w-[900px] border-collapse text-left text-sm">
           <caption className="sr-only">
-            Danh sách Scenario Parameters được phân theo thiết bị
+            Danh sách Scenario Parameters {simulatorModule.shortName}
           </caption>
           <thead className="bg-[var(--surface-muted)] text-[11px] uppercase tracking-wide text-[var(--text-muted)]">
             <tr>
@@ -409,48 +398,42 @@ export function ScenarioManagementWorkspace() {
           </thead>
           <tbody className="divide-y divide-[var(--border)]">
             {isLoading ? <LoadingRows /> : null}
-            {!isLoading
-              ? scenarioModules.map(({ module, moduleId, schemaVersion }) => {
-                  const moduleScenarios = scenariosByModule.get(moduleId) ?? [];
-                  const busy = busyModuleId !== null;
-                  return (
-                    <DeviceGroup
-                      key={moduleId}
-                      module={module}
-                      moduleId={moduleId}
-                      schemaVersion={schemaVersion}
-                      scenarios={moduleScenarios}
-                      busy={busy}
-                      busyModuleId={busyModuleId}
-                      importInputRef={(node) => {
-                        importInputRefs.current[moduleId] = node;
-                      }}
-                      onAdd={() => importInputRefs.current[moduleId]?.click()}
-                      onImport={(event) => void importScenario(moduleId, event)}
-                      expandedScenarioIds={expandedScenarioIds}
-                      onToggle={toggleScenario}
-                      onDownload={downloadScenario}
-                      onDelete={deleteScenario}
-                      quickEditDraft={quickEditDraft}
-                      onStartEdit={startQuickEdit}
-                      onCancelEdit={cancelQuickEdit}
-                      onSaveEdit={() => void saveQuickEdit()}
-                      onEditChange={(changes) =>
-                        setQuickEditDraft((current) =>
-                          current ? { ...current, ...changes } : current,
-                        )
-                      }
-                    />
-                  );
-                })
-              : null}
+            {!isLoading ? (
+              <DeviceGroup
+                module={simulatorModule}
+                moduleId={moduleId}
+                schemaVersion={scenarioModule.schemaVersion}
+                scenarios={moduleScenarios}
+                busy={busyModuleId !== null}
+                busyModuleId={busyModuleId}
+                importInputRef={(node) => {
+                  importInputRefs.current[moduleId] = node;
+                }}
+                onAdd={() => importInputRefs.current[moduleId]?.click()}
+                onImport={(event) => void importScenario(moduleId, event)}
+                expandedScenarioIds={expandedScenarioIds}
+                onToggle={toggleScenario}
+                onDownload={downloadScenario}
+                onDelete={deleteScenario}
+                quickEditDraft={quickEditDraft}
+                onStartEdit={startQuickEdit}
+                onCancelEdit={cancelQuickEdit}
+                onSaveEdit={() => void saveQuickEdit()}
+                onEditChange={(changes) =>
+                  setQuickEditDraft((current) =>
+                    current ? { ...current, ...changes } : current,
+                  )
+                }
+              />
+            ) : null}
           </tbody>
         </table>
       </div>
 
       <p className="mt-3 text-xs leading-5 text-[var(--text-muted)]">
-        Có {scenarios.length} kịch bản đã lưu. Chỉ JSON đúng schema của từng
-        thiết bị mới được ghi vào kho; import cùng mã sẽ cập nhật bản ghi cũ.
+        Có {moduleScenarios.length} kịch bản {simulatorModule.shortName} đã lưu. Chỉ
+        JSON đúng schema của thiết bị mới được ghi vào kho; import cùng mã sẽ
+        cập nhật bản ghi cũ.
       </p>
     </main>
   );
