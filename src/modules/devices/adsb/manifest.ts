@@ -11,7 +11,7 @@ export const ADSB_MODULE = {
     admin: "/admin/ads-b",
     student: "/student/ads-b",
     simulator: "/simulator/ads-b",
-    authoring: "/admin/ads-b",
+    authoring: "/authoring/ads-b",
     review: "/student/ads-b",
   },
   legacyId: "ads-b",

@@ -45,7 +45,7 @@ describe("StudentDashboard", () => {
     expect(screen.getByText("Chưa có bài thực hành")).toBeVisible();
     expect(screen.getByRole("link", { name: "Tạo kịch bản" })).toHaveAttribute(
       "href",
-      "/admin/create",
+      "/authoring/ads-b/create",
     );
   });
 

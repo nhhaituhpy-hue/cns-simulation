@@ -53,14 +53,14 @@ export function ScenarioWizard({ scenarioId }: ScenarioWizardProps) {
       createScenario(draft);
     }
 
-    router.push("/admin/ads-b");
+    router.push("/authoring/ads-b");
   }
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
       <header className="mb-7">
         <Link
-          href="/admin/ads-b"
+          href="/authoring/ads-b"
           className="inline-flex items-center gap-2 rounded text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
         >
           <ArrowLeft aria-hidden size={17} weight="regular" />
@@ -88,7 +88,7 @@ export function ScenarioWizard({ scenarioId }: ScenarioWizardProps) {
             Kịch bản có thể đã bị xóa hoặc đường dẫn không còn hợp lệ.
           </p>
           <Link
-            href="/admin/ads-b"
+            href="/authoring/ads-b"
             className="mt-5 inline-flex h-10 items-center rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
           >
             Mở danh sách kịch bản

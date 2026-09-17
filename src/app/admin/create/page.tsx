@@ -1,10 +1,5 @@
-import type { Metadata } from "next";
-import { ScenarioWizard } from "@/components/admin/scenario-wizard";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Kịch bản",
-};
-
-export default function CreateScenarioPage() {
-  return <ScenarioWizard />;
+export default function LegacyCreateAdsbScenarioPage() {
+  redirect("/authoring/ads-b/create");
 }

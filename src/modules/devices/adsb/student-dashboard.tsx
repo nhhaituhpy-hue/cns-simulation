@@ -73,7 +73,7 @@ export function AdsbStudentDashboard() {
         <ScenarioSectionHeader id="practice-list-title" title="Thực hành xử lý sự cố ADS-B" description="Quan sát trạng thái QCMS và thực hiện chuỗi thao tác trên terminal bảo trì." count={sortedScenarios.length} countLabel="bài" />
         <ScenarioListFrame>
           {sortedScenarios.length === 0 ? (
-            <EmptyState icon={<FolderOpen aria-hidden size={23} weight="duotone" />} title="Chưa có bài thực hành" description="Giám khảo cần tạo ít nhất một kịch bản trước khi học viên bắt đầu." action={<Link href="/admin/create" className="inline-flex min-h-10 items-center justify-center rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2">Tạo kịch bản</Link>} />
+            <EmptyState icon={<FolderOpen aria-hidden size={23} weight="duotone" />} title="Chưa có bài thực hành" description="Giám khảo cần tạo ít nhất một kịch bản trước khi học viên bắt đầu." action={<Link href="/authoring/ads-b/create" className="inline-flex min-h-10 items-center justify-center rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2">Tạo kịch bản</Link>} />
           ) : (
             <ScenarioDataTable items={sortedScenarios} caption="Danh sách kịch bản ADS-B dành cho thí sinh" columns={scenarioColumns} renderCells={(scenario, rowIndex) => <ScenarioCells scenario={scenario} index={rowIndex} />} />
           )}

@@ -140,7 +140,7 @@ PostgreSQL 17
 |---|---|---|---|
 | **Xác thực** | Đăng nhập & Đổi mật khẩu | `/login`, `/change-password` | Form xác thực PostgreSQL, đổi mật khẩu lần đầu bắt buộc và đổi mật khẩu chủ động |
 | **Giám khảo** | Quản trị kỳ thi | `/admin/exams`, `/admin/exam-sets` | Tạo kỳ thi, cấu hình đề thi theo môn, quản lý thí sinh và giám khảo chấm |
-| | Trung tâm kịch bản | `/admin/vor`, `/admin/dme`, `/admin/ads-b` | Quản lý kịch bản nghiệp vụ, chấm điểm bài nộp và xem timeline thao tác |
+| | Trung tâm kịch bản | `/admin/vor`, `/admin/dme`, `/authoring/ads-b` | Quản lý kịch bản nghiệp vụ, chấm điểm bài nộp và xem timeline thao tác |
 | | Quản lý Scenario Parameters | `/authoring`, `/authoring/[moduleId]` | Chọn thiết bị trước, rồi import/export JSON, sửa nhanh và quản lý kịch bản riêng theo từng simulator |
 | **Học viên** | Vào thi chính thức | `/student/exams` | Thực hiện các kịch bản trong đề thi được phân công theo thời gian thực |
 | | Ôn tập Scenario Parameters | `/review/[moduleId]` | Chỉ hiển thị tập con kịch bản đã được giám khảo gắn theo từng thiết bị |
@@ -208,6 +208,11 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 ---
 
 ## 6. Nhật ký phiên làm việc
+
+### 2026-09-17 — Chuẩn hóa ADS-B vào namespace Kịch bản
+- Khôi phục card ADS-B tại `/authoring` nhưng giữ riêng mô hình kịch bản legacy `scenarios`/`/api/scenarios`, không ép vào schema Scenario Parameters JSON của năm thiết bị PMDT/MOPIENS.
+- Chuẩn hóa danh sách, tạo và sửa ADS-B tại `/authoring/ads-b`, `/authoring/ads-b/create` và `/authoring/ads-b/edit`; các route `/admin/ads-b`, `/admin/create` và `/admin/edit` chuyển hướng tương thích về URL mới.
+- Cập nhật liên kết nội bộ dashboard, wizard và empty state để không quay lại namespace `/admin/*`.
 
 ### 2026-09-17 — Bổ sung quy tắc chống tái phát lỗi GitHub Actions CI
 - Ghi `GitHub Actions CI Regression Guard` vào `AGENTS.md`: yêu cầu kiểm tra full pipeline Node 24 khi đụng App Router/MOPIENS UI/test setup; nêu mock `useRouter` + `useSearchParams`, kỳ vọng nút quay lại nội tuyến và ranh giới giữa warning `act(...)` với lỗi test.

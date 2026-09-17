@@ -75,9 +75,6 @@ function trainingNavigationItems(mode: "authoring" | "review"): NavigationItem[]
     href: module.routes[mode],
     label: module.shortName,
     icon: DesktopTower,
-    ...(mode === "authoring" && module.id === "ads-b"
-      ? { activePrefixes: ["/admin/create", "/admin/edit"] }
-      : {}),
     ...(mode === "authoring" && module.id === "dme-1119a"
       ? { activePrefixes: ["/admin/dme"] }
       : {}),

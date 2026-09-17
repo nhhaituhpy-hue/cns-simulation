@@ -53,6 +53,20 @@ afterEach(() => {
 });
 
 describe("AdminDashboard", () => {
+  it("keeps ADS-B scenario actions in the authoring namespace", () => {
+    render(<AdminDashboard activeModule="ads-b" />);
+
+    expect(
+      screen.getByRole("link", { name: "Tạo kịch bản ADS-B" }),
+    ).toHaveAttribute("href", "/authoring/ads-b/create");
+    expect(
+      screen.getByRole("link", { name: "Sửa kịch bản: Kiểm tra Sensor A" }),
+    ).toHaveAttribute(
+      "href",
+      "/authoring/ads-b/edit?id=scenario-admin-test",
+    );
+  });
+
   it("sorts newest scenarios first and shows matching ordinal numbers", () => {
     useScenarioStore.setState({
       scenarios: [

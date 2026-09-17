@@ -79,7 +79,7 @@ export function AdsbAdminDashboard() {
               Mở giả lập ADS-B
             </Link>
             <Link
-              href="/admin/create"
+              href="/authoring/ads-b/create"
               className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white transition-[background-color,transform] hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98] active:bg-[var(--accent-active)] motion-reduce:transform-none"
             >
               <Plus aria-hidden size={18} weight="bold" />
@@ -121,7 +121,7 @@ export function AdsbAdminDashboard() {
               title="Chưa có kịch bản"
               description="Tạo kịch bản đầu tiên để cấu hình trạng thái cảm biến và đáp án thao tác."
               action={
-                <Link href="/admin/create" className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2">
+                <Link href="/authoring/ads-b/create" className="inline-flex min-h-10 items-center gap-2 rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2">
                   <Plus aria-hidden size={18} weight="bold" />
                   Tạo kịch bản
                 </Link>
@@ -156,7 +156,7 @@ export function AdsbAdminDashboard() {
                     </td>
                     <td className="px-4 py-4 align-top">
                       <div className="flex justify-end gap-2">
-                        <Link href={`/admin/edit?id=${scenario.id}`} aria-label={`Sửa kịch bản: ${scenario.title}`} title="Sửa kịch bản" className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-white text-[var(--text-secondary)] transition-[background-color,border-color,color,transform] duration-150 hover:border-[var(--accent-border)] hover:bg-[var(--accent-muted)] hover:text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none">
+                        <Link href={`/authoring/ads-b/edit?id=${scenario.id}`} aria-label={`Sửa kịch bản: ${scenario.title}`} title="Sửa kịch bản" className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-white text-[var(--text-secondary)] transition-[background-color,border-color,color,transform] duration-150 hover:border-[var(--accent-border)] hover:bg-[var(--accent-muted)] hover:text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none">
                           <PencilSimple aria-hidden size={18} weight="regular" />
                         </Link>
                         <button type="button" onClick={() => setScenarioToDelete(scenario)} aria-label={`Xóa kịch bản: ${scenario.title}`} title="Xóa kịch bản" className="inline-flex size-9 items-center justify-center rounded-md border border-transparent text-[var(--danger)] transition-[background-color,border-color,transform] duration-150 hover:border-[#fecaca] hover:bg-[var(--danger-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger)] active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none">

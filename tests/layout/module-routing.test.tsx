@@ -6,6 +6,7 @@ import { StudentDashboard } from "@/components/qcms/student-dashboard";
 import { DVOR_1150_MODULE } from "@/modules/devices/dvor-1150";
 import { DVOR_1150A_MODULE } from "@/modules/devices/dvor-1150a";
 import { DME_1119A_MODULE } from "@/modules/devices/dme-1119a";
+import { ADSB_MODULE } from "@/modules/devices/adsb";
 import { useScenarioStore } from "@/stores/scenario-store";
 import { useVorScenarioStore } from "@/stores/vor-scenario-store";
 import { useDmeScenarioStore } from "@/stores/dme-scenario-store";
@@ -44,6 +45,7 @@ describe("CNS module routing", () => {
     expect(DVOR_1150A_MODULE.routes.review).toBe("/review/dvor-1150a");
     expect(DVOR_1150A_MODULE.routes.authoring).toBe("/authoring/dvor-1150a");
     expect(DME_1119A_MODULE.routes.authoring).toBe("/authoring/dme-1119a");
+    expect(ADSB_MODULE.routes.authoring).toBe("/authoring/ads-b");
   });
 
   it("shows the DVOR 1150 scenario catalog before opening the simulator", () => {

@@ -9,7 +9,7 @@ function cardForHeading(name: string) {
 }
 
 describe("AuthoringPage", () => {
-  it("shows only modules with Scenario Parameters and opens their filtered routes", () => {
+  it("shows Scenario Parameters devices plus the legacy ADS-B authoring workflow", () => {
     render(<AuthoringPage />);
 
     const expectedModules = [
@@ -18,6 +18,7 @@ describe("AuthoringPage", () => {
       ["DME 1119A", "/authoring/dme-1119a"],
       ["DVOR 220", "/authoring/dvor-220"],
       ["DME 320", "/authoring/dme-320"],
+      ["ADS-B", "/authoring/ads-b"],
     ] as const;
 
     for (const [name, href] of expectedModules) {
@@ -28,7 +29,6 @@ describe("AuthoringPage", () => {
       ).toHaveAttribute("href", href);
     }
 
-    expect(screen.queryByRole("heading", { name: "ADS-B" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "VHF" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "VSAT" })).not.toBeInTheDocument();
   });

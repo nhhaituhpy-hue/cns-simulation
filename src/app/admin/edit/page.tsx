@@ -1,19 +1,14 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { ScenarioWizard } from "@/components/admin/scenario-wizard";
-import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
-
-function EditScenarioContent() {
-  const searchParams = useSearchParams();
-  const scenarioId = searchParams.get("id") || "";
-  return <ScenarioWizard scenarioId={scenarioId} />;
+interface LegacyEditAdsbScenarioPageProps {
+  searchParams: Promise<{ id?: string | string[] }>;
 }
 
-export default function EditScenarioPage() {
-  return (
-    <Suspense fallback={<div className="p-8 text-center text-[var(--text-secondary)]">Đang tải trình chỉnh sửa...</div>}>
-      <EditScenarioContent />
-    </Suspense>
-  );
+export default async function LegacyEditAdsbScenarioPage({
+  searchParams,
+}: LegacyEditAdsbScenarioPageProps) {
+  const params = await searchParams;
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const suffix = id ? `?id=${encodeURIComponent(id)}` : "";
+  redirect(`/authoring/ads-b/edit${suffix}`);
 }

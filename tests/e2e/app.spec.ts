@@ -29,7 +29,7 @@ test("admin and student dashboards have no serious accessibility violations", as
   page,
 }) => {
   const dashboards = [
-    { path: "/admin/ads-b", heading: "Quản lý kịch bản kiểm tra" },
+    { path: "/authoring/ads-b", heading: "Quản lý kịch bản kiểm tra" },
     { path: "/student/ads-b", heading: "Bài thực hành mô phỏng CNS" },
   ];
 
@@ -52,7 +52,7 @@ test("admin and student dashboards have no serious accessibility violations", as
 test("admin can create a scenario with a recorded reference path", async ({
   page,
 }) => {
-  await page.goto("/admin/create");
+  await page.goto("/authoring/ads-b/create");
 
   await page.getByLabel("Tiêu đề kịch bản").fill("Kiểm tra CAT21 ca trực");
   await page
@@ -82,7 +82,7 @@ test("admin can create a scenario with a recorded reference path", async ({
 
   // Click Create on Step 5
   await page.getByRole("button", { name: "Tạo kịch bản" }).click();
-  await expect(page).toHaveURL(/\/admin\/ads-b$/);
+  await expect(page).toHaveURL(/\/authoring\/ads-b$/);
   await expect(page.getByText("Kiểm tra CAT21 ca trực").first()).toBeVisible();
 });
 
