@@ -66,14 +66,14 @@ export function DeleteScenarioDialog({
           type="button"
           autoFocus
           onClick={onCancel}
-          className="h-10 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+          className="min-h-10 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
         >
           Giữ lại
         </button>
         <button
           type="button"
           onClick={onConfirm}
-          className="h-10 rounded bg-[#b91c1c] px-4 text-sm font-semibold text-white hover:bg-[#991b1b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91c1c] focus-visible:ring-offset-2"
+          className="min-h-10 rounded bg-[#b91c1c] px-3 text-xs font-semibold text-white hover:bg-[#991b1b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91c1c] focus-visible:ring-offset-2"
         >
           Xóa kịch bản
         </button>

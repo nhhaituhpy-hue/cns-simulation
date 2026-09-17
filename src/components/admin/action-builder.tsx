@@ -347,7 +347,7 @@ export function ActionBuilder({
                       key={nextLoginUser}
                       type="button"
                       onClick={() => startSessionAs(nextLoginUser)}
-                      className="min-h-11 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-4 text-left text-sm font-semibold text-[var(--text-primary)] hover:border-[var(--accent)] hover:bg-[var(--accent-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                      className="min-h-10 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-left text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--accent)] hover:bg-[var(--accent-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                     >
                       Đăng nhập{" "}
                       <span className="font-mono text-[var(--accent)]">
@@ -369,7 +369,7 @@ export function ActionBuilder({
                   <button
                     type="button"
                     onClick={() => completePending("0")}
-                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+                    className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded bg-[var(--accent)] px-3 text-xs font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
                   >
                     <Check aria-hidden size={17} weight="regular" />
                     0 / RETURN · Quay lại
@@ -377,7 +377,7 @@ export function ActionBuilder({
                   <button
                     type="button"
                     onClick={exitCurrentSession}
-                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                    className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                   >
                     <SignOut aria-hidden size={17} weight="regular" />
                     X · Đăng xuất
@@ -397,7 +397,7 @@ export function ActionBuilder({
                         key={option.number}
                         type="button"
                         onClick={() => completePending(String(option.number))}
-                        className="flex min-h-10 items-center gap-3 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-left text-sm text-[var(--text-primary)] hover:border-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                        className="flex min-h-10 items-center gap-2 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-left text-xs text-[var(--text-primary)] hover:border-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                       >
                         <code className="font-mono text-xs font-semibold text-[var(--accent)]">
                           {option.number}
@@ -441,7 +441,7 @@ export function ActionBuilder({
                       type="button"
                       onClick={() => completePending(inputValue)}
                       disabled={!inputValue.trim()}
-                      className="h-10 shrink-0 rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="min-h-10 shrink-0 rounded bg-[var(--accent)] px-3 text-xs font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Ghi giá trị
                     </button>
@@ -470,7 +470,7 @@ export function ActionBuilder({
                             onClick={() =>
                               completePending(String(option.number))
                             }
-                            className="flex min-h-10 items-center gap-3 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-left text-sm text-[var(--text-primary)] hover:border-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                            className="flex min-h-10 items-center gap-2 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-left text-xs text-[var(--text-primary)] hover:border-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                           >
                             <code className="font-mono text-xs font-semibold text-[var(--accent)]">
                               {option.number}
@@ -511,7 +511,7 @@ export function ActionBuilder({
                         type="button"
                         onClick={() => completePending(inputValue)}
                         disabled={!inputValue.trim()}
-                        className="h-10 shrink-0 rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="min-h-10 shrink-0 rounded bg-[var(--accent)] px-3 text-xs font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         Ghi giá trị
                       </button>
@@ -527,7 +527,7 @@ export function ActionBuilder({
                   key={item.number}
                   type="button"
                   onClick={() => selectMenuItem(item)}
-                  className="grid min-h-11 grid-cols-[2.5rem_1fr] items-center rounded border border-[var(--border)] px-3 text-left text-sm text-[var(--text-primary)] hover:border-[var(--accent)] hover:bg-[var(--accent-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                  className="grid min-h-10 grid-cols-[2.5rem_1fr] items-center rounded border border-[var(--border)] px-3 text-left text-xs text-[var(--text-primary)] hover:border-[var(--accent)] hover:bg-[var(--accent-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                 >
                   <code className="font-mono text-xs font-semibold text-[var(--accent)]">
                     {item.number}
@@ -540,7 +540,7 @@ export function ActionBuilder({
                 <button
                   type="button"
                   onClick={() => applyInput("0")}
-                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded border border-[var(--border-strong)] text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                  className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded border border-[var(--border-strong)] px-3 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                 >
                   <CaretLeft aria-hidden size={17} weight="regular" />
                   Menu trước
@@ -548,7 +548,7 @@ export function ActionBuilder({
                 <button
                   type="button"
                   onClick={exitCurrentSession}
-                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded border border-[var(--border-strong)] text-sm font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                  className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded border border-[var(--border-strong)] px-3 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                 >
                   <SignOut aria-hidden size={17} weight="regular" />
                   Đăng xuất tài khoản

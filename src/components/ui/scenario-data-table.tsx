@@ -156,7 +156,7 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
             disabled={currentPage === 1}
             aria-label="Trang trước"
             title="Trang trước"
-            className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-45"
+            className="inline-flex size-9 items-center justify-center rounded border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-45"
           >
             <CaretLeft aria-hidden size={16} weight="bold" />
           </button>
@@ -169,7 +169,7 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
                 onClick={() => setRequestedPage(pageNumber)}
                 aria-label={`Mở trang ${pageNumber}`}
                 aria-current={pageNumber === currentPage ? "page" : undefined}
-                className={`inline-flex size-9 items-center justify-center rounded-md border font-mono text-xs font-semibold tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
+                className={`inline-flex size-9 items-center justify-center rounded border font-mono text-xs font-semibold tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
                   pageNumber === currentPage
                     ? "border-[var(--accent)] bg-[var(--accent)] text-white"
                     : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
@@ -188,7 +188,7 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
             disabled={currentPage === totalPages}
             aria-label="Trang sau"
             title="Trang sau"
-            className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-45"
+            className="inline-flex size-9 items-center justify-center rounded border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-45"
           >
             <CaretRight aria-hidden size={16} weight="bold" />
           </button>

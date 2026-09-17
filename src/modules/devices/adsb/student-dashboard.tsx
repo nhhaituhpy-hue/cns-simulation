@@ -43,7 +43,7 @@ function ScenarioCells({ scenario, index }: { scenario: Scenario; index: number 
         <span className="mt-1.5 flex items-center gap-1.5"><Monitor aria-hidden size={15} /><span className="font-mono tabular-nums">{sensorCount} cảm biến</span></span>
       </td>
       <td className="px-4 py-4 text-right align-top">
-        <Link href={`/student/simulation?id=${encodeURIComponent(scenario.id)}`} aria-label={`Mở bài thực hành: ${scenario.title}`} title="Mở bài thực hành" className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--accent-border)] bg-[var(--surface)] text-[var(--accent)] transition-[background-color,border-color,transform] duration-150 hover:bg-[var(--accent-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none">
+        <Link href={`/student/simulation?id=${encodeURIComponent(scenario.id)}`} aria-label={`Mở bài thực hành: ${scenario.title}`} title="Mở bài thực hành" className="inline-flex size-9 items-center justify-center rounded border border-[var(--accent-border)] bg-[var(--surface)] text-[var(--accent)] transition-[background-color,border-color,transform] duration-150 hover:bg-[var(--accent-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none">
           <NotePencil aria-hidden size={19} />
         </Link>
       </td>
@@ -73,7 +73,7 @@ export function AdsbStudentDashboard() {
         <ScenarioSectionHeader id="practice-list-title" title="Thực hành xử lý sự cố ADS-B" description="Quan sát trạng thái QCMS và thực hiện chuỗi thao tác trên terminal bảo trì." count={sortedScenarios.length} countLabel="bài" />
         <ScenarioListFrame>
           {sortedScenarios.length === 0 ? (
-            <EmptyState icon={<FolderOpen aria-hidden size={23} weight="duotone" />} title="Chưa có bài thực hành" description="Giám khảo cần tạo ít nhất một kịch bản trước khi học viên bắt đầu." action={<Link href="/authoring/ads-b/create" className="inline-flex min-h-10 items-center justify-center rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2">Tạo kịch bản</Link>} />
+            <EmptyState icon={<FolderOpen aria-hidden size={23} weight="duotone" />} title="Chưa có bài thực hành" description="Giám khảo cần tạo ít nhất một kịch bản trước khi học viên bắt đầu." action={<Link href="/authoring/ads-b/create" className="inline-flex min-h-10 items-center justify-center rounded bg-[var(--accent)] px-3 text-xs font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2">Tạo kịch bản</Link>} />
           ) : (
             <ScenarioDataTable items={sortedScenarios} caption="Danh sách kịch bản ADS-B dành cho thí sinh" columns={scenarioColumns} renderCells={(scenario, rowIndex) => <ScenarioCells scenario={scenario} index={rowIndex} />} />
           )}

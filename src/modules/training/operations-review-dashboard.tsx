@@ -200,9 +200,9 @@ export function OperationsReviewDashboard({
               type="button"
               onClick={() => setDialogOpen(true)}
               disabled={isLoading}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-50"
+              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded bg-[var(--accent)] px-3 text-xs font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-50"
             >
-              <Plus aria-hidden size={18} weight="bold" />
+              <Plus aria-hidden size={16} weight="bold" />
               Thêm kịch bản
             </button>
           </div>
@@ -224,7 +224,7 @@ export function OperationsReviewDashboard({
                   <td className="px-4 py-4 align-top"><span className="inline-flex size-8 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--surface-muted)] text-xs font-bold tabular-nums text-[var(--text-secondary)]">{String(rowIndex + 1).padStart(2, "0")}</span></td>
                   <td className="px-4 py-4 align-top"><h3 className="text-[15px] font-semibold text-[var(--text-primary)]">{scenario.title}</h3><p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[var(--text-secondary)]">{scenario.description}</p></td>
                   <td className="px-4 py-4 align-top"><span className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-semibold ${details.className}`}>{details.label}</span></td>
-                  <td className="px-4 py-4 text-right align-top"><Link href={scenario.href} aria-label={`Bắt đầu bài ${copy.shortName}: ${scenario.title}`} title="Bắt đầu bài thực hành" className="inline-flex size-11 items-center justify-center rounded-md border border-[var(--accent-border)] bg-[var(--surface)] text-[var(--accent)] transition-[background-color,border-color,transform] duration-150 hover:bg-[var(--accent-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none"><NotePencil aria-hidden size={19} /></Link></td>
+                  <td className="px-4 py-4 text-right align-top"><Link href={scenario.href} aria-label={`Bắt đầu bài ${copy.shortName}: ${scenario.title}`} title="Bắt đầu bài thực hành" className="inline-flex size-11 items-center justify-center rounded border border-[var(--accent-border)] bg-[var(--surface)] text-[var(--accent)] transition-[background-color,border-color,transform] duration-150 hover:bg-[var(--accent-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none"><NotePencil aria-hidden size={19} /></Link></td>
                 </>;
               }}
             />
@@ -237,7 +237,7 @@ export function OperationsReviewDashboard({
           <section role="dialog" aria-modal="true" aria-labelledby={`${moduleId}-assign-title`} className="flex max-h-[min(44rem,calc(100dvh-2rem))] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-2xl">
             <header className="flex items-start justify-between gap-4 border-b border-[var(--border)] px-5 py-4">
               <div><h2 id={`${moduleId}-assign-title`} className="text-lg font-bold text-[var(--text-primary)]">Chọn kịch bản ôn tập · {copy.shortName}</h2><p className="mt-1 text-sm text-[var(--text-secondary)]">Đã chọn {selectedCount}/{available.length} kịch bản. Kịch bản không chọn vẫn được giữ trong kho để dùng cho mục đích khác.</p></div>
-              <button ref={closeButtonRef} type="button" onClick={() => setDialogOpen(false)} aria-label="Đóng cửa sổ chọn kịch bản" className="inline-flex size-11 shrink-0 items-center justify-center rounded-md border border-[var(--border-strong)] text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"><X aria-hidden size={20} /></button>
+              <button ref={closeButtonRef} type="button" onClick={() => setDialogOpen(false)} aria-label="Đóng cửa sổ chọn kịch bản" className="inline-flex size-11 shrink-0 items-center justify-center rounded border border-[var(--border-strong)] text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"><X aria-hidden size={20} /></button>
             </header>
             <div className="min-h-0 flex-1 overflow-y-auto p-5">
               {available.length === 0 ? <p className="border border-dashed border-[var(--border-strong)] bg-[var(--surface-muted)] p-5 text-sm text-[var(--text-secondary)]">Kho chưa có kịch bản cho {copy.shortName}. Hãy tạo hoặc import kịch bản tại tab Kịch bản trước.</p> : (
@@ -251,8 +251,8 @@ export function OperationsReviewDashboard({
               )}
             </div>
             <footer className="flex flex-wrap justify-end gap-2 border-t border-[var(--border)] px-5 py-4">
-              <button type="button" onClick={() => setDialogOpen(false)} disabled={isSaving} className="inline-flex min-h-11 items-center justify-center rounded-md border border-[var(--border-strong)] px-4 text-sm font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-50">Hủy</button>
-              <button type="button" onClick={() => void saveAssignments()} disabled={isSaving} className="inline-flex min-h-11 items-center justify-center rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-50">{isSaving ? "Đang lưu…" : `Lưu ${selectedCount} kịch bản`}</button>
+              <button type="button" onClick={() => setDialogOpen(false)} disabled={isSaving} className="inline-flex min-h-10 items-center justify-center rounded border border-[var(--border-strong)] px-3 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-50">Hủy</button>
+              <button type="button" onClick={() => void saveAssignments()} disabled={isSaving} className="inline-flex min-h-10 items-center justify-center rounded bg-[var(--accent)] px-3 text-xs font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-50">{isSaving ? "Đang lưu…" : `Lưu ${selectedCount} kịch bản`}</button>
             </footer>
           </section>
         </div>

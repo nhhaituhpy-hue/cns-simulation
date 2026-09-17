@@ -61,7 +61,7 @@ export function ScenarioWizard({ scenarioId }: ScenarioWizardProps) {
       <header className="mb-7">
         <Link
           href="/authoring/ads-b"
-          className="inline-flex items-center gap-2 rounded text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+          className="inline-flex min-h-9 items-center gap-2 rounded px-2 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
         >
           <ArrowLeft aria-hidden size={17} weight="regular" />
           Quay về danh sách
@@ -89,7 +89,7 @@ export function ScenarioWizard({ scenarioId }: ScenarioWizardProps) {
           </p>
           <Link
             href="/authoring/ads-b"
-            className="mt-5 inline-flex h-10 items-center rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+            className="mt-5 inline-flex min-h-10 items-center rounded bg-[var(--accent)] px-3 text-xs font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
           >
             Mở danh sách kịch bản
           </Link>

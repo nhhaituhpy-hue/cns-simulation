@@ -73,7 +73,7 @@ function responseMessage(response: Response, fallback: string) {
 
 function actionButtonClass(tone: "primary" | "default" | "danger" = "default") {
   const base =
-    "inline-flex min-h-10 items-center justify-center gap-1.5 border px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-50";
+    "inline-flex min-h-10 items-center justify-center gap-1.5 rounded border px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-50";
   if (tone === "primary")
     return `${base} border-[var(--accent)] bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]`;
   if (tone === "danger")
@@ -335,7 +335,7 @@ export function ScenarioManagementWorkspace({
         <nav aria-label="Đường dẫn kịch bản" className="mb-4">
           <Link
             href="/authoring"
-            className="inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+            className="inline-flex min-h-9 items-center gap-2 rounded px-2 text-xs font-semibold text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
           >
             <ArrowLeft aria-hidden size={17} />
             Danh sách thiết bị
@@ -613,7 +613,7 @@ function ScenarioRow({
         <th scope="row" className="px-4 py-4 pl-8 font-normal sm:px-5 sm:pl-10">
           <button
             type="button"
-            className="group inline-flex min-h-10 items-start gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+            className="group inline-flex min-h-10 items-start gap-2 rounded text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
             aria-expanded={expanded}
             aria-controls={`scenario-detail-${scenario.id}`}
             onClick={() => onToggle(scenario.id)}

@@ -59,7 +59,7 @@ export function TrainingWorkspaceCatalog({
               </div>
               <h2 className="mt-4 text-base font-bold text-[var(--text-primary)]">{module.shortName}</h2>
               <p className="mt-2 min-h-12 text-sm leading-5 text-[var(--text-secondary)]">{module.description}</p>
-              <Link href={module.routes[mode]} className={`mt-4 inline-flex min-h-9 items-center justify-center rounded-md px-3.5 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] active:scale-[0.98] ${trainingAvailable ? "bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] focus-visible:ring-offset-2" : "border border-[var(--accent-border)] bg-[var(--surface)] text-[var(--accent)] hover:bg-[var(--accent-muted)]"}`}>
+              <Link href={module.routes[mode]} className={`mt-4 inline-flex min-h-9 items-center justify-center rounded px-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] active:scale-[0.98] ${trainingAvailable ? "bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] focus-visible:ring-offset-2" : "border border-[var(--accent-border)] bg-[var(--surface)] text-[var(--accent)] hover:bg-[var(--accent-muted)]"}`}>
                 {trainingAvailable ? copy.availableAction : copy.plannedAction}
               </Link>
             </article>
@@ -83,7 +83,7 @@ export function TrainingModulePlaceholder({
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
-      <Link href={backHref} className="text-sm font-semibold text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">
+      <Link href={backHref} className="inline-flex min-h-9 items-center rounded px-2 text-xs font-semibold text-[var(--accent)] hover:bg-[var(--accent-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">
         Quay về {copy.title}
       </Link>
       <section className="mt-5 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-sm sm:p-8">

@@ -209,6 +209,12 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-09-17 — Chuẩn hóa button Kịch bản và Ôn tập
+- Chuẩn hóa các button chữ trong catalog, bảng, modal Ôn tập và luồng tạo/sửa ADS-B về góc `4px` (`rounded`), `text-xs`, padding gọn; giữ nguyên màu primary/danger, loading/disabled và focus-visible.
+- Chuẩn hóa các icon action, pagination và close modal về góc `4px`, nhưng giữ vùng bấm `size-9`/`size-11` để không làm giảm khả năng thao tác.
+- Đã kiểm tra trực quan preview local cho catalog Kịch bản ADS-B và modal Ôn tập DVOR 220 trước khi phát hành.
+- Kiểm tra: 8/8 file test UI liên quan, 23/23 test và focused ESLint đạt.
+
 ### 2026-09-17 — Chuẩn hóa ADS-B vào namespace Kịch bản
 - Khôi phục card ADS-B tại `/authoring` nhưng giữ riêng mô hình kịch bản legacy `scenarios`/`/api/scenarios`, không ép vào schema Scenario Parameters JSON của năm thiết bị PMDT/MOPIENS.
 - Chuẩn hóa danh sách, tạo và sửa ADS-B tại `/authoring/ads-b`, `/authoring/ads-b/create` và `/authoring/ads-b/edit`; các route `/admin/ads-b`, `/admin/create` và `/admin/edit` chuyển hướng tương thích về URL mới.
