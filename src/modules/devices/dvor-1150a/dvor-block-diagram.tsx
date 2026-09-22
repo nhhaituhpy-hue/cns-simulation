@@ -7,8 +7,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   DVOR_BLOCKS,
   DVOR_BLOCK_BY_ID,
+  dvorHardwareOccurrenceKey,
+  resolveDvorHardwareOccurrence,
   type CabinetFace,
   type DvorBlockId,
+  type DvorHardwareOccurrence,
   type DvorHotspot,
   type DvorWaveformReference,
 } from "./block-diagram-data";
@@ -161,13 +164,16 @@ const referenceDiagrams: Record<ReferenceDiagramId, {
 
 function DvorReferenceDiagrams({
   selectedHotspotId,
+  selectedHotspotIds,
   onSelect,
 }: {
-  selectedHotspotId: string | null;
+  selectedHotspotId?: string | null;
+  selectedHotspotIds?: ReadonlySet<string>;
   onSelect: (blockId: DvorBlockId, hotspot: DvorHotspot) => void;
 }) {
   const [diagramId, setDiagramId] = useState<ReferenceDiagramId>("transmitter");
   const diagram = referenceDiagrams[diagramId];
+  const isSelected = (hotspotId: string) => selectedHotspotIds?.has(hotspotId) ?? selectedHotspotId === hotspotId;
 
   function resolveHotspot(overlay: ReferenceDiagramOverlay) {
     const block = DVOR_BLOCK_BY_ID.get(overlay.blockId)!;
@@ -196,7 +202,7 @@ function DvorReferenceDiagrams({
               type="button"
               title={overlay.label}
               aria-label={`Chọn ${overlay.label}`}
-              aria-pressed={selectedHotspotId === overlay.hotspotId}
+              aria-pressed={isSelected(overlay.hotspotId)}
               className={styles.referenceHotspot}
               onClick={() => onSelect(overlay.blockId, resolveHotspot(overlay))}
             >
@@ -516,6 +522,107 @@ function DetailPanel({ blockId }: { blockId: DvorBlockId }) {
         {block.testPoints.map((point) => <div key={point.id}><strong>{point.id} · {point.label}</strong><span>{point.nominal}</span></div>)}
       </div>
     </section>
+  );
+}
+
+export interface DvorHardwareSelectorProps {
+  selectedOccurrenceKeys: ReadonlySet<string>;
+  inspectedOccurrenceKeys?: ReadonlySet<string>;
+  selectionDisabled?: boolean;
+  onSelectOccurrence: (occurrence: DvorHardwareOccurrence) => void;
+  onInspectOccurrence?: (occurrence: DvorHardwareOccurrence) => void;
+}
+
+/**
+ * Controlled selector used by scenario Bước 2. It deliberately reuses the
+ * same cabinet and source-diagram layers as the public block-diagram route,
+ * so an exam answer cannot drift from the documented cabinet mapping.
+ */
+export function DvorHardwareSelector({
+  selectedOccurrenceKeys,
+  inspectedOccurrenceKeys = new Set<string>(),
+  selectionDisabled = false,
+  onSelectOccurrence,
+  onInspectOccurrence,
+}: DvorHardwareSelectorProps) {
+  const [selectedDiagramHotspotId, setSelectedDiagramHotspotId] = useState<string | null>(null);
+  const [cabinetFace, setCabinetFace] = useState<CabinetFace>("front");
+  const allOccurrences = useMemo(
+    () => DVOR_BLOCKS.flatMap((block) => block.diagramHotspots
+      .map((hotspot) => resolveDvorHardwareOccurrence(block.id, hotspot.id))
+      .filter((occurrence): occurrence is DvorHardwareOccurrence => Boolean(occurrence))),
+    [],
+  );
+  const occurrenceByKey = useMemo(
+    () => new Map(allOccurrences.map((occurrence) => [dvorHardwareOccurrenceKey(occurrence), occurrence])),
+    [allOccurrences],
+  );
+  const selectedDiagramHotspots = useMemo(
+    () => new Set([...selectedOccurrenceKeys].map((key) => occurrenceByKey.get(key)?.diagramHotspotId).filter((id): id is string => Boolean(id))),
+    [occurrenceByKey, selectedOccurrenceKeys],
+  );
+  const selectedCabinetHotspots = useMemo(
+    () => new Set([...selectedOccurrenceKeys].map((key) => occurrenceByKey.get(key)?.cabinetHotspotId).filter((id): id is string => Boolean(id))),
+    [occurrenceByKey, selectedOccurrenceKeys],
+  );
+  const cabinet = cabinetImages[cabinetFace];
+  const cabinetHotspots = useMemo(
+    () => DVOR_BLOCKS.flatMap((block) => block.cabinetFace === cabinetFace
+      ? block.cabinetHotspots.map((hotspot) => ({ blockId: block.id, hotspot }))
+      : []),
+    [cabinetFace],
+  );
+  const cabinetSelectableBlocks = useMemo(
+    () => new Set(DVOR_BLOCKS.filter((block) => block.cabinetHotspots.length > 0).map((block) => block.id)),
+    [],
+  );
+
+  function selectBlock(blockId: DvorBlockId, hotspot: DvorHotspot) {
+    const occurrence = resolveDvorHardwareOccurrence(blockId, hotspot.id);
+    const block = DVOR_BLOCK_BY_ID.get(blockId);
+    if (!occurrence || !block) return;
+    setSelectedDiagramHotspotId(occurrence.diagramHotspotId);
+    if (block.cabinetHotspots.length > 0) setCabinetFace(block.cabinetFace);
+    onInspectOccurrence?.(occurrence);
+    if (!selectionDisabled) onSelectOccurrence(occurrence);
+  }
+
+  return (
+    <div className={styles.page}>
+      <div className={styles.workspace}>
+        <section className={styles.viewerPanel} aria-labelledby="scenario-cabinet-heading">
+          <div className={styles.panelHeading}>
+            <h2 id="scenario-cabinet-heading" className="sr-only">Cabinet {cabinet.label.toLocaleLowerCase("vi")}</h2>
+            <div className={styles.faceTabs} role="tablist" aria-label="Chọn mặt cabinet để xác định phần cứng">
+              {(["front", "rear"] as const).map((face) => (
+                <button key={face} type="button" role="tab" aria-selected={cabinetFace === face} onClick={() => setCabinetFace(face)}>
+                  {face === "front" ? <CaretLeft aria-hidden /> : <CaretRight aria-hidden />}{cabinetImages[face].label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <EquipmentCanvas
+            image={cabinet}
+            hotspots={cabinetHotspots}
+            selectedHotspotIds={selectedCabinetHotspots}
+            onSelect={selectBlock}
+            interactive
+            interactiveBlockIds={cabinetSelectableBlocks}
+          />
+        </section>
+        <section className={styles.viewerPanel} aria-labelledby="scenario-diagram-heading">
+          <h2 id="scenario-diagram-heading" className="sr-only">Sơ đồ khối DVOR 1150A dùng cho xác định phần cứng</h2>
+          <DvorReferenceDiagrams
+            selectedHotspotId={selectedDiagramHotspotId}
+            selectedHotspotIds={selectedDiagramHotspots}
+            onSelect={selectBlock}
+          />
+        </section>
+      </div>
+      <p className="sr-only">
+        Đã chọn {selectedOccurrenceKeys.size} occurrence phần cứng và đã kiểm tra {inspectedOccurrenceKeys.size} occurrence.
+      </p>
+    </div>
   );
 }
 

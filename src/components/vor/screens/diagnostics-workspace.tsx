@@ -25,10 +25,26 @@ function DiagnosticMark({ good }: { good: boolean }) {
 function PowerUpResults() {
   const timestamp = useVorPmdtStore((state) => state.data.timestamp);
   const healthy = useVorPmdtStore((state) => state.derived.voting.systemHealthy);
+  const scenario = useVorPmdtStore((state) => state.scenario);
+  const diagnosticState = useVorPmdtStore((state) => state.diagnosticState);
+  const failedSubsystem = scenario.definition?.diagnosis?.diagnosticSubsystem ?? null;
+
+  function columnHealthy(column: (typeof powerUpColumns)[number]) {
+    if (!diagnosticState.completed || !failedSubsystem) return healthy;
+    if (failedSubsystem === "Audio Generator") return !column.startsWith("Audio Gen");
+    if (failedSubsystem === "Monitor") return !column.startsWith("Monitor");
+    if (failedSubsystem === "Power Supplies") return column !== "RMS";
+    return healthy;
+  }
 
   return (
     <div className="pmdt-diagnostics-power-up">
       <time className="pmdt-monitor-date">{timestamp}</time>
+      {diagnosticState.completed && diagnosticState.result ? (
+        <p className="pmdt-diagnostics-result-summary" role="status">
+          <strong>{diagnosticState.subsystem ?? "Diagnostics"}:</strong> {diagnosticState.result}
+        </p>
+      ) : null}
       <table className="pmdt-diagnostics-power-table">
         <thead>
           <tr>
@@ -40,7 +56,7 @@ function PowerUpResults() {
           {powerUpRows.map((row) => (
             <tr key={row}>
               <th scope="row">{row}</th>
-              {powerUpColumns.map((column) => <td key={column}><DiagnosticMark good={healthy} /></td>)}
+              {powerUpColumns.map((column) => <td key={column}><DiagnosticMark good={columnHealthy(column)} /></td>)}
             </tr>
           ))}
         </tbody>
@@ -50,6 +66,30 @@ function PowerUpResults() {
 }
 
 function FaultIsolation() {
+  const scenario = useVorPmdtStore((state) => state.scenario);
+  const diagnosticState = useVorPmdtStore((state) => state.diagnosticState);
+  const securityLevel = useVorPmdtStore((state) => state.securityLevel);
+  const local = useVorPmdtStore((state) => state.config.simulation.local);
+  const runDiagnostics = useVorPmdtStore((state) => state.runDiagnostics);
+  const cancelDiagnostics = useVorPmdtStore((state) => state.cancelDiagnostics);
+  const diagnosis = scenario.definition?.diagnosis;
+  const faultRow = diagnosis?.diagnosticSubsystem === "Power Supplies"
+    ? "Power Supplies"
+    : diagnosis?.diagnosticSubsystem === "Audio Generator"
+      ? "Audio Generator"
+      : diagnosis?.diagnosticSubsystem === "Synthesizer"
+        ? "Synthesizer"
+        : diagnosis?.diagnosticSubsystem === "Distribution"
+          ? "Distribution"
+          : diagnosis?.diagnosticSubsystem === "Monitor"
+            ? "Monitor"
+            : diagnosis?.diagnosticSubsystem === "Power Amplifier"
+              ? "Power Amplifier"
+              : null;
+
+  const fullAllowed = securityLevel >= 3 && local && (!diagnosis || diagnosis.diagnosticRun === "full");
+  const onAirAllowed = securityLevel >= 3 && local && (!diagnosis || diagnosis.diagnosticRun === "on-air");
+
   return (
     <div className="pmdt-diagnostics-fault-isolation">
       <table className="pmdt-diagnostics-fault-table">
@@ -60,20 +100,29 @@ function FaultIsolation() {
           {faultIsolationRows.map((row) => (
             <tr key={row}>
               <th scope="row">{row}</th>
-              <td><span className="pmdt-diagnostics-progress" /></td>
-              <td />
+              <td><span className={`pmdt-diagnostics-progress ${diagnosticState.completed ? "pmdt-diagnostics-progress--complete" : ""}`} /></td>
+              <td>{diagnosticState.completed ? <DiagnosticMark good={row !== faultRow} /> : null}</td>
             </tr>
           ))}
         </tbody>
       </table>
       <div className="pmdt-diagnostics-fault-results">
         <span>Fault Isolation Results</span>
-        <div className="pmdt-diagnostics-results-box"><span aria-hidden>‹</span><span aria-hidden>›</span></div>
+        <div className="pmdt-diagnostics-results-box" role="status">
+          {diagnosticState.completed
+            ? diagnosticState.result ?? "NO FAULT FOUND"
+            : "Run a diagnostic to populate the result."}
+        </div>
       </div>
+      {diagnosis?.diagnosticRun === "full" ? (
+        <p className="pmdt-diagnostics-notam-warning">
+          Full Diagnostics changes the radiated signal. Issue a NOTAM before running this test.
+        </p>
+      ) : null}
       <div className="pmdt-diagnostics-fault-actions">
-        <button type="button" disabled>Run Full<br />Diagnostics</button>
-        <button type="button" disabled>Cancel</button>
-        <button type="button">Run On Air<br />Diagnostics</button>
+        <button type="button" disabled={!fullAllowed} onClick={() => runDiagnostics("full")}>Run Full<br />Diagnostics</button>
+        <button type="button" disabled={!diagnosticState.run} onClick={cancelDiagnostics}>Cancel</button>
+        <button type="button" disabled={!onAirAllowed} onClick={() => runDiagnostics("on-air")}>Run On Air<br />Diagnostics</button>
       </div>
     </div>
   );

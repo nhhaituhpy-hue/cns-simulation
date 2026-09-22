@@ -3114,6 +3114,43 @@ input[type="checkbox"].dvor1150-control {
   white-space: nowrap;
 }
 
+.dvor1150a-pmdt-page .dvor1150a-scenario-stagebar {
+  display: inline-flex;
+  min-height: 22px;
+  align-items: center;
+  gap: 7px;
+  padding: 1px 4px 1px 7px;
+  border: 1px solid #c69a20;
+  background: #3a341e;
+  color: #fff3bc;
+  font: 10px Arial, sans-serif;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-stagebar strong {
+  color: #ffe16a;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-stagebar button {
+  min-height: 20px;
+  padding: 1px 6px;
+  border: 1px solid #d8e5ed;
+  background: #eef3f6;
+  color: #1d2c35;
+  font: 700 10px Arial, sans-serif;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-stagebar button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-stagebar button:hover:not(:disabled),
+.dvor1150a-pmdt-page .dvor1150a-scenario-stagebar button:focus-visible {
+  background: #fff;
+  outline: 1px solid #ffcf00;
+  outline-offset: 1px;
+}
+
 .dvor1150a-pmdt-page .dvor1150a-scenario-parameters-panel {
   width: 430px;
 }
@@ -3152,6 +3189,13 @@ input[type="checkbox"].dvor1150-control {
 .dvor1150a-pmdt-page .dvor1150a-scenario-configurations > p {
   margin: 0;
   color: #404040;
+}
+
+.dvor1150a-pmdt-page .dvor1150a-scenario-checkpoint-list {
+  margin: 1px 0 0 16px;
+  padding: 0;
+  color: #303030;
+  line-height: 1.35;
 }
 
 .dvor1150a-pmdt-page .dvor1150a-scenario-policy .pmdt-config-section-body > label {

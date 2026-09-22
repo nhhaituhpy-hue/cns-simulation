@@ -237,6 +237,21 @@ export function Dvor1150aScenarioParametersPanel() {
         {Object.entries(scenarioDraft.successCriteria).map(([key, value]) => <label key={key}><input type="checkbox" checked={value} onChange={(event) => update((next) => { next.successCriteria[key as keyof Dvor1150aScenarioDefinition["successCriteria"]] = event.target.checked; })} /> {key.replace(/([A-Z])/g, " $1")}</label>)}
       </section>
 
+      {scenarioDraft.diagnosis ? (
+        <section className="dvor1150a-scenario-policy" aria-label="Two-stage diagnostic workflow">
+          <strong>Two-stage diagnostic workflow</strong>
+          <p>{scenarioDraft.diagnosis.faultSummary}</p>
+          <span><b>PMDT result:</b> {scenarioDraft.diagnosis.diagnosticResult}</span>
+          <span><b>Disposition:</b> {scenarioDraft.diagnosis.disposition === "replace-module" ? "Replace module/card" : "Software adjustment only"}</span>
+          <span><b>Diagnostic run:</b> {scenarioDraft.diagnosis.diagnosticRun}</span>
+          <ol className="dvor1150a-scenario-checkpoint-list">
+            {scenarioDraft.diagnosis.pmdtCheckpoints.map((checkpoint) => <li key={checkpoint.id}>{checkpoint.label}</li>)}
+          </ol>
+          <span><b>Hardware answer:</b> {scenarioDraft.diagnosis.expectedHardware.length > 0 ? scenarioDraft.diagnosis.expectedHardware.map((target) => target.assemblyId ?? target.diagramHotspotId).join(", ") : "No replacement"}</span>
+          <span><b>Manual:</b> {scenarioDraft.diagnosis.manualReferences.join(" · ")}</span>
+        </section>
+      ) : null}
+
       <section className="dvor1150a-scenario-policy" aria-label="Student recovery controls">
         <strong>Student recovery controls</strong>
         <p>Only selected fields can be staged and applied by the student. Alarm limits, calibration and raw monitor values remain protected unless intentionally selected.</p>

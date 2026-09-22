@@ -16,6 +16,8 @@ import { AboutPmdtDialog } from "./about-pmdt-dialog";
 import { PmdtLoginDialog } from "./pmdt-login-dialog";
 import { Dvor1150aScenarioParametersPanel } from "./dvor1150a-scenario-parameters";
 import { Dvor1150aTrainingHud } from "./dvor1150a-training-hud";
+import { Dvor1150aHardwareStage } from "./dvor1150a-hardware-stage";
+import { evaluateDvor1150aScenario } from "@/lib/dvor1150a";
 import { DisabledScreen } from "./screens/disabled-screen";
 import { HomeScreen } from "./screens/home-screen";
 import { MonitorConfigLayout } from "./screens/monitor-config-layout";
@@ -76,6 +78,32 @@ export function PmdtLayout({
   const configPanelOpen = useVorPmdtStore((state) => state.configPanelOpen);
   const scenarioParametersOpen = useVorPmdtStore((state) => state.scenarioParametersOpen);
   const scenario = useVorPmdtStore((state) => state.scenario);
+  const config = useVorPmdtStore((state) => state.config);
+  const derived = useVorPmdtStore((state) => state.derived);
+  const storeMode = useVorPmdtStore((state) => state.mode);
+  const scenarioStage = useVorPmdtStore((state) => state.scenarioStage);
+  const scenarioHardwareSelection = useVorPmdtStore((state) => state.scenarioHardwareSelection);
+  const scenarioHardwareDispositionConfirmed = useVorPmdtStore((state) => state.scenarioHardwareDispositionConfirmed);
+  const attemptEvents = useVorPmdtStore((state) => state.attemptEvents);
+  const actionHistory = useVorPmdtStore((state) => state.actionHistory);
+  const scenarioEvidence = {
+    visitedViewIds: attemptEvents.map((event) => event.viewId),
+    acceptedActionControlIds: actionHistory
+      .filter((event) => event.accepted && event.controlId)
+      .map((event) => event.controlId as string),
+    selectedHardwareOccurrenceKeys: scenarioHardwareSelection,
+    hardwareDispositionConfirmed: scenarioHardwareDispositionConfirmed,
+  };
+  const scenarioEvaluation = scenario.active && scenario.definition
+    ? evaluateDvor1150aScenario(
+        scenario,
+        derived,
+        config,
+        scenarioEvidence,
+      )
+    : null;
+  const twoStageScenario = storeMode === "student" && Boolean(scenario.active && scenario.definition?.diagnosis);
+  const setScenarioStage = useVorPmdtStore((state) => state.setScenarioStage);
   const setScenarioParametersOpen = useVorPmdtStore((state) => state.setScenarioParametersOpen);
   const setScenarioAuthoringEnabled = useVorPmdtStore((state) => state.setScenarioAuthoringEnabled);
   const replaceScenarioDraft = useVorPmdtStore((state) => state.replaceScenarioDraft);
@@ -130,6 +158,16 @@ export function PmdtLayout({
           {scenarioAuthoringEnabled ? <span className="dvor1150a-scenario-role-badge">EXAMINER</span> : null}
           <Dvor1150aTrainingHud examinerView={scenarioAuthoringEnabled} />
           {scenarioAuthoringEnabled && scenario.active ? <span className="dvor1150a-scenario-active-badge">Scenario active: {scenario.definition?.name}</span> : null}
+          {twoStageScenario && scenarioEvaluation ? (
+            <div className="dvor1150a-scenario-stagebar" role="status">
+              <span><strong>{scenarioStage === "pmdt" ? "Bước 1/2" : scenarioStage === "hardware" ? "Bước 2/2" : "Hoàn thành"}</strong> · {scenario.definition?.diagnosis?.disposition === "software-adjustment" ? "PMDT configuration" : "PMDT → hardware"}</span>
+              {scenarioStage === "pmdt" ? (
+                <button type="button" disabled={!scenarioEvaluation.pmdtComplete} onClick={() => setScenarioStage("hardware")}>
+                  Tiếp tục: Xác định phần cứng
+                </button>
+              ) : null}
+            </div>
+          ) : null}
         </nav> : null}
         <section
         aria-label="VOR PMDT Simulator"
@@ -164,6 +202,20 @@ export function PmdtLayout({
         {mode === "preview" && simulatorId ? <SimulatorConfigPersistence simulatorId={simulatorId} /> : null}
       </section>
       </div>
+      {twoStageScenario && scenarioStage === "hardware" ? <Dvor1150aHardwareStage /> : null}
+      {twoStageScenario && scenarioStage === "complete" ? (
+        <div className="fixed inset-0 z-[90] grid place-items-center bg-black/55 p-4" role="presentation">
+          <section role="dialog" aria-modal="true" aria-labelledby="dvor-scenario-complete-title" className="w-full max-w-lg rounded border border-[#9aa8b3] bg-[#f7f9fa] p-6 text-[#17202a] shadow-2xl">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1d5f91]">Scenario completed</p>
+            <h2 id="dvor-scenario-complete-title" className="mt-2 text-xl font-bold">Đã hoàn thành kịch bản</h2>
+            <p className="mt-3 text-sm leading-6 text-[#53616d]">PMDT và phần xác định xử lý phần cứng đã được ghi nhận trong phiên thực hành.</p>
+            <div className="mt-4 grid gap-2 rounded border border-[#c5d3dd] bg-white p-3 text-xs">
+              {scenarioEvaluation?.checks.map((check) => <div key={check.id} className="flex items-center justify-between gap-3"><span>{check.label}</span><strong className={check.passed ? "text-[#166534]" : "text-[#a22b2b]"}>{check.passed ? "Đạt" : "Theo dõi"}</strong></div>)}
+            </div>
+            <button type="button" onClick={() => setScenarioStage("pmdt")} className="mt-5 min-h-10 rounded bg-[#1d5f91] px-4 text-sm font-bold text-white hover:bg-[#174d76] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d5f91] focus-visible:ring-offset-2">Quay lại PMDT</button>
+          </section>
+        </div>
+      ) : null}
       {externalLeadingPanel ? (
         <aside aria-label="Nhật ký học viên" className="pmdt-classic-inspector pmdt-classic-inspector--external pmdt-classic-inspector--external-leading">
           {externalLeadingPanel}

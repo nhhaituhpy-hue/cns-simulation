@@ -25,6 +25,28 @@ export interface DvorHotspot {
   targetCabinetHotspotId?: string;
 }
 
+/**
+ * Stable identity for one occurrence of a DVOR block in the source diagram
+ * and, when available, its matching cabinet location. Scenario answers use
+ * these IDs instead of array indexes so TX1/TX2 and Monitor 1/2 remain
+ * distinguishable.
+ */
+export interface DvorHardwareOccurrence {
+  blockId: DvorBlockId;
+  diagramHotspotId: string;
+  cabinetHotspotId: string | null;
+}
+
+export function dvorHardwareOccurrenceKey(
+  occurrence: DvorHardwareOccurrence,
+): string {
+  return [
+    occurrence.blockId,
+    occurrence.diagramHotspotId,
+    occurrence.cabinetHotspotId ?? "none",
+  ].join("::");
+}
+
 export interface DvorWaveformReference {
   src: string;
   width: number;
@@ -362,3 +384,32 @@ export const DVOR_BLOCKS: readonly DvorBlockDefinition[] = [
 ] as const;
 
 export const DVOR_BLOCK_BY_ID = new Map(DVOR_BLOCKS.map((block) => [block.id, block]));
+
+/** Resolve either a diagram or cabinet hotspot to one canonical occurrence. */
+export function resolveDvorHardwareOccurrence(
+  blockId: DvorBlockId,
+  hotspotId: string,
+): DvorHardwareOccurrence | null {
+  const block = DVOR_BLOCK_BY_ID.get(blockId);
+  if (!block) return null;
+
+  const diagramHotspot = block.diagramHotspots.find((hotspot) => hotspot.id === hotspotId);
+  if (diagramHotspot) {
+    return {
+      blockId,
+      diagramHotspotId: diagramHotspot.id,
+      cabinetHotspotId: diagramHotspot.targetCabinetHotspotId ?? null,
+    };
+  }
+
+  const cabinetHotspot = block.cabinetHotspots.find((hotspot) => hotspot.id === hotspotId);
+  if (!cabinetHotspot) return null;
+  const matchingDiagram = block.diagramHotspots.find(
+    (hotspot) => hotspot.targetCabinetHotspotId === cabinetHotspot.id,
+  );
+  return {
+    blockId,
+    diagramHotspotId: matchingDiagram?.id ?? cabinetHotspot.id,
+    cabinetHotspotId: cabinetHotspot.id,
+  };
+}

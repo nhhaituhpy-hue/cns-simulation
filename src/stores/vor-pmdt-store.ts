@@ -81,6 +81,16 @@ export interface VorSessionInitialization {
   expectedCheckpoints?: readonly VorExpectedCheckpoint[];
 }
 
+export type DvorScenarioStage = "pmdt" | "hardware" | "complete";
+export type DvorDiagnosticRun = "full" | "on-air";
+
+export interface VorDiagnosticState {
+  run: DvorDiagnosticRun | null;
+  completed: boolean;
+  subsystem: string | null;
+  result: string | null;
+}
+
 export interface VorPmdtStoreState {
   mode: VorPmdtMode;
   configPanelOpen: boolean;
@@ -116,6 +126,12 @@ export interface VorPmdtStoreState {
   answer: VorStudentAnswer;
   scenario: Dvor1150aScenarioRuntime;
   scenarioDraft: Dvor1150aScenarioDefinition;
+  scenarioStage: DvorScenarioStage;
+  scenarioHardwareSelection: string[];
+  scenarioHardwareInspected: string[];
+  scenarioHardwareReasoning: string;
+  scenarioHardwareDispositionConfirmed: boolean;
+  diagnosticState: VorDiagnosticState;
 }
 
 export interface VorPmdtStoreActions {
@@ -127,6 +143,13 @@ export interface VorPmdtStoreActions {
   replaceScenarioDraft: (definition: Dvor1150aScenarioDefinition) => void;
   applyScenario: () => boolean;
   startReviewScenario: (definition: Dvor1150aScenarioDefinition) => boolean;
+  setScenarioStage: (stage: DvorScenarioStage) => void;
+  toggleScenarioHardware: (occurrenceKey: string) => void;
+  inspectScenarioHardware: (occurrenceKey: string) => void;
+  setScenarioHardwareReasoning: (reasoning: string) => void;
+  confirmScenarioSoftwareResolution: () => void;
+  runDiagnostics: (run: DvorDiagnosticRun) => boolean;
+  cancelDiagnostics: () => void;
   restoreScenario: () => boolean;
   endScenario: () => boolean;
   setAboutDialogOpen: (open: boolean) => void;
@@ -229,6 +252,17 @@ function initialState(): VorPmdtStoreState {
     answer: { ...emptyAnswer },
     scenario: { active: false, definition: null, startedAt: null },
     scenarioDraft: createDefaultDvor1150aScenarioDefinition(),
+    scenarioStage: "pmdt",
+    scenarioHardwareSelection: [],
+    scenarioHardwareInspected: [],
+    scenarioHardwareReasoning: "",
+    scenarioHardwareDispositionConfirmed: false,
+    diagnosticState: {
+      run: null,
+      completed: false,
+      subsystem: null,
+      result: null,
+    },
   };
 }
 
@@ -362,6 +396,10 @@ function vorEvidenceSnapshot(state: VorPmdtStoreState): ScenarioEvidenceSnapshot
       (monitor) => monitor.enabled && monitor.parameters.sidebandVswr.status === "alarm",
     ),
     activeAlerts: state.data.generalAlerts.filter((alert) => alert.checked).map((alert) => alert.label),
+    scenarioStage: state.scenarioStage,
+    diagnosticRun: state.diagnosticState.run,
+    diagnosticCompleted: state.diagnosticState.completed,
+    hardwareDispositionConfirmed: state.scenarioHardwareDispositionConfirmed,
   };
 }
 
@@ -449,6 +487,17 @@ export function createVorPmdtStore(
           startedAt: startedAt ?? now().toISOString(),
         },
         scenarioDraft: structuredClone(definition),
+        scenarioStage: "pmdt",
+        scenarioHardwareSelection: [],
+        scenarioHardwareInspected: [],
+        scenarioHardwareReasoning: "",
+        scenarioHardwareDispositionConfirmed: false,
+        diagnosticState: {
+          run: null,
+          completed: false,
+          subsystem: null,
+          result: null,
+        },
         lastCommand: message,
       });
       return true;
@@ -541,6 +590,126 @@ export function createVorPmdtStore(
         return applied;
       },
 
+      setScenarioStage: (stage) => {
+        const state = get();
+        if (!state.scenario.active || !state.scenario.definition?.diagnosis) return;
+        const before = vorEvidenceSnapshot(state);
+        set({ scenarioStage: stage });
+        recordAction({
+          kind: "control",
+          controlId: `scenario-stage-${stage}`,
+          label: stage === "hardware" ? "Continue to hardware identification" : `Scenario stage: ${stage}`,
+          accepted: true,
+          before,
+        });
+      },
+
+      toggleScenarioHardware: (occurrenceKey) => {
+        const state = get();
+        if (!state.scenario.active || !state.scenario.definition?.diagnosis) return;
+        const before = vorEvidenceSnapshot(state);
+        const selected = state.scenarioHardwareSelection.includes(occurrenceKey);
+        set({
+          scenarioHardwareSelection: selected
+            ? state.scenarioHardwareSelection.filter((key) => key !== occurrenceKey)
+            : [...state.scenarioHardwareSelection, occurrenceKey],
+        });
+        recordAction({
+          kind: "control",
+          controlId: `hardware-occurrence-${occurrenceKey}`,
+          label: selected ? "Unselect hardware occurrence" : "Select hardware occurrence",
+          input: { occurrenceKey, selected: !selected },
+          accepted: true,
+          before,
+        });
+      },
+
+      inspectScenarioHardware: (occurrenceKey) => {
+        const state = get();
+        if (!state.scenario.active || !state.scenario.definition?.diagnosis) return;
+        if (state.scenarioHardwareInspected.includes(occurrenceKey)) return;
+        set({ scenarioHardwareInspected: [...state.scenarioHardwareInspected, occurrenceKey] });
+      },
+
+      setScenarioHardwareReasoning: (reasoning) => set({ scenarioHardwareReasoning: reasoning }),
+
+      confirmScenarioSoftwareResolution: () => {
+        const state = get();
+        if (state.scenario.definition?.diagnosis?.disposition !== "software-adjustment") return;
+        const before = vorEvidenceSnapshot(state);
+        set({ scenarioHardwareDispositionConfirmed: true });
+        recordAction({
+          kind: "control",
+          controlId: "hardware-no-replacement",
+          label: "Confirm no hardware replacement",
+          accepted: true,
+          before,
+        });
+      },
+
+      runDiagnostics: (run) => {
+        const state = get();
+        const before = vorEvidenceSnapshot(state);
+        const diagnosis = state.scenario.definition?.diagnosis;
+        if (!state.scenario.active || !diagnosis) return false;
+        if (diagnosis.diagnosticRun !== run) {
+          recordAction({
+            kind: "control",
+            controlId: `diagnostics-run-${run}`,
+            label: `Run ${run} diagnostics`,
+            accepted: false,
+            reason: "This diagnostic mode is not part of the scenario contract.",
+            before,
+          });
+          return false;
+        }
+        if (state.securityLevel < 3 || !state.config.simulation.local) {
+          recordAction({
+            kind: "control",
+            controlId: `diagnostics-run-${run}`,
+            label: `Run ${run} diagnostics`,
+            accepted: false,
+            reason: run === "full"
+              ? "Full diagnostics require Local mode and Security Level 3 or higher."
+              : "On-Air diagnostics require an authenticated maintenance account.",
+            before,
+          });
+          return false;
+        }
+        set({
+          diagnosticState: {
+            run,
+            completed: true,
+            subsystem: diagnosis.diagnosticSubsystem,
+            result: diagnosis.diagnosticResult,
+          },
+          lastCommand: `${run === "full" ? "Full" : "On-Air"} Diagnostics completed`,
+        });
+        recordAction({
+          kind: "control",
+          controlId: `diagnostics-run-${run}`,
+          label: `Run ${run} diagnostics`,
+          accepted: true,
+          input: { run },
+          before,
+        });
+        return true;
+      },
+
+      cancelDiagnostics: () => {
+        const state = get();
+        if (!state.diagnosticState.run) return;
+        set({
+          diagnosticState: {
+            run: null,
+            completed: false,
+            subsystem: null,
+            result: null,
+          },
+          lastCommand: "Diagnostics canceled",
+        });
+      },
+
       restoreScenario: () => {
         const state = get();
         if (!state.scenario.active || !state.scenario.definition) return false;
@@ -576,6 +745,17 @@ export function createVorPmdtStore(
           derived,
           scenario: { active: false, definition: null, startedAt: null },
           scenarioDraft: createDefaultDvor1150aScenarioDefinition(),
+          scenarioStage: "pmdt",
+          scenarioHardwareSelection: [],
+          scenarioHardwareInspected: [],
+          scenarioHardwareReasoning: "",
+          scenarioHardwareDispositionConfirmed: false,
+          diagnosticState: {
+            run: null,
+            completed: false,
+            subsystem: null,
+            result: null,
+          },
           lastCommand: "Scenario ended; Đài TEST/TST defaults restored",
         });
         return true;

@@ -1,0 +1,494 @@
+{
+  "schemaVersion": 1,
+  "id": "lvps-tx1-power-fault",
+  "name": "LVPS TX1 Low-Voltage Fault (1A3A4)",
+  "description": "Trace abnormal RMS power-supply readings and Digital I/O status to the TX1 low-voltage power-supply card 1A3A4.",
+  "difficulty": "intermediate",
+  "configuration": {
+    "station": {
+      "stationDescription": "TST",
+      "frequencyMHz": 117,
+      "stationType": "DVOR",
+      "transmitterConfig": "Dual Transmitters",
+      "monitorConfig": "Dual Monitors"
+    },
+    "transmitters": {
+      "tx1": {
+        "enabled": true,
+        "onAir": true,
+        "load": false,
+        "frequencyErrorPpm": 5,
+        "nominal": {
+          "azimuthIndex": 5,
+          "outputPower": 70,
+          "voiceModulation": 0,
+          "identModulation": 8,
+          "referenceModulation": 28,
+          "sboRfLevel": 65,
+          "mainIdentCode": "TST",
+          "standbyIdentCode": "Same as Main Ident",
+          "keyerMode": "disabled"
+        },
+        "offsets": {
+          "azimuthAngleOffset": 0,
+          "outputPowerScale": 84,
+          "voiceModulationScale": 100,
+          "identModulationScale": 100,
+          "referenceModulationScale": 99,
+          "carrierPllControl": 12.5,
+          "carrierSidebandPhaseOffsetCoarse": 180,
+          "carrierSidebandPhaseOffsetFine": 33,
+          "sideband1PhaseOffset": -1,
+          "sideband2PhaseOffset": 1,
+          "sideband3PhaseOffset": 0,
+          "sideband4PhaseOffset": 0,
+          "txSidebandRfLevelScale": 95.5,
+          "sideband1RfLevelScale": 100,
+          "sideband2RfLevelScale": 100,
+          "sideband3RfLevelScale": 100,
+          "sideband4RfLevelScale": 100,
+          "sideband1VswrOffset": -0.72,
+          "sideband2VswrOffset": -0.66,
+          "sideband3VswrOffset": -0.66,
+          "sideband4VswrOffset": -0.72
+        },
+        "vswr": {
+          "carrier": 1.01,
+          "sidebands": [
+            1.83,
+            1.83,
+            1.74,
+            1.83
+          ]
+        },
+        "faults": {
+          "disabled": false,
+          "carrierVswr": false,
+          "overtemperature": false,
+          "frequencyError": false
+        }
+      },
+      "tx2": {
+        "enabled": true,
+        "onAir": false,
+        "load": false,
+        "frequencyErrorPpm": 0,
+        "nominal": {
+          "azimuthIndex": 5,
+          "outputPower": 70,
+          "voiceModulation": 0,
+          "identModulation": 8,
+          "referenceModulation": 28,
+          "sboRfLevel": 65,
+          "mainIdentCode": "TST",
+          "standbyIdentCode": "Same as Main Ident",
+          "keyerMode": "disabled"
+        },
+        "offsets": {
+          "azimuthAngleOffset": 0,
+          "outputPowerScale": 93.5,
+          "voiceModulationScale": 100,
+          "identModulationScale": 100,
+          "referenceModulationScale": 99,
+          "carrierPllControl": 11.5,
+          "carrierSidebandPhaseOffsetCoarse": 90,
+          "carrierSidebandPhaseOffsetFine": -16,
+          "sideband1PhaseOffset": 0,
+          "sideband2PhaseOffset": 0,
+          "sideband3PhaseOffset": 2,
+          "sideband4PhaseOffset": -2,
+          "txSidebandRfLevelScale": 95,
+          "sideband1RfLevelScale": 100,
+          "sideband2RfLevelScale": 100,
+          "sideband3RfLevelScale": 100,
+          "sideband4RfLevelScale": 100,
+          "sideband1VswrOffset": -0.65,
+          "sideband2VswrOffset": -0.8,
+          "sideband3VswrOffset": -0.75,
+          "sideband4VswrOffset": -0.69
+        },
+        "vswr": {
+          "carrier": 1.02,
+          "sidebands": [
+            1.85,
+            1.9,
+            1.9,
+            1.86
+          ]
+        },
+        "faults": {
+          "disabled": false,
+          "carrierVswr": false,
+          "overtemperature": false,
+          "frequencyError": false
+        }
+      }
+    },
+    "monitor": {
+      "rawMeasurements": {
+        "mon1": {
+          "azimuth": 249.55,
+          "hz30Modulation": 29.6,
+          "hz9960Modulation": 29.6,
+          "deviation": 16.1608,
+          "rfLevel": 0.9,
+          "identModulation": 7.2,
+          "identStatus": "Normal",
+          "identCode": "TST",
+          "txFrequencyError": 5,
+          "notchMonitor": 100,
+          "sidebandVswr": [
+            1.08,
+            1.09,
+            1.11,
+            1.1,
+            1.08,
+            1.09,
+            1.15,
+            1.1,
+            1.1,
+            1.11,
+            1.1,
+            1.11,
+            1.11,
+            1.1,
+            1.14,
+            1.1,
+            1.12,
+            1.11,
+            1.12,
+            1.11,
+            1.1,
+            1.1,
+            1.14,
+            1.12,
+            1.06,
+            1.07,
+            1.05,
+            1.11,
+            1.05,
+            1.11,
+            1.11,
+            1.09,
+            1.11,
+            1.11,
+            1.12,
+            1.08,
+            1.12,
+            1,
+            1.11,
+            1.12,
+            1.07,
+            1.09,
+            1.06,
+            1.05,
+            1.11,
+            1.1,
+            1.11,
+            1.15
+          ]
+        },
+        "mon2": {
+          "azimuth": 249.55,
+          "hz30Modulation": 29.6,
+          "hz9960Modulation": 29.6,
+          "deviation": 16.1608,
+          "rfLevel": 0.9,
+          "identModulation": 7.2,
+          "identStatus": "Normal",
+          "identCode": "TST",
+          "txFrequencyError": 5,
+          "notchMonitor": 100,
+          "sidebandVswr": [
+            1.08,
+            1.09,
+            1.11,
+            1.1,
+            1.08,
+            1.09,
+            1.15,
+            1.1,
+            1.1,
+            1.11,
+            1.1,
+            1.11,
+            1.11,
+            1.1,
+            1.14,
+            1.1,
+            1.12,
+            1.11,
+            1.12,
+            1.11,
+            1.1,
+            1.1,
+            1.14,
+            1.12,
+            1.06,
+            1.07,
+            1.05,
+            1.11,
+            1.05,
+            1.11,
+            1.11,
+            1.09,
+            1.11,
+            1.11,
+            1.12,
+            1.08,
+            1.12,
+            1,
+            1.11,
+            1.12,
+            1.07,
+            1.09,
+            1.06,
+            1.05,
+            1.11,
+            1.1,
+            1.11,
+            1.15
+          ]
+        }
+      },
+      "alarmLimits": {
+        "hz30Modulation": {
+          "alarmLow": 23,
+          "preAlarmLow": 28.5,
+          "nominal": 30,
+          "preAlarmHigh": 31.5,
+          "alarmHigh": 37,
+          "unit": "%"
+        },
+        "hz9960Modulation": {
+          "alarmLow": 23,
+          "preAlarmLow": 28.5,
+          "nominal": 30,
+          "preAlarmHigh": 31.5,
+          "alarmHigh": 37,
+          "unit": "%"
+        },
+        "deviation": {
+          "alarmLow": 12.6,
+          "preAlarmLow": 15.5,
+          "nominal": 16,
+          "preAlarmHigh": 16.5,
+          "alarmHigh": 19,
+          "unit": "Ratio"
+        },
+        "rfLevel": {
+          "alarmLow": -9,
+          "preAlarmLow": -2,
+          "nominal": 0,
+          "preAlarmHigh": 2,
+          "alarmHigh": 9,
+          "unit": "dB"
+        },
+        "identModulation": {
+          "alarmLow": 2,
+          "preAlarmLow": 4,
+          "nominal": 5,
+          "preAlarmHigh": 9,
+          "alarmHigh": 10,
+          "unit": "%"
+        },
+        "txPower": {
+          "alarmLow": 50,
+          "preAlarmLow": 65,
+          "nominal": 70,
+          "preAlarmHigh": 80,
+          "alarmHigh": 120,
+          "unit": "Watts"
+        },
+        "txFrequencyError": {
+          "alarmLow": -20,
+          "preAlarmLow": -18,
+          "nominal": 0,
+          "preAlarmHigh": 18,
+          "alarmHigh": 20,
+          "unit": "ppm"
+        }
+      },
+      "azimuthLimits": {
+        "preAlarm": 0.5,
+        "alarm": 2
+      },
+      "timers": {
+        "shutdown": 5,
+        "continuousIdent": 17,
+        "noIdent": 17
+      },
+      "antennas": {
+        "mon1": {
+          "monitor": 1,
+          "enabled": true,
+          "inputAttenuation": 14,
+          "azimuthAngle": 249.25,
+          "secondAntennaEnabled": false,
+          "secondInputAttenuation": 47,
+          "secondAzimuthAngle": 0
+        },
+        "mon2": {
+          "monitor": 2,
+          "enabled": true,
+          "inputAttenuation": 14,
+          "azimuthAngle": 249.25,
+          "secondAntennaEnabled": false,
+          "secondInputAttenuation": 47,
+          "secondAzimuthAngle": 0
+        }
+      },
+      "calibration": {
+        "mon1": {
+          "azimuthOffset": 0,
+          "hz30ModulationScale": 100,
+          "hz9960ModulationScale": 100,
+          "deviationScale": 99.5,
+          "rfLevelOffset": 0,
+          "identModulationScale": 100,
+          "txPowerScale": 99,
+          "txPowerOffset": 0,
+          "txFrequencyErrorOffset": 0,
+          "notchScale": 100,
+          "oddAntennaReturnLossOffset": 0,
+          "evenAntennaReturnLossOffset": 0
+        },
+        "mon2": {
+          "azimuthOffset": 0,
+          "hz30ModulationScale": 100,
+          "hz9960ModulationScale": 100,
+          "deviationScale": 99.5,
+          "rfLevelOffset": 0,
+          "identModulationScale": 100,
+          "txPowerScale": 99,
+          "txPowerOffset": 0,
+          "txFrequencyErrorOffset": 0,
+          "notchScale": 100,
+          "oddAntennaReturnLossOffset": 0,
+          "evenAntennaReturnLossOffset": 0
+        }
+      },
+      "routing": {
+        "azimuth": {
+          "primary": true,
+          "secondary": false
+        },
+        "hz30Modulation": {
+          "primary": true,
+          "secondary": false
+        },
+        "hz9960Modulation": {
+          "primary": true,
+          "secondary": false
+        },
+        "deviation": {
+          "primary": true,
+          "secondary": false
+        },
+        "rfLevel": {
+          "primary": true,
+          "secondary": false
+        },
+        "identModulation": {
+          "primary": true,
+          "secondary": false
+        },
+        "identStatus": {
+          "primary": true,
+          "secondary": false
+        },
+        "identCode": {
+          "primary": true,
+          "secondary": false
+        },
+        "txPower": {
+          "primary": true,
+          "secondary": false
+        },
+        "txFrequencyError": {
+          "primary": true,
+          "secondary": false
+        },
+        "notchMonitor": {
+          "primary": false,
+          "secondary": false
+        },
+        "sidebandVswr": {
+          "primary": true,
+          "secondary": false
+        }
+      },
+      "votingLogic": "AND",
+      "transfer": "on Primary Alarm",
+      "sidebandVswr": {
+        "numberAntennasInAlarm": 3,
+        "preAlarm": 2.2,
+        "alarm": 3
+      },
+      "notchTolerance": 50,
+      "integrity": {
+        "enabled": true,
+        "maxConsecutiveFailures": 3
+      }
+    },
+    "simulation": {
+      "connected": true,
+      "local": false,
+      "integralMonitorBypass": false,
+      "alert": false,
+      "timestamp": "08/08/26 13:20:56"
+    }
+  },
+  "startPolicy": {
+    "mainTransmitterId": "tx1",
+    "startLocal": true,
+    "startMonitorBypassed": true
+  },
+  "successCriteria": {
+    "requireIntegralMonitorNormal": true,
+    "requireActiveTransmitter": true,
+    "requireNoSidebandVswrAlarm": true,
+    "requireMonitorBypassCleared": true
+  },
+  "studentEditableFieldIds": [],
+  "diagnosis": {
+    "disposition": "replace-module",
+    "diagnosticRun": "full",
+    "diagnosticSubsystem": "Power Supplies",
+    "diagnosticResult": "TX1 LVPS / 1A3A4 power rail fault identified.",
+    "faultSummary": "The fault is in the low-voltage supply branch; do not compensate the monitor values with calibration offsets.",
+    "manualReferences": [
+      "§3.6.8.6, Diagnostics Screen",
+      "§6.4.17, 1A3A4/1A3A8 LVPS Replacement",
+      "§7.3.1"
+    ],
+    "pmdtCheckpoints": [
+      {
+        "id": "lvps-power-data",
+        "label": "RMS > Data > Power Supply Data",
+        "viewId": "rms-power-supply"
+      },
+      {
+        "id": "lvps-digital-io",
+        "label": "RMS > Data > Digital I/O",
+        "viewId": "rms-digital-io"
+      },
+      {
+        "id": "lvps-fault-isolation",
+        "label": "Diagnostics > Fault Isolation",
+        "viewId": "diagnostics-fault-isolation"
+      }
+    ],
+    "requiredActionControlIds": [
+      "diagnostics-run-full"
+    ],
+    "expectedHardware": [
+      {
+        "blockId": "lvps",
+        "diagramHotspotId": "diagram-lvps-1",
+        "cabinetHotspotId": "lvps-1a3a4",
+        "assemblyId": "1A3A4"
+      }
+    ]
+  }
+}

@@ -209,6 +209,14 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-09-22 — Bổ sung 10 scenario DVOR 1150A và quy trình chẩn đoán hai bước
+- Bổ sung 10 scenario troubleshooting mới theo manual 571150A-0002E: Audio Generator TX1, Synthesizer TX2, Monitor 1, LVPS TX1, BCPS TX2, RF Monitor, Carrier Amplifier TX2, Sideband Amplifier TX1, Commutator Controller và Monitor 1 calibration.
+- Mở rộng Scenario Parameters bằng hợp đồng `diagnosis`: PMDT checkpoints, loại chạy Diagnostics, kết luận thay module hay chỉnh phần mềm, manual references và hardware occurrence ID.
+- Nối Fault Isolation/Power-Up Diagnostics với trạng thái scenario; Full Diagnostics yêu cầu Local/Security phù hợp và hiển thị cảnh báo NOTAM.
+- Bổ sung Bước 2 dùng trực tiếp catalog sơ đồ DVOR 1150A: occurrence trên schematic được ánh xạ tới đúng cabinet hotspot, phân biệt TX1/TX2 và cho phép xác nhận trường hợp không thay phần cứng.
+- Tạo 10 JSON fixture để import tại `output/dvor1150a-scenarios-20260922/`.
+- Kiểm tra đạt: `npm run lint`, `npm run typecheck`, `npx vitest run tests/state/vor-pmdt-store.test.ts tests/vor/pmdt-shell.test.tsx tests/vor/monitor-screens.test.tsx tests/qa-generate-dvor1150a-scenarios.test.ts` (27/27 tests), `npm run build`, `git diff --check` và CodeGraph sync.
+
 ### 2026-09-17 — Chuẩn hóa button Kịch bản và Ôn tập
 - Chuẩn hóa các button chữ trong catalog, bảng, modal Ôn tập và luồng tạo/sửa ADS-B về góc `4px` (`rounded`), `text-xs`, padding gọn; giữ nguyên màu primary/danger, loading/disabled và focus-visible.
 - Chuẩn hóa các icon action, pagination và close modal về góc `4px`, nhưng giữ vùng bấm `size-9`/`size-11` để không làm giảm khả năng thao tác.

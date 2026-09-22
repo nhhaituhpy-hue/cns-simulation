@@ -629,6 +629,16 @@
   padding: 10px 15px;
 }
 
+.pmdt-diagnostics-result-summary {
+  width: min(520px, 100%);
+  margin: 8px 0 0 15px;
+  padding: 5px 7px;
+  border: 1px solid #c69a20;
+  background: #fffbd6;
+  color: #3b3210;
+  line-height: 1.4;
+}
+
 .pmdt-diagnostics-power-table {
   width: 365px;
   margin: 67px 0 0 123px;
@@ -732,9 +742,23 @@
   background: #dedede;
 }
 
+.pmdt-diagnostics-progress--complete {
+  border-color: #57a557;
+  background: repeating-linear-gradient(90deg, #5bd55b 0 7px, #d7f4d7 7px 9px);
+}
+
 .pmdt-diagnostics-fault-results {
   margin-top: 4px;
   text-align: center;
+}
+
+.pmdt-diagnostics-notam-warning {
+  margin: 8px 0 0;
+  padding: 5px 7px;
+  border: 1px solid #c69a20;
+  background: #fffbd6;
+  color: #3b3210;
+  line-height: 1.4;
 }
 
 .pmdt-diagnostics-results-box {
@@ -762,6 +786,11 @@
   min-height: 36px;
   padding: 2px 7px;
   font-size: 10px;
+}
+
+.pmdt-diagnostics-fault-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .pmdt-about-overlay {
