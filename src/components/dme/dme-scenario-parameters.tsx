@@ -344,6 +344,17 @@ export function Dme1119aScenarioParametersPanel() {
         <label><span>Ident mode</span><select value={scenarioDraft.startPolicy.identMode} onChange={(event) => update((next) => { next.startPolicy.identMode = event.target.value as "normal" | "off" | "continuous"; })}><option value="normal">Normal</option><option value="off">Off</option><option value="continuous">Continuous</option></select></label>
       </section>
 
+      {scenarioDraft.diagnosis ? <section className="dme1119a-scenario-section" aria-label="Two-stage diagnostic workflow">
+        <strong>Two-stage diagnostic workflow</strong>
+        <p>{scenarioDraft.diagnosis.faultSummary}</p>
+        <span><b>PMDT result:</b> {scenarioDraft.diagnosis.diagnosticResult}</span>
+        <span><b>Disposition:</b> {scenarioDraft.diagnosis.disposition === "replace-module" ? "Replace module/card" : "Software adjustment only"}</span>
+        <span><b>Diagnostic run:</b> {scenarioDraft.diagnosis.diagnosticRun}</span>
+        <ol className="dme1119a-scenario-checkpoint-list">{scenarioDraft.diagnosis.pmdtCheckpoints.map((checkpoint) => <li key={checkpoint.id}>{checkpoint.label}</li>)}</ol>
+        <span><b>Hardware answer:</b> {scenarioDraft.diagnosis.expectedHardware.length > 0 ? scenarioDraft.diagnosis.expectedHardware.map((target) => target.assemblyId ?? target.diagramOccurrenceId).join(", ") : "No replacement"}</span>
+        <span><b>Manual:</b> {scenarioDraft.diagnosis.manualReferences.join(" · ")}</span>
+      </section> : null}
+
       <section className="dme1119a-scenario-section" aria-label="Fault injection editor">
         <div className="dme1119a-scenario-section-heading"><strong>Fault injection editor</strong><button type="button" onClick={() => update((next) => { next.faultInjections.push(createFault("tx-power-loss", `fault-${next.faultInjections.length + 1}`)); })}>Add fault</button></div>
         {scenarioDraft.faultInjections.length === 0 ? <p className="pmdt-config-empty">No physical fault injected. Use the configuration editor for baseline changes.</p> : scenarioDraft.faultInjections.map((fault, index) => <FaultEditor key={fault.id || index} fault={fault} onChange={(mutate) => update((next) => { mutate(next.faultInjections[index]); })} onRemove={() => update((next) => { next.faultInjections.splice(index, 1); })} />)}

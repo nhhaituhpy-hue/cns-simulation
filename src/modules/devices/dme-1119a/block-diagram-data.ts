@@ -77,6 +77,23 @@ export interface Dme1119aDiagramOccurrence {
   targetCabinetHotspotIds: readonly string[];
 }
 
+/** Stable diagram-to-cabinet identity used by DME scenario answers. */
+export interface Dme1119aHardwareOccurrence {
+  blockId: Dme1119aBlockId;
+  diagramOccurrenceId: string;
+  cabinetHotspotIds: readonly string[];
+}
+
+export function dme1119aHardwareOccurrenceKey(
+  occurrence: Dme1119aHardwareOccurrence,
+): string {
+  return [
+    occurrence.blockId,
+    occurrence.diagramOccurrenceId,
+    [...occurrence.cabinetHotspotIds].sort().join(",") || "none",
+  ].join("::");
+}
+
 export interface Dme1119aWaveformReference {
   src: string;
   width: number;
@@ -511,3 +528,27 @@ export const DME_1119A_HOTSPOT_TO_BLOCK = new Map<string, Dme1119aBlockId>(
     block.cabinetHotspots.map((item) => [item.id, block.id] as const),
   ),
 );
+
+export function resolveDme1119aHardwareOccurrence(
+  blockId: Dme1119aBlockId,
+  occurrenceOrHotspotId: string,
+): Dme1119aHardwareOccurrence | null {
+  const block = DME_1119A_BLOCK_BY_ID.get(blockId);
+  if (!block) return null;
+  const occurrence = block.diagramOccurrences.find((item) => item.id === occurrenceOrHotspotId);
+  if (occurrence) {
+    return {
+      blockId,
+      diagramOccurrenceId: occurrence.id,
+      cabinetHotspotIds: [...occurrence.targetCabinetHotspotIds],
+    };
+  }
+  const hotspot = block.cabinetHotspots.find((item) => item.id === occurrenceOrHotspotId);
+  if (!hotspot) return null;
+  const matchingOccurrence = block.diagramOccurrences.find((item) => item.targetCabinetHotspotIds.includes(hotspot.id));
+  return {
+    blockId,
+    diagramOccurrenceId: matchingOccurrence?.id ?? hotspot.id,
+    cabinetHotspotIds: matchingOccurrence ? [...matchingOccurrence.targetCabinetHotspotIds] : [hotspot.id],
+  };
+}

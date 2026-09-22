@@ -10,7 +10,14 @@ import type {
   DmeParameterStatus,
   DmePmdtData,
   DmeTransmitterId,
+  DmeViewId,
 } from "@/lib/dme-types";
+import {
+  dme1119aHardwareOccurrenceKey,
+  resolveDme1119aHardwareOccurrence,
+  type Dme1119aBlockId,
+  type Dme1119aHardwareOccurrence,
+} from "@/modules/devices/dme-1119a/block-diagram-data";
 import {
   dmeParameterFieldCatalog,
   getDmeParameterValue,
@@ -21,6 +28,37 @@ import { recomputeDmeDerivedData } from "./derived-data";
 export const DME1119A_SCENARIO_SCHEMA_VERSION = 1 as const;
 
 export type Dme1119aScenarioDifficulty = "basic" | "intermediate" | "advanced";
+export type Dme1119aScenarioDisposition = "replace-module" | "software-adjustment";
+export type Dme1119aDiagnosticRun = "full" | "on-air" | "not-required";
+
+export interface Dme1119aScenarioPmdtCheckpoint {
+  id: string;
+  label: string;
+  viewId: DmeViewId;
+}
+
+export interface Dme1119aScenarioHardwareTarget extends Dme1119aHardwareOccurrence {
+  assemblyId?: string;
+}
+
+export interface Dme1119aScenarioDiagnosis {
+  disposition: Dme1119aScenarioDisposition;
+  diagnosticRun: Dme1119aDiagnosticRun;
+  diagnosticSubsystem: string;
+  diagnosticResult: string;
+  faultSummary: string;
+  manualReferences: string[];
+  pmdtCheckpoints: Dme1119aScenarioPmdtCheckpoint[];
+  requiredActionControlIds: string[];
+  expectedHardware: Dme1119aScenarioHardwareTarget[];
+}
+
+export interface Dme1119aScenarioEvidence {
+  visitedViewIds?: readonly string[];
+  acceptedActionControlIds?: readonly string[];
+  selectedHardwareOccurrenceKeys?: readonly string[];
+  hardwareDispositionConfirmed?: boolean;
+}
 
 /** RMS temperature channels that the DME 1119A engine can actually derive. */
 export const DME1119A_TEMPERATURE_SENSORS = [
@@ -76,6 +114,8 @@ export interface Dme1119aScenarioDefinition {
   };
   successCriteria: Dme1119aScenarioCriterion[];
   studentEditableFieldIds: string[];
+  /** Optional two-stage diagnostic contract; old schema-v1 JSON remains valid. */
+  diagnosis?: Dme1119aScenarioDiagnosis;
 }
 
 export interface Dme1119aScenarioRuntime {
@@ -99,6 +139,15 @@ export interface Dme1119aScenarioProtectedFieldChange {
 export interface Dme1119aScenarioEvaluation {
   solved: boolean;
   correctable: boolean;
+  pmdtComplete: boolean;
+  hardwareComplete: boolean;
+  hardware: {
+    exactMatch: boolean;
+    expectedKeys: string[];
+    selectedKeys: string[];
+    missingKeys: string[];
+    extraKeys: string[];
+  };
   checks: Dme1119aScenarioCheck[];
   blockers: string[];
 }
@@ -140,6 +189,61 @@ const DEFAULT_CRITERIA: Dme1119aScenarioCriterion[] = [
   { id: "integral-bypass-cleared", kind: "bypass-cleared", monitor: "integral" },
   { id: "standby-bypass-cleared", kind: "bypass-cleared", monitor: "standby" },
 ];
+
+function createHardwareTarget(
+  blockId: Dme1119aBlockId,
+  diagramOccurrenceId: string,
+  assemblyId?: string,
+): Dme1119aScenarioHardwareTarget {
+  const occurrence = resolveDme1119aHardwareOccurrence(blockId, diagramOccurrenceId);
+  if (!occurrence) throw new Error(`Unknown DME 1119A hardware occurrence: ${blockId}/${diagramOccurrenceId}`);
+  return { ...occurrence, ...(assemblyId ? { assemblyId } : {}) };
+}
+
+function createHardwareDiagnosis(input: {
+  diagnosticRun?: Exclude<Dme1119aDiagnosticRun, "not-required">;
+  diagnosticSubsystem: string;
+  diagnosticResult: string;
+  faultSummary: string;
+  manualReferences: string[];
+  pmdtCheckpoints: Dme1119aScenarioPmdtCheckpoint[];
+  requiredActionControlIds?: string[];
+  target: Dme1119aScenarioHardwareTarget;
+}): Dme1119aScenarioDiagnosis {
+  const run = input.diagnosticRun ?? "full";
+  return {
+    disposition: "replace-module",
+    diagnosticRun: run,
+    diagnosticSubsystem: input.diagnosticSubsystem,
+    diagnosticResult: input.diagnosticResult,
+    faultSummary: input.faultSummary,
+    manualReferences: [...input.manualReferences],
+    pmdtCheckpoints: [...input.pmdtCheckpoints],
+    requiredActionControlIds: input.requiredActionControlIds ?? [`diagnostics-run-${run}`],
+    expectedHardware: [input.target],
+  };
+}
+
+function createSoftwareDiagnosis(input: {
+  diagnosticSubsystem: string;
+  diagnosticResult: string;
+  faultSummary: string;
+  manualReferences: string[];
+  pmdtCheckpoints: Dme1119aScenarioPmdtCheckpoint[];
+  requiredActionControlIds?: string[];
+}): Dme1119aScenarioDiagnosis {
+  return {
+    disposition: "software-adjustment",
+    diagnosticRun: "not-required",
+    diagnosticSubsystem: input.diagnosticSubsystem,
+    diagnosticResult: input.diagnosticResult,
+    faultSummary: input.faultSummary,
+    manualReferences: [...input.manualReferences],
+    pmdtCheckpoints: [...input.pmdtCheckpoints],
+    requiredActionControlIds: input.requiredActionControlIds ?? ["config-apply"],
+    expectedHardware: [],
+  };
+}
 
 export function createDefaultDme1119aScenarioDefinition(): Dme1119aScenarioDefinition {
   return {
@@ -241,6 +345,58 @@ function validateCriterionValues(criterion: Dme1119aScenarioCriterion): string[]
   return [];
 }
 
+function validateScenarioDiagnosis(value: unknown): string[] {
+  if (!isRecord(value)) return ["Scenario diagnosis must be an object."];
+  const diagnosis = value as Partial<Dme1119aScenarioDiagnosis>;
+  const issues: string[] = [];
+  if (!(["replace-module", "software-adjustment"] as const).includes(diagnosis.disposition as Dme1119aScenarioDisposition)) {
+    issues.push("Scenario diagnosis disposition is invalid.");
+  }
+  if (!(["full", "on-air", "not-required"] as const).includes(diagnosis.diagnosticRun as Dme1119aDiagnosticRun)) {
+    issues.push("Scenario diagnostic run is invalid.");
+  }
+  for (const [field, candidate] of [
+    ["diagnosticSubsystem", diagnosis.diagnosticSubsystem],
+    ["diagnosticResult", diagnosis.diagnosticResult],
+    ["faultSummary", diagnosis.faultSummary],
+  ] as const) {
+    if (typeof candidate !== "string" || !candidate.trim()) issues.push(`Scenario diagnosis ${field} is required.`);
+  }
+  if (!Array.isArray(diagnosis.manualReferences) || !diagnosis.manualReferences.every((item) => typeof item === "string" && item.trim())) {
+    issues.push("Scenario diagnosis manual references are invalid.");
+  }
+  if (!Array.isArray(diagnosis.pmdtCheckpoints) || diagnosis.pmdtCheckpoints.length === 0) {
+    issues.push("Scenario diagnosis must contain at least one PMDT checkpoint.");
+  } else {
+    for (const checkpoint of diagnosis.pmdtCheckpoints) {
+      if (!checkpoint || typeof checkpoint.id !== "string" || !checkpoint.id.trim() || typeof checkpoint.label !== "string" || !checkpoint.label.trim() || typeof checkpoint.viewId !== "string") {
+        issues.push("Scenario PMDT checkpoint is invalid.");
+      }
+    }
+  }
+  if (!Array.isArray(diagnosis.requiredActionControlIds) || !diagnosis.requiredActionControlIds.every((item) => typeof item === "string" && item.trim())) {
+    issues.push("Scenario diagnosis required actions are invalid.");
+  }
+  if (!Array.isArray(diagnosis.expectedHardware)) {
+    issues.push("Scenario diagnosis hardware targets are invalid.");
+  } else {
+    for (const target of diagnosis.expectedHardware) {
+      if (!target || typeof target.blockId !== "string" || typeof target.diagramOccurrenceId !== "string" || !Array.isArray(target.cabinetHotspotIds) || !target.cabinetHotspotIds.every((item) => typeof item === "string")) {
+        issues.push("Scenario hardware target identity is invalid.");
+        continue;
+      }
+      const resolved = resolveDme1119aHardwareOccurrence(target.blockId as Dme1119aBlockId, target.diagramOccurrenceId);
+      if (!resolved || dme1119aHardwareOccurrenceKey(resolved) !== dme1119aHardwareOccurrenceKey(target)) {
+        issues.push(`Scenario hardware target does not match the DME block catalog: ${target.blockId}/${target.diagramOccurrenceId}.`);
+      }
+      if (target.assemblyId !== undefined && typeof target.assemblyId !== "string") issues.push("Scenario hardware target assembly ID is invalid.");
+    }
+  }
+  if (diagnosis.disposition === "replace-module" && diagnosis.expectedHardware?.length === 0) issues.push("A replace-module scenario must contain a hardware target.");
+  if (diagnosis.disposition === "software-adjustment" && diagnosis.expectedHardware?.length !== 0) issues.push("A software-adjustment scenario must not contain a hardware target.");
+  return issues;
+}
+
 export function validateDme1119aScenarioDefinition(
   definition: Dme1119aScenarioDefinition,
 ): string[] {
@@ -307,6 +463,8 @@ export function validateDme1119aScenarioDefinition(
       if (issue) issues.push(`${field.label}: ${issue}`);
     }
   }
+
+  if (definition.diagnosis !== undefined) issues.push(...validateScenarioDiagnosis(definition.diagnosis));
 
   return [...new Set(issues)];
 }
@@ -508,9 +666,20 @@ function criterionResult(
 export function evaluateDme1119aScenario(
   runtime: Dme1119aScenarioRuntime,
   currentData: DmePmdtData,
+  evidence: Dme1119aScenarioEvidence = {},
 ): Dme1119aScenarioEvaluation {
-  if (!runtime.active || !runtime.definition) return { solved: false, correctable: true, checks: [], blockers: [] };
-  const checks = runtime.definition.successCriteria.map((criterion) => criterionResult(criterion, currentData));
+  if (!runtime.active || !runtime.definition) {
+    return {
+      solved: false,
+      correctable: true,
+      pmdtComplete: false,
+      hardwareComplete: false,
+      hardware: { exactMatch: false, expectedKeys: [], selectedKeys: [], missingKeys: [], extraKeys: [] },
+      checks: [],
+      blockers: [],
+    };
+  }
+  const baselineChecks = runtime.definition.successCriteria.map((criterion) => criterionResult(criterion, currentData));
   const blockers = getDme1119aScenarioProtectedFieldChanges(runtime.definition, currentData)
     .map((change) => `Protected configuration changed: ${change.label}.`);
   const dualTransmitter = runtime.definition.configuration.rmsConfigStation.transmitterConfig === "Dual Transmitters";
@@ -527,10 +696,70 @@ export function evaluateDme1119aScenario(
     || ((fault.kind === "hpa-fault" || fault.kind === "rtc-comm-fault") && fault.active)
   ));
   const hasUnrecoverableAcFault = runtime.definition.faultInjections.some((fault) => fault.kind === "ac-power" && fault.failed);
-  const correctable = !hasUnrecoverableAcFault && (hasEditableRecovery || hasOperationalRecovery || hasRouteFault);
+  const diagnosis = runtime.definition.diagnosis;
+  const twoStageEnabled = Boolean(diagnosis && Object.keys(evidence).length > 0);
+  const correctable = diagnosis?.disposition === "replace-module"
+    ? true
+    : !hasUnrecoverableAcFault && (hasEditableRecovery || hasOperationalRecovery || hasRouteFault);
+  const visitedViews = new Set(evidence.visitedViewIds ?? []);
+  const acceptedActions = new Set(evidence.acceptedActionControlIds ?? []);
+  const pmdtChecks = diagnosis?.pmdtCheckpoints.map((checkpoint) => ({
+    id: `pmdt-${checkpoint.id}`,
+    label: checkpoint.label,
+    passed: visitedViews.has(checkpoint.viewId),
+    detail: visitedViews.has(checkpoint.viewId) ? "Đã kiểm tra" : "Chưa mở màn hình",
+  })) ?? [];
+  const actionChecks = diagnosis?.requiredActionControlIds.map((controlId) => ({
+    id: `action-${controlId}`,
+    label: `PMDT action: ${controlId}`,
+    passed: acceptedActions.has(controlId),
+    detail: acceptedActions.has(controlId) ? "Đã thực hiện" : "Chưa thực hiện",
+  })) ?? [];
+  const expectedKeys = diagnosis?.expectedHardware.map(dme1119aHardwareOccurrenceKey) ?? [];
+  const selectedKeys = [...new Set(evidence.selectedHardwareOccurrenceKeys ?? [])];
+  const expectedSet = new Set(expectedKeys);
+  const selectedSet = new Set(selectedKeys);
+  const missingKeys = expectedKeys.filter((key) => !selectedSet.has(key));
+  const extraKeys = selectedKeys.filter((key) => !expectedSet.has(key));
+  const hardware = { exactMatch: missingKeys.length === 0 && extraKeys.length === 0, expectedKeys, selectedKeys, missingKeys, extraKeys };
+  const hardwareComplete = !twoStageEnabled
+    ? true
+    : diagnosis
+    ? diagnosis.disposition === "software-adjustment"
+      ? selectedKeys.length === 0 && evidence.hardwareDispositionConfirmed === true
+      : hardware.exactMatch
+    : true;
+  const baselineComplete = baselineChecks.length > 0 && baselineChecks.every((check) => check.passed);
+  const pmdtComplete = !twoStageEnabled
+    ? baselineComplete
+    : diagnosis
+    ? pmdtChecks.every((check) => check.passed)
+      && actionChecks.every((check) => check.passed)
+      && (diagnosis.disposition === "replace-module" || baselineComplete)
+    : baselineComplete;
+  const checks = [
+    ...baselineChecks,
+    ...(twoStageEnabled ? pmdtChecks : []),
+    ...(twoStageEnabled ? actionChecks : []),
+    ...(twoStageEnabled && diagnosis ? [{
+      id: "hardware-selection",
+      label: diagnosis.disposition === "software-adjustment" ? "Hardware replacement" : "Hardware block selection",
+      passed: hardwareComplete,
+      detail: diagnosis.disposition === "software-adjustment"
+        ? (hardwareComplete ? "No hardware replacement selected" : "Không được chọn phần cứng cho lỗi phần mềm")
+        : (hardwareComplete ? "Đúng occurrence" : "Chưa khớp block/occurrence đáp án"),
+    }] : []),
+  ];
   return {
-    solved: checks.length > 0 && checks.every((check) => check.passed) && blockers.length === 0,
+    solved: !twoStageEnabled
+      ? baselineComplete && blockers.length === 0
+      : diagnosis
+      ? pmdtComplete && hardwareComplete && blockers.length === 0
+      : baselineComplete && blockers.length === 0,
     correctable,
+    pmdtComplete,
+    hardwareComplete,
+    hardware,
     checks,
     blockers: correctable ? blockers : [...blockers, "Scenario may be uncorrectable with the configured student controls."],
   };
@@ -569,6 +798,16 @@ export function createLowOutputDme1119aScenario(): Dme1119aScenarioDefinition {
   scenario.difficulty = "basic";
   scenario.configuration.txConfigNominal.rtcParameters.powerOutput = -5;
   scenario.studentEditableFieldIds = ["txConfigNominal.rtcParameters.powerOutput"];
+  scenario.diagnosis = createSoftwareDiagnosis({
+    diagnosticSubsystem: "Transmitter Data",
+    diagnosticResult: "No LRU fault isolated; TX1 RTC output parameter is below the configured target.",
+    faultSummary: "Verify TX Power/ERP on PMDT, then correct RTC Power Output and Apply. Do not replace HPA for a configuration-only low-output case.",
+    manualReferences: ["§3.6.9.1 Monitor Data", "§7.3.1 General Troubleshooting Information"],
+    pmdtCheckpoints: [
+      { id: "low-output-tx-data", label: "Transmitters > Data > Transmitter Data", viewId: "tx-data-main" },
+      { id: "low-output-integral", label: "Monitor 1 > Data > Integral", viewId: "monitor-1-data-detail-integral" },
+    ],
+  });
   return scenario;
 }
 
@@ -580,6 +819,16 @@ export function createDelayDriftDme1119aScenario(): Dme1119aScenarioDefinition {
   scenario.difficulty = "intermediate";
   scenario.faultInjections = [{ id: "tx1-delay", kind: "reply-delay-drift", transmitter: "tx1", driftUs: 0.6 }];
   scenario.studentEditableFieldIds = ["txConfigNominal.rtcParameters.replyDelayOffset", "txOffsets.2.tx1"];
+  scenario.diagnosis = createSoftwareDiagnosis({
+    diagnosticSubsystem: "RTC Configuration",
+    diagnosticResult: "No LRU fault isolated; TX1 reply delay requires PMDT offset correction.",
+    faultSummary: "Compare Integral/Standby Delay and RTC Data, then correct the Reply Delay Offset and Apply.",
+    manualReferences: ["§3.6.9.1 Monitor Data", "§7.3.1 General Troubleshooting Information"],
+    pmdtCheckpoints: [
+      { id: "delay-integral", label: "Monitor 1 > Data > Integral", viewId: "monitor-1-data-detail-integral" },
+      { id: "delay-rtc", label: "Transmitters > Data > RTC Data", viewId: "tx-rtc-data" },
+    ],
+  });
   return scenario;
 }
 
@@ -597,6 +846,16 @@ export function createPrfOverloadDme1119aScenario(): Dme1119aScenarioDefinition 
     { id: "overload-clear", kind: "rtc-overload-clear", transmitter: "active" },
     { id: "bypass-clear", kind: "bypass-cleared", monitor: "both" },
   ];
+  scenario.diagnosis = createSoftwareDiagnosis({
+    diagnosticSubsystem: "RTC PRF",
+    diagnosticResult: "No LRU fault isolated; configured PRF capacity is below the traffic demand.",
+    faultSummary: "Use PRF/traffic and RTC status screens to distinguish capacity overload from an RTC hardware failure, then correct the configured capacity.",
+    manualReferences: ["§3.6.9.1 Monitor Data", "§7.3.1 General Troubleshooting Information"],
+    pmdtCheckpoints: [
+      { id: "prf-integral", label: "Monitor 1 > Data > Integral", viewId: "monitor-1-data-detail-integral" },
+      { id: "prf-rms", label: "RMS > Data > Maintenance Alerts", viewId: "rms-maintenance-alerts" },
+    ],
+  });
   return scenario;
 }
 
@@ -613,6 +872,18 @@ export function createHpaChangeoverDme1119aScenario(): Dme1119aScenarioDefinitio
     { id: "integral-normal", kind: "monitor-normal", monitor: "integral" },
     { id: "bypass-clear", kind: "bypass-cleared", monitor: "both" },
   ];
+  scenario.diagnosis = createHardwareDiagnosis({
+    diagnosticSubsystem: "Power Amplifier",
+    diagnosticResult: "HPA 1 / 1A3 fault identified; transfer service to TX2 before module replacement.",
+    faultSummary: "Confirm HPA fault on TX1 using PA status, transmitter data and Fault Isolation, then transfer to the healthy TX2 path.",
+    manualReferences: ["§3.6.11.2 Fault Isolation", "§7.7.4 High Power Amplifier 1A3/1A7", "Figure 7-5"],
+    pmdtCheckpoints: [
+      { id: "hpa-status", label: "Transmitters > Data > Transmitter Data", viewId: "tx-data-main" },
+      { id: "hpa-diagnostics", label: "Diagnostics > Fault Isolation", viewId: "diagnostics-fault-isolation" },
+    ],
+    requiredActionControlIds: ["diagnostics-run-full", "tx-command-transfer"],
+    target: createHardwareTarget("hpa-1", "diagram-hpa-1", "1A3"),
+  });
   return scenario;
 }
 
@@ -630,6 +901,16 @@ export function createIdentLossDme1119aScenario(): Dme1119aScenarioDefinition {
     { id: "ident-normal", kind: "ident-normal" },
     { id: "bypass-clear", kind: "bypass-cleared", monitor: "both" },
   ];
+  scenario.diagnosis = createSoftwareDiagnosis({
+    diagnosticSubsystem: "Ident / Keying",
+    diagnosticResult: "No LRU replacement required; restore the external keying/ident configuration in PMDT.",
+    faultSummary: "Use Ident Status, Ident Code and Transmitter Data to separate keying configuration from an RTC communication fault.",
+    manualReferences: ["§3.6.9.1 Monitor Data", "§7.3.1 General Troubleshooting Information"],
+    pmdtCheckpoints: [
+      { id: "ident-integral", label: "Monitor 1 > Data > Integral", viewId: "monitor-1-data-detail-integral" },
+      { id: "ident-tx-data", label: "Transmitters > Data > Transmitter Data", viewId: "tx-data-main" },
+    ],
+  });
   return scenario;
 }
 
@@ -645,6 +926,19 @@ export function createVswrChangeoverDme1119aScenario(): Dme1119aScenarioDefiniti
     { id: "active-path", kind: "active-path-healthy" },
     { id: "bypass-clear", kind: "bypass-cleared", monitor: "both" },
   ];
+  scenario.diagnosis = createHardwareDiagnosis({
+    diagnosticSubsystem: "RF Distribution",
+    diagnosticResult: "RF Switch 1K1 / TX1 antenna path identified; service must be transferred to TX2.",
+    faultSummary: "Review VSWR and TX status before replacing an HPA. This training case narrows the RF feed fault to the RF Switch with Harness.",
+    manualReferences: ["§3.6.9.1 Monitor Data", "§7.6 Fault Isolation Flowcharts", "§7.7.16 RF Switch with Harness 1K1"],
+    pmdtCheckpoints: [
+      { id: "vswr-integral", label: "Monitor 1 > Data > Integral", viewId: "monitor-1-data-detail-integral" },
+      { id: "vswr-tx-data", label: "Transmitters > Data > Transmitter Data", viewId: "tx-data-main" },
+      { id: "vswr-diagnostics", label: "Diagnostics > Fault Isolation", viewId: "diagnostics-fault-isolation" },
+    ],
+    requiredActionControlIds: ["diagnostics-run-full", "tx-command-transfer"],
+    target: createHardwareTarget("rf-switch", "diagram-rf-switch", "1K1"),
+  });
   return scenario;
 }
 
@@ -660,6 +954,16 @@ export function createCalibrationErrorDme1119aScenario(): Dme1119aScenarioDefini
     { id: "delay-normal", kind: "parameter-status", monitor: "integral", parameter: "Delay", expected: "normal" },
     { id: "bypass-clear", kind: "bypass-cleared", monitor: "both" },
   ];
+  scenario.diagnosis = createSoftwareDiagnosis({
+    diagnosticSubsystem: "Monitor Calibration",
+    diagnosticResult: "No hardware fault isolated; Monitor 1 delay offset is outside the TST baseline.",
+    faultSummary: "Use Monitor Offsets and Scale Factors to correct the delay calibration, then Apply and release both monitor bypasses.",
+    manualReferences: ["§3.6.9.4 Monitor Offsets and Scale Factors", "§7.3.1 General Troubleshooting Information"],
+    pmdtCheckpoints: [
+      { id: "calibration-integral", label: "Monitor 1 > Data > Integral", viewId: "monitor-1-data-detail-integral" },
+      { id: "calibration-offsets", label: "Monitor 1 > Offsets and Scale Factors", viewId: "monitor-1-offsets" },
+    ],
+  });
   return scenario;
 }
 
@@ -675,6 +979,234 @@ export function createOvertemperatureDme1119aScenario(): Dme1119aScenarioDefinit
     { id: "fan-on", kind: "fan-control", expected: "On" },
     { id: "bypass-clear", kind: "bypass-cleared", monitor: "both" },
   ];
+  scenario.diagnosis = createHardwareDiagnosis({
+    diagnosticSubsystem: "Facilities / Cooling",
+    diagnosticResult: "Fan Controller CCA 1A2A2 is the suspected LRU after temperature and fan status checks.",
+    faultSummary: "Check RMS temperature and fan-control status before restoring the DME to service; identify the Fan Controller on the rear cabinet.",
+    manualReferences: ["§3.6.7 RMS Data Screens", "§7.7.14 Fan Controller CCA 1A2A2", "§7.7.15 Circulating Fan 1A2A3"],
+    pmdtCheckpoints: [
+      { id: "temperature-rms", label: "RMS > Data > A/D Data", viewId: "rms-ad-data" },
+      { id: "temperature-diagnostics", label: "Diagnostics > Fault Isolation", viewId: "diagnostics-fault-isolation" },
+    ],
+    target: createHardwareTarget("fan-controller", "rear-fan-controller", "1A2A2"),
+  });
+  return scenario;
+}
+
+export function createMonitor1LruFaultDme1119aScenario(): Dme1119aScenarioDefinition {
+  const scenario = withScenarioStart(createDefaultDme1119aScenarioDefinition());
+  scenario.id = "monitor-1-lru-fault";
+  scenario.name = "Monitor Interrogator 1 LRU Fault (1A11)";
+  scenario.description = "Use Monitor 1 data, test results and Fault Isolation to identify the Monitor Interrogator 1A11 LRU.";
+  scenario.difficulty = "advanced";
+  scenario.faultInjections = [{ id: "monitor1-delay-symptom", kind: "monitor-offset", monitor: 1, measurement: "integral", parameter: "Delay Offset", value: 1.2 }];
+  scenario.diagnosis = createHardwareDiagnosis({
+    diagnosticSubsystem: "Monitor",
+    diagnosticResult: "Monitor Interrogator 1 / 1A11 identified by Full Diagnostics.",
+    faultSummary: "The Monitor 1 path is abnormal after PMDT test verification; replace the pluggable Monitor Interrogator and repeat calibration.",
+    manualReferences: ["§3.6.11.2 Fault Isolation", "§7.7.1 Monitor Interrogator 1A11/1A15"],
+    pmdtCheckpoints: [
+      { id: "monitor1-data", label: "Monitor 1 > Data > Integral", viewId: "monitor-1-data-detail-integral" },
+      { id: "monitor1-test", label: "Monitor 1 > Test Results", viewId: "monitor-1-test-alarm-limits" },
+      { id: "monitor1-diagnostics", label: "Diagnostics > Fault Isolation", viewId: "diagnostics-fault-isolation" },
+    ],
+    target: createHardwareTarget("monitor-1", "diagram-monitor-1", "1A11"),
+  });
+  return scenario;
+}
+
+export function createRtc1LruFaultDme1119aScenario(): Dme1119aScenarioDefinition {
+  const scenario = withScenarioStart(createDefaultDme1119aScenarioDefinition());
+  scenario.id = "rtc-1-lru-fault";
+  scenario.name = "Receiver/Transmitter Controller 1 Fault (1A10)";
+  scenario.description = "Identify a TX1 RTC communication/processor fault from RTC status and transmitter data, then locate 1A10.";
+  scenario.difficulty = "advanced";
+  scenario.faultInjections = [{ id: "rtc1-comm", kind: "rtc-comm-fault", transmitter: "tx1", active: true }];
+  scenario.diagnosis = createHardwareDiagnosis({
+    diagnosticSubsystem: "Receiver / Transmitter Controller",
+    diagnosticResult: "RTC 1 / 1A10 communication fault identified.",
+    faultSummary: "Separate RTC communication failure from an RF amplifier fault using RTC alerts, Tx Data and Fault Isolation.",
+    manualReferences: ["§3.6.11.2 Fault Isolation", "§7.7.2 Receiver/Transmitter Controller 1A10/1A16"],
+    pmdtCheckpoints: [
+      { id: "rtc1-data", label: "Transmitters > Data > RTC Data", viewId: "tx-rtc-data" },
+      { id: "rtc1-maintenance", label: "RMS > Data > Maintenance Alerts", viewId: "rms-maintenance-alerts" },
+      { id: "rtc1-diagnostics", label: "Diagnostics > Fault Isolation", viewId: "diagnostics-fault-isolation" },
+    ],
+    target: createHardwareTarget("rtc-1", "diagram-rtc-1", "1A10"),
+  });
+  return scenario;
+}
+
+export function createLpa1LruFaultDme1119aScenario(): Dme1119aScenarioDefinition {
+  const scenario = withScenarioStart(createDefaultDme1119aScenarioDefinition());
+  scenario.id = "lpa-1-lru-fault";
+  scenario.name = "Low Power Amplifier 1 Fault (1A9)";
+  scenario.description = "Use low-output and pulse/PA indications to identify the TX1 Low Power Amplifier 1A9.";
+  scenario.difficulty = "advanced";
+  scenario.faultInjections = [{ id: "lpa1-power-loss", kind: "tx-power-loss", transmitter: "tx1", lossDb: 12 }];
+  scenario.diagnosis = createHardwareDiagnosis({
+    diagnosticSubsystem: "Power Amplifier",
+    diagnosticResult: "LPA 1 / 1A9 low-output fault identified.",
+    faultSummary: "Check transmitter power and pulse performance before replacing HPA; this case isolates the low-power driver stage.",
+    manualReferences: ["§3.6.11.2 Fault Isolation", "§7.7.3 Low Power Amplifier 1A9/1A17"],
+    pmdtCheckpoints: [
+      { id: "lpa1-tx", label: "Transmitters > Data > Transmitter Data", viewId: "tx-data-main" },
+      { id: "lpa1-pa", label: "RMS > Status > Monitor/Transmitter Status", viewId: "rms-status-monitor-tx" },
+      { id: "lpa1-diagnostics", label: "Diagnostics > Fault Isolation", viewId: "diagnostics-fault-isolation" },
+    ],
+    target: createHardwareTarget("lpa-synth-1", "diagram-lpa-synth-1", "1A9"),
+  });
+  return scenario;
+}
+
+export function createPowerSupply1LruFaultDme1119aScenario(): Dme1119aScenarioDefinition {
+  const scenario = withScenarioStart(createDefaultDme1119aScenarioDefinition());
+  scenario.id = "power-supply-1-lru-fault";
+  scenario.name = "TX1 Power Supply Fault (1A24)";
+  scenario.description = "Trace a TX1 DC power indication fault through RMS Power Supply Data and the Fault Isolation flowchart.";
+  scenario.difficulty = "advanced";
+  scenario.faultInjections = [{ id: "power1-ac", kind: "ac-power", failed: true }];
+  scenario.diagnosis = createHardwareDiagnosis({
+    diagnosticSubsystem: "Power Supplies",
+    diagnosticResult: "TX1 Power Supply 1 / 1A24 identified after RMS and front-panel power checks.",
+    faultSummary: "Verify AC/DC source and RMS power readings before replacing the pluggable TX1 Power Supply 1A24.",
+    manualReferences: ["Figure 7-1 Fault Isolation", "§7.7.12 Power Supply 1A24/1A25"],
+    pmdtCheckpoints: [
+      { id: "power1-rms", label: "RMS > Data > Power Supply Data", viewId: "rms-power-supply" },
+      { id: "power1-io", label: "RMS > Data > Digital I/O", viewId: "rms-digital-io" },
+      { id: "power1-diagnostics", label: "Diagnostics > Fault Isolation", viewId: "diagnostics-fault-isolation" },
+    ],
+    target: createHardwareTarget("tx-power-supply-1", "diagram-tx-power-supply-1", "1A24"),
+  });
+  return scenario;
+}
+
+export function createRmsProcessorLruFaultDme1119aScenario(): Dme1119aScenarioDefinition {
+  const scenario = withScenarioStart(createDefaultDme1119aScenarioDefinition());
+  scenario.id = "rms-processor-lru-fault";
+  scenario.name = "RMS Processor CCA Fault (1A13)";
+  scenario.description = "Use PMDT connection, RMS status and Full Diagnostics to identify the RMS Processor CCA 1A13.";
+  scenario.difficulty = "advanced";
+  scenario.diagnosis = createHardwareDiagnosis({
+    diagnosticSubsystem: "RMS / Control",
+    diagnosticResult: "RMS Processor CCA 1A13 identified by the connection and power-up flow.",
+    faultSummary: "Follow the manual's direct-connection flow: distinguish PMDT/RMS communication from downstream transmitter faults before replacing 1A13.",
+    manualReferences: ["Figure 7-1 Performing Fault Isolation Using a Direct Connection", "§7.7.5 RMS Processor CCA 1A13"],
+    pmdtCheckpoints: [
+      { id: "rms-status", label: "RMS > Status", viewId: "rms-status-main" },
+      { id: "rms-power", label: "RMS > Data > Power Supply Data", viewId: "rms-power-supply" },
+      { id: "rms-diagnostics", label: "Diagnostics > Power Up Results", viewId: "diagnostics-power-up" },
+    ],
+    target: createHardwareTarget("rms", "diagram-rms", "1A13"),
+  });
+  return scenario;
+}
+
+export function createFacilitiesCcaLruFaultDme1119aScenario(): Dme1119aScenarioDefinition {
+  const scenario = withScenarioStart(createDefaultDme1119aScenarioDefinition());
+  scenario.id = "facilities-cca-lru-fault";
+  scenario.name = "Facilities CCA Fault (1A14)";
+  scenario.description = "Use RMS temperature, AC/facilities indications and Fault Isolation to identify Facilities CCA 1A14.";
+  scenario.difficulty = "advanced";
+  scenario.faultInjections = [{ id: "external-temp", kind: "temperature", sensor: "External Temperature", celsius: 55 }];
+  scenario.diagnosis = createHardwareDiagnosis({
+    diagnosticSubsystem: "Facilities",
+    diagnosticResult: "Facilities CCA 1A14 identified after the facilities temperature/IO check.",
+    faultSummary: "Do not treat a facilities sensor or AC indication as a transmitter RF failure; inspect the Facilities CCA path first.",
+    manualReferences: ["§7.6 Fault Isolation Flowcharts", "§7.7.6 RMS Facilities CCA 1A14"],
+    pmdtCheckpoints: [
+      { id: "facilities-temp", label: "RMS > Data > A/D Data", viewId: "rms-ad-data" },
+      { id: "facilities-io", label: "RMS > Data > Digital I/O", viewId: "rms-digital-io" },
+      { id: "facilities-diagnostics", label: "Diagnostics > Fault Isolation", viewId: "diagnostics-fault-isolation" },
+    ],
+    target: createHardwareTarget("facilities", "front-facilities", "1A14"),
+  });
+  return scenario;
+}
+
+export function createBcps1LruFaultDme1119aScenario(): Dme1119aScenarioDefinition {
+  const scenario = withScenarioStart(createDefaultDme1119aScenarioDefinition());
+  scenario.id = "bcps-1-lru-fault";
+  scenario.name = "BCPS 1 Fault (1A20)";
+  scenario.description = "Use power-supply and battery indications to identify the rear-cabinet BCPS 1A20.";
+  scenario.difficulty = "advanced";
+  scenario.faultInjections = [{ id: "bcps1-ac", kind: "ac-power", failed: true }];
+  scenario.diagnosis = createHardwareDiagnosis({
+    diagnosticSubsystem: "Power Supplies",
+    diagnosticResult: "BCPS 1 / 1A20 identified by the power and battery fault path.",
+    faultSummary: "Check AC/DC, battery and 48 V indications before replacing the rear-cabinet BCPS CCA.",
+    manualReferences: ["Figure 7-1 Fault Isolation", "§7.7.7 BCPS CCA 1A20/1A21"],
+    pmdtCheckpoints: [
+      { id: "bcps1-power", label: "RMS > Data > Power Supply Data", viewId: "rms-power-supply" },
+      { id: "bcps1-status", label: "RMS > Status", viewId: "rms-status-main" },
+      { id: "bcps1-diagnostics", label: "Diagnostics > Fault Isolation", viewId: "diagnostics-fault-isolation" },
+    ],
+    target: createHardwareTarget("bcps-1", "diagram-bcps-1", "1A20"),
+  });
+  return scenario;
+}
+
+export function createInterfaceCcaLruFaultDme1119aScenario(): Dme1119aScenarioDefinition {
+  const scenario = withScenarioStart(createDefaultDme1119aScenarioDefinition());
+  scenario.id = "interface-cca-lru-fault";
+  scenario.name = "Interface CCA Fault (1A19)";
+  scenario.description = "Use remote/control communication indications and the Fault Isolation path to identify Interface CCA 1A19.";
+  scenario.difficulty = "advanced";
+  scenario.diagnosis = createHardwareDiagnosis({
+    diagnosticSubsystem: "Interface / Remote Control",
+    diagnosticResult: "Interface CCA 1A19 identified after the RMS/RCSU communication checks.",
+    faultSummary: "Separate a remote interface failure from an RMS processor failure using RMS Status and the direct/pass-through connection flow.",
+    manualReferences: ["Figures 7-2 and 7-3 Remote Fault Isolation", "§7.7.8 Interface CCA 1A19"],
+    pmdtCheckpoints: [
+      { id: "interface-rms", label: "RMS > Status", viewId: "rms-status-main" },
+      { id: "interface-logs", label: "RMS > Logs > Command Activity", viewId: "rms-logs-command-activity" },
+      { id: "interface-diagnostics", label: "Diagnostics > Fault Isolation", viewId: "diagnostics-fault-isolation" },
+    ],
+    target: createHardwareTarget("interface-card", "diagram-interface-card", "1A19"),
+  });
+  return scenario;
+}
+
+export function createRfSwitchLruFaultDme1119aScenario(): Dme1119aScenarioDefinition {
+  const scenario = withScenarioStart(createDefaultDme1119aScenarioDefinition());
+  scenario.id = "rf-switch-lru-fault";
+  scenario.name = "RF Switch with Harness Fault (1K1)";
+  scenario.description = "Correlate antenna-path VSWR and transfer behavior with Fault Isolation before identifying the rear-cabinet RF Switch 1K1.";
+  scenario.difficulty = "advanced";
+  scenario.faultInjections = [{ id: "rf-switch-vswr", kind: "antenna-vswr", transmitter: "tx1", ratio: 4.5 }];
+  scenario.diagnosis = createHardwareDiagnosis({
+    diagnosticSubsystem: "RF Distribution",
+    diagnosticResult: "RF Switch with Harness 1K1 identified in the TX1 antenna path.",
+    faultSummary: "Use VSWR, TX status and the changeover path to distinguish the RF switch harness from the power amplifier.",
+    manualReferences: ["§7.6 Fault Isolation Flowcharts", "§7.7.16 RF Switch with Harness 1K1"],
+    pmdtCheckpoints: [
+      { id: "rf-switch-integral", label: "Monitor 1 > Data > Integral", viewId: "monitor-1-data-detail-integral" },
+      { id: "rf-switch-tx", label: "Transmitters > Data > Transmitter Data", viewId: "tx-data-main" },
+      { id: "rf-switch-diagnostics", label: "Diagnostics > Fault Isolation", viewId: "diagnostics-fault-isolation" },
+    ],
+    requiredActionControlIds: ["diagnostics-run-full", "tx-command-transfer"],
+    target: createHardwareTarget("rf-switch", "diagram-rf-switch", "1K1"),
+  });
+  return scenario;
+}
+
+export function createLcuLruFaultDme1119aScenario(): Dme1119aScenarioDefinition {
+  const scenario = withScenarioStart(createDefaultDme1119aScenarioDefinition());
+  scenario.id = "lcu-lru-fault";
+  scenario.name = "Local Control Unit Fault (1A1)";
+  scenario.description = "Use Local mode, LCU indicators and the Fault Isolation flowchart to identify the front-panel LCU assembly 1A1.";
+  scenario.difficulty = "advanced";
+  scenario.diagnosis = createHardwareDiagnosis({
+    diagnosticSubsystem: "LCU / Control",
+    diagnosticResult: "Local Control Unit 1A1 identified by the local-control and lamp-test flow.",
+    faultSummary: "Confirm the local-control state and LCU indicators before replacing the assembly; do not confuse a PMDT login problem with an LCU fault.",
+    manualReferences: ["Figures 7-4 and 7-5 Fault Isolation L1/L1A", "§7.7.9 LCU Assembly 1A1"],
+    pmdtCheckpoints: [
+      { id: "lcu-rms", label: "RMS > Status", viewId: "rms-status-main" },
+      { id: "lcu-diagnostics", label: "Diagnostics > Fault Isolation", viewId: "diagnostics-fault-isolation" },
+    ],
+    target: createHardwareTarget("lcu", "diagram-lcu", "1A1"),
+  });
   return scenario;
 }
 
@@ -688,4 +1220,14 @@ export const DME1119A_BUILT_IN_SCENARIOS = [
   { id: "tx1-high-vswr", label: "TX1 high VSWR - change over", create: createVswrChangeoverDme1119aScenario },
   { id: "monitor-calibration-error", label: "Monitor calibration error", create: createCalibrationErrorDme1119aScenario },
   { id: "cabinet-overtemperature", label: "Cabinet overtemperature", create: createOvertemperatureDme1119aScenario },
+  { id: "monitor-1-lru", label: "Monitor Interrogator 1 LRU fault", create: createMonitor1LruFaultDme1119aScenario },
+  { id: "rtc-1-lru", label: "RTC 1 LRU fault", create: createRtc1LruFaultDme1119aScenario },
+  { id: "lpa-1-lru", label: "LPA 1 LRU fault", create: createLpa1LruFaultDme1119aScenario },
+  { id: "power-supply-1-lru", label: "TX1 Power Supply LRU fault", create: createPowerSupply1LruFaultDme1119aScenario },
+  { id: "rms-processor-lru", label: "RMS Processor LRU fault", create: createRmsProcessorLruFaultDme1119aScenario },
+  { id: "facilities-cca-lru", label: "Facilities CCA LRU fault", create: createFacilitiesCcaLruFaultDme1119aScenario },
+  { id: "bcps-1-lru", label: "BCPS 1 LRU fault", create: createBcps1LruFaultDme1119aScenario },
+  { id: "interface-cca-lru", label: "Interface CCA LRU fault", create: createInterfaceCcaLruFaultDme1119aScenario },
+  { id: "rf-switch-lru", label: "RF Switch with Harness LRU fault", create: createRfSwitchLruFaultDme1119aScenario },
+  { id: "lcu-lru", label: "Local Control Unit LRU fault", create: createLcuLruFaultDme1119aScenario },
 ] as const;

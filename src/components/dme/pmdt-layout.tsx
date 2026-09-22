@@ -14,6 +14,8 @@ import { PmdtTitleBar } from "./pmdt-title-bar";
 import { DmeConfigPanel } from "./dme-config-panel";
 import { Dme1119aScenarioParametersPanel } from "./dme-scenario-parameters";
 import { Dme1119aTrainingHud } from "./dme1119a-training-hud";
+import { Dme1119aHardwareStage } from "./dme1119a-hardware-stage";
+import { evaluateDme1119aScenario } from "@/lib/dme1119a";
 import { AboutPmdtDialog } from "./about-pmdt-dialog";
 import { DmePmdtLoginDialog } from "./pmdt-login-dialog";
 import { DmePmdtPasswordDialog } from "./pmdt-password-dialog";
@@ -86,6 +88,24 @@ export function PmdtLayout({
   const configPanelOpen = useDmePmdtStore((state) => state.configPanelOpen);
   const scenarioParametersOpen = useDmePmdtStore((state) => state.scenarioParametersOpen);
   const scenario = useDmePmdtStore((state) => state.scenario);
+  const sessionMode = useDmePmdtStore((state) => state.mode);
+  const config = useDmePmdtStore((state) => state.data);
+  const scenarioStage = useDmePmdtStore((state) => state.scenarioStage);
+  const scenarioHardwareSelection = useDmePmdtStore((state) => state.scenarioHardwareSelection);
+  const scenarioHardwareDispositionConfirmed = useDmePmdtStore((state) => state.scenarioHardwareDispositionConfirmed);
+  const attemptEvents = useDmePmdtStore((state) => state.attemptEvents);
+  const actionHistory = useDmePmdtStore((state) => state.actionHistory);
+  const setScenarioStage = useDmePmdtStore((state) => state.setScenarioStage);
+  const scenarioEvidence = {
+    visitedViewIds: attemptEvents.map((event) => event.viewId),
+    acceptedActionControlIds: actionHistory.filter((event) => event.accepted && event.controlId).map((event) => event.controlId as string),
+    selectedHardwareOccurrenceKeys: scenarioHardwareSelection,
+    hardwareDispositionConfirmed: scenarioHardwareDispositionConfirmed,
+  };
+  const scenarioEvaluation = scenario.active && scenario.definition
+    ? evaluateDme1119aScenario(scenario, config, scenarioEvidence)
+    : null;
+  const twoStageScenario = sessionMode === "student" && Boolean(scenario.active && scenario.definition?.diagnosis);
   const setScenarioParametersOpen = useDmePmdtStore((state) => state.setScenarioParametersOpen);
   const setScenarioAuthoringEnabled = useDmePmdtStore((state) => state.setScenarioAuthoringEnabled);
   const replaceScenarioDraft = useDmePmdtStore((state) => state.replaceScenarioDraft);
@@ -170,6 +190,10 @@ export function PmdtLayout({
           {scenarioAuthoringEnabled ? <span className="dme1119a-scenario-role-badge">EXAMINER</span> : null}
           <Dme1119aTrainingHud examinerView={scenarioAuthoringEnabled} />
           {scenarioAuthoringEnabled && scenario.active ? <span className="dme1119a-scenario-active-badge">Scenario active: {scenario.definition?.name}</span> : null}
+          {twoStageScenario && scenarioEvaluation ? <div className="dme1119a-scenario-stagebar" role="status">
+            <span><strong>{scenarioStage === "pmdt" ? "Bước 1/2" : scenarioStage === "hardware" ? "Bước 2/2" : "Hoàn thành"}</strong> · {scenario.definition?.diagnosis?.disposition === "software-adjustment" ? "PMDT configuration" : "PMDT → hardware"}</span>
+            {scenarioStage === "pmdt" ? <button type="button" disabled={!scenarioEvaluation.pmdtComplete} onClick={() => setScenarioStage("hardware")}>Tiếp tục: Xác định phần cứng</button> : null}
+          </div> : null}
         </nav> : null}
         <section
         aria-label="DME PMDT Simulator"
@@ -205,6 +229,16 @@ export function PmdtLayout({
         {mode === "preview" && simulatorId ? <SimulatorConfigPersistence simulatorId={simulatorId} /> : null}
         </section>
       </div>
+      {twoStageScenario && scenarioStage === "hardware" ? <Dme1119aHardwareStage /> : null}
+      {twoStageScenario && scenarioStage === "complete" ? <div className="fixed inset-0 z-[90] grid place-items-center bg-black/55 p-4" role="presentation">
+        <section role="dialog" aria-modal="true" aria-labelledby="dme-scenario-complete-title" className="w-full max-w-lg rounded border border-[#9aa8b3] bg-[#f7f9fa] p-6 text-[#17202a] shadow-2xl">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1d5f91]">Scenario completed</p>
+          <h2 id="dme-scenario-complete-title" className="mt-2 text-xl font-bold">Đã hoàn thành kịch bản</h2>
+          <p className="mt-3 text-sm leading-6 text-[#53616d]">PMDT và phần xác định xử lý phần cứng đã được ghi nhận.</p>
+          <div className="mt-4 grid gap-2 rounded border border-[#c5d3dd] bg-white p-3 text-xs">{scenarioEvaluation?.checks.map((check) => <div key={check.id} className="flex items-center justify-between gap-3"><span>{check.label}</span><strong className={check.passed ? "text-[#166534]" : "text-[#a22b2b]"}>{check.passed ? "Đạt" : "Theo dõi"}</strong></div>)}</div>
+          <button type="button" onClick={() => setScenarioStage("pmdt")} className="mt-5 min-h-10 rounded bg-[#1d5f91] px-4 text-sm font-bold text-white hover:bg-[#174d76] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1d5f91]">Quay lại PMDT</button>
+        </section>
+      </div> : null}
       {externalLeadingPanel ? (
         <aside aria-label="Nhật ký học viên" className="pmdt-classic-inspector pmdt-classic-inspector--external pmdt-classic-inspector--external-leading">
           {externalLeadingPanel}

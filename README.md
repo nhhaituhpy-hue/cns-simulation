@@ -209,6 +209,14 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-09-22 — Nâng cấp 8 và bổ sung 10 scenario DME 1119A hai bước
+- Nâng cấp 8 preset DME 1119A hiện có với diagnosis contract: PMDT checkpoints, Full/On-Air diagnostic mode, manual references, disposition thay LRU hoặc chỉnh phần mềm.
+- Bổ sung 10 scenario LRU mới theo manual 1119A-0001M: Monitor Interrogator 1, RTC 1, LPA 1, TX1 Power Supply, RMS Processor, Facilities CCA, BCPS 1, Interface CCA, RF Switch và LCU.
+- Nối Fault Isolation result với trạng thái scenario và mở Bước 2 cho review/student mode; hardware occurrence dùng trực tiếp catalog diagram-to-cabinet DME 1119A.
+- Tạo đủ 18 JSON fixture tại `output/dme1119a-scenarios-20260922/`: 8 scenario cũ đã enrich + 10 scenario mới.
+- Bổ sung test xác nhận hardware occurrence chính xác và xác nhận riêng trường hợp software-only không được chọn phần cứng.
+- Kiểm tra đạt: typecheck, lint, 45 test DME/fixture ban đầu và 28 test focused cho scenario/evidence/mapping.
+
 ### 2026-09-22 — Mở các màn hình PMDT cần cho Fault Isolation
 - Browser QA production phát hiện các menu `Diagnostics > Power Up Results`, `Diagnostics > Fault Isolation`, `Monitor 1/2 > Test Results` và `Monitor 1/2 > Fault History` vẫn bị đánh dấu `disabled`, khiến quy trình troubleshooting không thể bắt đầu.
 - Bật các menu này và thêm regression assertions vào `tests/state/vor-pmdt-store.test.ts`.

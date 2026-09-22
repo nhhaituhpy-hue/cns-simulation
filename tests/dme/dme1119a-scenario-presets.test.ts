@@ -33,7 +33,11 @@ describe("DME 1119A built-in scenarios", () => {
     "$id starts in progress and has a valid definition",
     ({ create }) => {
       const definition = create();
-      expect(definition.faultInjections.length + definition.studentEditableFieldIds.length).toBeGreaterThan(0);
+      expect(
+        definition.faultInjections.length
+        + definition.studentEditableFieldIds.length
+        + (definition.diagnosis ? 1 : 0),
+      ).toBeGreaterThan(0);
       expect(previewDme1119aScenario(definition).data).toBeDefined();
     },
   );

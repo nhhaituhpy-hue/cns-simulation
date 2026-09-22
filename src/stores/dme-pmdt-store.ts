@@ -96,6 +96,14 @@ export interface DmeSessionInitialization {
   expectedCheckpoints?: readonly DmeExpectedCheckpoint[];
 }
 
+export type DmeScenarioStage = "pmdt" | "hardware" | "complete";
+export interface DmeScenarioDiagnosticState {
+  run: "full" | "on-air" | null;
+  completed: boolean;
+  subsystem: string | null;
+  result: string | null;
+}
+
 export interface DmePmdtStoreState {
   mode: DmePmdtMode;
   configPanelOpen: boolean;
@@ -137,6 +145,12 @@ export interface DmePmdtStoreState {
   attemptEvents: DmeAttemptEvent[];
   actionHistory: ScenarioActionEvent[];
   answer: DmeStudentAnswer;
+  scenarioStage: DmeScenarioStage;
+  scenarioHardwareSelection: string[];
+  scenarioHardwareInspected: string[];
+  scenarioHardwareReasoning: string;
+  scenarioHardwareDispositionConfirmed: boolean;
+  scenarioDiagnosticState: DmeScenarioDiagnosticState;
 }
 
 export interface DmePmdtStoreActions {
@@ -153,6 +167,11 @@ export interface DmePmdtStoreActions {
   replaceScenarioDraft: (definition: Dme1119aScenarioDefinition) => void;
   applyScenario: () => boolean;
   startReviewScenario: (definition: Dme1119aScenarioDefinition) => boolean;
+  setScenarioStage: (stage: DmeScenarioStage) => void;
+  toggleScenarioHardware: (occurrenceKey: string) => void;
+  inspectScenarioHardware: (occurrenceKey: string) => void;
+  setScenarioHardwareReasoning: (reasoning: string) => void;
+  confirmScenarioSoftwareResolution: () => void;
   restoreScenario: () => boolean;
   endScenario: () => boolean;
   setAboutDialogOpen: (open: boolean) => void;
@@ -315,6 +334,12 @@ function initialState(): DmePmdtStoreState {
     attemptEvents: [],
     actionHistory: [],
     answer: { ...emptyAnswer },
+    scenarioStage: "pmdt",
+    scenarioHardwareSelection: [],
+    scenarioHardwareInspected: [],
+    scenarioHardwareReasoning: "",
+    scenarioHardwareDispositionConfirmed: false,
+    scenarioDiagnosticState: { run: null, completed: false, subsystem: null, result: null },
     // A disk/file save is only available after the explicit System
     // Configuration Save command. Keep it distinct from the simulated RMS
     // NVRAM backup so Config Restore selects the correct source.
@@ -595,6 +620,10 @@ function dmeEvidenceSnapshot(state: DmePmdtStoreState): ScenarioEvidenceSnapshot
     identMode: state.data.identMode,
     alarm: state.data.alert,
     activeAlarms: state.data.alarmLogs.filter((entry) => entry.state !== "Normal").map((entry) => entry.alarm),
+    scenarioStage: state.scenarioStage,
+    diagnosticRun: state.scenarioDiagnosticState.run,
+    diagnosticCompleted: state.scenarioDiagnosticState.completed,
+    hardwareDispositionConfirmed: state.scenarioHardwareDispositionConfirmed,
   };
 }
 
@@ -696,6 +725,12 @@ export function createDmePmdtStore(
         configurationBackup: state.configurationBackup,
         scenario: { active: true, definition, startedAt },
         scenarioDraft: cloneDme1119aScenarioDefinition(definition),
+        scenarioStage: "pmdt",
+        scenarioHardwareSelection: [],
+        scenarioHardwareInspected: [],
+        scenarioHardwareReasoning: "",
+        scenarioHardwareDispositionConfirmed: false,
+        scenarioDiagnosticState: { run: null, completed: false, subsystem: null, result: null },
         scenarioParametersOpen: false,
         lastCommand: `${mode === "student" ? "Review scenario started" : "Scenario Apply"}: ${definition.name}`,
       });
@@ -775,6 +810,39 @@ export function createDmePmdtStore(
 
       startReviewScenario: (definition) => applyScenarioDefinition(definition, "student"),
 
+      setScenarioStage: (stage) => {
+        const state = get();
+        if (!state.scenario.active || !state.scenario.definition?.diagnosis) return;
+        const before = dmeEvidenceSnapshot(state);
+        set({ scenarioStage: stage });
+        recordAction({ kind: "control", controlId: `scenario-stage-${stage}`, label: stage === "hardware" ? "Continue to hardware identification" : `Scenario stage: ${stage}`, accepted: true, before });
+      },
+
+      toggleScenarioHardware: (occurrenceKey) => {
+        const state = get();
+        if (!state.scenario.active || !state.scenario.definition?.diagnosis) return;
+        const before = dmeEvidenceSnapshot(state);
+        const selected = state.scenarioHardwareSelection.includes(occurrenceKey);
+        set({ scenarioHardwareSelection: selected ? state.scenarioHardwareSelection.filter((key) => key !== occurrenceKey) : [...state.scenarioHardwareSelection, occurrenceKey] });
+        recordAction({ kind: "control", controlId: `hardware-occurrence-${occurrenceKey}`, label: selected ? "Unselect hardware occurrence" : "Select hardware occurrence", input: { occurrenceKey, selected: !selected }, accepted: true, before });
+      },
+
+      inspectScenarioHardware: (occurrenceKey) => {
+        const state = get();
+        if (!state.scenario.active || !state.scenario.definition?.diagnosis || state.scenarioHardwareInspected.includes(occurrenceKey)) return;
+        set({ scenarioHardwareInspected: [...state.scenarioHardwareInspected, occurrenceKey] });
+      },
+
+      setScenarioHardwareReasoning: (reasoning) => set({ scenarioHardwareReasoning: reasoning }),
+
+      confirmScenarioSoftwareResolution: () => {
+        const state = get();
+        if (state.scenario.definition?.diagnosis?.disposition !== "software-adjustment") return;
+        const before = dmeEvidenceSnapshot(state);
+        set({ scenarioHardwareDispositionConfirmed: true });
+        recordAction({ kind: "control", controlId: "hardware-no-replacement", label: "Confirm no hardware replacement", accepted: true, before });
+      },
+
       restoreScenario: () => {
         const state = get();
         if (!state.scenario.active || !state.scenario.definition) return false;
@@ -806,6 +874,12 @@ export function createDmePmdtStore(
           needBackup: false,
           scenario: { active: false, definition: null, startedAt: null },
           scenarioDraft: createDefaultDme1119aScenarioDefinition(),
+          scenarioStage: "pmdt",
+          scenarioHardwareSelection: [],
+          scenarioHardwareInspected: [],
+          scenarioHardwareReasoning: "",
+          scenarioHardwareDispositionConfirmed: false,
+          scenarioDiagnosticState: { run: null, completed: false, subsystem: null, result: null },
           scenarioParametersOpen: false,
           lastCommand: "Scenario End - Restore TST",
         });
@@ -1516,11 +1590,27 @@ export function createDmePmdtStore(
       runDiagnostics: (mode) => {
         const state = get();
         if (state.loginDialogOpen || (mode === "full" ? state.securityLevel < 3 || !state.data.local : state.securityLevel < 2)) return false;
+        const diagnosis = state.scenario.definition?.diagnosis;
+        const before = dmeEvidenceSnapshot(state);
+        if (state.scenario.active && diagnosis && diagnosis.diagnosticRun !== mode) {
+          recordAction({ kind: "control", controlId: `diagnostics-run-${mode}`, label: `Run ${mode} diagnostics`, accepted: false, reason: "This diagnostic mode is not part of the scenario contract.", before });
+          return false;
+        }
+        if (state.scenario.active && diagnosis) {
+          set({
+            diagnosticsRunning: false,
+            diagnosticsMode: mode,
+            scenarioDiagnosticState: { run: mode, completed: true, subsystem: diagnosis.diagnosticSubsystem, result: diagnosis.diagnosticResult },
+            lastCommand: mode === "full" ? "Run Full Diagnostics" : "Run On Air Diagnostics",
+          });
+          recordAction({ kind: "control", controlId: `diagnostics-run-${mode}`, label: `Run ${mode} diagnostics`, accepted: true, input: { mode }, before });
+          return true;
+        }
         set({ diagnosticsRunning: true, diagnosticsMode: mode, lastCommand: mode === "full" ? "Run Full Diagnostics" : "Run On Air Diagnostics" });
         return true;
       },
 
-      cancelDiagnostics: () => set({ diagnosticsRunning: false, diagnosticsMode: null, lastCommand: "Cancel Diagnostics" }),
+      cancelDiagnostics: () => set({ diagnosticsRunning: false, diagnosticsMode: null, scenarioDiagnosticState: { run: null, completed: false, subsystem: null, result: null }, lastCommand: "Cancel Diagnostics" }),
 
       nextView: () => {
         const state = get();
