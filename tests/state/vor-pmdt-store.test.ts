@@ -56,6 +56,10 @@ describe("VOR PMDT defaults", () => {
     );
 
     expect(testSignal?.children).toHaveLength(8);
+    expect(monitor1?.items.find((item) => item.id.endsWith("test-results"))?.enabled).toBe(true);
+    expect(monitor1?.items.find((item) => item.id.endsWith("fault-history"))?.enabled).toBe(true);
+    const diagnostics = vorMenuStructure.find((group) => group.id === "diagnostics");
+    expect(diagnostics?.items.map((item) => item.enabled)).toEqual([true, true]);
     expect(commands?.children?.map((item) => [item.label, item.enabled])).toEqual([
       ["Transfer", true],
       ["Transmitter 1", true],

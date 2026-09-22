@@ -14,8 +14,8 @@ const testSignalItems: readonly VorMenuItem[] = [
 function monitorItems(monitorNumber: 1 | 2): readonly VorMenuItem[] {
   return [
     { id: `monitor-${monitorNumber}-data`, label: "Data", enabled: true, screenId: "monitor-data" },
-    { id: `monitor-${monitorNumber}-test-results`, label: "Test Results", enabled: false, screenId: "monitor-test-results" },
-    { id: `monitor-${monitorNumber}-fault-history`, label: "Fault History", enabled: false, screenId: "monitor-fault-history" },
+    { id: `monitor-${monitorNumber}-test-results`, label: "Test Results", enabled: true, screenId: "monitor-test-results" },
+    { id: `monitor-${monitorNumber}-fault-history`, label: "Fault History", enabled: true, screenId: "monitor-fault-history" },
     {
       id: `monitor-${monitorNumber}-offsets`,
       label: "Offsets & Scale Factors",
@@ -186,14 +186,14 @@ export const vorMenuStructure: readonly VorMenuGroup[] = [
       {
         id: "diagnostics-power-up",
         label: "Power Up Results",
-        enabled: false,
+        enabled: true,
         screenId: "diagnostics",
         viewId: "diagnostics-power-up",
       },
       {
         id: "diagnostics-fault-isolation",
         label: "Fault Isolation",
-        enabled: false,
+        enabled: true,
         screenId: "diagnostics",
         viewId: "diagnostics-fault-isolation",
       },

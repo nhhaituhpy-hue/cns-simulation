@@ -209,6 +209,11 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-09-22 — Mở các màn hình PMDT cần cho Fault Isolation
+- Browser QA production phát hiện các menu `Diagnostics > Power Up Results`, `Diagnostics > Fault Isolation`, `Monitor 1/2 > Test Results` và `Monitor 1/2 > Fault History` vẫn bị đánh dấu `disabled`, khiến quy trình troubleshooting không thể bắt đầu.
+- Bật các menu này và thêm regression assertions vào `tests/state/vor-pmdt-store.test.ts`.
+- Kiểm tra lại đạt: lint, typecheck, build và 27/27 focused tests.
+
 ### 2026-09-22 — Bổ sung 10 scenario DVOR 1150A và quy trình chẩn đoán hai bước
 - Bổ sung 10 scenario troubleshooting mới theo manual 571150A-0002E: Audio Generator TX1, Synthesizer TX2, Monitor 1, LVPS TX1, BCPS TX2, RF Monitor, Carrier Amplifier TX2, Sideband Amplifier TX1, Commutator Controller và Monitor 1 calibration.
 - Mở rộng Scenario Parameters bằng hợp đồng `diagnosis`: PMDT checkpoints, loại chạy Diagnostics, kết luận thay module hay chỉnh phần mềm, manual references và hardware occurrence ID.
