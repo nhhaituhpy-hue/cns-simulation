@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   dvorConfigFieldCatalog,
   getDvorConfigValue,
+  isDvor1150aScenarioStudentEditable,
   parseDvorConfigInput,
   type DvorConfigFieldType,
 } from "@/lib/dvor1150a";
@@ -45,7 +46,7 @@ export function PmdtConfigControl({
   const [draftValue, setDraftValue] = useState(formatValue(value, digits));
   const [isEditing, setIsEditing] = useState(false);
   const scenarioAllowsField = !scenario.active
-    || [configFieldId, ...mirrorFieldIds].every((id) => scenario.definition?.studentEditableFieldIds.includes(id));
+    || [configFieldId, ...mirrorFieldIds].every((id) => isDvor1150aScenarioStudentEditable(scenario.definition, id));
   const canEdit = !disabled && scenarioAllowsField && securityLevel >= 3 && local && Boolean(field);
   const lockedByScenario = scenario.active && !scenarioAllowsField;
   const isTextEntry = controlType === "number" || controlType === "text";

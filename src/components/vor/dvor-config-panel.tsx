@@ -5,6 +5,7 @@ import { useState } from "react";
 import {
   dvorConfigFieldCatalog,
   getDvorConfigValue,
+  isDvor1150aScenarioStudentEditable,
   parseDvorConfigInput,
   validateDvorConfigField,
   type DvorConfigFieldDefinition,
@@ -18,7 +19,7 @@ function ConfigField({ field }: { field: DvorConfigFieldDefinition }) {
   const scenario = useVorPmdtStore((state) => state.scenario);
   const setConfigValue = useVorPmdtStore((state) => state.setConfigValue);
   const scenarioAllowsField = !scenario.active
-    || Boolean(scenario.definition?.studentEditableFieldIds.includes(field.id));
+    || isDvor1150aScenarioStudentEditable(scenario.definition, field.id);
   const canEdit = securityLevel >= 3 && local && scenarioAllowsField;
   const value = getDvorConfigValue(config, field.id);
   const validationMessage = validateDvorConfigField(field, value);
@@ -93,7 +94,7 @@ export function DvorConfigPanel() {
   const scenario = useVorPmdtStore((state) => state.scenario);
 
   const visibleFields = scenario.active
-    ? dvorConfigFieldCatalog.filter((field) => scenario.definition?.studentEditableFieldIds.includes(field.id))
+    ? dvorConfigFieldCatalog.filter((field) => isDvor1150aScenarioStudentEditable(scenario.definition, field.id))
     : dvorConfigFieldCatalog;
   const sections = Array.from(new Set(visibleFields.map((field) => field.section)));
 

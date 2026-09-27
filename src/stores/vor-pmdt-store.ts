@@ -18,6 +18,8 @@ import {
   cloneDvor1150aConfig,
   createDefaultDvor1150aConfig,
   DVOR_MONITOR_IDS,
+  dvorConfigFieldCatalog,
+  getDvorConfigValue,
   type Dvor1150aConfig,
   type Dvor1150aSnapshot,
   type DvorConfigValue,
@@ -27,6 +29,7 @@ import {
 import {
   configurationForDvor1150aScenario,
   createDefaultDvor1150aScenarioDefinition,
+  isDvor1150aScenarioStudentEditable,
   getDvor1150aScenarioProtectedFieldChanges,
   type Dvor1150aScenarioDefinition,
   type Dvor1150aScenarioRuntime,
@@ -40,9 +43,15 @@ import {
 } from "@/lib/simulator-config/parameter-change";
 import { extractDvor1150aConfig } from "@/lib/simulator-config/dvor-1150a";
 import type {
+  ScenarioParameterChange,
   ScenarioActionEvent,
+  ScenarioEvidenceStats,
   ScenarioEvidenceSnapshot,
   ScenarioEvidenceValue,
+} from "@/lib/scenario-evidence";
+import {
+  appendScenarioEvidenceEvent,
+  createScenarioEvidenceStats,
 } from "@/lib/scenario-evidence";
 import { create, type StoreApi, type UseBoundStore } from "zustand";
 
@@ -74,11 +83,18 @@ export interface VorSessionInitialization {
   mode: VorPmdtMode;
   scenarioId?: string;
   sessionKey?: string;
+  revisionKey?: string;
   userId?: string;
   studentName?: string;
   workUnit?: string;
   overrides?: readonly VorFieldOverride[];
   expectedCheckpoints?: readonly VorExpectedCheckpoint[];
+}
+
+export interface VorReviewSessionContext {
+  userId?: string;
+  sessionKey?: string;
+  revisionKey?: string;
 }
 
 export type DvorScenarioStage = "pmdt" | "hardware" | "complete";
@@ -115,6 +131,7 @@ export interface VorPmdtStoreState {
   activeMenuPath: string[];
   scenarioId: string | null;
   sessionKey: string | null;
+  scenarioRevisionKey: string | null;
   userId: string;
   studentName: string;
   workUnit: string;
@@ -123,6 +140,7 @@ export interface VorPmdtStoreState {
   studentFieldStates: VorFieldOverride[];
   attemptEvents: VorAttemptEvent[];
   actionHistory: ScenarioActionEvent[];
+  evidenceStats: ScenarioEvidenceStats;
   answer: VorStudentAnswer;
   scenario: Dvor1150aScenarioRuntime;
   scenarioDraft: Dvor1150aScenarioDefinition;
@@ -142,7 +160,7 @@ export interface VorPmdtStoreActions {
   setScenarioAuthoringEnabled: (enabled: boolean) => void;
   replaceScenarioDraft: (definition: Dvor1150aScenarioDefinition) => void;
   applyScenario: () => boolean;
-  startReviewScenario: (definition: Dvor1150aScenarioDefinition) => boolean;
+  startReviewScenario: (definition: Dvor1150aScenarioDefinition, context?: VorReviewSessionContext) => boolean;
   setScenarioStage: (stage: DvorScenarioStage) => void;
   toggleScenarioHardware: (occurrenceKey: string) => void;
   inspectScenarioHardware: (occurrenceKey: string) => void;
@@ -189,6 +207,25 @@ export interface VorPmdtStoreActions {
   ) => void;
   updateEventAnnotation: (eventId: string, annotation: string) => void;
   removeEvent: (eventId: string) => void;
+  restoreScenarioEvidence: (evidence: {
+    actionHistory: readonly ScenarioActionEvent[];
+    attemptEvents: readonly VorAttemptEvent[];
+    answer?: Partial<VorStudentAnswer>;
+    scenarioHardwareSelection?: readonly string[];
+    scenarioHardwareInspected?: readonly string[];
+    scenarioHardwareReasoning?: string;
+    scenarioHardwareDispositionConfirmed?: boolean;
+    evidenceStats?: ScenarioEvidenceStats;
+    checkpoint?: {
+      config: Dvor1150aConfig;
+      configDraft: Dvor1150aConfig;
+      configurationBackup: Dvor1150aConfig;
+      configDirty: boolean;
+      needBackup: boolean;
+      scenarioStage: DvorScenarioStage;
+      diagnosticState: VorDiagnosticState;
+    };
+  }) => void;
   updateAnswer: (changes: Partial<VorStudentAnswer>) => void;
   reset: () => void;
 }
@@ -241,6 +278,7 @@ function initialState(): VorPmdtStoreState {
     activeMenuPath: ["Home"],
     scenarioId: null,
     sessionKey: null,
+    scenarioRevisionKey: null,
     userId: "",
     studentName: "",
     workUnit: "",
@@ -249,6 +287,7 @@ function initialState(): VorPmdtStoreState {
     studentFieldStates: [],
     attemptEvents: [],
     actionHistory: [],
+    evidenceStats: createScenarioEvidenceStats(),
     answer: { ...emptyAnswer },
     scenario: { active: false, definition: null, startedAt: null },
     scenarioDraft: createDefaultDvor1150aScenarioDefinition(),
@@ -403,6 +442,27 @@ function vorEvidenceSnapshot(state: VorPmdtStoreState): ScenarioEvidenceSnapshot
   };
 }
 
+function dvorParameterChanges(
+  before: Dvor1150aConfig,
+  after: Dvor1150aConfig,
+  fieldIds: readonly string[],
+  phase: ScenarioParameterChange["phase"],
+): ScenarioParameterChange[] {
+  return [...new Set(fieldIds)].flatMap((fieldId) => {
+    const beforeValue = getDvorConfigValue(before, fieldId);
+    const afterValue = getDvorConfigValue(after, fieldId);
+    if (Object.is(beforeValue, afterValue)) return [];
+    return [{
+      fieldId,
+      label: dvorConfigFieldCatalog.find((field) => field.id === fieldId)?.label ?? fieldId,
+      before: beforeValue,
+      after: afterValue,
+      phase,
+      accepted: true,
+    }];
+  });
+}
+
 export function createVorPmdtStore(
   options: VorPmdtStoreOptions = {},
 ): UseBoundStore<StoreApi<VorPmdtStore>> {
@@ -420,12 +480,21 @@ export function createVorPmdtStore(
       accepted: boolean;
       reason?: string;
       before?: ScenarioEvidenceSnapshot;
+      parameterChanges?: readonly ScenarioParameterChange[];
     }) => {
       const state = get();
       if (state.mode !== "student" && input.actor !== "system") return;
+      const draftOnly = input.accepted
+        && input.kind === "configuration"
+        && input.label.startsWith("Stage ")
+        && (!input.parameterChanges?.length || input.parameterChanges.every((change) => change.phase === "draft"));
+      // Keystrokes update the draft continuously. They are not independent
+      // business events and must not consume the capped evidence slots.
+      if (draftOnly) return;
+      const sequence = state.evidenceStats.totalEventCount + 1;
       const event: ScenarioActionEvent = {
         id: generateId(),
-        sequence: state.actionHistory.length + 1,
+        sequence,
         occurredAt: now().toISOString(),
         actor: input.actor ?? "student",
         kind: input.kind,
@@ -437,8 +506,10 @@ export function createVorPmdtStore(
         ...(input.reason ? { reason: input.reason } : {}),
         ...(input.before ? { before: structuredClone(input.before) } : {}),
         after: vorEvidenceSnapshot(state),
+        ...(input.parameterChanges?.length ? { parameterChanges: structuredClone(input.parameterChanges) } : {}),
       };
-      set({ actionHistory: [...state.actionHistory, event] });
+      const appended = appendScenarioEvidenceEvent(state.actionHistory, event, state.evidenceStats);
+      set({ actionHistory: appended.history, evidenceStats: appended.stats });
     };
 
     const recordVisit = (
@@ -517,6 +588,10 @@ export function createVorPmdtStore(
           mode: initialization.mode,
           scenarioId: initialization.scenarioId ?? null,
           sessionKey: initialization.sessionKey ?? initialization.scenarioId ?? null,
+          scenarioRevisionKey: initialization.revisionKey?.trim()
+            || initialization.sessionKey
+            || initialization.scenarioId
+            || null,
           userId: initialization.userId?.trim() ?? "",
           studentName: initialization.studentName?.trim() ?? "",
           workUnit: initialization.workUnit?.trim() ?? "",
@@ -575,7 +650,8 @@ export function createVorPmdtStore(
         );
       },
 
-      startReviewScenario: (definition) => {
+      startReviewScenario: (definition, context) => {
+        const previous = get();
         const issues = validateDvor1150aScenarioDefinition(definition);
         if (issues.length > 0) {
           set({ lastCommand: `Review scenario initialization failed: ${issues[0]}` });
@@ -586,7 +662,17 @@ export function createVorPmdtStore(
           `Review scenario started: ${definition.name}`,
           null,
         );
-        if (applied) set({ mode: "student", scenarioParametersOpen: false });
+        if (applied) {
+          set({
+            mode: "student",
+            scenarioParametersOpen: false,
+            userId: context?.userId?.trim() || previous.userId,
+            sessionKey: context?.sessionKey?.trim() || previous.sessionKey || definition.id,
+            scenarioRevisionKey: context?.revisionKey?.trim()
+              || previous.scenarioRevisionKey
+              || definition.id,
+          });
+        }
         return applied;
       },
 
@@ -902,7 +988,7 @@ export function createVorPmdtStore(
         const fieldIds = [...new Set([fieldId, ...mirrorFieldIds])];
         if (
           state.scenario.active
-          && fieldIds.some((id) => !state.scenario.definition?.studentEditableFieldIds.includes(id))
+          && fieldIds.some((id) => !isDvor1150aScenarioStudentEditable(state.scenario.definition, id))
         ) {
           set({ lastCommand: "Scenario control locked: examiner recovery controls only" });
           recordAction({ kind: "configuration", controlId: fieldId, label: `Set ${fieldId}`, input: { fieldId, value: String(value) }, accepted: false, reason: "Scenario recovery controls only.", before });
@@ -922,7 +1008,15 @@ export function createVorPmdtStore(
           configDraft: result.config,
           configDirty: JSON.stringify(result.config) !== JSON.stringify(state.config),
         });
-        recordAction({ kind: "configuration", controlId: fieldId, label: `Stage ${fieldId}`, input: { fieldId, value: String(value) }, accepted: true, before });
+        recordAction({
+          kind: "configuration",
+          controlId: fieldId,
+          label: `Stage ${fieldId}`,
+          input: { fieldId, value: String(value) },
+          accepted: true,
+          before,
+          parameterChanges: dvorParameterChanges(state.configDraft, result.config, fieldIds, "draft"),
+        });
       },
 
       applyConfigChanges: () => {
@@ -972,7 +1066,18 @@ export function createVorPmdtStore(
               ? "Automatic monitor shutdown: both transmitters off"
               : "Configuration Apply",
         });
-        recordAction({ kind: "configuration", controlId: "config-apply", label: "Configuration Apply", accepted: true, before });
+        const appliedFields = collectChangedConfigFields(
+          extractDvor1150aConfig(state.config),
+          extractDvor1150aConfig(nextConfig),
+        );
+        recordAction({
+          kind: "configuration",
+          controlId: "config-apply",
+          label: "Configuration Apply",
+          accepted: true,
+          before,
+          parameterChanges: dvorParameterChanges(state.config, nextConfig, appliedFields, "apply"),
+        });
         if (automaticTransfer?.action) {
           recordAction({ actor: "system", kind: "system", controlId: "automatic-monitor-transfer", label: automaticTransfer.action === "transfer" && automaticTransfer.target ? `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}` : "Automatic monitor shutdown", accepted: true, reason: "PMDT automatic protection response.", before: vorEvidenceSnapshot(get()) });
         }
@@ -1245,6 +1350,37 @@ export function createVorPmdtStore(
             })),
           };
         }),
+
+      restoreScenarioEvidence: (evidence) => {
+        const state = get();
+        if (!state.scenario.active) return;
+        const checkpointSnapshot = evidence.checkpoint
+          ? buildDvor1150aSnapshot(evidence.checkpoint.config)
+          : null;
+        set({
+          actionHistory: [...evidence.actionHistory].slice(0, 500),
+          evidenceStats: evidence.evidenceStats ?? createScenarioEvidenceStats(evidence.actionHistory),
+          attemptEvents: [...evidence.attemptEvents],
+          ...(evidence.answer ? { answer: { ...state.answer, ...evidence.answer } } : {}),
+          ...(evidence.scenarioHardwareSelection ? { scenarioHardwareSelection: [...evidence.scenarioHardwareSelection] } : {}),
+          ...(evidence.scenarioHardwareInspected ? { scenarioHardwareInspected: [...evidence.scenarioHardwareInspected] } : {}),
+          ...(evidence.scenarioHardwareReasoning !== undefined ? { scenarioHardwareReasoning: evidence.scenarioHardwareReasoning } : {}),
+          ...(evidence.scenarioHardwareDispositionConfirmed !== undefined
+            ? { scenarioHardwareDispositionConfirmed: evidence.scenarioHardwareDispositionConfirmed }
+            : {}),
+          ...(evidence.checkpoint && checkpointSnapshot ? {
+            config: structuredClone(evidence.checkpoint.config),
+            configDraft: structuredClone(evidence.checkpoint.configDraft),
+            configurationBackup: structuredClone(evidence.checkpoint.configurationBackup),
+            configDirty: evidence.checkpoint.configDirty,
+            needBackup: evidence.checkpoint.needBackup,
+            scenarioStage: evidence.checkpoint.scenarioStage,
+            diagnosticState: structuredClone(evidence.checkpoint.diagnosticState),
+            data: checkpointSnapshot.data,
+            derived: checkpointSnapshot,
+          } : {}),
+        });
+      },
 
       updateAnswer: (changes) =>
         set((state) => ({ answer: { ...state.answer, ...changes } })),

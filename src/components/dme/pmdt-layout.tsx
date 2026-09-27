@@ -4,6 +4,7 @@ import { Suspense, useEffect, type ReactNode } from "react";
 import { SimulatorConfigPersistence } from "@/components/simulator/simulator-config-persistence";
 import { SimulatorToolbarBackButton } from "@/components/simulator/simulator-toolbar-back-button";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
+import { DmeScenarioSessionPersistence } from "@/components/scenario/scenario-session-persistence";
 import type { SupportedSimulatorConfigId } from "@/lib/simulator-config/types";
 import type { DmePmdtMode } from "@/lib/dme-types";
 import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
@@ -41,6 +42,7 @@ export interface PmdtLayoutProps {
   mode?: DmePmdtMode;
   simulatorId?: Extract<SupportedSimulatorConfigId, "dme-1119a">;
   scenarioAuthoringEnabled?: boolean;
+  sessionUserId?: string;
   children?: ReactNode;
   leadingPanel?: ReactNode;
   sidePanel?: ReactNode;
@@ -76,6 +78,7 @@ export function PmdtLayout({
   mode = "preview",
   simulatorId,
   scenarioAuthoringEnabled = false,
+  sessionUserId = "",
   children,
   leadingPanel,
   sidePanel,
@@ -175,7 +178,13 @@ export function PmdtLayout({
           moduleId="dme-1119a"
           enabled
           onLoaded={(definition, context) => {
-            if (context.review) startReviewScenario(definition);
+            if (context.review) {
+              startReviewScenario(definition, {
+                userId: sessionUserId,
+                sessionKey: context.sessionKey ?? `practice:${sessionUserId || "anonymous"}:${definition.id}`,
+                revisionKey: context.revisionKey,
+              });
+            }
             else {
               replaceScenarioDraft(definition);
               setScenarioParametersOpen(true);
@@ -227,6 +236,7 @@ export function PmdtLayout({
         {passwordDialogOpen ? <DmePmdtPasswordDialog /> : null}
         {loginDialogOpen ? <DmePmdtLoginDialog /> : null}
         {mode === "preview" && simulatorId ? <SimulatorConfigPersistence simulatorId={simulatorId} /> : null}
+        <DmeScenarioSessionPersistence />
         </section>
       </div>
       {twoStageScenario && scenarioStage === "hardware" ? <Dme1119aHardwareStage /> : null}

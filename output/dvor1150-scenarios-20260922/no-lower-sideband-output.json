@@ -1,0 +1,410 @@
+{
+  "schemaVersion": 2,
+  "id": "no-lower-sideband-output",
+  "name": "No Lower Sideband Output - Generator (1A5)",
+  "description": "The lower sideband path is absent. Correlate the 9960 Hz reading and sideband data with Full Fault Isolation, then identify the TX1 SB1/SB2 generator.",
+  "difficulty": "advanced",
+  "configuration": {
+    "station": {
+      "stationDescription": "Runway ID",
+      "stationType": "DVOR",
+      "transmitterConfig": "Dual Transmitters",
+      "monitorConfig": "Dual Monitors",
+      "frequencyMHz": 112.1
+    },
+    "transmitters": {
+      "tx1": {
+        "enabled": true,
+        "onAir": true,
+        "load": false,
+        "nominal": {
+          "azimuthIndex": 0,
+          "outputPower": 100,
+          "voiceModulation": 0,
+          "identModulation": 8,
+          "referenceModulation": 30,
+          "sboRfLevel": 47,
+          "identCode": "TST"
+        },
+        "offsets": {
+          "azimuthAngle": 0,
+          "outputPowerScale": 100,
+          "voiceModulationScale": 100,
+          "identModulationScale": 100,
+          "referenceModulationScale": 100,
+          "sideband12PhaseOffset": 0,
+          "sideband34PhaseOffset": 0,
+          "carrierSidebandPhaseOffset": 0,
+          "sideband1RfLevelScale": 0,
+          "sideband2RfLevelScale": 0,
+          "sideband3RfLevelScale": 100,
+          "sideband4RfLevelScale": 100,
+          "cabinetTemperatureOffset": 0
+        }
+      },
+      "tx2": {
+        "enabled": true,
+        "onAir": false,
+        "load": true,
+        "nominal": {
+          "azimuthIndex": 0,
+          "outputPower": 100,
+          "voiceModulation": 0,
+          "identModulation": 8,
+          "referenceModulation": 30,
+          "sboRfLevel": 47,
+          "identCode": "TST"
+        },
+        "offsets": {
+          "azimuthAngle": 0,
+          "outputPowerScale": 100,
+          "voiceModulationScale": 100,
+          "identModulationScale": 100,
+          "referenceModulationScale": 100,
+          "sideband12PhaseOffset": 0,
+          "sideband34PhaseOffset": 0,
+          "carrierSidebandPhaseOffset": 0,
+          "sideband1RfLevelScale": 100,
+          "sideband2RfLevelScale": 100,
+          "sideband3RfLevelScale": 100,
+          "sideband4RfLevelScale": 100,
+          "cabinetTemperatureOffset": 0
+        }
+      }
+    },
+    "monitor": {
+      "votingLogic": "AND",
+      "monitorStartupDelay": 20,
+      "monitorShutdownDelay": 20,
+      "identMonitoringEnabled": true,
+      "alarmLimits": {
+        "azimuth": {
+          "alarmLow": 358,
+          "preAlarmLow": 359,
+          "nominal": 360,
+          "preAlarmHigh": 361,
+          "alarmHigh": 362
+        },
+        "hz30Modulation": {
+          "alarmLow": 28,
+          "preAlarmLow": 28.5,
+          "nominal": 30,
+          "preAlarmHigh": 31.5,
+          "alarmHigh": 32
+        },
+        "hz9960Modulation": {
+          "alarmLow": 28,
+          "preAlarmLow": 28.5,
+          "nominal": 30,
+          "preAlarmHigh": 31.5,
+          "alarmHigh": 32
+        },
+        "deviation": {
+          "alarmLow": 15,
+          "preAlarmLow": 15.2,
+          "nominal": 16,
+          "preAlarmHigh": 16.3,
+          "alarmHigh": 17
+        },
+        "rfLevel": {
+          "alarmLow": -3,
+          "preAlarmLow": -1,
+          "nominal": 0,
+          "preAlarmHigh": 1,
+          "alarmHigh": 3
+        }
+      },
+      "azimuthAlarmLimits": {
+        "mon1": {
+          "alarmLow": 358,
+          "preAlarmLow": 359,
+          "nominal": 360,
+          "preAlarmHigh": 361,
+          "alarmHigh": 362
+        },
+        "mon2": {
+          "alarmLow": 358,
+          "preAlarmLow": 359,
+          "nominal": 360,
+          "preAlarmHigh": 361,
+          "alarmHigh": 362
+        }
+      },
+      "offsets": {
+        "mon1": {
+          "azimuth": 0,
+          "hz30Modulation": 0,
+          "hz9960Modulation": 0,
+          "deviation": 0,
+          "rfLevel": 0
+        },
+        "mon2": {
+          "azimuth": 0,
+          "hz30Modulation": 0,
+          "hz9960Modulation": 0,
+          "deviation": 0,
+          "rfLevel": 0
+        }
+      },
+      "calibration": {
+        "mon1": {
+          "fieldDetector": {
+            "azimuthAngleOffset": 0,
+            "hz30ModulationScale": 100,
+            "hz9960ModulationScale": 100,
+            "hz9960DeviationScale": 100,
+            "rfLevelOffset": 0
+          },
+          "testGenerator": {
+            "azimuthAngleOffset": 0,
+            "hz30ModulationScale": 100,
+            "hz9960ModulationScale": 100,
+            "hz9960DeviationScale": 100,
+            "rfLevelOffset": 0
+          }
+        },
+        "mon2": {
+          "fieldDetector": {
+            "azimuthAngleOffset": 0,
+            "hz30ModulationScale": 100,
+            "hz9960ModulationScale": 100,
+            "hz9960DeviationScale": 100,
+            "rfLevelOffset": 0
+          },
+          "testGenerator": {
+            "azimuthAngleOffset": 0,
+            "hz30ModulationScale": 100,
+            "hz9960ModulationScale": 100,
+            "hz9960DeviationScale": 100,
+            "rfLevelOffset": 0
+          }
+        }
+      },
+      "testGenerator": {
+        "azimuthAngle": 0,
+        "hz30Modulation": 30,
+        "hz9960Modulation": 30,
+        "deviation": 16,
+        "identModulation": 0,
+        "identControl": "Normal",
+        "audioModulation": 0,
+        "audioFrequency": 300
+      },
+      "notch": {
+        "enabled": true,
+        "tolerance": 20,
+        "baseline": [
+          1,
+          1.7,
+          2.4,
+          1.2,
+          1.9,
+          2.6,
+          1.4,
+          2.1,
+          2.8,
+          1.6,
+          2.3,
+          1.1,
+          1.8,
+          2.5,
+          1.3,
+          2,
+          2.7,
+          1.5,
+          2.2,
+          1,
+          1.7,
+          2.4,
+          1.2,
+          1.9,
+          2.6,
+          1.4,
+          2.1,
+          2.8,
+          1.6,
+          2.3,
+          1.1,
+          1.8,
+          2.5,
+          1.3,
+          2,
+          2.7,
+          1.5,
+          2.2,
+          1,
+          1.7,
+          2.4,
+          1.2,
+          1.9,
+          2.6,
+          1.4,
+          2.1,
+          2.8,
+          1.6
+        ]
+      },
+      "sidebandVswrTolerance": 2,
+      "sidebandVswrExecutiveAlarm": false,
+      "numberOfAntennasInAlarm": 1
+    },
+    "rms": {
+      "rcsuPresent": false,
+      "rcsuConnectionType": "Hard Wired",
+      "smokeAlarmInstalled": false,
+      "intrusionAlarmInstalled": false,
+      "automaticRestartsEnabled": false,
+      "firstRestartDelay": 60,
+      "dmePresent": false,
+      "dualDme": false,
+      "keyingOutputEnabled": true,
+      "adLimits": {
+        "tx1": {
+          "plus5V": {
+            "low": 4.75,
+            "preLow": 4.85,
+            "preHigh": 5.15,
+            "high": 5.25
+          },
+          "plus12V": {
+            "low": 11.5,
+            "preLow": 11.7,
+            "preHigh": 12.3,
+            "high": 12.5
+          },
+          "plus12VLogic": {
+            "low": 11.5,
+            "preLow": 11.7,
+            "preHigh": 12.3,
+            "high": 12.5
+          },
+          "plus28V": {
+            "low": 27,
+            "preLow": 27.5,
+            "preHigh": 28.5,
+            "high": 29
+          },
+          "paVoltage": {
+            "low": 42.7,
+            "preLow": 43.5,
+            "preHigh": 47.5,
+            "high": 48.1
+          }
+        },
+        "tx2": {
+          "plus5V": {
+            "low": 4.75,
+            "preLow": 4.85,
+            "preHigh": 5.15,
+            "high": 5.25
+          },
+          "plus12V": {
+            "low": 11.5,
+            "preLow": 11.7,
+            "preHigh": 12.3,
+            "high": 12.5
+          },
+          "plus12VLogic": {
+            "low": 11.5,
+            "preLow": 11.7,
+            "preHigh": 12.3,
+            "high": 12.5
+          },
+          "plus28V": {
+            "low": 27,
+            "preLow": 27.5,
+            "preHigh": 28.5,
+            "high": 29
+          },
+          "paVoltage": {
+            "low": 42.7,
+            "preLow": 43.5,
+            "preHigh": 47.5,
+            "high": 48.1
+          }
+        },
+        "temperature": {
+          "exterior": {
+            "low": -25,
+            "preLow": -20,
+            "preHigh": 65,
+            "high": 70
+          },
+          "tx1": {
+            "low": -25,
+            "preLow": -20,
+            "preHigh": 35,
+            "high": 40
+          },
+          "tx2": {
+            "low": -25,
+            "preLow": -20,
+            "preHigh": 35,
+            "high": 40
+          }
+        }
+      }
+    },
+    "simulation": {
+      "connected": true,
+      "local": false,
+      "integralMonitorBypass": false,
+      "alert": false,
+      "timestamp": "19/09/02 11:06:50"
+    }
+  },
+  "startPolicy": {
+    "mainTransmitterId": "tx1",
+    "startLocal": true,
+    "startMonitorBypassed": true
+  },
+  "successCriteria": {
+    "requireIntegralMonitorNormal": true,
+    "requireActiveTransmitter": true,
+    "requireNoVswrExecutiveAlarm": true,
+    "requireMonitorBypassCleared": true
+  },
+  "studentEditableFieldIds": [],
+  "diagnosis": {
+    "disposition": "replace-module",
+    "diagnosticRun": "full",
+    "diagnosticSubsystem": "Audio Generator",
+    "diagnosticResult": "TX1 lower-sideband path is isolated to Sideband Generator 1A5 (SB1/SB2).",
+    "faultSummary": "Use the 9960 Hz monitor value and the transmitter sideband power rows to distinguish a lower-sideband path fault from a shared monitor limit. Select TX1 Sideband Generator 1A5.",
+    "manualReferences": [
+      "§7.3.1(j), No Lower Sideband Output",
+      "§2.3.2.7, Sideband Generator Assembly",
+      "§9.7.17.3, Sideband Generator Phasing"
+    ],
+    "pmdtCheckpoints": [
+      {
+        "id": "lsb-monitor",
+        "label": "Monitors > Data > Integral Monitor",
+        "viewId": "monitor-integrity"
+      },
+      {
+        "id": "lsb-transmitter",
+        "label": "Transmitters > Data > Transmitter 1",
+        "viewId": "tx-data-tx1"
+      },
+      {
+        "id": "lsb-diagnostics",
+        "label": "Diagnostics > Fault Isolation",
+        "viewId": "diagnostics-fault-isolation"
+      }
+    ],
+    "requiredActionControlIds": [
+      "diagnostics-run-full"
+    ],
+    "expectedHardware": [
+      {
+        "blockId": "sideband-generator",
+        "diagramOccurrenceId": "diagram-sideband-tx1-sb12",
+        "cabinetHotspotIds": [
+          "cabinet-sideband-12-tx1"
+        ],
+        "assemblyId": "1A5"
+      }
+    ]
+  }
+}

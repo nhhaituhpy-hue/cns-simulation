@@ -12,7 +12,8 @@ export interface SimulatorParameterChangeLogEntry {
   state: SimulatorParameterChangeState;
 }
 
-export const MAX_PARAMETER_CHANGE_LOG_ROWS = 100;
+/** Hard cap for the parameter-change view/history retained in one session. */
+export const MAX_PARAMETER_CHANGE_LOG_ROWS = 500;
 
 function pad(value: number): string {
   return String(value).padStart(2, "0");

@@ -8,11 +8,14 @@ import type {
   Dvor1150CabinetHotspot,
   Dvor1150CabinetSurface,
   Dvor1150DiagramOccurrence,
+  Dvor1150HardwareOccurrence,
   Dvor1150WaveformReference,
 } from "./block-diagram-data";
 import {
   DVOR_1150_BLOCK_BY_ID,
   DVOR_1150_BLOCKS,
+  dvor1150HardwareOccurrenceKey,
+  resolveDvor1150HardwareOccurrence,
 } from "./block-diagram-data";
 import { Dvor1150Cabinet } from "./dvor-1150-cabinet";
 import { Dvor1150ModuleFaceplate } from "./dvor-1150-module-faceplates";
@@ -315,18 +318,54 @@ function DetailPanel({ block }: { block: Dvor1150BlockDefinition }) {
   );
 }
 
-export function Dvor1150BlockDiagram() {
+export interface Dvor1150BlockDiagramProps {
+  selectedOccurrenceKeys?: ReadonlySet<string>;
+  inspectedOccurrenceKeys?: ReadonlySet<string>;
+  selectionDisabled?: boolean;
+  onInspectOccurrence?: (occurrence: Dvor1150HardwareOccurrence) => void;
+  onSelectOccurrence?: (occurrence: Dvor1150HardwareOccurrence) => void;
+}
+
+export function Dvor1150BlockDiagram({
+  selectedOccurrenceKeys,
+  selectionDisabled = false,
+  onInspectOccurrence,
+  onSelectOccurrence,
+}: Dvor1150BlockDiagramProps = {}) {
   const [surface, setSurface] = useState<Dvor1150CabinetSurface>("electronics");
   const [selectedBlockId, setSelectedBlockId] = useState<Dvor1150BlockId | null>(null);
   const [selectedOccurrenceId, setSelectedOccurrenceId] = useState<string | null>(null);
   const [selectedCabinetHotspotIds, setSelectedCabinetHotspotIds] = useState<ReadonlySet<string>>(new Set());
   const detailRef = useRef<HTMLDivElement>(null);
 
+  const controlledCabinetHotspotIds = useMemo(() => {
+    if (!selectedOccurrenceKeys) return null;
+    const ids = new Set<string>();
+    DVOR_1150_BLOCKS.forEach((block) => {
+      block.diagramOccurrences.forEach((occurrence) => {
+        const canonical = resolveDvor1150HardwareOccurrence(block.id, occurrence.id);
+        if (canonical && selectedOccurrenceKeys.has(dvor1150HardwareOccurrenceKey(canonical))) {
+          canonical.cabinetHotspotIds.forEach((id) => ids.add(id));
+        }
+      });
+      block.cabinetHotspots.forEach((hotspot) => {
+        const canonical = resolveDvor1150HardwareOccurrence(block.id, hotspot.id);
+        if (canonical && selectedOccurrenceKeys.has(dvor1150HardwareOccurrenceKey(canonical))) ids.add(hotspot.id);
+      });
+    });
+    return ids;
+  }, [selectedOccurrenceKeys]);
+
   const selectedBlock = selectedBlockId ? DVOR_1150_BLOCK_BY_ID.get(selectedBlockId) ?? null : null;
 
   function selectDiagramBlock(blockId: Dvor1150BlockId, occurrence: Dvor1150DiagramOccurrence) {
     const block = DVOR_1150_BLOCK_BY_ID.get(blockId);
     if (!block) return;
+    const canonical = resolveDvor1150HardwareOccurrence(blockId, occurrence.id);
+    if (canonical) {
+      onInspectOccurrence?.(canonical);
+      if (!selectionDisabled) onSelectOccurrence?.(canonical);
+    }
     setSelectedBlockId(blockId);
     setSelectedOccurrenceId(occurrence.id);
     setSelectedCabinetHotspotIds(new Set(occurrence.targetCabinetHotspotIds));
@@ -335,8 +374,13 @@ export function Dvor1150BlockDiagram() {
   }
 
   function selectCabinetBlock(blockId: Dvor1150BlockId, hotspot: Dvor1150CabinetHotspot) {
+    const canonical = resolveDvor1150HardwareOccurrence(blockId, hotspot.id);
+    if (canonical) {
+      onInspectOccurrence?.(canonical);
+      if (!selectionDisabled) onSelectOccurrence?.(canonical);
+      setSelectedOccurrenceId(canonical.diagramOccurrenceId);
+    }
     setSelectedBlockId(blockId);
-    setSelectedOccurrenceId(null);
     setSelectedCabinetHotspotIds(new Set([hotspot.id]));
     setSurface(hotspot.surface);
     requestAnimationFrame(() => detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
@@ -359,7 +403,7 @@ export function Dvor1150BlockDiagram() {
               </button>
             ))}
           </div>
-          <Dvor1150Cabinet surface={surface} selectedHotspotIds={selectedCabinetHotspotIds} onSelect={selectCabinetBlock} />
+          <Dvor1150Cabinet surface={surface} selectedHotspotIds={selectionDisabled ? selectedCabinetHotspotIds : controlledCabinetHotspotIds ?? selectedCabinetHotspotIds} onSelect={selectCabinetBlock} />
         </section>
 
         <section className={styles.viewerPanel} aria-label="Sơ đồ khối DVOR 1150">

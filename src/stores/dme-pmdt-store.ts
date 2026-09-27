@@ -22,6 +22,7 @@ import {
   previewDme1119aScenario,
   validateDme1119aScenarioDefinition,
   getDmeParameterValue,
+  isDme1119aScenarioStudentEditable,
   recomputeDmeDerivedData,
   setDmeParameterValue,
   validateDmeParameterField,
@@ -49,9 +50,15 @@ import type {
   DmeViewId,
 } from "@/lib/dme-types";
 import type {
+  ScenarioParameterChange,
   ScenarioActionEvent,
+  ScenarioEvidenceStats,
   ScenarioEvidenceSnapshot,
   ScenarioEvidenceValue,
+} from "@/lib/scenario-evidence";
+import {
+  appendScenarioEvidenceEvent,
+  createScenarioEvidenceStats,
 } from "@/lib/scenario-evidence";
 import { create, type StoreApi, type UseBoundStore } from "zustand";
 
@@ -89,11 +96,18 @@ export interface DmeSessionInitialization {
   mode: DmePmdtMode;
   scenarioId?: string;
   sessionKey?: string;
+  revisionKey?: string;
   userId?: string;
   studentName?: string;
   workUnit?: string;
   overrides?: readonly DmeFieldOverride[];
   expectedCheckpoints?: readonly DmeExpectedCheckpoint[];
+}
+
+export interface DmeReviewSessionContext {
+  userId?: string;
+  sessionKey?: string;
+  revisionKey?: string;
 }
 
 export type DmeScenarioStage = "pmdt" | "hardware" | "complete";
@@ -136,6 +150,7 @@ export interface DmePmdtStoreState {
   aboutDialogOpen: boolean;
   scenarioId: string | null;
   sessionKey: string | null;
+  scenarioRevisionKey: string | null;
   userId: string;
   studentName: string;
   workUnit: string;
@@ -144,6 +159,7 @@ export interface DmePmdtStoreState {
   studentFieldStates: DmeFieldOverride[];
   attemptEvents: DmeAttemptEvent[];
   actionHistory: ScenarioActionEvent[];
+  evidenceStats: ScenarioEvidenceStats;
   answer: DmeStudentAnswer;
   scenarioStage: DmeScenarioStage;
   scenarioHardwareSelection: string[];
@@ -166,7 +182,7 @@ export interface DmePmdtStoreActions {
   setScenarioAuthoringEnabled: (enabled: boolean) => void;
   replaceScenarioDraft: (definition: Dme1119aScenarioDefinition) => void;
   applyScenario: () => boolean;
-  startReviewScenario: (definition: Dme1119aScenarioDefinition) => boolean;
+  startReviewScenario: (definition: Dme1119aScenarioDefinition, context?: DmeReviewSessionContext) => boolean;
   setScenarioStage: (stage: DmeScenarioStage) => void;
   toggleScenarioHardware: (occurrenceKey: string) => void;
   inspectScenarioHardware: (occurrenceKey: string) => void;
@@ -228,6 +244,26 @@ export interface DmePmdtStoreActions {
   ) => void;
   updateEventAnnotation: (eventId: string, annotation: string) => void;
   removeEvent: (eventId: string) => void;
+  restoreScenarioEvidence: (evidence: {
+    actionHistory: readonly ScenarioActionEvent[];
+    attemptEvents: readonly DmeAttemptEvent[];
+    answer?: Partial<DmeStudentAnswer>;
+    scenarioHardwareSelection?: readonly string[];
+    scenarioHardwareInspected?: readonly string[];
+    scenarioHardwareReasoning?: string;
+    scenarioHardwareDispositionConfirmed?: boolean;
+    evidenceStats?: ScenarioEvidenceStats;
+    checkpoint?: {
+      data: DmePmdtData;
+      configDraft: DmePmdtData;
+      configurationBackup: DmePmdtData | null;
+      savedConfiguration: DmePmdtData | null;
+      configDirty: boolean;
+      needBackup: boolean;
+      scenarioStage: DmeScenarioStage;
+      scenarioDiagnosticState: DmeScenarioDiagnosticState;
+    };
+  }) => void;
   updateAnswer: (changes: Partial<DmeStudentAnswer>) => void;
   reset: () => void;
 }
@@ -325,6 +361,7 @@ function initialState(): DmePmdtStoreState {
     aboutDialogOpen: false,
     scenarioId: null,
     sessionKey: null,
+    scenarioRevisionKey: null,
     userId: "",
     studentName: "",
     workUnit: "",
@@ -333,6 +370,7 @@ function initialState(): DmePmdtStoreState {
     studentFieldStates: [],
     attemptEvents: [],
     actionHistory: [],
+    evidenceStats: createScenarioEvidenceStats(),
     answer: { ...emptyAnswer },
     scenarioStage: "pmdt",
     scenarioHardwareSelection: [],
@@ -627,6 +665,27 @@ function dmeEvidenceSnapshot(state: DmePmdtStoreState): ScenarioEvidenceSnapshot
   };
 }
 
+function dmeParameterChanges(
+  before: DmePmdtData,
+  after: DmePmdtData,
+  fieldIds: readonly string[],
+  phase: ScenarioParameterChange["phase"],
+): ScenarioParameterChange[] {
+  return [...new Set(fieldIds)].flatMap((fieldId) => {
+    const beforeValue = getDmeParameterValue(before, fieldId);
+    const afterValue = getDmeParameterValue(after, fieldId);
+    if (Object.is(beforeValue, afterValue)) return [];
+    return [{
+      fieldId,
+      label: dmeParameterFieldCatalog.find((field) => field.id === fieldId)?.label ?? fieldId,
+      before: beforeValue,
+      after: afterValue,
+      phase,
+      accepted: true,
+    }];
+  });
+}
+
 export function createDmePmdtStore(
   options: DmePmdtStoreOptions = {},
 ): UseBoundStore<StoreApi<DmePmdtStore>> {
@@ -644,12 +703,19 @@ export function createDmePmdtStore(
       accepted: boolean;
       reason?: string;
       before?: ScenarioEvidenceSnapshot;
+      parameterChanges?: readonly ScenarioParameterChange[];
     }) => {
       const state = get();
       if (state.mode !== "student" && input.actor !== "system") return;
+      const draftOnly = input.accepted
+        && input.kind === "configuration"
+        && input.label.startsWith("Stage ")
+        && (!input.parameterChanges?.length || input.parameterChanges.every((change) => change.phase === "draft"));
+      if (draftOnly) return;
+      const sequence = state.evidenceStats.totalEventCount + 1;
       const event: ScenarioActionEvent = {
         id: generateId(),
-        sequence: state.actionHistory.length + 1,
+        sequence,
         occurredAt: now().toISOString(),
         actor: input.actor ?? "student",
         kind: input.kind,
@@ -661,8 +727,10 @@ export function createDmePmdtStore(
         ...(input.reason ? { reason: input.reason } : {}),
         ...(input.before ? { before: structuredClone(input.before) } : {}),
         after: dmeEvidenceSnapshot(state),
+        ...(input.parameterChanges?.length ? { parameterChanges: structuredClone(input.parameterChanges) } : {}),
       };
-      set({ actionHistory: [...state.actionHistory, event] });
+      const appended = appendScenarioEvidenceEvent(state.actionHistory, event, state.evidenceStats);
+      set({ actionHistory: appended.history, evidenceStats: appended.stats });
     };
 
     const recordVisit = (
@@ -747,6 +815,10 @@ export function createDmePmdtStore(
           mode: initialization.mode,
           scenarioId: initialization.scenarioId ?? null,
           sessionKey: initialization.sessionKey ?? initialization.scenarioId ?? null,
+          scenarioRevisionKey: initialization.revisionKey?.trim()
+            || initialization.sessionKey
+            || initialization.scenarioId
+            || null,
           userId: initialization.userId?.trim() ?? "",
           studentName: initialization.studentName?.trim() ?? "",
           workUnit: initialization.workUnit?.trim() ?? "",
@@ -808,7 +880,19 @@ export function createDmePmdtStore(
         return applyScenarioDefinition(state.scenarioDraft);
       },
 
-      startReviewScenario: (definition) => applyScenarioDefinition(definition, "student"),
+      startReviewScenario: (definition, context) => {
+        const previous = get();
+        const applied = applyScenarioDefinition(definition, "student");
+        if (!applied) return false;
+        set({
+          userId: context?.userId?.trim() || previous.userId,
+          sessionKey: context?.sessionKey?.trim() || previous.sessionKey || definition.id,
+          scenarioRevisionKey: context?.revisionKey?.trim()
+            || previous.scenarioRevisionKey
+            || definition.id,
+        });
+        return true;
+      },
 
       setScenarioStage: (stage) => {
         const state = get();
@@ -1138,7 +1222,7 @@ export function createDmePmdtStore(
         if (
           state.scenario.active
           && !isLiveDmeOperationalField(fieldId)
-          && !state.scenario.definition?.studentEditableFieldIds.includes(fieldId)
+          && !isDme1119aScenarioStudentEditable(state.scenario.definition, fieldId)
         ) {
           recordAction({ kind: "configuration", controlId: fieldId, label: `Set ${fieldId}`, input: { fieldId, value: String(value) }, accepted: false, reason: "Scenario recovery controls only.", before });
           return;
@@ -1190,7 +1274,19 @@ export function createDmePmdtStore(
           configDraft: nextDraft,
           configDirty: JSON.stringify(nextDraft) !== JSON.stringify(state.data),
         });
-        recordAction({ kind: "configuration", controlId: fieldId, label: `Stage ${fieldId}`, input: { fieldId, value: String(value) }, accepted: true, before });
+        const stagedFields = collectChangedConfigFields(
+          extractDme1119aConfig(state.configDraft),
+          extractDme1119aConfig(nextDraft),
+        );
+        recordAction({
+          kind: "configuration",
+          controlId: fieldId,
+          label: `Stage ${fieldId}`,
+          input: { fieldId, value: String(value) },
+          accepted: true,
+          before,
+          parameterChanges: dmeParameterChanges(state.configDraft, nextDraft, stagedFields, "draft"),
+        });
       },
 
       applyConfigChanges: () => {
@@ -1231,7 +1327,18 @@ export function createDmePmdtStore(
               ? "Configuration Apply: Automatic monitor shutdown: both transmitters off"
               : "Configuration Apply",
         });
-        recordAction({ kind: "configuration", controlId: "config-apply", label: "Configuration Apply", accepted: true, before });
+        const appliedFields = collectChangedConfigFields(
+          extractDme1119aConfig(state.data),
+          extractDme1119aConfig(data),
+        );
+        recordAction({
+          kind: "configuration",
+          controlId: "config-apply",
+          label: "Configuration Apply",
+          accepted: true,
+          before,
+          parameterChanges: dmeParameterChanges(state.data, data, appliedFields, "apply"),
+        });
         if (automaticTransfer.action) {
           recordAction({ actor: "system", kind: "system", controlId: "automatic-monitor-transfer", label: automaticTransfer.action === "transfer" && automaticTransfer.target ? `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}` : "Automatic monitor shutdown", accepted: true, reason: "PMDT automatic protection response.", before });
         }
@@ -1759,6 +1866,50 @@ export function createDmePmdtStore(
             })),
           };
         }),
+
+      restoreScenarioEvidence: (evidence) => {
+        const state = get();
+        if (!state.scenario.active) return;
+        const checkpoint = evidence.checkpoint;
+        const restoreData = checkpoint
+          ? structuredClone(checkpoint.data)
+          : null;
+        const restoreDraft = checkpoint
+          ? structuredClone(checkpoint.configDraft)
+          : null;
+        const restoreBackup = checkpoint?.configurationBackup
+          ? structuredClone(checkpoint.configurationBackup)
+          : checkpoint?.configurationBackup ?? null;
+        const restoreSaved = checkpoint?.savedConfiguration
+          ? structuredClone(checkpoint.savedConfiguration)
+          : checkpoint?.savedConfiguration ?? null;
+        if (restoreData) restoreData.securityAccounts = structuredClone(state.data.securityAccounts);
+        if (restoreDraft) restoreDraft.securityAccounts = structuredClone(state.configDraft.securityAccounts);
+        if (restoreBackup) restoreBackup.securityAccounts = structuredClone(state.configurationBackup?.securityAccounts ?? state.data.securityAccounts);
+        if (restoreSaved) restoreSaved.securityAccounts = structuredClone(state.savedConfiguration?.securityAccounts ?? state.data.securityAccounts);
+        set({
+          actionHistory: [...evidence.actionHistory].slice(0, 500),
+          evidenceStats: evidence.evidenceStats ?? createScenarioEvidenceStats(evidence.actionHistory),
+          attemptEvents: [...evidence.attemptEvents],
+          ...(evidence.answer ? { answer: { ...state.answer, ...evidence.answer } } : {}),
+          ...(evidence.scenarioHardwareSelection ? { scenarioHardwareSelection: [...evidence.scenarioHardwareSelection] } : {}),
+          ...(evidence.scenarioHardwareInspected ? { scenarioHardwareInspected: [...evidence.scenarioHardwareInspected] } : {}),
+          ...(evidence.scenarioHardwareReasoning !== undefined ? { scenarioHardwareReasoning: evidence.scenarioHardwareReasoning } : {}),
+          ...(evidence.scenarioHardwareDispositionConfirmed !== undefined
+            ? { scenarioHardwareDispositionConfirmed: evidence.scenarioHardwareDispositionConfirmed }
+            : {}),
+          ...(checkpoint && restoreData && restoreDraft ? {
+            data: restoreData,
+            configDraft: restoreDraft,
+            configurationBackup: restoreBackup,
+            savedConfiguration: restoreSaved,
+            configDirty: checkpoint.configDirty,
+            needBackup: checkpoint.needBackup,
+            scenarioStage: checkpoint.scenarioStage,
+            scenarioDiagnosticState: structuredClone(checkpoint.scenarioDiagnosticState),
+          } : {}),
+        });
+      },
 
       updateAnswer: (changes) =>
         set((state) => ({ answer: { ...state.answer, ...changes } })),

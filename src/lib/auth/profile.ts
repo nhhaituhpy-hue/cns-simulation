@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { queryDatabase } from "@/lib/db";
 import { hashSessionToken, sessionCookieName } from "./session";
 
-export type AppRole = "student" | "admin";
+export type AppRole = "student" | "teacher" | "admin";
 
 export interface AuthProfile {
   id: string;
@@ -54,7 +54,7 @@ const loadCurrentProfile = cache(async (): Promise<AuthProfile | null> => {
     [hashSessionToken(token)],
   );
   const data = result.rows[0];
-  if (!data || (data.role !== "student" && data.role !== "admin")) {
+  if (!data || (data.role !== "student" && data.role !== "teacher" && data.role !== "admin")) {
     return null;
   }
 

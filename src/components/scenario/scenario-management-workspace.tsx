@@ -21,6 +21,7 @@ import {
   type ScenarioParametersModuleId,
 } from "@/lib/scenario-parameters";
 import type { StoredScenarioParameters } from "@/lib/scenario-parameters-storage";
+import { ScenarioLibraryControls } from "@/components/scenario/scenario-library-controls";
 
 type ScenarioDifficulty = "basic" | "intermediate" | "advanced";
 
@@ -254,11 +255,12 @@ export function ScenarioManagementWorkspace({
       const response = await fetch("/api/scenario-parameters", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          moduleId: quickEditDraft.moduleId,
-          definition,
-          sourceFileName: existing.sourceFileName,
-        }),
+          body: JSON.stringify({
+            moduleId: quickEditDraft.moduleId,
+            definition,
+            sourceFileName: existing.sourceFileName,
+            ...(existing.revision !== undefined ? { expectedRevision: existing.revision } : {}),
+          }),
       });
       if (!response.ok) {
         setError(
@@ -371,6 +373,8 @@ export function ScenarioManagementWorkspace({
           {notice}
         </p>
       ) : null}
+
+      <ScenarioLibraryControls moduleId={moduleId} scenarios={scenarios} />
 
       <div className="mt-5 overflow-x-auto border-y border-[var(--border)]">
         <table className="w-full min-w-[900px] border-collapse text-left text-sm">

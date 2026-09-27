@@ -15,8 +15,10 @@ import {
   validateDvor1150ScenarioDefinition,
   type Dvor1150Config,
   type Dvor1150ConfigValue,
+  type Dvor1150DiagnosticRun,
   type Dvor1150MonitorId,
   type Dvor1150PmdtMode,
+  type Dvor1150ScenarioEvidence,
   type Dvor1150ScreenId,
   type Dvor1150SecurityLevel,
   type Dvor1150Snapshot,
@@ -67,6 +69,24 @@ const accounts: readonly { id: string; password: string; level: Dvor1150Security
   { id: "SEC4", password: "FOUR", level: 4 },
 ];
 
+export type Dvor1150ScenarioStage = "pmdt" | "hardware" | "complete";
+
+export interface Dvor1150DiagnosticRow {
+  subsystem: string;
+  status: "idle" | "pass" | "fault";
+  progress: number;
+  result: string;
+}
+
+export interface Dvor1150DiagnosticState {
+  running: boolean;
+  completed: boolean;
+  run: Dvor1150DiagnosticRun | null;
+  startedAt: string | null;
+  result: string | null;
+  rows: Dvor1150DiagnosticRow[];
+}
+
 export interface Dvor1150PmdtStoreState {
   mode: Dvor1150PmdtMode;
   config: Dvor1150Config;
@@ -90,6 +110,14 @@ export interface Dvor1150PmdtStoreState {
   scenarioAuthoringEnabled: boolean;
   scenario: Dvor1150ScenarioRuntime;
   scenarioDraft: Dvor1150ScenarioDefinition;
+  scenarioVisitedViewIds: string[];
+  scenarioAcceptedActionControlIds: string[];
+  scenarioHardwareSelection: string[];
+  scenarioHardwareInspected: string[];
+  scenarioHardwareReasoning: string;
+  scenarioHardwareDispositionConfirmed: boolean;
+  scenarioStage: Dvor1150ScenarioStage;
+  diagnosticState: Dvor1150DiagnosticState;
   lastCommand: string | null;
 }
 
@@ -123,6 +151,13 @@ export interface Dvor1150PmdtStoreActions {
   applyScenario: () => boolean;
   restoreScenario: () => boolean;
   endScenario: () => boolean;
+  runDiagnostics: (run: Exclude<Dvor1150DiagnosticRun, "not-required">) => boolean;
+  cancelDiagnostics: () => void;
+  toggleScenarioHardware: (occurrenceKey: string) => void;
+  inspectScenarioHardware: (occurrenceKey: string) => void;
+  setScenarioHardwareReasoning: (reasoning: string) => void;
+  confirmScenarioSoftwareResolution: () => void;
+  setScenarioStage: (stage: Dvor1150ScenarioStage) => void;
   nextView: () => void;
   closeScreen: () => void;
   reset: () => void;
@@ -161,6 +196,14 @@ function buildInitialState(now: () => Date): Dvor1150PmdtStoreState {
     scenarioAuthoringEnabled: false,
     scenario: { active: false, definition: null, startedAt: null },
     scenarioDraft: createDefaultDvor1150ScenarioDefinition(),
+    scenarioVisitedViewIds: [],
+    scenarioAcceptedActionControlIds: [],
+    scenarioHardwareSelection: [],
+    scenarioHardwareInspected: [],
+    scenarioHardwareReasoning: "",
+    scenarioHardwareDispositionConfirmed: false,
+    scenarioStage: "pmdt",
+    diagnosticState: createIdleDvor1150DiagnosticState(),
     lastCommand: null,
   };
 }
@@ -191,6 +234,34 @@ interface AutomaticDvor1150Transfer {
   target: Dvor1150TransmitterId | null;
   action: "transfer" | "shutdown" | null;
   transfer: Dvor1150TransferState;
+}
+
+const diagnosticSubsystems = [
+  "Logon / RMM",
+  "Power Supplies",
+  "Monitor",
+  "Audio Generator",
+  "Synthesizer",
+  "Power Amplifier",
+  "Distribution",
+  "Alarm/Alert Analysis",
+  "Control",
+] as const;
+
+function createIdleDvor1150DiagnosticState(): Dvor1150DiagnosticState {
+  return {
+    running: false,
+    completed: false,
+    run: null,
+    startedAt: null,
+    result: null,
+    rows: diagnosticSubsystems.map((subsystem) => ({
+      subsystem,
+      status: "idle",
+      progress: 0,
+      result: "Chưa chạy",
+    })),
+  };
 }
 
 /**
@@ -320,6 +391,14 @@ export function createDvor1150PmdtStore(
         derived,
         scenario: { active: true, definition: storedDefinition, startedAt: startedAt ?? config.simulation.timestamp },
         scenarioDraft: structuredClone(storedDefinition),
+        scenarioVisitedViewIds: [],
+        scenarioAcceptedActionControlIds: [],
+        scenarioHardwareSelection: [],
+        scenarioHardwareInspected: [],
+        scenarioHardwareReasoning: "",
+        scenarioHardwareDispositionConfirmed: false,
+        scenarioStage: "pmdt",
+        diagnosticState: createIdleDvor1150DiagnosticState(),
         lastCommand: command,
       });
       return true;
@@ -554,6 +633,9 @@ export function createDvor1150PmdtStore(
           // Training changes must be contained in the current browser session.
           needBackup: state.scenario.active ? false : true,
           parameterChangeLogs: prependParameterChangeLogEntries(state.parameterChangeLogs, nextParameterLogs),
+          scenarioAcceptedActionControlIds: state.scenario.active
+            ? [...new Set([...state.scenarioAcceptedActionControlIds, "config-apply"])]
+            : state.scenarioAcceptedActionControlIds,
           lastCommand: automaticTransfer?.action === "transfer" && automaticTransfer.target
             ? `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}`
             : automaticTransfer?.action === "shutdown"
@@ -687,10 +769,66 @@ export function createDvor1150PmdtStore(
           config,
           configDraft,
           derived,
+          scenarioAcceptedActionControlIds: state.scenario.active && mode === "main"
+            ? [...new Set([...state.scenarioAcceptedActionControlIds, `tx-transfer-${transmitterId}`])]
+            : state.scenarioAcceptedActionControlIds,
           lastCommand: transfer.message,
         });
         return true;
       },
+      runDiagnostics: (run) => {
+        const state = get();
+        const allowed = run === "full"
+          ? state.securityLevel >= 3 && state.config.simulation.local
+          : state.securityLevel >= 2;
+        if (!allowed || state.loginDialogOpen) return false;
+        const diagnosis = state.scenario.definition?.diagnosis;
+        const failedSubsystem = diagnosis?.disposition === "replace-module"
+          ? diagnosis.diagnosticSubsystem
+          : null;
+        const rows = diagnosticSubsystems.map((subsystem) => {
+          const failed = failedSubsystem === subsystem;
+          return {
+            subsystem,
+            status: failed ? "fault" as const : "pass" as const,
+            progress: 100,
+            result: failed ? "FAULT ISOLATED" : "PASS",
+          };
+        });
+        const result = diagnosis?.diagnosticResult ?? "NO FAULT FOUND";
+        set({
+          diagnosticState: {
+            running: false,
+            completed: true,
+            run,
+            startedAt: state.derived.data.timestamp,
+            result,
+            rows,
+          },
+          scenarioAcceptedActionControlIds: state.scenario.active
+            ? [...new Set([...state.scenarioAcceptedActionControlIds, `diagnostics-run-${run}`])]
+            : state.scenarioAcceptedActionControlIds,
+          lastCommand: run === "full" ? "Run Full Diagnostics" : "Run On Air Diagnostics",
+        });
+        return true;
+      },
+      cancelDiagnostics: () => set((state) => ({
+        diagnosticState: { ...state.diagnosticState, running: false },
+        lastCommand: "Cancel Diagnostics",
+      })),
+      toggleScenarioHardware: (occurrenceKey) => set((state) => ({
+        scenarioHardwareSelection: state.scenarioHardwareSelection.includes(occurrenceKey)
+          ? state.scenarioHardwareSelection.filter((key) => key !== occurrenceKey)
+          : [...state.scenarioHardwareSelection, occurrenceKey],
+      })),
+      inspectScenarioHardware: (occurrenceKey) => set((state) => ({
+        scenarioHardwareInspected: state.scenarioHardwareInspected.includes(occurrenceKey)
+          ? state.scenarioHardwareInspected
+          : [...state.scenarioHardwareInspected, occurrenceKey],
+      })),
+      setScenarioHardwareReasoning: (reasoning) => set({ scenarioHardwareReasoning: reasoning }),
+      confirmScenarioSoftwareResolution: () => set({ scenarioHardwareDispositionConfirmed: true }),
+      setScenarioStage: (stage) => set({ scenarioStage: stage }),
       executeCommand: (commandId) => {
         const state = get();
         if (commandId === "enable-command-mode" || commandId === "disable-command-mode") {
@@ -702,14 +840,30 @@ export function createDvor1150PmdtStore(
           set({ lastCommand: "Set Time and Date" });
           return true;
         }
-        if (commandId === "reset-rms" || commandId === "reset-intrusion" || commandId === "reset-smoke" || commandId === "abort-tests" || commandId === "dme-1-on" || commandId === "dme-2-on" || commandId === "dme-off" || commandId === "dme-transfer" || commandId === "ident-normal" || commandId === "ident-off" || commandId === "ident-continuous" || commandId === "run-ground-check" || commandId === "run-monitor-test" || commandId === "run-on-air-diagnostics" || commandId.startsWith("run-certification-") || commandId === "record-notch-baseline") {
+        if (commandId === "run-full-diagnostics") return get().runDiagnostics("full");
+        if (commandId === "run-on-air-diagnostics") return get().runDiagnostics("on-air");
+        if (commandId === "reset-rms" || commandId === "reset-intrusion" || commandId === "reset-smoke" || commandId === "abort-tests" || commandId === "dme-1-on" || commandId === "dme-2-on" || commandId === "dme-off" || commandId === "dme-transfer" || commandId === "ident-normal" || commandId === "ident-off" || commandId === "ident-continuous" || commandId === "run-ground-check" || commandId === "run-monitor-test" || commandId.startsWith("run-certification-") || commandId === "record-notch-baseline") {
           set({ lastCommand: commandId });
           return true;
         }
         return false;
       },
-      openScreen: (screenId, menuPath) => set({ activeScreen: screenId, activeView: defaultViews[screenId], activeMenuPath: [...menuPath] }),
-      openView: (screenId, viewId, menuPath) => set({ activeScreen: screenId, activeView: viewId, activeMenuPath: [...menuPath] }),
+      openScreen: (screenId, menuPath) => set((state) => ({
+        activeScreen: screenId,
+        activeView: defaultViews[screenId],
+        activeMenuPath: [...menuPath],
+        scenarioVisitedViewIds: state.mode === "student" && state.scenario.active
+          ? [...new Set([...state.scenarioVisitedViewIds, defaultViews[screenId]])]
+          : state.scenarioVisitedViewIds,
+      })),
+      openView: (screenId, viewId, menuPath) => set((state) => ({
+        activeScreen: screenId,
+        activeView: viewId,
+        activeMenuPath: [...menuPath],
+        scenarioVisitedViewIds: state.mode === "student" && state.scenario.active
+          ? [...new Set([...state.scenarioVisitedViewIds, viewId])]
+          : state.scenarioVisitedViewIds,
+      })),
       setSimulationParametersOpen: (open) => set((state) => ({
         simulationParametersOpen: open,
         scenarioParametersOpen: open ? false : state.scenarioParametersOpen,
@@ -782,6 +936,14 @@ export function createDvor1150PmdtStore(
           derived,
           scenario: { active: false, definition: null, startedAt: null },
           scenarioDraft: createDefaultDvor1150ScenarioDefinition(),
+          scenarioVisitedViewIds: [],
+          scenarioAcceptedActionControlIds: [],
+          scenarioHardwareSelection: [],
+          scenarioHardwareInspected: [],
+          scenarioHardwareReasoning: "",
+          scenarioHardwareDispositionConfirmed: false,
+          scenarioStage: "pmdt",
+          diagnosticState: createIdleDvor1150DiagnosticState(),
           lastCommand: "Scenario ended; Đài TEST/TST defaults restored",
         });
         return true;
@@ -800,6 +962,23 @@ export function createDvor1150PmdtStore(
 }
 
 export const useDvor1150PmdtStore = createDvor1150PmdtStore();
+
+export function getDvor1150ScenarioEvidence(
+  state: Pick<
+    Dvor1150PmdtStoreState,
+    "scenarioVisitedViewIds"
+    | "scenarioAcceptedActionControlIds"
+    | "scenarioHardwareSelection"
+    | "scenarioHardwareDispositionConfirmed"
+  >,
+): Dvor1150ScenarioEvidence {
+  return {
+    visitedViewIds: state.scenarioVisitedViewIds,
+    acceptedActionControlIds: state.scenarioAcceptedActionControlIds,
+    selectedHardwareOccurrenceKeys: state.scenarioHardwareSelection,
+    hardwareDispositionConfirmed: state.scenarioHardwareDispositionConfirmed,
+  };
+}
 
 export function getDvor1150DisplayValue(config: Dvor1150Config, fieldId: string): Dvor1150ConfigValue {
   return getDvor1150ConfigValue(config, fieldId);

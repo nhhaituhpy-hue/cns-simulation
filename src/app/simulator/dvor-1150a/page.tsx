@@ -12,6 +12,7 @@ export default async function Dvor1150aSimulatorPage() {
         mode="preview"
         simulatorId="dvor-1150a"
         scenarioAuthoringEnabled={profile?.role === "admin"}
+        sessionUserId={profile?.id ?? ""}
       />
     </div>
   );

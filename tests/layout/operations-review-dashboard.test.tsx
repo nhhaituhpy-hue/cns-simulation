@@ -82,4 +82,48 @@ describe("OperationsReviewDashboard", () => {
     expect(screen.getByRole("checkbox", { name: /Suy giảm Carrier/ })).toBeChecked();
     expect(screen.getByRole("button", { name: "Lưu 1 kịch bản" })).toBeInTheDocument();
   });
+
+  it("sends the library revision read by the examiner when saving", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn().mockImplementation((_: RequestInfo | URL, init?: RequestInit) => {
+      if (init?.method === "PUT") {
+        return Promise.resolve(new Response(JSON.stringify({ success: true, libraryRevision: 6 }), { status: 200 }));
+      }
+      return Promise.resolve(new Response(JSON.stringify({
+        assigned: [],
+        canManage: true,
+        libraryRevision: 5,
+        available: [{
+          id: "row-1",
+          moduleId: "dvor-220",
+          scenarioId: "scenario-1",
+          name: "Suy giảm Carrier",
+          description: "Khôi phục Carrier.",
+          difficulty: "intermediate",
+          schemaVersion: 1,
+          definition: {},
+          sourceFileName: "scenario.json",
+          createdAt: "2026-09-16T00:00:00.000Z",
+          updatedAt: "2026-09-16T00:00:00.000Z",
+        }],
+      }), { status: 200 }));
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    render(<OperationsReviewDashboard moduleId="dvor-220" />);
+
+    await waitFor(() => expect(screen.getByRole("button", { name: "Thêm kịch bản" })).toBeEnabled());
+    await user.click(screen.getByRole("button", { name: "Thêm kịch bản" }));
+    await user.click(screen.getByRole("checkbox", { name: /Suy giảm Carrier/ }));
+    await user.click(screen.getByRole("button", { name: "Lưu 1 kịch bản" }));
+
+    await waitFor(() => {
+      const putCall = fetchMock.mock.calls.find(([, init]) => (init as RequestInit | undefined)?.method === "PUT");
+      expect(putCall).toBeDefined();
+      expect(JSON.parse(String((putCall?.[1] as RequestInit).body))).toMatchObject({
+        moduleId: "dvor-220",
+        scenarioIds: ["row-1"],
+        expectedRevision: 5,
+      });
+    });
+  });
 });

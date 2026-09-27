@@ -75,6 +75,7 @@ type ReviewApiPayload = {
   assigned: AssignedReviewScenario[];
   available?: StoredScenarioParameters[];
   canManage: boolean;
+  libraryRevision?: number;
 };
 
 function responseMessage(response: Response, fallback: string) {
@@ -116,6 +117,7 @@ export function OperationsReviewDashboard({
   const [scenarios, setScenarios] = useState(initialScenarios);
   const [available, setAvailable] = useState<StoredScenarioParameters[]>([]);
   const [canManage, setCanManage] = useState(initialCanManage);
+  const [libraryRevision, setLibraryRevision] = useState(0);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(loadFromApi);
@@ -136,6 +138,7 @@ export function OperationsReviewDashboard({
       setScenarios(payload.assigned.map((scenario) => toScenarioRow(moduleId, scenario)));
       setAvailable(Array.isArray(payload.available) ? payload.available : []);
       setCanManage(payload.canManage === true);
+      setLibraryRevision(typeof payload.libraryRevision === "number" ? payload.libraryRevision : 0);
       setSelectedIds(payload.assigned.map((scenario) => scenario.id));
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Không thể tải danh sách ôn tập.");
@@ -173,9 +176,11 @@ export function OperationsReviewDashboard({
       const response = await fetch("/api/review-scenarios", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ moduleId, scenarioIds: selectedIds }),
+        body: JSON.stringify({ moduleId, scenarioIds: selectedIds, expectedRevision: libraryRevision }),
       });
-      if (!response.ok) throw new Error(await responseMessage(response, "Không thể lưu danh sách ôn tập."));
+      const payload = await response.json() as { libraryRevision?: number; error?: string };
+      if (!response.ok) throw new Error(payload.error ?? "Không thể lưu danh sách ôn tập.");
+      if (typeof payload.libraryRevision === "number") setLibraryRevision(payload.libraryRevision);
       setDialogOpen(false);
       setNotice(`Đã cập nhật ${selectedIds.length} kịch bản ôn tập cho ${copy.shortName}.`);
       await loadScenarios();

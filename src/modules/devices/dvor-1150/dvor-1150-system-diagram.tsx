@@ -221,13 +221,17 @@ export function Dvor1150SystemDiagram({
         <text x="48" y="702">AUDIO OUT</text>
       </g>
 
-      <DiagramBlock blockId="frequency-synthesizer" occurrenceId="diagram-synth" x={68} y={84} width={112} height={80} lines={["FREQUENCY", "SYNTHESIZER", "A4 / A20"]} selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
-      <DiagramBlock blockId="csb-power-amplifier" occurrenceId="diagram-csb" x={228} y={84} width={130} height={80} lines={["CSB POWER", "AMPLIFIER", "A3 / A19"]} selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
+      <DiagramBlock blockId="frequency-synthesizer" occurrenceId="diagram-synth-tx1" x={68} y={84} width={56} height={80} lines={["SYNTH", "TX1", "A4"]} compact selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
+      <DiagramBlock blockId="frequency-synthesizer" occurrenceId="diagram-synth-tx2" x={124} y={84} width={56} height={80} lines={["SYNTH", "TX2", "A20"]} compact selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
+      <DiagramBlock blockId="csb-power-amplifier" occurrenceId="diagram-csb-tx1" x={228} y={84} width={65} height={80} lines={["CSB AMP", "TX1", "A3"]} compact selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
+      <DiagramBlock blockId="csb-power-amplifier" occurrenceId="diagram-csb-tx2" x={293} y={84} width={65} height={80} lines={["CSB AMP", "TX2", "A19"]} compact selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
       <DiagramBlock blockId="low-pass-filter" occurrenceId="diagram-low-pass" x={400} y={84} width={130} height={80} lines={["LOW PASS", "FILTER", "A35 / A36"]} selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
       <DiagramBlock blockId="bidirectional-coupler" occurrenceId="diagram-coupler" x={576} y={84} width={146} height={80} lines={["BI-DIRECTIONAL", "COUPLER", "DC1 / DC2"]} selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
       <DiagramBlock blockId="rf-monitor" occurrenceId="diagram-rf-monitor" x={767} y={192} width={92} height={134} lines={["RF", "MONITOR", "A2"]} selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
-      <DiagramBlock blockId="audio-generator" occurrenceId="diagram-audio" x={96} y={300} width={94} height={90} lines={["AUDIO", "GENERATOR", "A7 / A23"]} selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
-      <DiagramBlock blockId="sideband-generator" occurrenceId="diagram-sideband" x={226} y={276} width={154} height={108} lines={["SIDEBAND", "GENERATOR", "A5 / A6 /", "A21 / A22"]} selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
+      <DiagramBlock blockId="audio-generator" occurrenceId="diagram-audio-tx1" x={96} y={300} width={47} height={90} lines={["AUDIO", "TX1", "A7"]} compact selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
+      <DiagramBlock blockId="audio-generator" occurrenceId="diagram-audio-tx2" x={143} y={300} width={47} height={90} lines={["AUDIO", "TX2", "A23"]} compact selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
+      <DiagramBlock blockId="sideband-generator" occurrenceId="diagram-sideband-tx1-sb12" x={226} y={276} width={77} height={108} lines={["SB GEN", "TX1", "SB1/2", "A5"]} compact selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
+      <DiagramBlock blockId="sideband-generator" occurrenceId="diagram-sideband-tx1-sb34" x={303} y={276} width={77} height={108} lines={["SB GEN", "TX1", "SB3/4", "A6"]} compact selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
       <DiagramBlock blockId="sideband-sample" occurrenceId="diagram-sideband-sample" x={450} y={268} width={138} height={96} lines={["SIDEBAND", "SAMPLE ASSY", "A29-A32"]} selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
 
       {[328, 374, 420, 466].map((y, index) => (
@@ -243,7 +247,8 @@ export function Dvor1150SystemDiagram({
 
       <DiagramBlock blockId="rms-cpu" occurrenceId="diagram-rms" x={224} y={606} width={196} height={80} lines={["SYSTEM CONTROL AND", "INTERFACE PROCESSOR", "(SCIP / RMS)"]} selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
       <DiagramBlock blockId="status-display" occurrenceId="diagram-display" x={450} y={540} width={130} height={54} lines={["DISPLAY", "1A1A1 / 1A1A2"]} compact selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
-      <DiagramBlock blockId="monitor-cca" occurrenceId="diagram-monitor" x={620} y={606} width={136} height={80} lines={["MONITOR", "A8 / A24"]} selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
+      <DiagramBlock blockId="monitor-cca" occurrenceId="diagram-monitor-1" x={620} y={606} width={68} height={80} lines={["MONITOR", "1", "A8"]} compact selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
+      <DiagramBlock blockId="monitor-cca" occurrenceId="diagram-monitor-2" x={688} y={606} width={68} height={80} lines={["MONITOR", "2", "A24"]} compact selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
 
       <g
         className={styles.diagramAntennaButton}

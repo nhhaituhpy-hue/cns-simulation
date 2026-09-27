@@ -450,6 +450,7 @@
     "requireNoSidebandVswrAlarm": true,
     "requireMonitorBypassCleared": true
   },
+  "taskTargets": [],
   "studentEditableFieldIds": [
     "transmitters.tx1.offsets.sideband1RfLevelScale",
     "transmitters.tx1.offsets.sideband2RfLevelScale",

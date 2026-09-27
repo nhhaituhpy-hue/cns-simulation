@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import {
   dmeParameterFieldCatalog,
   canEditDmeScenarioField,
+  isDme1119aScenarioStudentEditable,
   formatDmeFrequency,
   getDmeParameterValue,
   getDmeStationChannelAllocation,
@@ -37,6 +38,7 @@ function ParameterField({ field }: { field: DmeParameterFieldDefinition }) {
   const canEdit = canEditDmeScenarioField({
     active: scenario.active,
     editableFieldIds: scenario.definition?.studentEditableFieldIds ?? [],
+    editPolicy: scenario.definition?.editPolicy,
     fieldId: field.id,
     readOnly: field.readOnly,
     securityLevel,
@@ -124,7 +126,7 @@ export function DmeConfigPanel() {
   const lastCommand = useDmePmdtStore((state) => state.lastCommand);
   const canApply = configDirty && securityLevel >= 3 && !loginDialogOpen && local;
   const visibleFields = scenario.active
-    ? dmeParameterFieldCatalog.filter((field) => scenario.definition?.studentEditableFieldIds.includes(field.id))
+    ? dmeParameterFieldCatalog.filter((field) => isDme1119aScenarioStudentEditable(scenario.definition, field.id))
     : dmeParameterFieldCatalog;
   const sections = Array.from(new Set(visibleFields.map((field) => field.section)));
   const allocation = getDmeStationChannelAllocation(data.rmsConfigStation);

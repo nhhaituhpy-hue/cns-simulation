@@ -35,14 +35,14 @@ export interface AuthActionResult {
   code: AuthActionCode;
   message: string;
   lockedUntil?: string;
-  role?: "student" | "admin";
+  role?: "student" | "teacher" | "admin";
   mustChangePassword?: boolean;
 }
 
 type LoginUser = {
   id: string;
   password_hash: string;
-  role: "student" | "admin";
+  role: "student" | "teacher" | "admin";
   is_active: boolean;
   must_change_password: boolean;
   temporary_password_expires_at: Date | string | null;

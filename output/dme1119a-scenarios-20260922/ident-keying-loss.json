@@ -377,6 +377,7 @@
     "standbyMonitorBypassed": true,
     "identMode": "normal"
   },
+  "taskTargets": [],
   "successCriteria": [
     {
       "id": "ident-normal",

@@ -15,7 +15,7 @@ interface ScenarioParametersRouteLoaderProps<
   enabled: boolean;
   onLoaded: (
     definition: ScenarioParametersDefinitionFor<TModuleId>,
-    context: { review: boolean },
+    context: { review: boolean; revisionKey: string; sessionKey?: string },
   ) => void;
 }
 
@@ -26,6 +26,7 @@ export function ScenarioParametersRouteLoader<
   const searchParams = useSearchParams();
   const scenarioId = searchParams?.get("scenarioId")?.trim() ?? "";
   const review = searchParams?.get("review") === "1";
+  const requestedSessionKey = searchParams?.get("sessionKey")?.trim() || undefined;
   const [message, setMessage] = useState<string | null>(null);
   const loadedRef = useRef<string | null>(null);
 
@@ -48,8 +49,15 @@ export function ScenarioParametersRouteLoader<
           ? parseScenarioParameters(moduleId, row.definition)
           : null;
         if (!definition) throw new Error("Scenario Parameters không khớp với simulation đang mở.");
+        const storedRevision = row && typeof row === "object" && "revision" in row && typeof row.revision === "number" && Number.isInteger(row.revision) && row.revision > 0
+          ? row.revision
+          : 1;
         if (cancelled) return;
-        onLoaded(definition, { review });
+        onLoaded(definition, {
+          review,
+          revisionKey: `${review ? "published" : "source"}:${storedRevision}`,
+          ...(requestedSessionKey ? { sessionKey: requestedSessionKey } : {}),
+        });
         setMessage(review
           ? "Đã nạp kịch bản ôn tập vào simulator."
           : "Đã nạp Scenario Parameters từ kho quản lý. Hãy mở panel và Apply để chạy tình huống.");
@@ -64,7 +72,7 @@ export function ScenarioParametersRouteLoader<
     return () => {
       cancelled = true;
     };
-  }, [enabled, moduleId, onLoaded, review, scenarioId]);
+  }, [enabled, moduleId, onLoaded, requestedSessionKey, review, scenarioId]);
 
   return message ? <span role="status" className="sr-only">{message}</span> : null;
 }

@@ -371,6 +371,7 @@
     "standbyMonitorBypassed": true,
     "identMode": "normal"
   },
+  "taskTargets": [],
   "successCriteria": [
     {
       "id": "integral-normal",
@@ -399,5 +400,32 @@
     "txConfigNominal.rtcParameters.maximumPrf",
     "txConfigNominal.rtcParameters.deadTime",
     "txConfigNominal.rtcParameters.minimumSquitter"
-  ]
+  ],
+  "diagnosis": {
+    "disposition": "software-adjustment",
+    "diagnosticRun": "not-required",
+    "diagnosticSubsystem": "RTC PRF",
+    "diagnosticResult": "No LRU fault isolated; configured PRF capacity is below the traffic demand.",
+    "faultSummary": "Use PRF/traffic and RTC status screens to distinguish capacity overload from an RTC hardware failure, then correct the configured capacity.",
+    "manualReferences": [
+      "§3.6.9.1 Monitor Data",
+      "§7.3.1 General Troubleshooting Information"
+    ],
+    "pmdtCheckpoints": [
+      {
+        "id": "prf-integral",
+        "label": "Monitor 1 > Data > Integral",
+        "viewId": "monitor-1-data-detail-integral"
+      },
+      {
+        "id": "prf-rms",
+        "label": "RMS > Data > Maintenance Alerts",
+        "viewId": "rms-maintenance-alerts"
+      }
+    ],
+    "requiredActionControlIds": [
+      "config-apply"
+    ],
+    "expectedHardware": []
+  }
 }

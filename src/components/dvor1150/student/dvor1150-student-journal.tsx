@@ -58,11 +58,13 @@ export function Dvor1150StudentJournal({
 export function Dvor1150StudentActivity({
   events,
   evaluation,
+  onContinue,
   onUpdateEvent,
   onRemoveEvent,
 }: {
   events: Dvor1150StudentEvent[];
   evaluation: Dvor1150ScenarioEvaluation;
+  onContinue?: () => void;
   onUpdateEvent: (eventId: string, annotation: string) => void;
   onRemoveEvent: (eventId: string) => void;
 }) {
@@ -139,6 +141,7 @@ export function Dvor1150StudentActivity({
       </div>
 
       <footer className="sticky bottom-0 border-t border-[#334155] bg-[#111827] p-4">
+        {onContinue ? <button type="button" onClick={onContinue} className="mb-2 inline-flex h-10 w-full items-center justify-center rounded border border-[#4ade80] bg-[#166534] px-2 text-[10px] font-semibold leading-4 text-[#f0fdf4] whitespace-nowrap hover:bg-[#15803d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4ade80]">Tiếp tục: Xác định phần cứng</button> : null}
         <Link
           href="/student/dvor-1150"
           className="pmdt-student-action-button inline-flex h-10 w-full items-center justify-center gap-1 rounded border border-[#60a5fa] bg-[#1d4ed8] px-2 text-[10px] font-semibold leading-4 text-[#f8fafc] whitespace-nowrap hover:bg-[#2563eb] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60a5fa] disabled:cursor-wait disabled:opacity-60"

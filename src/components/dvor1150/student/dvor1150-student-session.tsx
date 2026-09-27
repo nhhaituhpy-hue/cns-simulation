@@ -1,6 +1,7 @@
 "use client";
 
 import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
+import { CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -9,6 +10,7 @@ import {
 } from "@/lib/dvor1150";
 import { useDvor1150PmdtStore } from "@/stores/dvor1150-pmdt-store";
 import { Dvor1150PmdtLayout } from "../pmdt-layout";
+import { Dvor1150HardwareStage } from "../dvor1150-hardware-stage";
 import {
   Dvor1150StudentActivity,
   Dvor1150StudentJournal,
@@ -41,6 +43,12 @@ export function Dvor1150StudentSession({ scenarioId, identity }: Dvor1150Student
   const runtime = useDvor1150PmdtStore((state) => state.scenario);
   const derived = useDvor1150PmdtStore((state) => state.derived);
   const config = useDvor1150PmdtStore((state) => state.config);
+  const scenarioStage = useDvor1150PmdtStore((state) => state.scenarioStage);
+  const scenarioVisitedViewIds = useDvor1150PmdtStore((state) => state.scenarioVisitedViewIds);
+  const scenarioAcceptedActionControlIds = useDvor1150PmdtStore((state) => state.scenarioAcceptedActionControlIds);
+  const scenarioHardwareSelection = useDvor1150PmdtStore((state) => state.scenarioHardwareSelection);
+  const scenarioHardwareDispositionConfirmed = useDvor1150PmdtStore((state) => state.scenarioHardwareDispositionConfirmed);
+  const setScenarioStage = useDvor1150PmdtStore((state) => state.setScenarioStage);
   const [sessionReady, setSessionReady] = useState(false);
   const [answer, setAnswer] = useState<Dvor1150StudentAnswer>(emptyAnswer);
   const [events, setEvents] = useState<Dvor1150StudentEvent[]>([]);
@@ -95,7 +103,27 @@ export function Dvor1150StudentSession({ scenarioId, identity }: Dvor1150Student
     return <div role="status" className="grid min-h-[calc(100dvh-4.5rem)] place-items-center bg-[#070a12] text-sm text-[#94a3b8]">Đang chuẩn bị phiên thực hành DVOR 1150…</div>;
   }
 
-  const evaluation = evaluateDvor1150Scenario(runtime, derived, config);
+  const evaluation = evaluateDvor1150Scenario(runtime, derived, config, {
+    visitedViewIds: scenarioVisitedViewIds,
+    acceptedActionControlIds: scenarioAcceptedActionControlIds,
+    selectedHardwareOccurrenceKeys: scenarioHardwareSelection,
+    hardwareDispositionConfirmed: scenarioHardwareDispositionConfirmed,
+  });
+
+  if (scenarioStage === "hardware") return <Dvor1150HardwareStage />;
+
+  if (scenarioStage === "complete") {
+    return (
+      <main className="grid min-h-[calc(100dvh-4.5rem)] place-items-center bg-[var(--surface-muted)] px-4">
+        <div className="max-w-lg rounded border border-[#aebbc5] bg-white p-8 text-center shadow-[var(--shadow-card)]">
+          <CheckCircle aria-hidden size={44} weight="fill" className="mx-auto text-[#16a34a]" />
+          <h1 className="mt-4 text-2xl font-bold text-[var(--text-primary)]">Đã hoàn thành kịch bản DVOR 1150</h1>
+          <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">Đã ghi nhận đủ bước PMDT và xác định phần cứng/biện pháp xử lý. Giám khảo có thể xem lại nhật ký thao tác và căn cứ chẩn đoán.</p>
+          <Link href="/student/dvor-1150" className="mt-6 inline-flex h-10 items-center rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white">Về danh sách kịch bản</Link>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <div className="dvor1150-pmdt-page min-w-[1024px] bg-[#070a12]">
@@ -107,7 +135,7 @@ export function Dvor1150StudentSession({ scenarioId, identity }: Dvor1150Student
       <Dvor1150PmdtLayout
         mode="student"
         leadingPanel={<Dvor1150StudentJournal scenario={scenario} answer={answer} onAnswerChange={(changes) => setAnswer((current) => ({ ...current, ...changes }))} />}
-        sidePanel={<Dvor1150StudentActivity events={events} evaluation={evaluation} onUpdateEvent={(eventId, annotation) => setEvents((current) => current.map((event) => event.id === eventId ? { ...event, annotation } : event))} onRemoveEvent={(eventId) => setEvents((current) => current.filter((event) => event.id !== eventId).map((event, index) => ({ ...event, sequence: index + 1 })))} />}
+        sidePanel={<Dvor1150StudentActivity events={events} evaluation={evaluation} onContinue={scenario.diagnosis && evaluation.pmdtComplete ? () => setScenarioStage("hardware") : undefined} onUpdateEvent={(eventId, annotation) => setEvents((current) => current.map((event) => event.id === eventId ? { ...event, annotation } : event))} onRemoveEvent={(eventId) => setEvents((current) => current.filter((event) => event.id !== eventId).map((event, index) => ({ ...event, sequence: index + 1 })))} />}
       />
     </div>
   );

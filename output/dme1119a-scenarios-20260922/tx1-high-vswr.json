@@ -378,6 +378,7 @@
     "standbyMonitorBypassed": true,
     "identMode": "normal"
   },
+  "taskTargets": [],
   "successCriteria": [
     {
       "id": "tx2-active",

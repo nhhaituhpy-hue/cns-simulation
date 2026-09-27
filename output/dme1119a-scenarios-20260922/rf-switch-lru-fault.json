@@ -378,6 +378,7 @@
     "standbyMonitorBypassed": true,
     "identMode": "normal"
   },
+  "taskTargets": [],
   "successCriteria": [
     {
       "id": "integral-monitor-normal",

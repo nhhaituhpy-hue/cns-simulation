@@ -378,6 +378,7 @@
     "standbyMonitorBypassed": true,
     "identMode": "normal"
   },
+  "taskTargets": [],
   "successCriteria": [
     {
       "id": "integral-monitor-normal",
@@ -407,5 +408,32 @@
   "studentEditableFieldIds": [
     "txConfigNominal.rtcParameters.replyDelayOffset",
     "txOffsets.2.tx1"
-  ]
+  ],
+  "diagnosis": {
+    "disposition": "software-adjustment",
+    "diagnosticRun": "not-required",
+    "diagnosticSubsystem": "RTC Configuration",
+    "diagnosticResult": "No LRU fault isolated; TX1 reply delay requires PMDT offset correction.",
+    "faultSummary": "Compare Integral/Standby Delay and RTC Data, then correct the Reply Delay Offset and Apply.",
+    "manualReferences": [
+      "§3.6.9.1 Monitor Data",
+      "§7.3.1 General Troubleshooting Information"
+    ],
+    "pmdtCheckpoints": [
+      {
+        "id": "delay-integral",
+        "label": "Monitor 1 > Data > Integral",
+        "viewId": "monitor-1-data-detail-integral"
+      },
+      {
+        "id": "delay-rtc",
+        "label": "Transmitters > Data > RTC Data",
+        "viewId": "tx-rtc-data"
+      }
+    ],
+    "requiredActionControlIds": [
+      "config-apply"
+    ],
+    "expectedHardware": []
+  }
 }

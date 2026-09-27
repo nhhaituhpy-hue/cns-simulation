@@ -8,7 +8,7 @@ export default async function Dme1119aSimulatorPage() {
   const profile = await getCurrentProfile();
   return (
     <div className="pmdt-classic-page dme-pmdt-page">
-      <Dme1119aPmdtLayout mode="preview" simulatorId="dme-1119a" scenarioAuthoringEnabled={profile?.role === "admin"} />
+      <Dme1119aPmdtLayout mode="preview" simulatorId="dme-1119a" scenarioAuthoringEnabled={profile?.role === "admin"} sessionUserId={profile?.id ?? ""} />
     </div>
   );
 }

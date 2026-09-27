@@ -7,6 +7,7 @@ import {
   dvorConfigFieldCatalog,
   evaluateDvor1150aScenario,
   getDvorConfigValue,
+  isDvor1150aScenarioStudentEditable,
   parseDvor1150aScenarioDefinition,
   parseDvorConfigInput,
   previewDvor1150aScenario,
@@ -254,15 +255,30 @@ export function Dvor1150aScenarioParametersPanel() {
 
       <section className="dvor1150a-scenario-policy" aria-label="Student recovery controls">
         <strong>Student recovery controls</strong>
-        <p>Only selected fields can be staged and applied by the student. Alarm limits, calibration and raw monitor values remain protected unless intentionally selected.</p>
+        <label><span>Edit policy</span><select
+          value={scenarioDraft.editPolicy?.mode ?? "restricted"}
+          onChange={(event) => update((next) => {
+            next.editPolicy = event.target.value === "open"
+              ? { mode: "open" }
+              : { mode: "restricted", allowedFieldIds: [...next.studentEditableFieldIds] };
+          })}
+        >
+          <option value="open">Open — all safe catalog fields</option>
+          <option value="restricted">Restricted — selected fields only</option>
+        </select></label>
+        <p>{scenarioDraft.editPolicy?.mode === "open"
+          ? "New scenarios are open by default. Read-only, session, security and live routing controls remain protected by the simulator."
+          : "Only selected fields can be staged and applied by the student. Alarm limits, calibration and raw monitor values remain protected unless intentionally selected."}</p>
         {sections.map((section) => <details key={section} className="pmdt-config-section">
           <summary>{section}</summary>
           <div className="pmdt-config-section-body">
             {fields.filter((field) => field.section === section).map((field) => <label key={field.id}>
-              <input type="checkbox" checked={scenarioDraft.studentEditableFieldIds.includes(field.id)} onChange={(event) => update((next) => {
-                next.studentEditableFieldIds = event.target.checked
+              <input type="checkbox" checked={isDvor1150aScenarioStudentEditable(scenarioDraft, field.id)} disabled={scenarioDraft.editPolicy?.mode === "open"} onChange={(event) => update((next) => {
+                const nextIds = event.target.checked
                   ? [...next.studentEditableFieldIds, field.id]
                   : next.studentEditableFieldIds.filter((id) => id !== field.id);
+                next.studentEditableFieldIds = nextIds;
+                next.editPolicy = { mode: "restricted", allowedFieldIds: [...nextIds] };
               })} /> {field.label}
             </label>)}
           </div>

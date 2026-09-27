@@ -367,5 +367,38 @@
   "studentEditableFieldIds": [
     "transmitters.tx1.nominal.outputPower",
     "transmitters.tx1.offsets.outputPowerScale"
-  ]
+  ],
+  "diagnosis": {
+    "disposition": "software-adjustment",
+    "diagnosticRun": "not-required",
+    "diagnosticSubsystem": "Transmitter Data",
+    "diagnosticResult": "No LRU fault isolated; TX1 carrier output parameter is below the configured target.",
+    "faultSummary": "Compare TX1 carrier/RF level with Monitor Data and Diagnostics. Correct the permitted output setting and Apply; do not replace a card for a configuration-only low-output case.",
+    "manualReferences": [
+      "§3.4.2.5, RMS Data Screens",
+      "§3.4.2.17, Diagnostics Screen",
+      "§7.3.1, Table 7-1"
+    ],
+    "pmdtCheckpoints": [
+      {
+        "id": "carrier-tx-data",
+        "label": "Transmitters > Data > Transmitter 1",
+        "viewId": "tx-data-tx1"
+      },
+      {
+        "id": "carrier-monitor",
+        "label": "Monitors > Data > Integral Monitor",
+        "viewId": "monitor-integrity"
+      },
+      {
+        "id": "carrier-power-up",
+        "label": "Diagnostics > Power-Up Results",
+        "viewId": "diagnostics-power-up"
+      }
+    ],
+    "requiredActionControlIds": [
+      "config-apply"
+    ],
+    "expectedHardware": []
+  }
 }

@@ -134,6 +134,10 @@ export function Dvor1150ScenarioParametersPanel() {
   const applyScenario = useDvor1150PmdtStore((state) => state.applyScenario);
   const restoreScenario = useDvor1150PmdtStore((state) => state.restoreScenario);
   const endScenario = useDvor1150PmdtStore((state) => state.endScenario);
+  const scenarioVisitedViewIds = useDvor1150PmdtStore((state) => state.scenarioVisitedViewIds);
+  const scenarioAcceptedActionControlIds = useDvor1150PmdtStore((state) => state.scenarioAcceptedActionControlIds);
+  const scenarioHardwareSelection = useDvor1150PmdtStore((state) => state.scenarioHardwareSelection);
+  const scenarioHardwareDispositionConfirmed = useDvor1150PmdtStore((state) => state.scenarioHardwareDispositionConfirmed);
   const [message, setMessage] = useState<string | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
   const validationIssues = useMemo(
@@ -148,7 +152,17 @@ export function Dvor1150ScenarioParametersPanel() {
       return null;
     }
   }, [scenarioDraft, validationIssues.length]);
-  const activeEvaluation = evaluateDvor1150Scenario(scenario, derived, config);
+  const activeEvaluation = evaluateDvor1150Scenario(
+    scenario,
+    derived,
+    config,
+    {
+      visitedViewIds: scenarioVisitedViewIds,
+      acceptedActionControlIds: scenarioAcceptedActionControlIds,
+      selectedHardwareOccurrenceKeys: scenarioHardwareSelection,
+      hardwareDispositionConfirmed: scenarioHardwareDispositionConfirmed,
+    },
+  );
   const previewEvaluation = preview
     ? evaluateDvor1150Scenario({ active: true, definition: scenarioDraft, startedAt: null }, preview.snapshot, preview.config)
     : null;
@@ -256,6 +270,17 @@ export function Dvor1150ScenarioParametersPanel() {
         <label><input type="checkbox" checked={scenarioDraft.successCriteria.requireNoVswrExecutiveAlarm} onChange={(event) => update((next) => { next.successCriteria.requireNoVswrExecutiveAlarm = event.target.checked; })} /> No VSWR executive alarm</label>
         <label><input type="checkbox" checked={scenarioDraft.successCriteria.requireMonitorBypassCleared} onChange={(event) => update((next) => { next.successCriteria.requireMonitorBypassCleared = event.target.checked; })} /> Monitor Bypass released</label>
       </section>
+
+      {scenarioDraft.diagnosis ? <section className="dvor1150-scenario-policy" aria-label="Two-stage diagnostic workflow">
+        <strong>Two-stage diagnostic workflow</strong>
+        <p>{scenarioDraft.diagnosis.faultSummary}</p>
+        <span><b>PMDT result:</b> {scenarioDraft.diagnosis.diagnosticResult}</span>
+        <span><b>Disposition:</b> {scenarioDraft.diagnosis.disposition === "replace-module" ? "Replace module/card" : "Software adjustment only"}</span>
+        <span><b>Diagnostic run:</b> {scenarioDraft.diagnosis.diagnosticRun}</span>
+        <ol className="dvor1150-scenario-checkpoint-list">{scenarioDraft.diagnosis.pmdtCheckpoints.map((checkpoint) => <li key={checkpoint.id}>{checkpoint.label}</li>)}</ol>
+        <span><b>Hardware answer:</b> {scenarioDraft.diagnosis.expectedHardware.length > 0 ? scenarioDraft.diagnosis.expectedHardware.map((target) => target.assemblyId ?? target.diagramOccurrenceId).join(", ") : "No replacement"}</span>
+        <span><b>Manual:</b> {scenarioDraft.diagnosis.manualReferences.join(" · ")}</span>
+      </section> : null}
 
       <section className="dvor1150-scenario-policy" aria-label="Student recovery controls">
         <strong>Student recovery controls</strong>

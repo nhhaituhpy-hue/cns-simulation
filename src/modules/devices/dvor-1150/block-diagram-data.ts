@@ -56,6 +56,23 @@ export interface Dvor1150DiagramOccurrence {
   targetCabinetHotspotIds: readonly string[];
 }
 
+/** Stable identity used by scenario answers and student hardware evidence. */
+export interface Dvor1150HardwareOccurrence {
+  blockId: Dvor1150BlockId;
+  diagramOccurrenceId: string;
+  cabinetHotspotIds: readonly string[];
+}
+
+export function dvor1150HardwareOccurrenceKey(
+  occurrence: Dvor1150HardwareOccurrence,
+): string {
+  return [
+    occurrence.blockId,
+    occurrence.diagramOccurrenceId,
+    occurrence.cabinetHotspotIds.join(",") || "none",
+  ].join("::");
+}
+
 export interface Dvor1150WaveformReference {
   src: string;
   width: number;
@@ -207,7 +224,10 @@ export const DVOR_1150_BLOCKS: readonly Dvor1150BlockDefinition[] = [
       { id: "cabinet-csb-1", surface: "electronics", x: 132, y: 246, width: 91, height: 188, assemblyId: "1A3", shortLabel: "CSB AMP 1", kind: "amplifier" },
       { id: "cabinet-csb-2", surface: "electronics", x: 132, y: 658, width: 91, height: 188, assemblyId: "1A19", shortLabel: "CSB AMP 2", kind: "amplifier" },
     ],
-    diagramOccurrences: [occurrence("diagram-csb", "CSB POWER AMPLIFIER A3/A19", "cabinet-csb-1", "cabinet-csb-2")],
+    diagramOccurrences: [
+      occurrence("diagram-csb-tx1", "CSB POWER AMPLIFIER TX1 A3", "cabinet-csb-1"),
+      occurrence("diagram-csb-tx2", "CSB POWER AMPLIFIER TX2 A19", "cabinet-csb-2"),
+    ],
     indicators: [],
     controls: [],
     testPoints: [
@@ -227,7 +247,10 @@ export const DVOR_1150_BLOCKS: readonly Dvor1150BlockDefinition[] = [
       { id: "cabinet-synth-1", surface: "electronics", x: 229, y: 246, width: 48, height: 188, assemblyId: "1A4", shortLabel: "SYNTH 1", kind: "module" },
       { id: "cabinet-synth-2", surface: "electronics", x: 229, y: 658, width: 48, height: 188, assemblyId: "1A20", shortLabel: "SYNTH 2", kind: "module" },
     ],
-    diagramOccurrences: [occurrence("diagram-synth", "FREQUENCY SYNTHESIZER A4/A20", "cabinet-synth-1", "cabinet-synth-2")],
+    diagramOccurrences: [
+      occurrence("diagram-synth-tx1", "FREQUENCY SYNTHESIZER TX1 A4", "cabinet-synth-1"),
+      occurrence("diagram-synth-tx2", "FREQUENCY SYNTHESIZER TX2 A20", "cabinet-synth-2"),
+    ],
     indicators: [],
     controls: ["R81 - adjustment shown on the front panel", "J8 - Carrier Frequency, 10 mW typical"],
     testPoints: [
@@ -254,7 +277,12 @@ export const DVOR_1150_BLOCKS: readonly Dvor1150BlockDefinition[] = [
       { id: "cabinet-sideband-12-tx2", surface: "electronics", x: 283, y: 658, width: 54, height: 188, assemblyId: "1A21", shortLabel: "SB 1/2", kind: "module" },
       { id: "cabinet-sideband-34-tx2", surface: "electronics", x: 343, y: 658, width: 54, height: 188, assemblyId: "1A22", shortLabel: "SB 3/4", kind: "module" },
     ],
-    diagramOccurrences: [occurrence("diagram-sideband", "SIDEBAND GENERATOR A5/A6/A21/A22", "cabinet-sideband-12-tx1", "cabinet-sideband-34-tx1", "cabinet-sideband-12-tx2", "cabinet-sideband-34-tx2")],
+    diagramOccurrences: [
+      occurrence("diagram-sideband-tx1-sb12", "SIDEBAND GENERATOR TX1 SB1/SB2 A5", "cabinet-sideband-12-tx1"),
+      occurrence("diagram-sideband-tx1-sb34", "SIDEBAND GENERATOR TX1 SB3/SB4 A6", "cabinet-sideband-34-tx1"),
+      occurrence("diagram-sideband-tx2-sb12", "SIDEBAND GENERATOR TX2 SB1/SB2 A21", "cabinet-sideband-12-tx2"),
+      occurrence("diagram-sideband-tx2-sb34", "SIDEBAND GENERATOR TX2 SB3/SB4 A22", "cabinet-sideband-34-tx2"),
+    ],
     indicators: [],
     controls: [
       "A1/A3 R18 và R24 - Sideband Carrier Balance",
@@ -285,7 +313,10 @@ export const DVOR_1150_BLOCKS: readonly Dvor1150BlockDefinition[] = [
       { id: "cabinet-audio-1", surface: "electronics", x: 403, y: 246, width: 38, height: 188, assemblyId: "1A7", shortLabel: "AUDIO 1", kind: "card" },
       { id: "cabinet-audio-2", surface: "electronics", x: 403, y: 658, width: 38, height: 188, assemblyId: "1A23", shortLabel: "AUDIO 2", kind: "card" },
     ],
-    diagramOccurrences: [occurrence("diagram-audio", "AUDIO GENERATOR A7/A23", "cabinet-audio-1", "cabinet-audio-2")],
+    diagramOccurrences: [
+      occurrence("diagram-audio-tx1", "AUDIO GENERATOR TX1 A7", "cabinet-audio-1"),
+      occurrence("diagram-audio-tx2", "AUDIO GENERATOR TX2 A23", "cabinet-audio-2"),
+    ],
     indicators: [],
     controls: [],
     testPoints: [
@@ -307,7 +338,10 @@ export const DVOR_1150_BLOCKS: readonly Dvor1150BlockDefinition[] = [
       { id: "cabinet-monitor-1", surface: "electronics", x: 447, y: 246, width: 32, height: 188, assemblyId: "1A8", shortLabel: "MON 1", kind: "card" },
       { id: "cabinet-monitor-2", surface: "electronics", x: 447, y: 658, width: 32, height: 188, assemblyId: "1A24", shortLabel: "MON 2", kind: "card" },
     ],
-    diagramOccurrences: [occurrence("diagram-monitor", "MONITOR A8/A24", "cabinet-monitor-1", "cabinet-monitor-2")],
+    diagramOccurrences: [
+      occurrence("diagram-monitor-1", "MONITOR 1 A8", "cabinet-monitor-1"),
+      occurrence("diagram-monitor-2", "MONITOR 2 A24", "cabinet-monitor-2"),
+    ],
     indicators: ["Integral Fault LED - sáng khi Monitor CCA phát hiện Integral Fault"],
     controls: [],
     testPoints: [
@@ -616,3 +650,30 @@ export const DVOR_1150_HOTSPOT_TO_BLOCK = new Map(
     block.cabinetHotspots.map((hotspot) => [hotspot.id, block.id] as const),
   ),
 );
+
+/** Resolve a diagram occurrence or a cabinet hotspot to one canonical answer. */
+export function resolveDvor1150HardwareOccurrence(
+  blockId: Dvor1150BlockId,
+  occurrenceId: string,
+): Dvor1150HardwareOccurrence | null {
+  const block = DVOR_1150_BLOCK_BY_ID.get(blockId);
+  if (!block) return null;
+
+  const diagramOccurrence = block.diagramOccurrences.find((item) => item.id === occurrenceId);
+  if (diagramOccurrence) {
+    return {
+      blockId,
+      diagramOccurrenceId: diagramOccurrence.id,
+      cabinetHotspotIds: [...diagramOccurrence.targetCabinetHotspotIds],
+    };
+  }
+
+  const cabinetHotspot = block.cabinetHotspots.find((item) => item.id === occurrenceId);
+  if (!cabinetHotspot) return null;
+  const matchingDiagram = block.diagramOccurrences.find((item) => item.targetCabinetHotspotIds.includes(cabinetHotspot.id));
+  return {
+    blockId,
+    diagramOccurrenceId: matchingDiagram?.id ?? cabinetHotspot.id,
+    cabinetHotspotIds: [cabinetHotspot.id],
+  };
+}

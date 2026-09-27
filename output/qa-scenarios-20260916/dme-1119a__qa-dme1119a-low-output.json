@@ -371,6 +371,7 @@
     "standbyMonitorBypassed": true,
     "identMode": "normal"
   },
+  "taskTargets": [],
   "successCriteria": [
     {
       "id": "integral-monitor-normal",
@@ -399,5 +400,32 @@
   ],
   "studentEditableFieldIds": [
     "txConfigNominal.rtcParameters.powerOutput"
-  ]
+  ],
+  "diagnosis": {
+    "disposition": "software-adjustment",
+    "diagnosticRun": "not-required",
+    "diagnosticSubsystem": "Transmitter Data",
+    "diagnosticResult": "No LRU fault isolated; TX1 RTC output parameter is below the configured target.",
+    "faultSummary": "Verify TX Power/ERP on PMDT, then correct RTC Power Output and Apply. Do not replace HPA for a configuration-only low-output case.",
+    "manualReferences": [
+      "§3.6.9.1 Monitor Data",
+      "§7.3.1 General Troubleshooting Information"
+    ],
+    "pmdtCheckpoints": [
+      {
+        "id": "low-output-tx-data",
+        "label": "Transmitters > Data > Transmitter Data",
+        "viewId": "tx-data-main"
+      },
+      {
+        "id": "low-output-integral",
+        "label": "Monitor 1 > Data > Integral",
+        "viewId": "monitor-1-data-detail-integral"
+      }
+    ],
+    "requiredActionControlIds": [
+      "config-apply"
+    ],
+    "expectedHardware": []
+  }
 }

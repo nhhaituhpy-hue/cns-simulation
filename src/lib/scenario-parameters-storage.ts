@@ -15,6 +15,9 @@ export interface StoredScenarioParameters {
   schemaVersion: number;
   definition: ScenarioParametersDefinition;
   sourceFileName: string;
+  createdBy?: string;
+  revision?: number;
+  archivedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -64,6 +67,11 @@ export function mapRowToStoredScenarioParameters(row: unknown): StoredScenarioPa
     schemaVersion: requiredInteger(row, "schema_version"),
     definition,
     sourceFileName: typeof row.source_filename === "string" ? row.source_filename : "",
+    ...(typeof row.created_by === "string" ? { createdBy: row.created_by } : {}),
+    ...(typeof row.revision === "number" && Number.isInteger(row.revision) && row.revision > 0
+      ? { revision: row.revision }
+      : {}),
+    ...(typeof row.archived_at === "string" ? { archivedAt: row.archived_at } : {}),
     createdAt: requiredString(row, "created_at"),
     updatedAt: requiredString(row, "updated_at"),
   };
@@ -92,6 +100,7 @@ export function storedScenarioParametersToRow(input: {
     definition_json: JSON.stringify(parsed),
     source_filename: (input.sourceFileName ?? "").trim().slice(0, 255),
     created_by: input.createdBy,
+    revision: 1,
     updated_at: new Date().toISOString(),
   };
 }

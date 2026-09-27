@@ -450,6 +450,7 @@
     "requireNoSidebandVswrAlarm": true,
     "requireMonitorBypassCleared": true
   },
+  "taskTargets": [],
   "studentEditableFieldIds": [
     "transmitters.tx1.vswr.sidebands.0",
     "transmitters.tx1.vswr.sidebands.1",

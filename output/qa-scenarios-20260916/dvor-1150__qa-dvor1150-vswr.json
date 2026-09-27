@@ -367,5 +367,38 @@
   "studentEditableFieldIds": [
     "transmitters.tx1.offsets.sideband1RfLevelScale",
     "transmitters.tx1.offsets.sideband2RfLevelScale"
-  ]
+  ],
+  "diagnosis": {
+    "disposition": "software-adjustment",
+    "diagnosticRun": "not-required",
+    "diagnosticSubsystem": "Monitor Configuration",
+    "diagnosticResult": "No LRU fault isolated; the configured TX1 sideband RF scales are creating the VSWR alarm profile.",
+    "faultSummary": "Use Sideband Antenna VSWR, Transmitter Data and Power-Up Diagnostics to distinguish a PMDT scale correction from a card replacement. Restore the permitted scales and Apply.",
+    "manualReferences": [
+      "§3.4.2.16.7, Change the Sideband Power Level",
+      "§3.4.2.17, Diagnostics Screen",
+      "§7.3.1, Table 7-1"
+    ],
+    "pmdtCheckpoints": [
+      {
+        "id": "sideband-vswr",
+        "label": "Monitors > Data > Sideband Antenna VSWR",
+        "viewId": "monitor-sideband-vswr"
+      },
+      {
+        "id": "sideband-tx-data",
+        "label": "Transmitters > Data > Transmitter 1",
+        "viewId": "tx-data-tx1"
+      },
+      {
+        "id": "sideband-power-up",
+        "label": "Diagnostics > Power-Up Results",
+        "viewId": "diagnostics-power-up"
+      }
+    ],
+    "requiredActionControlIds": [
+      "config-apply"
+    ],
+    "expectedHardware": []
+  }
 }

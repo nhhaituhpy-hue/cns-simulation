@@ -450,6 +450,7 @@
     "requireNoSidebandVswrAlarm": true,
     "requireMonitorBypassCleared": true
   },
+  "taskTargets": [],
   "studentEditableFieldIds": [
     "transmitters.tx1.nominal.referenceModulation",
     "transmitters.tx1.offsets.referenceModulationScale"

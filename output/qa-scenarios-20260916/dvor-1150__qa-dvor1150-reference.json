@@ -367,5 +367,38 @@
   "studentEditableFieldIds": [
     "transmitters.tx1.nominal.referenceModulation",
     "transmitters.tx1.offsets.referenceModulationScale"
-  ]
+  ],
+  "diagnosis": {
+    "disposition": "software-adjustment",
+    "diagnosticRun": "not-required",
+    "diagnosticSubsystem": "Monitor / Modulation",
+    "diagnosticResult": "Power-up diagnostics are normal; the 30 Hz reference modulation is below the configured transmitter target.",
+    "faultSummary": "Verify 30 Hz and 9960 Hz readings on the Monitor Data screen, then correct the permitted reference modulation value and Apply.",
+    "manualReferences": [
+      "§3.4.2.5, RMS Data Screens",
+      "§3.4.2.17, Diagnostics Screen",
+      "§7.3.1, Table 7-1"
+    ],
+    "pmdtCheckpoints": [
+      {
+        "id": "reference-monitor",
+        "label": "Monitors > Data > Integral Monitor",
+        "viewId": "monitor-integrity"
+      },
+      {
+        "id": "reference-tx-data",
+        "label": "Transmitters > Data > Transmitter 1",
+        "viewId": "tx-data-tx1"
+      },
+      {
+        "id": "reference-power-up",
+        "label": "Diagnostics > Power-Up Results",
+        "viewId": "diagnostics-power-up"
+      }
+    ],
+    "requiredActionControlIds": [
+      "config-apply"
+    ],
+    "expectedHardware": []
+  }
 }

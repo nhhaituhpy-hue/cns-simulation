@@ -4,6 +4,7 @@ import { Suspense, useEffect, type ReactNode } from "react";
 import { SimulatorConfigPersistence } from "@/components/simulator/simulator-config-persistence";
 import { SimulatorToolbarBackButton } from "@/components/simulator/simulator-toolbar-back-button";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
+import { VorScenarioSessionPersistence } from "@/components/scenario/scenario-session-persistence";
 import type { SupportedSimulatorConfigId } from "@/lib/simulator-config/types";
 import type { VorPmdtMode } from "@/lib/vor-types";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
@@ -37,6 +38,7 @@ export interface PmdtLayoutProps {
   mode?: VorPmdtMode;
   simulatorId?: Extract<SupportedSimulatorConfigId, "dvor-1150a">;
   scenarioAuthoringEnabled?: boolean;
+  sessionUserId?: string;
   children?: ReactNode;
   leadingPanel?: ReactNode;
   sidePanel?: ReactNode;
@@ -66,6 +68,7 @@ export function PmdtLayout({
   mode = "preview",
   simulatorId,
   scenarioAuthoringEnabled = false,
+  sessionUserId = "",
   children,
   leadingPanel,
   sidePanel,
@@ -143,7 +146,13 @@ export function PmdtLayout({
           moduleId="dvor-1150a"
           enabled
           onLoaded={(definition, context) => {
-            if (context.review) startReviewScenario(definition);
+            if (context.review) {
+              startReviewScenario(definition, {
+                userId: sessionUserId,
+                sessionKey: context.sessionKey ?? `practice:${sessionUserId || "anonymous"}:${definition.id}`,
+                revisionKey: context.revisionKey,
+              });
+            }
             else {
               replaceScenarioDraft(definition);
               setScenarioParametersOpen(true);
@@ -200,6 +209,7 @@ export function PmdtLayout({
         {aboutDialogOpen ? <AboutPmdtDialog /> : null}
         {loginDialogOpen ? <PmdtLoginDialog /> : null}
         {mode === "preview" && simulatorId ? <SimulatorConfigPersistence simulatorId={simulatorId} /> : null}
+        <VorScenarioSessionPersistence />
       </section>
       </div>
       {twoStageScenario && scenarioStage === "hardware" ? <Dvor1150aHardwareStage /> : null}

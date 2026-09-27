@@ -24,6 +24,15 @@ import {
   validateDmeParameterField,
 } from "./config";
 import { recomputeDmeDerivedData } from "./derived-data";
+import {
+  isScenarioFieldAllowed,
+  scenarioAllowedFieldIds,
+  validateScenarioEditPolicy,
+  validateScenarioTaskTargets,
+  type ScenarioFieldRole,
+  type ScenarioEditPolicy,
+  type ScenarioTaskTarget,
+} from "@/lib/scenario-policy";
 
 export const DME1119A_SCENARIO_SCHEMA_VERSION = 1 as const;
 
@@ -112,6 +121,10 @@ export interface Dme1119aScenarioDefinition {
     standbyMonitorBypassed: boolean;
     identMode: DmePmdtData["identMode"];
   };
+  /** New scenarios default to open; omitted means legacy whitelist semantics. */
+  editPolicy?: ScenarioEditPolicy;
+  /** Optional explicit fields that the learner must inspect or apply. */
+  taskTargets?: ScenarioTaskTarget[];
   successCriteria: Dme1119aScenarioCriterion[];
   studentEditableFieldIds: string[];
   /** Optional two-stage diagnostic contract; old schema-v1 JSON remains valid. */
@@ -261,6 +274,8 @@ export function createDefaultDme1119aScenarioDefinition(): Dme1119aScenarioDefin
       standbyMonitorBypassed: false,
       identMode: "normal",
     },
+    editPolicy: { mode: "open" },
+    taskTargets: [],
     successCriteria: structuredClone(DEFAULT_CRITERIA),
     studentEditableFieldIds: [],
   };
@@ -454,6 +469,21 @@ export function validateDme1119aScenarioDefinition(
     }
   }
 
+  issues.push(...validateScenarioEditPolicy({
+    policy: definition.editPolicy,
+    fields: dmeParameterFieldCatalog,
+    isBlocked: (fieldId) => SESSION_ONLY_FIELD_IDS.has(fieldId) || isLiveScenarioField(fieldId) || fieldId.startsWith("securityAccounts."),
+    roleOf: dme1119aScenarioFieldRole,
+    label: "Scenario edit policy",
+  }));
+  issues.push(...validateScenarioTaskTargets({
+    targets: definition.taskTargets,
+    fields: dmeParameterFieldCatalog,
+    isBlocked: (fieldId) => SESSION_ONLY_FIELD_IDS.has(fieldId) || isLiveScenarioField(fieldId) || fieldId.startsWith("securityAccounts."),
+    roleOf: dme1119aScenarioFieldRole,
+    label: "Scenario task targets",
+  }));
+
   if (parseDme1119aConfig(definition.configuration)) {
     const runtime = hydrateDme1119aData(definition.configuration);
     for (const field of dmeParameterFieldCatalog) {
@@ -568,14 +598,21 @@ function isLiveScenarioField(fieldId: string): boolean {
     || fieldId.startsWith("monitorTransmitterStatus.transmitterOn.");
 }
 
+/** Classify DME fields before applying the scenario's open policy. */
+export function dme1119aScenarioFieldRole(fieldId: string): ScenarioFieldRole {
+  if (SESSION_ONLY_FIELD_IDS.has(fieldId) || isLiveScenarioField(fieldId)) return "runtime";
+  if (fieldId.startsWith("securityAccounts.")) return "security";
+  if (fieldId.startsWith("simulationFaults.") || fieldId.startsWith("overrides.")) return "instructor-only";
+  return "student-operable";
+}
+
 export function getDme1119aScenarioProtectedFieldChanges(
   definition: Dme1119aScenarioDefinition,
   currentData: DmePmdtData,
 ): Dme1119aScenarioProtectedFieldChange[] {
   const expected = hydrateDme1119aData(definition.configuration);
-  const editable = new Set(definition.studentEditableFieldIds);
   return dmeParameterFieldCatalog.flatMap((field) => {
-    if (field.readOnly || SESSION_ONLY_FIELD_IDS.has(field.id) || isLiveScenarioField(field.id) || editable.has(field.id)) return [];
+    if (field.readOnly || SESSION_ONLY_FIELD_IDS.has(field.id) || isLiveScenarioField(field.id) || isDme1119aScenarioStudentEditable(definition, field.id)) return [];
     const expectedValue = getDmeParameterValue(expected, field.id);
     const actualValue = getDmeParameterValue(currentData, field.id);
     return Object.is(expectedValue, actualValue) ? [] : [{ fieldId: field.id, label: field.label }];
@@ -683,7 +720,7 @@ export function evaluateDme1119aScenario(
   const blockers = getDme1119aScenarioProtectedFieldChanges(runtime.definition, currentData)
     .map((change) => `Protected configuration changed: ${change.label}.`);
   const dualTransmitter = runtime.definition.configuration.rmsConfigStation.transmitterConfig === "Dual Transmitters";
-  const hasEditableRecovery = runtime.definition.studentEditableFieldIds.length > 0;
+  const hasEditableRecovery = dme1119aScenarioAllowedFieldIds(runtime.definition).length > 0;
   const hasOperationalRecovery = runtime.definition.successCriteria.some((criterion) => (
     criterion.kind === "active-transmitter"
     || criterion.kind === "bypass-cleared"
@@ -768,6 +805,7 @@ export function evaluateDme1119aScenario(
 export function canEditDmeScenarioField(input: {
   active: boolean;
   editableFieldIds: readonly string[];
+  editPolicy?: ScenarioEditPolicy;
   fieldId: string;
   readOnly?: boolean;
   securityLevel: number;
@@ -776,13 +814,23 @@ export function canEditDmeScenarioField(input: {
 }): boolean {
   if (input.loginDialogOpen || input.securityLevel < 3 || !input.local || input.readOnly || SESSION_ONLY_FIELD_IDS.has(input.fieldId)) return false;
   if (!input.active) return true;
-  return input.editableFieldIds.includes(input.fieldId);
+  return isScenarioFieldAllowed({
+    policy: input.editPolicy,
+    legacyFieldIds: input.editableFieldIds,
+    fieldId: input.fieldId,
+    fields: dmeParameterFieldCatalog,
+    isBlocked: (fieldId) => SESSION_ONLY_FIELD_IDS.has(fieldId) || isLiveScenarioField(fieldId),
+    roleOf: dme1119aScenarioFieldRole,
+  });
 }
 
 function withScenarioStart(
   scenario: Dme1119aScenarioDefinition,
   mainTransmitterId: DmeTransmitterId = "tx1",
 ): Dme1119aScenarioDefinition {
+  // Built-in scenarios retain the legacy explicit whitelist. A newly authored
+  // scenario uses the open default from createDefault...Definition().
+  delete scenario.editPolicy;
   scenario.startPolicy.mainTransmitterId = mainTransmitterId;
   scenario.startPolicy.startLocal = true;
   scenario.startPolicy.integralMonitorBypassed = true;
@@ -809,6 +857,33 @@ export function createLowOutputDme1119aScenario(): Dme1119aScenarioDefinition {
     ],
   });
   return scenario;
+}
+
+export function isDme1119aScenarioStudentEditable(
+  definition: Dme1119aScenarioDefinition | null,
+  fieldId: string,
+): boolean {
+  return Boolean(definition && isScenarioFieldAllowed({
+    policy: definition.editPolicy,
+    legacyFieldIds: definition.studentEditableFieldIds,
+    fieldId,
+    fields: dmeParameterFieldCatalog,
+    isBlocked: (candidate) => SESSION_ONLY_FIELD_IDS.has(candidate) || isLiveScenarioField(candidate),
+    roleOf: dme1119aScenarioFieldRole,
+  }));
+}
+
+export function dme1119aScenarioAllowedFieldIds(
+  definition: Dme1119aScenarioDefinition | null,
+): string[] {
+  if (!definition) return [];
+  return scenarioAllowedFieldIds({
+    policy: definition.editPolicy,
+    legacyFieldIds: definition.studentEditableFieldIds,
+    fields: dmeParameterFieldCatalog,
+    isBlocked: (candidate) => SESSION_ONLY_FIELD_IDS.has(candidate) || isLiveScenarioField(candidate),
+    roleOf: dme1119aScenarioFieldRole,
+  });
 }
 
 export function createDelayDriftDme1119aScenario(): Dme1119aScenarioDefinition {

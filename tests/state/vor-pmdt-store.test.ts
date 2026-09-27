@@ -86,6 +86,10 @@ describe("VOR PMDT store", () => {
         startedAt: null,
         definition: {
           ...store.getState().scenarioDraft,
+          editPolicy: {
+            mode: "restricted",
+            allowedFieldIds: ["transmitters.tx1.nominal.outputPower"],
+          },
           studentEditableFieldIds: ["transmitters.tx1.nominal.outputPower"],
         },
       },

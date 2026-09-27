@@ -35,15 +35,29 @@ function storedRow() {
   };
 }
 
+function membershipRow(overrides: Record<string, unknown> = {}) {
+  return {
+    ...storedRow(),
+    membership_id: "33333333-3333-4333-8333-333333333333",
+    library_kind: "practice",
+    revision_number: 1,
+    published_by: profile.id,
+    published_at: timestamp,
+    archived_at: null,
+    sort_order: 1,
+    ...overrides,
+  };
+}
+
 function getRequest() {
   return new Request("http://localhost/api/review-scenarios?moduleId=dvor-220");
 }
 
-function putRequest(scenarioIds: string[]) {
+function putRequest(scenarioIds: string[], expectedRevision = 0) {
   return new Request("http://localhost/api/review-scenarios", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ moduleId: "dvor-220", scenarioIds }),
+    body: JSON.stringify({ moduleId: "dvor-220", scenarioIds, expectedRevision }),
   });
 }
 
@@ -56,8 +70,9 @@ describe("review scenario assignments", () => {
 
   it("returns assigned scenarios and the device library to an admin", async () => {
     vi.mocked(queryDatabase)
-      .mockResolvedValueOnce({ rows: [{ ...storedRow(), sort_order: 1, assigned_at: timestamp }] } as never)
-      .mockResolvedValueOnce({ rows: [storedRow()] } as never);
+      .mockResolvedValueOnce({ rows: [storedRow()] } as never)
+      .mockResolvedValueOnce({ rows: [membershipRow()] } as never)
+      .mockResolvedValueOnce({ rows: [{ library_kind: "practice", revision: 0 }, { library_kind: "exam", revision: 0 }] } as never);
 
     const response = await GET(getRequest());
 
@@ -72,7 +87,7 @@ describe("review scenario assignments", () => {
   it("returns only published scenarios to a student", async () => {
     vi.mocked(getCurrentProfile).mockResolvedValue({ ...profile, role: "student" });
     vi.mocked(queryDatabase).mockResolvedValueOnce({
-      rows: [{ ...storedRow(), sort_order: 1, assigned_at: timestamp }],
+      rows: [membershipRow()],
     } as never);
 
     const response = await GET(getRequest());
@@ -87,7 +102,18 @@ describe("review scenario assignments", () => {
   it("replaces one device assignment list in a transaction", async () => {
     const client = {
       query: vi.fn()
-        .mockResolvedValueOnce({ rows: [{ id: scenarioRowId, module_id: "dvor-220" }] })
+        .mockResolvedValueOnce({ rows: [{ revision: 0 }] })
+        .mockResolvedValueOnce({ rows: [{
+          id: scenarioRowId,
+          module_id: "dvor-220",
+          scenario_id: "default-dvor-220",
+          name: "Default",
+          description: "Default",
+          difficulty: "basic",
+          schema_version: 1,
+          definition_json: JSON.stringify(createDefaultDvor220ScenarioDefinition()),
+          source_filename: "",
+        }] })
         .mockResolvedValue({ rows: [] }),
     };
     vi.mocked(withDatabaseTransaction).mockImplementation(async (work) => work(client as never));
@@ -95,7 +121,7 @@ describe("review scenario assignments", () => {
     const response = await PUT(putRequest([scenarioRowId]));
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({ success: true, assignedCount: 1 });
+    await expect(response.json()).resolves.toEqual({ success: true, assignedCount: 1, libraryRevision: 1 });
     expect(client.query).toHaveBeenCalledWith(
       expect.stringContaining("delete from public.simulator_review_scenario_assignments"),
       ["dvor-220"],
@@ -113,11 +139,35 @@ describe("review scenario assignments", () => {
     expect(withDatabaseTransaction).not.toHaveBeenCalled();
   });
 
+  it("requires the revision read by the compatibility client", async () => {
+    const response = await PUT(new Request("http://localhost/api/review-scenarios", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ moduleId: "dvor-220", scenarioIds: [scenarioRowId] }),
+    }));
+
+    expect(response.status).toBe(400);
+    expect(queryDatabase).not.toHaveBeenCalled();
+    expect(withDatabaseTransaction).not.toHaveBeenCalled();
+  });
+
+  it("propagates a stale revision as 409 through the compatibility adapter", async () => {
+    const client = {
+      query: vi.fn().mockResolvedValueOnce({ rows: [{ revision: 2 }] }),
+    };
+    vi.mocked(withDatabaseTransaction).mockImplementation(async (work) => work(client as never));
+
+    const response = await PUT(putRequest([scenarioRowId], 1));
+
+    expect(response.status).toBe(409);
+    expect(queryDatabase).not.toHaveBeenCalled();
+  });
+
   it("rejects a scenario that belongs to another device", async () => {
     const client = {
-      query: vi.fn().mockResolvedValueOnce({
-        rows: [{ id: scenarioRowId, module_id: "dme-320" }],
-      }),
+      query: vi.fn()
+        .mockResolvedValueOnce({ rows: [{ revision: 0 }] })
+        .mockResolvedValueOnce({ rows: [{ id: scenarioRowId, module_id: "dme-320" }] }),
     };
     vi.mocked(withDatabaseTransaction).mockImplementation(async (work) => work(client as never));
     const response = await PUT(putRequest([scenarioRowId]));

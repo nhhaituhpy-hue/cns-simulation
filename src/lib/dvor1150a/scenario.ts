@@ -17,6 +17,15 @@ import {
   type DvorHardwareOccurrence,
 } from "@/modules/devices/dvor-1150a/block-diagram-data";
 import type { VorViewId } from "@/lib/vor-types";
+import {
+  isScenarioFieldAllowed,
+  scenarioAllowedFieldIds,
+  validateScenarioEditPolicy,
+  validateScenarioTaskTargets,
+  type ScenarioFieldRole,
+  type ScenarioEditPolicy,
+  type ScenarioTaskTarget,
+} from "@/lib/scenario-policy";
 
 export const DVOR1150A_SCENARIO_SCHEMA_VERSION = 1 as const;
 
@@ -76,6 +85,10 @@ export interface Dvor1150aScenarioDefinition {
     requireNoSidebandVswrAlarm: boolean;
     requireMonitorBypassCleared: boolean;
   };
+  /** New scenarios default to open; omitted means legacy whitelist semantics. */
+  editPolicy?: ScenarioEditPolicy;
+  /** Optional explicit fields that the learner must inspect or apply. */
+  taskTargets?: ScenarioTaskTarget[];
   /**
    * Recovery controls chosen by the examiner. Every other staged PMDT
    * configuration field is protected while the exercise is active.
@@ -191,12 +204,22 @@ export function createDefaultDvor1150aScenarioDefinition(): Dvor1150aScenarioDef
       requireNoSidebandVswrAlarm: true,
       requireMonitorBypassCleared: true,
     },
+    editPolicy: { mode: "open" },
+    taskTargets: [],
     studentEditableFieldIds: [],
   };
 }
 
-export function createLowCarrierAnd9960Scenario(): Dvor1150aScenarioDefinition {
+function createPresetDvor1150aScenarioDefinition(): Dvor1150aScenarioDefinition {
   const scenario = createDefaultDvor1150aScenarioDefinition();
+  // Built-in scenarios retain their explicit recovery contract. Only a
+  // newly authored scenario receives the open default.
+  delete scenario.editPolicy;
+  return scenario;
+}
+
+export function createLowCarrierAnd9960Scenario(): Dvor1150aScenarioDefinition {
+  const scenario = createPresetDvor1150aScenarioDefinition();
   scenario.id = "tx1-low-carrier-9960";
   scenario.name = "TX1 Low Carrier and 9960 Hz Modulation";
   scenario.description = "TX1 starts with critically low carrier output, producing low TX Power and 9960 Hz monitor readings. Restore TX1 output power, apply the correction, then release Monitor Bypass to prove normal operation.";
@@ -212,7 +235,7 @@ export function createLowCarrierAnd9960Scenario(): Dvor1150aScenarioDefinition {
 }
 
 export function createReferenceModulationScenario(): Dvor1150aScenarioDefinition {
-  const scenario = createDefaultDvor1150aScenarioDefinition();
+  const scenario = createPresetDvor1150aScenarioDefinition();
   scenario.id = "tx1-low-reference-modulation";
   scenario.name = "TX1 Low 30 Hz Reference Modulation";
   scenario.description = "TX1 reference modulation is below the monitor alarm limit. Correct the transmitter reference modulation, apply the correction, then release Monitor Bypass after both monitors are normal.";
@@ -227,7 +250,7 @@ export function createReferenceModulationScenario(): Dvor1150aScenarioDefinition
 }
 
 export function createSidebandVswrScenario(): Dvor1150aScenarioDefinition {
-  const scenario = createDefaultDvor1150aScenarioDefinition();
+  const scenario = createPresetDvor1150aScenarioDefinition();
   scenario.id = "tx1-sideband-vswr-alarm";
   scenario.name = "TX1 Sideband VSWR Alarm";
   scenario.description = "The TX1 sideband VSWR profile raises the field-monitor antenna count above the executive alarm threshold. Correct the affected TX1 sideband VSWR values and release Monitor Bypass to prove recovery.";
@@ -245,7 +268,7 @@ export function createSidebandVswrScenario(): Dvor1150aScenarioDefinition {
 }
 
 export function createTx1FaultChangeoverScenario(): Dvor1150aScenarioDefinition {
-  const scenario = createDefaultDvor1150aScenarioDefinition();
+  const scenario = createPresetDvor1150aScenarioDefinition();
   scenario.id = "tx1-carrier-vswr-changeover";
   scenario.name = "TX1 Carrier VSWR Fault - Change Over";
   scenario.description = "TX1 is on antenna with a carrier VSWR fault. The student must transfer the service to healthy TX2 and release Monitor Bypass to confirm normal monitoring.";
@@ -257,7 +280,7 @@ export function createTx1FaultChangeoverScenario(): Dvor1150aScenarioDefinition 
 }
 
 export function createAudioGeneratorTx1FaultScenario(): Dvor1150aScenarioDefinition {
-  const scenario = createDefaultDvor1150aScenarioDefinition();
+  const scenario = createPresetDvor1150aScenarioDefinition();
   scenario.id = "audio-generator-tx1-cca-fault";
   scenario.name = "Audio Generator TX1 CCA Fault (1A3A2)";
   scenario.description = "Use PMDT diagnostics and Transmitter Status to identify a TX1 Audio Generator CCA failure, then locate the 1A3A2 module on the DVOR 1150A block diagram.";
@@ -281,7 +304,7 @@ export function createAudioGeneratorTx1FaultScenario(): Dvor1150aScenarioDefinit
 }
 
 export function createSynthesizerTx2FrequencyScenario(): Dvor1150aScenarioDefinition {
-  const scenario = createDefaultDvor1150aScenarioDefinition();
+  const scenario = createPresetDvor1150aScenarioDefinition();
   scenario.id = "synthesizer-tx2-frequency-unlocked";
   scenario.name = "Synthesizer TX2 Frequency Unlock (1A3A11)";
   scenario.description = "Correlate TX2 frequency error, carrier phase and LSB/USB unlock indications with the TX2 Synthesizer CCA, then identify 1A3A11.";
@@ -306,7 +329,7 @@ export function createSynthesizerTx2FrequencyScenario(): Dvor1150aScenarioDefini
 }
 
 export function createMonitor1CcaFaultScenario(): Dvor1150aScenarioDefinition {
-  const scenario = createDefaultDvor1150aScenarioDefinition();
+  const scenario = createPresetDvor1150aScenarioDefinition();
   scenario.id = "monitor-1-cca-fault";
   scenario.name = "Monitor 1 CCA Fault (1A3A3)";
   scenario.description = "Use Monitor 1 status, integrity results and Fault Isolation to identify a Monitor CCA failure before selecting the 1A3A3 module.";
@@ -330,7 +353,7 @@ export function createMonitor1CcaFaultScenario(): Dvor1150aScenarioDefinition {
 }
 
 export function createLvpsTx1PowerScenario(): Dvor1150aScenarioDefinition {
-  const scenario = createDefaultDvor1150aScenarioDefinition();
+  const scenario = createPresetDvor1150aScenarioDefinition();
   scenario.id = "lvps-tx1-power-fault";
   scenario.name = "LVPS TX1 Low-Voltage Fault (1A3A4)";
   scenario.description = "Trace abnormal RMS power-supply readings and Digital I/O status to the TX1 low-voltage power-supply card 1A3A4.";
@@ -353,7 +376,7 @@ export function createLvpsTx1PowerScenario(): Dvor1150aScenarioDefinition {
 }
 
 export function createBcpsTx2PowerScenario(): Dvor1150aScenarioDefinition {
-  const scenario = createDefaultDvor1150aScenarioDefinition();
+  const scenario = createPresetDvor1150aScenarioDefinition();
   scenario.id = "bcps-tx2-power-fault";
   scenario.name = "BCPS TX2 AC/DC Power Fault (1A5A2)";
   scenario.description = "Correlate AC/DC, battery and 48 V supply indications before identifying the TX2 Battery Charging Power Supply 1A5A2.";
@@ -376,7 +399,7 @@ export function createBcpsTx2PowerScenario(): Dvor1150aScenarioDefinition {
 }
 
 export function createRfMonitorVswrScenario(): Dvor1150aScenarioDefinition {
-  const scenario = createDefaultDvor1150aScenarioDefinition();
+  const scenario = createPresetDvor1150aScenarioDefinition();
   scenario.id = "rf-monitor-vswr-measurement-fault";
   scenario.name = "RF Monitor VSWR Measurement Fault (1A4A4)";
   scenario.description = "Use Sideband Antenna VSWR, Transmitter Data and Fault Isolation to distinguish an RF Monitor measurement fault from a real antenna fault.";
@@ -400,7 +423,7 @@ export function createRfMonitorVswrScenario(): Dvor1150aScenarioDefinition {
 }
 
 export function createCarrierAmplifierTx2Scenario(): Dvor1150aScenarioDefinition {
-  const scenario = createDefaultDvor1150aScenarioDefinition();
+  const scenario = createPresetDvor1150aScenarioDefinition();
   scenario.id = "carrier-amplifier-tx2-low-power";
   scenario.name = "Carrier Amplifier TX2 Low Output (1A5A4)";
   scenario.description = "Use TX2 Carrier Power and PA alerts to identify a low-output Carrier Amplifier, then verify the 1A5A4 block and its post-replacement output adjustment.";
@@ -426,7 +449,7 @@ export function createCarrierAmplifierTx2Scenario(): Dvor1150aScenarioDefinition
 }
 
 export function createSidebandAmplifierTx1Scenario(): Dvor1150aScenarioDefinition {
-  const scenario = createDefaultDvor1150aScenarioDefinition();
+  const scenario = createPresetDvor1150aScenarioDefinition();
   scenario.id = "sideband-amplifier-tx1-sb12";
   scenario.name = "Sideband Amplifier TX1 SB1/SB2 Fault (1A4A1)";
   scenario.description = "Use sideband power, VSWR and Ground Check evidence to identify the TX1 SB1/SB2 Sideband Amplifier 1A4A1.";
@@ -457,7 +480,7 @@ export function createSidebandAmplifierTx1Scenario(): Dvor1150aScenarioDefinitio
 }
 
 export function createCommutatorDistributionScenario(): Dvor1150aScenarioDefinition {
-  const scenario = createDefaultDvor1150aScenarioDefinition();
+  const scenario = createPresetDvor1150aScenarioDefinition();
   scenario.id = "commutator-distribution-notch-fault";
   scenario.name = "Commutator Distribution Notch Fault (1A4A5)";
   scenario.description = "Correlate a Notch Monitor reduction with Sideband VSWR and Fault Isolation before locating the Commutator Controller 1A4A5.";
@@ -481,7 +504,7 @@ export function createCommutatorDistributionScenario(): Dvor1150aScenarioDefinit
 }
 
 export function createMonitor1CalibrationScenario(): Dvor1150aScenarioDefinition {
-  const scenario = createDefaultDvor1150aScenarioDefinition();
+  const scenario = createPresetDvor1150aScenarioDefinition();
   scenario.id = "monitor-1-calibration-offset";
   scenario.name = "Monitor 1 RF Level Calibration Offset";
   scenario.description = "PMDT diagnostics are normal, but Monitor 1 RF Level is biased by a calibration offset. Correct the software value; no hardware block should be selected.";
@@ -563,14 +586,23 @@ function isLiveScenarioField(fieldId: string): boolean {
     || /^transmitters\.(tx1|tx2)\.(enabled|onAir|load)$/.test(fieldId);
 }
 
+/** Open policy exposes only real learner controls, never authoring stimuli. */
+export function dvor1150aScenarioFieldRole(fieldId: string): ScenarioFieldRole {
+  if (isLiveScenarioField(fieldId)) return "runtime";
+  if (fieldId.startsWith("monitor.rawMeasurements.") || fieldId.includes(".faults.")) {
+    return "instructor-only";
+  }
+  if (fieldId.startsWith("securityAccounts.") || fieldId.startsWith("security.")) return "security";
+  return "student-operable";
+}
+
 /** Returns non-recovery configuration changes made while a scenario is active. */
 export function getDvor1150aScenarioProtectedFieldChanges(
   definition: Dvor1150aScenarioDefinition,
   currentConfiguration: Dvor1150aConfig,
 ): Dvor1150aScenarioProtectedFieldChange[] {
-  const editable = new Set(definition.studentEditableFieldIds);
   return dvorConfigFieldCatalog.flatMap((field) => {
-    if (isLiveScenarioField(field.id) || editable.has(field.id)) return [];
+    if (isLiveScenarioField(field.id) || isDvor1150aScenarioStudentEditable(definition, field.id)) return [];
     const expected = getDvorConfigValue(definition.configuration, field.id);
     const actual = getDvorConfigValue(currentConfiguration, field.id);
     return Object.is(expected, actual) ? [] : [{ fieldId: field.id, label: field.label }];
@@ -837,6 +869,20 @@ export function validateDvor1150aScenarioDefinition(
       issues.push("Student editable fields must not contain duplicates.");
     }
   }
+  issues.push(...validateScenarioEditPolicy({
+    policy: definition.editPolicy,
+    fields: dvorConfigFieldCatalog,
+    isBlocked: isLiveScenarioField,
+    roleOf: dvor1150aScenarioFieldRole,
+    label: "Scenario edit policy",
+  }));
+  issues.push(...validateScenarioTaskTargets({
+    targets: definition.taskTargets,
+    fields: dvorConfigFieldCatalog,
+    isBlocked: isLiveScenarioField,
+    roleOf: dvor1150aScenarioFieldRole,
+    label: "Scenario task targets",
+  }));
   issues.push(...validateDvorConfig(definition.configuration));
   if (definition.diagnosis !== undefined) {
     issues.push(...validateScenarioDiagnosis(definition.diagnosis));
@@ -872,5 +918,25 @@ export function isDvor1150aScenarioStudentEditable(
   definition: Dvor1150aScenarioDefinition | null,
   fieldId: string,
 ): boolean {
-  return Boolean(definition?.studentEditableFieldIds.includes(fieldId));
+  return Boolean(definition && isScenarioFieldAllowed({
+    policy: definition.editPolicy,
+    legacyFieldIds: definition.studentEditableFieldIds,
+    fieldId,
+    fields: dvorConfigFieldCatalog,
+    isBlocked: isLiveScenarioField,
+    roleOf: dvor1150aScenarioFieldRole,
+  }));
+}
+
+export function dvor1150aScenarioAllowedFieldIds(
+  definition: Dvor1150aScenarioDefinition | null,
+): string[] {
+  if (!definition) return [];
+  return scenarioAllowedFieldIds({
+    policy: definition.editPolicy,
+    legacyFieldIds: definition.studentEditableFieldIds,
+    fields: dvorConfigFieldCatalog,
+    isBlocked: isLiveScenarioField,
+    roleOf: dvor1150aScenarioFieldRole,
+  });
 }

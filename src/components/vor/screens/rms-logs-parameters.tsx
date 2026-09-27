@@ -3,7 +3,7 @@
 import { resolveVorField, useVorPmdtStore } from "@/stores/vor-pmdt-store";
 
 export function RmsLogsParameters() {
-  const logs = useVorPmdtStore((state) => state.parameterChangeLogs).slice(0, 100);
+  const logs = useVorPmdtStore((state) => state.parameterChangeLogs).slice(0, 500);
   const overrides = useVorPmdtStore((state) => state.overrides);
 
   return (

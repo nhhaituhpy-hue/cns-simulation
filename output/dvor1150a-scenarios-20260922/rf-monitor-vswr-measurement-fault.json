@@ -450,6 +450,7 @@
     "requireNoSidebandVswrAlarm": true,
     "requireMonitorBypassCleared": true
   },
+  "taskTargets": [],
   "studentEditableFieldIds": [],
   "diagnosis": {
     "disposition": "replace-module",

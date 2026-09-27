@@ -61,6 +61,7 @@ export function DmeConfigControl({
     && canEditDmeScenarioField({
       active: scenario.active,
       editableFieldIds: scenario.definition?.studentEditableFieldIds ?? [],
+      editPolicy: scenario.definition?.editPolicy,
       fieldId,
       readOnly: field?.readOnly,
       securityLevel,

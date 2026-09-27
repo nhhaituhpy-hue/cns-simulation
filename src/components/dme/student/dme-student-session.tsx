@@ -118,6 +118,7 @@ export function DmeStudentSession({ scenarioId, identity: authIdentity, official
       mode: "student",
       scenarioId: scenario.id,
       sessionKey: officialExam?.sessionKey ?? scenario.id,
+      revisionKey: officialExam?.sessionKey ?? scenario.id,
       userId: identity.userId,
       studentName: identity.studentName,
       workUnit: identity.workUnit,

@@ -16,6 +16,75 @@ export type ScenarioActionKind =
   | "authentication"
   | "system";
 
+export type ScenarioParameterChangePhase = "draft" | "apply" | "command" | "restore" | "backup";
+
+export interface ScenarioParameterChange {
+  fieldId: string;
+  label: string;
+  before: ScenarioEvidenceValue;
+  after: ScenarioEvidenceValue;
+  phase: ScenarioParameterChangePhase;
+  accepted: boolean;
+}
+
+export const MAX_SCENARIO_ACTION_HISTORY_EVENTS = 500;
+
+export interface ScenarioEvidenceStats {
+  totalEventCount: number;
+  storedEventCount: number;
+  droppedCount: number;
+  evidenceTruncated: boolean;
+  lastSequence: number;
+}
+
+export function createScenarioEvidenceStats(
+  history: readonly ScenarioActionEvent[] = [],
+): ScenarioEvidenceStats {
+  const storedEventCount = Math.min(history.length, MAX_SCENARIO_ACTION_HISTORY_EVENTS);
+  const lastSequence = history.reduce((maximum, event) => Math.max(maximum, event.sequence), 0);
+  return {
+    totalEventCount: lastSequence,
+    storedEventCount,
+    droppedCount: Math.max(0, lastSequence - storedEventCount),
+    evidenceTruncated: lastSequence > storedEventCount,
+    lastSequence,
+  };
+}
+
+export function appendScenarioEvidenceEvent(
+  existing: readonly ScenarioActionEvent[],
+  next: ScenarioActionEvent,
+  stats: ScenarioEvidenceStats,
+): { history: ScenarioActionEvent[]; stats: ScenarioEvidenceStats } {
+  const totalEventCount = Math.max(stats.totalEventCount, next.sequence);
+  const canStore = existing.length < MAX_SCENARIO_ACTION_HISTORY_EVENTS;
+  const history = canStore ? [...existing, next] : [...existing];
+  const storedEventCount = history.length;
+  return {
+    history,
+    stats: {
+      totalEventCount,
+      storedEventCount,
+      droppedCount: Math.max(0, totalEventCount - storedEventCount),
+      evidenceTruncated: totalEventCount > storedEventCount,
+      lastSequence: Math.max(stats.lastSequence, next.sequence),
+    },
+  };
+}
+
+export function isScenarioEvidenceStats(value: unknown): value is ScenarioEvidenceStats {
+  if (!isRecord(value)) return false;
+  const totalEventCount = value.totalEventCount;
+  const storedEventCount = value.storedEventCount;
+  return ["totalEventCount", "storedEventCount", "droppedCount", "lastSequence"].every((key) => (
+    typeof value[key] === "number" && Number.isInteger(value[key]) && (value[key] as number) >= 0
+  )) && typeof value.evidenceTruncated === "boolean"
+    && typeof storedEventCount === "number"
+    && typeof totalEventCount === "number"
+    && storedEventCount <= MAX_SCENARIO_ACTION_HISTORY_EVENTS
+    && storedEventCount <= totalEventCount;
+}
+
 /**
  * A compact, serializable audit event. Inputs are intentionally typed as JSON
  * values so passwords and DOM objects cannot accidentally enter an exam result.
@@ -34,6 +103,7 @@ export interface ScenarioActionEvent {
   reason?: string;
   before?: ScenarioEvidenceSnapshot;
   after?: ScenarioEvidenceSnapshot;
+  parameterChanges?: readonly ScenarioParameterChange[];
 }
 
 export interface ScenarioResolutionCheck {
@@ -84,7 +154,24 @@ export function isScenarioActionEvent(value: unknown): value is ScenarioActionEv
   if (value.reason !== undefined && typeof value.reason !== "string") return false;
   if (value.before !== undefined && !isScenarioEvidenceSnapshot(value.before)) return false;
   if (value.after !== undefined && !isScenarioEvidenceSnapshot(value.after)) return false;
+  if (value.parameterChanges !== undefined && (!Array.isArray(value.parameterChanges) || !value.parameterChanges.every((change) => {
+    if (!isRecord(change)) return false;
+    return typeof change.fieldId === "string"
+      && typeof change.label === "string"
+      && isScenarioEvidenceValue(change.before)
+      && isScenarioEvidenceValue(change.after)
+      && ["draft", "apply", "command", "restore", "backup"].includes(change.phase as ScenarioParameterChangePhase)
+      && typeof change.accepted === "boolean";
+  }))) return false;
   return true;
+}
+
+export function appendScenarioActionHistory(
+  existing: readonly ScenarioActionEvent[],
+  next: ScenarioActionEvent,
+): ScenarioActionEvent[] {
+  if (existing.length >= MAX_SCENARIO_ACTION_HISTORY_EVENTS) return [...existing];
+  return [...existing, next];
 }
 
 export function isScenarioResolution(value: unknown): value is ScenarioResolution {
@@ -115,8 +202,9 @@ function displayEvidenceValue(value: ScenarioEvidenceValue | undefined): string 
 
 /** Human-readable changes used by both the student journal and examiner view. */
 export function describeScenarioActionTransition(event: ScenarioActionEvent): string[] {
-  if (!event.before || !event.after) return [];
-  const fields = [
+  const transitions = event.before && event.after ? [
+    ...(() => {
+      const fields = [
     ["monitorNormal", "Integral Monitor"],
     ["monitorIntegralNormal", "Integral Monitor"],
     ["monitorStandbyNormal", "Standby Monitor"],
@@ -128,14 +216,22 @@ export function describeScenarioActionTransition(event: ScenarioActionEvent): st
     ["secondaryMonitorAlarm", "Secondary Monitor Alarm"],
     ["activeTransmitter", "Active Transmitter"],
     ["alarm", "PMDT Alarm"],
-  ] as const;
-  return fields.flatMap(([key, label]) => {
+      ] as const;
+      return fields.flatMap(([key, label]) => {
     const before = event.before?.[key];
     const after = event.after?.[key];
     return JSON.stringify(before) === JSON.stringify(after)
       ? []
       : [`${label}: ${displayEvidenceValue(before)} → ${displayEvidenceValue(after)}`];
-  });
+      });
+    })(),
+  ] : [];
+  return [
+    ...transitions,
+    ...(event.parameterChanges ?? []).map((change) => (
+      `${change.label}: ${displayEvidenceValue(change.before)} → ${displayEvidenceValue(change.after)} (${change.phase})`
+    )),
+  ];
 }
 
 export function scenarioResolutionFromEvaluation(input: {
