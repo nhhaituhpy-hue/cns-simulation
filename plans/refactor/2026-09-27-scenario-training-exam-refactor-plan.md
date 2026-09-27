@@ -622,16 +622,15 @@ Không đánh dấu task hoàn thành chỉ vì đã viết code; phải có đ�
 
 #### Còn thiếu / chưa được phép coi là hoàn tất
 
-- Migration rehearsal trên database cô lập chưa chạy: máy thiếu Docker, `psql` và PostgreSQL local; không dùng `DATABASE_URL` production để thay thế.
+- Migration rehearsal trên database cô lập không chạy theo quyết định phát hành; thay vào đó đã chạy trực tiếp migration production expand-only và kiểm tra checksum/row count/FK sau áp dụng (chi tiết ở mục 11.4).
 - Chưa có DB integration test thật cho FK, grant, transaction rollback, concurrent revision và row count/backfill.
 - Chưa có browser reload/cross-account QA cho checkpoint; localStorage vẫn chỉ là recovery cache, chưa là audit nguồn chính; chưa có IndexedDB/outbox/ACK/server evidence.
-- Chưa triển khai P5/P6 assignment/timer/exam UI; chưa mở teacher flag, chưa migration production, chưa commit/push/deploy.
+- Chưa triển khai P5/P6 assignment/timer/exam UI; teacher flag vẫn tắt. Commit/push/deploy của đợt này đã hoàn tất theo mục 11.4.
 
 #### Bước tiếp theo được phép
 
-- Cung cấp hoặc duyệt một PostgreSQL cô lập (Docker Desktop hoặc VM/database tạm riêng) để chạy rehearsal 0001–0009, FK/backfill/rollback/grant/concurrency và ghi row count/checksum.
-- Sau khi có DB rehearsal, chạy browser QA hai pilot: teacher flag tắt, student đọc đúng published revision, reload cùng user/session, đổi tài khoản/revision và cảnh báo localStorage.
-- Chỉ sau UI approval mới chạy build/quality gate; vẫn giữ P5/P6, teacher rollout, production migration, commit/push/deploy ở trạng thái khóa.
+- Bổ sung DB integration/concurrency test và browser QA authenticated cho hai pilot ở đợt tiếp theo; không coi HTTP smoke test thay cho visual/reload/cross-account QA.
+- Giữ P5/P6 và teacher rollout ngoài phạm vi; teacher flag tiếp tục tắt cho đến khi có đợt nghiệm thu riêng.
 
 ### 11.4. Nhật ký phát hành production — 27/09/2026
 
@@ -658,6 +657,7 @@ Không đánh dấu task hoàn thành chỉ vì đã viết code; phải có đ�
 
 #### Còn thiếu trước/sau push
 
-- Chưa push commit phát hành và chưa có bằng chứng container mới đã được Dokploy build/deploy.
+- Đã commit `1c78f0fb2e65ee823061d7f502c620f4fa31acdd` và push `deploy/main`; Dokploy service update completed, task mới healthy.
 - Chưa có browser reload/cross-account visual QA; chỉ có HTTP health/read-only evidence.
-- Cần xác minh `app_schema_migrations`, HTTP health và log container sau khi Dokploy hoàn tất deploy.
+- Đã xác minh `app_schema_migrations` = 9, seed revision = 10, orphan FK = 0; `/api/health` = 200/database ok; API thư viện và Ôn tập trả 401 đúng khi chưa đăng nhập; `HEAD` trùng `deploy/main`.
+- Browser visual/reload/cross-account QA vẫn chưa có bằng chứng vì môi trường CUA không có browser provider/tab.
