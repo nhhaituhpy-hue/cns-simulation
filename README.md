@@ -209,6 +209,13 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-09-30 — P3: Tab Giám khảo kỳ thi bằng mã code
+- Thêm route mới `/admin/scenario-exams`, tách khỏi luồng `src/lib/exams` legacy: danh sách kỳ thi, tìm kiếm, tạo kỳ thi, mở/khóa/đóng kỳ thi.
+- Thêm form phát mã theo tên, đơn vị và các module được tích; hiển thị pool scenario Kiểm tra trước khi cấp mã, lưu plaintext code chỉ một lần ở giao diện.
+- Thêm bảng tiến độ theo mã và module đã cấp; code/session data lấy từ domain `scenario_exam_*` mới.
+- Giữ `/admin/exams` legacy để compatibility, chưa xóa hoặc chuyển dữ liệu cũ.
+- Kiểm tra đạt: typecheck, ESLint targeted, production build và CodeGraph sync.
+
 ### 2026-09-30 — Sửa lỗi lưu thư viện ADS-B trên production
 - Tách hẳn câu SQL chọn source theo nhánh admin/teacher trong `PUT /api/scenario-libraries`, bảo đảm số placeholder và params luôn khớp; không còn phụ thuộc predicate động cho admin.
 - Thêm regression test mô phỏng lỗi bind parameter khiến giao diện báo `Không thể cập nhật thư viện kịch bản.`.

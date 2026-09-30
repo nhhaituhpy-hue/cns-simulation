@@ -52,3 +52,26 @@ export interface ScenarioExamCodeSummary {
   moduleIds: ScenarioParametersModuleId[];
   completedModules: number;
 }
+
+export interface ScenarioExamCodeSubjectSummary {
+  id: string;
+  moduleId: ScenarioParametersModuleId;
+  position: number;
+  status: ScenarioExamSubjectStatus;
+  startedAt: string | null;
+  submittedAt: string | null;
+}
+
+export interface ScenarioExamCodeDetail extends ScenarioExamCodeSummary {
+  subjects: ScenarioExamCodeSubjectSummary[];
+}
+
+export interface ScenarioExamDetail extends ScenarioExamSummary {
+  description: string;
+  codes: ScenarioExamCodeDetail[];
+}
+
+export interface ScenarioExamPoolCount {
+  moduleId: ScenarioParametersModuleId;
+  count: number;
+}

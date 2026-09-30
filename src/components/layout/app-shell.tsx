@@ -90,7 +90,7 @@ const workspaceItems: Record<WorkspaceSection, NavigationItem[]> = {
   review: trainingNavigationItems("review"),
   admin: [
     { href: "/admin/exam-sets", label: "Quản lý đề thi", icon: Exam },
-    { href: "/admin/exams", label: "Quản lý kỳ thi", icon: CalendarCheck },
+    { href: "/admin/scenario-exams", label: "Quản lý kỳ thi", icon: CalendarCheck },
   ],
   student: [{ href: "/student/exams", label: "Vào thi", icon: SignIn }],
 };
@@ -121,10 +121,10 @@ const navigationItems: NavigationItem[] = [
     ]),
   },
   {
-    href: "/admin/exams",
+    href: "/admin/scenario-exams",
     label: "Giám khảo",
     icon: ClipboardText,
-    activePrefixes: ["/admin/exam-sets"],
+    activePrefixes: ["/admin/exam-sets", "/admin/exams"],
   },
   { href: "/student/exams", label: "Thí sinh", icon: Student },
 ];
