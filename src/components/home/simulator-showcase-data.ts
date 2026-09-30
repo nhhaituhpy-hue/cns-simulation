@@ -1,17 +1,14 @@
-import type { StaticImageData } from "next/image";
-import adsBCatalogueImage from "../../../public/images/simulator-cataloge/ads-b-catalogue.png";
-import dme1119aCatalogueImage from "../../../public/images/simulator-cataloge/DME1119A.png";
-import dme320CatalogueImage from "../../../public/images/simulator-cataloge/DME320.png";
-import dvor1150CatalogueImage from "../../../public/images/simulator-cataloge/DVOR1150.png";
-import dvor1150aCatalogueImage from "../../../public/images/simulator-cataloge/DVOR1150A.png";
-import dvor220CatalogueImage from "../../../public/images/simulator-cataloge/DVOR220.png";
+import {
+  getSimulatorCatalogueImage,
+  type SimulatorCatalogueImage,
+} from "@/modules/core/simulator-catalogue-images";
 import type {
   SimulatorModuleDefinition,
   SimulatorModuleId,
   SimulatorModuleStatus,
 } from "@/modules/core/types";
 
-type ShowcaseImage = string | StaticImageData;
+type ShowcaseImage = SimulatorCatalogueImage;
 
 export type SimulatorShowcaseItem = {
   id: SimulatorModuleId;
@@ -44,9 +41,9 @@ const showcaseVisuals: Record<SimulatorModuleId, ShowcaseVisual> = {
       "Theo dõi chỉ thị, nguồn và cảnh báo.",
       "Luyện thao tác theo quy trình tại trạm.",
     ],
-    cardImage: dvor1150CatalogueImage,
+    cardImage: getSimulatorCatalogueImage("dvor-1150"),
     cardImageFit: "cover",
-    image: dvor1150CatalogueImage,
+    image: getSimulatorCatalogueImage("dvor-1150"),
     imageAlt: "Cabinet DVOR 1150 trong catalogue thiết bị mô phỏng",
     imageFit: "contain",
   },
@@ -59,9 +56,9 @@ const showcaseVisuals: Record<SimulatorModuleId, ShowcaseVisual> = {
       "Đối chiếu màn hình với cấu hình thiết bị.",
       "Thực hành theo tình huống khai thác.",
     ],
-    cardImage: dvor1150aCatalogueImage,
+    cardImage: getSimulatorCatalogueImage("dvor-1150a"),
     cardImageFit: "cover",
-    image: dvor1150aCatalogueImage,
+    image: getSimulatorCatalogueImage("dvor-1150a"),
     imageAlt: "Cabinet DVOR 1150A trong catalogue thiết bị mô phỏng",
     imageFit: "contain",
   },
@@ -74,9 +71,9 @@ const showcaseVisuals: Record<SimulatorModuleId, ShowcaseVisual> = {
       "Kiểm tra cấu hình, tín hiệu và cảnh báo.",
       "Đánh giá thao tác theo kịch bản.",
     ],
-    cardImage: dme1119aCatalogueImage,
+    cardImage: getSimulatorCatalogueImage("dme-1119a"),
     cardImageFit: "cover",
-    image: dme1119aCatalogueImage,
+    image: getSimulatorCatalogueImage("dme-1119a"),
     imageAlt: "Cabinet DME 1119A trong catalogue thiết bị mô phỏng",
     imageFit: "contain",
   },
@@ -89,9 +86,9 @@ const showcaseVisuals: Record<SimulatorModuleId, ShowcaseVisual> = {
       "Liên hệ trạng thái màn hình với thiết bị.",
       "Luyện kiểm tra theo tình huống.",
     ],
-    cardImage: dvor220CatalogueImage,
+    cardImage: getSimulatorCatalogueImage("dvor-220"),
     cardImageFit: "cover",
-    image: dvor220CatalogueImage,
+    image: getSimulatorCatalogueImage("dvor-220"),
     imageAlt: "Cabinet MOPIENS 220 DVOR trong catalogue thiết bị mô phỏng",
     imageFit: "contain",
   },
@@ -104,9 +101,9 @@ const showcaseVisuals: Record<SimulatorModuleId, ShowcaseVisual> = {
       "Thực hành quy trình kiểm tra hệ thống.",
       "Lặp lại tình huống bảo dưỡng có kiểm soát.",
     ],
-    cardImage: dme320CatalogueImage,
+    cardImage: getSimulatorCatalogueImage("dme-320"),
     cardImageFit: "cover",
-    image: dme320CatalogueImage,
+    image: getSimulatorCatalogueImage("dme-320"),
     imageAlt: "Cabinet MOPIENS 320 DME trong catalogue thiết bị mô phỏng",
     imageFit: "contain",
   },
@@ -119,9 +116,9 @@ const showcaseVisuals: Record<SimulatorModuleId, ShowcaseVisual> = {
       "Thực hành đọc trạng thái theo kịch bản.",
       "Rèn phản ứng với thông tin giám sát.",
     ],
-    cardImage: adsBCatalogueImage,
+    cardImage: getSimulatorCatalogueImage("ads-b"),
     cardImageFit: "cover",
-    image: adsBCatalogueImage,
+    image: getSimulatorCatalogueImage("ads-b"),
     imageAlt: "Thiết bị mặt đất ADS-B trong catalogue thiết bị mô phỏng",
     imageFit: "contain",
   },
@@ -134,9 +131,9 @@ const showcaseVisuals: Record<SimulatorModuleId, ShowcaseVisual> = {
       "Sẵn sàng bổ sung kịch bản khai thác.",
       "Định hướng học viên trước khi mở simulator.",
     ],
-    cardImage: "/images/simulator-icons/vhf.png",
+    cardImage: getSimulatorCatalogueImage("vhf"),
     cardImageFit: "contain",
-    image: "/images/simulator-icons/vhf.png",
+    image: getSimulatorCatalogueImage("vhf"),
     imageAlt: "Biểu tượng mô phỏng hệ thống VHF",
     imageFit: "contain",
   },
@@ -149,9 +146,9 @@ const showcaseVisuals: Record<SimulatorModuleId, ShowcaseVisual> = {
       "Sẵn sàng bổ sung kịch bản vận hành và bảo dưỡng.",
       "Định hướng học viên trước khi mở simulator.",
     ],
-    cardImage: "/images/simulator-icons/vsat.png",
+    cardImage: getSimulatorCatalogueImage("vsat"),
     cardImageFit: "contain",
-    image: "/images/simulator-icons/vsat.png",
+    image: getSimulatorCatalogueImage("vsat"),
     imageAlt: "Biểu tượng mô phỏng hệ thống VSAT",
     imageFit: "contain",
   },

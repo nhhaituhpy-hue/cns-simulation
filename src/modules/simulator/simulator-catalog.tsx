@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getSimulatorIconImage } from "@/modules/core/simulator-icon-images";
+import { getSimulatorCatalogueImage } from "@/modules/core/simulator-catalogue-images";
 import { SIMULATOR_MODULES } from "@/modules/core/registry";
 
 export function SimulatorCatalog() {
@@ -10,7 +10,7 @@ export function SimulatorCatalog() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {SIMULATOR_MODULES.map((module) => {
             const available = module.status === "available";
-            const moduleIcon = getSimulatorIconImage(module.id);
+            const moduleIcon = getSimulatorCatalogueImage(module.id);
             return (
               <article key={module.id} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
