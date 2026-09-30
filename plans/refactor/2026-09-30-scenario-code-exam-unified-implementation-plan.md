@@ -27,7 +27,7 @@
 - Người dùng đã cho phép mở rộng lưu mã mã hóa để phục vụ PDF xuất lại; plaintext vẫn không được lưu hoặc ghi log.
 - Đã viết migration `0013` (nullable `code_ciphertext`, audit `code_exported`), AES-256-GCM với AAD gắn kỳ thi/hash, endpoint admin-only PDF và nút tải ở bảng `Danh sách mã`.
 - PDF đã kiểm tra trực quan bằng fixture 38 dòng: A4 ngang, tiếng Việt, lịch UTC+7, header lặp, footer/trang, dòng dài xuống hàng và đánh dấu mã cũ không khôi phục được.
-- **Release status:** migration `0013` đã áp dụng trên đúng database `cns_simulator` và checksum khớp. Còn thiếu secret `SCENARIO_EXAM_CODE_ENCRYPTION_KEY` trong runtime production, runner mới, health + route authorization + browser download QA; không reissue mã cũ tự động.
+- **Release status:** migration `0013` đã áp dụng trên đúng database `cns_simulator` và checksum khớp; secret `SCENARIO_EXAM_CODE_ENCRYPTION_KEY` đã gắn vào service, runner mới có route/font và health production 200, unauthenticated route trả 401. Còn browser download QA với tài khoản Giám khảo; không reissue mã cũ tự động.
 
 ## 0. Tóm tắt quyết định chính
 
