@@ -1,6 +1,6 @@
 # Kế hoạch triển khai refactor kỳ thi bằng mã code và chuẩn hóa thư viện Scenario
 
-**Phiên bản:** 1.2 — kế hoạch đã duyệt, cập nhật tiến độ và hotfix lịch hiển thị
+**Phiên bản:** 1.3 — kế hoạch đã duyệt, cập nhật tiến độ PDF và mã mã hóa
 **Ngày:** 2026-09-30
 **Phạm vi:** CNS Simulation Lab — Scenario Parameters, thư viện Ôn tập/Kiểm tra, ADS-B và kỳ thi bằng mã code
 **Trạng thái:** IN PROGRESS — đã có nền tảng P1/P2, workspace P3 và P4 foundation; chưa hoàn tất runtime/nộp bài/chấm điểm và acceptance P4–P8.
@@ -21,6 +21,13 @@
 - UI admin và candidate hiển thị lịch thống nhất UTC+7; nút khóa được đổi nhãn thành `Khóa kỳ thi` để phản ánh việc dừng cấp mã và dừng phiên mới.
 - Đã thêm ma trận integration PostgreSQL cho kỳ thi tương lai/đang diễn ra/hết hạn. Không đổi lịch, không revoke/reissue và không ghi dữ liệu production.
 - **Còn lại:** browser QA sau deploy; cần chốt riêng thiết kế lưu mã mã hóa trước khi làm PDF có thể xuất lại mã đầy đủ. Mã cũ chỉ có hash/hint nên không khôi phục được.
+
+### Cập nhật 2026-09-30 — PDF danh sách mã và envelope mã hóa
+
+- Người dùng đã cho phép mở rộng lưu mã mã hóa để phục vụ PDF xuất lại; plaintext vẫn không được lưu hoặc ghi log.
+- Đã viết migration `0013` (nullable `code_ciphertext`, audit `code_exported`), AES-256-GCM với AAD gắn kỳ thi/hash, endpoint admin-only PDF và nút tải ở bảng `Danh sách mã`.
+- PDF đã kiểm tra trực quan bằng fixture 38 dòng: A4 ngang, tiếng Việt, lịch UTC+7, header lặp, footer/trang, dòng dài xuống hàng và đánh dấu mã cũ không khôi phục được.
+- **Remaining release gates:** cài secret `SCENARIO_EXAM_CODE_ENCRYPTION_KEY` trong runtime production, áp dụng migration 0013 trên đúng database sau khi xác minh identity, deploy runner mới, health + route authorization + browser download QA; không reissue mã cũ tự động.
 
 ## 0. Tóm tắt quyết định chính
 

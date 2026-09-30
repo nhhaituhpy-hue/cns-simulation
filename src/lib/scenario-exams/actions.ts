@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { withDatabaseTransaction } from "@/lib/db";
 import { generateScenarioExamCode, hashScenarioExamCode, isScenarioExamCode } from "./codes";
+import { encryptScenarioExamCode, ScenarioExamCodeEncryptionError } from "./code-encryption";
 import { createScenarioExamSessionToken, hashScenarioExamSessionToken, setScenarioExamSessionCookie } from "./session";
 import { getScenarioExamSessionToken } from "./session";
 import {
@@ -30,6 +31,7 @@ async function requireAdmin() {
 
 function errorMessage(error: unknown, operation: string): string {
   if (error instanceof ScenarioExamValidationError) return error.message;
+  if (error instanceof ScenarioExamCodeEncryptionError) return error.message;
 
   // PostgreSQL messages/details can contain candidate data or token values.
   // Keep only a SQLSTATE-shaped code and the known operation in server logs.
@@ -139,12 +141,13 @@ export async function issueScenarioExamCodeAction(
         }
       }
 
+      const codeCiphertext = encryptScenarioExamCode(generated.value, parsed.examId, generated.hash);
       const codeResult = await client.query<{ id: string }>(
         `insert into public.scenario_exam_codes
-           (exam_id, code_hash, code_hint, candidate_name, candidate_unit, created_by)
-         values ($1, $2, $3, $4, $5, $6)
+           (exam_id, code_hash, code_hint, code_ciphertext, candidate_name, candidate_unit, created_by)
+         values ($1, $2, $3, $4, $5, $6, $7)
          returning id`,
-        [parsed.examId, generated.hash, generated.hint, parsed.candidateName, parsed.candidateUnit, profile.id],
+        [parsed.examId, generated.hash, generated.hint, codeCiphertext, parsed.candidateName, parsed.candidateUnit, profile.id],
       );
       const codeId = codeResult.rows[0]?.id;
       if (!codeId) throw new Error("Không tạo được mã thí sinh.");

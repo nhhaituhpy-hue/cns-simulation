@@ -25,6 +25,7 @@ import {
   startScenarioExamSubjectAction,
 } from "@/lib/scenario-exams/actions";
 import { hashScenarioExamCode, isScenarioExamCode } from "@/lib/scenario-exams/codes";
+import { decryptScenarioExamCode } from "@/lib/scenario-exams/code-encryption";
 import { hashScenarioExamSessionToken } from "@/lib/scenario-exams/session";
 
 const examId = "11111111-1111-4111-8111-111111111111";
@@ -38,6 +39,7 @@ const now = new Date("2026-09-30T10:00:00.000Z");
 const validCode = "ABCD2345EFGH";
 const token = "opaque-candidate-session-token";
 const unexpectedError = "Không thể xử lý kỳ thi Scenario. Vui lòng thử lại hoặc liên hệ giám khảo.";
+const testEncryptionKey = "11".repeat(32);
 
 function profile(role = "admin") {
   return { id: userId, role, email: "gate-only@example.test" };
@@ -81,6 +83,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(now);
   vi.spyOn(console, "error").mockImplementation(() => {});
+  process.env.SCENARIO_EXAM_CODE_ENCRYPTION_KEY = testEncryptionKey;
   mocks.getCurrentProfile.mockResolvedValue(profile());
   mocks.cookieGet.mockReturnValue({ value: token });
   mocks.query.mockResolvedValue({ rows: [], rowCount: 0 });
@@ -221,10 +224,12 @@ describe("issueScenarioExamCodeAction", () => {
     expect(isScenarioExamCode(result.data?.code ?? "")).toBe(true);
     expect(mocks.query.mock.calls[1]?.[1]).toEqual(["dvor-1150a"]);
     expect(mocks.query.mock.calls[2]?.[1]).toEqual(["dme-1119a"]);
-    expect(mocks.query.mock.calls[3]?.[1]).toEqual([
-      examId, hashScenarioExamCode(result.data!.code), result.data!.code.slice(-4),
-      "Thí sinh kiểm thử", "Đơn vị kiểm thử", userId,
-    ]);
+    const codeHash = hashScenarioExamCode(result.data!.code);
+    const insertParams = mocks.query.mock.calls[3]?.[1] as unknown[];
+    expect(insertParams?.slice(0, 3)).toEqual([examId, codeHash, result.data!.code.slice(-4)]);
+    expect(insertParams?.slice(4, 7)).toEqual(["Thí sinh kiểm thử", "Đơn vị kiểm thử", userId]);
+    expect(typeof insertParams?.[3]).toBe("string");
+    expect(decryptScenarioExamCode(String(insertParams?.[3]), examId, codeHash)).toBe(result.data!.code);
     expect(mocks.query.mock.calls[4]?.[1]).toEqual([codeId, "dvor-1150a", 1]);
     expect(mocks.query.mock.calls[5]?.[1]).toEqual([codeId, "dme-1119a", 2]);
     expect(sqlAt(6)).toContain("jsonb_build_object('moduleIds', $4::jsonb)");

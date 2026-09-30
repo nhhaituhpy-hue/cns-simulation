@@ -1,6 +1,7 @@
 "use client";
 
 import { Copy } from "@phosphor-icons/react/dist/csr/Copy";
+import { FilePdf } from "@phosphor-icons/react/dist/csr/FilePdf";
 import { Lock } from "@phosphor-icons/react/dist/csr/Lock";
 import { LockOpen } from "@phosphor-icons/react/dist/csr/LockOpen";
 import { Plus } from "@phosphor-icons/react/dist/csr/Plus";
@@ -24,6 +25,8 @@ export function ScenarioExamDetailManager({ detail, poolCounts }: { detail: Scen
   const [moduleIds, setModuleIds] = useState<ScenarioParametersModuleId[]>([]);
   const [issuedCode, setIssuedCode] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const [exportFeedback, setExportFeedback] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   function toggleModule(moduleId: ScenarioParametersModuleId) {
@@ -57,6 +60,38 @@ export function ScenarioExamDetailManager({ detail, poolCounts }: { detail: Scen
 
   async function copyCode() {
     if (issuedCode) await navigator.clipboard?.writeText(issuedCode);
+  }
+
+  async function exportPdf() {
+    setExportFeedback(null);
+    setExportingPdf(true);
+    try {
+      const response = await fetch(`/api/scenario-exams/${detail.id}/codes.pdf`, { credentials: "same-origin" });
+      if (!response.ok) {
+        let message = "Không thể xuất danh sách mã PDF.";
+        try {
+          const payload = await response.json() as { error?: unknown };
+          if (typeof payload.error === "string" && payload.error.trim()) message = payload.error;
+        } catch {
+          // Keep the safe fallback when an upstream error is not JSON.
+        }
+        throw new Error(message);
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `scenario-exam-${detail.id}-codes.pdf`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
+      setExportFeedback("Đã tải bảng danh sách mã PDF.");
+    } catch (error) {
+      setExportFeedback(error instanceof Error ? error.message : "Không thể xuất danh sách mã PDF.");
+    } finally {
+      setExportingPdf(false);
+    }
   }
 
   return (
@@ -93,7 +128,7 @@ export function ScenarioExamDetailManager({ detail, poolCounts }: { detail: Scen
         {feedback ? <p role="status" className="mt-4 text-sm text-[var(--text-secondary)]">{feedback}</p> : null}
       </section>
 
-      <section className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]"><div className="border-b border-[var(--border)] px-5 py-4"><h2 className="text-base font-bold text-[var(--text-primary)]">Danh sách mã</h2></div><div className="overflow-x-auto"><table className="w-full min-w-[900px] border-collapse text-left text-sm"><thead className="bg-[var(--surface-muted)] text-[11px] font-semibold uppercase text-[var(--text-secondary)]"><tr><th className="px-4 py-3">Thí sinh</th><th className="px-4 py-3">Đơn vị</th><th className="px-4 py-3">Mã</th><th className="px-4 py-3">Môn</th><th className="px-4 py-3">Tiến độ</th><th className="px-4 py-3">Trạng thái</th></tr></thead><tbody className="divide-y divide-[var(--border)]">{detail.codes.map((code) => <tr key={code.id} className={code.status === "submitted" || code.status === "timed_out" ? "bg-[#f0fdf4]" : ""}><td className="px-4 py-3 font-semibold text-[var(--text-primary)]">{code.candidateName}</td><td className="px-4 py-3 text-[var(--text-secondary)]">{code.candidateUnit}</td><td className="px-4 py-3 font-mono text-xs text-[var(--text-secondary)]">••••{code.codeHint}</td><td className="px-4 py-3 text-xs text-[var(--text-secondary)]">{code.moduleIds.map(moduleLabel).join(", ")}</td><td className="px-4 py-3 text-xs text-[var(--text-secondary)]">{code.completedModules}/{code.moduleIds.length}</td><td className="px-4 py-3 text-xs font-semibold text-[var(--text-secondary)]">{code.status}</td></tr>)}{detail.codes.length === 0 ? <tr><td colSpan={6} className="px-5 py-10 text-center text-sm text-[var(--text-muted)]">Chưa có mã thí sinh.</td></tr> : null}</tbody></table></div></section>
+      <section className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)]"><div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--border)] px-5 py-4"><div><h2 className="text-base font-bold text-[var(--text-primary)]">Danh sách mã</h2><p className="mt-1 text-xs text-[var(--text-secondary)]">PDF gồm thông tin kỳ thi, STT, thí sinh, đơn vị, mã đầy đủ, môn thi và tiến độ. Mã cũ không thể khôi phục sẽ được đánh dấu rõ.</p></div><button type="button" className={secondaryButtonClassName} onClick={() => void exportPdf()} disabled={exportingPdf}><FilePdf aria-hidden size={18} /> {exportingPdf ? "Đang tạo PDF…" : "Xuất danh sách PDF"}</button></div><div className="overflow-x-auto"><table className="w-full min-w-[900px] border-collapse text-left text-sm"><thead className="bg-[var(--surface-muted)] text-[11px] font-semibold uppercase text-[var(--text-secondary)]"><tr><th className="px-4 py-3">Thí sinh</th><th className="px-4 py-3">Đơn vị</th><th className="px-4 py-3">Mã</th><th className="px-4 py-3">Môn</th><th className="px-4 py-3">Tiến độ</th><th className="px-4 py-3">Trạng thái</th></tr></thead><tbody className="divide-y divide-[var(--border)]">{detail.codes.map((code) => <tr key={code.id} className={code.status === "submitted" || code.status === "timed_out" ? "bg-[#f0fdf4]" : ""}><td className="px-4 py-3 font-semibold text-[var(--text-primary)]">{code.candidateName}</td><td className="px-4 py-3 text-[var(--text-secondary)]">{code.candidateUnit}</td><td className="px-4 py-3 font-mono text-xs text-[var(--text-secondary)]">••••{code.codeHint}</td><td className="px-4 py-3 text-xs text-[var(--text-secondary)]">{code.moduleIds.map(moduleLabel).join(", ")}</td><td className="px-4 py-3 text-xs text-[var(--text-secondary)]">{code.completedModules}/{code.moduleIds.length}</td><td className="px-4 py-3 text-xs font-semibold text-[var(--text-secondary)]">{code.status}</td></tr>)}{detail.codes.length === 0 ? <tr><td colSpan={6} className="px-5 py-10 text-center text-sm text-[var(--text-muted)]">Chưa có mã thí sinh.</td></tr> : null}</tbody></table></div>{exportFeedback ? <p role="status" className="border-t border-[var(--border)] px-5 py-3 text-sm text-[var(--text-secondary)]">{exportFeedback}</p> : null}</section>
     </div>
   );
 }

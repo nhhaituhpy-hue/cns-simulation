@@ -19,6 +19,7 @@ import {
   listScenarioExamPoolCounts,
   listScenarioExams,
 } from "@/lib/scenario-exams/queries";
+import { decryptScenarioExamCode } from "@/lib/scenario-exams/code-encryption";
 import type { ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 
 const cookieJar = vi.hoisted(() => new Map<string, string>());
@@ -50,6 +51,7 @@ const student: AuthProfile = {
 // Never fall back to DATABASE_URL/.env.local: this suite creates and drops only
 // its own randomly named database through an explicit loopback test endpoint.
 const testUrl = process.env.SCENARIO_EXAM_TEST_DATABASE_URL;
+const testEncryptionKey = "33".repeat(32);
 describe.skipIf(!testUrl)("Scenario Exam actions against real PostgreSQL", () => {
   const databaseName = `cns_exam_test_${randomUUID().replaceAll("-", "")}`;
   let control: Client | undefined;
@@ -58,6 +60,7 @@ describe.skipIf(!testUrl)("Scenario Exam actions against real PostgreSQL", () =>
   const previousPool = globalThis.cnsSimulatorDatabasePool;
 
   beforeAll(async () => {
+    process.env.SCENARIO_EXAM_CODE_ENCRYPTION_KEY = testEncryptionKey;
     const url = new URL(testUrl!);
     if (!/^(postgres|postgresql):$/.test(url.protocol)
       || !["127.0.0.1", "localhost", "[::1]"].includes(url.hostname)
@@ -132,6 +135,7 @@ describe.skipIf(!testUrl)("Scenario Exam actions against real PostgreSQL", () =>
       if (createdDatabase) await control!.query(`drop database "${databaseName}"`);
     } finally {
       await control?.end();
+      delete process.env.SCENARIO_EXAM_CODE_ENCRYPTION_KEY;
     }
   });
 
@@ -267,6 +271,9 @@ describe.skipIf(!testUrl)("Scenario Exam actions against real PostgreSQL", () =>
     const storedCode = await queryDatabase("select code_hash from public.scenario_exam_codes where id = $1", [code.id]);
     expect(storedCode.rows[0].code_hash).toMatch(/^[a-f0-9]{64}$/);
     expect(storedCode.rows[0].code_hash).not.toBe(code.code);
+    const encryptedCode = await queryDatabase("select code_ciphertext from public.scenario_exam_codes where id = $1", [code.id]);
+    expect(encryptedCode.rows[0].code_ciphertext).toMatch(/^v1:/);
+    expect(decryptScenarioExamCode(encryptedCode.rows[0].code_ciphertext, examId, storedCode.rows[0].code_hash)).toBe(code.code);
     expect((await getCandidateScenarioExamSession())?.subjects.every((subject) => subject.sessionItemId)).toBe(true);
   });
 
