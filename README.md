@@ -209,6 +209,11 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-09-30 — Sửa lỗi lưu thư viện ADS-B trên production
+- Sửa nhánh admin của `PUT /api/scenario-libraries`: không còn truyền thừa tham số `profile.id` khi SQL ownership của admin không có placeholder tương ứng.
+- Thêm regression test mô phỏng chính xác lỗi bind parameter khiến giao diện báo `Không thể cập nhật thư viện kịch bản.`.
+- Kiểm tra đạt: focused API tests 7/7, ESLint, typecheck và production build.
+
 ### 2026-09-30 — Chuẩn hóa ADS-B và nền tảng kỳ thi bằng mã code (P1/P2)
 - Thêm adapter Scenario Parameters ADS-B, chấp nhận dữ liệu legacy `title/easy|medium|hard` và chuẩn hóa thành `name/basic|intermediate|advanced`; giữ nguyên site/sensor, expected actions, QCMS/event log và hardware fault.
 - Thêm ADS-B vào module registry/review catalog, chống card trùng trong `/authoring`, và bổ sung panel phân chia ADS-B vào hai thư viện Ôn tập/Kiểm tra trong giai đoạn chuyển tiếp.

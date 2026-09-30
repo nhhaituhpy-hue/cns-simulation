@@ -92,6 +92,22 @@ describe("scenario library resource authorization and concurrency", () => {
     expect(queryDatabase).not.toHaveBeenCalled();
   });
 
+  it("binds only the SQL parameters used by the admin ownership predicate", async () => {
+    vi.mocked(getCurrentProfile).mockResolvedValue(admin);
+    const client = {
+      query: vi.fn()
+        .mockResolvedValueOnce({ rows: [{ revision: 0 }] })
+        .mockResolvedValueOnce({ rows: [availableScenarioRow()] })
+        .mockResolvedValue({ rows: [] }),
+    };
+    vi.mocked(withDatabaseTransaction).mockImplementation(async (work) => work(client as never));
+
+    const response = await PUT(putRequest(0));
+
+    expect(response.status).toBe(200);
+    expect(client.query.mock.calls[1]?.[1]).toEqual([[scenarioId], "dme-320"]);
+  });
+
   it("archives only teacher-manageable memberships", async () => {
     const client = {
       query: vi.fn()

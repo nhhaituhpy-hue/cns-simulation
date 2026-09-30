@@ -265,7 +265,7 @@ export async function PUT(request: Request) {
              and sp.archived_at is null
              and ${ownership.sql}
            for share`,
-          [ids, moduleId, ...(profile.role === "admin" ? [profile.id] : ownership.values)],
+          [ids, moduleId, ...ownership.values],
         )).rows;
       if (
         selected.length !== ids.length
