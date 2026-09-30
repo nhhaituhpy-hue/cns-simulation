@@ -221,7 +221,7 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 - Bổ sung migration `0013_scenario_code_export_encryption.sql`: giữ `code_hash` cho redeem một lần và lưu thêm envelope AES-256-GCM cho mã phát hành mới; khóa runtime là `SCENARIO_EXAM_CODE_ENCRYPTION_KEY` (32 byte dạng hex), không lưu plaintext/log/DTO thường.
 - Thêm endpoint admin-only `/api/scenario-exams/[examId]/codes.pdf` với `no-store`, audit `code_exported`, PDF A4 ngang có thông tin kỳ thi, lịch UTC+7, STT, họ tên, đơn vị, mã, môn, tiến độ, trạng thái và phân trang lặp header.
 - Font Geist Regular/Bold và license được bundle trong `public/fonts`; PDF QA tiếng Việt 4 trang đã render và kiểm tra trực quan bằng PyMuPDF. Các mã cũ chỉ có hash/hint sẽ được ghi rõ là không khôi phục được, không tự cấp lại.
-- Đã kiểm tra: encryption round-trip/tamper, route authorization/audit, migration guard, PDF generator, PostgreSQL integration, typecheck và production build. Chưa áp dụng migration hoặc secret trên production trong mục này.
+- Đã kiểm tra: encryption round-trip/tamper, route authorization/audit, migration guard, PDF generator, PostgreSQL integration, typecheck và production build. Migration `0013` đã áp dụng trên đúng database `cns_simulator` với checksum khớp; secret runtime và runner PDF vẫn chờ cấu hình/redeploy.
 
 ### 2026-09-30 — Hotfix SQL và kiểm thử thực tế kỳ thi Scenario bằng mã
 
