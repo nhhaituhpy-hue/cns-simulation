@@ -92,7 +92,7 @@ const workspaceItems: Record<WorkspaceSection, NavigationItem[]> = {
     { href: "/admin/exam-sets", label: "Quản lý đề thi", icon: Exam },
     { href: "/admin/scenario-exams", label: "Quản lý kỳ thi", icon: CalendarCheck },
   ],
-  student: [{ href: "/student/exams", label: "Vào thi", icon: SignIn }],
+    student: [{ href: "/student/scenario-exams", label: "Vào thi", icon: SignIn }],
 };
 
 const navigationItems: NavigationItem[] = [
@@ -126,7 +126,7 @@ const navigationItems: NavigationItem[] = [
     icon: ClipboardText,
     activePrefixes: ["/admin/exam-sets", "/admin/exams"],
   },
-  { href: "/student/exams", label: "Thí sinh", icon: Student },
+  { href: "/student/scenario-exams", label: "Thí sinh", icon: Student, activePrefixes: ["/student/exams"] },
 ];
 
 function visibleNavigationItems(role?: AuthProfile["role"]) {

@@ -4,6 +4,9 @@ import { getCurrentProfile } from "@/lib/auth/profile";
 import { queryDatabase } from "@/lib/db";
 import { SCENARIO_PARAMETERS_MODULES, type ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 import type {
+  CandidateOpenScenarioExam,
+  CandidateScenarioExamSession,
+  CandidateSessionSubject,
   ScenarioExamCodeDetail,
   ScenarioExamDetail,
   ScenarioExamPoolCount,
@@ -11,6 +14,7 @@ import type {
   ScenarioExamSubjectStatus,
   ScenarioExamSummary,
 } from "./types";
+import { getScenarioExamSessionToken, hashScenarioExamSessionToken } from "./session";
 
 type Row = Record<string, unknown>;
 
@@ -137,4 +141,79 @@ export async function listScenarioExamPoolCounts(): Promise<ScenarioExamPoolCoun
     moduleId: module.moduleId,
     count: counts.get(module.moduleId) ?? 0,
   }));
+}
+
+export async function listCandidateOpenScenarioExams(): Promise<CandidateOpenScenarioExam[]> {
+  const profile = await getCurrentProfile();
+  if (!profile || profile.role !== "student") throw new Error("Bạn cần đăng nhập tài khoản Thí sinh.");
+  const result = await queryDatabase(
+    `select id, name, opens_at, closes_at, duration_minutes
+       from public.scenario_exams
+      where status = 'open'
+        and (opens_at is null or opens_at <= now())
+        and (closes_at is null or closes_at > now())
+      order by opens_at nulls first, created_at desc`,
+  );
+  return result.rows.map((row) => ({
+    id: string(row.id),
+    name: string(row.name),
+    opensAt: nullableString(row.opens_at),
+    closesAt: nullableString(row.closes_at),
+    durationMinutes: number(row.duration_minutes),
+  }));
+}
+
+export async function getCandidateScenarioExamSession(): Promise<CandidateScenarioExamSession | null> {
+  const profile = await getCurrentProfile();
+  if (!profile || profile.role !== "student") throw new Error("Bạn cần đăng nhập tài khoản Thí sinh.");
+  const token = await getScenarioExamSessionToken();
+  if (!token) return null;
+  const result = await queryDatabase(
+    `select s.id, c.exam_id, e.name as exam_name,
+            c.candidate_name, c.candidate_unit, s.status, s.started_at,
+            s.deadline_at, s.submitted_at,
+            coalesce(jsonb_agg(jsonb_build_object(
+              'id', cs.id,
+              'moduleId', cs.module_id,
+              'position', cs.position,
+              'status', cs.status,
+              'startedAt', cs.started_at,
+              'submittedAt', cs.submitted_at,
+              'sessionItemId', item.id,
+              'scenarioName', item.scenario_name
+            ) order by cs.position) filter (where cs.id is not null), '[]'::jsonb) as subjects
+       from public.scenario_exam_sessions s
+       join public.scenario_exam_codes c on c.id = s.code_id
+       join public.scenario_exams e on e.id = c.exam_id
+       left join public.scenario_exam_code_subjects cs on cs.code_id = c.id
+       left join public.scenario_exam_session_items item on item.code_subject_id = cs.id and item.session_id = s.id
+      where s.session_token_hash = $1
+      group by s.id, c.exam_id, e.name, c.candidate_name, c.candidate_unit,
+               s.status, s.started_at, s.deadline_at, s.submitted_at`,
+    [hashScenarioExamSessionToken(token)],
+  );
+  const row = result.rows[0] as Row | undefined;
+  if (!row) return null;
+  const subjects: CandidateSessionSubject[] = rows(row.subjects).map((subject) => ({
+    id: string(subject.id),
+    moduleId: string(subject.moduleId) as ScenarioParametersModuleId,
+    position: number(subject.position),
+    status: string(subject.status) as CandidateSessionSubject["status"],
+    startedAt: nullableString(subject.startedAt),
+    submittedAt: nullableString(subject.submittedAt),
+    sessionItemId: nullableString(subject.sessionItemId),
+    scenarioName: nullableString(subject.scenarioName),
+  }));
+  return {
+    id: string(row.id),
+    examId: string(row.exam_id),
+    examName: string(row.exam_name),
+    candidateName: string(row.candidate_name),
+    candidateUnit: string(row.candidate_unit),
+    status: string(row.status) as CandidateScenarioExamSession["status"],
+    startedAt: string(row.started_at),
+    deadlineAt: string(row.deadline_at),
+    submittedAt: nullableString(row.submitted_at),
+    subjects,
+  };
 }

@@ -38,6 +38,10 @@ function uuid(value: unknown, label: string): string {
   return value.trim();
 }
 
+export function validateScenarioExamUuid(value: unknown, label: string): string {
+  return uuid(value, label);
+}
+
 function optionalDate(value: unknown, label: string): string | null {
   if (value === undefined || value === null || value === "") return null;
   if (typeof value !== "string" || Number.isNaN(Date.parse(value))) {

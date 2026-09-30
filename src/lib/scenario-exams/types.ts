@@ -75,3 +75,35 @@ export interface ScenarioExamPoolCount {
   moduleId: ScenarioParametersModuleId;
   count: number;
 }
+
+export interface CandidateOpenScenarioExam {
+  id: string;
+  name: string;
+  opensAt: string | null;
+  closesAt: string | null;
+  durationMinutes: number;
+}
+
+export interface CandidateSessionSubject {
+  id: string;
+  moduleId: ScenarioParametersModuleId;
+  position: number;
+  status: ScenarioExamSubjectStatus;
+  startedAt: string | null;
+  submittedAt: string | null;
+  sessionItemId: string | null;
+  scenarioName: string | null;
+}
+
+export interface CandidateScenarioExamSession {
+  id: string;
+  examId: string;
+  examName: string;
+  candidateName: string;
+  candidateUnit: string;
+  status: ScenarioExamSessionStatus;
+  startedAt: string;
+  deadlineAt: string;
+  submittedAt: string | null;
+  subjects: CandidateSessionSubject[];
+}

@@ -209,6 +209,12 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-09-30 — P4 foundation: candidate code session
+- Thêm entry/session cho role Thí sinh tại `/student/scenario-exams`: chọn kỳ thi, redeem mã một lần, cookie session HttpOnly riêng và hiển thị đúng module được cấp.
+- `startScenarioExamSubjectAction` chọn ngẫu nhiên một membership Kiểm tra tại thời điểm bắt đầu môn, snapshot definition/revision và không random lại khi retry.
+- Thêm query/session types và timer UI; submit/evidence runtime tiếp tục ở phase kế tiếp.
+- Kiểm tra đạt: ESLint targeted, typecheck và focused scenario-exam tests.
+
 ### 2026-09-30 — P3: Tab Giám khảo kỳ thi bằng mã code
 - Thêm route mới `/admin/scenario-exams`, tách khỏi luồng `src/lib/exams` legacy: danh sách kỳ thi, tìm kiếm, tạo kỳ thi, mở/khóa/đóng kỳ thi.
 - Thêm form phát mã theo tên, đơn vị và các module được tích; hiển thị pool scenario Kiểm tra trước khi cấp mã, lưu plaintext code chỉ một lần ở giao diện.
