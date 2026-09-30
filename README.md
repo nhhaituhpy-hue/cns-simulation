@@ -212,6 +212,7 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 ### 2026-09-30 — Sửa lỗi lưu thư viện ADS-B trên production
 - Tách hẳn câu SQL chọn source theo nhánh admin/teacher trong `PUT /api/scenario-libraries`, bảo đảm số placeholder và params luôn khớp; không còn phụ thuộc predicate động cho admin.
 - Thêm regression test mô phỏng lỗi bind parameter khiến giao diện báo `Không thể cập nhật thư viện kịch bản.`.
+- Bổ sung migration `0012_adsb_review_assignment_support.sql` để cột Ôn tập có thể lưu assignment ADS-B; migration không xóa hay thay đổi các row hiện có.
 - Kiểm tra đạt: focused API tests 7/7, ESLint, typecheck và production build.
 
 ### 2026-09-30 — Chuẩn hóa ADS-B và nền tảng kỳ thi bằng mã code (P1/P2)
