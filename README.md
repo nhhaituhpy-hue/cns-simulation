@@ -209,6 +209,14 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-09-30 — Chuẩn hóa ADS-B và nền tảng kỳ thi bằng mã code (P1/P2)
+- Thêm adapter Scenario Parameters ADS-B, chấp nhận dữ liệu legacy `title/easy|medium|hard` và chuẩn hóa thành `name/basic|intermediate|advanced`; giữ nguyên site/sensor, expected actions, QCMS/event log và hardware fault.
+- Thêm ADS-B vào module registry/review catalog, chống card trùng trong `/authoring`, và bổ sung panel phân chia ADS-B vào hai thư viện Ôn tập/Kiểm tra trong giai đoạn chuyển tiếp.
+- Tạo migration expand-only `0010_adsb_scenario_parameters_and_library.sql`: mở module constraint, tạo revision counters và backfill 17 scenario legacy vào `simulator_scenario_parameters`; không tự publish membership.
+- Tạo migration `0011_scenario_code_exam_sessions.sql` cho kỳ thi code-based: kỳ thi, mã hash một lần, module được chọn, session, snapshot session item và audit event; chưa nối UI kỳ thi mới.
+- Production đã chạy migration bằng runner có advisory lock/checksum: 0010/0011 apply thành công; ADS-B source = 17, ADS-B exam library = 0, bảng code/session = 0; health database 200, web/postgres healthy.
+- Kiểm tra local đạt: focused tests, ESLint, typecheck, production build, `git diff --check` và CodeGraph sync. Database rehearsal local chưa chạy vì máy không có Docker/psql và Chocolatey/winget bị chặn bởi quyền Administrator.
+
 ### 2026-09-30 — Giới hạn vùng chọn kịch bản trong thư viện
 - Giới hạn bảng phân chia kịch bản vào thư viện Ôn tập/Kiểm tra ở vùng cao khoảng 5 dòng; danh sách dài có thể cuộn dọc và vẫn hỗ trợ cuộn ngang trên màn hình hẹp.
 - Giữ hàng tiêu đề cùng checkbox “Chọn tất cả” cố định khi cuộn; thêm nhãn vùng và khả năng focus bằng bàn phím cho vùng danh sách.

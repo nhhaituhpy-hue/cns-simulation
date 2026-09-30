@@ -11,6 +11,10 @@ import {
   type Dme1119aScenarioDefinition,
 } from "@/lib/dme1119a";
 import {
+  parseAdsbScenarioDefinition,
+  type AdsbScenarioDefinition,
+} from "@/modules/devices/adsb/scenario-parameters";
+import {
   parseDvor220ScenarioDefinition,
 } from "@/modules/operations/dvor-220/domain/scenario";
 import type { Dvor220ScenarioDefinition } from "@/modules/operations/dvor-220/domain/types";
@@ -49,6 +53,12 @@ export const SCENARIO_PARAMETERS_MODULES = [
     category: "MOPIENS / PMDT",
     schemaVersion: 1,
   },
+  {
+    moduleId: "ads-b",
+    label: "ADS-B",
+    category: "QCMS / Terminal",
+    schemaVersion: 1,
+  },
 ] as const;
 
 export type ScenarioParametersModuleId =
@@ -59,7 +69,8 @@ export type ScenarioParametersDefinition =
   | Dvor1150aScenarioDefinition
   | Dme1119aScenarioDefinition
   | Dvor220ScenarioDefinition
-  | Dme320ScenarioDefinition;
+  | Dme320ScenarioDefinition
+  | AdsbScenarioDefinition;
 
 export type ScenarioParametersDefinitionFor<
   TModuleId extends ScenarioParametersModuleId,
@@ -71,7 +82,9 @@ export type ScenarioParametersDefinitionFor<
       ? Dme1119aScenarioDefinition
       : TModuleId extends "dvor-220"
         ? Dvor220ScenarioDefinition
-        : Dme320ScenarioDefinition;
+        : TModuleId extends "dme-320"
+          ? Dme320ScenarioDefinition
+          : AdsbScenarioDefinition;
 
 type ScenarioParametersParser<TDefinition extends ScenarioParametersDefinition> =
   (value: unknown) => TDefinition | null;
@@ -109,6 +122,10 @@ const adapters: {
   "dme-320": {
     moduleId: "dme-320",
     parse: parseDme320ScenarioDefinition,
+  },
+  "ads-b": {
+    moduleId: "ads-b",
+    parse: parseAdsbScenarioDefinition,
   },
 };
 

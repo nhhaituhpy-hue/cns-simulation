@@ -10,6 +10,7 @@ import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { DeleteScenarioDialog } from "@/components/admin/delete-scenario-dialog";
+import { AdsbScenarioLibraryPanel } from "@/components/scenario/adsb-scenario-library-panel";
 import {
   EmptyState,
   LoadingRows,
@@ -104,6 +105,8 @@ export function AdsbAdminDashboard() {
           {deleteError}
         </p>
       ) : null}
+
+      <AdsbScenarioLibraryPanel />
 
       <section aria-labelledby="scenario-list-title" className="mt-7">
         <ScenarioSectionHeader

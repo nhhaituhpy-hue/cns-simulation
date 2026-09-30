@@ -48,6 +48,11 @@ const moduleCopy: Record<
     title: "Thực hành xử lý sự cố DME 320",
     description: "Chọn một tình huống đã được giám khảo đưa vào danh sách ôn tập để thực hành trên PMDT/LMI MOPIENS 320.",
   },
+  "ads-b": {
+    shortName: "ADS-B",
+    title: "Thực hành xử lý sự cố ADS-B",
+    description: "Chọn một tình huống đã được giám khảo đưa vào danh sách ôn tập để thực hành trên QCMS và terminal bảo trì ADS-B.",
+  },
 };
 
 const difficultyDetails = {

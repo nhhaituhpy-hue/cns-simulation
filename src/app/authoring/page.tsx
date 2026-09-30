@@ -11,11 +11,14 @@ export default function AuthoringPage() {
     const simulatorModule = getSimulatorModule(entry.moduleId);
     return simulatorModule ? [simulatorModule] : [];
   });
+  const modules = [...scenarioParametersModules, ADSB_MODULE].filter(
+    (module, index, all) => all.findIndex((candidate) => candidate.id === module.id) === index,
+  );
 
   return (
     <TrainingWorkspaceCatalog
       mode="authoring"
-      modules={[...scenarioParametersModules, ADSB_MODULE]}
+      modules={modules}
     />
   );
 }
