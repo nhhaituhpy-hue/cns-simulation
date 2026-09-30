@@ -10,5 +10,5 @@ export default async function ScenarioExamDetailPage({ params }: { params: Promi
   const { examId } = await params;
   const [detail, poolCounts] = await Promise.all([getScenarioExamDetail(examId), listScenarioExamPoolCounts()]);
   if (!detail) notFound();
-  return <ExamPageFrame><ExamPageHeader title={detail.name} description="Quản lý mã thí sinh, module được cấp và trạng thái hoàn tất." /><ScenarioExamDetailManager detail={detail} poolCounts={poolCounts} /></ExamPageFrame>;
+  return <ExamPageFrame><div className="mx-auto w-full max-w-7xl"><ExamPageHeader title={detail.name} description="Quản lý mã thí sinh, module được cấp và trạng thái hoàn tất." /><ScenarioExamDetailManager detail={detail} poolCounts={poolCounts} /></div></ExamPageFrame>;
 }

@@ -209,6 +209,11 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-09-30 — Sửa lỗi truy cập tab Thí sinh khi đăng nhập tài khoản admin
+- Route `/student/scenario-exams` không còn ném server error khi người dùng đang đăng nhập role admin/khác student.
+- Hiển thị màn hình hướng dẫn rõ ràng yêu cầu đăng nhập tài khoản Thí sinh; session/code flow không bị thay đổi.
+- Kiểm tra đạt: ESLint targeted, typecheck, `git diff --check` và production build.
+
 ### 2026-09-30 — P4 foundation: candidate code session
 - Thêm entry/session cho role Thí sinh tại `/student/scenario-exams`: chọn kỳ thi, redeem mã một lần, cookie session HttpOnly riêng và hiển thị đúng module được cấp.
 - `startScenarioExamSubjectAction` chọn ngẫu nhiên một membership Kiểm tra tại thời điểm bắt đầu môn, snapshot definition/revision và không random lại khi retry.

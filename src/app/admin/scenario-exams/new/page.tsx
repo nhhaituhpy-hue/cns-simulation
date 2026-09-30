@@ -5,5 +5,5 @@ import { ScenarioExamEditor } from "@/components/scenario-exams/scenario-exam-ed
 export const metadata: Metadata = { title: "Tạo kỳ thi Scenario" };
 
 export default function NewScenarioExamPage() {
-  return <ExamPageFrame><ExamPageHeader title="Tạo kỳ thi Scenario" description="Tạo kỳ thi độc lập với luồng exam legacy. Sau khi mở kỳ thi, giám khảo cấp mã và chọn các module cho từng thí sinh." /><ScenarioExamEditor /></ExamPageFrame>;
+  return <ExamPageFrame><div className="mx-auto w-full max-w-7xl"><ExamPageHeader title="Tạo kỳ thi Scenario" description="Tạo kỳ thi độc lập với luồng exam legacy. Sau khi mở kỳ thi, giám khảo cấp mã và chọn các module cho từng thí sinh." /><ScenarioExamEditor /></div></ExamPageFrame>;
 }
