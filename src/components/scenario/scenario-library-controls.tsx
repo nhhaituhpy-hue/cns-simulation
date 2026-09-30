@@ -281,12 +281,17 @@ export function ScenarioLibraryControls({
         </p>
       </header>
 
-      <div className="overflow-x-auto">
+      <div
+        role="region"
+        aria-label="Danh sách kịch bản để phân chia thư viện"
+        tabIndex={0}
+        className="max-h-[26rem] overflow-auto"
+      >
         <table className="w-full min-w-[680px] border-collapse text-left text-sm">
           <caption className="sr-only">
             Phân chia kịch bản vào thư viện Ôn tập và thư viện Kiểm tra
           </caption>
-          <thead className="bg-[var(--surface-muted)] text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--text-secondary)]">
+          <thead className="sticky top-0 z-10 bg-[var(--surface-muted)] text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--text-secondary)]">
             <tr>
               <th
                 scope="col"

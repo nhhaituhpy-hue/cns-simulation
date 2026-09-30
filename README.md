@@ -209,6 +209,11 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-09-30 — Giới hạn vùng chọn kịch bản trong thư viện
+- Giới hạn bảng phân chia kịch bản vào thư viện Ôn tập/Kiểm tra ở vùng cao khoảng 5 dòng; danh sách dài có thể cuộn dọc và vẫn hỗ trợ cuộn ngang trên màn hình hẹp.
+- Giữ hàng tiêu đề cùng checkbox “Chọn tất cả” cố định khi cuộn; thêm nhãn vùng và khả năng focus bằng bàn phím cho vùng danh sách.
+- Kiểm tra đạt: focused test `tests/layout/scenario-library-controls.test.tsx`, ESLint hai file bị ảnh hưởng, typecheck, `git diff --check` và CodeGraph sync.
+
 ### 2026-09-22 — Nâng cấp 8 và bổ sung 10 scenario DME 1119A hai bước
 - Nâng cấp 8 preset DME 1119A hiện có với diagnosis contract: PMDT checkpoints, Full/On-Air diagnostic mode, manual references, disposition thay LRU hoặc chỉnh phần mềm.
 - Bổ sung 10 scenario LRU mới theo manual 1119A-0001M: Monitor Interrogator 1, RTC 1, LPA 1, TX1 Power Supply, RMS Processor, Facilities CCA, BCPS 1, Interface CCA, RF Switch và LCU.

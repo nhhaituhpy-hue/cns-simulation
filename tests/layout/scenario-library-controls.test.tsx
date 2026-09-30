@@ -70,6 +70,12 @@ describe("ScenarioLibraryControls", () => {
     const examAll = screen.getByRole("checkbox", {
       name: "Chọn tất cả Thư viện Kiểm tra",
     });
+    const tableRegion = screen.getByRole("region", {
+      name: "Danh sách kịch bản để phân chia thư viện",
+    });
+
+    expect(tableRegion).toHaveClass("max-h-[26rem]", "overflow-auto");
+    expect(tableRegion).toHaveAttribute("tabindex", "0");
 
     await waitFor(() => expect(practiceAll).toHaveProperty("indeterminate", true));
     await waitFor(() => expect(examAll).toHaveProperty("indeterminate", true));
