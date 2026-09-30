@@ -250,22 +250,31 @@ export async function PUT(request: Request) {
           created_by: string;
           has_manage_grant?: boolean;
         }>(
-          `select sp.id, sp.module_id, sp.scenario_id, sp.name, sp.description, sp.difficulty,
-                  sp.schema_version, sp.definition_json, sp.source_filename, sp.created_by,
-                  exists (
-                    select 1 from public.simulator_scenario_parameter_permissions permission
-                    where permission.scenario_parameters_id = sp.id
-                      and permission.module_id = sp.module_id
-                      and permission.grantee_user_id = $3
-                      and permission.permission = 'manage'
-                  ) as has_manage_grant
-           from public.simulator_scenario_parameters sp
-           where sp.id = any($1::uuid[])
-             and sp.module_id = $2
-             and sp.archived_at is null
-             and ${ownership.sql}
-           for share`,
-          [ids, moduleId, ...ownership.values],
+          profile.role === "admin"
+            ? `select sp.id, sp.module_id, sp.scenario_id, sp.name, sp.description, sp.difficulty,
+                      sp.schema_version, sp.definition_json, sp.source_filename, sp.created_by,
+                      false as has_manage_grant
+               from public.simulator_scenario_parameters sp
+               where sp.id = any($1::uuid[])
+                 and sp.module_id = $2
+                 and sp.archived_at is null
+               for share`
+            : `select sp.id, sp.module_id, sp.scenario_id, sp.name, sp.description, sp.difficulty,
+                      sp.schema_version, sp.definition_json, sp.source_filename, sp.created_by,
+                      exists (
+                        select 1 from public.simulator_scenario_parameter_permissions permission
+                        where permission.scenario_parameters_id = sp.id
+                          and permission.module_id = sp.module_id
+                          and permission.grantee_user_id = $3
+                          and permission.permission = 'manage'
+                      ) as has_manage_grant
+               from public.simulator_scenario_parameters sp
+               where sp.id = any($1::uuid[])
+                 and sp.module_id = $2
+                 and sp.archived_at is null
+                 and ${ownership.sql}
+               for share`,
+          profile.role === "admin" ? [ids, moduleId] : [ids, moduleId, ...ownership.values],
         )).rows;
       if (
         selected.length !== ids.length
