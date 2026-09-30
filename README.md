@@ -209,11 +209,11 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
-### 2026-09-30 — Khôi phục cấu hình bảo mật mã kỳ thi sau tự triển khai
+### 2026-09-30 — Điều tra lỗi cấu hình bảo mật mã kỳ thi sau tự triển khai
 
 - Lỗi “Thiếu cấu hình bảo mật mã kỳ thi” khi tạo mã xuất phát từ runner web không còn `SCENARIO_EXAM_CODE_ENCRYPTION_KEY`: khóa trước đó chỉ được gắn vào Docker service và bị Dokploy thay thế ở lần deploy tiếp theo.
-- Kiểm tra production trước khi sửa: bảng `scenario_exam_codes` có 3 mã cũ và 0 mã có `code_ciphertext`; không có mã mới cần giải mã bằng khóa tạm. Lưu khóa 32 byte dạng hex vào cấu hình environment của chính ứng dụng `cns-simulator-web` trong Dokploy, giữ nguyên các biến cũ; nạp lại service.
-- Đã xác nhận cấu hình ứng dụng và Docker service đều có một khóa đúng định dạng, runner mới healthy và `/api/health` trả HTTP 200 với database `ok`. Cần kiểm tra lại sau lần tự deploy kế tiếp; thao tác tạo mã và tải PDF bằng phiên Giám khảo vẫn cần xác nhận trên trình duyệt đã đăng nhập.
+- Kiểm tra production: bảng `scenario_exam_codes` có 3 mã cũ và 0 mã có `code_ciphertext`; có thể tạo khóa mới mà không mất khả năng giải mã mã mới đã phát hành. Docker service nhận khóa hợp lệ khi gắn tạm, nhưng lần tự deploy sau đó lại bỏ biến này; health vẫn trả 200 vì không kiểm tra cấu hình cấp mã.
+- Dokploy lưu nguyên khối environment ở dạng mã hóa. Việc thêm dòng trực tiếp vào database không được Dokploy áp dụng; đã gỡ dòng thử nghiệm và khôi phục nguyên trạng dữ liệu environment. Runner sau tự deploy hiện **chưa có khóa**. Cần tạo khóa 32 byte dạng hex mới, thêm `SCENARIO_EXAM_CODE_ENCRYPTION_KEY` qua màn hình Environment của ứng dụng `cns-simulator-web` trong Dokploy, lưu và redeploy; sau đó kiểm tra runner và luồng tạo mã/PDF bằng phiên Giám khảo.
 
 ### 2026-09-30 — Hiển thị đúng kỳ thi sắp mở ở tab Thí sinh
 
