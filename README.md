@@ -209,6 +209,10 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-09-30 — Căn chỉnh nhịp các ô nhập kỳ thi Scenario
+- Căn các field form tạo kỳ thi theo cùng nhịp label → input → hint; thêm `items-start` và hint đối xứng cho các cột thời gian/tên kỳ thi.
+- Kiểm tra đạt: ESLint component, typecheck và `git diff --check`.
+
 ### 2026-09-30 — Sửa lỗi truy cập tab Thí sinh khi đăng nhập tài khoản admin
 - Route `/student/scenario-exams` không còn ném server error khi người dùng đang đăng nhập role admin/khác student.
 - Hiển thị màn hình hướng dẫn rõ ràng yêu cầu đăng nhập tài khoản Thí sinh; session/code flow không bị thay đổi.

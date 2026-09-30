@@ -41,8 +41,8 @@ export function ScenarioExamEditor() {
 
   return (
     <section className="mt-6 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)] sm:p-6">
-      <div className="grid gap-5 lg:grid-cols-2">
-        <Field label="Tên kỳ thi" htmlFor="scenario-exam-name" required>
+      <div className="grid items-start gap-5 lg:grid-cols-2">
+        <Field label="Tên kỳ thi" htmlFor="scenario-exam-name" required hint="Tên hiển thị trong danh sách kỳ thi.">
           <input id="scenario-exam-name" value={name} onChange={(event) => setName(event.currentTarget.value)} className={inputClassName} placeholder="Năng định đợt 2 năm 2026" disabled={pending} />
         </Field>
         <Field label="Thời lượng (phút)" htmlFor="scenario-exam-duration" required hint="Tính từ lúc mã được chấp nhận và phiên thi được tạo.">
@@ -51,7 +51,7 @@ export function ScenarioExamEditor() {
         <Field label="Mở kỳ thi" htmlFor="scenario-exam-opens-at" hint="Để trống nếu mở ngay sau khi chuyển trạng thái.">
           <input id="scenario-exam-opens-at" type="datetime-local" value={opensAt} onChange={(event) => setOpensAt(event.currentTarget.value)} className={inputClassName} disabled={pending} />
         </Field>
-        <Field label="Đóng kỳ thi" htmlFor="scenario-exam-closes-at">
+        <Field label="Đóng kỳ thi" htmlFor="scenario-exam-closes-at" hint="Để trống nếu không giới hạn thời điểm đóng.">
           <input id="scenario-exam-closes-at" type="datetime-local" value={closesAt} onChange={(event) => setClosesAt(event.currentTarget.value)} className={inputClassName} disabled={pending} />
         </Field>
         <div className="lg:col-span-2">
