@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { withDatabaseTransaction } from "@/lib/db";
-import { generateScenarioExamCode, hashScenarioExamCode } from "./codes";
+import { generateScenarioExamCode, hashScenarioExamCode, isScenarioExamCode } from "./codes";
 import { createScenarioExamSessionToken, hashScenarioExamSessionToken, setScenarioExamSessionCookie } from "./session";
 import { getScenarioExamSessionToken } from "./session";
 import {
@@ -28,8 +28,19 @@ async function requireAdmin() {
   return profile;
 }
 
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Không thể xử lý kỳ thi Scenario.";
+function errorMessage(error: unknown, operation: string): string {
+  if (error instanceof ScenarioExamValidationError) return error.message;
+
+  // PostgreSQL messages/details can contain candidate data or token values.
+  // Keep only a SQLSTATE-shaped code and the known operation in server logs.
+  const code = typeof error === "object" && error !== null && "code" in error
+    ? error.code
+    : undefined;
+  console.error("Scenario Exam operation failed", {
+    operation,
+    code: typeof code === "string" && /^[0-9A-Z]{5}$/.test(code) ? code : "unknown",
+  });
+  return "Không thể xử lý kỳ thi Scenario. Vui lòng thử lại hoặc liên hệ giám khảo.";
 }
 
 export async function createScenarioExamAction(
@@ -50,15 +61,15 @@ export async function createScenarioExamAction(
       if (!id) throw new Error("Không tạo được mã kỳ thi Scenario.");
       await client.query(
         `insert into public.scenario_exam_audit_events (exam_id, actor_user_id, event_type, event_json)
-         values ($1, $2, 'exam_created', jsonb_build_object('name', $3))`,
+         values ($1, $2, 'exam_created', jsonb_build_object('name', $3::text))`,
         [id, profile.id, parsed.name],
       );
       return { id };
     });
-    revalidatePath("/admin/exams");
+    revalidatePath("/admin/scenario-exams");
     return { ok: true, message: "Kỳ thi Scenario đã được tạo ở trạng thái nháp.", data };
   } catch (error) {
-    return { ok: false, message: errorMessage(error) };
+    return { ok: false, message: errorMessage(error, "create_exam") };
   }
 }
 
@@ -68,11 +79,7 @@ export async function setScenarioExamStatusAction(
 ): Promise<ScenarioExamActionResult> {
   try {
     const profile = await requireAdmin();
-    const examId = validateScenarioExamInput({
-      name: "Temporary name for validation",
-      durationMinutes: 1,
-      id: examIdValue,
-    }).id!;
+    const examId = validateScenarioExamUuid(examIdValue, "Mã kỳ thi");
     const status = validateScenarioExamStatus(statusValue);
     await withDatabaseTransaction(async (client) => {
       const result = await client.query(
@@ -82,18 +89,19 @@ export async function setScenarioExamStatusAction(
           returning id`,
         [examId, status],
       );
-      if (result.rowCount !== 1) throw new Error("Không tìm thấy kỳ thi Scenario.");
+      if (result.rowCount !== 1) throw new ScenarioExamValidationError("Không tìm thấy kỳ thi Scenario.");
       await client.query(
         `insert into public.scenario_exam_audit_events (exam_id, actor_user_id, event_type)
          values ($1, $2, $3)`,
         [examId, profile.id, status === "open" ? "exam_opened" : status === "locked" ? "exam_locked" : "exam_closed"],
       );
     });
-    revalidatePath("/admin/exams");
-    revalidatePath(`/admin/exams/${examId}`);
+    revalidatePath("/admin/scenario-exams");
+    revalidatePath(`/admin/scenario-exams/${examId}`);
+    revalidatePath("/student/scenario-exams");
     return { ok: true, message: "Trạng thái kỳ thi đã được cập nhật." };
   } catch (error) {
-    return { ok: false, message: errorMessage(error) };
+    return { ok: false, message: errorMessage(error, "set_exam_status") };
   }
 }
 
@@ -113,8 +121,8 @@ export async function issueScenarioExamCodeAction(
         [parsed.examId],
       );
       const exam = examResult.rows[0];
-      if (!exam) throw new Error("Không tìm thấy kỳ thi Scenario.");
-      if (exam.status !== "open") throw new Error("Kỳ thi chưa ở trạng thái mở để cấp mã.");
+      if (!exam) throw new ScenarioExamValidationError("Không tìm thấy kỳ thi Scenario.");
+      if (exam.status !== "open") throw new ScenarioExamValidationError("Kỳ thi chưa ở trạng thái mở để cấp mã.");
 
       for (const moduleId of parsed.moduleIds) {
         const pool = await client.query(
@@ -127,7 +135,7 @@ export async function issueScenarioExamCodeAction(
           [moduleId],
         );
         if (pool.rowCount !== 1) {
-          throw new Error(`Module ${moduleId} chưa có scenario active trong thư viện Kiểm tra.`);
+          throw new ScenarioExamValidationError(`Module ${moduleId} chưa có scenario active trong thư viện Kiểm tra.`);
         }
       }
 
@@ -155,10 +163,11 @@ export async function issueScenarioExamCodeAction(
       );
       return { id: codeId, code: generated.value, codeHint: generated.hint };
     });
-    revalidatePath(`/admin/exams/${parsed.examId}`);
+    revalidatePath("/admin/scenario-exams");
+    revalidatePath(`/admin/scenario-exams/${parsed.examId}`);
     return { ok: true, message: "Mã thí sinh đã được tạo. Hãy lưu mã này ngay.", data };
   } catch (error) {
-    return { ok: false, message: errorMessage(error) };
+    return { ok: false, message: errorMessage(error, "issue_code") };
   }
 }
 
@@ -169,9 +178,10 @@ export async function redeemScenarioExamCodeAction(
   try {
     const profile = await getCurrentProfile();
     if (!profile || profile.role !== "student") throw new ScenarioExamValidationError("Bạn cần đăng nhập tài khoản Thí sinh.");
-    const examId = typeof examIdValue === "string" ? examIdValue.trim() : "";
-    const code = typeof codeValue === "string" ? codeValue : "";
-    if (!examId || !code) throw new ScenarioExamValidationError("Vui lòng chọn kỳ thi và nhập mã code.");
+    const examId = validateScenarioExamUuid(examIdValue, "Mã kỳ thi");
+    const code = typeof codeValue === "string" ? codeValue.trim() : "";
+    if (!code) throw new ScenarioExamValidationError("Vui lòng chọn kỳ thi và nhập mã code.");
+    if (!isScenarioExamCode(code)) throw new ScenarioExamValidationError("Mã code không đúng định dạng.");
     const token = createScenarioExamSessionToken();
 
     const data = await withDatabaseTransaction(async (client) => {
@@ -185,7 +195,7 @@ export async function redeemScenarioExamCodeAction(
         [examId],
       );
       const exam = examResult.rows[0];
-      if (!exam) throw new Error("Kỳ thi không mở hoặc đã hết thời gian.");
+      if (!exam) throw new ScenarioExamValidationError("Kỳ thi không mở hoặc đã hết thời gian.");
       const normalizedHash = hashScenarioExamCode(code);
       const codeResult = await client.query<{ id: string; candidate_name: string; candidate_unit: string }>(
         `select id, candidate_name, candidate_unit
@@ -195,7 +205,7 @@ export async function redeemScenarioExamCodeAction(
         [examId, normalizedHash],
       );
       const candidateCode = codeResult.rows[0];
-      if (!candidateCode) throw new Error("Mã code không đúng hoặc đã được sử dụng.");
+      if (!candidateCode) throw new ScenarioExamValidationError("Mã code không đúng hoặc đã được sử dụng. Vui lòng liên hệ giám khảo để được hỗ trợ.");
       const startedAt = new Date();
       const configuredDeadline = new Date(startedAt.getTime() + exam.duration_minutes * 60_000);
       const deadlineAt = exam.closes_at && new Date(exam.closes_at).getTime() < configuredDeadline.getTime()
@@ -224,9 +234,11 @@ export async function redeemScenarioExamCodeAction(
       return { sessionId, deadlineAt };
     });
     await setScenarioExamSessionCookie(token.value, data.deadlineAt);
+    revalidatePath(`/admin/scenario-exams/${examId}`);
+    revalidatePath("/student/scenario-exams/session");
     return { ok: true, message: "Mã hợp lệ. Phiên thi đã được tạo.", data: { sessionId: data.sessionId } };
   } catch (error) {
-    return { ok: false, message: errorMessage(error) };
+    return { ok: false, message: errorMessage(error, "redeem_code") };
   }
 }
 
@@ -238,7 +250,7 @@ export async function startScenarioExamSubjectAction(
     if (!profile || profile.role !== "student") throw new ScenarioExamValidationError("Bạn cần đăng nhập tài khoản Thí sinh.");
     const subjectId = validateScenarioExamUuid(subjectIdValue, "Mã môn thi");
     const token = await getScenarioExamSessionToken();
-    if (!token) throw new Error("Phiên thi đã hết hạn. Hãy nhập lại mã code.");
+    if (!token) throw new ScenarioExamValidationError("Không tìm thấy phiên thi hợp lệ. Vui lòng liên hệ giám khảo để được hỗ trợ.");
     const sessionHash = hashScenarioExamSessionToken(token);
 
     const data = await withDatabaseTransaction(async (client) => {
@@ -249,29 +261,43 @@ export async function startScenarioExamSubjectAction(
         exam_id: string;
         module_id: string;
         subject_status: string;
-        item_id: string | null;
-        scenario_name: string | null;
       }>(
         `select s.id as session_id, s.status as session_status, s.deadline_at,
-                c.exam_id, cs.module_id, cs.status as subject_status,
-                item.id as item_id, item.scenario_name
+                c.exam_id, cs.module_id, cs.status as subject_status
            from public.scenario_exam_sessions s
            join public.scenario_exam_codes c on c.id = s.code_id
            join public.scenario_exam_code_subjects cs on cs.code_id = c.id
-           left join public.scenario_exam_session_items item
-             on item.session_id = s.id and item.code_subject_id = cs.id
           where s.session_token_hash = $1 and cs.id = $2
-          for update`,
+          for update of s, cs`,
         [sessionHash, subjectId],
       );
       const subject = subjectResult.rows[0];
-      if (!subject) throw new Error("Không tìm thấy môn thi trong phiên hiện tại.");
-      if (subject.item_id) {
-        return { id: subject.item_id, moduleId: subject.module_id, scenarioName: subject.scenario_name ?? "Scenario đã được cấp" };
+      if (!subject) throw new ScenarioExamValidationError("Không tìm thấy môn thi trong phiên hiện tại.");
+      if (subject.session_status !== "in_progress") throw new ScenarioExamValidationError("Phiên thi đã kết thúc.");
+      if (new Date(subject.deadline_at).getTime() <= Date.now()) throw new ScenarioExamValidationError("Phiên thi đã hết thời gian.");
+      if (subject.subject_status !== "not_started" && subject.subject_status !== "in_progress") {
+        throw new ScenarioExamValidationError("Môn thi đã kết thúc.");
       }
-      if (subject.session_status !== "in_progress") throw new Error("Phiên thi đã kết thúc.");
-      if (new Date(subject.deadline_at).getTime() <= Date.now()) throw new Error("Phiên thi đã hết thời gian.");
-      if (subject.subject_status !== "not_started") throw new Error("Môn thi không còn ở trạng thái có thể bắt đầu.");
+
+      // Read the item after acquiring the session/subject locks. A concurrent
+      // start may have committed while we waited; this fresh statement sees it
+      // under READ COMMITTED and reuses the snapshot instead of drawing again.
+      const existingItemResult = await client.query<{ id: string; scenario_name: string }>(
+        `select id, scenario_name
+           from public.scenario_exam_session_items
+          where session_id = $1 and code_subject_id = $2`,
+        [subject.session_id, subjectId],
+      );
+      const existingItem = existingItemResult.rows[0];
+      if (existingItem) {
+        return {
+          examId: subject.exam_id,
+          id: existingItem.id,
+          moduleId: subject.module_id,
+          scenarioName: existingItem.scenario_name,
+        };
+      }
+      if (subject.subject_status !== "not_started") throw new ScenarioExamValidationError("Môn thi không còn ở trạng thái có thể bắt đầu.");
 
       const membershipResult = await client.query<{
         id: string;
@@ -291,7 +317,7 @@ export async function startScenarioExamSubjectAction(
         [subject.module_id],
       );
       const membership = membershipResult.rows[0];
-      if (!membership) throw new Error("Môn thi chưa có scenario trong thư viện Kiểm tra.");
+      if (!membership) throw new ScenarioExamValidationError("Môn thi chưa có scenario trong thư viện Kiểm tra.");
       const itemResult = await client.query<{ id: string }>(
         `insert into public.scenario_exam_session_items
            (session_id, code_subject_id, module_id, library_membership_id,
@@ -306,13 +332,19 @@ export async function startScenarioExamSubjectAction(
       await client.query("update public.scenario_exam_code_subjects set status = 'in_progress', started_at = now() where id = $1", [subjectId]);
       await client.query(
         `insert into public.scenario_exam_audit_events (exam_id, code_id, session_id, actor_user_id, event_type, event_json)
-         values ($1, (select code_id from public.scenario_exam_sessions where id = $2), $2, $3, 'scenario_assigned', jsonb_build_object('moduleId', $4, 'scenarioId', $5))`,
+         values ($1, (select code_id from public.scenario_exam_sessions where id = $2), $2, $3, 'scenario_assigned', jsonb_build_object('moduleId', $4::text, 'scenarioId', $5::text))`,
         [subject.exam_id, subject.session_id, profile.id, subject.module_id, membership.scenario_id],
       );
-      return { id: itemId, moduleId: subject.module_id, scenarioName: membership.name };
+      return { examId: subject.exam_id, id: itemId, moduleId: subject.module_id, scenarioName: membership.name };
     });
-    return { ok: true, message: "Scenario đã được cố định cho môn thi.", data };
+    revalidatePath(`/admin/scenario-exams/${data.examId}`);
+    revalidatePath("/student/scenario-exams/session");
+    return {
+      ok: true,
+      message: "Scenario đã được cố định cho môn thi.",
+      data: { id: data.id, moduleId: data.moduleId, scenarioName: data.scenarioName },
+    };
   } catch (error) {
-    return { ok: false, message: errorMessage(error) };
+    return { ok: false, message: errorMessage(error, "start_subject") };
   }
 }

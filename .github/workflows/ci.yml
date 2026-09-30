@@ -13,6 +13,26 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    # Disposable local PostgreSQL only; never point the integration suite at the
+    # application's DATABASE_URL or a production service.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: scenario_test
+          POSTGRES_PASSWORD: scenario_test_only
+          POSTGRES_DB: cns_scenario_exams_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U scenario_test -d cns_scenario_exams_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      SCENARIO_EXAM_TEST_DATABASE_URL: postgresql://scenario_test:scenario_test_only@127.0.0.1:5432/cns_scenario_exams_test
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -45,4 +65,3 @@ jobs:
 
       - name: Audit high-severity production dependencies
         run: npm audit --omit=dev --audit-level=high || true
-

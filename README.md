@@ -209,6 +209,25 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-09-30 — Hotfix SQL và kiểm thử thực tế kỳ thi Scenario bằng mã
+
+- Sửa lỗi tạo kỳ thi `could not determine data type of parameter $3`: khai báo kiểu text cho tham số audit JSON; sửa cùng lỗi ở audit cấp scenario (`$4`/`$5`).
+- Sửa cú pháp `FILTER`/ép kiểu ở thống kê hoàn tất môn, giúp mở trang chi tiết ngay cả khi kỳ thi chưa có mã.
+- Bắt đầu môn khóa session/subject trước rồi đọc lại item bằng statement riêng: request đồng thời dùng lại snapshot đã commit; không khóa nullable side của `LEFT JOIN`, không random lại. Kiểm tra deadline/trạng thái trước khi trả item.
+- Revalidate đúng route mới; kiểm tra UUID/định dạng code trước SQL. Thông báo nghiệp vụ vẫn cụ thể; lỗi nội bộ được trả bằng tiếng Việt an toàn, log chỉ giữ operation/SQLSTATE, không in SQL, PII hoặc token. Không hướng dẫn nhập lại code đã tiêu thụ khi mất cookie.
+- Bổ sung test action/query và integration PostgreSQL thật, kiểm tra create → open → issue → redeem → start, rollback audit, double redeem/start, pool đúng môn, cách ly theo token/code và snapshot cố định. Database test mới mỗi lượt, chỉ dùng fixture, tự xóa sau khi chạy; auth và Next cookie/cache được mock.
+- CI có service PostgreSQL 17 riêng để các kiểm thử SQL được chạy bắt buộc trong `npm run test:run`. Local mặc định bỏ qua suite PostgreSQL nếu chưa cấu hình biến riêng; không coi lượt bỏ qua là đã kiểm chứng SQL.
+- Kiểm tra đạt trên Node 24: lint toàn repo, typecheck, **130 file/756 test**, production build, CodeGraph sync và `git diff --check`. Trong đó có **58 test action/query mới + 9 test PostgreSQL 17.11 thật**; suite database đã chạy, không skip.
+- Chạy local bằng endpoint PostgreSQL **cô lập** (user cần quyền tạo database):
+
+  ```powershell
+  $env:SCENARIO_EXAM_TEST_DATABASE_URL = 'postgresql://<test-user>:<test-password>@127.0.0.1:55432/cns_scenario_exams_test'
+  npx vitest run tests/integration/scenario-exams.postgres.test.ts tests/scenario-exams/
+  ```
+
+  Suite chỉ chấp nhận host loopback và database kiểm tra tên `cns_scenario_exams_test`; không fallback sang `DATABASE_URL` hoặc `.env.local`. Mỗi lượt tự tạo database `cns_exam_test_<uuid>`, chạy migration thật và chỉ xóa đúng database do lượt đó tạo.
+- Không thêm/sửa migration và không xóa hoặc thay đổi dữ liệu production. Hotfix không bao gồm runtime/nộp bài/finalize timeout/review P4/P5 đang còn dở; browser QA production vẫn phải xác minh riêng.
+
 ### 2026-09-30 — Căn chỉnh nhịp các ô nhập kỳ thi Scenario
 - Căn các field form tạo kỳ thi theo cùng nhịp label → input → hint; thêm `items-start` và hint đối xứng cho các cột thời gian/tên kỳ thi.
 - Kiểm tra đạt: ESLint component, typecheck và `git diff --check`.

@@ -1,9 +1,18 @@
 # Kế hoạch triển khai refactor kỳ thi bằng mã code và chuẩn hóa thư viện Scenario
 
-**Phiên bản:** 1.0 — bản kế hoạch chờ phê duyệt
+**Phiên bản:** 1.1 — kế hoạch đã duyệt, cập nhật tiến độ và hotfix SQL
 **Ngày:** 2026-09-30
 **Phạm vi:** CNS Simulation Lab — Scenario Parameters, thư viện Ôn tập/Kiểm tra, ADS-B và kỳ thi bằng mã code
-**Trạng thái:** DRAFT — chưa triển khai source mới, chưa tạo migration mới, chưa chạy migration mới trên production
+**Trạng thái:** IN PROGRESS — đã có nền tảng P1/P2, workspace P3 và P4 foundation; chưa hoàn tất runtime/nộp bài/chấm điểm và acceptance P4–P8.
+
+### Cập nhật 2026-09-30 — ổn định luồng tạo kỳ thi/cấp mã
+
+- Người dùng đã duyệt gói sửa sau khi form tạo kỳ thi báo `could not determine data type of parameter $3`.
+- Đã sửa kiểu tham số audit JSON, vị trí `FILTER` khi đếm tiến độ, khóa session/subject trước khi đọc lại snapshot để không cấp lại đề khi request đồng thời.
+- Đã sửa đường dẫn revalidation sang `/admin/scenario-exams` và `/student/scenario-exams`, validate UUID/định dạng code trước SQL, giữ thông báo nghiệp vụ và không trả nguyên lỗi SQL ra client.
+- Đã kiểm chứng 58 test action/query và 9 ca integration chạy trên PostgreSQL 17.11 cô lập: tạo kỳ thi có lịch, chi tiết rỗng/có mã, chuỗi create → open → issue → redeem → start, double redeem/start, rollback audit, pool rỗng, hết giờ, cách ly hai code cùng tài khoản và giữ snapshot khi sửa nguồn/gỡ membership. Auth/Next cookie/cache được mock; database, schema, transaction và truy vấn là thật. Full gate: lint, typecheck, 130 file/756 test, production build, CodeGraph sync và diff check đạt.
+- CI bổ sung PostgreSQL 17 tạm; suite chỉ nhận URL localhost được chỉ định riêng, tự tạo/xóa database ngẫu nhiên chứa fixture. Không dùng `.env.local`/`DATABASE_URL`, không chạm dữ liệu production và không thêm migration.
+- **Còn lại:** browser QA bản hotfix; runtime từ snapshot, resume UX, checkpoint/submission, finalize timeout, review/điểm giám khảo và pilot vẫn là công việc tiếp theo. Không coi test cấp scenario là đã hoàn tất bài thi end-to-end.
 
 ## 0. Tóm tắt quyết định chính
 
@@ -22,7 +31,9 @@ Tài khoản có role Thí sinh vẫn được dùng để bảo vệ tab và x�
 
 ADS-B sẽ được đưa vào cùng mô hình hai thư viện thông qua adapter chuẩn hóa, không để kỳ thi mới đọc trực tiếp catalog legacy.
 
-## 1. Bằng chứng baseline đã xác minh
+## 1. Bằng chứng baseline tại thời điểm lập kế hoạch
+
+Các count/commit dưới đây là baseline lịch sử trước triển khai, không phải khẳng định trạng thái production hiện tại. Tiến độ mới xem mục 1.5 và cập nhật đầu tài liệu.
 
 ### 1.1. Trạng thái thư viện Kiểm tra production
 
@@ -76,9 +87,9 @@ ADS-B hiện dùng Scenario legacy với sites, targetSensorId, targetLoginUser,
 | Nhóm | Đã viết | Đã xác minh | Còn lại |
 | --- | --- | --- | --- |
 | Scenario Parameters 5 module | Source/migration hiện có | Production counts đã kiểm tra | Không mở rộng v2 ngoài nhu cầu |
-| ADS-B | Legacy type/API đã khảo sát | 17 legacy scenario, 0 library snapshot | Adapter, backfill, phân thư viện, runtime snapshot |
+| ADS-B | Adapter/parser, source/library panel và migration 0010/0012 | Backfill production được ghi trong README; parser/migration tests | Runtime snapshot và browser QA/publish theo lựa chọn giám khảo |
 | Kỳ thi cũ | Phạm vi xóa đã thực hiện | Target counts = 0 | Không dùng lại business flow |
-| Kỳ thi bằng mã | Kế hoạch này | Chưa có source/schema | Toàn bộ P1–P8 |
+| Kỳ thi bằng mã | Migration 0011, action/query/session, trang admin và candidate foundation | 58 regression tests + 9 integration PostgreSQL 17.11; migration production đã ghi trong README | Runtime/nộp bài/timeout/review; browser QA/pilot/cutover chưa hoàn tất |
 
 ## 2. Mục tiêu và ranh giới
 

@@ -87,7 +87,7 @@ export async function getScenarioExamDetail(examId: string): Promise<ScenarioExa
                             'startedAt', cs.started_at,
                             'submittedAt', cs.submitted_at
                           ) order by cs.position) filter (where cs.id is not null), '[]'::jsonb) as subjects,
-                          count(cs.id)::int filter (where cs.status in ('submitted', 'timed_out')) as completed_modules
+                          (count(cs.id) filter (where cs.status in ('submitted', 'timed_out')))::int as completed_modules
                      from public.scenario_exam_codes c
                      left join public.scenario_exam_code_subjects cs on cs.code_id = c.id
                     where c.exam_id = $1
