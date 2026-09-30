@@ -10,8 +10,8 @@ import { issueScenarioExamCodeAction, setScenarioExamStatusAction } from "@/lib/
 import type { ScenarioExamDetail, ScenarioExamPoolCount } from "@/lib/scenario-exams/types";
 import { SCENARIO_PARAMETERS_MODULES, type ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 import { primaryButtonClassName, secondaryButtonClassName } from "@/components/exams/shared";
-
-const statusLabel = { draft: "Bản nháp", open: "Đang mở", locked: "Đã khóa", closed: "Đã đóng", archived: "Đã lưu trữ" } as const;
+import { formatScenarioExamDate } from "@/lib/scenario-exams/presentation";
+import { ScenarioExamAvailabilityBadge } from "./scenario-exam-availability-badge";
 
 function moduleLabel(moduleId: ScenarioParametersModuleId) {
   return SCENARIO_PARAMETERS_MODULES.find((module) => module.moduleId === moduleId)?.label ?? moduleId;
@@ -63,14 +63,22 @@ export function ScenarioExamDetailManager({ detail, poolCounts }: { detail: Scen
     <div className="mt-6 grid gap-5">
       <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">
         <div className="flex flex-wrap items-start justify-between gap-4">
-          <div><h2 className="text-xl font-bold text-[var(--text-primary)]">{detail.name}</h2><p className="mt-1 text-sm text-[var(--text-secondary)]">{detail.description || "Chưa có mô tả."}</p><p className="mt-2 text-xs text-[var(--text-muted)]">{detail.durationMinutes} phút · {detail.codeCount} mã · {detail.terminalCodeCount} đã kết thúc</p></div>
-          <span className="rounded-md border border-[var(--border-strong)] bg-[var(--surface-muted)] px-2 py-1 text-xs font-semibold text-[var(--text-secondary)]">{statusLabel[detail.status]}</span>
+          <div className="min-w-0 break-words"><h2 className="text-xl font-bold text-[var(--text-primary)]">{detail.name}</h2><p className="mt-1 text-sm text-[var(--text-secondary)]">{detail.description || "Chưa có mô tả."}</p><p className="mt-2 text-xs text-[var(--text-muted)]">{detail.durationMinutes} phút · {detail.codeCount} mã · {detail.terminalCodeCount} đã kết thúc</p></div>
+          <ScenarioExamAvailabilityBadge availability={detail.availability} />
         </div>
+        <div className="mt-4 grid gap-1 text-sm text-[var(--text-secondary)]">
+          <p className="text-xs font-semibold">Lịch thi · Giờ Việt Nam (UTC+7)</p>
+          <p>Mở: {formatScenarioExamDate(detail.opensAt, "Khi giám khảo mở kỳ thi")}</p>
+          <p>Đóng: {formatScenarioExamDate(detail.closesAt)}</p>
+        </div>
+        {detail.availability === "upcoming" ? <p className="mt-3 rounded border border-[var(--color-warning-border)] bg-[var(--color-warning-muted)] p-3 text-sm text-[var(--color-warning)]">Kỳ thi đã được mở nhưng chưa đến giờ bắt đầu. Thí sinh thấy lịch thi và chỉ được nhập mã từ {formatScenarioExamDate(detail.opensAt)} (giờ Việt Nam).</p> : null}
+        {detail.availability === "ended" ? <p className="mt-3 text-sm text-[var(--text-secondary)]">Đã hết thời gian nhận thí sinh theo lịch. Trạng thái mở không bỏ qua giờ đóng kỳ thi.</p> : null}
         <div className="mt-5 flex flex-wrap gap-2">
           {detail.status === "draft" ? <button type="button" className={primaryButtonClassName} onClick={() => setStatus("open")} disabled={pending}><LockOpen aria-hidden size={18} /> Mở kỳ thi</button> : null}
-          {detail.status === "open" ? <button type="button" className={secondaryButtonClassName} onClick={() => setStatus("locked")} disabled={pending}><Lock aria-hidden size={18} /> Khóa cấp mã mới</button> : null}
+          {detail.status === "open" ? <button type="button" className={secondaryButtonClassName} onClick={() => setStatus("locked")} disabled={pending}><Lock aria-hidden size={18} /> Khóa kỳ thi</button> : null}
           {detail.status === "locked" ? <button type="button" className={secondaryButtonClassName} onClick={() => setStatus("open")} disabled={pending}><LockOpen aria-hidden size={18} /> Mở lại</button> : null}
         </div>
+        {detail.status === "open" || detail.status === "locked" ? <p className="mt-2 text-xs text-[var(--text-muted)]">Khóa kỳ thi sẽ dừng cấp mã và không cho tạo phiên thi mới; không kết thúc các phiên đã vào thi.</p> : null}
       </section>
 
       <section className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-card)]">

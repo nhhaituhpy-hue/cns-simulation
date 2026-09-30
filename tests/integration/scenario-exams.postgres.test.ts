@@ -182,6 +182,52 @@ describe.skipIf(!testUrl)("Scenario Exam actions against real PostgreSQL", () =>
     expect(audit.rows).toEqual([{ event_json: { name: input.name } }]);
   });
 
+  it("shows upcoming exams without allowing redemption before the opening window", async () => {
+    const now = Date.now();
+    async function createWindowedExam(name: string, opensAt: string, closesAt: string) {
+      const created = await createScenarioExamAction({ name, durationMinutes: 60, opensAt, closesAt });
+      expect(created.ok).toBe(true);
+      expect((await setScenarioExamStatusAction(created.data!.id, "open")).ok).toBe(true);
+      return created.data!.id;
+    }
+
+    const futureExamId = await createWindowedExam(
+      `Future ${randomUUID()}`,
+      new Date(now + 60 * 60_000).toISOString(),
+      new Date(now + 2 * 60 * 60_000).toISOString(),
+    );
+    const activeExamId = await createWindowedExam(
+      `Active ${randomUUID()}`,
+      new Date(now - 60 * 60_000).toISOString(),
+      new Date(now + 2 * 60 * 60_000).toISOString(),
+    );
+    const expiredExamId = await createWindowedExam(
+      `Expired ${randomUUID()}`,
+      new Date(now - 2 * 60 * 60_000).toISOString(),
+      new Date(now - 60 * 60_000).toISOString(),
+    );
+    const futureCode = await issueCode(futureExamId, ["dvor-1150a"]);
+    const activeCode = await issueCode(activeExamId, ["dvor-1150a"]);
+    const expiredCode = await issueCode(expiredExamId, ["dvor-1150a"]);
+    const unscheduledExamId = await openExam();
+
+    vi.mocked(getCurrentProfile).mockResolvedValue(student);
+    const listed = await listCandidateOpenScenarioExams();
+    expect(Object.fromEntries(listed.map((exam) => [exam.id, exam.availability]))).toEqual({
+      [activeExamId]: "available",
+      [unscheduledExamId]: "available",
+      [futureExamId]: "upcoming",
+    });
+    expect(listed.some((exam) => exam.id === expiredExamId)).toBe(false);
+
+    const futureRedeem = await redeemScenarioExamCodeAction(futureExamId, futureCode.code);
+    expect(futureRedeem).toMatchObject({ ok: false, message: "Kỳ thi không mở hoặc đã hết thời gian." });
+    const activeRedeem = await redeemScenarioExamCodeAction(activeExamId, activeCode.code);
+    expect(activeRedeem.ok).toBe(true);
+    const expiredRedeem = await redeemScenarioExamCodeAction(expiredExamId, expiredCode.code);
+    expect(expiredRedeem).toMatchObject({ ok: false, message: "Kỳ thi không mở hoặc đã hết thời gian." });
+  });
+
   it("counts partial module progress without marking the whole code complete", async () => {
     const examId = await openExam();
     const first = await issueCode(examId);

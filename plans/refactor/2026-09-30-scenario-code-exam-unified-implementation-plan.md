@@ -1,6 +1,6 @@
 # Kế hoạch triển khai refactor kỳ thi bằng mã code và chuẩn hóa thư viện Scenario
 
-**Phiên bản:** 1.1 — kế hoạch đã duyệt, cập nhật tiến độ và hotfix SQL
+**Phiên bản:** 1.2 — kế hoạch đã duyệt, cập nhật tiến độ và hotfix lịch hiển thị
 **Ngày:** 2026-09-30
 **Phạm vi:** CNS Simulation Lab — Scenario Parameters, thư viện Ôn tập/Kiểm tra, ADS-B và kỳ thi bằng mã code
 **Trạng thái:** IN PROGRESS — đã có nền tảng P1/P2, workspace P3 và P4 foundation; chưa hoàn tất runtime/nộp bài/chấm điểm và acceptance P4–P8.
@@ -13,6 +13,14 @@
 - Đã kiểm chứng 58 test action/query và 9 ca integration chạy trên PostgreSQL 17.11 cô lập: tạo kỳ thi có lịch, chi tiết rỗng/có mã, chuỗi create → open → issue → redeem → start, double redeem/start, rollback audit, pool rỗng, hết giờ, cách ly hai code cùng tài khoản và giữ snapshot khi sửa nguồn/gỡ membership. Auth/Next cookie/cache được mock; database, schema, transaction và truy vấn là thật. Full gate: lint, typecheck, 130 file/756 test, production build, CodeGraph sync và diff check đạt.
 - CI bổ sung PostgreSQL 17 tạm; suite chỉ nhận URL localhost được chỉ định riêng, tự tạo/xóa database ngẫu nhiên chứa fixture. Không dùng `.env.local`/`DATABASE_URL`, không chạm dữ liệu production và không thêm migration.
 - **Còn lại:** browser QA bản hotfix; runtime từ snapshot, resume UX, checkpoint/submission, finalize timeout, review/điểm giám khảo và pilot vẫn là công việc tiếp theo. Không coi test cấp scenario là đã hoàn tất bài thi end-to-end.
+
+### Cập nhật 2026-09-30 — phân biệt trạng thái mở và cửa sổ vào thi
+
+- Đã xác minh production: kỳ thi `Test case 01` có `status=open` nhưng `opens_at=20/11/2026 07:00` (giờ Việt Nam), nên chưa đủ điều kiện redeem tại thời điểm kiểm tra 30/09/2026.
+- Query mới trả thêm `availability`: `upcoming`/`available`/`ended` hoặc trạng thái vòng đời; tab Thí sinh hiển thị kỳ thi sắp mở nhưng vẫn giữ chốt redeem server-side theo `opens_at`/`closes_at`.
+- UI admin và candidate hiển thị lịch thống nhất UTC+7; nút khóa được đổi nhãn thành `Khóa kỳ thi` để phản ánh việc dừng cấp mã và dừng phiên mới.
+- Đã thêm ma trận integration PostgreSQL cho kỳ thi tương lai/đang diễn ra/hết hạn. Không đổi lịch, không revoke/reissue và không ghi dữ liệu production.
+- **Còn lại:** browser QA sau deploy; cần chốt riêng thiết kế lưu mã mã hóa trước khi làm PDF có thể xuất lại mã đầy đủ. Mã cũ chỉ có hash/hint nên không khôi phục được.
 
 ## 0. Tóm tắt quyết định chính
 

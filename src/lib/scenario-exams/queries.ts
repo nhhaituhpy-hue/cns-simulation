@@ -7,6 +7,7 @@ import type {
   CandidateOpenScenarioExam,
   CandidateScenarioExamSession,
   CandidateSessionSubject,
+  ScenarioExamAvailability,
   ScenarioExamCodeDetail,
   ScenarioExamDetail,
   ScenarioExamPoolCount,
@@ -17,6 +18,15 @@ import type {
 import { getScenarioExamSessionToken, hashScenarioExamSessionToken } from "./session";
 
 type Row = Record<string, unknown>;
+
+// All exam projections use database time, with lifecycle restrictions taking
+// precedence over the schedule. Each query aliases scenario_exams as e.
+const EXAM_AVAILABILITY_SQL = `case
+  when e.status <> 'open' then e.status
+  when e.closes_at <= now() then 'ended'
+  when e.opens_at > now() then 'upcoming'
+  else 'available'
+end`;
 
 function string(value: unknown): string {
   return typeof value === "string" ? value : "";
@@ -48,6 +58,7 @@ function mapSummary(row: Row): ScenarioExamSummary {
     closesAt: nullableString(row.closes_at),
     durationMinutes: number(row.duration_minutes),
     status: string(row.status) as ScenarioExamStatus,
+    availability: string(row.availability) as ScenarioExamAvailability,
     codeCount: number(row.code_count),
     terminalCodeCount: number(row.terminal_code_count),
   };
@@ -57,6 +68,7 @@ export async function listScenarioExams(): Promise<ScenarioExamSummary[]> {
   await requireAdmin();
   const result = await queryDatabase(
     `select e.id, e.name, e.opens_at, e.closes_at, e.duration_minutes, e.status,
+            ${EXAM_AVAILABILITY_SQL} as availability,
             count(c.id)::int as code_count,
             count(c.id) filter (where c.status in ('submitted', 'timed_out'))::int as terminal_code_count
        from public.scenario_exams e
@@ -71,6 +83,7 @@ export async function getScenarioExamDetail(examId: string): Promise<ScenarioExa
   await requireAdmin();
   const [examResult, codeResult] = await Promise.all([
     queryDatabase(`select e.id, e.name, e.description, e.opens_at, e.closes_at, e.duration_minutes, e.status,
+                          ${EXAM_AVAILABILITY_SQL} as availability,
                           count(c.id)::int as code_count,
                           count(c.id) filter (where c.status in ('submitted', 'timed_out'))::int as terminal_code_count
                      from public.scenario_exams e
@@ -146,13 +159,16 @@ export async function listScenarioExamPoolCounts(): Promise<ScenarioExamPoolCoun
 export async function listCandidateOpenScenarioExams(): Promise<CandidateOpenScenarioExam[]> {
   const profile = await getCurrentProfile();
   if (!profile || profile.role !== "student") throw new Error("Bạn cần đăng nhập tài khoản Thí sinh.");
+  // Display upcoming exams too; redeemScenarioExamCodeAction independently
+  // enforces the opening time before a code can be consumed.
   const result = await queryDatabase(
-    `select id, name, opens_at, closes_at, duration_minutes
-       from public.scenario_exams
-      where status = 'open'
-        and (opens_at is null or opens_at <= now())
-        and (closes_at is null or closes_at > now())
-      order by opens_at nulls first, created_at desc`,
+    `select e.id, e.name, e.opens_at, e.closes_at, e.duration_minutes,
+            ${EXAM_AVAILABILITY_SQL} as availability
+       from public.scenario_exams e
+      where e.status = 'open'
+        and (e.closes_at is null or e.closes_at > now())
+      order by case when e.opens_at > now() then 1 else 0 end,
+               e.opens_at nulls first, e.created_at desc, e.id`,
   );
   return result.rows.map((row) => ({
     id: string(row.id),
@@ -160,6 +176,7 @@ export async function listCandidateOpenScenarioExams(): Promise<CandidateOpenSce
     opensAt: nullableString(row.opens_at),
     closesAt: nullableString(row.closes_at),
     durationMinutes: number(row.duration_minutes),
+    availability: string(row.availability) as ScenarioExamAvailability,
   }));
 }
 

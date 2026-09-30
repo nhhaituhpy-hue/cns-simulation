@@ -19,6 +19,7 @@ import {
   listScenarioExams,
 } from "@/lib/scenario-exams/queries";
 import { hashScenarioExamSessionToken } from "@/lib/scenario-exams/session";
+import type { ScenarioExamAvailability } from "@/lib/scenario-exams/types";
 
 const examId = "11111111-1111-4111-8111-111111111111";
 const timestamp = "2026-09-30T10:00:00.000Z";
@@ -33,6 +34,7 @@ function examRow(overrides: Record<string, unknown> = {}) {
     closes_at: null,
     duration_minutes: 60,
     status: "open",
+    availability: "available",
     code_count: 0,
     terminal_code_count: 0,
     ...overrides,
@@ -72,6 +74,10 @@ function sqlAt(index: number): string {
   return String(mocks.queryDatabase.mock.calls[index]?.[0]).replace(/\s+/g, " ").trim();
 }
 
+function expectDatabaseAvailability(sql: string) {
+  expect(sql).toContain("case when e.status <> 'open' then e.status when e.closes_at <= now() then 'ended' when e.opens_at > now() then 'upcoming' else 'available' end as availability");
+}
+
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.getCurrentProfile.mockResolvedValue({ id: "admin-gate", role: "admin" });
@@ -108,9 +114,11 @@ describe("getScenarioExamDetail", () => {
     expect(detail).toEqual({
       id: examId, name: "Kỳ thi kiểm thử", description: "Mô tả kiểm thử",
       opensAt: timestamp, closesAt: null, durationMinutes: 60, status: "open",
+      availability: "available",
       codeCount: 0, terminalCodeCount: 0, codes: [],
     });
     expect(mocks.queryDatabase.mock.calls.map(([, values]) => values)).toEqual([[examId], [examId]]);
+    expectDatabaseAvailability(sqlAt(0));
     // Unit guard for the reported ordering bug; real PostgreSQL tests validate the syntax.
     expect(sqlAt(1)).toMatch(/count\(cs\.id\) filter \(where cs\.status in \('submitted', 'timed_out'\)\)\)?::int as completed_modules/i);
     expect(sqlAt(1)).not.toMatch(/count\(cs\.id\)::int\s+filter/i);
@@ -171,9 +179,27 @@ describe("Scenario Exam list queries", () => {
     expect(await listScenarioExams()).toEqual([{
       id: examId, name: "Kỳ thi kiểm thử", opensAt: timestamp, closesAt: null,
       durationMinutes: 60, status: "open", codeCount: 3, terminalCodeCount: 1,
+      availability: "available",
     }]);
+    expectDatabaseAvailability(sqlAt(0));
     expect(sqlAt(0)).toContain("count(c.id) filter (where c.status in ('submitted', 'timed_out'))::int");
   });
+
+  it.each<ScenarioExamAvailability>(["draft", "upcoming", "available", "ended", "locked", "closed", "archived"])(
+    "preserves the database-computed %s availability in summary and detail projections",
+    async (availability) => {
+      const row = examRow({ availability });
+      mocks.queryDatabase
+        .mockResolvedValueOnce({ rows: [row] })
+        .mockResolvedValueOnce({ rows: [row] })
+        .mockResolvedValueOnce({ rows: [] });
+
+      expect((await listScenarioExams())[0].availability).toBe(availability);
+      expect((await getScenarioExamDetail(examId))?.availability).toBe(availability);
+      expectDatabaseAvailability(sqlAt(0));
+      expectDatabaseAvailability(sqlAt(1));
+    },
+  );
 
   it("returns all six modules and a zero count for empty active exam pools", async () => {
     mocks.queryDatabase.mockResolvedValueOnce({ rows: [{ module_id: "dvor-1150a", count: 2 }] });
@@ -186,17 +212,25 @@ describe("Scenario Exam list queries", () => {
     expect(sqlAt(0)).toContain("library_kind = 'exam' and archived_at is null");
   });
 
-  it("lists only exams inside the open time window for the student role", async () => {
+  it("lists available and upcoming exams without exposing candidate data", async () => {
     mocks.getCurrentProfile.mockResolvedValue({ id: "student-gate", role: "student" });
-    mocks.queryDatabase.mockResolvedValueOnce({ rows: [examRow()] });
+    mocks.queryDatabase.mockResolvedValueOnce({ rows: [
+      examRow({ candidate_name: "Private candidate", code_hash: "private-code-hash" }),
+      examRow({ id: "future-exam", name: "Kỳ thi sắp mở", availability: "upcoming", opens_at: "2026-11-20T00:00:00.000Z" }),
+    ] });
 
     expect(await listCandidateOpenScenarioExams()).toEqual([{
       id: examId, name: "Kỳ thi kiểm thử", opensAt: timestamp, closesAt: null, durationMinutes: 60,
+      availability: "available",
+    }, {
+      id: "future-exam", name: "Kỳ thi sắp mở", opensAt: "2026-11-20T00:00:00.000Z", closesAt: null, durationMinutes: 60,
+      availability: "upcoming",
     }]);
-    expect(sqlAt(0)).toContain("status = 'open'");
-    expect(sqlAt(0)).toContain("opens_at <= now()");
-    expect(sqlAt(0)).toContain("closes_at > now()");
-    expect(sqlAt(0)).not.toMatch(/candidate_user_id|email/);
+    expectDatabaseAvailability(sqlAt(0));
+    expect(sqlAt(0)).toContain("where e.status = 'open' and (e.closes_at is null or e.closes_at > now())");
+    expect(sqlAt(0)).not.toContain("opens_at <= now()");
+    expect(sqlAt(0)).toContain("order by case when e.opens_at > now() then 1 else 0 end, e.opens_at nulls first, e.created_at desc, e.id");
+    expect(sqlAt(0)).not.toMatch(/candidate_name|candidate_unit|candidate_user_id|code_hash|email/);
   });
 });
 

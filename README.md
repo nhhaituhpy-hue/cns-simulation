@@ -209,6 +209,13 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-09-30 — Hiển thị đúng kỳ thi sắp mở ở tab Thí sinh
+
+- Tách trạng thái vòng đời (`draft/open/locked/...`) khỏi khả năng vào thi theo lịch: `upcoming`, `available`, `ended` và các trạng thái khóa/đóng được tính bằng giờ PostgreSQL.
+- Tab `/student/scenario-exams` hiển thị kỳ thi đã mở nhưng chưa tới `opens_at`, khóa nút nhập mã cho tới giờ bắt đầu; lịch mở/đóng hiển thị cố định theo giờ Việt Nam (UTC+7).
+- Bổ sung nút làm mới danh sách, nhãn trạng thái rõ ràng và thông báo hướng dẫn khi danh sách trống. Điều kiện redeem server-side vẫn yêu cầu đúng cửa sổ thời gian, không thay đổi mã hoặc dữ liệu production.
+- Kiểm tra đạt: 65 test action/query, 10 test integration PostgreSQL 17.11 cô lập, typecheck, ESLint targeted và `git diff --check`; production browser QA sau deploy còn chờ xác minh.
+
 ### 2026-09-30 — Hotfix SQL và kiểm thử thực tế kỳ thi Scenario bằng mã
 
 - Sửa lỗi tạo kỳ thi `could not determine data type of parameter $3`: khai báo kiểu text cho tham số audit JSON; sửa cùng lỗi ở audit cấp scenario (`$4`/`$5`).

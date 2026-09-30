@@ -5,30 +5,10 @@ import { Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import type { ScenarioExamStatus, ScenarioExamSummary } from "@/lib/scenario-exams/types";
+import type { ScenarioExamSummary } from "@/lib/scenario-exams/types";
+import { formatScenarioExamDate } from "@/lib/scenario-exams/presentation";
 import { inputClassName, primaryButtonClassName } from "@/components/exams/shared";
-
-const statusLabel: Record<ScenarioExamStatus, string> = {
-  draft: "Bản nháp",
-  open: "Đang mở",
-  locked: "Đã khóa",
-  closed: "Đã đóng",
-  archived: "Đã lưu trữ",
-};
-
-const statusClass: Record<ScenarioExamStatus, string> = {
-  draft: "border-[var(--border-strong)] bg-[var(--surface-muted)] text-[var(--text-secondary)]",
-  open: "border-[#86efac] bg-[#f0fdf4] text-[#166534]",
-  locked: "border-[#fde68a] bg-[#fffbeb] text-[#92400e]",
-  closed: "border-[#bfdbfe] bg-[#eff6ff] text-[#1d4ed8]",
-  archived: "border-[var(--border-strong)] bg-[var(--surface-muted)] text-[var(--text-muted)]",
-};
-
-function formatDate(value: string | null) {
-  if (!value) return "—";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeStyle: "short" }).format(date);
-}
+import { ScenarioExamAvailabilityBadge } from "./scenario-exam-availability-badge";
 
 export function ScenarioExamList({ items }: { items: ScenarioExamSummary[] }) {
   const [query, setQuery] = useState("");
@@ -54,10 +34,10 @@ export function ScenarioExamList({ items }: { items: ScenarioExamSummary[] }) {
             <tr>
               <th className="w-16 border-b border-[var(--border)] px-4 py-3">STT</th>
               <th className="border-b border-[var(--border)] px-4 py-3">Kỳ thi</th>
-              <th className="w-48 border-b border-[var(--border)] px-4 py-3">Thời gian</th>
+              <th className="w-56 border-b border-[var(--border)] px-4 py-3">Lịch thi (giờ Việt Nam)</th>
               <th className="w-32 border-b border-[var(--border)] px-4 py-3">Thời lượng</th>
               <th className="w-36 border-b border-[var(--border)] px-4 py-3">Mã / hoàn tất</th>
-              <th className="w-32 border-b border-[var(--border)] px-4 py-3">Trạng thái</th>
+              <th className="w-44 border-b border-[var(--border)] px-4 py-3">Trạng thái</th>
               <th className="w-20 border-b border-[var(--border)] px-4 py-3"><span className="sr-only">Mở</span></th>
             </tr>
           </thead>
@@ -68,10 +48,10 @@ export function ScenarioExamList({ items }: { items: ScenarioExamSummary[] }) {
                 <td className="px-4 py-4">
                   <Link href={`/admin/scenario-exams/${item.id}`} className="font-semibold text-[var(--text-primary)] hover:text-[var(--accent)] hover:underline">{item.name}</Link>
                 </td>
-                <td className="px-4 py-4 text-xs text-[var(--text-secondary)]"><p>Mở: {formatDate(item.opensAt)}</p><p className="mt-1">Đóng: {formatDate(item.closesAt)}</p></td>
+                <td className="px-4 py-4 text-xs text-[var(--text-secondary)]"><p>Mở: {formatScenarioExamDate(item.opensAt, "Khi mở kỳ thi")}</p><p className="mt-1">Đóng: {formatScenarioExamDate(item.closesAt)}</p></td>
                 <td className="px-4 py-4 font-mono text-xs text-[var(--text-secondary)]">{item.durationMinutes} phút</td>
                 <td className="px-4 py-4 text-sm text-[var(--text-secondary)]">{item.codeCount} / {item.terminalCodeCount}</td>
-                <td className="px-4 py-4"><span className={`inline-flex rounded-md border px-2 py-1 text-xs font-semibold ${statusClass[item.status]}`}>{statusLabel[item.status]}</span></td>
+                <td className="px-4 py-4"><ScenarioExamAvailabilityBadge availability={item.availability} /></td>
                 <td className="px-4 py-4 text-right"><Link href={`/admin/scenario-exams/${item.id}`} className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--accent-border)] text-[var(--accent)] hover:bg-[var(--accent-muted)]" aria-label={`Mở ${item.name}`}><ArrowRight aria-hidden size={18} /></Link></td>
               </tr>
             ))}

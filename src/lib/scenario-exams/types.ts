@@ -1,6 +1,7 @@
 import type { ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 
 export type ScenarioExamStatus = "draft" | "open" | "locked" | "closed" | "archived";
+export type ScenarioExamAvailability = "draft" | "upcoming" | "available" | "ended" | "locked" | "closed" | "archived";
 export type ScenarioExamCodeStatus =
   | "issued"
   | "redeemed"
@@ -35,6 +36,7 @@ export interface ScenarioExamSummary {
   closesAt: string | null;
   durationMinutes: number;
   status: ScenarioExamStatus;
+  availability: ScenarioExamAvailability;
   codeCount: number;
   terminalCodeCount: number;
 }
@@ -82,6 +84,7 @@ export interface CandidateOpenScenarioExam {
   opensAt: string | null;
   closesAt: string | null;
   durationMinutes: number;
+  availability: ScenarioExamAvailability;
 }
 
 export interface CandidateSessionSubject {
