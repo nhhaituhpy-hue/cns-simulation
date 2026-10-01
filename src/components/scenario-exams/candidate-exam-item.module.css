@@ -1,0 +1,11 @@
+.simulator {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+/* The general PMDT media rule uses flex-start. Exam pages center a fitting window. */
+.simulator :global(.pmdt-classic-viewport) {
+  justify-content: center;
+  justify-content: safe center;
+}

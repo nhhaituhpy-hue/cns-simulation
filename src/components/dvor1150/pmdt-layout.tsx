@@ -15,6 +15,7 @@ import type { Dvor1150PmdtMode } from "@/lib/dvor1150";
 import { Dvor1150ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
 import { SimulatorToolbarBackButton } from "@/components/simulator/simulator-toolbar-back-button";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
+import { useScenarioExamResultReader, useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
 
 export interface Dvor1150PmdtLayoutProps {
   mode?: Dvor1150PmdtMode;
@@ -29,6 +30,17 @@ export function Dvor1150PmdtLayout({
   leadingPanel,
   sidePanel,
 }: Dvor1150PmdtLayoutProps) {
+  const examSnapshot = useScenarioExamSnapshot();
+  useScenarioExamResultReader(() => {
+    const state = useDvor1150PmdtStore.getState();
+    if (!examSnapshot || !state.scenario.active || state.scenario.definition?.id !== examSnapshot.definition.id) return null;
+    return { visitedViewIds: state.scenarioVisitedViewIds, acceptedActionControlIds: state.scenarioAcceptedActionControlIds,
+      scenarioHardwareSelection: state.scenarioHardwareSelection, scenarioHardwareInspected: state.scenarioHardwareInspected,
+      scenarioHardwareReasoning: state.scenarioHardwareReasoning, scenarioHardwareDispositionConfirmed: state.scenarioHardwareDispositionConfirmed,
+      parameterChangeLogs: state.parameterChangeLogs,
+      checkpoint: { config: state.config, configDraft: state.configDraft, configurationBackup: state.configurationBackup,
+        configDirty: state.configDirty, needBackup: state.needBackup, scenarioStage: state.scenarioStage, diagnosticState: state.diagnosticState } };
+  });
   const externalLeadingPanel = mode === "student" ? leadingPanel : null;
   const externalSidePanel = mode === "student" ? sidePanel : null;
   const hasExternalPanels = Boolean(externalLeadingPanel || externalSidePanel);

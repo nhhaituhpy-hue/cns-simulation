@@ -209,6 +209,17 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-10-01 — Căn giữa simulator và nộp bài kết thúc phiên thi
+- Căn giữa PMDT trong wrapper của trang làm bài, ghi đè quy tắc căn trái ở breakpoint của skin cũ. Khung nhỏ hơn simulator vẫn cuộn ngang và giữ mép trái truy cập được.
+- Thêm `Lưu bài làm` và `Nộp môn` cạnh countdown; định kỳ lưu bản nháp lên server mỗi 10 giây và lưu khi bấm `Quay lại phiên thi`. Nếu runtime chưa nạp hoặc khởi tạo lỗi, vẫn có thể quay lại phiên.
+- Thêm `Nộp bài và kết thúc phiên thi` ngay dưới danh sách các môn. Có xác nhận trước khi nộp; nút bật khi tất cả môn đã bắt đầu và phiên còn hạn. Server yêu cầu mỗi môn có kết quả hợp lệ trước khi hoàn tất, không đánh dấu hoàn thành chỉ vì đã mở simulator.
+- Kết quả lấy trực tiếp từ sáu runtime, bao gồm cấu hình/nhật ký/chẩn đoán/phần cứng hoặc QCMS/terminal tùy thiết bị; định danh bằng session item/module/scenario/revision. Loại account credential và definition lặp khỏi payload, giới hạn JSON 750 KB và độ sâu. Điểm giám khảo không lấy từ candidate payload.
+- Trang phiên thu hồi bài Selex đã lưu cục bộ từ phiên bản trước; chọn bản mới hơn giữa cache theo thao tác và bản autosave định kỳ. Lưu thành công rồi mới nộp toàn phiên; nếu mất kết nối hoặc lưu thất bại, giữ phiên mở để thử lại.
+- Nộp môn và nộp toàn phiên kiểm tra role/cookie, khóa session/code/subject/item, dùng lại kết quả đã nộp khi retry và chặn sửa kết quả sau nộp. Nộp toàn phiên cập nhật item, môn, session và code cùng audit trong một transaction; rollback toàn bộ nếu audit hoặc bất kỳ bước nào thất bại.
+- Dùng `result_json`, status, timestamp và audit event đã có; không thêm migration, không đổi deadline hoặc mã thí sinh production. Sau nộp, trang phiên hiện `Đã nộp bài`, ẩn thao tác tiếp tục và nút nộp.
+- Gate cuối đạt trên Node 24: lint → typecheck → **137 file / 834 test** (gồm **20 ca PostgreSQL thật**) → production build; CodeGraph sync/diff check đạt. Các ca mới kiểm chứng nộp hai môn, double submit đồng thời, không ghi đè bài đã nộp, cách ly mã, deadline, payload sai/credential, thiếu bài và rollback audit; regression UI chờ React hoàn tất transition trước khi thao tác lại.
+- **Giới hạn:** chưa QA trực quan production vì Computer Use không có browser khả dụng. Đã lưu checkpoint lên server nhưng khôi phục đầy đủ checkpoint server cho mọi module, finalize tự động khi hết giờ và màn hình giám khảo đọc/chấm bài vẫn là phần tiếp theo của P4/P5.
+
 ### 2026-10-01 — P4: mở và tiếp tục môn từ Scenario đã cấp
 - Xác nhận nguyên nhân: `Bắt đầu môn` đã lưu item/snapshot nhưng handler chỉ cập nhật danh sách, chưa chuyển trang; môn đang làm chỉ hiện `Scenario đã được cố định`.
 - Sau khi bắt đầu thành công, chuyển thẳng đến `/student/scenario-exams/session/items/[itemId]`. Môn `in_progress` có nút `Tiếp tục môn` dùng item đã lưu; môn đã kết thúc hoặc phiên hết hạn không có thao tác tiếp tục.

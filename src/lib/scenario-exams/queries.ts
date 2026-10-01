@@ -199,7 +199,10 @@ export async function getCandidateScenarioExamSession(): Promise<CandidateScenar
               'startedAt', cs.started_at,
               'submittedAt', cs.submitted_at,
               'sessionItemId', item.id,
-              'scenarioName', item.scenario_name
+              'scenarioName', item.scenario_name,
+              'scenarioId', item.scenario_id,
+              'revision', item.library_revision_number,
+              'hasSavedResult', item.result_json is not null
             ) order by cs.position) filter (where cs.id is not null), '[]'::jsonb) as subjects
        from public.scenario_exam_sessions s
        join public.scenario_exam_codes c on c.id = s.code_id
@@ -222,6 +225,9 @@ export async function getCandidateScenarioExamSession(): Promise<CandidateScenar
     submittedAt: nullableString(subject.submittedAt),
     sessionItemId: nullableString(subject.sessionItemId),
     scenarioName: nullableString(subject.scenarioName),
+    scenarioId: nullableString(subject.scenarioId),
+    revision: subject.revision == null ? null : number(subject.revision),
+    hasSavedResult: subject.hasSavedResult === true,
   }));
   return {
     id: string(row.id),

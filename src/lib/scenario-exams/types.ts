@@ -96,6 +96,9 @@ export interface CandidateSessionSubject {
   submittedAt: string | null;
   sessionItemId: string | null;
   scenarioName: string | null;
+  scenarioId?: string | null;
+  revision?: number | null;
+  hasSavedResult?: boolean;
 }
 
 export interface CandidateScenarioExamSession {
@@ -124,4 +127,14 @@ export interface CandidateScenarioExamItem {
   deadlineAt: string;
   revision: number;
   definition: ScenarioParametersDefinition;
+}
+
+export interface CandidateScenarioExamResult {
+  version: 1;
+  sessionItemId: string;
+  moduleId: ScenarioParametersModuleId;
+  scenarioId: string;
+  revision: number;
+  capturedAt: string;
+  payload: Record<string, unknown>;
 }

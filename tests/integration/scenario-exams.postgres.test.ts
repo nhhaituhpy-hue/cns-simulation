@@ -11,6 +11,9 @@ import {
   redeemScenarioExamCodeAction,
   setScenarioExamStatusAction,
   startScenarioExamSubjectAction,
+  saveScenarioExamItemAction,
+  submitScenarioExamItemAction,
+  submitScenarioExamSessionAction,
 } from "@/lib/scenario-exams/actions";
 import {
   getCandidateScenarioExamSession,
@@ -25,6 +28,7 @@ import type { ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 import { parseScenarioParameters } from "@/lib/scenario-parameters";
 import { createDefaultDvor1150aScenarioDefinition } from "@/lib/dvor1150a/scenario";
 import { createLowOutputDme1119aScenario } from "@/lib/dme1119a/scenario";
+import { buildCandidateScenarioExamResult } from "@/lib/scenario-exams/browser-results";
 
 const cookieJar = vi.hoisted(() => new Map<string, string>());
 vi.mock("@/lib/auth/profile", () => ({ getCurrentProfile: vi.fn() }));
@@ -179,6 +183,114 @@ describe.skipIf(!testUrl)("Scenario Exam actions against real PostgreSQL", () =>
     return { examId, code, session: session! };
   }
 
+  async function startWithResult(subjectId: string) {
+    const started = await startScenarioExamSubjectAction(subjectId);
+    expect(started.ok).toBe(true);
+    const item = (await getCandidateScenarioExamItem(started.data!.id))!;
+    return { item, result: buildCandidateScenarioExamResult(item, { actionHistory: [], answer: { suspectedFault: "Fixture conclusion", reasoning: "Measured parameters", remediation: "Adjusted configuration" }, checkpoint: { parameter: 42 } }) };
+  }
+
+  it("saves actual draft evidence without marking the subject complete or changing its scenario", async () => {
+    const { session } = await enterExam();
+    const { item, result } = await startWithResult(session.subjects[0].id);
+    expect((await saveScenarioExamItemAction(item.id, result)).ok).toBe(true);
+    const row = (await queryDatabase("select status, result_json, definition_snapshot_json, examiner_score from public.scenario_exam_session_items where id = $1", [item.id])).rows[0];
+    expect(row.status).toBe("in_progress");
+    expect(row.result_json).toEqual(result);
+    expect(row.definition_snapshot_json.id).toBe(item.definition.id);
+    expect(row.examiner_score).toBeNull();
+    expect((await getCandidateScenarioExamSession())?.subjects[0].hasSavedResult).toBe(true);
+  });
+
+  it("submits one subject idempotently and prevents rewriting its evidence", async () => {
+    const { session } = await enterExam();
+    const { item, result } = await startWithResult(session.subjects[0].id);
+    const first = await submitScenarioExamItemAction(item.id, result);
+    const retry = await submitScenarioExamItemAction(item.id, { ...result, payload: { answer: "changed-after-submit" } });
+    expect(first.ok).toBe(true);
+    expect(retry).toEqual(first);
+    expect((await saveScenarioExamItemAction(item.id, result)).ok).toBe(false);
+    expect((await queryDatabase("select result_json, status from public.scenario_exam_session_items where id = $1", [item.id])).rows[0]).toEqual({ result_json: result, status: "submitted" });
+    expect((await getCandidateScenarioExamSession())?.subjects[0].status).toBe("submitted");
+    expect((await getCandidateScenarioExamSession())?.status).toBe("in_progress");
+    expect((await queryDatabase("select event_type from public.scenario_exam_audit_events where session_id = $1 and event_type = 'item_submitted'", [session.id])).rows).toHaveLength(1);
+  });
+
+  it("submits both saved subjects and finishes the code/session once even for concurrent requests", async () => {
+    const { session } = await enterExam();
+    for (const subject of session.subjects) {
+      const { item, result } = await startWithResult(subject.id);
+      expect((await saveScenarioExamItemAction(item.id, result)).ok).toBe(true);
+    }
+    const [first, retry] = await Promise.all([submitScenarioExamSessionAction(), submitScenarioExamSessionAction()]);
+    expect(first.ok).toBe(true);
+    expect(retry).toEqual(first);
+    const finished = await getCandidateScenarioExamSession();
+    expect(finished?.status).toBe("submitted");
+    expect(finished?.submittedAt).toBeTruthy();
+    expect(finished?.subjects.map((subject) => subject.status)).toEqual(["submitted", "submitted"]);
+    const code = (await queryDatabase("select status, terminal_at from public.scenario_exam_codes where id = (select code_id from public.scenario_exam_sessions where id = $1)", [session.id])).rows[0];
+    expect(code.status).toBe("submitted");
+    expect(code.terminal_at).toBeTruthy();
+    expect((await queryDatabase("select event_type from public.scenario_exam_audit_events where session_id = $1 and event_type = 'item_submitted'", [session.id])).rows).toHaveLength(2);
+    expect((await queryDatabase("select event_type from public.scenario_exam_audit_events where session_id = $1 and event_type = 'session_submitted'", [session.id])).rows).toHaveLength(1);
+    expect((await startScenarioExamSubjectAction(session.subjects[0].id)).ok).toBe(false);
+  });
+
+  it("does not partially submit when one selected subject has no saved result", async () => {
+    const { session } = await enterExam();
+    const first = await startWithResult(session.subjects[0].id);
+    await saveScenarioExamItemAction(first.item.id, first.result);
+    await startWithResult(session.subjects[1].id);
+    expect((await submitScenarioExamSessionAction()).ok).toBe(false);
+    expect((await getCandidateScenarioExamSession())?.subjects.map((subject) => subject.status)).toEqual(["in_progress", "in_progress"]);
+    expect((await queryDatabase("select event_type from public.scenario_exam_audit_events where session_id = $1 and event_type = 'item_submitted'", [session.id])).rows).toEqual([]);
+  });
+
+  it("rejects final submission before every selected subject is started", async () => {
+    await enterExam();
+    expect((await submitScenarioExamSessionAction()).ok).toBe(false);
+  });
+
+  it("rejects mismatched revision, secret-bearing payloads, and evidence from another code", async () => {
+    const { session } = await enterExam();
+    const { item, result } = await startWithResult(session.subjects[0].id);
+    expect((await saveScenarioExamItemAction(item.id, { ...result, revision: result.revision + 1 })).ok).toBe(false);
+    expect((await saveScenarioExamItemAction(item.id, { ...result, payload: { password: "non-production-fixture" } })).ok).toBe(false);
+    vi.mocked(getCurrentProfile).mockResolvedValue(admin);
+    await enterExam();
+    expect((await saveScenarioExamItemAction(item.id, result)).ok).toBe(false);
+    expect((await queryDatabase("select result_json from public.scenario_exam_session_items where id = $1", [item.id])).rows[0].result_json).toBeNull();
+  });
+
+  it("rejects saving or finishing after the original deadline", async () => {
+    const { session } = await enterExam();
+    const { item, result } = await startWithResult(session.subjects[0].id);
+    await queryDatabase("update public.scenario_exam_sessions set started_at = now() - interval '2 hours', deadline_at = now() - interval '1 hour' where id = $1", [session.id]);
+    expect((await saveScenarioExamItemAction(item.id, result)).ok).toBe(false);
+    expect((await submitScenarioExamItemAction(item.id, result)).ok).toBe(false);
+    expect((await submitScenarioExamSessionAction()).ok).toBe(false);
+  });
+
+  it("rolls all subject/session/code transitions back if the final audit fails", async () => {
+    const { session } = await enterExam();
+    for (const subject of session.subjects) {
+      const { item, result } = await startWithResult(subject.id);
+      await saveScenarioExamItemAction(item.id, result);
+    }
+    await queryDatabase("alter table public.scenario_exam_audit_events add constraint test_reject_session_submitted check (event_type <> 'session_submitted') not valid");
+    const diagnostic = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      expect((await submitScenarioExamSessionAction()).ok).toBe(false);
+      expect((await getCandidateScenarioExamSession())?.status).toBe("in_progress");
+      expect((await getCandidateScenarioExamSession())?.subjects.map((subject) => subject.status)).toEqual(["in_progress", "in_progress"]);
+      expect((await queryDatabase("select event_type from public.scenario_exam_audit_events where session_id = $1 and event_type in ('item_submitted', 'session_submitted')", [session.id])).rows).toEqual([]);
+    } finally {
+      diagnostic.mockRestore();
+      await queryDatabase("alter table public.scenario_exam_audit_events drop constraint test_reject_session_submitted");
+    }
+  });
+
   it("creates the scheduled exam and audit, then loads an empty detail page", async () => {
     const input = {
       name: "Test case 01", description: "SQL regression fixture", durationMinutes: 60,
@@ -224,7 +336,8 @@ describe.skipIf(!testUrl)("Scenario Exam actions against real PostgreSQL", () =>
 
     vi.mocked(getCurrentProfile).mockResolvedValue(student);
     const listed = await listCandidateOpenScenarioExams();
-    expect(Object.fromEntries(listed.map((exam) => [exam.id, exam.availability]))).toEqual({
+    const testedExamIds = [activeExamId, unscheduledExamId, futureExamId, expiredExamId];
+    expect(Object.fromEntries(listed.filter((exam) => testedExamIds.includes(exam.id)).map((exam) => [exam.id, exam.availability]))).toEqual({
       [activeExamId]: "available",
       [unscheduledExamId]: "available",
       [futureExamId]: "upcoming",

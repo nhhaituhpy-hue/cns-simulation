@@ -16,6 +16,7 @@ import type { Scenario } from "@/lib/types";
 import { AdsbBlockDiagram } from "@/modules/devices/adsb/adsb-block-diagram";
 import { useRecordingStore } from "@/stores/recording-store";
 import { createTerminalStore } from "@/stores/terminal-store";
+import { useScenarioExamResultReader } from "./scenario-exam-snapshot-context";
 
 /** QCMS and terminal share one assigned item; neither hydrates the source catalog. */
 export function CandidateAdsbRuntime({ item }: { item: CandidateScenarioExamItem }) {
@@ -36,6 +37,13 @@ export function CandidateAdsbRuntime({ item }: { item: CandidateScenarioExamItem
       createdAt: item.startedAt,
     };
   }, [item.definition, item.startedAt]);
+  useScenarioExamResultReader(() => {
+    const recording = useRecordingStore.getState();
+    if (!scenario || recording.sessionKey !== sessionKey) return null;
+    return { allActions: recording.allActions, selectedActions: recording.selectedActions,
+      authenticatedCorrectly: recording.authenticatedCorrectly, qcmsMonitoringOpened: recording.qcmsMonitoringOpened,
+      phase: recording.phase, terminal: terminalStore.getState().getPersistentState() };
+  });
 
   useEffect(() => {
     if (!scenario) return;

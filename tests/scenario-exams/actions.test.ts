@@ -23,6 +23,9 @@ import {
   redeemScenarioExamCodeAction,
   setScenarioExamStatusAction,
   startScenarioExamSubjectAction,
+  saveScenarioExamItemAction,
+  submitScenarioExamItemAction,
+  submitScenarioExamSessionAction,
 } from "@/lib/scenario-exams/actions";
 import { hashScenarioExamCode, isScenarioExamCode } from "@/lib/scenario-exams/codes";
 import { decryptScenarioExamCode } from "@/lib/scenario-exams/code-encryption";
@@ -98,6 +101,22 @@ afterEach(() => {
 });
 
 describe("Scenario Exam action authorization", () => {
+  it.each([null, "admin", "teacher"])("rejects %s for save/submit before reading the cookie or database", async (role) => {
+    mocks.getCurrentProfile.mockResolvedValue(role ? profile(role) : null);
+    const results = await Promise.all([saveScenarioExamItemAction(itemId, {}), submitScenarioExamItemAction(itemId, {}), submitScenarioExamSessionAction()]);
+    for (const result of results) expect(result).toEqual({ ok: false, message: "Bạn cần đăng nhập tài khoản Thí sinh." });
+    expect(mocks.cookieGet).not.toHaveBeenCalled();
+    expect(mocks.withDatabaseTransaction).not.toHaveBeenCalled();
+  });
+
+  it("requires the code session cookie for saving/submitting evidence", async () => {
+    mocks.getCurrentProfile.mockResolvedValue(profile("student"));
+    mocks.cookieGet.mockReturnValue(undefined);
+    const results = await Promise.all([saveScenarioExamItemAction(itemId, {}), submitScenarioExamItemAction(itemId, {}), submitScenarioExamSessionAction()]);
+    for (const result of results) expect(result.ok).toBe(false);
+    expect(mocks.withDatabaseTransaction).not.toHaveBeenCalled();
+  });
+
   it.each([null, "student", "teacher"])("rejects %s for every admin mutation before DB access", async (role) => {
     mocks.getCurrentProfile.mockResolvedValue(role ? profile(role) : null);
 

@@ -4,7 +4,7 @@ import { Suspense, useEffect, type ReactNode } from "react";
 import { SimulatorConfigPersistence } from "@/components/simulator/simulator-config-persistence";
 import { SimulatorToolbarBackButton } from "@/components/simulator/simulator-toolbar-back-button";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
-import { useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
+import { useScenarioExamResultReader, useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
 import { DmeScenarioSessionPersistence } from "@/components/scenario/scenario-session-persistence";
 import type { SupportedSimulatorConfigId } from "@/lib/simulator-config/types";
 import type { DmePmdtMode } from "@/lib/dme-types";
@@ -85,6 +85,16 @@ export function PmdtLayout({
   sidePanel,
 }: PmdtLayoutProps) {
   const examSnapshot = useScenarioExamSnapshot();
+  useScenarioExamResultReader(() => {
+    const state = useDmePmdtStore.getState();
+    if (!examSnapshot || !state.scenario.active || state.sessionKey !== examSnapshot.sessionKey) return null;
+    return { actionHistory: state.actionHistory, evidenceStats: state.evidenceStats, attemptEvents: state.attemptEvents,
+      answer: state.answer, scenarioHardwareSelection: state.scenarioHardwareSelection, scenarioHardwareInspected: state.scenarioHardwareInspected,
+      scenarioHardwareReasoning: state.scenarioHardwareReasoning, scenarioHardwareDispositionConfirmed: state.scenarioHardwareDispositionConfirmed,
+      checkpoint: { data: state.data, configDraft: state.configDraft, configurationBackup: state.configurationBackup,
+        savedConfiguration: state.savedConfiguration, configDirty: state.configDirty, needBackup: state.needBackup,
+        scenarioStage: state.scenarioStage, scenarioDiagnosticState: state.scenarioDiagnosticState } };
+  });
   const externalLeadingPanel = mode === "student" ? leadingPanel : null;
   const externalSidePanel = mode === "student" ? sidePanel : null;
   const hasExternalPanels = Boolean(externalLeadingPanel || externalSidePanel);

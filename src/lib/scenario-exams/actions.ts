@@ -7,6 +7,7 @@ import { generateScenarioExamCode, hashScenarioExamCode, isScenarioExamCode } fr
 import { encryptScenarioExamCode, ScenarioExamCodeEncryptionError } from "./code-encryption";
 import { createScenarioExamSessionToken, hashScenarioExamSessionToken, setScenarioExamSessionCookie } from "./session";
 import { getScenarioExamSessionToken } from "./session";
+import { saveCandidateScenarioExamItem, submitCandidateScenarioExamSession } from "./submissions";
 import {
   ScenarioExamValidationError,
   validateIssueScenarioExamCodeInput,
@@ -349,5 +350,37 @@ export async function startScenarioExamSubjectAction(
     };
   } catch (error) {
     return { ok: false, message: errorMessage(error, "start_subject") };
+  }
+}
+
+export async function saveScenarioExamItemAction(itemId: unknown, input: unknown): Promise<ScenarioExamActionResult<{ id: string }>> {
+  try {
+    const data = await saveCandidateScenarioExamItem(itemId, input, false);
+    return { ok: true, message: "Đã lưu bài làm.", data: { id: data.id } };
+  } catch (error) {
+    return { ok: false, message: errorMessage(error, "save_item") };
+  }
+}
+
+export async function submitScenarioExamItemAction(itemId: unknown, input: unknown): Promise<ScenarioExamActionResult<{ id: string }>> {
+  try {
+    const data = await saveCandidateScenarioExamItem(itemId, input, true);
+    revalidatePath(`/admin/scenario-exams/${data.examId}`);
+    revalidatePath("/student/scenario-exams/session");
+    revalidatePath(`/student/scenario-exams/session/items/${data.id}`);
+    return { ok: true, message: "Đã nộp môn thi.", data: { id: data.id } };
+  } catch (error) {
+    return { ok: false, message: errorMessage(error, "submit_item") };
+  }
+}
+
+export async function submitScenarioExamSessionAction(): Promise<ScenarioExamActionResult<{ id: string }>> {
+  try {
+    const data = await submitCandidateScenarioExamSession();
+    revalidatePath(`/admin/scenario-exams/${data.examId}`);
+    revalidatePath("/student/scenario-exams/session", "layout");
+    return { ok: true, message: "Đã nộp bài và kết thúc phiên thi.", data: { id: data.id } };
+  } catch (error) {
+    return { ok: false, message: errorMessage(error, "submit_session") };
   }
 }

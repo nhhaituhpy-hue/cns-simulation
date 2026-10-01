@@ -6,7 +6,7 @@ import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { useStore } from "zustand";
 import { Dvor220ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
-import { useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
+import { useScenarioExamResultReader, useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
 import {
   MopiensBeveledButton,
   MopiensConnectionDialog,
@@ -123,6 +123,10 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
   const [store] = useState<Dvor220StoreApi>(() => providedStore ?? createDvor220Store({ initialNowMs: trainingStartMs }));
   const storeState = useStore(store);
   const { device, snapshot } = storeState;
+  useScenarioExamResultReader(() => {
+    const current = store.getState().device;
+    return examSnapshot && current.scenario.active && current.scenario.definition?.id === examSnapshot.definition.id ? { device: current } : null;
+  });
   const [viewMode, setViewMode] = useState<Dvor220ViewMode>(initialView);
   const [activeSectionId, setActiveSectionId] = useState("main");
   const [activeScreenId, setActiveScreenId] = useState<Dvor220ScreenId>("home");

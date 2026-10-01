@@ -6,7 +6,7 @@ import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { useStore } from "zustand";
 import { Dme320ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
-import { useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
+import { useScenarioExamResultReader, useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
 import { evaluateDme320Scenario } from "./domain/scenario";
 import {
   MopiensConnectionDialog,
@@ -178,6 +178,10 @@ export function Dme320Simulator({
   );
   const storeState = useStore(store);
   const simulation = storeState.simulation;
+  useScenarioExamResultReader(() => {
+    const current = store.getState().simulation;
+    return examSnapshot && current.scenario.active && current.scenario.definition?.id === examSnapshot.definition.id ? { simulation: current } : null;
+  });
   const [viewMode, setViewMode] = useState<Dme320ViewMode>(initialView);
   const [activeSectionId, setActiveSectionId] = useState("main");
   const [activeScreenId, setActiveScreenId] = useState<Dme320ScreenId>("home");

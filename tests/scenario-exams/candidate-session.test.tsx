@@ -2,14 +2,15 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CandidateScenarioExamSession } from "@/lib/scenario-exams/types";
 
-const mocks = vi.hoisted(() => ({ start: vi.fn(), push: vi.fn() }));
-vi.mock("@/lib/scenario-exams/actions", () => ({ startScenarioExamSubjectAction: mocks.start }));
+const mocks = vi.hoisted(() => ({ start: vi.fn(), push: vi.fn(), save: vi.fn(), submit: vi.fn(), refresh: vi.fn() }));
+vi.mock("@/lib/scenario-exams/actions", () => ({ startScenarioExamSubjectAction: mocks.start, saveScenarioExamItemAction: mocks.save, submitScenarioExamSessionAction: mocks.submit }));
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: mocks.push, replace: vi.fn(), back: vi.fn(), forward: vi.fn(), refresh: vi.fn(), prefetch: vi.fn() }),
+  useRouter: () => ({ push: mocks.push, replace: vi.fn(), back: vi.fn(), forward: vi.fn(), refresh: mocks.refresh, prefetch: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
 }));
 
 import { CandidateExamSession } from "@/components/scenario-exams/candidate-exam-session";
+import { candidateResultStorageKey } from "@/lib/scenario-exams/browser-results";
 
 const itemId = "55555555-5555-4555-8555-555555555555";
 const itemHref = `/student/scenario-exams/session/items/${itemId}`;
@@ -25,11 +26,68 @@ function session(overrides: Partial<CandidateScenarioExamSession> = {}): Candida
 
 beforeEach(() => {
   vi.clearAllMocks();
+  window.localStorage.clear();
+  vi.spyOn(window, "confirm").mockReturnValue(true);
+  mocks.save.mockResolvedValue({ ok: true, message: "Đã lưu" });
+  mocks.submit.mockResolvedValue({ ok: true, message: "Đã nộp" });
   vi.spyOn(Date, "now").mockReturnValue(now);
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 describe("candidate subject navigation", () => {
+  function startedSession() {
+    const data = session();
+    data.subjects[0] = { ...data.subjects[0], status: "in_progress", sessionItemId: itemId, scenarioId: "scenario-1", revision: 1, scenarioName: "Scenario A" };
+    return data;
+  }
+
+  it("offers final submission after subjects have been started and locks the session after server ACK", async () => {
+    render(<CandidateExamSession session={startedSession()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Nộp bài và kết thúc phiên thi" }));
+    await waitFor(() => expect(mocks.submit).toHaveBeenCalledOnce());
+    await waitFor(() => expect(screen.getByText("Đã nộp bài và kết thúc phiên thi.")).toBeInTheDocument());
+    expect(screen.queryByRole("link", { name: "Tiếp tục môn" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Nộp bài và kết thúc phiên thi" })).not.toBeInTheDocument();
+    expect(mocks.refresh).toHaveBeenCalledOnce();
+  });
+
+  it("does not submit when the candidate cancels confirmation", () => {
+    vi.mocked(window.confirm).mockReturnValue(false);
+    render(<CandidateExamSession session={startedSession()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Nộp bài và kết thúc phiên thi" }));
+    expect(mocks.submit).not.toHaveBeenCalled();
+  });
+
+  it("uploads local evidence before finishing and does not finish if saving fails", async () => {
+    const data = startedSession();
+    const result = { version: 1, sessionItemId: itemId, moduleId: "dvor-1150a", scenarioId: "scenario-1", revision: 1, capturedAt: "2026-10-01T00:05:00.000Z", payload: { answer: { suspectedFault: "Final conclusion" } } };
+    window.localStorage.setItem(candidateResultStorageKey(data.id, itemId), JSON.stringify(result));
+    mocks.save.mockResolvedValue({ ok: false, message: "Không thể lưu bài làm." });
+    render(<CandidateExamSession session={data} />);
+    fireEvent.click(screen.getByRole("button", { name: "Nộp bài và kết thúc phiên thi" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Không thể lưu bài làm.");
+    expect(mocks.save).toHaveBeenCalledWith(itemId, result);
+    expect(mocks.submit).not.toHaveBeenCalled();
+    mocks.save.mockResolvedValue({ ok: true, message: "Đã lưu" });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Nộp bài và kết thúc phiên thi" })).toBeEnabled());
+    fireEvent.click(screen.getByRole("button", { name: "Nộp bài và kết thúc phiên thi" }));
+    await waitFor(() => expect(mocks.submit).toHaveBeenCalledOnce());
+    expect(mocks.save.mock.invocationCallOrder.at(-1)!).toBeLessThan(mocks.submit.mock.invocationCallOrder[0]);
+  });
+
+  it("keeps the session editable when the server rejects final submission", async () => {
+    mocks.submit.mockResolvedValue({ ok: false, message: "Có môn chưa lưu bài làm." });
+    render(<CandidateExamSession session={startedSession()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Nộp bài và kết thúc phiên thi" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Có môn chưa lưu bài làm.");
+    expect(screen.getByRole("link", { name: "Tiếp tục môn" })).toBeInTheDocument();
+    expect(mocks.refresh).not.toHaveBeenCalled();
+  });
+
+  it("disables final submission when a selected subject is not started", () => {
+    render(<CandidateExamSession session={session()} />);
+    expect(screen.getByRole("button", { name: "Nộp bài và kết thúc phiên thi" })).toBeDisabled();
+  });
   it("opens the returned assigned item immediately after starting a subject", async () => {
     mocks.start.mockResolvedValue({ ok: true, message: "Đã cấp", data: { id: itemId, moduleId: "dvor-1150a", scenarioName: "Scenario A" } });
     render(<CandidateExamSession session={session()} />);
@@ -61,7 +119,7 @@ describe("candidate subject navigation", () => {
     render(<CandidateExamSession session={session()} />);
     fireEvent.click(screen.getByRole("button", { name: "Bắt đầu môn" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Hãy tải lại phiên thi");
-    expect(screen.getByRole("button", { name: "Bắt đầu môn" })).toBeEnabled();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Bắt đầu môn" })).toBeEnabled());
     expect(mocks.push).not.toHaveBeenCalled();
   });
 
