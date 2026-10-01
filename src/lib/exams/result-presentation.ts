@@ -4,6 +4,7 @@ import type {
   ScenarioActionEvent,
   ScenarioEvidenceSnapshot,
   ScenarioEvidenceValue,
+  ScenarioParameterChange,
   ScenarioResolution,
   ScenarioResolutionCheck,
 } from "@/lib/scenario-evidence";
@@ -85,6 +86,15 @@ function parseScenarioAction(value: unknown, index: number): ScenarioActionEvent
   const input = action.input === undefined || isEvidenceValue(action.input) ? action.input : undefined;
   const before = evidenceSnapshot(action.before);
   const after = evidenceSnapshot(action.after);
+  // Retain valid Apply/draft/restore changes for the examiner's saved evidence.
+  const parameterChanges = Array.isArray(action.parameterChanges) ? action.parameterChanges.flatMap((value): ScenarioParameterChange[] => {
+    const change = row(value);
+    if (typeof change.fieldId !== "string" || typeof change.label !== "string"
+      || !isEvidenceValue(change.before) || !isEvidenceValue(change.after) || typeof change.accepted !== "boolean"
+      || typeof change.phase !== "string" || !["draft", "apply", "command", "restore", "backup"].includes(change.phase)) return [];
+    return [{ fieldId: change.fieldId, label: change.label, before: change.before, after: change.after,
+      phase: change.phase as ScenarioParameterChange["phase"], accepted: change.accepted }];
+  }) : [];
   return {
     id: text(action.id) || `action-${index + 1}`,
     sequence: typeof action.sequence === "number" && Number.isFinite(action.sequence) ? action.sequence : index + 1,
@@ -99,6 +109,7 @@ function parseScenarioAction(value: unknown, index: number): ScenarioActionEvent
     ...(typeof action.reason === "string" ? { reason: action.reason } : {}),
     ...(before ? { before } : {}),
     ...(after ? { after } : {}),
+    ...(parameterChanges.length ? { parameterChanges } : {}),
   };
 }
 

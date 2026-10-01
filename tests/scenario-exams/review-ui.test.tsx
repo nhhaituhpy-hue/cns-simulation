@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ScenarioExamDetailManager } from "@/components/scenario-exams/scenario-exam-detail-manager";
 import { ScenarioExamSubmissionReviewView } from "@/components/scenario-exams/scenario-exam-submission-review";
 import type { ScenarioExamDetail, ScenarioExamSubmissionReview } from "@/lib/scenario-exams/types";
-import { createDefaultDvor1150aScenarioDefinition } from "@/lib/dvor1150a/scenario";
+import { createDefaultDvor1150aScenarioDefinition, createLvpsTx1PowerScenario } from "@/lib/dvor1150a/scenario";
 
 const mocks = vi.hoisted(() => ({ save: vi.fn(), refresh: vi.fn() }));
 vi.mock("@/lib/scenario-exams/actions", () => ({ saveScenarioExamReviewAction: mocks.save, issueScenarioExamCodeAction: vi.fn(), setScenarioExamStatusAction: vi.fn() }));
@@ -53,6 +53,57 @@ describe("examiner submission UI", () => {
     expect(screen.getByText("SOLVED")).toHaveClass("text-[var(--color-success)]");
     expect(screen.getByLabelText("Trạng thái kỹ thuật bài làm")).toHaveTextContent("SOLVED");
     expect(screen.getAllByText("submitted").length).toBeGreaterThan(0);
+  });
+
+  it("shows evaluated criteria and software functions while keeping raw data collapsed", () => {
+    const data = review();
+    data.subjects[0].technicalSummary = { status: "IN_PROGRESS", solved: false, checks: [
+      { id: "integral-monitor", label: "Integral Monitor", passed: true, detail: "Normal" },
+      { id: "action-diagnostics-run-full", label: "PMDT action: diagnostics-run-full", passed: false, detail: "Chưa thực hiện" },
+    ], blockers: [] };
+    data.subjects[0].result!.payload.actionHistory = [
+      { id: "login", sequence: 1, occurredAt: timestamp, actor: "student", kind: "authentication", controlId: "pmdt-login", label: "PMDT login", menuPath: ["Home"], input: { securityLevel: 3 }, accepted: true },
+      { id: "tx", sequence: 6, occurredAt: timestamp, actor: "student", kind: "control", controlId: "transmitter-tx2-main", label: "TX TX2 main", menuPath: ["Commands"], input: { transmitterId: "tx2", mode: "main" }, accepted: true, before: { activeTransmitter: "tx1" }, after: { activeTransmitter: "tx2" } },
+      { id: "local", sequence: 8, occurredAt: timestamp, actor: "student", kind: "control", controlId: "simulation.local", label: "Set simulation.local", menuPath: [], input: { fieldId: "simulation.local", value: "true" }, accepted: false, reason: "Security level is insufficient." },
+    ];
+    render(<ScenarioExamSubmissionReviewView review={data} />);
+    const criteria = screen.getByRole("region", { name: /Tiêu chí đạt/ });
+    expect(within(criteria).getByText("1/2 đạt")).toBeInTheDocument();
+    expect(within(criteria).getByText("Đạt").closest("li")).toHaveClass("bg-[var(--color-success-muted)]");
+    expect(within(criteria).getByText("Chưa đạt").closest("li")).toHaveClass("bg-[var(--color-danger-muted)]");
+    expect(within(criteria).getByText("Chạy Diagnostics đầy đủ")).toBeInTheDocument();
+    const journal = screen.getByRole("region", { name: "Nhật ký kỹ thuật đã nộp" });
+    expect(within(journal).getByText("Chọn TX2 làm máy phát chính")).toBeInTheDocument();
+    expect(within(journal).getByText("Main TX2")).toBeInTheDocument();
+    expect(within(journal).getByText("Cấp 3")).toBeInTheDocument();
+    expect(within(journal).getByText("Bị từ chối").closest("li")).toHaveClass("bg-[var(--color-danger-muted)]");
+    expect(within(journal).queryByText(/^Input:/)).not.toBeInTheDocument();
+    for (const detail of journal.querySelectorAll("details")) expect(detail).not.toHaveAttribute("open");
+    expect(screen.getByText("Chi tiết kỹ thuật · Dữ liệu bài làm đã nộp").closest("details")).not.toHaveAttribute("open");
+  });
+
+  it("does not show unverified criteria or an absent journal as completed green steps", () => {
+    const data = review();
+    data.subjects[0].technicalSummary = { status: "UNVERIFIED", solved: null, checks: [{ id: "old", label: "Old client claim", passed: true, detail: "SOLVED" }], blockers: [] };
+    render(<ScenarioExamSubmissionReviewView review={data} />);
+    const criteria = screen.getByRole("region", { name: /Tiêu chí đạt/ });
+    expect(within(criteria).getByText("Chưa xác nhận").closest("li")).not.toHaveClass("bg-[var(--color-success-muted)]");
+    expect(within(criteria).queryByText("Đạt")).not.toBeInTheDocument();
+    expect(screen.getByText("Chưa có thao tác kỹ thuật được ghi nhận trong bài nộp.")).toBeInTheDocument();
+  });
+
+  it("shows missing hardware evidence in gray without inventing a selection from the reference answer", () => {
+    const data = review();
+    data.subjects[0].definition = createLvpsTx1PowerScenario();
+    delete data.subjects[0].result!.payload.scenarioHardwareSelection;
+    data.subjects[0].technicalSummary = { status: "IN_PROGRESS", solved: false, checks: [{ id: "hardware-selection", label: "Hardware block selection", passed: true, detail: "Stale claim" }], blockers: [] };
+    render(<ScenarioExamSubmissionReviewView review={data} />);
+    const criteria = screen.getByRole("region", { name: /Tiêu chí đạt/ });
+    expect(within(criteria).getByText("Chưa có minh chứng").closest("li")).toHaveClass("bg-[var(--surface)]");
+    expect(within(criteria).getByText("0/1 đạt")).toBeInTheDocument();
+    const hardware = screen.getByRole("region", { name: "Lựa chọn khối/card trong bài nộp" });
+    expect(within(hardware).getByText("Chưa có lựa chọn khối/card được lưu trong bài nộp.")).toBeInTheDocument();
+    expect(within(hardware).queryByText("Khớp đáp án")).not.toBeInTheDocument();
   });
 
   it.each([0, 85.25, 100])("saves %s points with the code/item identity and examiner comment", async (score) => {

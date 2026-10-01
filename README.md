@@ -209,6 +209,19 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-10-01 — Nhật ký chức năng và minh chứng khối/card trong bài nộp
+
+- Theo phương án đã duyệt, trang giám khảo hiển thị `Tiêu chí đạt / Success criteria` trực tiếp và nhật ký theo tên chức năng/nút trên phần mềm; bổ sung thời gian, giá trị chọn, trạng thái trước → sau và lý do từ chối. Lệnh được chấp nhận dùng nền xanh nhẹ; kết quả đạt vẫn lấy từ evaluator của Scenario/bài nộp.
+- Dùng token màu của theme sáng/tối, chữ trạng thái và icon cùng màu. Local hiển thị Bật/Tắt; boolean Alarm và Normal được diễn giải riêng để không đảo nghĩa cảnh báo. Bản nháp, yêu cầu bị từ chối và trạng thái tham khảo không được diễn giải thành cấu hình đã áp dụng hoặc kết quả đạt.
+- JSON/tên trường nội bộ được thu gọn trong `Chi tiết kỹ thuật`; vẫn giữ dữ liệu gốc để đối chiếu. Presenter bài nộp giữ lại các `parameterChanges` hợp lệ của Apply/draft/restore/backup thay vì bỏ mất thay đổi tham số.
+- Sau phản hồi của người dùng về khối/card, nối evidence đã lưu vào mục `Lựa chọn khối/card trong bài nộp`: tên khối/card, đúng vị trí TX/Monitor/card, lựa chọn thí sinh cạnh đáp án từ definition snapshot, lý do xử lý và danh sách đã kiểm tra. Không đọc lựa chọn từ store đang chạy hay tự lấy đáp án điền vào bài cũ.
+- Bài cũ chưa lưu lựa chọn/xác nhận phần cứng hiển thị xám `Chưa có minh chứng`, không suy ra đạt từ summary cũ. Các bài SELEX có disposition `replace-module` ghi rõ tiêu chí vận hành là tham khảo theo contract evaluator hiện hữu; chúng không được cộng vào số tiêu chí bắt buộc đã đạt. Điểm chính thức tiếp tục do giám khảo nhập.
+- Không sửa schema, migration, thuật toán mô phỏng hoặc dữ liệu production. Component nhật ký mới chỉ dùng trên trang review kỳ thi Scenario; nhật ký thí sinh/legacy giữ luồng hiện có.
+- **Đã kiểm tra:** ESLint trực tiếp, TypeScript và **8 file / 75 test** đạt, gồm luồng UI chọn LVPS 1 → lưu → nộp → review đọc vị trí **1A3A4**/lý do từ submitted snapshot sau khi store thay đổi; PostgreSQL thật trong database cô lập kiểm tra round-trip selection/inspection/reasoning và kết quả kỹ thuật. Source test/mock auth/cache không thay thế browser QA production.
+- **QA giao diện:** bản xem trước dùng component thực với dữ liệu minh họa; dark/light đạt tương phản chữ tối thiểu 7.17/5.89 ở bản khảo sát đầu, disclosure mở/đóng bằng Tab/Enter có focus-visible; 375px và landscape 812px không tràn ngang. Bổ sung khối/card đã render được và DOM xác nhận tên LVPS 1/vị trí 1A3A4/lý do/khớp đáp án; công cụ screenshot bị kẹt khi chụp bản cuối nên không lặp tiếp. Preview cục bộ: `http://127.0.0.1:3199/` (dữ liệu minh họa, không phải bài production).
+- **Gate phát hành:** sau yêu cầu `commit push đi`, đã chạy đủ chuỗi CI Regression Guard bằng **Node 24.18.0** vì suite bài thi có thay đổi mock: `npm run lint` → `npm run typecheck` → toàn bộ **145 file / 906 test** (có PostgreSQL thật) → production build **84/84** đều đạt. CodeGraph sync và diff check đạt; scope Git gồm mã nguồn/test trực tiếp và README, không có env, database, log hoặc artifact xem trước.
+- Người dùng đã cho phép commit/push `deploy/main`; CI và Dokploy được theo dõi sau push. Browser production đang đăng nhập chưa truy cập được do công cụ báo thiếu Codex auth token; chưa xác nhận bài thực tế trong ảnh có evidence phần cứng. Git push/CI đạt không thay thế xác nhận phiên bản đã deploy hoặc acceptance browser production.
+
 ### 2026-10-01 — Thống nhất Scenario Parameters cho ba thiết bị SELEX PMDT
 
 - Triển khai kế hoạch 1.1 đã được duyệt cho DVOR 1150 không A, DVOR 1150A và DME 1119A: Trạng thái khởi đầu → Lỗi đưa vào → Điều kiện đạt → Chẩn đoán hai bước → Quyền chỉnh sửa; metadata ở đầu, preview/footer ở cuối.

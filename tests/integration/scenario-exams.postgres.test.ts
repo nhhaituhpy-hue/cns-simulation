@@ -28,7 +28,9 @@ import {
 import { decryptScenarioExamCode } from "@/lib/scenario-exams/code-encryption";
 import type { ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 import { parseScenarioParameters } from "@/lib/scenario-parameters";
-import { createDefaultDvor1150aScenarioDefinition } from "@/lib/dvor1150a/scenario";
+import { createDefaultDvor1150aScenarioDefinition, createLvpsTx1PowerScenario } from "@/lib/dvor1150a/scenario";
+import { dvorHardwareOccurrenceKey } from "@/modules/devices/dvor-1150a/block-diagram-data";
+import { presentExamHardwareEvidence } from "@/lib/scenario-exams/hardware-presentation";
 import { createLowOutputDme1119aScenario } from "@/lib/dme1119a/scenario";
 import { buildCandidateScenarioExamResult } from "@/lib/scenario-exams/browser-results";
 import { evaluateScenarioExamResult } from "@/lib/scenario-exams/evaluation";
@@ -228,6 +230,38 @@ describe.skipIf(!testUrl)("Scenario Exam actions against real PostgreSQL", () =>
     expect(graded?.subjects.every((subject) => Boolean(subject.reviewedAt))).toBe(true);
     expect((await queryDatabase("select status, terminal_reason from public.scenario_exam_sessions where id = $1", [session.id])).rows[0]).toEqual({ status: "submitted", terminal_reason: "submitted" });
     expect((await queryDatabase("select event_type from public.scenario_exam_audit_events where session_id = $1 and event_type = 'review_updated'", [session.id])).rows).toHaveLength(2);
+  });
+
+  it("persists the selected hardware card and reasoning through submission and the examiner query", async () => {
+    const memberships = await queryDatabase("select id, scenario_id, definition_json from public.simulator_scenario_library_memberships where module_id = 'dvor-1150a' and library_kind = 'exam' and archived_at is null");
+    try {
+      for (const row of memberships.rows) {
+        const definition = { ...createLvpsTx1PowerScenario(), id: row.scenario_id };
+        await queryDatabase("update public.simulator_scenario_library_memberships set definition_json = $2 where id = $1", [row.id, definition]);
+      }
+      const examId = await openExam();
+      const code = await issueCode(examId, ["dvor-1150a"]);
+      vi.mocked(getCurrentProfile).mockResolvedValue(student);
+      expect((await redeemScenarioExamCodeAction(examId, code.code)).ok).toBe(true);
+      const session = (await getCandidateScenarioExamSession())!;
+      const { item } = await startWithResult(session.subjects[0].id);
+      const definition = parseScenarioParameters("dvor-1150a", item.definition)!;
+      const key = dvorHardwareOccurrenceKey(definition.diagnosis!.expectedHardware[0]);
+      const payload = { checkpoint: { config: definition.configuration },
+        visitedViewIds: definition.diagnosis!.pmdtCheckpoints.map((entry) => entry.viewId),
+        acceptedActionControlIds: definition.diagnosis!.requiredActionControlIds,
+        scenarioHardwareSelection: [key], scenarioHardwareInspected: [key], scenarioHardwareReasoning: "Nguồn +5V thấp tại LVPS 1A3A4" };
+      const result = buildCandidateScenarioExamResult(item, payload);
+      expect((await submitScenarioExamItemAction(item.id, result)).ok).toBe(true);
+      vi.mocked(getCurrentProfile).mockResolvedValue(admin);
+      const review = (await getScenarioExamSubmissionReview(examId, code.id))!;
+      expect(review.subjects[0].result?.payload).toEqual(payload);
+      expect(review.subjects[0].technicalSummary?.status).toBe("SOLVED");
+      expect(presentExamHardwareEvidence(review.subjects[0])).toMatchObject({ passed: true,
+        selected: [{ key, position: "1A3A4", matchesReference: true }], inspected: [{ key }], reasoning: payload.scenarioHardwareReasoning });
+    } finally {
+      for (const row of memberships.rows) await queryDatabase("update public.simulator_scenario_library_memberships set definition_json = $2 where id = $1", [row.id, row.definition_json]);
+    }
   });
 
   it("prevents grading another code/exam or grading before the subject is submitted", async () => {

@@ -74,6 +74,14 @@ describe("official exam result presentation", () => {
     expect(result?.inspectedComponentIds).toEqual(["rx-a", "psu-a"]);
   });
 
+  it("keeps valid parameter changes and ignores malformed changes from old saved results", () => {
+    const change = { fieldId: "simulation.local", label: "Local", before: false, after: true, phase: "draft", accepted: true };
+    const result = presentPmdtResult({ actionHistory: [{ actor: "student", kind: "configuration", label: "Stage simulation.local", accepted: true,
+      parameterChanges: [change, { ...change, phase: "unknown" }, { ...change, phase: { toString: "apply" } }, { ...change, after: undefined }, { ...change, accepted: "true" }] }] });
+    expect(result?.actionHistory[0].parameterChanges).toEqual([change]);
+    expect(result?.actionHistory[0]).toMatchObject({ id: "action-1", sequence: 1 });
+  });
+
   it("returns null when no official result was stored", () => {
     expect(presentPmdtResult(null)).toBeNull();
     expect(presentAdsbResult(null)).toBeNull();

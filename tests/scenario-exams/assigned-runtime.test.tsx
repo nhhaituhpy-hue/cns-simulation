@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 import { CandidateAdsbRuntime } from "@/components/scenario-exams/candidate-adsb-runtime";
@@ -21,12 +21,14 @@ import { useDvor1150PmdtStore } from "@/stores/dvor1150-pmdt-store";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
 import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
 import { useRecordingStore } from "@/stores/recording-store";
-import type { CandidateScenarioExamItem } from "@/lib/scenario-exams/types";
+import type { CandidateScenarioExamItem, CandidateScenarioExamResult, ScenarioExamSubmissionReview } from "@/lib/scenario-exams/types";
 import type { ScenarioActionEvent } from "@/lib/scenario-evidence";
 import { buildCandidateScenarioExamResult } from "@/lib/scenario-exams/browser-results";
+import { ScenarioExamSubmissionReviewView } from "@/components/scenario-exams/scenario-exam-submission-review";
+import { evaluateScenarioExamResult } from "@/lib/scenario-exams/evaluation";
 
-const actionMocks = vi.hoisted(() => ({ save: vi.fn(), submit: vi.fn(), push: vi.fn(), refresh: vi.fn() }));
-vi.mock("@/lib/scenario-exams/actions", () => ({ saveScenarioExamItemAction: actionMocks.save, submitScenarioExamItemAction: actionMocks.submit }));
+const actionMocks = vi.hoisted(() => ({ save: vi.fn(), submit: vi.fn(), grade: vi.fn(), push: vi.fn(), refresh: vi.fn() }));
+vi.mock("@/lib/scenario-exams/actions", () => ({ saveScenarioExamItemAction: actionMocks.save, submitScenarioExamItemAction: actionMocks.submit, saveScenarioExamReviewAction: actionMocks.grade }));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: actionMocks.push, replace: vi.fn(), back: vi.fn(), forward: vi.fn(), refresh: actionMocks.refresh, prefetch: vi.fn() }),
@@ -102,6 +104,26 @@ describe("assigned simulator snapshots", () => {
     fireEvent.click(screen.getByRole("button", { name: "Lưu bài làm" }));
     await waitFor(() => expect(actionMocks.save).toHaveBeenCalled());
     expect(actionMocks.save.mock.calls[0]?.[1].payload).toMatchObject({ scenarioHardwareInspected: [key], scenarioHardwareSelection: [key], scenarioHardwareReasoning: "RMS nguồn +5V thấp liên hệ với LVPS 1A3A4" });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Nộp môn" })).toBeEnabled());
+    fireEvent.click(screen.getByRole("button", { name: "Nộp môn" }));
+    await waitFor(() => expect(actionMocks.submit).toHaveBeenCalledOnce());
+    const result = actionMocks.submit.mock.calls[0][1] as CandidateScenarioExamResult;
+    cleanup();
+    // The examiner must read the submitted snapshot, independent of live stores.
+    act(() => useVorPmdtStore.setState({ scenarioHardwareSelection: [], scenarioHardwareInspected: [], scenarioHardwareReasoning: "Another live session" }));
+    const submitted: ScenarioExamSubmissionReview = { examId: "exam", examName: "Exam", codeId: "code", codeHint: "0001", candidateName: "Candidate", candidateUnit: "Unit", codeStatus: "submitted", sessionStatus: "submitted", startedAt: null, deadlineAt: null, submittedAt: result.capturedAt,
+      subjects: [{ subjectId: "subject", moduleId: "dvor-1150a", status: "submitted", itemId: result.sessionItemId, scenarioName: definition.name, revision: 7, startedAt: null, submittedAt: result.capturedAt, definition, result, resultInvalid: false, examinerScore: null, examinerComment: "", reviewedAt: null, reviewedByName: null,
+        technicalSummary: evaluateScenarioExamResult("dvor-1150a", definition, result.payload) }] };
+    render(<ScenarioExamSubmissionReviewView review={submitted} />);
+    const hardware = screen.getByRole("region", { name: "Lựa chọn khối/card trong bài nộp" });
+    expect(within(hardware).getAllByText(/LVPS.*1/).length).toBeGreaterThan(0);
+    const selectedHardware = within(hardware).getByRole("heading", { name: "Thí sinh lựa chọn" }).parentElement!;
+    const expectedHardware = within(hardware).getByRole("heading", { name: "Đáp án của Scenario đã cấp" }).parentElement!;
+    expect(within(selectedHardware).getByText("Vị trí: 1A3A4")).toBeVisible();
+    expect(within(expectedHardware).getByText("Vị trí: 1A3A4")).toBeVisible();
+    expect(within(hardware).getByText("RMS nguồn +5V thấp liên hệ với LVPS 1A3A4")).toBeVisible();
+    expect(within(hardware).getByText("Khớp đáp án")).toBeVisible();
+    expect(within(hardware).queryByText("Another live session")).not.toBeInTheDocument();
   });
 
   it("lets the candidate return to the session when the assigned runtime cannot initialize", async () => {
