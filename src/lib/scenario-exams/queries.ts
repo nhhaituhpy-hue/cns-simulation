@@ -21,6 +21,7 @@ import type {
 import { getScenarioExamSessionToken, hashScenarioExamSessionToken } from "./session";
 import { validateScenarioExamUuid } from "./validation";
 import { parseCandidateScenarioExamResult } from "./results";
+import { evaluateScenarioExamResult } from "./evaluation";
 
 type Row = Record<string, unknown>;
 
@@ -209,7 +210,8 @@ export async function getScenarioExamSubmissionReview(examIdValue: string, codeI
       definition: row.definition_snapshot_json ? parseScenarioParameters(moduleId, row.definition_snapshot_json) : null,
       result, resultInvalid: row.result_json != null && result === null,
       examinerScore: row.examiner_score == null ? null : number(row.examiner_score), examinerComment: string(row.examiner_comment),
-      reviewedAt: nullableString(row.reviewed_at), reviewedByName: nullableString(row.reviewed_by_name) };
+      reviewedAt: nullableString(row.reviewed_at), reviewedByName: nullableString(row.reviewed_by_name),
+      technicalSummary: evaluateScenarioExamResult(moduleId, row.definition_snapshot_json, result?.payload ?? null) };
   });
   return { examId, examName: string(code.exam_name), codeId, codeHint: string(code.code_hint),
     candidateName: string(code.candidate_name), candidateUnit: string(code.candidate_unit),

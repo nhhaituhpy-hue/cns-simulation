@@ -15,6 +15,8 @@ import type { Dvor1150PmdtMode } from "@/lib/dvor1150";
 import { Dvor1150ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
 import { SimulatorToolbarBackButton } from "@/components/simulator/simulator-toolbar-back-button";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
+import { Dvor1150HardwareStage } from "./dvor1150-hardware-stage";
+import { evaluateDvor1150Scenario } from "@/lib/dvor1150";
 import { useScenarioExamResultReader, useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
 
 export interface Dvor1150PmdtLayoutProps {
@@ -59,6 +61,11 @@ export function Dvor1150PmdtLayout({
   const replaceScenarioDraft = useDvor1150PmdtStore((state) => state.replaceScenarioDraft);
   const initializeStudentScenario = useDvor1150PmdtStore((state) => state.initializeStudentScenario);
   const scenario = useDvor1150PmdtStore((state) => state.scenario);
+  const runtime = useDvor1150PmdtStore();
+  const examEvaluation = examSnapshot && scenario.active ? evaluateDvor1150Scenario(scenario, runtime.derived, runtime.config, {
+    visitedViewIds: runtime.scenarioVisitedViewIds, acceptedActionControlIds: runtime.scenarioAcceptedActionControlIds,
+    selectedHardwareOccurrenceKeys: runtime.scenarioHardwareSelection, hardwareDispositionConfirmed: runtime.scenarioHardwareDispositionConfirmed,
+  }) : null;
 
   useEffect(() => { setMode(mode); }, [mode, setMode]);
   useEffect(() => { setScenarioAuthoringEnabled(scenarioAuthoringEnabled); }, [scenarioAuthoringEnabled, setScenarioAuthoringEnabled]);
@@ -98,6 +105,7 @@ export function Dvor1150PmdtLayout({
         {scenarioAuthoringEnabled ? <button type="button" onClick={() => setScenarioParametersOpen(true)}>Scenario Parameters</button> : null}
         {scenarioAuthoringEnabled ? <span className="dvor1150-scenario-role-badge">EXAMINER</span> : null}
         <Dvor1150TrainingHud examinerView={scenarioAuthoringEnabled} />
+        {examSnapshot && scenario.definition?.diagnosis ? <button type="button" disabled={!examEvaluation?.pmdtComplete} onClick={() => runtime.setScenarioStage("hardware")}>Tiếp tục: Xác định phần cứng</button> : null}
         {scenarioAuthoringEnabled && scenario.active ? <span className="dvor1150-scenario-active-badge">Scenario active: {scenario.definition?.name}</span> : null}
       </nav> : null}
       <section className={`pmdt-classic-window dvor1150-pmdt-window ${inlineSidePanel ? "pmdt-classic-window--with-inspector" : "pmdt-classic-window--standard"}`} aria-label="DVOR 1150 PMDT Simulator">
@@ -115,5 +123,6 @@ export function Dvor1150PmdtLayout({
     </div>
     {externalLeadingPanel ? <aside aria-label="Nhật ký học viên" className="pmdt-classic-inspector pmdt-classic-inspector--external pmdt-classic-inspector--external-leading">{externalLeadingPanel}</aside> : null}
     {externalSidePanel ? <aside aria-label="Màn hình và thao tác đã ghi nhận" className="pmdt-classic-inspector pmdt-classic-inspector--external">{externalSidePanel}</aside> : null}
+    {examSnapshot && runtime.scenarioStage === "hardware" ? <Dvor1150HardwareStage /> : null}
   </div>;
 }

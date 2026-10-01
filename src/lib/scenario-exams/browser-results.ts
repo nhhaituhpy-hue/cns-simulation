@@ -1,8 +1,22 @@
 import { parseCandidateScenarioExamResult, sanitizeScenarioExamPayload } from "./results";
-import type { CandidateScenarioExamItem, CandidateScenarioExamResult, CandidateScenarioExamSession, CandidateSessionSubject } from "./types";
+import type { CandidateScenarioExamItem, CandidateScenarioExamResult, CandidateScenarioExamSession, CandidateSessionSubject, ScenarioExamAnswer } from "./types";
 
 export function candidateResultStorageKey(sessionId: string, itemId: string): string {
   return `cns-scenario-exam:result:v1:${encodeURIComponent(sessionId)}:${encodeURIComponent(itemId)}`;
+}
+
+function answerKey(sessionId: string, itemId: string) { return `cns-scenario-exam:answer:v1:${encodeURIComponent(sessionId)}:${encodeURIComponent(itemId)}`; }
+export function readCandidateAnswer(sessionId: string, itemId: string): ScenarioExamAnswer {
+  const empty = { suspectedFault: "", reasoning: "", remediation: "" };
+  try {
+    const stored = window.localStorage.getItem(answerKey(sessionId, itemId));
+    const rawResult = window.localStorage.getItem(candidateResultStorageKey(sessionId, itemId));
+    const value = stored ? JSON.parse(stored) : rawResult ? JSON.parse(rawResult)?.payload?.answer : null;
+    return Object.fromEntries(Object.keys(empty).map((key) => [key, value && typeof value[key] === "string" ? value[key].slice(0, 4000) : ""])) as unknown as ScenarioExamAnswer;
+  } catch { return empty; }
+}
+export function cacheCandidateAnswer(sessionId: string, itemId: string, answer: ScenarioExamAnswer) {
+  window.localStorage.setItem(answerKey(sessionId, itemId), JSON.stringify(answer));
 }
 
 export function buildCandidateScenarioExamResult(item: CandidateScenarioExamItem, payload: Record<string, unknown>): CandidateScenarioExamResult {
@@ -21,6 +35,17 @@ export function cacheCandidateScenarioExamResult(sessionId: string, result: Cand
 
 /** Recover the existing Selex evidence cache so already-completed work can be submitted. */
 export function readCandidateScenarioExamResult(session: CandidateScenarioExamSession, subject: CandidateSessionSubject): CandidateScenarioExamResult | null {
+  const result = readStoredResult(session, subject);
+  if (!result || !subject.sessionItemId) return result;
+  try {
+    if (window.localStorage.getItem(answerKey(session.id, subject.sessionItemId))) {
+      return { ...result, payload: { ...result.payload, answer: readCandidateAnswer(session.id, subject.sessionItemId) } };
+    }
+  } catch { /* Keep valid saved evidence if browser storage is blocked. */ }
+  return result;
+}
+
+function readStoredResult(session: CandidateScenarioExamSession, subject: CandidateSessionSubject): CandidateScenarioExamResult | null {
   if (!subject.sessionItemId) return null;
   try {
     const raw = window.localStorage.getItem(candidateResultStorageKey(session.id, subject.sessionItemId));

@@ -5,13 +5,14 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ExamPageFrame, primaryButtonClassName, secondaryButtonClassName } from "@/components/exams/shared";
+import { ExamPageFrame, primaryButtonClassName, secondaryButtonClassName, textareaClassName } from "@/components/exams/shared";
 import { getScenarioParametersModule } from "@/lib/scenario-parameters";
-import type { CandidateScenarioExamItem } from "@/lib/scenario-exams/types";
+import type { CandidateScenarioExamItem, ScenarioExamAnswer } from "@/lib/scenario-exams/types";
 import { CandidateExamTimer, useScenarioExamRemainingTime } from "./candidate-exam-timer";
 import { ScenarioExamSnapshotProvider, type ScenarioExamResultReader } from "./scenario-exam-snapshot-context";
 import { saveScenarioExamItemAction, submitScenarioExamItemAction, type ScenarioExamActionResult } from "@/lib/scenario-exams/actions";
-import { buildCandidateScenarioExamResult, cacheCandidateScenarioExamResult } from "@/lib/scenario-exams/browser-results";
+import { buildCandidateScenarioExamResult, cacheCandidateScenarioExamResult, cacheCandidateAnswer, readCandidateAnswer } from "@/lib/scenario-exams/browser-results";
+import { ScenarioExamLiveStatus } from "./scenario-exam-live-status";
 import styles from "./candidate-exam-item.module.css";
 
 const loading = () => <p role="status" className="p-5 text-sm text-[var(--text-secondary)]">Đang mở simulator…</p>;
@@ -39,6 +40,7 @@ export function CandidateExamItem({ item }: { item: CandidateScenarioExamItem })
   const [pending, startTransition] = useTransition();
   const [submitted, setSubmitted] = useState(false);
   const [feedback, setFeedback] = useState<{ message: string; error: boolean } | null>(null);
+  const [answer, setAnswer] = useState(() => readCandidateAnswer(item.sessionId, item.id));
   const resultReader = useRef<ScenarioExamResultReader | null>(null);
   const inFlight = useRef<Promise<ScenarioExamActionResult<{ id: string }>> | null>(null);
   const active = remaining > 0 && !submitted;
@@ -53,7 +55,7 @@ export function CandidateExamItem({ item }: { item: CandidateScenarioExamItem })
       if (automatic) return null;
       throw new Error("Simulator chưa sẵn sàng. Vui lòng chờ môn thi được nạp xong.");
     }
-    const result = buildCandidateScenarioExamResult(item, payload);
+    const result = buildCandidateScenarioExamResult(item, { ...payload, answer });
     // A blocked browser cache must not prevent saving evidence on the server.
     try { cacheCandidateScenarioExamResult(item.sessionId, result); } catch { /* Server ACK remains authoritative. */ }
     const request = submit ? submitScenarioExamItemAction(item.id, result) : saveScenarioExamItemAction(item.id, result);
@@ -67,7 +69,7 @@ export function CandidateExamItem({ item }: { item: CandidateScenarioExamItem })
     } finally {
       if (inFlight.current === request) inFlight.current = null;
     }
-  }, [item]);
+  }, [answer, item]);
   useEffect(() => {
     if (!active) return;
     const timer = window.setInterval(() => {
@@ -89,6 +91,11 @@ export function CandidateExamItem({ item }: { item: CandidateScenarioExamItem })
       }
     });
   }
+  function changeAnswer(field: keyof ScenarioExamAnswer, value: string) {
+    const next = { ...answer, [field]: value };
+    setAnswer(next);
+    try { cacheCandidateAnswer(item.sessionId, item.id, next); } catch { /* Server save is still available. */ }
+  }
   const moduleLabel = getScenarioParametersModule(item.moduleId)?.label ?? item.moduleId;
   return (
     <div className="grid gap-4 pb-6">
@@ -107,12 +114,19 @@ export function CandidateExamItem({ item }: { item: CandidateScenarioExamItem })
           </div>
         </header>
         {feedback ? <p role={feedback.error ? "alert" : "status"} className={`mt-3 text-sm ${feedback.error ? "text-[var(--color-danger)]" : "text-[var(--text-secondary)]"}`}>{feedback.message}</p> : null}
+        {active ? <div className="mt-3"><ScenarioExamLiveStatus item={item} reader={resultReader} /></div> : null}
       </ExamPageFrame>
       {submitted ? <p role="status" className="mx-4 text-sm text-[var(--color-success)]">Đã nộp môn thi. Bạn có thể quay lại phiên thi để nộp toàn bộ bài.</p> : remaining === 0 ? (
         <p role="alert" className="mx-4 rounded border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-sm text-[#991b1b]">Phiên thi đã hết thời gian. Hãy quay lại phiên thi để xem trạng thái các môn.</p>
       ) : (
-        <ScenarioExamSnapshotProvider registerResultReader={registerResultReader} snapshot={{ moduleId: item.moduleId, definition: item.definition, sessionKey: `scenario-exam:${item.sessionId}:${item.id}`, revisionKey: `exam:${item.id}:${item.revision}` }}>
+        <ScenarioExamSnapshotProvider answer={answer} registerResultReader={registerResultReader} snapshot={{ moduleId: item.moduleId, definition: item.definition, sessionKey: `scenario-exam:${item.sessionId}:${item.id}`, revisionKey: `exam:${item.id}:${item.revision}` }}>
           <div className={styles.simulator} data-testid="exam-simulator"><AssignedSimulator item={item} /></div>
+          <section aria-label="Kết luận sự cố" className="mx-auto w-full max-w-7xl px-4 pt-4 sm:px-6">
+            <h2 className="text-lg font-bold text-[var(--text-primary)]">Kết luận sự cố</h2>
+            <div className="mt-4 grid gap-4 lg:grid-cols-3">{([
+              ["suspectedFault", "Vị trí / sự cố nghi ngờ"], ["reasoning", "Căn cứ chẩn đoán"], ["remediation", "Hướng khắc phục"],
+            ] as const).map(([key, label]) => <label key={key} className="grid gap-2 text-sm font-semibold text-[var(--text-secondary)]">{label}<textarea rows={4} maxLength={4000} value={answer[key]} onChange={(event) => changeAnswer(key, event.target.value)} disabled={pending} className={textareaClassName} /></label>)}</div>
+          </section>
         </ScenarioExamSnapshotProvider>
       )}
     </div>

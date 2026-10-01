@@ -8,7 +8,8 @@ import { QcmsToolbar, type QcmsPanel } from "@/components/qcms/qcms-toolbar";
 import { ReplayDialog } from "@/components/qcms/replay-dialog";
 import { SiteMonitor } from "@/components/qcms/site-monitor";
 import { TerminalWindow } from "@/components/terminal/terminal-window";
-import { secondaryButtonClassName } from "@/components/exams/shared";
+import { secondaryButtonClassName, textareaClassName } from "@/components/exams/shared";
+import { HardwareDiagnosisWorkspace } from "@/components/hardware/hardware-diagnosis-workspace";
 import { parseScenarioParameters } from "@/lib/scenario-parameters";
 import type { CandidateScenarioExamItem } from "@/lib/scenario-exams/types";
 import { buildTerminalSessionCacheKey, fingerprintTerminalBaseline } from "@/lib/terminal-session-cache";
@@ -17,6 +18,7 @@ import { AdsbBlockDiagram } from "@/modules/devices/adsb/adsb-block-diagram";
 import { useRecordingStore } from "@/stores/recording-store";
 import { createTerminalStore } from "@/stores/terminal-store";
 import { useScenarioExamResultReader } from "./scenario-exam-snapshot-context";
+import { candidateResultStorageKey } from "@/lib/scenario-exams/browser-results";
 
 /** QCMS and terminal share one assigned item; neither hydrates the source catalog. */
 export function CandidateAdsbRuntime({ item }: { item: CandidateScenarioExamItem }) {
@@ -25,6 +27,15 @@ export function CandidateAdsbRuntime({ item }: { item: CandidateScenarioExamItem
   const [panel, setPanel] = useState<QcmsPanel>("sites");
   const [groundStationsOpen, setGroundStationsOpen] = useState(true);
   const [terminalStore] = useState(() => createTerminalStore());
+  const [hardwareOpen, setHardwareOpen] = useState(false);
+  const [hardware, setHardware] = useState<{ selected: string[]; inspected: string[]; reasoning: string }>(() => {
+    try {
+      const cached = window.localStorage.getItem(candidateResultStorageKey(item.sessionId, item.id));
+      const payload = cached ? JSON.parse(cached).payload : null;
+      return { selected: Array.isArray(payload?.scenarioHardwareSelection) ? payload.scenarioHardwareSelection : [],
+        inspected: Array.isArray(payload?.scenarioHardwareInspected) ? payload.scenarioHardwareInspected : [], reasoning: typeof payload?.scenarioHardwareReasoning === "string" ? payload.scenarioHardwareReasoning : "" };
+    } catch { return { selected: [], inspected: [], reasoning: "" }; }
+  });
   const terminal = terminalStore();
   const sessionKey = `scenario-exam:${item.sessionId}:${item.id}`;
   const scenario = useMemo<Scenario | null>(() => {
@@ -42,7 +53,8 @@ export function CandidateAdsbRuntime({ item }: { item: CandidateScenarioExamItem
     if (!scenario || recording.sessionKey !== sessionKey) return null;
     return { allActions: recording.allActions, selectedActions: recording.selectedActions,
       authenticatedCorrectly: recording.authenticatedCorrectly, qcmsMonitoringOpened: recording.qcmsMonitoringOpened,
-      phase: recording.phase, terminal: terminalStore.getState().getPersistentState() };
+      phase: recording.phase, terminal: terminalStore.getState().getPersistentState(),
+      scenarioHardwareSelection: hardware.selected, scenarioHardwareInspected: hardware.inspected, scenarioHardwareReasoning: hardware.reasoning };
   });
 
   useEffect(() => {
@@ -87,7 +99,12 @@ export function CandidateAdsbRuntime({ item }: { item: CandidateScenarioExamItem
           : <GeneralSettingsDialog onClose={showSites} />}
       </div>
       {view === "terminal" ? <TerminalWindow ipAddress={terminal.connectionIpAddress ?? ""} output={terminal.output} pendingPrompt={terminal.pendingPrompt} pendingSensitive={terminal.pendingSensitive} isExited={terminal.isExited} onSubmit={(input) => terminal.processInput(input)} /> : null}
-      {view === "hardware" ? <AdsbBlockDiagram /> : null}
+      {view === "hardware" ? <div className="grid gap-4">
+        {scenario.hardwareFault ? <button type="button" className={`${secondaryButtonClassName} w-fit`} onClick={() => setHardwareOpen(true)}>Kiểm tra và chọn khối/card</button> : <p className="text-sm text-[var(--text-secondary)]">Kịch bản không yêu cầu thay phần cứng.</p>}
+        <div className="grid gap-3 text-sm text-[var(--text-primary)]"><p>Khối/card đã kiểm tra: {hardware.inspected.join(", ") || "Chưa kiểm tra"}</p><p>Khối/card được chọn: {hardware.selected.join(", ") || "Chưa chọn"}</p><label className="grid gap-2">Lý do xử lý phần cứng<textarea rows={4} value={hardware.reasoning} onChange={(event) => setHardware((current) => ({ ...current, reasoning: event.target.value }))} className={textareaClassName} /></label></div>
+        <AdsbBlockDiagram />
+      </div> : null}
+      {hardwareOpen && scenario.hardwareFault ? <HardwareDiagnosisWorkspace hardwareFault={scenario.hardwareFault} onClose={() => setHardwareOpen(false)} onSubmit={(diagnosis) => { setHardware((current) => ({ ...current, selected: diagnosis.componentIds, inspected: diagnosis.inspectedComponents })); setHardwareOpen(false); }} /> : null}
     </section>
   );
 }

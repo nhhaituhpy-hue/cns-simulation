@@ -4,7 +4,7 @@ import { Suspense, useEffect, type ReactNode } from "react";
 import { SimulatorConfigPersistence } from "@/components/simulator/simulator-config-persistence";
 import { SimulatorToolbarBackButton } from "@/components/simulator/simulator-toolbar-back-button";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
-import { useScenarioExamResultReader, useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
+import { useScenarioExamAnswer, useScenarioExamResultReader, useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
 import { DmeScenarioSessionPersistence } from "@/components/scenario/scenario-session-persistence";
 import type { SupportedSimulatorConfigId } from "@/lib/simulator-config/types";
 import type { DmePmdtMode } from "@/lib/dme-types";
@@ -85,6 +85,8 @@ export function PmdtLayout({
   sidePanel,
 }: PmdtLayoutProps) {
   const examSnapshot = useScenarioExamSnapshot();
+  const examAnswer = useScenarioExamAnswer();
+  useEffect(() => { if (examAnswer) useDmePmdtStore.getState().updateAnswer(examAnswer); }, [examAnswer]);
   useScenarioExamResultReader(() => {
     const state = useDmePmdtStore.getState();
     if (!examSnapshot || !state.scenario.active || state.sessionKey !== examSnapshot.sessionKey) return null;
@@ -208,8 +210,8 @@ export function PmdtLayout({
         />
       </Suspense>
       <div className="dme1119a-simulator-frame">
-        {mode === "preview" ? <nav className="dme1119a-simulator-tools" aria-label="DME 1119A simulator tools">
-          <SimulatorToolbarBackButton />
+        {mode === "preview" || examSnapshot ? <nav className="dme1119a-simulator-tools" aria-label="DME 1119A simulator tools">
+          {mode === "preview" ? <SimulatorToolbarBackButton /> : null}
           {scenarioAuthoringEnabled ? <button type="button" onClick={() => { setConfigPanelOpen(false); setScenarioParametersOpen(true); }}>Scenario Parameters</button> : null}
           {scenarioAuthoringEnabled ? <span className="dme1119a-scenario-role-badge">EXAMINER</span> : null}
           <Dme1119aTrainingHud examinerView={scenarioAuthoringEnabled} />

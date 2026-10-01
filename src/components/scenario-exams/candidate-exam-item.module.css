@@ -9,3 +9,55 @@
   justify-content: center;
   justify-content: safe center;
 }
+
+.simulator :global(.dvor1150a-simulator-frame),
+.simulator :global(.dme1119a-simulator-frame) {
+  width: 900px;
+  min-width: 900px;
+}
+
+.simulator :global(.dvor1150a-simulator-tools),
+.simulator :global(.dme1119a-simulator-tools) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--border-strong);
+  border-bottom: 0;
+  background: var(--surface-muted);
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.simulator :global(.dvor1150a-training-hud),
+.simulator :global(.dme1119a-training-hud),
+.simulator :global(.dvor1150a-scenario-stagebar),
+.simulator :global(.dme1119a-scenario-stagebar) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.simulator :global(.dvor1150a-simulator-tools button),
+.simulator :global(.dme1119a-simulator-tools button) {
+  min-height: 32px;
+  padding: 4px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+.simulator :global(.dvor1150a-simulator-tools button:focus-visible),
+.simulator :global(.dme1119a-simulator-tools button:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.simulator :global(.dvor1150a-simulator-tools button:disabled),
+.simulator :global(.dme1119a-simulator-tools button:disabled) {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

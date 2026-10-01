@@ -9,6 +9,7 @@ import { isRecord, sanitizeScenarioExamPayload } from "@/lib/scenario-exams/resu
 import { formatScenarioExamDate } from "@/lib/scenario-exams/presentation";
 import type { ScenarioExamReviewSubject, ScenarioExamSubmissionReview } from "@/lib/scenario-exams/types";
 import { ScenarioExamScoreEditor } from "./scenario-exam-score-editor";
+import { ScenarioExamTechnicalStatus } from "./scenario-exam-technical-status";
 
 const labels: Record<string, string> = {
   answer: "Câu trả lời", suspectedFault: "Vị trí / sự cố nghi ngờ", reasoning: "Căn cứ chẩn đoán", remediation: "Hướng khắc phục",
@@ -72,9 +73,9 @@ export function ScenarioExamSubmissionReviewView({ review }: { review: ScenarioE
     {review.subjects.map((subject) => <section key={subject.subjectId} id={`subject-${subject.subjectId}`} aria-label={`Bài làm ${getScenarioParametersModule(subject.moduleId)?.label ?? subject.moduleId}`} className="scroll-mt-28 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
       <header className="mb-5 flex flex-wrap items-start justify-between gap-3 border-b border-[var(--border)] pb-4">
         <div><h2 className="text-lg font-bold text-[var(--text-primary)]">{getScenarioParametersModule(subject.moduleId)?.label ?? subject.moduleId}</h2><p className="mt-1 text-sm text-[var(--text-secondary)]">{subject.scenarioName ?? "Chưa cấp Scenario"}</p><p className="mt-2 text-xs text-[var(--text-secondary)]">Bắt đầu: {formatScenarioExamDate(subject.startedAt, "Chưa bắt đầu")} · Nộp môn: {formatScenarioExamDate(subject.submittedAt, "Chưa nộp")}</p></div>
-        <div className="text-right"><p className={`text-sm font-semibold ${subject.status === "submitted" ? "text-[var(--color-success)]" : "text-[var(--text-secondary)]"}`}>{subject.status}</p><p className="mt-1 text-sm text-[var(--text-primary)]">{subject.examinerScore == null ? "Chưa chấm điểm" : `Điểm: ${subject.examinerScore}/100`}</p></div>
+        <div className="text-right">{subject.technicalSummary ? <ScenarioExamTechnicalStatus summary={subject.technicalSummary} /> : null}<p className={`mt-1 text-xs font-semibold ${subject.status === "submitted" ? "text-[var(--color-success)]" : "text-[var(--text-secondary)]"}`}>{subject.status}</p><p className="mt-1 text-sm text-[var(--text-primary)]">{subject.examinerScore == null ? "Chưa chấm điểm" : `Điểm: ${subject.examinerScore}/100`}</p></div>
       </header>
-      <div className="grid gap-5"><SubmittedEvidence subject={subject} /><ScenarioReference subject={subject} /><ScenarioExamScoreEditor key={`${subject.itemId}:${subject.reviewedAt}`} examId={review.examId} codeId={review.codeId} subject={subject} /></div>
+      <div className="grid gap-5">{subject.technicalSummary ? <details><summary className="cursor-pointer rounded text-sm font-semibold text-[var(--text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">Kết quả đánh giá kỹ thuật · {subject.technicalSummary.checks.filter((check) => check.passed).length}/{subject.technicalSummary.checks.length} tiêu chí</summary><div className="mt-3"><EvidenceData value={{ checks: subject.technicalSummary.checks, blockers: subject.technicalSummary.blockers }} /></div></details> : null}<SubmittedEvidence subject={subject} /><ScenarioReference subject={subject} /><ScenarioExamScoreEditor key={`${subject.itemId}:${subject.reviewedAt}`} examId={review.examId} codeId={review.codeId} subject={subject} /></div>
     </section>)}
     {!review.subjects.length ? <p className="text-sm text-[var(--text-secondary)]">Mã thí sinh chưa được cấp môn thi.</p> : null}
   </div>;

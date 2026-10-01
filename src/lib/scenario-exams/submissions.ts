@@ -6,6 +6,8 @@ import { withDatabaseTransaction } from "@/lib/db";
 import { getScenarioExamSessionToken, hashScenarioExamSessionToken } from "./session";
 import { parseCandidateScenarioExamResult } from "./results";
 import { ScenarioExamValidationError, validateScenarioExamUuid } from "./validation";
+import { evaluateScenarioExamResult } from "./evaluation";
+import type { ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 
 interface LockedSession {
   id: string;
@@ -25,6 +27,7 @@ interface LockedItem {
   status: string;
   subject_status: string;
   result_json: unknown;
+  definition_snapshot_json: unknown;
 }
 
 async function candidateIdentity() {
@@ -80,7 +83,7 @@ export async function saveCandidateScenarioExamItem(itemIdValue: unknown, input:
     const session = await lockSession(client, identity.tokenHash);
     const itemResult = await client.query<LockedItem>(
       `select item.id, item.code_subject_id, item.module_id, item.scenario_id,
-              item.library_revision_number, item.status, cs.status as subject_status, item.result_json
+              item.library_revision_number, item.status, cs.status as subject_status, item.result_json, item.definition_snapshot_json
          from public.scenario_exam_session_items item
          join public.scenario_exam_code_subjects cs on cs.id = item.code_subject_id
         where item.id = $1 and item.session_id = $2 and cs.code_id = $3 and cs.module_id = item.module_id
@@ -93,10 +96,11 @@ export async function saveCandidateScenarioExamItem(itemIdValue: unknown, input:
     requireActiveSession(session);
     if (item.status !== "in_progress" || item.subject_status !== "in_progress") throw new ScenarioExamValidationError("Môn thi đã kết thúc, không thể sửa bài làm.");
     const result = validItemResult(item, input);
+    const technicalSummary = evaluateScenarioExamResult(item.module_id as ScenarioParametersModuleId, item.definition_snapshot_json, result.payload);
     await client.query(
       `update public.scenario_exam_session_items
-          set result_json = $2, result_summary_json = jsonb_build_object('savedAt', now()), updated_at = now()
-        where id = $1`, [item.id, result],
+          set result_json = $2, result_summary_json = $3, updated_at = now()
+        where id = $1`, [item.id, result, { ...technicalSummary, savedAt: new Date().toISOString() }],
     );
     await client.query("update public.scenario_exam_sessions set last_seen_at = now(), updated_at = now() where id = $1", [session.id]);
     if (submit) await recordItemSubmission(client, session, item, identity.userId);

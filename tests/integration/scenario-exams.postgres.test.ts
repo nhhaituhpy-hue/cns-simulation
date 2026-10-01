@@ -31,6 +31,7 @@ import { parseScenarioParameters } from "@/lib/scenario-parameters";
 import { createDefaultDvor1150aScenarioDefinition } from "@/lib/dvor1150a/scenario";
 import { createLowOutputDme1119aScenario } from "@/lib/dme1119a/scenario";
 import { buildCandidateScenarioExamResult } from "@/lib/scenario-exams/browser-results";
+import { evaluateScenarioExamResult } from "@/lib/scenario-exams/evaluation";
 
 const cookieJar = vi.hoisted(() => new Map<string, string>());
 vi.mock("@/lib/auth/profile", () => ({ getCurrentProfile: vi.fn() }));
@@ -191,6 +192,21 @@ describe.skipIf(!testUrl)("Scenario Exam actions against real PostgreSQL", () =>
     const item = (await getCandidateScenarioExamItem(started.data!.id))!;
     return { item, result: buildCandidateScenarioExamResult(item, { actionHistory: [], answer: { suspectedFault: "Fixture conclusion", reasoning: "Measured parameters", remediation: "Adjusted configuration" }, checkpoint: { parameter: 42 } }) };
   }
+
+  it("computes and stores technical summary from the frozen definition, ignoring a client SOLVED claim", async () => {
+    const { examId, code, session } = await enterExam();
+    const { item } = await startWithResult(session.subjects[0].id);
+    const definition = parseScenarioParameters("dvor-1150a", item.definition)!;
+    const payload = { checkpoint: { config: definition.configuration }, answer: { suspectedFault: "Fixture diagnosis", reasoning: "Verified data", remediation: "Adjusted reference" } };
+    const result = buildCandidateScenarioExamResult(item, { ...payload, technicalSummary: { status: "IN_PROGRESS" }, solved: false });
+    const expected = evaluateScenarioExamResult("dvor-1150a", definition, payload);
+    expect(expected.status).toBe("SOLVED");
+    expect((await submitScenarioExamItemAction(item.id, result)).ok).toBe(true);
+    const saved = (await queryDatabase("select result_summary_json from public.scenario_exam_session_items where id = $1", [item.id])).rows[0].result_summary_json;
+    expect(saved).toMatchObject(expected);
+    vi.mocked(getCurrentProfile).mockResolvedValue(admin);
+    expect((await getScenarioExamSubmissionReview(examId, code.id))?.subjects[0].technicalSummary).toEqual(expected);
+  });
 
   it("opens and grades the correct code's saved snapshots without changing the candidate's evidence", async () => {
     const { examId, code, session } = await enterExam();

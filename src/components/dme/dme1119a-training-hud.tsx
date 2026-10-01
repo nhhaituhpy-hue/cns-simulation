@@ -19,7 +19,7 @@ export function Dme1119aTrainingHud({ examinerView = false }: { examinerView?: b
     hardwareDispositionConfirmed: scenarioHardwareDispositionConfirmed,
   });
   return <span className="dme1119a-training-hud" role="status" aria-atomic="true">
-    <strong>{evaluation.solved ? "SOLVED" : "IN PROGRESS"}</strong>
+    <strong className={evaluation.solved ? "text-[var(--color-success)]" : ""}>{evaluation.solved ? "SOLVED" : "IN PROGRESS"}</strong>
     <span>{scenario.definition.name}</span>
     {examinerView ? <span>{evaluation.checks.filter((check) => check.passed).length}/{evaluation.checks.length}</span> : null}
   </span>;

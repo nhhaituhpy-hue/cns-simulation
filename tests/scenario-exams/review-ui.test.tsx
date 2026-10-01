@@ -47,6 +47,14 @@ describe("examiner submission UI", () => {
     expect(screen.getByText(/Scenario và đáp án tham chiếu đã cấp · revision 7/)).toBeInTheDocument();
   });
 
+  it("shows SOLVED in green as the technical result separately from submitted", () => {
+    const data = review(); data.subjects[0].technicalSummary = { status: "SOLVED", solved: true, checks: [{ id: "hardware", label: "Hardware", passed: true, detail: "Correct" }], blockers: [] };
+    render(<ScenarioExamSubmissionReviewView review={data} />);
+    expect(screen.getByText("SOLVED")).toHaveClass("text-[var(--color-success)]");
+    expect(screen.getByLabelText("Trạng thái kỹ thuật bài làm")).toHaveTextContent("SOLVED");
+    expect(screen.getAllByText("submitted").length).toBeGreaterThan(0);
+  });
+
   it.each([0, 85.25, 100])("saves %s points with the code/item identity and examiner comment", async (score) => {
     render(<ScenarioExamSubmissionReviewView review={review()} />);
     fireEvent.change(screen.getByLabelText("Điểm giám khảo (0–100)"), { target: { value: String(score) } });

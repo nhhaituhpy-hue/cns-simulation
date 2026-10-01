@@ -155,6 +155,7 @@ export interface ScenarioExamReviewSubject {
   examinerComment: string;
   reviewedAt: string | null;
   reviewedByName: string | null;
+  technicalSummary?: ScenarioExamTechnicalSummary;
 }
 
 export interface ScenarioExamSubmissionReview {
@@ -178,4 +179,19 @@ export interface ScenarioExamReviewInput {
   itemId: string;
   score: number;
   comment: string;
+}
+
+export interface ScenarioExamAnswer {
+  suspectedFault: string;
+  reasoning: string;
+  remediation: string;
+}
+
+export interface ScenarioExamTechnicalSummary {
+  status: "SOLVED" | "IN_PROGRESS" | "UNVERIFIED";
+  solved: boolean | null;
+  checks: Array<{ id: string; label: string; passed: boolean; detail: string }>;
+  blockers: string[];
+  pmdtComplete?: boolean;
+  hardwareComplete?: boolean;
 }

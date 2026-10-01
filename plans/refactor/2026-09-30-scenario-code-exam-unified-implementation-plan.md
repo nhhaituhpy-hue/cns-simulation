@@ -1,9 +1,17 @@
 # Kế hoạch triển khai refactor kỳ thi bằng mã code và chuẩn hóa thư viện Scenario
 
-**Phiên bản:** 1.6 — kế hoạch đã duyệt, cập nhật xem bài/chấm điểm giám khảo
+**Phiên bản:** 1.7 — kế hoạch đã duyệt, cập nhật kết luận/hardware/SOLVED
 **Ngày:** 2026-09-30 (cập nhật 2026-10-01)
 **Phạm vi:** CNS Simulation Lab — Scenario Parameters, thư viện Ôn tập/Kiểm tra, ADS-B và kỳ thi bằng mã code
-**Trạng thái:** IN PROGRESS — đã có nền tảng P1/P2, workspace P3, runtime snapshot/resume UX, lưu/nộp bài và P5 xem bài/chấm điểm thủ công; còn khôi phục checkpoint server, finalize timeout, summary evaluator và acceptance P4–P8.
+**Trạng thái:** IN PROGRESS — đã có nền tảng P1/P2, workspace P3, runtime snapshot/resume, kết luận/hardware/lưu/nộp bài, P5 xem/chấm điểm và summary kỹ thuật; còn khôi phục checkpoint server, finalize timeout và acceptance P4–P8.
+
+### Cập nhật 2026-10-01 — kết luận, hardware và SOLVED
+
+- Người dùng phản hồi thiếu ô kết luận, khối/card/inspection/reasoning và trạng thái SOLVED ở candidate/review. Root cause: thiếu form ở route item và Selex HUD/stagebar bị giới hạn preview.
+- Đã thêm ba ô kết luận, cache đúng session/item và đưa vào payload; hiện HUD/stagebar, giữ checkpoint PMDT trước bước phần cứng, dùng selector card sẵn có và nhãn inspection/selection/reasoning. ADS-B lưu kết quả workspace chẩn đoán từ snapshot.
+- Đã nối summary evaluator sáu module, tính từ snapshot và dữ liệu lưu, không nhận cờ SOLVED client làm kết quả. Lưu summary trên server và tính lại ở review để bài cũ có checkpoint cũng được đánh giá; SOLVED chữ xanh, không tô nền. Không tự điền câu trả lời thiếu hoặc đổi điểm giám khảo.
+- Gate cuối Node 24: lint, typecheck, 140 file/875 test (24 ca PostgreSQL thật), production build và build CSS cuối đạt; CodeGraph sync/diff check đạt. UI test nhập/lưu ba trường, LVPS 1A3A4 inspection/selection/reasoning, PMDT→hardware và trạng thái SOLVED; server test lưu và tính lại summary bất chấp cờ client.
+- **Còn lại:** Browser QA production thiếu Codex auth token, restore checkpoint server đầy đủ, finalize timeout và pilot. Không thêm migration hoặc sửa evidence đã nộp.
 
 ### Cập nhật 2026-10-01 — xem bài/chấm điểm giám khảo
 
@@ -130,7 +138,7 @@ ADS-B hiện dùng Scenario legacy với sites, targetSensorId, targetLoginUser,
 | Scenario Parameters 5 module | Source/migration hiện có | Production counts đã kiểm tra | Không mở rộng v2 ngoài nhu cầu |
 | ADS-B | Adapter/parser, source/library panel và migration 0010/0012 | Backfill production được ghi trong README; parser/migration tests | Runtime snapshot và browser QA/publish theo lựa chọn giám khảo |
 | Kỳ thi cũ | Phạm vi xóa đã thực hiện | Target counts = 0 | Không dùng lại business flow |
-| Kỳ thi bằng mã | Migration 0011, action/query/session, runtime snapshot/resume UX, lưu/nộp bài, trang review/điểm giám khảo | Gate Node 24: 139 file/865 test, gồm 23 ca PostgreSQL cô lập; migration production trước đó đã ghi trong README | Khôi phục checkpoint server/finalize timeout/summary evaluator; browser QA/pilot/cutover chưa hoàn tất |
+| Kỳ thi bằng mã | Migration 0011, action/query/session, runtime snapshot/resume, kết luận/hardware/lưu/nộp bài, review/điểm/summary kỹ thuật | Gate Node 24: 140 file/875 test, gồm 24 ca PostgreSQL cô lập; migration production trước đó đã ghi trong README | Khôi phục checkpoint server/finalize timeout; browser QA/pilot/cutover chưa hoàn tất |
 
 ## 2. Mục tiêu và ranh giới
 
@@ -588,6 +596,7 @@ Cổng P3: hoàn tất workflow Nguyễn Hoàng Hải với DVOR 1150A + DME 111
 - [x] Chuyển trang sau khi bắt đầu; nút Tiếp tục môn dùng item đã cấp.
 - [x] Countdown/deadline gốc, refresh không reroll và chặn đọc item của phiên khác/hết hạn.
 - [x] Lưu evidence/checkpoint trên server và lấy payload từ sáu runtime.
+- [x] Ba ô kết luận, luồng kiểm tra/chọn phần cứng và trạng thái kỹ thuật tại route item.
 - [x] Nộp môn/nộp toàn phiên, transaction và duplicate submit.
 - [ ] Khôi phục đầy đủ checkpoint server và tiến độ của mọi module.
 - [ ] Finalize timeout tự động.
@@ -600,7 +609,7 @@ Cổng P4: candidate không thể đọc scenario pool hoặc session khác; ref
 - [x] Trang chi tiết code.
 - [x] Per-module submission review từ snapshot/result đã lưu.
 - [x] Reuse pure result presenter khi an toàn, không reuse old exam actions/query.
-- [ ] Tính summary kỹ thuật theo evaluator.
+- [x] Tính summary kỹ thuật theo evaluator từ snapshot/result; chưa thay thế acceptance browser.
 - [x] Giám khảo nhập điểm/nhận xét và audit transaction.
 - [x] Status terminal server-authoritative; chỉ chữ submitted màu xanh theo yêu cầu mới.
 - [ ] Acceptance browser xem/chấm đủ sáu module.

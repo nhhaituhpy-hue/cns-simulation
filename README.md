@@ -209,6 +209,17 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-10-01 — Kết luận thí sinh, phần cứng và trạng thái SOLVED
+- Xác nhận thiếu kết nối: HUD và stagebar DVOR 1150A/DME 1119A chỉ render trong mode preview, còn route item dùng mode student. Ba ô kết luận chưa được đưa vào route item nên payload answer vẫn trống.
+- Thêm `Vị trí / sự cố nghi ngờ`, `Căn cứ chẩn đoán`, `Hướng khắc phục` dưới simulator. Cache theo session/item, đưa answer vào result khi lưu/nộp và đồng bộ với store Selex để không lẫn môn/phiên.
+- Hiện HUD và nút `Tiếp tục: Xác định phần cứng` trong phiên thi; giữ chốt PMDT checkpoint trước bước hardware. Bước hardware hiển thị danh sách khối/card đã kiểm tra, đã chọn và ô `Lý do xử lý phần cứng`; dùng selector occurrence/card sẵn có. Nối lại bước hardware DVOR 1150 non-A trong route item. ADS-B lưu lựa chọn/inspection/reasoning từ workspace chẩn đoán hardware của Scenario.
+- Giữ simulator căn giữa; toolbar của phiên thi có style theo theme, nút gọn, focus-visible và disabled state. HUD/student header dùng chữ `SOLVED` xanh lá; trạng thái `submitted` tiếp tục chỉ phản ánh việc đã nộp.
+- Thêm evaluator adapter cho sáu module, đọc definition snapshot và checkpoint/evidence đã lưu. Không tin cờ `solved` hoặc summary từ client; Selex dựng lại snapshot/derived data, MOPIENS dùng evaluator thiết bị, ADS-B đối chiếu actions/QCMS/authentication/hardware.
+- Server lưu summary kỹ thuật trong `result_summary_json`; trang giám khảo tính lại từ snapshot/result, kể cả bài cũ có đủ checkpoint, và hiện nhanh `SOLVED` / `IN PROGRESS` / `CHƯA ĐỦ DỮ LIỆU` đầu từng môn. Có danh sách tiêu chí để xem chi tiết; điểm chính thức vẫn do giám khảo nhập.
+- Không thêm migration và không sửa dữ liệu các bài đã nộp. Kết luận/khối-card bị thiếu ở phiên bản trước vẫn để trống nếu không từng được ghi nhận; không tạo câu trả lời hoặc evidence thay thí sinh.
+- Gate Node 24 đạt lint → typecheck → **140 file / 875 test** (gồm **24 ca PostgreSQL thật**) → production build; đã build lại sau chỉnh CSS toolbar. Test route item kiểm tra nhập cả ba trường, sang hardware, chọn đúng LVPS 1A3A4, lưu inspection/selection/reasoning và hiển thị SOLVED; test evaluator giữ strict PMDT→hardware, chặn cờ SOLVED giả, protected field và thiếu checkpoint.
+- **Giới hạn xác minh:** Workflow UI kiểm chứng bằng Vitest, auth/Next cookie/cache integration được mock; PostgreSQL/schema/transaction là thật trên database cô lập. Chưa QA trực quan production do Computer Use thiếu Codex auth token. Khôi phục checkpoint server đầy đủ, finalize timeout tự động và pilot vẫn còn trong kế hoạch.
+
 ### 2026-10-01 — P5: mở bài nộp và chấm điểm giám khảo
 - Bỏ nền xanh nhạt toàn dòng `submitted`/`timed_out` ở bảng mã để giữ tương phản của theme tối. Chỉ chữ `submitted` dùng màu xanh lá từ token của theme.
 - Tên thí sinh, mã hint và link `Xem bài / Chấm điểm` mở `/admin/scenario-exams/[examId]/results/[codeId]`. Cùng một người có nhiều mã vẫn mở đúng bài theo code ID, không theo tên hoặc tài khoản dùng chung.

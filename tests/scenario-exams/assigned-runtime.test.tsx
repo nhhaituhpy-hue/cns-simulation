@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 import { CandidateAdsbRuntime } from "@/components/scenario-exams/candidate-adsb-runtime";
@@ -13,7 +13,8 @@ import { createDme320Store } from "@/modules/operations/dme-320/store/dme320-sto
 import { createDefaultDvor220ScenarioDefinition } from "@/modules/operations/dvor-220/domain/scenario";
 import { createDefaultDme320ScenarioDefinition } from "@/modules/operations/dme-320/domain/scenario";
 import { createDefaultDvor1150ScenarioDefinition } from "@/lib/dvor1150/scenario";
-import { createDefaultDvor1150aScenarioDefinition } from "@/lib/dvor1150a/scenario";
+import { createDefaultDvor1150aScenarioDefinition, createLvpsTx1PowerScenario } from "@/lib/dvor1150a/scenario";
+import { dvorHardwareOccurrenceKey } from "@/modules/devices/dvor-1150a/block-diagram-data";
 import { createDefaultDme1119aScenarioDefinition, createLowOutputDme1119aScenario } from "@/lib/dme1119a/scenario";
 import { parseScenarioParameters, type ScenarioParametersDefinition, type ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 import { useDvor1150PmdtStore } from "@/stores/dvor1150-pmdt-store";
@@ -65,6 +66,44 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 describe("assigned simulator snapshots", () => {
+  it("shows editable conclusions and saves their exact values", async () => {
+    render(<CandidateExamItem item={runtimeItem("dvor-1150a", createDefaultDvor1150aScenarioDefinition())} />);
+    await waitFor(() => expect(useVorPmdtStore.getState().sessionKey).toBe(sessionKey));
+    fireEvent.change(screen.getByLabelText("Vị trí / sự cố nghi ngờ"), { target: { value: "LVPS TX1" } });
+    fireEvent.change(screen.getByLabelText("Căn cứ chẩn đoán"), { target: { value: "Nguồn +5V thấp" } });
+    fireEvent.change(screen.getByLabelText("Hướng khắc phục"), { target: { value: "Kiểm tra và thay card" } });
+    fireEvent.click(screen.getByRole("button", { name: "Lưu bài làm" }));
+    await waitFor(() => expect(actionMocks.save).toHaveBeenCalled());
+    expect(actionMocks.save.mock.calls[0]?.[1].payload.answer).toEqual({ suspectedFault: "LVPS TX1", reasoning: "Nguồn +5V thấp", remediation: "Kiểm tra và thay card" });
+  });
+
+  it("exposes the hardware stage in a real exam and records card inspection, selection and reasoning", async () => {
+    const definition = createLvpsTx1PowerScenario();
+    render(<CandidateExamItem item={runtimeItem("dvor-1150a", definition)} />);
+    await waitFor(() => expect(useVorPmdtStore.getState().scenario.definition?.id).toBe(definition.id));
+    const next = screen.getByRole("button", { name: "Tiếp tục: Xác định phần cứng" });
+    expect(next).toBeDisabled();
+    act(() => useVorPmdtStore.setState({
+      attemptEvents: definition.diagnosis!.pmdtCheckpoints.map((entry, index) => ({ id: `event-${index}`, sequence: index + 1, eventType: "view", screenId: "home", viewId: entry.viewId, menuPath: [], title: entry.label, visitedAt: new Date().toISOString(), annotation: "" })),
+      actionHistory: definition.diagnosis!.requiredActionControlIds.map((controlId, index) => ({ ...previousAction, id: `action-${index}`, controlId })),
+    }));
+    expect(next).toBeEnabled();
+    fireEvent.click(next);
+    expect(screen.getByText("Khối/card đã kiểm tra")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "Control & Monitoring" }));
+    fireEvent.click(screen.getByRole("button", { name: "Chọn LVPS 1" }));
+    const key = dvorHardwareOccurrenceKey(definition.diagnosis!.expectedHardware[0]);
+    expect(useVorPmdtStore.getState().scenarioHardwareInspected).toContain(key);
+    expect(useVorPmdtStore.getState().scenarioHardwareSelection).toContain(key);
+    fireEvent.change(screen.getByLabelText("Lý do xử lý phần cứng"), { target: { value: "RMS nguồn +5V thấp liên hệ với LVPS 1A3A4" } });
+    expect(useVorPmdtStore.getState().scenarioHardwareReasoning).toContain("1A3A4");
+    fireEvent.click(screen.getByRole("button", { name: "Quay lại PMDT" }));
+    await waitFor(() => expect(screen.getAllByText("SOLVED").length).toBeGreaterThan(0), { timeout: 2500 });
+    fireEvent.click(screen.getByRole("button", { name: "Lưu bài làm" }));
+    await waitFor(() => expect(actionMocks.save).toHaveBeenCalled());
+    expect(actionMocks.save.mock.calls[0]?.[1].payload).toMatchObject({ scenarioHardwareInspected: [key], scenarioHardwareSelection: [key], scenarioHardwareReasoning: "RMS nguồn +5V thấp liên hệ với LVPS 1A3A4" });
+  });
+
   it("lets the candidate return to the session when the assigned runtime cannot initialize", async () => {
     render(<CandidateExamItem item={runtimeItem("dme-1119a", createDefaultDme1119aScenarioDefinition())} />);
     expect(await screen.findByRole("alert")).toHaveTextContent("Không thể khởi tạo Scenario đã cấp");

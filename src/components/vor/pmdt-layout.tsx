@@ -4,7 +4,7 @@ import { Suspense, useEffect, type ReactNode } from "react";
 import { SimulatorConfigPersistence } from "@/components/simulator/simulator-config-persistence";
 import { SimulatorToolbarBackButton } from "@/components/simulator/simulator-toolbar-back-button";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
-import { useScenarioExamResultReader, useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
+import { useScenarioExamAnswer, useScenarioExamResultReader, useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
 import { VorScenarioSessionPersistence } from "@/components/scenario/scenario-session-persistence";
 import type { SupportedSimulatorConfigId } from "@/lib/simulator-config/types";
 import type { VorPmdtMode } from "@/lib/vor-types";
@@ -75,6 +75,8 @@ export function PmdtLayout({
   sidePanel,
 }: PmdtLayoutProps) {
   const examSnapshot = useScenarioExamSnapshot();
+  const examAnswer = useScenarioExamAnswer();
+  useEffect(() => { if (examAnswer) useVorPmdtStore.getState().updateAnswer(examAnswer); }, [examAnswer]);
   useScenarioExamResultReader(() => {
     const state = useVorPmdtStore.getState();
     if (!examSnapshot || !state.scenario.active || state.sessionKey !== examSnapshot.sessionKey) return null;
@@ -175,8 +177,8 @@ export function PmdtLayout({
         />
       </Suspense>
       <div className="dvor1150a-simulator-frame">
-        {mode === "preview" ? <nav className="dvor1150a-simulator-tools" aria-label="DVOR 1150A simulator tools">
-          <SimulatorToolbarBackButton />
+        {mode === "preview" || examSnapshot ? <nav className="dvor1150a-simulator-tools" aria-label="DVOR 1150A simulator tools">
+          {mode === "preview" ? <SimulatorToolbarBackButton /> : null}
           {scenarioAuthoringEnabled ? <button type="button" onClick={() => setScenarioParametersOpen(true)}>Scenario Parameters</button> : null}
           {scenarioAuthoringEnabled ? <span className="dvor1150a-scenario-role-badge">EXAMINER</span> : null}
           <Dvor1150aTrainingHud examinerView={scenarioAuthoringEnabled} />

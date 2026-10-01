@@ -132,8 +132,10 @@ export function Dvor1150aHardwareStage() {
             </p>
           )}
 
+          <div className="mt-4 grid gap-3 text-xs"><div><h3 className="font-bold">Khối/card đã kiểm tra</h3><p className="mt-1 break-words">{inspected.length ? inspected.map((key) => key.split("::").slice(0, 2).join(" · ")).join(", ") : "Chưa kiểm tra khối/card."}</p></div><div><h3 className="font-bold">Khối/card được chọn</h3><p className="mt-1 break-words">{selection.length ? selection.map((key) => key.split("::").slice(0, 2).join(" · ")).join(", ") : "Chưa chọn khối/card."}</p></div></div>
+
           <label className="mt-4 grid gap-2 text-xs font-bold text-[#364754]" htmlFor="dvor-hardware-reasoning">
-            Căn cứ lựa chọn
+            Lý do xử lý phần cứng
             <textarea
               id="dvor-hardware-reasoning"
               value={reasoning}

@@ -113,7 +113,7 @@ export function Dvor1150HardwareStage() {
           )}
 
           <label className="mt-4 grid gap-2 text-xs font-bold text-[#364754]" htmlFor="dvor1150-hardware-reasoning">
-            Căn cứ lựa chọn
+            Lý do xử lý phần cứng
             <textarea id="dvor1150-hardware-reasoning" value={reasoning} onChange={(event) => { setReasoning(event.target.value); setError(null); }} rows={7} placeholder="Liên hệ kết quả Fault Isolation, màn hình PMDT và đường tín hiệu trên sơ đồ…" className="resize-y rounded border border-[#9aa8b3] bg-white p-3 text-sm font-normal leading-6 outline-none focus:border-[#1d5f91] focus:ring-2 focus:ring-[#9ed0ff]" />
           </label>
 
