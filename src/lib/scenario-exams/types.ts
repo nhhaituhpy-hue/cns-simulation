@@ -138,3 +138,44 @@ export interface CandidateScenarioExamResult {
   capturedAt: string;
   payload: Record<string, unknown>;
 }
+
+export interface ScenarioExamReviewSubject {
+  subjectId: string;
+  moduleId: ScenarioParametersModuleId;
+  status: ScenarioExamSubjectStatus;
+  itemId: string | null;
+  scenarioName: string | null;
+  revision: number | null;
+  startedAt: string | null;
+  submittedAt: string | null;
+  definition: ScenarioParametersDefinition | null;
+  result: CandidateScenarioExamResult | null;
+  resultInvalid: boolean;
+  examinerScore: number | null;
+  examinerComment: string;
+  reviewedAt: string | null;
+  reviewedByName: string | null;
+}
+
+export interface ScenarioExamSubmissionReview {
+  examId: string;
+  examName: string;
+  codeId: string;
+  codeHint: string;
+  candidateName: string;
+  candidateUnit: string;
+  codeStatus: ScenarioExamCodeStatus;
+  sessionStatus: ScenarioExamSessionStatus | null;
+  startedAt: string | null;
+  deadlineAt: string | null;
+  submittedAt: string | null;
+  subjects: ScenarioExamReviewSubject[];
+}
+
+export interface ScenarioExamReviewInput {
+  examId: string;
+  codeId: string;
+  itemId: string;
+  score: number;
+  comment: string;
+}

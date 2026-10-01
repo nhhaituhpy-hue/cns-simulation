@@ -14,11 +14,13 @@ import {
   saveScenarioExamItemAction,
   submitScenarioExamItemAction,
   submitScenarioExamSessionAction,
+  saveScenarioExamReviewAction,
 } from "@/lib/scenario-exams/actions";
 import {
   getCandidateScenarioExamSession,
   getCandidateScenarioExamItem,
   getScenarioExamDetail,
+  getScenarioExamSubmissionReview,
   listCandidateOpenScenarioExams,
   listScenarioExamPoolCounts,
   listScenarioExams,
@@ -189,6 +191,59 @@ describe.skipIf(!testUrl)("Scenario Exam actions against real PostgreSQL", () =>
     const item = (await getCandidateScenarioExamItem(started.data!.id))!;
     return { item, result: buildCandidateScenarioExamResult(item, { actionHistory: [], answer: { suspectedFault: "Fixture conclusion", reasoning: "Measured parameters", remediation: "Adjusted configuration" }, checkpoint: { parameter: 42 } }) };
   }
+
+  it("opens and grades the correct code's saved snapshots without changing the candidate's evidence", async () => {
+    const { examId, code, session } = await enterExam();
+    const first = await startWithResult(session.subjects[0].id);
+    const second = await startWithResult(session.subjects[1].id);
+    await submitScenarioExamItemAction(first.item.id, first.result);
+    await submitScenarioExamItemAction(second.item.id, second.result);
+    await submitScenarioExamSessionAction();
+    vi.mocked(getCurrentProfile).mockResolvedValue(admin);
+    const review = await getScenarioExamSubmissionReview(examId, code.id);
+    expect(review?.subjects.map((subject) => subject.result?.sessionItemId)).toEqual([first.item.id, second.item.id]);
+    expect(review?.subjects[0].definition).toEqual(first.item.definition);
+    expect((await saveScenarioExamReviewAction({ examId, codeId: code.id, itemId: first.item.id, score: 85.25, comment: "Chẩn đoán đúng" })).ok).toBe(true);
+    expect((await saveScenarioExamReviewAction({ examId, codeId: code.id, itemId: second.item.id, score: 0, comment: "Chưa xử lý được" })).ok).toBe(true);
+    const graded = await getScenarioExamSubmissionReview(examId, code.id);
+    expect(graded?.subjects.map((subject) => subject.examinerScore)).toEqual([85.25, 0]);
+    expect(graded?.subjects[0]).toMatchObject({ examinerComment: "Chẩn đoán đúng", reviewedByName: admin.fullName, result: first.result });
+    expect(graded?.subjects[1].result).toEqual(second.result);
+    expect(graded?.subjects.every((subject) => Boolean(subject.reviewedAt))).toBe(true);
+    expect((await queryDatabase("select status, terminal_reason from public.scenario_exam_sessions where id = $1", [session.id])).rows[0]).toEqual({ status: "submitted", terminal_reason: "submitted" });
+    expect((await queryDatabase("select event_type from public.scenario_exam_audit_events where session_id = $1 and event_type = 'review_updated'", [session.id])).rows).toHaveLength(2);
+  });
+
+  it("prevents grading another code/exam or grading before the subject is submitted", async () => {
+    const { examId, code, session } = await enterExam();
+    const { item, result } = await startWithResult(session.subjects[0].id);
+    await saveScenarioExamItemAction(item.id, result);
+    vi.mocked(getCurrentProfile).mockResolvedValue(admin);
+    expect((await saveScenarioExamReviewAction({ examId, codeId: code.id, itemId: item.id, score: 80, comment: "Review" })).ok).toBe(false);
+    const otherExam = await openExam();
+    const otherCode = await issueCode(otherExam);
+    expect(await getScenarioExamSubmissionReview(otherExam, code.id)).toBeNull();
+    expect((await saveScenarioExamReviewAction({ examId: otherExam, codeId: code.id, itemId: item.id, score: 80, comment: "Review" })).ok).toBe(false);
+    expect((await saveScenarioExamReviewAction({ examId, codeId: otherCode.id, itemId: item.id, score: 80, comment: "Review" })).ok).toBe(false);
+    expect((await queryDatabase("select examiner_score from public.scenario_exam_session_items where id = $1", [item.id])).rows[0].examiner_score).toBeNull();
+  });
+
+  it("rolls score and reviewer metadata back if the review audit cannot be saved", async () => {
+    const { examId, code, session } = await enterExam();
+    const { item, result } = await startWithResult(session.subjects[0].id);
+    await submitScenarioExamItemAction(item.id, result);
+    vi.mocked(getCurrentProfile).mockResolvedValue(admin);
+    await queryDatabase("alter table public.scenario_exam_audit_events add constraint test_reject_review check (event_type <> 'review_updated') not valid");
+    const diagnostic = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      expect((await saveScenarioExamReviewAction({ examId, codeId: code.id, itemId: item.id, score: 90, comment: "Review" })).ok).toBe(false);
+      const row = (await queryDatabase("select examiner_score, examiner_comment, reviewed_by, reviewed_at, result_json from public.scenario_exam_session_items where id = $1", [item.id])).rows[0];
+      expect(row).toEqual({ examiner_score: null, examiner_comment: null, reviewed_by: null, reviewed_at: null, result_json: result });
+    } finally {
+      diagnostic.mockRestore();
+      await queryDatabase("alter table public.scenario_exam_audit_events drop constraint test_reject_review");
+    }
+  });
 
   it("saves actual draft evidence without marking the subject complete or changing its scenario", async () => {
     const { session } = await enterExam();

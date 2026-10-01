@@ -1,9 +1,18 @@
 # Kế hoạch triển khai refactor kỳ thi bằng mã code và chuẩn hóa thư viện Scenario
 
-**Phiên bản:** 1.5 — kế hoạch đã duyệt, cập nhật lưu bài và nộp phiên
+**Phiên bản:** 1.6 — kế hoạch đã duyệt, cập nhật xem bài/chấm điểm giám khảo
 **Ngày:** 2026-09-30 (cập nhật 2026-10-01)
 **Phạm vi:** CNS Simulation Lab — Scenario Parameters, thư viện Ôn tập/Kiểm tra, ADS-B và kỳ thi bằng mã code
-**Trạng thái:** IN PROGRESS — đã có nền tảng P1/P2, workspace P3, runtime snapshot/resume UX, lưu bài và nộp môn/toàn phiên; chưa hoàn tất khôi phục checkpoint server cho mọi module, finalize timeout, chấm điểm và acceptance P4–P8.
+**Trạng thái:** IN PROGRESS — đã có nền tảng P1/P2, workspace P3, runtime snapshot/resume UX, lưu/nộp bài và P5 xem bài/chấm điểm thủ công; còn khôi phục checkpoint server, finalize timeout, summary evaluator và acceptance P4–P8.
+
+### Cập nhật 2026-10-01 — xem bài/chấm điểm giám khảo
+
+- Người dùng yêu cầu bỏ nền màu dòng đã nộp và chỉ đổi chữ `submitted` sang xanh lá; đã áp dụng token theme để giữ tương phản và không tô màu toàn dòng.
+- Đã nối tên thí sinh, hint mã và `Xem bài / Chấm điểm` tới route `/admin/scenario-exams/[examId]/results/[codeId]`, đọc đúng snapshot/result của các item theo mã, không đọc Scenario nguồn.
+- Trang review hiển thị evidence theo môn và tham chiếu đã cấp; dùng pure presenter nhật ký PMDT, không gọi domain action/query legacy. Đã nối nhập điểm 0–100/nhận xét, người chấm/thời gian chấm.
+- Query/action giữ gate admin hiện tại, kiểm tra exam/code/item và item terminal có result hợp lệ. Transaction lưu review cùng audit, không sửa dữ liệu nộp, không thêm migration.
+- Gate Node 24: lint, typecheck, 139 file/865 test (23 ca PostgreSQL thật), build, CodeGraph sync/diff check đạt. Kiểm chứng score 0, precision, cách ly code/exam, chưa nộp không chấm, evidence bất biến và rollback audit.
+- **Còn lại:** Browser QA production thiếu Codex auth token; summary kỹ thuật theo evaluator, khôi phục checkpoint server và finalize timeout chưa hoàn tất. Không coi lượt này là đã hoàn tất acceptance P5 cho tất cả module.
 
 ### Cập nhật 2026-10-01 — căn giữa và nộp bài kết thúc phiên
 
@@ -121,7 +130,7 @@ ADS-B hiện dùng Scenario legacy với sites, targetSensorId, targetLoginUser,
 | Scenario Parameters 5 module | Source/migration hiện có | Production counts đã kiểm tra | Không mở rộng v2 ngoài nhu cầu |
 | ADS-B | Adapter/parser, source/library panel và migration 0010/0012 | Backfill production được ghi trong README; parser/migration tests | Runtime snapshot và browser QA/publish theo lựa chọn giám khảo |
 | Kỳ thi cũ | Phạm vi xóa đã thực hiện | Target counts = 0 | Không dùng lại business flow |
-| Kỳ thi bằng mã | Migration 0011, action/query/session, trang admin/candidate runtime snapshot/resume UX, lưu bài/nộp môn/nộp toàn phiên | Gate Node 24: 137 file/834 test, gồm 20 ca PostgreSQL cô lập; migration production trước đó đã ghi trong README | Khôi phục đầy đủ checkpoint server/finalize timeout/review; browser QA/pilot/cutover chưa hoàn tất |
+| Kỳ thi bằng mã | Migration 0011, action/query/session, runtime snapshot/resume UX, lưu/nộp bài, trang review/điểm giám khảo | Gate Node 24: 139 file/865 test, gồm 23 ca PostgreSQL cô lập; migration production trước đó đã ghi trong README | Khôi phục checkpoint server/finalize timeout/summary evaluator; browser QA/pilot/cutover chưa hoàn tất |
 
 ## 2. Mục tiêu và ranh giới
 
@@ -588,12 +597,13 @@ Cổng P4: candidate không thể đọc scenario pool hoặc session khác; ref
 
 ### P5 — Review/chấm
 
-- Trang chi tiết code.
-- Per-module submission review.
-- Reuse pure result presenter khi an toàn, không reuse old exam actions/query.
-- Tính summary kỹ thuật.
-- Giám khảo nhập điểm/nhận xét.
-- Status terminal và màu thống kê server-authoritative.
+- [x] Trang chi tiết code.
+- [x] Per-module submission review từ snapshot/result đã lưu.
+- [x] Reuse pure result presenter khi an toàn, không reuse old exam actions/query.
+- [ ] Tính summary kỹ thuật theo evaluator.
+- [x] Giám khảo nhập điểm/nhận xét và audit transaction.
+- [x] Status terminal server-authoritative; chỉ chữ submitted màu xanh theo yêu cầu mới.
+- [ ] Acceptance browser xem/chấm đủ sáu module.
 
 Cổng P5: giám khảo xem được đủ evidence của VOR/DME/ADS-B snapshot.
 

@@ -8,6 +8,7 @@ import { encryptScenarioExamCode, ScenarioExamCodeEncryptionError } from "./code
 import { createScenarioExamSessionToken, hashScenarioExamSessionToken, setScenarioExamSessionCookie } from "./session";
 import { getScenarioExamSessionToken } from "./session";
 import { saveCandidateScenarioExamItem, submitCandidateScenarioExamSession } from "./submissions";
+import { saveScenarioExamReview } from "./reviews";
 import {
   ScenarioExamValidationError,
   validateIssueScenarioExamCodeInput,
@@ -382,5 +383,16 @@ export async function submitScenarioExamSessionAction(): Promise<ScenarioExamAct
     return { ok: true, message: "Đã nộp bài và kết thúc phiên thi.", data: { id: data.id } };
   } catch (error) {
     return { ok: false, message: errorMessage(error, "submit_session") };
+  }
+}
+
+export async function saveScenarioExamReviewAction(input: unknown): Promise<ScenarioExamActionResult<{ itemId: string; score: number; comment: string }>> {
+  try {
+    const data = await saveScenarioExamReview(input);
+    revalidatePath(`/admin/scenario-exams/${data.examId}`);
+    revalidatePath(`/admin/scenario-exams/${data.examId}/results/${data.codeId}`);
+    return { ok: true, message: "Đã lưu điểm và nhận xét của giám khảo.", data: { itemId: data.itemId, score: data.score, comment: data.comment } };
+  } catch (error) {
+    return { ok: false, message: errorMessage(error, "save_review") };
   }
 }

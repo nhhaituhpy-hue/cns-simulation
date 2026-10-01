@@ -209,6 +209,16 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-10-01 — P5: mở bài nộp và chấm điểm giám khảo
+- Bỏ nền xanh nhạt toàn dòng `submitted`/`timed_out` ở bảng mã để giữ tương phản của theme tối. Chỉ chữ `submitted` dùng màu xanh lá từ token của theme.
+- Tên thí sinh, mã hint và link `Xem bài / Chấm điểm` mở `/admin/scenario-exams/[examId]/results/[codeId]`. Cùng một người có nhiều mã vẫn mở đúng bài theo code ID, không theo tên hoặc tài khoản dùng chung.
+- Trang review hiển thị từng môn, Scenario/revision đã cấp, thời gian, câu trả lời, nhật ký kỹ thuật, cấu hình/checkpoint, QCMS/Terminal hoặc chẩn đoán/phần cứng theo payload đã lưu. Dữ liệu cấu trúc được mở theo từng mục; đối chiếu tham chiếu bằng definition snapshot, không tải lại thư viện/source hiện tại.
+- Giám khảo nhập điểm 0–100 (tối đa hai chữ số thập phân) và nhận xét tối đa 4000 ký tự cho từng item. Hiển thị điểm đã lưu, người chấm và thời gian chấm; số 0 được giữ đúng, không coi là chưa nhập điểm.
+- Query/action kiểm tra quyền admin như workspace giám khảo hiện hành; chặn student/teacher, kiểm tra exam/code/item thuộc cùng phiên và chỉ chấm item `submitted`/`timed_out` có result hợp lệ. Không thay đổi result/definition/status nộp khi lưu điểm.
+- Lưu score/comment/reviewed_by/reviewed_at cùng audit `review_updated` trong transaction; rollback điểm và thông tin người chấm nếu audit thất bại. Không thêm migration, không gọi action/query kỳ thi legacy; chỉ tái sử dụng pure presenter nhật ký PMDT.
+- Gate Node 24 đạt: lint → typecheck → **139 file / 865 test** (gồm **23 ca PostgreSQL thật**) → production build; CodeGraph sync/diff check đạt. Regression kiểm tra chữ xanh không tô nền, link đúng code, score 0/85.25/100, dữ liệu snapshot, cách ly exam/code, chặn chấm trước nộp, không sửa evidence và rollback audit.
+- **Giới hạn:** QA trực quan production chưa chạy do Computer Use báo thiếu Codex auth token. Trang đọc bài và nhập điểm đã viết/kiểm thử; acceptance browser toàn bộ sáu module, summary evaluator tự động, khôi phục checkpoint server và finalize timeout vẫn còn trong kế hoạch.
+
 ### 2026-10-01 — Căn giữa simulator và nộp bài kết thúc phiên thi
 - Căn giữa PMDT trong wrapper của trang làm bài, ghi đè quy tắc căn trái ở breakpoint của skin cũ. Khung nhỏ hơn simulator vẫn cuộn ngang và giữ mép trái truy cập được.
 - Thêm `Lưu bài làm` và `Nộp môn` cạnh countdown; định kỳ lưu bản nháp lên server mỗi 10 giây và lưu khi bấm `Quay lại phiên thi`. Nếu runtime chưa nạp hoặc khởi tạo lỗi, vẫn có thể quay lại phiên.

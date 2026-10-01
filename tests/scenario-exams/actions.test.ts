@@ -26,6 +26,7 @@ import {
   saveScenarioExamItemAction,
   submitScenarioExamItemAction,
   submitScenarioExamSessionAction,
+  saveScenarioExamReviewAction,
 } from "@/lib/scenario-exams/actions";
 import { hashScenarioExamCode, isScenarioExamCode } from "@/lib/scenario-exams/codes";
 import { decryptScenarioExamCode } from "@/lib/scenario-exams/code-encryption";
@@ -101,6 +102,12 @@ afterEach(() => {
 });
 
 describe("Scenario Exam action authorization", () => {
+  it.each([null, "student", "teacher"])("rejects %s for examiner grading before DB access", async (role) => {
+    mocks.getCurrentProfile.mockResolvedValue(role ? profile(role) : null);
+    expect(await saveScenarioExamReviewAction({ examId, codeId, itemId, score: 80, comment: "Good" })).toEqual({ ok: false, message: "Bạn không có quyền chấm kỳ thi Scenario." });
+    expect(mocks.withDatabaseTransaction).not.toHaveBeenCalled();
+  });
+
   it.each([null, "admin", "teacher"])("rejects %s for save/submit before reading the cookie or database", async (role) => {
     mocks.getCurrentProfile.mockResolvedValue(role ? profile(role) : null);
     const results = await Promise.all([saveScenarioExamItemAction(itemId, {}), submitScenarioExamItemAction(itemId, {}), submitScenarioExamSessionAction()]);

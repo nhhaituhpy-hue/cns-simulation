@@ -2,7 +2,7 @@ import {
   isScenarioParametersModuleId,
   type ScenarioParametersModuleId,
 } from "@/lib/scenario-parameters";
-import type { IssueScenarioExamCodeInput, ScenarioExamInput } from "./types";
+import type { IssueScenarioExamCodeInput, ScenarioExamInput, ScenarioExamReviewInput } from "./types";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -107,4 +107,17 @@ export function validateScenarioExamStatus(value: unknown): "open" | "locked" | 
     throw new ScenarioExamValidationError("Trạng thái kỳ thi không hợp lệ.");
   }
   return value;
+}
+
+export function validateScenarioExamReviewInput(value: unknown): ScenarioExamReviewInput {
+  const input = record(value);
+  if (typeof input.score !== "number" || !Number.isFinite(input.score) || input.score < 0 || input.score > 100) {
+    throw new ScenarioExamValidationError("Điểm giám khảo phải nằm trong khoảng 0–100.");
+  }
+  if (Math.abs(input.score * 100 - Math.round(input.score * 100)) > 0.000001) {
+    throw new ScenarioExamValidationError("Điểm chỉ có tối đa hai chữ số thập phân.");
+  }
+  return { examId: uuid(input.examId, "Mã kỳ thi"), codeId: uuid(input.codeId, "Mã thí sinh"),
+    itemId: uuid(input.itemId, "Mã bài làm"), score: input.score,
+    comment: text(input.comment ?? "", "Nhận xét", 0, 4000) };
 }

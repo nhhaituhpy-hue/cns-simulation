@@ -15,9 +15,12 @@ import type {
   ScenarioExamStatus,
   ScenarioExamSubjectStatus,
   ScenarioExamSummary,
+  ScenarioExamSubmissionReview,
+  ScenarioExamReviewSubject,
 } from "./types";
 import { getScenarioExamSessionToken, hashScenarioExamSessionToken } from "./session";
 import { validateScenarioExamUuid } from "./validation";
+import { parseCandidateScenarioExamResult } from "./results";
 
 type Row = Record<string, unknown>;
 
@@ -156,6 +159,63 @@ export async function listScenarioExamPoolCounts(): Promise<ScenarioExamPoolCoun
     moduleId: module.moduleId,
     count: counts.get(module.moduleId) ?? 0,
   }));
+}
+
+/** Review reads only the assigned snapshots/results of the code in this exam. */
+export async function getScenarioExamSubmissionReview(examIdValue: string, codeIdValue: string): Promise<ScenarioExamSubmissionReview | null> {
+  await requireAdmin();
+  let examId: string;
+  let codeId: string;
+  try {
+    examId = validateScenarioExamUuid(examIdValue, "Mã kỳ thi");
+    codeId = validateScenarioExamUuid(codeIdValue, "Mã thí sinh");
+  } catch {
+    return null;
+  }
+  const codeResult = await queryDatabase(
+    `select c.id, c.exam_id, c.code_hint, c.candidate_name, c.candidate_unit,
+            c.status as code_status, e.name as exam_name, s.id as session_id,
+            s.status as session_status, s.started_at, s.deadline_at, s.submitted_at
+       from public.scenario_exam_codes c
+       join public.scenario_exams e on e.id = c.exam_id
+       left join public.scenario_exam_sessions s on s.code_id = c.id
+      where c.exam_id = $1 and c.id = $2`, [examId, codeId],
+  );
+  const code = codeResult.rows[0] as Row | undefined;
+  if (!code) return null;
+  const subjectResult = await queryDatabase(
+    `select cs.id as subject_id, cs.module_id, cs.status, item.id as item_id,
+            item.scenario_id, item.scenario_name, item.library_revision_number,
+            item.started_at, item.submitted_at, item.definition_snapshot_json,
+            item.result_json, item.examiner_score, item.examiner_comment,
+            item.reviewed_at, reviewer.full_name as reviewed_by_name
+       from public.scenario_exam_code_subjects cs
+       left join public.scenario_exam_session_items item
+         on item.code_subject_id = cs.id and item.session_id = $2 and item.module_id = cs.module_id
+       left join public.users reviewer on reviewer.id = item.reviewed_by
+      where cs.code_id = $1 order by cs.position`, [codeId, nullableString(code.session_id)],
+  );
+  const subjects = subjectResult.rows.map((raw): ScenarioExamReviewSubject => {
+    const row = raw as Row;
+    const moduleId = string(row.module_id);
+    if (!isScenarioParametersModuleId(moduleId)) throw new Error("Môn thi không được hỗ trợ.");
+    const parsed = parseCandidateScenarioExamResult(row.result_json);
+    const result = parsed && parsed.sessionItemId === row.item_id && parsed.moduleId === moduleId
+      && parsed.scenarioId === row.scenario_id && parsed.revision === number(row.library_revision_number) ? parsed : null;
+    return { subjectId: string(row.subject_id), moduleId, status: string(row.status) as ScenarioExamReviewSubject["status"],
+      itemId: nullableString(row.item_id), scenarioName: nullableString(row.scenario_name),
+      revision: row.library_revision_number == null ? null : number(row.library_revision_number),
+      startedAt: nullableString(row.started_at), submittedAt: nullableString(row.submitted_at),
+      definition: row.definition_snapshot_json ? parseScenarioParameters(moduleId, row.definition_snapshot_json) : null,
+      result, resultInvalid: row.result_json != null && result === null,
+      examinerScore: row.examiner_score == null ? null : number(row.examiner_score), examinerComment: string(row.examiner_comment),
+      reviewedAt: nullableString(row.reviewed_at), reviewedByName: nullableString(row.reviewed_by_name) };
+  });
+  return { examId, examName: string(code.exam_name), codeId, codeHint: string(code.code_hint),
+    candidateName: string(code.candidate_name), candidateUnit: string(code.candidate_unit),
+    codeStatus: string(code.code_status) as ScenarioExamSubmissionReview["codeStatus"],
+    sessionStatus: nullableString(code.session_status) as ScenarioExamSubmissionReview["sessionStatus"],
+    startedAt: nullableString(code.started_at), deadlineAt: nullableString(code.deadline_at), submittedAt: nullableString(code.submitted_at), subjects };
 }
 
 export async function listCandidateOpenScenarioExams(): Promise<CandidateOpenScenarioExam[]> {

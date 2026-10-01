@@ -15,6 +15,7 @@ import {
   getCandidateScenarioExamSession,
   getCandidateScenarioExamItem,
   getScenarioExamDetail,
+  getScenarioExamSubmissionReview,
   listCandidateOpenScenarioExams,
   listScenarioExamPoolCounts,
   listScenarioExams,
@@ -94,6 +95,7 @@ describe("Scenario Exam query authorization", () => {
     await expect(listScenarioExams()).rejects.toThrow("Bạn không có quyền xem kỳ thi Scenario.");
     await expect(getScenarioExamDetail(examId)).rejects.toThrow("Bạn không có quyền xem kỳ thi Scenario.");
     await expect(listScenarioExamPoolCounts()).rejects.toThrow("Bạn không có quyền xem kỳ thi Scenario.");
+    await expect(getScenarioExamSubmissionReview(examId, "22222222-2222-4222-8222-222222222222")).rejects.toThrow("Bạn không có quyền xem kỳ thi Scenario.");
     expect(mocks.queryDatabase).not.toHaveBeenCalled();
   });
 
@@ -105,6 +107,47 @@ describe("Scenario Exam query authorization", () => {
     await expect(getCandidateScenarioExamItem("55555555-5555-4555-8555-555555555555")).rejects.toThrow("Bạn cần đăng nhập tài khoản Thí sinh.");
     expect(mocks.queryDatabase).not.toHaveBeenCalled();
     expect(mocks.cookieGet).not.toHaveBeenCalled();
+  });
+});
+
+describe("getScenarioExamSubmissionReview", () => {
+  const codeId = "22222222-2222-4222-8222-222222222222";
+  const itemId = "55555555-5555-4555-8555-555555555555";
+  const definition = createDefaultDvor1150aScenarioDefinition();
+  const result = { version: 1, sessionItemId: itemId, moduleId: "dvor-1150a", scenarioId: definition.id, revision: 7, capturedAt: timestamp, payload: { answer: { suspectedFault: "Reference" }, checkpoint: { config: { reference: 100 } } } };
+  function code() { return { id: codeId, exam_id: examId, exam_name: "Exam", code_hint: "7EGD", candidate_name: "Candidate A", candidate_unit: "Unit A", code_status: "submitted", session_id: "session-1", session_status: "submitted", started_at: timestamp, deadline_at: timestamp, submitted_at: timestamp, code_hash: "private-hash", session_token_hash: "private-token-hash" }; }
+  function subject(overrides: Record<string, unknown> = {}) { return { subject_id: "subject-1", module_id: "dvor-1150a", status: "submitted", item_id: itemId, scenario_id: definition.id, scenario_name: "Assigned scenario", library_revision_number: 7, started_at: timestamp, submitted_at: timestamp, definition_snapshot_json: definition, result_json: result, examiner_score: "0.00", examiner_comment: "Review", reviewed_at: timestamp, reviewed_by_name: "Examiner", ...overrides }; }
+
+  it("scopes the code to its exam, loads frozen item evidence, and preserves a zero score", async () => {
+    mocks.queryDatabase.mockResolvedValueOnce({ rows: [code()] }).mockResolvedValueOnce({ rows: [subject()] });
+    const review = await getScenarioExamSubmissionReview(examId, codeId);
+    expect(review?.subjects[0]).toMatchObject({ itemId, result, definition, examinerScore: 0, reviewedByName: "Examiner" });
+    expect(mocks.queryDatabase.mock.calls.map(([, values]) => values)).toEqual([[examId, codeId], [codeId, "session-1"]]);
+    expect(sqlAt(0)).toContain("where c.exam_id = $1 and c.id = $2");
+    expect(sqlAt(1)).toContain("item.session_id = $2 and item.module_id = cs.module_id");
+    expect(sqlAt(1)).not.toMatch(/simulator_scenario_parameters|simulator_scenario_library_memberships/);
+    expect(JSON.stringify(review)).not.toMatch(/private-hash|private-token-hash/);
+    expect(mocks.cookieGet).not.toHaveBeenCalled();
+  });
+
+  it("returns null for an unknown code or code outside the exam", async () => {
+    expect(await getScenarioExamSubmissionReview(examId, codeId)).toBeNull();
+    expect(mocks.queryDatabase).toHaveBeenCalledOnce();
+  });
+
+  it("validates IDs before SQL", async () => {
+    expect(await getScenarioExamSubmissionReview("invalid", codeId)).toBeNull();
+    expect(mocks.queryDatabase).not.toHaveBeenCalled();
+  });
+
+  it("marks corrupt or foreign result metadata as invalid instead of displaying it", async () => {
+    mocks.queryDatabase.mockResolvedValueOnce({ rows: [code()] }).mockResolvedValueOnce({ rows: [subject({ result_json: { ...result, sessionItemId: "foreign-item" } })] });
+    expect((await getScenarioExamSubmissionReview(examId, codeId))?.subjects[0]).toMatchObject({ result: null, resultInvalid: true });
+  });
+
+  it("shows unstarted selected subjects without attempting to load a live source", async () => {
+    mocks.queryDatabase.mockResolvedValueOnce({ rows: [code()] }).mockResolvedValueOnce({ rows: [subject({ status: "not_started", item_id: null, definition_snapshot_json: null, result_json: null, library_revision_number: null, examiner_score: null })] });
+    expect((await getScenarioExamSubmissionReview(examId, codeId))?.subjects[0]).toMatchObject({ status: "not_started", itemId: null, definition: null, result: null, resultInvalid: false, examinerScore: null });
   });
 });
 
