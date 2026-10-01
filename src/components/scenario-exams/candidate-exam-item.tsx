@@ -120,13 +120,13 @@ export function CandidateExamItem({ item }: { item: CandidateScenarioExamItem })
         <p role="alert" className="mx-4 rounded border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-sm text-[#991b1b]">Phiên thi đã hết thời gian. Hãy quay lại phiên thi để xem trạng thái các môn.</p>
       ) : (
         <ScenarioExamSnapshotProvider answer={answer} registerResultReader={registerResultReader} snapshot={{ moduleId: item.moduleId, definition: item.definition, sessionKey: `scenario-exam:${item.sessionId}:${item.id}`, revisionKey: `exam:${item.id}:${item.revision}` }}>
-          <div className={styles.simulator} data-testid="exam-simulator"><AssignedSimulator item={item} /></div>
-          <section aria-label="Kết luận sự cố" className="mx-auto w-full max-w-7xl px-4 pt-4 sm:px-6">
+          <section aria-label="Kết luận sự cố" className="mx-auto w-full max-w-7xl px-4 pb-2 sm:px-6">
             <h2 className="text-lg font-bold text-[var(--text-primary)]">Kết luận sự cố</h2>
             <div className="mt-4 grid gap-4 lg:grid-cols-3">{([
               ["suspectedFault", "Vị trí / sự cố nghi ngờ"], ["reasoning", "Căn cứ chẩn đoán"], ["remediation", "Hướng khắc phục"],
             ] as const).map(([key, label]) => <label key={key} className="grid gap-2 text-sm font-semibold text-[var(--text-secondary)]">{label}<textarea rows={4} maxLength={4000} value={answer[key]} onChange={(event) => changeAnswer(key, event.target.value)} disabled={pending} className={textareaClassName} /></label>)}</div>
           </section>
+          <div className={styles.simulator} data-testid="exam-simulator"><AssignedSimulator item={item} /></div>
         </ScenarioExamSnapshotProvider>
       )}
     </div>

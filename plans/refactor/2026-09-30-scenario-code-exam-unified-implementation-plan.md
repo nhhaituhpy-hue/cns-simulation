@@ -1,9 +1,14 @@
 # Kế hoạch triển khai refactor kỳ thi bằng mã code và chuẩn hóa thư viện Scenario
 
-**Phiên bản:** 1.7 — kế hoạch đã duyệt, cập nhật kết luận/hardware/SOLVED
+**Phiên bản:** 1.8 — kế hoạch đã duyệt, phần nhận định nằm trước simulator
 **Ngày:** 2026-09-30 (cập nhật 2026-10-01)
 **Phạm vi:** CNS Simulation Lab — Scenario Parameters, thư viện Ôn tập/Kiểm tra, ADS-B và kỳ thi bằng mã code
 **Trạng thái:** IN PROGRESS — đã có nền tảng P1/P2, workspace P3, runtime snapshot/resume, kết luận/hardware/lưu/nộp bài, P5 xem/chấm điểm và summary kỹ thuật; còn khôi phục checkpoint server, finalize timeout và acceptance P4–P8.
+
+### Cập nhật 2026-10-01 — thứ tự nhận định trước thao tác phần mềm
+
+- Người dùng yêu cầu ba ô `Vị trí / sự cố nghi ngờ` → `Căn cứ chẩn đoán` → `Hướng khắc phục` nằm trên simulator. Đã đổi thứ tự JSX để thí sinh nhập nhận định trước khi thao tác PMDT.
+- Thay đổi UI tĩnh; ESLint targeted và diff check đạt.
 
 ### Cập nhật 2026-10-01 — kết luận, hardware và SOLVED
 

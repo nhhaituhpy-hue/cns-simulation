@@ -209,6 +209,10 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-10-01 — Đưa phần nhận định sự cố lên trước simulator
+- Theo yêu cầu thí sinh xác định sự cố trước khi thao tác phần mềm, đưa ba ô `Vị trí / sự cố nghi ngờ`, `Căn cứ chẩn đoán`, `Hướng khắc phục` lên trên simulator, giữ thứ tự trái sang phải này.
+- Chỉnh vị trí JSX và khoảng cách của phần kết luận. Kiểm tra: ESLint targeted và `git diff --check` đạt; bố cục là thay đổi UI tĩnh theo workflow dự án.
+
 ### 2026-10-01 — Kết luận thí sinh, phần cứng và trạng thái SOLVED
 - Xác nhận thiếu kết nối: HUD và stagebar DVOR 1150A/DME 1119A chỉ render trong mode preview, còn route item dùng mode student. Ba ô kết luận chưa được đưa vào route item nên payload answer vẫn trống.
 - Thêm `Vị trí / sự cố nghi ngờ`, `Căn cứ chẩn đoán`, `Hướng khắc phục` dưới simulator. Cache theo session/item, đưa answer vào result khi lưu/nộp và đồng bộ với store Selex để không lẫn môn/phiên.
