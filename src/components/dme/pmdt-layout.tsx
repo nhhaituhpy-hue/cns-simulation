@@ -4,6 +4,7 @@ import { Suspense, useEffect, type ReactNode } from "react";
 import { SimulatorConfigPersistence } from "@/components/simulator/simulator-config-persistence";
 import { SimulatorToolbarBackButton } from "@/components/simulator/simulator-toolbar-back-button";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
+import { useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
 import { DmeScenarioSessionPersistence } from "@/components/scenario/scenario-session-persistence";
 import type { SupportedSimulatorConfigId } from "@/lib/simulator-config/types";
 import type { DmePmdtMode } from "@/lib/dme-types";
@@ -83,6 +84,7 @@ export function PmdtLayout({
   leadingPanel,
   sidePanel,
 }: PmdtLayoutProps) {
+  const examSnapshot = useScenarioExamSnapshot();
   const externalLeadingPanel = mode === "student" ? leadingPanel : null;
   const externalSidePanel = mode === "student" ? sidePanel : null;
   const hasExternalPanels = Boolean(externalLeadingPanel || externalSidePanel);
@@ -179,7 +181,10 @@ export function PmdtLayout({
           enabled
           onLoaded={(definition, context) => {
             if (context.review) {
-              startReviewScenario(definition, {
+              if (examSnapshot && useDmePmdtStore.getState().sessionKey !== context.sessionKey) {
+                useDmePmdtStore.getState().initializeSession({ mode: "student", scenarioId: definition.id, sessionKey: context.sessionKey, revisionKey: context.revisionKey, userId: sessionUserId });
+              }
+              return startReviewScenario(definition, {
                 userId: sessionUserId,
                 sessionKey: context.sessionKey ?? `practice:${sessionUserId || "anonymous"}:${definition.id}`,
                 revisionKey: context.revisionKey,

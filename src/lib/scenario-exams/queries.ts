@@ -2,9 +2,10 @@ import "server-only";
 
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { queryDatabase } from "@/lib/db";
-import { SCENARIO_PARAMETERS_MODULES, type ScenarioParametersModuleId } from "@/lib/scenario-parameters";
+import { isScenarioParametersModuleId, parseScenarioParameters, SCENARIO_PARAMETERS_MODULES, type ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 import type {
   CandidateOpenScenarioExam,
+  CandidateScenarioExamItem,
   CandidateScenarioExamSession,
   CandidateSessionSubject,
   ScenarioExamAvailability,
@@ -16,6 +17,7 @@ import type {
   ScenarioExamSummary,
 } from "./types";
 import { getScenarioExamSessionToken, hashScenarioExamSessionToken } from "./session";
+import { validateScenarioExamUuid } from "./validation";
 
 type Row = Record<string, unknown>;
 
@@ -232,5 +234,55 @@ export async function getCandidateScenarioExamSession(): Promise<CandidateScenar
     deadlineAt: string(row.deadline_at),
     submittedAt: nullableString(row.submitted_at),
     subjects,
+  };
+}
+
+/** Read the assigned snapshot through the code session, never through the live library. */
+export async function getCandidateScenarioExamItem(itemIdValue: string): Promise<CandidateScenarioExamItem | null> {
+  const profile = await getCurrentProfile();
+  if (!profile || profile.role !== "student") throw new Error("Bạn cần đăng nhập tài khoản Thí sinh.");
+  let itemId: string;
+  try {
+    itemId = validateScenarioExamUuid(itemIdValue, "Mã bài thi");
+  } catch {
+    return null;
+  }
+  const token = await getScenarioExamSessionToken();
+  if (!token) return null;
+  const result = await queryDatabase(
+    `select item.id, item.session_id, item.code_subject_id, item.module_id,
+            item.scenario_id, item.scenario_name, item.library_revision_number,
+            item.definition_snapshot_json, item.started_at, s.deadline_at,
+            e.name as exam_name, c.candidate_name, c.candidate_unit
+       from public.scenario_exam_session_items item
+       join public.scenario_exam_sessions s on s.id = item.session_id
+       join public.scenario_exam_codes c on c.id = s.code_id
+       join public.scenario_exams e on e.id = c.exam_id
+       join public.scenario_exam_code_subjects cs
+         on cs.id = item.code_subject_id and cs.code_id = s.code_id and cs.module_id = item.module_id
+      where s.session_token_hash = $1 and item.id = $2
+        and s.status = 'in_progress' and s.deadline_at > now()
+        and c.status = 'in_progress' and cs.status = 'in_progress' and item.status = 'in_progress'`,
+    [hashScenarioExamSessionToken(token), itemId],
+  );
+  const row = result.rows[0] as Row | undefined;
+  if (!row) return null;
+  const moduleId = string(row.module_id);
+  if (!isScenarioParametersModuleId(moduleId)) return null;
+  const definition = parseScenarioParameters(moduleId, row.definition_snapshot_json);
+  if (!definition || definition.id !== string(row.scenario_id)) return null;
+  return {
+    id: string(row.id),
+    sessionId: string(row.session_id),
+    subjectId: string(row.code_subject_id),
+    moduleId,
+    examName: string(row.exam_name),
+    candidateName: string(row.candidate_name),
+    candidateUnit: string(row.candidate_unit),
+    scenarioName: string(row.scenario_name),
+    startedAt: string(row.started_at),
+    deadlineAt: string(row.deadline_at),
+    revision: number(row.library_revision_number),
+    definition,
   };
 }

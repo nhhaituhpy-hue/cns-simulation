@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
 import {
   parseScenarioParameters,
   type ScenarioParametersDefinitionFor,
@@ -16,7 +17,7 @@ interface ScenarioParametersRouteLoaderProps<
   onLoaded: (
     definition: ScenarioParametersDefinitionFor<TModuleId>,
     context: { review: boolean; revisionKey: string; sessionKey?: string },
-  ) => void;
+  ) => boolean | void;
 }
 
 /** Loads a row opened from the Kịch bản table into the simulator's draft. */
@@ -24,6 +25,7 @@ export function ScenarioParametersRouteLoader<
   TModuleId extends ScenarioParametersModuleId,
 >({ moduleId, enabled, onLoaded }: ScenarioParametersRouteLoaderProps<TModuleId>) {
   const searchParams = useSearchParams();
+  const examSnapshot = useScenarioExamSnapshot();
   const scenarioId = searchParams?.get("scenarioId")?.trim() ?? "";
   const review = searchParams?.get("review") === "1";
   const requestedSessionKey = searchParams?.get("sessionKey")?.trim() || undefined;
@@ -31,6 +33,23 @@ export function ScenarioParametersRouteLoader<
   const loadedRef = useRef<string | null>(null);
 
   useEffect(() => {
+    // Assigned exams are hydrated directly from the authorized server snapshot.
+    // Query strings must not replace it with a source row or another revision.
+    if (examSnapshot) {
+      if (!enabled || examSnapshot.moduleId !== moduleId) return;
+      const requestKey = `${moduleId}:${examSnapshot.sessionKey}:${examSnapshot.revisionKey}`;
+      if (loadedRef.current === requestKey) return;
+      const definition = parseScenarioParameters(moduleId, examSnapshot.definition);
+      if (!definition) return;
+      loadedRef.current = requestKey;
+      try {
+        const loaded = onLoaded(definition, { review: true, sessionKey: examSnapshot.sessionKey, revisionKey: examSnapshot.revisionKey });
+        if (loaded === false) setMessage("Không thể khởi tạo Scenario đã cấp. Hãy quay lại phiên thi và liên hệ giám khảo.");
+      } catch {
+        setMessage("Không thể khởi tạo Scenario đã cấp. Hãy quay lại phiên thi và liên hệ giám khảo.");
+      }
+      return;
+    }
     if (!enabled || !scenarioId || loadedRef.current === `${moduleId}:${scenarioId}`) return;
     let cancelled = false;
     const requestKey = `${moduleId}:${scenarioId}`;
@@ -72,7 +91,10 @@ export function ScenarioParametersRouteLoader<
     return () => {
       cancelled = true;
     };
-  }, [enabled, moduleId, onLoaded, requestedSessionKey, review, scenarioId]);
+  }, [enabled, examSnapshot, moduleId, onLoaded, requestedSessionKey, review, scenarioId]);
 
-  return message ? <span role="status" className="sr-only">{message}</span> : null;
+  return message ? examSnapshot
+    ? <p role="alert" className="m-4 rounded border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-sm text-[#991b1b]">{message}</p>
+    : <span role="status" className="sr-only">{message}</span>
+    : null;
 }

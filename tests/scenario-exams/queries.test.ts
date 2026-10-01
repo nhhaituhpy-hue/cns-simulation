@@ -13,6 +13,7 @@ vi.mock("next/headers", () => ({ cookies: vi.fn(async () => ({ get: mocks.cookie
 
 import {
   getCandidateScenarioExamSession,
+  getCandidateScenarioExamItem,
   getScenarioExamDetail,
   listCandidateOpenScenarioExams,
   listScenarioExamPoolCounts,
@@ -20,6 +21,7 @@ import {
 } from "@/lib/scenario-exams/queries";
 import { hashScenarioExamSessionToken } from "@/lib/scenario-exams/session";
 import type { ScenarioExamAvailability } from "@/lib/scenario-exams/types";
+import { createDefaultDvor1150aScenarioDefinition } from "@/lib/dvor1150a/scenario";
 
 const examId = "11111111-1111-4111-8111-111111111111";
 const timestamp = "2026-09-30T10:00:00.000Z";
@@ -100,8 +102,66 @@ describe("Scenario Exam query authorization", () => {
 
     await expect(listCandidateOpenScenarioExams()).rejects.toThrow("Bạn cần đăng nhập tài khoản Thí sinh.");
     await expect(getCandidateScenarioExamSession()).rejects.toThrow("Bạn cần đăng nhập tài khoản Thí sinh.");
+    await expect(getCandidateScenarioExamItem("55555555-5555-4555-8555-555555555555")).rejects.toThrow("Bạn cần đăng nhập tài khoản Thí sinh.");
     expect(mocks.queryDatabase).not.toHaveBeenCalled();
     expect(mocks.cookieGet).not.toHaveBeenCalled();
+  });
+});
+
+describe("getCandidateScenarioExamItem", () => {
+  const itemId = "55555555-5555-4555-8555-555555555555";
+  const definition = createDefaultDvor1150aScenarioDefinition();
+  function itemRow(overrides: Record<string, unknown> = {}) {
+    return {
+      id: itemId, session_id: "session-1", code_subject_id: "subject-1", module_id: "dvor-1150a",
+      exam_name: "Kỳ thi", candidate_name: "Thí sinh", candidate_unit: "Đơn vị",
+      scenario_id: definition.id, scenario_name: definition.name, library_revision_number: 7,
+      definition_snapshot_json: definition, started_at: timestamp, deadline_at: "2026-09-30T11:00:00.000Z",
+      ...overrides,
+    };
+  }
+
+  beforeEach(() => { mocks.getCurrentProfile.mockResolvedValue({ id: "student-gate", role: "student" }); });
+
+  it("returns only the assigned snapshot through the cookie identity and original deadline", async () => {
+    mocks.queryDatabase.mockResolvedValueOnce({ rows: [itemRow({ code_hash: "private", result_json: { answer: "private" } })] });
+    const item = await getCandidateScenarioExamItem(itemId);
+    expect(item).toMatchObject({ id: itemId, sessionId: "session-1", subjectId: "subject-1", revision: 7, definition, deadlineAt: "2026-09-30T11:00:00.000Z" });
+    expect(mocks.queryDatabase.mock.calls[0]?.[1]).toEqual([hashScenarioExamSessionToken(token), itemId]);
+    expect(sqlAt(0)).toContain("s.session_token_hash = $1 and item.id = $2");
+    expect(sqlAt(0)).toContain("s.deadline_at > now()");
+    expect(sqlAt(0)).toContain("cs.code_id = s.code_id and cs.module_id = item.module_id");
+    expect(sqlAt(0)).toContain("cs.status = 'in_progress' and item.status = 'in_progress'");
+    expect(sqlAt(0)).not.toMatch(/simulator_scenario_library_memberships|simulator_scenario_parameters|candidate_user_id|email/);
+    expect(item).not.toHaveProperty("code_hash");
+    expect(item).not.toHaveProperty("result_json");
+    expect(JSON.stringify(item)).not.toContain(token);
+  });
+
+  it("does not query without a cookie", async () => {
+    mocks.cookieGet.mockReturnValue(undefined);
+    expect(await getCandidateScenarioExamItem(itemId)).toBeNull();
+    expect(mocks.queryDatabase).not.toHaveBeenCalled();
+  });
+
+  it("rejects malformed item IDs before reading the cookie or database", async () => {
+    expect(await getCandidateScenarioExamItem("not-a-uuid")).toBeNull();
+    expect(mocks.cookieGet).not.toHaveBeenCalled();
+    expect(mocks.queryDatabase).not.toHaveBeenCalled();
+  });
+
+  it("returns null for an unknown, foreign or finished item", async () => {
+    expect(await getCandidateScenarioExamItem(itemId)).toBeNull();
+  });
+
+  it.each([
+    { module_id: "unknown" },
+    { module_id: "dme-1119a" },
+    { definition_snapshot_json: {} },
+    { scenario_id: "another-scenario" },
+  ])("does not load an invalid or mismatched snapshot: %j", async (overrides) => {
+    mocks.queryDatabase.mockResolvedValueOnce({ rows: [itemRow(overrides)] });
+    expect(await getCandidateScenarioExamItem(itemId)).toBeNull();
   });
 });
 

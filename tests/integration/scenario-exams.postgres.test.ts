@@ -14,6 +14,7 @@ import {
 } from "@/lib/scenario-exams/actions";
 import {
   getCandidateScenarioExamSession,
+  getCandidateScenarioExamItem,
   getScenarioExamDetail,
   listCandidateOpenScenarioExams,
   listScenarioExamPoolCounts,
@@ -21,6 +22,9 @@ import {
 } from "@/lib/scenario-exams/queries";
 import { decryptScenarioExamCode } from "@/lib/scenario-exams/code-encryption";
 import type { ScenarioParametersModuleId } from "@/lib/scenario-parameters";
+import { parseScenarioParameters } from "@/lib/scenario-parameters";
+import { createDefaultDvor1150aScenarioDefinition } from "@/lib/dvor1150a/scenario";
+import { createLowOutputDme1119aScenario } from "@/lib/dme1119a/scenario";
 
 const cookieJar = vi.hoisted(() => new Map<string, string>());
 vi.mock("@/lib/auth/profile", () => ({ getCurrentProfile: vi.fn() }));
@@ -109,7 +113,10 @@ describe.skipIf(!testUrl)("Scenario Exam actions against real PostgreSQL", () =>
     for (const moduleId of ["dvor-1150a", "dme-1119a"]) {
       for (let position = 1; position <= 4; position++) {
         const scenarioId = `${moduleId}-fixture-${position}`;
-        const definition = { id: scenarioId, name: scenarioId, schemaVersion: 1, fixture: true };
+        const definition = {
+          ...(moduleId === "dvor-1150a" ? createDefaultDvor1150aScenarioDefinition() : createLowOutputDme1119aScenario()),
+          id: scenarioId, name: scenarioId,
+        };
         const source = await queryDatabase(
           `insert into public.simulator_scenario_parameters
            (module_id, scenario_id, name, description, difficulty, schema_version, definition_json, created_by)
@@ -315,6 +322,9 @@ describe.skipIf(!testUrl)("Scenario Exam actions against real PostgreSQL", () =>
       expect(resumed.data).toEqual(started.data);
       const saved = await queryDatabase("select definition_snapshot_json from public.scenario_exam_session_items where id = $1", [started.data!.id]);
       expect(saved.rows[0].definition_snapshot_json).toEqual(original.rows[0].definition_snapshot_json);
+      const runtime = await getCandidateScenarioExamItem(started.data!.id);
+      expect(runtime?.definition).toEqual(parseScenarioParameters(session.subjects[0].moduleId, original.rows[0].definition_snapshot_json));
+      expect(runtime?.deadlineAt).toBe(session.deadlineAt);
     } finally {
       await queryDatabase("update public.simulator_scenario_parameters set definition_json = $2 where id = $1", [sourceId, membership.rows[0].definition_json]);
       await queryDatabase("update public.simulator_scenario_library_memberships set archived_at = null where id = $1", [membershipId]);
@@ -346,10 +356,39 @@ describe.skipIf(!testUrl)("Scenario Exam actions against real PostgreSQL", () =>
 
   it("rejects an expired session even if the module already has a snapshot", async () => {
     const { session } = await enterExam();
-    expect((await startScenarioExamSubjectAction(session.subjects[0].id)).ok).toBe(true);
+    const started = await startScenarioExamSubjectAction(session.subjects[0].id);
+    expect(started.ok).toBe(true);
     await queryDatabase("update public.scenario_exam_sessions set started_at = now() - interval '2 hours', deadline_at = now() - interval '1 hour' where id = $1", [session.id]);
     expect((await startScenarioExamSubjectAction(session.subjects[0].id)).ok).toBe(false);
     expect((await startScenarioExamSubjectAction(session.subjects[1].id)).ok).toBe(false);
+    expect(await getCandidateScenarioExamItem(started.data!.id)).toBeNull();
     expect((await queryDatabase("select id from public.scenario_exam_session_items where session_id = $1", [session.id])).rows).toHaveLength(1);
+  });
+
+  it("isolates runtime snapshots between two codes even when the student account is the same", async () => {
+    const first = await enterExam();
+    const started = await startScenarioExamSubjectAction(first.session.subjects[0].id);
+    expect(started.ok).toBe(true);
+    expect((await getCandidateScenarioExamItem(started.data!.id))?.sessionId).toBe(first.session.id);
+    const firstToken = cookieJar.get("cns_scenario_exam_session")!;
+    vi.mocked(getCurrentProfile).mockResolvedValue(admin);
+    await enterExam();
+    expect(await getCandidateScenarioExamItem(started.data!.id)).toBeNull();
+    cookieJar.set("cns_scenario_exam_session", firstToken);
+    expect((await getCandidateScenarioExamItem(started.data!.id))?.id).toBe(started.data!.id);
+  });
+
+  it("prevents opening submitted subjects, revoked codes, and terminal sessions", async () => {
+    const { session } = await enterExam();
+    const started = await startScenarioExamSubjectAction(session.subjects[0].id);
+    const itemId = started.data!.id;
+    await queryDatabase("update public.scenario_exam_code_subjects set status = 'submitted', submitted_at = now() where id = $1", [session.subjects[0].id]);
+    expect(await getCandidateScenarioExamItem(itemId)).toBeNull();
+    await queryDatabase("update public.scenario_exam_code_subjects set status = 'in_progress', submitted_at = null where id = $1", [session.subjects[0].id]);
+    await queryDatabase("update public.scenario_exam_codes set status = 'revoked' where id = (select code_id from public.scenario_exam_sessions where id = $1)", [session.id]);
+    expect(await getCandidateScenarioExamItem(itemId)).toBeNull();
+    await queryDatabase("update public.scenario_exam_codes set status = 'in_progress' where id = (select code_id from public.scenario_exam_sessions where id = $1)", [session.id]);
+    await queryDatabase("update public.scenario_exam_sessions set status = 'submitted', submitted_at = now(), terminal_reason = 'submitted' where id = $1", [session.id]);
+    expect(await getCandidateScenarioExamItem(itemId)).toBeNull();
   });
 });

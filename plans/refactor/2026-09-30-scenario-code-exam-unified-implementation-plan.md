@@ -1,9 +1,17 @@
 # Kế hoạch triển khai refactor kỳ thi bằng mã code và chuẩn hóa thư viện Scenario
 
-**Phiên bản:** 1.3 — kế hoạch đã duyệt, cập nhật tiến độ PDF và mã mã hóa
-**Ngày:** 2026-09-30
+**Phiên bản:** 1.4 — kế hoạch đã duyệt, cập nhật runtime snapshot và resume UX
+**Ngày:** 2026-09-30 (cập nhật 2026-10-01)
 **Phạm vi:** CNS Simulation Lab — Scenario Parameters, thư viện Ôn tập/Kiểm tra, ADS-B và kỳ thi bằng mã code
-**Trạng thái:** IN PROGRESS — đã có nền tảng P1/P2, workspace P3 và P4 foundation; chưa hoàn tất runtime/nộp bài/chấm điểm và acceptance P4–P8.
+**Trạng thái:** IN PROGRESS — đã có nền tảng P1/P2, workspace P3 và P4 runtime snapshot/resume UX; chưa hoàn tất checkpoint server/nộp bài/chấm điểm và acceptance P4–P8.
+
+### Cập nhật 2026-10-01 — mở và tiếp tục màn hình làm bài
+
+- Tiếp tục P4 từ nguyên nhân đã xác nhận: cấp và lưu Scenario thành công nhưng thiếu chuyển trang và thiếu thao tác tiếp tục môn đang làm.
+- Đã nối `Bắt đầu môn` và `Tiếp tục môn` tới route item riêng `/student/scenario-exams/session/items/[itemId]`; query kiểm tra role/cookie, item thuộc đúng mã, trạng thái và deadline theo database.
+- Đã hydrate sáu runtime từ snapshot đã lưu, không tải Scenario nguồn/pool. Session/item/revision quyết định định danh cục bộ; DVOR 1150A/DME 1119A xóa trạng thái từ item khác trước khi khởi tạo. MOPIENS không hydrate profile hoặc hiện công cụ authoring trong phiên thi; ADS-B nối QCMS và terminal từ snapshot.
+- Đã kiểm chứng UI/engine bằng Vitest và cách ly/snapshot/deadline bằng 12 ca PostgreSQL thật. Gate cuối trên Node 24 đạt: lint, typecheck, 136 file/802 test, production build và CodeGraph sync. Một lượt bị giới hạn thời gian công cụ; lượt có log trên đĩa đã hoàn tất exit code 0.
+- **Còn lại:** browser QA bị chặn do Computer Use thiếu Codex auth token; chưa xác minh UI production. Checkpoint trên server, submission/idempotency, finalize timeout và review/điểm vẫn chưa triển khai. Không thêm migration và không coi resume UX là đã hoàn tất acceptance P4.
 
 ### Cập nhật 2026-09-30 — ổn định luồng tạo kỳ thi/cấp mã
 
@@ -104,7 +112,7 @@ ADS-B hiện dùng Scenario legacy với sites, targetSensorId, targetLoginUser,
 | Scenario Parameters 5 module | Source/migration hiện có | Production counts đã kiểm tra | Không mở rộng v2 ngoài nhu cầu |
 | ADS-B | Adapter/parser, source/library panel và migration 0010/0012 | Backfill production được ghi trong README; parser/migration tests | Runtime snapshot và browser QA/publish theo lựa chọn giám khảo |
 | Kỳ thi cũ | Phạm vi xóa đã thực hiện | Target counts = 0 | Không dùng lại business flow |
-| Kỳ thi bằng mã | Migration 0011, action/query/session, trang admin và candidate foundation | 58 regression tests + 9 integration PostgreSQL 17.11; migration production đã ghi trong README | Runtime/nộp bài/timeout/review; browser QA/pilot/cutover chưa hoàn tất |
+| Kỳ thi bằng mã | Migration 0011, action/query/session, trang admin và candidate runtime snapshot/resume UX | Gate Node 24: 136 file/802 test, gồm 12 ca PostgreSQL cô lập; migration production trước đó đã ghi trong README | Checkpoint server/nộp bài/finalize timeout/review; browser QA/pilot/cutover chưa hoàn tất |
 
 ## 2. Mục tiêu và ranh giới
 
@@ -553,14 +561,17 @@ Cổng P3: hoàn tất workflow Nguyễn Hoàng Hải với DVOR 1150A + DME 111
 
 ### P4 — Tab Thí sinh và runtime session
 
-- Login gate role Thí sinh.
-- Chọn kỳ thi/nhập code.
-- Tạo cookie session.
-- Hiển thị đúng module đã tích.
-- Start module và random snapshot.
-- Hydrate VOR/DME/ADS-B runtime từ session snapshot.
-- Save checkpoint/submission.
-- Timer, refresh, timeout, duplicate submit.
+- [x] Login gate role Thí sinh.
+- [x] Chọn kỳ thi/nhập code.
+- [x] Tạo cookie session.
+- [x] Hiển thị đúng module đã tích.
+- [x] Start module và random snapshot.
+- [x] Hydrate sáu runtime VOR/DME/ADS-B từ session snapshot.
+- [x] Chuyển trang sau khi bắt đầu; nút Tiếp tục môn dùng item đã cấp.
+- [x] Countdown/deadline gốc, refresh không reroll và chặn đọc item của phiên khác/hết hạn.
+- [ ] Save checkpoint trên server và khôi phục đầy đủ tiến độ của mọi module.
+- [ ] Submission, finalize timeout và duplicate submit.
+- [ ] Browser QA và acceptance P4 end-to-end.
 
 Cổng P4: candidate không thể đọc scenario pool hoặc session khác; refresh không reroll.
 

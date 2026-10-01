@@ -1,4 +1,4 @@
-import type { ScenarioParametersModuleId } from "@/lib/scenario-parameters";
+import type { ScenarioParametersDefinition, ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 
 export type ScenarioExamStatus = "draft" | "open" | "locked" | "closed" | "archived";
 export type ScenarioExamAvailability = "draft" | "upcoming" | "available" | "ended" | "locked" | "closed" | "archived";
@@ -109,4 +109,19 @@ export interface CandidateScenarioExamSession {
   deadlineAt: string;
   submittedAt: string | null;
   subjects: CandidateSessionSubject[];
+}
+
+export interface CandidateScenarioExamItem {
+  id: string;
+  sessionId: string;
+  subjectId: string;
+  moduleId: ScenarioParametersModuleId;
+  examName: string;
+  candidateName: string;
+  candidateUnit: string;
+  scenarioName: string;
+  startedAt: string;
+  deadlineAt: string;
+  revision: number;
+  definition: ScenarioParametersDefinition;
 }

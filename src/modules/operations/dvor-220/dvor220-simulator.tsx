@@ -6,6 +6,7 @@ import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { useStore } from "zustand";
 import { Dvor220ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
+import { useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
 import {
   MopiensBeveledButton,
   MopiensConnectionDialog,
@@ -118,6 +119,7 @@ type Dvor220SimulatorToolScreen =
   | "history-parameter-change";
 
 export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }: Dvor220SimulatorProps = {}) {
+  const examSnapshot = useScenarioExamSnapshot();
   const [store] = useState<Dvor220StoreApi>(() => providedStore ?? createDvor220Store({ initialNowMs: trainingStartMs }));
   const storeState = useStore(store);
   const { device, snapshot } = storeState;
@@ -362,7 +364,7 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
           moduleId="dvor-220"
           enabled
           onLoaded={(definition, context) => {
-            if (context.review) dispatch({ type: "apply-scenario", scenario: definition });
+            if (context.review) return dispatch({ type: "apply-scenario", scenario: definition }).ok;
             else {
               setPreloadedScenario(definition);
               setActiveDialog("simulation-parameters");
@@ -370,8 +372,8 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
           }}
         />
       </Suspense>
-      <Dvor220ConfigPersistenceBoundary store={store} />
-      <section className={styles.simulatorTools} aria-label="Simulator Tools">
+      {!examSnapshot ? <Dvor220ConfigPersistenceBoundary store={store} /> : null}
+      {!examSnapshot ? <section className={styles.simulatorTools} aria-label="Simulator Tools">
         <button
           type="button"
           className={styles.simulatorBackButton}
@@ -408,7 +410,7 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
             Scenario Active · {device.scenario.definition?.name}
           </span>
         ) : null}
-      </section>
+      </section> : null}
       {simulatorToolScreen ? (
         <aside className={styles.simulatorToolPanel} aria-label={`${DVOR220_SCREEN_LABELS[activeSimulatorTool!]} simulator tool`}>
           <div className={styles.simulatorToolPanelHeader}>

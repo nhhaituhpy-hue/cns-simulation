@@ -72,7 +72,7 @@ export function Dvor1150PmdtLayout({
         moduleId="dvor-1150"
         enabled
         onLoaded={(definition, context) => {
-          if (context.review) initializeStudentScenario(definition);
+          if (context.review) return initializeStudentScenario(definition);
           else {
             replaceScenarioDraft(definition);
             setScenarioParametersOpen(true);

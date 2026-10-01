@@ -209,6 +209,17 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-10-01 — P4: mở và tiếp tục môn từ Scenario đã cấp
+- Xác nhận nguyên nhân: `Bắt đầu môn` đã lưu item/snapshot nhưng handler chỉ cập nhật danh sách, chưa chuyển trang; môn đang làm chỉ hiện `Scenario đã được cố định`.
+- Sau khi bắt đầu thành công, chuyển thẳng đến `/student/scenario-exams/session/items/[itemId]`. Môn `in_progress` có nút `Tiếp tục môn` dùng item đã lưu; môn đã kết thúc hoặc phiên hết hạn không có thao tác tiếp tục.
+- Route làm bài kiểm tra role Thí sinh, cookie phiên, quan hệ item/môn/mã, trạng thái và deadline bằng PostgreSQL. Runtime đọc `definition_snapshot_json`, không đọc lại Scenario nguồn hoặc pool Kiểm tra; sửa/gỡ nguồn sau khi cấp không đổi đề đang làm.
+- Nối snapshot vào cả sáu runtime: DVOR 1150, DVOR 1150A, DME 1119A, DVOR 220, DME 320 và ADS-B. PMDT dùng cơ chế khởi tạo học viên hiện có; MOPIENS không hydrate cấu hình cá nhân hoặc hiện công cụ authoring trong phiên thi; ADS-B dùng QCMS/terminal của snapshot và cache terminal theo item/revision.
+- DVOR 1150A/DME 1119A khởi tạo sạch khi đổi item để đáp án và nhật ký cũ không đi vào phiên mới. Định danh lưu cục bộ gồm session/item/revision; giữ deadline gốc khi mở lại. Countdown chặn thao tác khi hết giờ; đây chưa phải finalize timeout trên server.
+- Bổ sung regression UI cho bắt đầu → chuyển trang, resume từ dữ liệu đã lưu, lỗi cấp/lỗi mạng, trạng thái terminal, loader Strict Mode, URL không thay snapshot, runtime của sáu module và cách ly trạng thái PMDT. Integration PostgreSQL kiểm chứng cách ly hai mã cùng tài khoản, snapshot bất biến và chặn bài hết hạn/đã kết thúc.
+- Gate cuối đạt trên Node 24: `lint` → `typecheck` → **136 file / 802 test** (có **12 ca PostgreSQL thật**, không skip suite này) → production build; CodeGraph sync và diff check đạt. Auth và Next cookie/cache trong suite integration được mock; schema, transaction và SQL chạy thật trên database cô lập.
+- Thêm `tmp/**` vào ESLint ignores cho artifact/helper cục bộ, giữ kiểm tra mã nguồn và test. Một lượt gate bị công cụ dừng ở giới hạn 240 giây và đóng stdout (`EPIPE`); lượt tiếp theo lưu log trên đĩa và hoàn tất với exit code 0. Cụm PostgreSQL test tạm đã dừng sau kiểm tra.
+- **Giới hạn xác minh:** QA trên trình duyệt chưa chạy do Computer Use báo `Codex auth token is unavailable`; chưa xác minh UI production. Không thêm migration trong đợt này. P4 còn checkpoint trên server, submission/idempotency, finalize timeout; P5 còn review/điểm giám khảo. Mở lại giữ Scenario và deadline; không coi đó là đã hoàn tất khôi phục tiến độ server cho mọi module.
+
 ### 2026-09-30 — Điều tra lỗi cấu hình bảo mật mã kỳ thi sau tự triển khai
 
 - Lỗi “Thiếu cấu hình bảo mật mã kỳ thi” khi tạo mã xuất phát từ runner web không còn `SCENARIO_EXAM_CODE_ENCRYPTION_KEY`: khóa trước đó chỉ được gắn vào Docker service và bị Dokploy thay thế ở lần deploy tiếp theo.

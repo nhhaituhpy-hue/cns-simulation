@@ -6,6 +6,7 @@ import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { useStore } from "zustand";
 import { Dme320ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
+import { useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
 import { evaluateDme320Scenario } from "./domain/scenario";
 import {
   MopiensConnectionDialog,
@@ -168,6 +169,7 @@ export function Dme320Simulator({
   store: providedStore,
   initialView = "pmdt",
 }: Dme320SimulatorProps = {}) {
+  const examSnapshot = useScenarioExamSnapshot();
   const [store] = useState<Dme320StoreApi>(
     () => providedStore ?? createDme320Store({
       initialNowMs: trainingStartMs,
@@ -459,13 +461,13 @@ export function Dme320Simulator({
           moduleId="dme-320"
           enabled
           onLoaded={(definition, context) => {
-            if (context.review) dispatch({ type: "apply-scenario", scenario: definition });
+            if (context.review) return dispatch({ type: "apply-scenario", scenario: definition }).accepted;
             else loadScenario(definition);
           }}
         />
       </Suspense>
-      <Dme320ConfigPersistenceBoundary store={store} />
-      <section className={styles.simulatorTools} aria-label="Simulator Tools">
+      {!examSnapshot ? <Dme320ConfigPersistenceBoundary store={store} /> : null}
+      {!examSnapshot ? <section className={styles.simulatorTools} aria-label="Simulator Tools">
         <button
           type="button"
           className={styles.simulatorBackButton}
@@ -497,7 +499,7 @@ export function Dme320Simulator({
             Scenario Active · {simulation.scenario.definition?.name} · {scenarioEvaluation.solved ? "SOLVED" : "IN PROGRESS"} · Profile Save disabled
           </span>
         ) : null}
-      </section>
+      </section> : null}
       {viewMode === "pmdt" ? (
         <MopiensPmdtShell
           ariaLabel="MOPIENS 320 DME PMDT"

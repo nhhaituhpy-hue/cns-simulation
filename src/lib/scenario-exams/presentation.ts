@@ -1,5 +1,9 @@
 import type { ScenarioExamAvailability } from "./types";
 
+export function candidateScenarioExamItemHref(itemId: string): string {
+  return `/student/scenario-exams/session/items/${encodeURIComponent(itemId)}`;
+}
+
 export const scenarioExamAvailabilityLabel: Record<ScenarioExamAvailability, string> = {
   draft: "Bản nháp",
   upcoming: "Chưa đến giờ",
