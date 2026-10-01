@@ -1,0 +1,77 @@
+/* Shared authoring surface only; equipment screens retain their own geometry. */
+.pmdt-config-panel.selex-scenario-parameters-panel {
+  width: min(560px, calc(100vw - 24px));
+  max-height: calc(100dvh - 96px);
+}
+
+.selex-scenario-parameters-panel .pmdt-config-panel-body {
+  min-height: 0;
+  overflow-y: auto;
+  gap: 8px;
+}
+
+.selex-scenario-parameters-panel .selex-scenario-overview { display: grid; gap: 5px; padding: 8px; border: 1px solid #b0b0b0; background: #f4f4f4; font-size: 12px; }
+.selex-scenario-parameters-panel .selex-scenario-overview > label { display: grid; grid-template-columns: 150px minmax(0, 1fr); align-items: center; gap: 5px; }
+.selex-scenario-parameters-panel .selex-scenario-overview :is(input, select, textarea, button) { min-width: 0; font: inherit; }
+.selex-scenario-parameters-panel .selex-scenario-overview textarea { min-height: 46px; resize: vertical; }
+
+.selex-scenario-parameters-panel .selex-scenario-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid #b0b0b0;
+  background: #f4f4f4;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.selex-scenario-parameters-panel .selex-scenario-section-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.selex-scenario-section-heading h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 5px;
+  margin: 0;
+  color: #171717;
+  font: inherit;
+  font-weight: 700;
+}
+
+.selex-scenario-section-heading h3 small { color: #505050; font-size: 10px; font-weight: 400; }
+.selex-scenario-section-number { min-width: 18px; color: #303030; }
+.selex-scenario-parameters-panel .selex-scenario-help { margin: 0; color: #404040; font-size: 11px; line-height: 1.4; }
+.selex-scenario-diagnosis { display: grid; gap: 5px; overflow-wrap: anywhere; }
+.selex-scenario-diagnosis p { margin: 0; }
+.selex-scenario-diagnosis ol, .selex-scenario-diagnosis ul { margin: 0; padding-left: 20px; }
+.selex-scenario-permissions label { display: flex; align-items: flex-start; gap: 5px; font-weight: 400; }
+.selex-scenario-permissions input { flex: none; margin-top: 3px; }
+.selex-scenario-parameters-panel .pmdt-config-panel-footer { flex-shrink: 0; flex-wrap: wrap; }
+.selex-scenario-parameters-panel button { border-radius: 4px; }
+.selex-scenario-parameters-panel :is(button, input, select, textarea, summary):focus-visible { outline: 2px solid #245b9e; outline-offset: 1px; }
+.selex-scenario-parameters-panel button:disabled { cursor: not-allowed; opacity: .6; }
+.selex-scenario-parameters-panel .selex-scenario-section > label { display: grid; grid-template-columns: 150px minmax(0, 1fr); align-items: center; gap: 5px; }
+.selex-scenario-parameters-panel .selex-scenario-section > label:has(input[type="checkbox"]) { display: flex; }
+.selex-scenario-parameters-panel .selex-scenario-section :is(input, select, textarea) { min-width: 0; font: inherit; }
+.selex-scenario-parameters-panel .selex-scenario-section :is(input, select, textarea, button) { border: 1px solid #808080; background: #fff; color: #000; }
+.selex-scenario-parameters-panel .selex-scenario-section .pmdt-config-section-body > .pmdt-config-field { display: grid; grid-template-columns: minmax(0, 1fr) 120px; align-items: center; gap: 6px; }
+.selex-scenario-parameters-panel .pmdt-config-panel-header button { width: 24px; height: 24px; }
+.selex-scenario-parameters-panel .selex-scenario-section-heading button { min-height: 24px; padding: 2px 6px; font: inherit; }
+.selex-scenario-parameters-panel .selex-scenario-baseline { margin-top: 3px; }
+.selex-scenario-parameters-panel .selex-scenario-baseline > summary { font-weight: 700; cursor: pointer; }
+.selex-scenario-parameters-panel .selex-scenario-preview-values { display: flex; flex-wrap: wrap; gap: 5px 12px; }
+
+@media (max-height: 800px) {
+  .pmdt-config-panel.selex-scenario-parameters-panel { max-height: calc(100dvh - 64px); }
+}
+@media (max-width: 600px) {
+  .selex-scenario-parameters-panel .selex-scenario-section > label { grid-template-columns: minmax(0, 1fr); }
+}

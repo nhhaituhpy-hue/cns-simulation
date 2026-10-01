@@ -17,6 +17,13 @@ import {
   type Dvor1150BlockId,
   type Dvor1150HardwareOccurrence,
 } from "@/modules/devices/dvor-1150/block-diagram-data";
+import {
+  isScenarioFieldAllowed,
+  scenarioAllowedFieldIds,
+  validateScenarioEditPolicy,
+  type ScenarioEditPolicy,
+  type ScenarioFieldRole,
+} from "@/lib/scenario-policy";
 
 export const DVOR1150_SCENARIO_SCHEMA_VERSION = 2 as const;
 
@@ -82,6 +89,8 @@ export interface Dvor1150ScenarioDefinition {
    * an alarm cannot be cleared by altering monitor thresholds or calibration.
   */
   studentEditableFieldIds: string[];
+  /** Omitted keeps the original whitelist; Open must be chosen explicitly. */
+  editPolicy?: ScenarioEditPolicy;
   /** Optional two-stage diagnosis contract; legacy JSON remains valid. */
   diagnosis?: Dvor1150ScenarioDiagnosis;
 }
@@ -572,12 +581,41 @@ export function previewDvor1150Scenario(definition: Dvor1150ScenarioDefinition):
   return { config, snapshot: buildDvor1150Snapshot(config) };
 }
 
-/** Returns fields changed outside the examiner-authorized recovery controls. */
+/** Maintenance commands remain separate from editable configuration fields. */
+export function dvor1150ScenarioFieldRole(fieldId: string): ScenarioFieldRole {
+  if (fieldId.startsWith("simulation.") || /^transmitters\.(tx1|tx2)\.(enabled|onAir|load)$/.test(fieldId)) return "runtime";
+  if (fieldId.startsWith("security.") || fieldId.startsWith("securityAccounts.")) return "security";
+  if (fieldId.includes(".faults.") || fieldId.startsWith("monitor.rawMeasurements.") || fieldId.startsWith("overrides.")) return "instructor-only";
+  return "student-operable";
+}
+
+export function isDvor1150ScenarioStudentEditable(definition: Dvor1150ScenarioDefinition, fieldId: string): boolean {
+  return isScenarioFieldAllowed({
+    policy: definition.editPolicy,
+    legacyFieldIds: definition.studentEditableFieldIds,
+    fieldId,
+    fields: dvor1150ConfigFieldCatalog,
+    isBlocked: (id) => dvor1150ScenarioFieldRole(id) !== "student-operable",
+    roleOf: dvor1150ScenarioFieldRole,
+  });
+}
+
+export function dvor1150ScenarioAllowedFieldIds(definition: Dvor1150ScenarioDefinition): string[] {
+  return scenarioAllowedFieldIds({
+    policy: definition.editPolicy,
+    legacyFieldIds: definition.studentEditableFieldIds,
+    fields: dvor1150ConfigFieldCatalog,
+    isBlocked: (id) => dvor1150ScenarioFieldRole(id) !== "student-operable",
+    roleOf: dvor1150ScenarioFieldRole,
+  });
+}
+
+/** Setter, Apply and evaluation share the same effective recovery policy. */
 export function getDvor1150ScenarioProtectedFieldChanges(
   definition: Dvor1150ScenarioDefinition,
   currentConfiguration: Dvor1150Config,
 ): Dvor1150ScenarioProtectedFieldChange[] {
-  const editable = new Set(definition.studentEditableFieldIds);
+  const editable = new Set(dvor1150ScenarioAllowedFieldIds(definition));
   return dvor1150ConfigFieldCatalog.flatMap((field) => {
     if (editable.has(field.id)) return [];
     const expected = getDvor1150ConfigValue(definition.configuration, field.id);
@@ -815,6 +853,12 @@ export function validateDvor1150ScenarioDefinition(definition: Dvor1150ScenarioD
       issues.push("Student editable fields must not contain duplicates.");
     }
   }
+  issues.push(...validateScenarioEditPolicy({
+    policy: definition.editPolicy,
+    fields: dvor1150ConfigFieldCatalog,
+    isBlocked: (id) => dvor1150ScenarioFieldRole(id) !== "student-operable",
+    roleOf: dvor1150ScenarioFieldRole,
+  }));
   issues.push(...validateDvor1150Config(definition.configuration));
   if (definition.diagnosis !== undefined) issues.push(...validateScenarioDiagnosis(definition.diagnosis));
   return [...new Set(issues)];

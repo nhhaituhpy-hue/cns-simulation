@@ -1,5 +1,7 @@
 # Hướng dẫn xây dựng kịch bản Scenario cho DVOR 1150A
 
+> Cập nhật 01/10/2026: Scenario Parameters được tổ chức thành 5 nhóm chung với DVOR 1150 không A và DME 1119A. Đọc [hướng dẫn SELEX PMDT](selex-scenario-parameters.md) cho bố cục mới, chẩn đoán hai bước và Open/Restricted. Tài liệu dưới đây tiếp tục giải thích các tham số riêng của 1150A.
+
 Tài liệu này hướng dẫn giám khảo xây dựng, kiểm tra, xuất và vận hành một kịch bản huấn luyện **Scenario Parameters** trên SELEX DVOR 1150A PMDT Simulator.
 
 Phạm vi tài liệu là màn hình `/simulator/dvor-1150a` và schema Scenario Parameters phiên bản 1 đang được phần mềm sử dụng. Nội dung được đối chiếu với mã nguồn hiện tại tại:
@@ -107,11 +109,11 @@ Vì vậy, nhìn thấy `EXAMINER` không có nghĩa là mọi nút bên trong P
 - File sai schema, thiếu trường, sai kiểu dữ liệu hoặc có giá trị ngoài giới hạn sẽ bị từ chối.
 - Cách an toàn nhất để tạo file mẫu là chọn preset gần nhất, Export, sau đó chỉnh lại trong giao diện hoặc chỉnh JSON có kiểm soát.
 
-## 4. `Start policy and success criteria` là gì?
+## 4. Trạng thái khởi đầu và Điều kiện đạt
 
 Đây là khu vực xác định **hệ thống bắt đầu như thế nào** và **điều kiện nào chứng minh học viên đã xử lý xong**.
 
-Hai khái niệm phải được thiết kế cùng nhau:
+Hai khái niệm được đặt thành nhóm 1 và nhóm 3 riêng trong cửa sổ mới, và phải được thiết kế phù hợp với nhau:
 
 - Start policy tạo bối cảnh vận hành lúc bắt đầu.
 - Success criteria xác định trạng thái đích cần đạt.
@@ -167,7 +169,7 @@ Các ô success criteria là điều kiện được kiểm tra liên tục tron
 | `require No Sideband Vswr Alarm` | Không còn Sideband VSWR ở mức Alarm trên các monitor đang được bật. |
 | `require Monitor Bypass Cleared` | Integral Monitor Bypass phải được nhả. Alarm không được che bằng cách giữ Bypass. |
 
-Scenario chỉ chuyển sang `SOLVED` khi:
+Với kịch bản không có diagnosis, điều kiện `SOLVED` là:
 
 ```text
 mọi tiêu chí đã chọn đều đạt
@@ -175,7 +177,9 @@ VÀ
 không có trường cấu hình được bảo vệ bị thay đổi
 ```
 
-> **Cảnh báo:** Nếu bỏ chọn toàn bộ success criteria, bài không có điều kiện chứng minh hoàn thành và sẽ không đạt `SOLVED`. Luôn chọn ít nhất một tiêu chí có ý nghĩa.
+Với diagnosis hiệu chỉnh phần mềm, bài còn yêu cầu bằng chứng PMDT/lệnh và xác nhận không thay phần cứng. Với diagnosis thay module/card, PMDT checkpoint/lệnh và đúng hardware occurrence là điều kiện hoàn thành; các chỉ thị có thể chưa trở về Normal.
+
+> **Cảnh báo:** Bài chỉ đánh giá vận hành cần ít nhất một success criterion có ý nghĩa. Giữ tiêu chí phù hợp với loại bài và đọc nhóm Chẩn đoán hai bước khi có diagnosis.
 
 ### 4.3. Cách chọn tiêu chí phù hợp
 
@@ -184,18 +188,18 @@ không có trường cấu hình được bảo vệ bị thay đổi
 - Bài chuyển máy: chọn `Active Transmitter`, `Integral Monitor Normal` và `Monitor Bypass Cleared`; không nhất thiết cấp trường cấu hình cho học viên vì thao tác chuyển Main là một lệnh vận hành.
 - Không dùng Bypass cleared như tiêu chí duy nhất, vì học viên có thể chỉ nhả Bypass mà chưa khắc phục nguyên nhân lỗi.
 
-## 5. `Student recovery controls` là gì?
+## 5. Quyền chỉnh sửa của thí sinh — Student edit policy
 
-`Student recovery controls` là **danh sách trắng các trường cấu hình học viên được phép sửa trong khi Scenario đang chạy**.
+Nhóm 5 cấu hình **những trường học viên được phép sửa trong khi Scenario đang chạy**. `Restricted` dùng danh sách đã chọn; `Open` dùng mọi trường nghiệp vụ an toàn của catalog. Field runtime, bảo mật, fault injection và raw measurement vẫn được bảo vệ.
 
-Khi Scenario active:
+Khi Scenario active và dùng Restricted:
 
 - trường được chọn: học viên có thể thay đổi trong Config Draft và Apply;
 - trường không được chọn: bị khóa để bảo vệ baseline của bài;
 - nếu một trường được bảo vệ vẫn bị thay đổi bằng một đường thao tác khác, hệ thống tạo blocker và bài không được `SOLVED`;
 - alarm limit, calibration và raw measurement mặc định vẫn được bảo vệ, trừ khi giám khảo chủ động cấp quyền.
 
-### 5.1. Tại sao cần danh sách trắng?
+### 5.1. Khi nào dùng Restricted?
 
 Danh sách này ngăn học viên “xử lý” bài bằng cách làm sai bản chất, ví dụ:
 

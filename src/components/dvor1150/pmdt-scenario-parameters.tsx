@@ -19,11 +19,31 @@ import {
   validateDvor1150ScenarioDefinition,
   DVOR1150_BUILT_IN_SCENARIOS,
   evaluateDvor1150Scenario,
+  dvor1150ScenarioFieldRole,
+  isDvor1150ScenarioStudentEditable,
   type Dvor1150ConfigFieldDefinition,
   type Dvor1150ConfigValue,
   type Dvor1150ScenarioDefinition,
 } from "@/lib/dvor1150";
 import { useDvor1150PmdtStore } from "@/stores/dvor1150-pmdt-store";
+import { scenarioEditPolicyChange, scenarioEditableFieldChange } from "@/lib/scenario-policy-draft";
+import { ScenarioParametersSection, ScenarioCriteriaHelp } from "@/components/scenario/parameters/scenario-parameters-section";
+import { ScenarioDiagnosisSection } from "@/components/scenario/parameters/scenario-diagnosis-section";
+import { ScenarioEditPolicySection } from "@/components/scenario/parameters/scenario-edit-policy-section";
+
+// Native configuration stimuli; each value has one editor in the authoring UI.
+const faultFieldIds = new Set(["tx1", "tx2"].flatMap((tx) => [
+  "nominal.outputPower", "nominal.referenceModulation", "nominal.sboRfLevel",
+  "offsets.outputPowerScale", "offsets.cabinetTemperatureOffset",
+  "offsets.sideband1RfLevelScale", "offsets.sideband2RfLevelScale", "offsets.sideband3RfLevelScale", "offsets.sideband4RfLevelScale",
+].map((path) => `transmitters.${tx}.${path}`)));
+
+const criterionLabels: Record<keyof Dvor1150ScenarioDefinition["successCriteria"], string> = {
+  requireIntegralMonitorNormal: "Integral Monitor trở về Normal",
+  requireActiveTransmitter: "Có máy phát hoạt động trên antenna",
+  requireNoVswrExecutiveAlarm: "Không còn VSWR executive alarm",
+  requireMonitorBypassCleared: "Monitor Bypass đã được bỏ",
+};
 
 function ScenarioNumberField({
   field,
@@ -168,6 +188,8 @@ export function Dvor1150ScenarioParametersPanel() {
     : null;
   const fields = dvor1150ConfigFieldCatalog;
   const sections = Array.from(new Set(fields.map((field) => field.section)));
+  const baselineFields = fields.filter((field) => !faultFieldIds.has(field.id));
+  const faultFields = fields.filter((field) => faultFieldIds.has(field.id));
 
   function update(mutator: (next: Dvor1150ScenarioDefinition) => void) {
     const next = structuredClone(scenarioDraft);
@@ -221,21 +243,22 @@ export function Dvor1150ScenarioParametersPanel() {
     }
   }
 
-  return <aside className="pmdt-config-panel dvor1150-scenario-parameters-panel" aria-label="DVOR 1150 scenario parameters">
+  return <aside className="pmdt-config-panel dvor1150-scenario-parameters-panel selex-scenario-parameters-panel" aria-label="DVOR 1150 scenario parameters">
     <header className="pmdt-config-panel-header">
-      <strong>Scenario Parameters...</strong>
+      <strong>DVOR 1150 Scenario Parameters</strong>
       <button type="button" title="Close" aria-label="Close scenario parameters" onClick={() => setOpen(false)}><X aria-hidden size={13} weight="bold" /></button>
     </header>
     <div className="pmdt-config-summary dvor1150-scenario-summary">
       <span><b>SESSION:</b> {scenario.active ? `Active: ${scenario.definition?.name}` : "No active scenario"}</span>
       <span><b>LIVE RESULT:</b> {statusLabel(activeEvaluation.solved, scenario.active)}</span>
-      <span><b>PREVIEW:</b> {preview ? (previewEvaluation?.solved ? "SOLVED" : "IN PROGRESS") : "INVALID"}</span>
+      <span><b>INITIAL PREVIEW:</b> {preview ? (previewEvaluation?.solved ? "Baseline criteria met" : "Baseline criteria not met") : "INVALID"}</span>
       <span>Session-only · Reset restores scenario baseline · End restores TST</span>
     </div>
     <div className="pmdt-config-panel-body dvor1150-scenario-panel-body">
-      <section className="dvor1150-scenario-overview" aria-label="Scenario definition">
+      <section className="dvor1150-scenario-overview selex-scenario-overview" aria-label="Scenario definition">
+        <strong>Thông tin kịch bản</strong>
         <div className="dvor1150-scenario-action-row">
-          <label>Template
+          <label>Preset
             <select value="" onChange={(event) => {
               const preset = DVOR1150_BUILT_IN_SCENARIOS.find((item) => item.id === event.target.value);
               if (preset) {
@@ -251,7 +274,7 @@ export function Dvor1150ScenarioParametersPanel() {
           <button type="button" onClick={() => importInputRef.current?.click()}>Import JSON</button>
           <input ref={importInputRef} type="file" accept="application/json,.json" onChange={importScenario} hidden />
         </div>
-        <label>Scenario ID<input value={scenarioDraft.id} onChange={(event) => update((next) => { next.id = event.target.value; })} /></label>
+        <label>ID<input value={scenarioDraft.id} onChange={(event) => update((next) => { next.id = event.target.value; })} /></label>
         <label>Name<input value={scenarioDraft.name} onChange={(event) => update((next) => { next.name = event.target.value; })} /></label>
         <label>Difficulty<select value={scenarioDraft.difficulty} onChange={(event) => update((next) => { next.difficulty = event.target.value as Dvor1150ScenarioDefinition["difficulty"]; })}>
           <option value="basic">Basic</option><option value="intermediate">Intermediate</option><option value="advanced">Advanced</option>
@@ -259,73 +282,48 @@ export function Dvor1150ScenarioParametersPanel() {
         <label>Description<textarea value={scenarioDraft.description} onChange={(event) => update((next) => { next.description = event.target.value; })} /></label>
       </section>
 
-      <section className="dvor1150-scenario-policy" aria-label="Starting policy and success criteria">
-        <strong>Starting state</strong>
+      <ScenarioParametersSection number={1} title="Trạng thái khởi đầu" englishTitle="Initial state" ariaLabel="Starting policy" className="dvor1150-scenario-policy"
+        help="Trạng thái và giá trị thiết bị khi bắt đầu bài. Sửa bản nháp không thay đổi phiên đang chạy hoặc profile bình thường.">
         <label>Main transmitter<select value={scenarioDraft.startPolicy.mainTransmitterId} onChange={(event) => update((next) => { next.startPolicy.mainTransmitterId = event.target.value as "tx1" | "tx2"; })}><option value="tx1">TX1</option><option value="tx2">TX2</option></select></label>
         <label><input type="checkbox" checked={scenarioDraft.startPolicy.startLocal} onChange={(event) => update((next) => { next.startPolicy.startLocal = event.target.checked; })} /> Start in Local mode</label>
         <label><input type="checkbox" checked={scenarioDraft.startPolicy.startMonitorBypassed} onChange={(event) => update((next) => { next.startPolicy.startMonitorBypassed = event.target.checked; })} /> Start with Monitor Bypass</label>
-        <strong>Pass criteria</strong>
-        <label><input type="checkbox" checked={scenarioDraft.successCriteria.requireIntegralMonitorNormal} onChange={(event) => update((next) => { next.successCriteria.requireIntegralMonitorNormal = event.target.checked; })} /> Integral Monitor Normal</label>
-        <label><input type="checkbox" checked={scenarioDraft.successCriteria.requireActiveTransmitter} onChange={(event) => update((next) => { next.successCriteria.requireActiveTransmitter = event.target.checked; })} /> Active transmitter on antenna</label>
-        <label><input type="checkbox" checked={scenarioDraft.successCriteria.requireNoVswrExecutiveAlarm} onChange={(event) => update((next) => { next.successCriteria.requireNoVswrExecutiveAlarm = event.target.checked; })} /> No VSWR executive alarm</label>
-        <label><input type="checkbox" checked={scenarioDraft.successCriteria.requireMonitorBypassCleared} onChange={(event) => update((next) => { next.successCriteria.requireMonitorBypassCleared = event.target.checked; })} /> Monitor Bypass released</label>
-      </section>
+        <details className="selex-scenario-baseline"><summary>Cấu hình ban đầu / Scenario configuration</summary>
+          {sections.filter((section) => baselineFields.some((field) => field.section === section)).map((section) => <details key={section} className="pmdt-config-section">
+            <summary>{section}</summary><div className="pmdt-config-section-body">{baselineFields.filter((field) => field.section === section).map((field) => <ScenarioConfigField key={field.id} field={field} scenario={scenarioDraft} onScenarioChange={replaceScenarioDraft} onError={setMessage} />)}</div>
+          </details>)}
+        </details>
+      </ScenarioParametersSection>
 
-      {scenarioDraft.diagnosis ? <section className="dvor1150-scenario-policy" aria-label="Two-stage diagnostic workflow">
-        <strong>Two-stage diagnostic workflow</strong>
-        <p>{scenarioDraft.diagnosis.faultSummary}</p>
-        <span><b>PMDT result:</b> {scenarioDraft.diagnosis.diagnosticResult}</span>
-        <span><b>Disposition:</b> {scenarioDraft.diagnosis.disposition === "replace-module" ? "Replace module/card" : "Software adjustment only"}</span>
-        <span><b>Diagnostic run:</b> {scenarioDraft.diagnosis.diagnosticRun}</span>
-        <ol className="dvor1150-scenario-checkpoint-list">{scenarioDraft.diagnosis.pmdtCheckpoints.map((checkpoint) => <li key={checkpoint.id}>{checkpoint.label}</li>)}</ol>
-        <span><b>Hardware answer:</b> {scenarioDraft.diagnosis.expectedHardware.length > 0 ? scenarioDraft.diagnosis.expectedHardware.map((target) => target.assemblyId ?? target.diagramOccurrenceId).join(", ") : "No replacement"}</span>
-        <span><b>Manual:</b> {scenarioDraft.diagnosis.manualReferences.join(" · ")}</span>
-      </section> : null}
-
-      <section className="dvor1150-scenario-policy" aria-label="Student recovery controls">
-        <strong>Student recovery controls</strong>
-        <p>Only selected physical controls are available to the student. Monitor limits, alarm enablement, offsets, and calibration stay protected.</p>
-        {sections.map((section) => <details key={`student-controls-${section}`} className="pmdt-config-section">
-          <summary>{section}</summary>
-          <div className="pmdt-config-section-body">
-            {fields.filter((field) => field.section === section).map((field) => <label key={field.id}>
-              <input
-                type="checkbox"
-                checked={scenarioDraft.studentEditableFieldIds.includes(field.id)}
-                onChange={(event) => update((next) => {
-                  next.studentEditableFieldIds = event.target.checked
-                    ? [...next.studentEditableFieldIds, field.id]
-                    : next.studentEditableFieldIds.filter((id) => id !== field.id);
-                })}
-              /> {field.label}
-            </label>)}
-          </div>
+      <ScenarioParametersSection number={2} title="Lỗi đưa vào" englishTitle="Fault injection" ariaLabel="Fault injection editor" className="dvor1150-scenario-policy"
+        help="DVOR 1150 tạo triệu chứng bằng các giá trị cấu hình native: công suất, điều chế, hệ số sideband và nhiệt độ. Đây không phải fault flag mới.">
+        {scenarioDraft.diagnosis ? <p>{scenarioDraft.diagnosis.faultSummary}</p> : null}
+        {["tx1", "tx2"].map((tx) => <details key={tx} className="pmdt-config-section">
+          <summary>Tham số tạo triệu chứng — {tx.toUpperCase()}</summary><div className="pmdt-config-section-body">{faultFields.filter((field) => field.id.startsWith(`transmitters.${tx}.`)).map((field) => <ScenarioConfigField key={field.id} field={field} scenario={scenarioDraft} onScenarioChange={replaceScenarioDraft} onError={setMessage} />)}</div>
         </details>)}
-      </section>
+      </ScenarioParametersSection>
 
-      <section className="dvor1150-scenario-preview" aria-label="Scenario preview">
-        <strong>Preview</strong>
-        <span>Active TX: <b>{preview?.snapshot.activeTransmitter?.toUpperCase() ?? "NONE"}</b></span>
-        <span>Integral Monitor: <b>{preview?.snapshot.data.monitorIntegral.normal ? "NORMAL" : "ALARM"}</b></span>
-        <span>VSWR executive: <b>{preview?.snapshot.data.maintenanceAlerts.find((item) => item.label === "Sideband Antenna VSWR")?.indicator === "red" ? "ALARM" : "CLEAR"}</b></span>
-      </section>
+      <ScenarioParametersSection number={3} title="Điều kiện đạt" englishTitle="Success criteria" ariaLabel="Success criteria editor" className="dvor1150-scenario-policy"
+        help="Kết quả vận hành cần đạt; không tự xác định trường được phép sửa hoặc thao tác bắt buộc.">
+        <ScenarioCriteriaHelp disposition={scenarioDraft.diagnosis?.disposition} />
+        {Object.entries(scenarioDraft.successCriteria).map(([key, value]) => <label key={key}><input type="checkbox" checked={value} onChange={(event) => update((next) => { next.successCriteria[key as keyof Dvor1150ScenarioDefinition["successCriteria"]] = event.target.checked; })} /> {criterionLabels[key as keyof typeof criterionLabels]}</label>)}
+      </ScenarioParametersSection>
 
-      <section className="dvor1150-scenario-configurations" aria-label="Scenario configuration parameters">
-        <strong>Scenario configuration</strong>
-        <p>These values become the student&apos;s starting state. They are not saved to the normal DVOR 1150 configuration profile.</p>
-        {sections.map((section) => <details key={section} className="pmdt-config-section" open={section === "Station" || section === "Transmitter Nominal" || section === "Monitor General"}>
-          <summary>{section}</summary>
-          <div className="pmdt-config-section-body">
-            {fields.filter((field) => field.section === section).map((field) => <ScenarioConfigField
-              key={field.id}
-              field={field}
-              scenario={scenarioDraft}
-              onScenarioChange={replaceScenarioDraft}
-              onError={setMessage}
-            />)}
-          </div>
-        </details>)}
-      </section>
+      <ScenarioDiagnosisSection className="dvor1150-scenario-policy" diagnosis={scenarioDraft.diagnosis}
+        hardwareAnswers={scenarioDraft.diagnosis?.expectedHardware.map((target) => `${target.assemblyId ?? target.diagramOccurrenceId} · ${target.blockId} · ${target.diagramOccurrenceId}`)} />
+
+      <ScenarioEditPolicySection className="dvor1150-scenario-policy" mode={scenarioDraft.editPolicy?.mode ?? "restricted"} fields={fields}
+        isAllowed={(id) => isDvor1150ScenarioStudentEditable(scenarioDraft, id)} isOperable={(id) => dvor1150ScenarioFieldRole(id) === "student-operable"}
+        onModeChange={(mode) => update((next) => { Object.assign(next, scenarioEditPolicyChange(next, mode)); })}
+        onFieldChange={(id, checked) => update((next) => { Object.assign(next, scenarioEditableFieldChange(next, id, checked)); })} />
+
+      <ScenarioParametersSection title="Xem trước trạng thái khởi đầu" englishTitle="Initial preview" ariaLabel="Scenario preview" className="dvor1150-scenario-preview"
+        help="Xem trước bản nháp; không phải kết quả bài làm đã hoàn thành quy trình chẩn đoán.">
+        <div className="selex-scenario-preview-values">
+          <span>Active TX: <b>{preview?.snapshot.activeTransmitter?.toUpperCase() ?? "NONE"}</b></span>
+          <span>Integral Monitor: <b>{preview?.snapshot.data.monitorIntegral.normal ? "NORMAL" : "ALARM"}</b></span>
+          <span>VSWR executive: <b>{preview?.snapshot.data.maintenanceAlerts.find((item) => item.label === "Sideband Antenna VSWR")?.indicator === "red" ? "ALARM" : "CLEAR"}</b></span>
+        </div>
+      </ScenarioParametersSection>
     </div>
     <p className={validationIssues.length > 0 ? "dvor1150-scenario-message dvor1150-scenario-message--error" : "dvor1150-scenario-message"} role={validationIssues.length > 0 ? "alert" : "status"}>
       {message ?? (validationIssues[0] ?? "Scenario is structurally valid. Review the preview, then Apply Scenario.")}

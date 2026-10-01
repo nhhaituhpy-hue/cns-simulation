@@ -6,6 +6,7 @@ import {
   createDefaultDvor1150ScenarioDefinition,
   defaultDvor1150Config,
   getDvor1150ScenarioProtectedFieldChanges,
+  isDvor1150ScenarioStudentEditable,
   type Dvor1150ScenarioDefinition,
   type Dvor1150ScenarioRuntime,
   formatDvor1150Timestamp,
@@ -578,7 +579,7 @@ export function createDvor1150PmdtStore(
         if (state.securityLevel < 3 || !state.config.simulation.local) return;
         if (
           state.scenario.active
-          && !state.scenario.definition?.studentEditableFieldIds.includes(fieldId)
+          && (!state.scenario.definition || !isDvor1150ScenarioStudentEditable(state.scenario.definition, fieldId))
         ) {
           set({ lastCommand: "Scenario control locked: examiner recovery controls only" });
           return;

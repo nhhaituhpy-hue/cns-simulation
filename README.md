@@ -209,6 +209,25 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-10-01 — Thống nhất Scenario Parameters cho ba thiết bị SELEX PMDT
+
+- Triển khai kế hoạch 1.1 đã được duyệt cho DVOR 1150 không A, DVOR 1150A và DME 1119A: Trạng thái khởi đầu → Lỗi đưa vào → Điều kiện đạt → Chẩn đoán hai bước → Quyền chỉnh sửa; metadata ở đầu, preview/footer ở cuối.
+- Tạo section, diagnosis presenter và policy controls dùng chung; giữ editor fault/criterion, schema và hardware occurrence riêng của từng model. Đổi nhãn kết luận thành `Kết luận PMDT mong đợi`, hiện checkpoint/lệnh và vai trò của tiêu chí vận hành theo disposition.
+- Thêm optional `editPolicy` cho non-A schema v2; giữ whitelist legacy/preset và import v1→v2. Nối resolver vào ô cấu hình, Simulation Parameters, setter, Apply và protected-field comparison; không đổi thuật toán vật lý/chẩn đoán.
+- Giữ danh sách Restricted khi chuyển qua Open và ưu tiên đúng explicit policy khi nó khác whitelist legacy. Kết quả phiên active của 1150A/DME được nối với evidence theo HUD hiện có; preview baseline được giải thích riêng.
+- Hướng dẫn: [SELEX Scenario Parameters](docs/simulators/selex-scenario-parameters.md). Kế hoạch/checklist: [triển khai ba thiết bị](plans/refactor/2026-10-01-scenario-parameters-organization-unification-plan.md).
+- Người dùng đã xem bản dev, chấp nhận giao diện tiếng Việt và yêu cầu commit/push. Gate Node 24: lint, typecheck, **16 file / 113 test trực tiếp liên quan**, production build **84/84** đạt. Test mới kiểm tra policy non-A v1/v2, guard security/Local/setter/Apply, explicit whitelist khác legacy, round-trip Open/Restricted trên cả ba panel và đánh giá đúng policy của snapshot kỳ thi.
+- Không sửa navigation/AppShell/MOPIENS hoặc test setup nên không chạy lại toàn suite cục bộ. Toàn suite tiếp tục là gate của GitHub Actions. Dev log tham số login đã được tắt; `.env.local`, PostgreSQL local, log và script kiểm tra dưới `tmp/` không thuộc gói Git.
+- Runtime sau bản này phải hiểu optional policy non-A trước khi dùng revision Open. Nếu đã lưu/giao bài Open, rollback UI phải giữ parser/resolver tương thích; không tự sửa snapshot/revision cũ để quay về runtime không hỗ trợ policy.
+- Tại thời điểm chuẩn bị commit: diff/CodeGraph đạt; phát hành tới `deploy/main` đã được chấp thuận. CI/Dokploy và health bản mới được theo dõi sau push. Người dùng đã review dev; agent chưa có browser kết nối để QA trực quan production.
+
+### 2026-10-01 — Khắc phục đăng nhập bản xem trước cục bộ
+
+- Người dùng mở bản dev nhưng đăng nhập báo hệ thống xác thực đang bận. Xác định lỗi `DATABASE_URL is not configured`: `.env.local` còn cấu hình Supabase, chưa có kết nối PostgreSQL mà auth hiện tại sử dụng.
+- Dùng PostgreSQL 17.11 có sẵn, tạo database local `cns_selex_preview` chỉ nghe `127.0.0.1:5433`; áp dụng 13 migration hiện có và cấu hình `.env.local` (file được ignore). Tài khoản admin local dùng hash scrypt; không ghi credential vào source/tài liệu.
+- Tắt `logging.serverFunctions` trong Next config để tham số đăng nhập không xuất hiện trong log dev, xử lý log cục bộ trước đó và khởi động lại dev.
+- Xác minh `/api/health` trả database OK; gọi login action thật bằng fixture local tạm thời nhận SUCCESS/session cookie, ba trang simulator trả 200 và có toolbar authoring với phiên xác thực. Fixture đã được dọn. Đây là bằng chứng HTTP/auth/SSR; người dùng sau đó đã review dev và duyệt giao diện.
+
 ### 2026-10-01 — Đưa phần nhận định sự cố lên trước simulator
 - Theo yêu cầu thí sinh xác định sự cố trước khi thao tác phần mềm, đưa ba ô `Vị trí / sự cố nghi ngờ`, `Căn cứ chẩn đoán`, `Hướng khắc phục` lên trên simulator, giữ thứ tự trái sang phải này.
 - Chỉnh vị trí JSX và khoảng cách của phần kết luận. Kiểm tra: ESLint targeted và `git diff --check` đạt; bố cục là thay đổi UI tĩnh theo workflow dự án.

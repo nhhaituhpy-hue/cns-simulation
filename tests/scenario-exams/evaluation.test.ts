@@ -7,7 +7,8 @@ import { dme1119aHardwareOccurrenceKey } from "@/modules/devices/dme-1119a/block
 import { createDefaultDvor220ScenarioDefinition, previewDvor220Scenario } from "@/modules/operations/dvor-220/domain/scenario";
 import { createDefaultDme320ScenarioDefinition } from "@/modules/operations/dme-320/domain/scenario";
 import { previewDme320Scenario } from "@/modules/operations/dme-320/domain/engine";
-import { createReferenceModulationScenario, previewDvor1150Scenario } from "@/lib/dvor1150/scenario";
+import { createReferenceModulationScenario, createTx1FaultScenario, previewDvor1150Scenario } from "@/lib/dvor1150/scenario";
+import { dvor1150HardwareOccurrenceKey } from "@/modules/devices/dvor-1150/block-diagram-data";
 
 describe("snapshot-based exam technical evaluation", () => {
   it("requires PMDT evidence and the exact LVPS TX1 card for SOLVED", () => {
@@ -60,5 +61,24 @@ describe("snapshot-based exam technical evaluation", () => {
     const definition = createReferenceModulationScenario();
     const preview = previewDvor1150Scenario(definition);
     expect(evaluateScenarioExamResult("dvor-1150", definition, { checkpoint: { config: preview.config } }).status).toBe("IN_PROGRESS");
+  });
+
+  it("uses the non-A assigned policy for protection without weakening PMDT or exact hardware checks", () => {
+    const assigned = createTx1FaultScenario();
+    const changed = structuredClone(previewDvor1150Scenario(assigned).config);
+    changed.station.stationDescription = "Candidate changed station label";
+    const diagnosis = assigned.diagnosis!;
+    const payload = {
+      checkpoint: { config: changed },
+      visitedViewIds: diagnosis.pmdtCheckpoints.map((checkpoint) => checkpoint.viewId),
+      acceptedActionControlIds: diagnosis.requiredActionControlIds,
+      scenarioHardwareSelection: diagnosis.expectedHardware.map(dvor1150HardwareOccurrenceKey),
+    };
+    expect(evaluateScenarioExamResult("dvor-1150", assigned, payload)).toMatchObject({ status: "IN_PROGRESS", solved: false });
+    const open = { ...structuredClone(assigned), editPolicy: { mode: "open" as const } };
+    expect(evaluateScenarioExamResult("dvor-1150", open, payload)).toMatchObject({ status: "SOLVED", solved: true });
+    expect(evaluateScenarioExamResult("dvor-1150", open, { ...payload, scenarioHardwareSelection: ["wrong-occurrence"] }).solved).toBe(false);
+    expect(evaluateScenarioExamResult("dvor-1150", open, { ...payload, visitedViewIds: [] }).solved).toBe(false);
+    expect(evaluateScenarioExamResult("dvor-1150", assigned, payload).solved).toBe(false);
   });
 });

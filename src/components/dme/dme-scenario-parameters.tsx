@@ -23,6 +23,11 @@ import {
 } from "@/lib/dme1119a";
 import { extractDme1119aConfig, hydrateDme1119aData } from "@/lib/simulator-config/dme-1119a";
 import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
+import { dme1119aScenarioFieldRole } from "@/lib/dme1119a/scenario";
+import { scenarioEditPolicyChange, scenarioEditableFieldChange } from "@/lib/scenario-policy-draft";
+import { ScenarioParametersSection, ScenarioCriteriaHelp } from "@/components/scenario/parameters/scenario-parameters-section";
+import { ScenarioDiagnosisSection } from "@/components/scenario/parameters/scenario-diagnosis-section";
+import { ScenarioEditPolicySection } from "@/components/scenario/parameters/scenario-edit-policy-section";
 
 const faultKinds = [
   ["tx-power-loss", "TX power loss"],
@@ -239,6 +244,10 @@ export function Dme1119aScenarioParametersPanel() {
   const scenario = useDmePmdtStore((state) => state.scenario);
   const scenarioDraft = useDmePmdtStore((state) => state.scenarioDraft);
   const data = useDmePmdtStore((state) => state.data);
+  const attemptEvents = useDmePmdtStore((state) => state.attemptEvents);
+  const actionHistory = useDmePmdtStore((state) => state.actionHistory);
+  const hardwareSelection = useDmePmdtStore((state) => state.scenarioHardwareSelection);
+  const hardwareDispositionConfirmed = useDmePmdtStore((state) => state.scenarioHardwareDispositionConfirmed);
   const replaceScenarioDraft = useDmePmdtStore((state) => state.replaceScenarioDraft);
   const applyScenario = useDmePmdtStore((state) => state.applyScenario);
   const restoreScenario = useDmePmdtStore((state) => state.restoreScenario);
@@ -261,7 +270,12 @@ export function Dme1119aScenarioParametersPanel() {
   const previewEvaluation = preview
     ? evaluateDme1119aScenario({ active: true, definition: scenarioDraft, startedAt: null }, preview.data)
     : null;
-  const evaluation = evaluateDme1119aScenario(scenario, data);
+  const evaluation = evaluateDme1119aScenario(scenario, data, {
+    visitedViewIds: attemptEvents.map((event) => event.viewId),
+    acceptedActionControlIds: actionHistory.filter((event) => event.accepted && event.controlId).map((event) => event.controlId as string),
+    selectedHardwareOccurrenceKeys: hardwareSelection,
+    hardwareDispositionConfirmed,
+  });
   const previewPower = preview?.data.integralData.find((row) => row.label === "Tx Power");
   const previewDelay = preview?.data.integralData.find((row) => row.label === "Delay");
   const previewVswr = preview?.data.integralData.find((row) => row.label === "VSWR");
@@ -310,7 +324,7 @@ export function Dme1119aScenarioParametersPanel() {
     if (applyScenario()) setMessage(`Scenario applied: ${scenarioDraft.name}`);
   }
 
-  return <aside className="pmdt-config-panel dme1119a-scenario-parameters-panel" aria-label="DME 1119A scenario parameters">
+  return <aside className="pmdt-config-panel dme1119a-scenario-parameters-panel selex-scenario-parameters-panel" aria-label="DME 1119A scenario parameters">
     <header className="pmdt-config-panel-header">
       <strong>DME 1119A Scenario Parameters</strong>
       <button type="button" title="Close" aria-label="Close scenario parameters" onClick={() => setOpen(false)}><X aria-hidden size={13} weight="bold" /></button>
@@ -323,7 +337,8 @@ export function Dme1119aScenarioParametersPanel() {
       {scenario.active ? <div className="dme1119a-scenario-check-list" aria-label="Scenario check results">{evaluation.checks.map((check) => <span key={check.id} data-passed={check.passed}>{check.passed ? "✓" : "✕"} {check.label}: {check.detail}</span>)}</div> : null}
     </div>
     <div className="pmdt-config-panel-body dme1119a-scenario-panel-body">
-      <section className="dme1119a-scenario-section" aria-label="Scenario definition">
+      <section className="dme1119a-scenario-section selex-scenario-overview" aria-label="Scenario definition">
+        <strong>Thông tin kịch bản</strong>
         <div className="dme1119a-scenario-action-row">
           <label>Preset <select defaultValue="" onChange={(event) => { selectPreset(event.target.value); event.currentTarget.value = ""; }}><option value="" disabled>Load built-in scenario…</option>{DME1119A_BUILT_IN_SCENARIOS.map((preset) => <option key={preset.id} value={preset.id}>{preset.label}</option>)}</select></label>
           <button type="button" onClick={handleExport}>Export JSON</button>
@@ -336,70 +351,50 @@ export function Dme1119aScenarioParametersPanel() {
         <label><span>Description</span><textarea value={scenarioDraft.description} onChange={(event) => update((next) => { next.description = event.target.value; })} /></label>
       </section>
 
-      <section className="dme1119a-scenario-section" aria-label="Starting policy">
-        <strong>Starting policy</strong>
+      <ScenarioParametersSection number={1} title="Trạng thái khởi đầu" englishTitle="Initial state" ariaLabel="Starting policy" className="dme1119a-scenario-section"
+        help="Trạng thái và giá trị thiết bị khi bắt đầu bài. Sửa bản nháp không thay đổi phiên đang chạy hoặc profile bình thường.">
         <label><span>Main transmitter</span><select value={scenarioDraft.startPolicy.mainTransmitterId} onChange={(event) => update((next) => { next.startPolicy.mainTransmitterId = event.target.value as "tx1" | "tx2"; })}><option value="tx1">TX1</option><option value="tx2">TX2</option></select></label>
         <label><input type="checkbox" checked={scenarioDraft.startPolicy.startLocal} onChange={(event) => update((next) => { next.startPolicy.startLocal = event.target.checked; })} /> Start Local</label>
         <label><input type="checkbox" checked={scenarioDraft.startPolicy.integralMonitorBypassed} onChange={(event) => update((next) => { next.startPolicy.integralMonitorBypassed = event.target.checked; })} /> Integral monitor bypass</label>
         <label><input type="checkbox" checked={scenarioDraft.startPolicy.standbyMonitorBypassed} onChange={(event) => update((next) => { next.startPolicy.standbyMonitorBypassed = event.target.checked; })} /> Standby monitor bypass</label>
         <label><span>Ident mode</span><select value={scenarioDraft.startPolicy.identMode} onChange={(event) => update((next) => { next.startPolicy.identMode = event.target.value as "normal" | "off" | "continuous"; })}><option value="normal">Normal</option><option value="off">Off</option><option value="continuous">Continuous</option></select></label>
-      </section>
+        <details className="selex-scenario-baseline"><summary>Cấu hình ban đầu / Scenario configuration</summary>
+          {sections.map((section) => <details key={section} className="pmdt-config-section"><summary>{section}</summary><div className="pmdt-config-section-body">{fields.filter((field) => field.section === section).map((field) => <ScenarioConfigField key={field.id} field={field} scenario={scenarioDraft} onScenarioChange={replaceScenarioDraft} onError={setMessage} />)}</div></details>)}
+        </details>
+      </ScenarioParametersSection>
 
-      {scenarioDraft.diagnosis ? <section className="dme1119a-scenario-section" aria-label="Two-stage diagnostic workflow">
-        <strong>Two-stage diagnostic workflow</strong>
-        <p>{scenarioDraft.diagnosis.faultSummary}</p>
-        <span><b>PMDT result:</b> {scenarioDraft.diagnosis.diagnosticResult}</span>
-        <span><b>Disposition:</b> {scenarioDraft.diagnosis.disposition === "replace-module" ? "Replace module/card" : "Software adjustment only"}</span>
-        <span><b>Diagnostic run:</b> {scenarioDraft.diagnosis.diagnosticRun}</span>
-        <ol className="dme1119a-scenario-checkpoint-list">{scenarioDraft.diagnosis.pmdtCheckpoints.map((checkpoint) => <li key={checkpoint.id}>{checkpoint.label}</li>)}</ol>
-        <span><b>Hardware answer:</b> {scenarioDraft.diagnosis.expectedHardware.length > 0 ? scenarioDraft.diagnosis.expectedHardware.map((target) => target.assemblyId ?? target.diagramOccurrenceId).join(", ") : "No replacement"}</span>
-        <span><b>Manual:</b> {scenarioDraft.diagnosis.manualReferences.join(" · ")}</span>
-      </section> : null}
-
-      <section className="dme1119a-scenario-section" aria-label="Fault injection editor">
-        <div className="dme1119a-scenario-section-heading"><strong>Fault injection editor</strong><button type="button" onClick={() => update((next) => { next.faultInjections.push(createFault("tx-power-loss", `fault-${next.faultInjections.length + 1}`)); })}>Add fault</button></div>
+      <ScenarioParametersSection number={2} title="Lỗi đưa vào" englishTitle="Fault injection" ariaLabel="Fault injection editor" className="dme1119a-scenario-section"
+        help="Người soạn đưa lỗi vào thiết bị. Mỗi lỗi giữ nguyên loại, tham số và máy phát/monitor đích của DME."
+        actions={<button type="button" onClick={() => update((next) => { next.faultInjections.push(createFault("tx-power-loss", "fault-" + (next.faultInjections.length + 1))); })}>Add fault</button>}>
         {scenarioDraft.faultInjections.length === 0 ? <p className="pmdt-config-empty">No physical fault injected. Use the configuration editor for baseline changes.</p> : scenarioDraft.faultInjections.map((fault, index) => <FaultEditor key={fault.id || index} fault={fault} onChange={(mutate) => update((next) => { mutate(next.faultInjections[index]); })} onRemove={() => update((next) => { next.faultInjections.splice(index, 1); })} />)}
-      </section>
+      </ScenarioParametersSection>
 
-      <section className="dme1119a-scenario-section" aria-label="Success criteria editor">
-        <div className="dme1119a-scenario-section-heading"><strong>Success criteria</strong><button type="button" onClick={() => update((next) => { next.successCriteria.push(createCriterion("monitor-normal", `criterion-${next.successCriteria.length + 1}`)); })}>Add criterion</button></div>
+      <ScenarioParametersSection number={3} title="Điều kiện đạt" englishTitle="Success criteria" ariaLabel="Success criteria editor" className="dme1119a-scenario-section"
+        help="Kết quả vận hành cần đạt; không tự xác định trường được phép sửa hoặc thao tác bắt buộc."
+        actions={<button type="button" onClick={() => update((next) => { next.successCriteria.push(createCriterion("monitor-normal", "criterion-" + (next.successCriteria.length + 1))); })}>Add criterion</button>}>
+        <ScenarioCriteriaHelp disposition={scenarioDraft.diagnosis?.disposition} />
         {scenarioDraft.successCriteria.map((criterion, index) => <CriterionEditor key={criterion.id || index} criterion={criterion} onChange={(mutate) => update((next) => { mutate(next.successCriteria[index]); })} onRemove={() => update((next) => { next.successCriteria.splice(index, 1); })} />)}
-      </section>
+      </ScenarioParametersSection>
 
-      <section className="dme1119a-scenario-section" aria-label="Student recovery controls">
-        <strong>Student edit policy</strong>
-        <label><span>Edit policy</span><select
-          value={scenarioDraft.editPolicy?.mode ?? "restricted"}
-          onChange={(event) => update((next) => {
-            next.editPolicy = event.target.value === "open"
-              ? { mode: "open" }
-              : { mode: "restricted", allowedFieldIds: [...next.studentEditableFieldIds] };
-          })}
-        >
-          <option value="open">Open — all safe catalog fields</option>
-          <option value="restricted">Restricted — selected fields only</option>
-        </select></label>
-        <p>{scenarioDraft.editPolicy?.mode === "open"
-          ? "New scenarios are open by default. Read-only, session, security and live routing controls remain protected by the simulator."
-          : "Only selected configuration fields can be changed by the student. Alarm limits, voting, transfer and calibration remain protected unless intentionally selected."}</p>
-        {sections.map((section) => <details key={section} className="pmdt-config-section"><summary>{section}</summary><div className="pmdt-config-section-body">{fields.filter((field) => field.section === section).map((field) => <label key={field.id}><input type="checkbox" checked={isDme1119aScenarioStudentEditable(scenarioDraft, field.id)} disabled={scenarioDraft.editPolicy?.mode === "open"} onChange={(event) => update((next) => { const nextIds = event.target.checked ? [...next.studentEditableFieldIds, field.id] : next.studentEditableFieldIds.filter((id) => id !== field.id); next.studentEditableFieldIds = nextIds; next.editPolicy = { mode: "restricted", allowedFieldIds: [...nextIds] }; })} /> {field.label}</label>)}</div></details>)}
-      </section>
+      <ScenarioDiagnosisSection className="dme1119a-scenario-section" diagnosis={scenarioDraft.diagnosis} fields={fields} taskTargets={scenarioDraft.taskTargets}
+        hardwareAnswers={scenarioDraft.diagnosis?.expectedHardware.map((target) => [target.assemblyId ?? target.diagramOccurrenceId, target.blockId, target.diagramOccurrenceId].join(" · "))} />
 
-      <section className="dme1119a-scenario-preview" aria-label="Scenario preview">
-        <strong>Preview from TST</strong>
-        <span>Active TX: <b>TX{preview?.data.monitorTransmitterStatus.antennaSelect ?? "--"}</b></span>
-        <span>Delay: <b>{previewDelay?.mon1Value ?? "--"} {previewDelay?.unit ?? ""}</b></span>
-        <span>Tx Power: <b>{previewPower?.mon1Value ?? "--"} {previewPower?.unit ?? ""}</b></span>
-        <span>VSWR: <b>{previewVswr?.mon1Value ?? "--"} {previewVswr?.unit ?? ""}</b></span>
-        <span>Monitor state: <b>{preview?.data.monitors.integral.normal ? "NORMAL" : "ALARM"}</b></span>
+      <ScenarioEditPolicySection className="dme1119a-scenario-section" mode={scenarioDraft.editPolicy?.mode ?? "restricted"} fields={fields}
+        isAllowed={(id) => isDme1119aScenarioStudentEditable(scenarioDraft, id)} isOperable={(id) => dme1119aScenarioFieldRole(id) === "student-operable"}
+        onModeChange={(mode) => update((next) => { Object.assign(next, scenarioEditPolicyChange(next, mode)); })}
+        onFieldChange={(id, checked) => update((next) => { Object.assign(next, scenarioEditableFieldChange(next, id, checked)); })} />
+
+      <ScenarioParametersSection title="Xem trước trạng thái khởi đầu" englishTitle="Initial preview" ariaLabel="Scenario preview" className="dme1119a-scenario-preview"
+        help="Xem trước bản nháp; không phải kết quả bài làm đã hoàn thành quy trình chẩn đoán.">
+        <div className="selex-scenario-preview-values">
+          <span>Active TX: <b>TX{preview?.data.monitorTransmitterStatus.antennaSelect ?? "--"}</b></span>
+          <span>Delay: <b>{previewDelay?.mon1Value ?? "--"} {previewDelay?.unit ?? ""}</b></span>
+          <span>Tx Power: <b>{previewPower?.mon1Value ?? "--"}</b></span>
+          <span>VSWR: <b>{previewVswr?.mon1Value ?? "--"}</b></span>
+          <span>Monitor state: <b>{preview?.data.monitors.integral.normal ? "NORMAL" : "ALARM"}</b></span>
+        </div>
         {previewEvaluation && !previewEvaluation.correctable ? <span className="pmdt-config-summary-warning">Scenario may be uncorrectable with the configured student controls.</span> : null}
-      </section>
-
-      <section className="dme1119a-scenario-section" aria-label="Scenario configuration parameters">
-        <strong>Scenario configuration</strong>
-        <p>Values are applied to a session-only TST baseline and never overwrite the persistent DME profile.</p>
-        {sections.map((section) => <details key={section} className="pmdt-config-section" open={section === "Channel assignment" || section === "Station equipment" || section === "Transmitter nominal"}><summary>{section}</summary><div className="pmdt-config-section-body">{fields.filter((field) => field.section === section).map((field) => <ScenarioConfigField key={field.id} field={field} scenario={scenarioDraft} onScenarioChange={replaceScenarioDraft} onError={setMessage} />)}</div></details>)}
-      </section>
+      </ScenarioParametersSection>
     </div>
     <p className={validationIssues.length > 0 || Boolean(previewEvaluation?.solved) ? "dme1119a-scenario-message dme1119a-scenario-message--error" : "dme1119a-scenario-message"} role={validationIssues.length > 0 || Boolean(previewEvaluation?.solved) ? "alert" : "status"}>{message ?? (validationIssues[0] ?? (previewEvaluation?.solved ? "Starting state is already solved; add a fault or change the success criteria before Apply." : "Scenario is structurally valid. Review the preview, then Apply Scenario."))}</p>
     <footer className="pmdt-config-panel-footer dme1119a-scenario-footer">

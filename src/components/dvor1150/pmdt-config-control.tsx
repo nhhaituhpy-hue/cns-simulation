@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   dvor1150ConfigFieldCatalog,
   getDvor1150ConfigValue,
+  isDvor1150ScenarioStudentEditable,
   parseDvor1150ConfigInput,
   type Dvor1150ConfigFieldType,
 } from "@/lib/dvor1150";
@@ -43,7 +44,7 @@ export function Dvor1150ConfigControl({
   const [draftValue, setDraftValue] = useState(formatValue(value, digits ?? field?.digits));
   const [editing, setEditing] = useState(false);
   const scenarioAllowsField = !scenario.active || Boolean(
-    scenario.definition?.studentEditableFieldIds.includes(fieldId),
+    scenario.definition && isDvor1150ScenarioStudentEditable(scenario.definition, fieldId),
   );
   const canEdit = security >= 3 && local && scenarioAllowsField && Boolean(field);
 

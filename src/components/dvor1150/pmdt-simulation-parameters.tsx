@@ -4,6 +4,7 @@ import { X } from "@phosphor-icons/react/dist/csr/X";
 import { useDvor1150PmdtStore } from "@/stores/dvor1150-pmdt-store";
 import {
   dvor1150ConfigFieldCatalog,
+  dvor1150ScenarioAllowedFieldIds,
   type Dvor1150ConfigFieldDefinition,
 } from "@/lib/dvor1150";
 import { Dvor1150ConfigControl } from "./pmdt-config-control";
@@ -54,7 +55,7 @@ export function Dvor1150SimulationParametersPanel() {
   const applyConfigChanges = useDvor1150PmdtStore((state) => state.applyConfigChanges);
   const resetConfigDraft = useDvor1150PmdtStore((state) => state.resetConfigDraft);
   const canEdit = securityLevel >= 3 && !loginDialogOpen && local;
-  const permittedScenarioFields = new Set(scenario.definition?.studentEditableFieldIds ?? []);
+  const permittedScenarioFields = new Set(scenario.definition ? dvor1150ScenarioAllowedFieldIds(scenario.definition) : []);
   const fields = dvor1150ConfigFieldCatalog.filter((field) => (
     !field.id.startsWith("transmitters.tx2.nominal.")
     && !field.id.endsWith("nominal.identCode")

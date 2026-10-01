@@ -58,8 +58,11 @@ yarn-error.log*
 !/docs/simulators/
 /docs/simulators/*
 !/docs/simulators/dvor-1150a-scenario-authoring.md
+!/docs/simulators/selex-scenario-parameters.md
 /pdf_extracts/
 /tmp/
+/output/selex-scenario-dev.out.log
+/output/selex-scenario-dev.err.log
 /History/
 
 # Wrangler & local database mocks
