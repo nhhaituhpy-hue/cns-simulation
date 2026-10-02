@@ -20,7 +20,7 @@ export function cnsButtonClass({
   disabled = false,
 }: ButtonClassOptions = {}): string {
   const base =
-    "inline-flex items-center justify-center gap-1.5 rounded-[8px] font-medium text-[13px] leading-none transition duration-150 ease-out select-none " +
+    "inline-flex items-center justify-center gap-1.5 rounded-[8px] font-medium text-[13px] leading-none whitespace-nowrap shrink-0 transition duration-150 ease-out select-none " +
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111a24] " +
     "disabled:pointer-events-none disabled:opacity-40 disabled:cursor-not-allowed";
 

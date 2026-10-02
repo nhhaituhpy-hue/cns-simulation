@@ -2,7 +2,7 @@
 
 import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
-import { NotePencil } from "@phosphor-icons/react/dist/csr/NotePencil";
+import { Play } from "@phosphor-icons/react/dist/csr/Play";
 import { Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { X } from "@phosphor-icons/react/dist/csr/X";
@@ -69,7 +69,7 @@ const scenarioColumns = [
   { id: "number", label: "STT", className: "w-16" },
   { id: "title", label: "Tiêu đề" },
   { id: "difficulty", label: "Mức độ", className: "w-28" },
-  { id: "actions", label: "Thao tác", className: "w-28 text-right" },
+  { id: "actions", label: "Thao tác", className: "w-32 text-right" },
 ];
 
 export type OperationsReviewScenarioRow = {
@@ -370,17 +370,17 @@ export function OperationsReviewDashboard({
                     <td className="w-28 px-4 py-3.5 align-middle">
                       <DifficultyBadge difficulty={scenario.difficulty} />
                     </td>
-                    <td className="w-28 px-4 py-3.5 text-right align-middle">
+                    <td className="w-32 px-4 py-3.5 text-right align-middle">
                       <ButtonLink
                         href={scenario.href}
                         variant="primary"
                         size="sm"
                         aria-label={`Bắt đầu bài ${copy.shortName}: ${scenario.title}`}
                         title="Bắt đầu bài thực hành"
-                        className="inline-flex items-center gap-1.5"
+                        className="inline-flex items-center gap-1.5 whitespace-nowrap"
                       >
-                        <NotePencil aria-hidden size={14} weight="bold" />
-                        <span>Bắt đầu</span>
+                        <Play aria-hidden size={12} weight="fill" className="shrink-0 translate-x-[0.5px]" />
+                        <span className="whitespace-nowrap font-medium">Bắt đầu</span>
                       </ButtonLink>
                     </td>
                   </>

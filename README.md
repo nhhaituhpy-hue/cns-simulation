@@ -216,10 +216,10 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
   - Container chuẩn `max-w-[1280px]` căn giữa với breadcrumb điều hướng `Danh sách thiết bị` và icon `ArrowLeft`.
   - Header chuyên nghiệp với eyebrow `Ôn tập / Thực hành`, tiêu đề H1 sắc nét và mô tả rõ ràng.
   - Cụm điều khiển góc phải tích hợp `CountBadgePill` hiển thị số bài thi và nút `Button` primary "Thêm kịch bản" cho giám khảo.
-  - Thay thế bảng dữ liệu sang giao diện tối tinh tế: STT badge bo 6px, tiêu đề kịch bản rõ ràng, tag mức độ `DifficultyBadge` tương phản cao, và nút `ButtonLink` "Bắt đầu" primary với icon `NotePencil` chuyên nghiệp.
+  - Thay thế bảng dữ liệu sang giao diện tối tinh tế: STT badge bo 6px, tiêu đề kịch bản rõ ràng, tag mức độ `DifficultyBadge` tương phản cao, và nút `ButtonLink` "Bắt đầu" primary với icon `Play` (fill tam giác sắc nét, cân bằng quang học), chống ngắt dòng (`whitespace-nowrap`), mở rộng cột thao tác `w-32` hiển thị hoàn hảo trên 1 dòng đơn.
   - Chuẩn hóa modal dialog "Chọn kịch bản ôn tập" với card bo 12px viền mờ `border-white/[0.12] bg-[#141f2a] shadow-2xl`, thanh cuộn `cns-scrollbar`, danh sách checkbox bo 8px hover mượt mà và nút hành động chuẩn `Button`.
 - Tinh chỉnh `ScenarioListFrame` (`src/components/ui/exam-workspace.tsx`) và `ScenarioDataTable` (`src/components/ui/scenario-data-table.tsx`): thanh tìm kiếm bo 8px, thead viền mờ 6% uppercase tracking 0.06em, các nút phân trang bo 8px (`size-8` 32px).
-- Nâng cấp `ButtonLinkProps` trong `src/components/ui/button.tsx` hỗ trợ đầy đủ các thuộc tính của thẻ HTML anchor (`<a>`).
+- Nâng cấp `ButtonLinkProps` trong `src/components/ui/button.tsx` hỗ trợ đầy đủ các thuộc tính của thẻ HTML anchor (`<a>`), đồng thời thêm thuộc tính `whitespace-nowrap shrink-0` vào `cnsButtonClass` bảo đảm mọi nút trong hệ thống không bị rớt dòng.
 - **Kiểm tra chất lượng & Regression Guard:**
   - `npm run lint`: đạt (0 lỗi).
   - `npm run typecheck`: đạt (0 lỗi).
