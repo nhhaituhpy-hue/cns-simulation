@@ -209,6 +209,28 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-10-02 — Chuẩn hóa Design Tokens cho phân hệ Ôn tập ADS-B (Student Dashboard)
+
+- Đồng bộ triệt để hệ thống Design Tokens cho trang Ôn tập ADS-B (`/student/ads-b`):
+  - **Khung giao diện & Điều hướng ([`page.tsx`](file:///C:/Test/cns-simulator/src/app/student/ads-b/page.tsx), [`student-dashboard.tsx`](file:///C:/Test/cns-simulator/src/modules/devices/adsb/student-dashboard.tsx)):**
+    - Đưa container trang từ toàn màn hình (`w-full max-w-none`) về khung chuẩn `max-w-[1280px]` căn giữa đồng bộ với các trang thiết bị khác.
+    - Bổ sung breadcrumb điều hướng `← Danh sách thiết bị` (`href="/review"`).
+    - Khối Header chuẩn 3 tầng typography: Eyebrow `Ôn tập / Thực hành`, H1 26-28px font-semibold text `#E6EDF5`, mô tả dịu mắt `#9AA9BC`, cùng chip pill đếm bài bo tròn `rounded-full border border-white/[0.08] bg-white/[0.05] px-2.5 text-[12px] font-medium text-[#9AA9BC]`.
+  - **Bảng kịch bản ôn tập:**
+    - Cột STT dạng badge vuông vát góc 6px `size-7 rounded-[6px] border border-white/[0.08] bg-white/[0.04] text-[12px] font-medium text-[#9AA9BC]`.
+    - Tiêu đề kịch bản 14px font-semibold text `#E6EDF5`, mô tả ngắn 12px `#9AA9BC`.
+    - Mức độ kịch bản chuẩn hóa bằng component `<DifficultyBadge />`.
+    - Cột Phạm vi hiển thị rõ số site và cảm biến với icon `MapPin` và `Monitor` xám dịu, số tabular-nums.
+    - Cột Thao tác nâng cấp thành nút CTA **"Bắt đầu"** (`ButtonLink` variant primary, size sm) với icon `Play` điền tam giác sắc nét, thay thế nút icon nhỏ trước đây.
+  - **Trạng thái nạp ([`student-loading.tsx`](file:///C:/Test/cns-simulator/src/components/qcms/student-loading.tsx)):**
+    - Chuẩn hóa skeleton loading về nền tối `#141f2a` và `max-w-[1280px]`, loại bỏ các class `bg-white` gây chói mắt.
+- **Kiểm tra chất lượng & Regression Guard:**
+  - `npm run lint`: đạt (0 lỗi).
+  - `npm run typecheck`: đạt (0 lỗi).
+  - Vitest: **144 file / 881 test passed** (100% pass, 0 fail).
+  - `npm run build`: biên dịch sản xuất thành công 84 dynamic routes.
+  - Đã chụp ảnh xác minh trực quan ở độ phân giải 1440px và 1280px.
+
 ### 2026-10-02 — Chuẩn hóa Design Tokens toàn diện cho phân hệ ADS-B
 
 - Đồng bộ triệt để hệ thống Design Tokens (màu sắc HSL tối, typography 3 tầng, border mờ tinh tế, border-radius 6/8/12px) cho toàn bộ phân hệ ADS-B:

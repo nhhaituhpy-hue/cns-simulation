@@ -3,37 +3,26 @@ export function StudentDashboardLoading() {
     <section
       aria-label="Đang tải danh sách bài thực hành"
       aria-busy="true"
-      className="w-full max-w-none px-4 py-7 sm:px-6 lg:px-8 lg:py-9 xl:px-10 2xl:px-12"
+      className="space-y-6"
     >
-      <div className="border-b border-[var(--border)] pb-6">
-        <div className="h-3 w-40 animate-pulse rounded bg-[var(--surface-muted)] motion-reduce:animate-none" />
-        <div className="mt-3 h-9 w-80 max-w-full animate-pulse rounded bg-[var(--surface-muted)] motion-reduce:animate-none" />
-        <div className="mt-4 h-4 w-full max-w-2xl animate-pulse rounded bg-[var(--surface-muted)] motion-reduce:animate-none" />
+      <div className="border-b border-white/[0.08] pb-6">
+        <div className="h-3 w-40 animate-pulse rounded bg-white/[0.05] motion-reduce:animate-none" />
+        <div className="mt-3 h-8 w-80 max-w-full animate-pulse rounded bg-white/[0.05] motion-reduce:animate-none" />
+        <div className="mt-3 h-4 w-full max-w-2xl animate-pulse rounded bg-white/[0.05] motion-reduce:animate-none" />
       </div>
-      <div className="mt-6 h-12 w-80 max-w-full animate-pulse rounded-lg bg-[var(--surface-muted)] motion-reduce:animate-none" />
-      <div className="mt-7">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <div className="h-5 w-52 animate-pulse rounded bg-[var(--surface-muted)] motion-reduce:animate-none" />
-            <div className="mt-2 h-4 w-96 max-w-full animate-pulse rounded bg-[var(--surface-muted)] motion-reduce:animate-none" />
-          </div>
-          <div className="h-6 w-16 animate-pulse rounded bg-[var(--surface-muted)] motion-reduce:animate-none" />
-        </div>
-      </div>
-      <div className="mt-3 overflow-hidden rounded-xl border border-[var(--border)] bg-white shadow-[var(--shadow-card)]">
-        <div className="divide-y divide-[var(--border)]">
+      <div className="overflow-hidden rounded-[12px] border border-white/[0.08] bg-[#141f2a] shadow-sm">
+        <div className="divide-y divide-white/[0.05]">
           {Array.from({ length: 3 }, (_, index) => (
             <div
               key={index}
-              className="grid min-h-28 grid-cols-[2.5rem_minmax(0,1fr)] gap-4 p-4 sm:p-5 lg:grid-cols-[2.5rem_minmax(0,1fr)_10rem]"
+              className="grid min-h-24 grid-cols-[2.5rem_minmax(0,1fr)] gap-4 p-4 sm:p-5 lg:grid-cols-[2.5rem_minmax(0,1fr)_10rem]"
             >
-              <div className="size-9 animate-pulse rounded-md bg-[var(--surface-muted)] motion-reduce:animate-none" />
+              <div className="size-8 animate-pulse rounded-[6px] bg-white/[0.05] motion-reduce:animate-none" />
               <div>
-                <div className="h-5 w-2/5 animate-pulse rounded bg-[var(--surface-muted)] motion-reduce:animate-none" />
-                <div className="mt-3 h-4 w-4/5 animate-pulse rounded bg-[var(--surface-muted)] motion-reduce:animate-none" />
-                <div className="mt-4 h-4 w-1/3 animate-pulse rounded bg-[var(--surface-muted)] motion-reduce:animate-none" />
+                <div className="h-5 w-2/5 animate-pulse rounded bg-white/[0.05] motion-reduce:animate-none" />
+                <div className="mt-3 h-4 w-4/5 animate-pulse rounded bg-white/[0.05] motion-reduce:animate-none" />
               </div>
-              <div className="col-span-2 h-10 animate-pulse rounded-md bg-[var(--surface-muted)] motion-reduce:animate-none lg:col-span-1" />
+              <div className="col-span-2 h-9 animate-pulse rounded-[8px] bg-white/[0.05] motion-reduce:animate-none lg:col-span-1" />
             </div>
           ))}
         </div>
