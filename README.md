@@ -363,6 +363,14 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 - Production đã chạy migration bằng runner có advisory lock/checksum: 0010/0011 apply thành công; ADS-B source = 17, ADS-B exam library = 0, bảng code/session = 0; health database 200, web/postgres healthy.
 - Kiểm tra local đạt: focused tests, ESLint, typecheck, production build, `git diff --check` và CodeGraph sync. Database rehearsal local chưa chạy vì máy không có Docker/psql và Chocolatey/winget bị chặn bởi quyền Administrator.
 
+### 2026-10-02 — Tinh chỉnh giao diện trang Kịch bản DVOR 1150A chuẩn Design Tokens
+- Chuẩn hóa hệ thống Design Tokens trong `theme-tokens.css`: thang radius (6px tag/checkbox, 8px button/input/pill, 12px card), màu chữ phân tầng (#E6EDF5, #9AA9BC, #6B7A8D), viền mờ 6–8%, scrollbar mảnh bo tròn `cns-scrollbar`.
+- Xây dựng component `Button` và `ButtonLink` dùng chung tại `src/components/ui/button.tsx`: chuẩn hóa 3 cấp độ (Primary nền xanh ATTECH, Secondary/Ghost viền mờ 12%, Danger ghost đỏ); 2 kích thước (32px cho hàng bảng, 36px cho hành động trang); bo góc 8px; đầy đủ hover, active, focus-visible ring 2px, disabled.
+- Tinh chỉnh khối `Phân chia thư viện`: header cân xứng trái/phải; số lượng kịch bản chuyển thành chip pill (24px, radius 999px); checkbox 16px bo 4px căn giữa; scrollbar mảnh; sticky action bar ở đáy card với nút "Lưu thay đổi" (disabled mờ khi chưa có thay đổi, sáng lên khi có thay đổi).
+- Tinh chỉnh trang quản lý kịch bản `DVOR 1150A`: container max 1280px căn giữa; header H1 (28-32px) + mô tả max-width 640px; cụm tiêu đề thiết bị cân xứng với chip trạng thái nhỏ (chấm xanh + chữ); bảng kịch bản hàng cao 56–64px; tên kịch bản 14px font-medium; slug kỹ thuật dùng font JetBrains Mono 12px màu mờ dịu mắt; badge độ khó phân màu; status "Đã lưu" chấm xanh 6px + chữ 12px; cột Thao tác căn phải thẳng hàng.
+- Tinh chỉnh AppShell Navbar: chiều cao nav 60px; tab đang chọn ("Kịch bản") dùng pill bo 8px nền xanh mờ, chữ xanh sáng; các mục khác chữ phụ, hover sáng; mobile drawer khớp vị trí top 60px.
+- Kiểm tra đạt: 11/11 file test layout (44/44 tests), `npm run lint` (0 errors, 0 warnings), `npm run typecheck`, và `npm run build` (84/84 static pages).
+
 ### 2026-09-30 — Giới hạn vùng chọn kịch bản trong thư viện
 - Giới hạn bảng phân chia kịch bản vào thư viện Ôn tập/Kiểm tra ở vùng cao khoảng 5 dòng; danh sách dài có thể cuộn dọc và vẫn hỗ trợ cuộn ngang trên màn hình hẹp.
 - Giữ hàng tiêu đề cùng checkbox “Chọn tất cả” cố định khi cuộn; thêm nhãn vùng và khả năng focus bằng bàn phím cho vùng danh sách.

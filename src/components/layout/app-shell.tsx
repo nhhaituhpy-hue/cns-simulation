@@ -354,7 +354,7 @@ function TopNavigation({
   return (
     <nav
       aria-label="Điều hướng chính"
-      className="absolute left-1/2 hidden min-w-0 -translate-x-1/2 items-center gap-1 xl:flex"
+      className="absolute left-1/2 hidden min-w-0 -translate-x-1/2 items-center gap-1.5 xl:flex"
     >
       {visibleNavigationItems(role).map((item) => {
         const active = isItemActive(pathname, item);
@@ -365,14 +365,14 @@ function TopNavigation({
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={[
-              "rounded-full px-3 py-2 text-xs font-semibold transition-[background-color,color,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 motion-reduce:transition-none",
+              "rounded-[8px] px-3.5 py-1.5 text-[13px] font-medium transition duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-2 motion-reduce:transition-none",
               active
                 ? inverted
-                  ? "bg-white/14 text-white"
-                  : "bg-[var(--accent-muted)] text-[var(--accent)]"
+                  ? "bg-white/15 text-white"
+                  : "border border-[#0369a1]/25 bg-[#0369a1]/15 text-[#38a3dc]"
                 : inverted
-                  ? "text-white/70 hover:bg-white/8 hover:text-white"
-                  : "text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]",
+                  ? "border border-transparent text-white/70 hover:bg-white/8 hover:text-white"
+                  : "border border-transparent text-[#9AA9BC] hover:bg-white/[0.04] hover:text-[#E6EDF5]",
             ].join(" ")}
           >
             {item.label}
@@ -446,7 +446,7 @@ export function AppShell({ children, currentUser }: AppShellProps) {
 
       <header
         className={[
-          "sticky top-0 z-30 h-[4.5rem] border-b print:hidden",
+          "sticky top-0 z-30 h-[3.75rem] border-b print:hidden",
           isLanding
             ? "border-white/10 bg-[#061b25]/95 text-white backdrop-blur-xl"
             : "border-[var(--border)] bg-[var(--background)] text-[var(--foreground)]",
@@ -578,7 +578,7 @@ export function AppShell({ children, currentUser }: AppShellProps) {
 
       {mobileNavigationOpen ? (
         <div
-          className="fixed inset-0 top-[4.5rem] z-40 xl:hidden"
+          className="fixed inset-0 top-[3.75rem] z-40 xl:hidden"
           onKeyDown={(event) => {
             if (event.key === "Escape") {
               setMobileNavigationOpen(false);

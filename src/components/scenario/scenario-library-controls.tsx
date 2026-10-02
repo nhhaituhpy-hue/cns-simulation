@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 import type { ScenarioLibraryKind } from "@/lib/scenario-libraries";
 import type { StoredScenarioParameters } from "@/lib/scenario-parameters-storage";
+import { Button, CountBadgePill } from "@/components/ui/button";
 
 const LIBRARY_KINDS = ["practice", "exam"] as const satisfies readonly ScenarioLibraryKind[];
 
@@ -27,14 +28,8 @@ const LIBRARY_LABELS: Record<ScenarioLibraryKind, string> = {
 
 const EMPTY_SELECTION: LibrarySelection = { practice: [], exam: [] };
 
-function buttonClass(primary = false) {
-  return `inline-flex min-h-10 items-center justify-center rounded border px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-50 ${primary
-    ? "border-[var(--accent)] bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]"
-    : "border-[var(--border-strong)] bg-transparent text-[var(--text-primary)] hover:bg-[var(--surface-muted)]"}`;
-}
-
 function checkboxClass() {
-  return "size-4 accent-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2";
+  return "size-4 rounded-[4px] accent-[#0369a1] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-1 focus-visible:ring-offset-[#101922] transition-shadow";
 }
 
 function sameIds(left: readonly string[], right: readonly string[]) {
@@ -67,7 +62,7 @@ function SelectAllCheckbox({
   }, [indeterminate]);
 
   return (
-    <label className="inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 text-center">
+    <label className="inline-flex min-h-7 cursor-pointer items-center justify-center gap-1.5 text-center select-none">
       <input
         ref={inputRef}
         type="checkbox"
@@ -77,7 +72,7 @@ function SelectAllCheckbox({
         onChange={(event) => onChange(event.currentTarget.checked)}
         className={checkboxClass()}
       />
-      <span className="text-[10px] font-semibold normal-case tracking-normal text-[var(--text-secondary)]">
+      <span className="text-[11px] font-medium normal-case tracking-normal text-[#9AA9BC]">
         Chọn tất cả
       </span>
     </label>
@@ -260,42 +255,49 @@ export function ScenarioLibraryControls({
 
   return (
     <section
-      className="mt-5 overflow-hidden rounded border border-[var(--border)] bg-[var(--surface-subtle)]"
+      className="mt-6 overflow-hidden rounded-[12px] border border-white/[0.08] bg-[#141f2a] shadow-sm"
       aria-label="Phân chia thư viện kịch bản"
     >
-      <header className="flex flex-col gap-2 border-b border-[var(--border)] px-4 py-4 sm:flex-row sm:items-end sm:justify-between sm:px-5">
+      <header className="flex flex-col gap-3 border-b border-white/[0.06] bg-[#141f2a] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div>
-          <h2 className="text-sm font-bold text-[var(--text-primary)]">
+          <h2 className="text-[16px] font-semibold text-[#E6EDF5]">
             Phân chia thư viện
           </h2>
-          <p className="mt-1 text-xs leading-5 text-[var(--text-muted)]">
+          <p className="mt-1 text-[13px] leading-relaxed text-[#9AA9BC]">
             Chọn thư viện cho từng kịch bản rồi lưu một lần.
           </p>
         </div>
-        <p
+        <div
           aria-live="polite"
-          className="text-xs tabular-nums text-[var(--text-secondary)]"
+          className="flex flex-wrap items-center gap-2"
         >
-          {available.length} kịch bản · Ôn tập {selectedCounts.practice} · Kiểm
-          tra {selectedCounts.exam}
-        </p>
+          <CountBadgePill>
+            <span className="font-semibold text-[#E6EDF5]">{available.length}</span> kịch bản
+          </CountBadgePill>
+          <CountBadgePill>
+            Ôn tập <span className="font-semibold text-[#E6EDF5]">{selectedCounts.practice}</span>
+          </CountBadgePill>
+          <CountBadgePill>
+            Kiểm tra <span className="font-semibold text-[#E6EDF5]">{selectedCounts.exam}</span>
+          </CountBadgePill>
+        </div>
       </header>
 
       <div
         role="region"
         aria-label="Danh sách kịch bản để phân chia thư viện"
         tabIndex={0}
-        className="max-h-[26rem] overflow-auto"
+        className="cns-scrollbar max-h-[26rem] overflow-auto"
       >
         <table className="w-full min-w-[680px] border-collapse text-left text-sm">
           <caption className="sr-only">
             Phân chia kịch bản vào thư viện Ôn tập và thư viện Kiểm tra
           </caption>
-          <thead className="sticky top-0 z-10 bg-[var(--surface-muted)] text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--text-secondary)]">
+          <thead className="sticky top-0 z-10 border-b border-white/[0.06] bg-[#101922] text-[11px] font-semibold uppercase tracking-[0.06em] text-[#9AA9BC]">
             <tr>
               <th
                 scope="col"
-                className="border-b border-[var(--border)] px-4 py-3 sm:px-5"
+                className="px-5 py-3 sm:px-6"
               >
                 Tên kịch bản
               </th>
@@ -308,9 +310,9 @@ export function ScenarioLibraryControls({
                   <th
                     key={kind}
                     scope="col"
-                    className="w-44 border-b border-[var(--border)] px-3 py-2 text-center"
+                    className="w-44 px-3 py-2 text-center"
                   >
-                    <span className="block">{LIBRARY_LABELS[kind]}</span>
+                    <span className="block font-semibold text-[#E6EDF5]">{LIBRARY_LABELS[kind]}</span>
                     <SelectAllCheckbox
                       kind={kind}
                       checked={allSelected}
@@ -323,12 +325,12 @@ export function ScenarioLibraryControls({
               })}
             </tr>
           </thead>
-          <tbody className="divide-y divide-[var(--border)]">
+          <tbody className="divide-y divide-white/[0.05]">
             {loading ? (
               <tr>
                 <td
                   colSpan={3}
-                  className="px-5 py-8 text-center text-xs text-[var(--text-muted)]"
+                  className="px-6 py-8 text-center text-[13px] text-[#6B7A8D]"
                 >
                   Đang tải trạng thái thư viện…
                 </td>
@@ -337,7 +339,7 @@ export function ScenarioLibraryControls({
               <tr>
                 <td
                   colSpan={3}
-                  className="px-5 py-8 text-center text-xs text-[var(--text-muted)]"
+                  className="px-6 py-8 text-center text-[13px] text-[#6B7A8D]"
                 >
                   Chưa có kịch bản để phân chia thư viện.
                 </td>
@@ -346,16 +348,16 @@ export function ScenarioLibraryControls({
               available.map((scenario) => (
                 <tr
                   key={scenario.id}
-                  className="transition-colors hover:bg-[var(--surface-subtle)]"
+                  className="transition-colors duration-150 hover:bg-white/[0.035]"
                 >
                   <th
                     scope="row"
-                    className="px-4 py-3 align-middle sm:px-5"
+                    className="px-5 py-3.5 align-middle sm:px-6 font-normal"
                   >
-                    <span className="block font-semibold text-[var(--text-primary)]">
+                    <span className="block text-[14px] font-medium text-[#E6EDF5]">
                       {scenario.name}
                     </span>
-                    <span className="mt-1 block font-mono text-[10px] text-[var(--text-muted)]">
+                    <span className="mt-1 block font-mono text-[12px] text-[#6B7A8D]">
                       {scenario.scenarioId}
                     </span>
                   </th>
@@ -364,7 +366,7 @@ export function ScenarioLibraryControls({
                       key={kind}
                       className="px-3 py-2 text-center align-middle"
                     >
-                      <label className="inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded border border-transparent transition-colors hover:border-[var(--accent-border)] hover:bg-[var(--accent-muted)]">
+                      <label className="inline-flex size-8 cursor-pointer items-center justify-center rounded-[6px] border border-transparent transition-colors hover:border-white/[0.12] hover:bg-white/[0.06]">
                         <input
                           type="checkbox"
                           checked={selected[kind].includes(scenario.id)}
@@ -385,32 +387,32 @@ export function ScenarioLibraryControls({
         </table>
       </div>
 
-      <footer className="flex flex-col gap-3 border-t border-[var(--border)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-        <div className="min-h-5 text-xs leading-5">
+      <footer className="sticky bottom-0 z-10 flex flex-col gap-3 border-t border-white/[0.07] bg-[#101922]/95 px-5 py-3 backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="min-h-5 text-[13px] leading-5">
           {error ? (
-            <p role="alert" className="text-[#b91c1c]">
+            <p role="alert" className="text-[#f87171]">
               {error}
             </p>
           ) : notice ? (
-            <p role="status" className="text-[#166534]">
+            <p role="status" className="text-[#4ade80]">
               {notice}
             </p>
           ) : (
-            <p className="text-[var(--text-muted)]">
+            <p className="text-[#6B7A8D]">
               {changedKinds.length > 0
                 ? "Có thay đổi chưa lưu."
                 : "Các thay đổi sẽ áp dụng sau khi nhấn lưu."}
             </p>
           )}
         </div>
-        <button
-          type="button"
-          className={buttonClass(true)}
+        <Button
+          variant="primary"
+          size="md"
           disabled={loading || busy || available.length === 0 || changedKinds.length === 0}
           onClick={() => void saveAll()}
         >
           {busy ? "Đang lưu…" : "Lưu thay đổi"}
-        </button>
+        </Button>
       </footer>
     </section>
   );

@@ -156,3 +156,87 @@
 [data-theme="dark"] .theme-toggle-moon {
   display: block;
 }
+
+/* ==========================================================================
+   CNS DESIGN SYSTEM TOKENS (Authoring & Dashboard Refinement)
+   ========================================================================== */
+:root {
+  /* Radius scale */
+  --cns-radius-sm: 6px;   /* Checkbox, tags, badges */
+  --cns-radius-md: 8px;   /* Buttons, inputs, pills */
+  --cns-radius-lg: 12px;  /* Cards, panels, modals */
+
+  /* Text hierarchy (Dark mode defaults) */
+  --cns-text-primary: #E6EDF5;
+  --cns-text-secondary: #9AA9BC;
+  --cns-text-muted: #6B7A8D;
+
+  /* Card and Panel Surface tokens */
+  --cns-surface-card: #15222e;
+  --cns-surface-card-subtle: #111a24;
+  --cns-surface-table-header: #101922;
+  --cns-surface-table-hover: rgba(255, 255, 255, 0.035);
+
+  /* Borders & Dividers */
+  --cns-border-subtle: rgba(255, 255, 255, 0.07);
+  --cns-divider: rgba(255, 255, 255, 0.05);
+  --cns-btn-ghost-border: rgba(255, 255, 255, 0.12);
+
+  /* Button Brand ATTECH & Semantic */
+  --cns-btn-primary-bg: #0369a1;
+  --cns-btn-primary-hover: #075985;
+  --cns-btn-primary-active: #0c4a6e;
+  --cns-focus-ring: #0284c7;
+
+  /* Badges & Chips */
+  --cns-badge-pill-bg: rgba(255, 255, 255, 0.06);
+  --cns-badge-pill-border: rgba(255, 255, 255, 0.08);
+
+  /* Difficulty tags */
+  --cns-diff-adv-bg: rgba(249, 115, 22, 0.14);
+  --cns-diff-adv-text: #fb923c;
+  --cns-diff-adv-border: rgba(249, 115, 22, 0.28);
+
+  --cns-diff-med-bg: rgba(234, 179, 8, 0.14);
+  --cns-diff-med-text: #facc15;
+  --cns-diff-med-border: rgba(234, 179, 8, 0.28);
+
+  --cns-diff-basic-bg: rgba(34, 197, 94, 0.14);
+  --cns-diff-basic-text: #4ade80;
+  --cns-diff-basic-border: rgba(34, 197, 94, 0.28);
+
+  /* Status tag */
+  --cns-status-saved-bg: rgba(34, 197, 94, 0.12);
+  --cns-status-saved-text: #4ade80;
+  --cns-status-saved-dot: #22c55e;
+
+  /* Danger Ghost */
+  --cns-danger-ghost-text: #f87171;
+  --cns-danger-ghost-border: rgba(248, 113, 113, 0.25);
+  --cns-danger-ghost-hover-bg: rgba(239, 68, 68, 0.12);
+  --cns-danger-ghost-hover-border: rgba(248, 113, 113, 0.4);
+}
+
+/* Custom slender rounded scrollbar */
+.cns-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+
+.cns-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.cns-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cns-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
+}
+
+.cns-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
