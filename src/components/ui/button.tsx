@@ -70,13 +70,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 );
 Button.displayName = "Button";
 
-export interface ButtonLinkProps extends LinkProps {
+export interface ButtonLinkProps
+  extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps>,
+    LinkProps {
   variant?: ButtonVariant;
   size?: ButtonSize;
   className?: string;
   children?: React.ReactNode;
-  target?: string;
-  rel?: string;
 }
 
 export const ButtonLink = forwardRef<HTMLAnchorElement, ButtonLinkProps>(

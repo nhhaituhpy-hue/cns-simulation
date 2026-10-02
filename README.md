@@ -209,6 +209,24 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-10-02 — Chuẩn hóa Design Tokens cho toàn bộ trang Ôn tập / Thực hành
+
+- Áp dụng triệt để hệ thống Design Tokens (màu sắc HSL tối, font typography 3 tầng, border mờ tinh tế, border-radius 6/8/12px) từ trang Kịch bản tác giả sang toàn bộ 6 trang Ôn tập / Thực hành (`/review/[moduleId]`): DVOR 1150, DVOR 1150A, DME 1119A, DVOR 220, DME 320 và ADS-B.
+- Tinh chỉnh `OperationsReviewDashboard` (`src/modules/training/operations-review-dashboard.tsx`):
+  - Container chuẩn `max-w-[1280px]` căn giữa với breadcrumb điều hướng `Danh sách thiết bị` và icon `ArrowLeft`.
+  - Header chuyên nghiệp với eyebrow `Ôn tập / Thực hành`, tiêu đề H1 sắc nét và mô tả rõ ràng.
+  - Cụm điều khiển góc phải tích hợp `CountBadgePill` hiển thị số bài thi và nút `Button` primary "Thêm kịch bản" cho giám khảo.
+  - Thay thế bảng dữ liệu sang giao diện tối tinh tế: STT badge bo 6px, tiêu đề kịch bản rõ ràng, tag mức độ `DifficultyBadge` tương phản cao, và nút `ButtonLink` "Bắt đầu" primary với icon `NotePencil` chuyên nghiệp.
+  - Chuẩn hóa modal dialog "Chọn kịch bản ôn tập" với card bo 12px viền mờ `border-white/[0.12] bg-[#141f2a] shadow-2xl`, thanh cuộn `cns-scrollbar`, danh sách checkbox bo 8px hover mượt mà và nút hành động chuẩn `Button`.
+- Tinh chỉnh `ScenarioListFrame` (`src/components/ui/exam-workspace.tsx`) và `ScenarioDataTable` (`src/components/ui/scenario-data-table.tsx`): thanh tìm kiếm bo 8px, thead viền mờ 6% uppercase tracking 0.06em, các nút phân trang bo 8px (`size-8` 32px).
+- Nâng cấp `ButtonLinkProps` trong `src/components/ui/button.tsx` hỗ trợ đầy đủ các thuộc tính của thẻ HTML anchor (`<a>`).
+- **Kiểm tra chất lượng & Regression Guard:**
+  - `npm run lint`: đạt (0 lỗi).
+  - `npm run typecheck`: đạt (0 lỗi).
+  - Toàn bộ test suite Vitest: **144 file / 881 test passed** (100% pass, 0 fail).
+  - `npm run build`: biên dịch sản xuất thành công 84 dynamic routes.
+  - Giữ nguyên 100% logic API `/api/review-scenarios`, cấu trúc URL tham số và quyền hạn người dùng.
+
 ### 2026-10-01 — Nhật ký chức năng và minh chứng khối/card trong bài nộp
 
 - Theo phương án đã duyệt, trang giám khảo hiển thị `Tiêu chí đạt / Success criteria` trực tiếp và nhật ký theo tên chức năng/nút trên phần mềm; bổ sung thời gian, giá trị chọn, trạng thái trước → sau và lý do từ chối. Lệnh được chấp nhận dùng nền xanh nhẹ; kết quả đạt vẫn lấy từ evaluator của Scenario/bài nộp.

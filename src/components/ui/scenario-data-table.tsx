@@ -70,14 +70,14 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
 
   return (
     <div>
-      <div className="flex flex-col gap-3 border-b border-[var(--border)] bg-[var(--surface-subtle)] p-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+      <div className="flex flex-col gap-3 border-b border-white/[0.06] bg-[#141f2a] p-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <label htmlFor={searchId} className="relative block w-full sm:max-w-sm">
           <span className="sr-only">{searchLabel}</span>
           <MagnifyingGlass
             aria-hidden
-            size={17}
+            size={16}
             weight="regular"
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7A8D]"
           />
           <input
             id={searchId}
@@ -88,13 +88,13 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
               setRequestedPage(1);
             }}
             placeholder="Tìm theo tiêu đề kịch bản..."
-            className="h-10 w-full rounded-md border border-[var(--border-strong)] bg-[var(--surface)] pl-9 pr-3 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-muted)]"
+            className="h-9 w-full rounded-[8px] border border-white/[0.12] bg-[#101922] pl-9 pr-3 text-[13px] text-[#E6EDF5] outline-none placeholder:text-[#6B7A8D] focus:border-[#0284c7] focus:ring-2 focus:ring-[#0284c7]/20"
           />
         </label>
 
         <p
           aria-live="polite"
-          className="shrink-0 text-xs font-medium tabular-nums text-[var(--text-secondary)]"
+          className="shrink-0 text-[12px] font-medium tabular-nums text-[#9AA9BC]"
         >
           {normalizedQuery
             ? `${filteredItems.length}/${items.length} kịch bản phù hợp`
@@ -103,26 +103,26 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px] border-collapse text-left">
+        <table className="w-full min-w-[760px] border-collapse text-left text-[13px]">
           <caption className="sr-only">{caption}</caption>
-          <thead className="bg-[var(--surface-muted)] text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--text-secondary)]">
+          <thead className="border-b border-white/[0.06] bg-[#101922] text-[11px] font-semibold uppercase tracking-[0.06em] text-[#9AA9BC]">
             <tr>
               {columns.map((column) => (
                 <th
                   key={column.id}
                   scope="col"
-                  className={`border-b border-[var(--border)] px-4 py-3 ${column.className ?? ""}`}
+                  className={`px-5 py-3 sm:px-6 ${column.className ?? ""}`}
                 >
                   {column.label}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-[var(--border)]">
+          <tbody className="divide-y divide-white/[0.05]">
             {visibleItems.map((item, index) => (
               <tr
                 key={item.id}
-                className="transition-colors hover:bg-[var(--surface-subtle)]"
+                className="transition-colors duration-150 hover:bg-white/[0.035]"
               >
                 {renderCells(item, startIndex + index)}
               </tr>
@@ -131,7 +131,7 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="px-5 py-10 text-center text-sm text-[var(--text-secondary)]"
+                  className="px-6 py-12 text-center text-[13px] text-[#6B7A8D]"
                 >
                   {emptySearchMessage}
                 </td>
@@ -141,14 +141,14 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
         </table>
       </div>
 
-      <div className="flex flex-col gap-3 border-t border-[var(--border)] bg-[var(--surface-subtle)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs tabular-nums text-[var(--text-secondary)]">
+      <div className="flex flex-col gap-3 border-t border-white/[0.06] bg-[#141f2a] px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <p className="text-[12px] tabular-nums text-[#9AA9BC]">
           Hiển thị {firstVisible}-{lastVisible} trong {filteredItems.length} kịch bản
         </p>
 
         <nav
           aria-label={`Phân trang ${caption}`}
-          className="flex items-center gap-1"
+          className="flex items-center gap-1.5"
         >
           <button
             type="button"
@@ -156,9 +156,9 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
             disabled={currentPage === 1}
             aria-label="Trang trước"
             title="Trang trước"
-            className="inline-flex size-9 items-center justify-center rounded border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-45"
+            className="inline-flex size-8 items-center justify-center rounded-[8px] border border-white/[0.12] bg-white/[0.04] text-[#9AA9BC] transition duration-150 hover:bg-white/[0.08] hover:text-[#E6EDF5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <CaretLeft aria-hidden size={16} weight="bold" />
+            <CaretLeft aria-hidden size={15} weight="bold" />
           </button>
 
           {Array.from({ length: totalPages }, (_, index) => index + 1).map(
@@ -169,10 +169,10 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
                 onClick={() => setRequestedPage(pageNumber)}
                 aria-label={`Mở trang ${pageNumber}`}
                 aria-current={pageNumber === currentPage ? "page" : undefined}
-                className={`inline-flex size-9 items-center justify-center rounded border font-mono text-xs font-semibold tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
+                className={`inline-flex size-8 items-center justify-center rounded-[8px] border font-mono text-[12px] font-semibold tabular-nums transition duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] ${
                   pageNumber === currentPage
-                    ? "border-[var(--accent)] bg-[var(--accent)] text-white"
-                    : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"
+                    ? "border-[#0369a1] bg-[#0369a1] text-white shadow-sm"
+                    : "border-white/[0.12] bg-white/[0.04] text-[#9AA9BC] hover:bg-white/[0.08] hover:text-[#E6EDF5]"
                 }`}
               >
                 {pageNumber}
@@ -188,9 +188,9 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
             disabled={currentPage === totalPages}
             aria-label="Trang sau"
             title="Trang sau"
-            className="inline-flex size-9 items-center justify-center rounded border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-45"
+            className="inline-flex size-8 items-center justify-center rounded-[8px] border border-white/[0.12] bg-white/[0.04] text-[#9AA9BC] transition duration-150 hover:bg-white/[0.08] hover:text-[#E6EDF5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] disabled:cursor-not-allowed disabled:opacity-40"
           >
-            <CaretRight aria-hidden size={16} weight="bold" />
+            <CaretRight aria-hidden size={15} weight="bold" />
           </button>
         </nav>
       </div>
