@@ -1,6 +1,6 @@
 "use client";
 
-import { Broadcast } from "@phosphor-icons/react/dist/csr/Broadcast";
+import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { FilePlus } from "@phosphor-icons/react/dist/csr/FilePlus";
 import { PencilSimple } from "@phosphor-icons/react/dist/csr/PencilSimple";
 import { Plus } from "@phosphor-icons/react/dist/csr/Plus";
@@ -12,25 +12,16 @@ import { useEffect, useMemo, useState } from "react";
 import { DeleteScenarioDialog } from "@/components/admin/delete-scenario-dialog";
 import { AdsbScenarioLibraryPanel } from "@/components/scenario/adsb-scenario-library-panel";
 import {
-  EmptyState,
-  LoadingRows,
-  ModuleSummary,
-  ScenarioListFrame,
-  ScenarioSectionHeader,
-} from "@/components/ui/exam-workspace";
+  Button,
+  ButtonLink,
+  CountBadgePill,
+  DifficultyBadge,
+} from "@/components/ui/button";
+import { ScenarioListFrame } from "@/components/ui/exam-workspace";
 import { ScenarioDataTable } from "@/components/ui/scenario-data-table";
 import { formatScenarioNumber, sortScenariosByRecency } from "@/lib/scenario-order";
-import type { Scenario, ScenarioDifficulty } from "@/lib/types";
+import type { Scenario } from "@/lib/types";
 import { useScenarioStore } from "@/stores/scenario-store";
-
-const difficultyDetails: Record<
-  ScenarioDifficulty,
-  { label: string; className: string }
-> = {
-  easy: { label: "Cơ bản", className: "border-[#bbf7d0] bg-[#f0fdf4] text-[#166534]" },
-  medium: { label: "Trung bình", className: "border-[#fde68a] bg-[#fffbeb] text-[#92400e]" },
-  hard: { label: "Nâng cao", className: "border-[#fecaca] bg-[#fef2f2] text-[#991b1b]" },
-};
 
 const scenarioColumns = [
   { id: "number", label: "STT", className: "w-16" },
@@ -63,108 +54,209 @@ export function AdsbAdminDashboard() {
   }
 
   return (
-    <>
-      <ModuleSummary
-        title="Mô phỏng giám sát ADS-B"
-        description="Cấu hình trạng thái site, dữ liệu cảm biến và chuỗi thao tác chuẩn trên QCMS và terminal bảo trì."
-        icon={Broadcast}
-        actions={
-          <>
-            <Link
+    <div className="mx-auto w-full max-w-[1280px] px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+      {/* Navigation Breadcrumb */}
+      <div>
+        <Link
+          href="/authoring"
+          className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[#38a3dc] transition-colors hover:bg-white/[0.04] hover:text-[#7dd3fc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+        >
+          <ArrowLeft aria-hidden size={15} />
+          <span>Danh sách thiết bị</span>
+        </Link>
+      </div>
+
+      {/* Main Workspace Header */}
+      <header className="border-b border-white/[0.08] pb-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#38a3dc]">
+              Kịch bản / ADS-B
+            </p>
+            <h1 className="mt-1.5 text-[28px] sm:text-[32px] font-semibold tracking-tight text-[#E6EDF5] leading-tight">
+              Kịch bản ADS-B
+            </h1>
+            <p className="mt-2 max-w-[640px] text-[13px] sm:text-[14px] leading-relaxed text-[#9AA9BC]">
+              Cấu hình trạng thái site, dữ liệu cảm biến và chuỗi thao tác chuẩn trên QCMS và terminal bảo trì.
+            </p>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2.5">
+            <ButtonLink
               href="/simulator/ads-b"
               target="_blank"
               rel="noreferrer"
-              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded border border-[var(--accent-border)] bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--accent)] transition-[background-color,border-color,transform] hover:border-[var(--accent)] hover:bg-[var(--accent-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98] motion-reduce:transform-none"
+              variant="secondary"
+              size="md"
+              className="inline-flex items-center gap-1.5"
             >
-              <Terminal aria-hidden size={18} weight="bold" />
-              Mở giả lập ADS-B
-            </Link>
-            <Link
+              <Terminal aria-hidden size={16} weight="bold" />
+              <span>Mở giả lập ADS-B</span>
+            </ButtonLink>
+            <ButtonLink
               href="/authoring/ads-b/create"
-              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded bg-[var(--accent)] px-3 text-xs font-semibold text-white transition-[background-color,transform] hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98] active:bg-[var(--accent-active)] motion-reduce:transform-none"
+              variant="primary"
+              size="md"
+              className="inline-flex items-center gap-1.5"
             >
-              <Plus aria-hidden size={18} weight="bold" />
-              Tạo kịch bản ADS-B
-            </Link>
-          </>
-        }
-      />
+              <Plus aria-hidden size={16} weight="bold" />
+              <span>Tạo kịch bản ADS-B</span>
+            </ButtonLink>
+          </div>
+        </div>
+      </header>
 
+      {/* Storage and System Alerts */}
       {storageError ? (
-        <div role="alert" className="mt-5 flex items-start gap-3 rounded-lg border border-[#fde68a] bg-[#fffbeb] px-4 py-3 text-sm text-[#78350f]">
-          <WarningCircle aria-hidden size={20} weight="duotone" className="mt-0.5 shrink-0" />
+        <div
+          role="alert"
+          className="flex items-start gap-2.5 rounded-[8px] border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-[13px] leading-5 text-amber-200"
+        >
+          <WarningCircle aria-hidden size={18} className="mt-0.5 shrink-0 text-amber-400" />
           <div>
-            <p className="font-semibold">Dữ liệu cục bộ đang có vấn đề</p>
-            <p className="mt-1 leading-5">Danh sách vẫn dùng được trong phiên này, nhưng thay đổi có thể chưa được lưu trên thiết bị.</p>
+            <p className="font-semibold text-amber-100">Dữ liệu cục bộ đang có vấn đề</p>
+            <p className="mt-0.5 text-amber-200/80">
+              Danh sách vẫn dùng được trong phiên này, nhưng thay đổi có thể chưa được lưu trên thiết bị.
+            </p>
           </div>
         </div>
       ) : null}
 
       {deleteError ? (
-        <p role="alert" className="mt-5 rounded-lg border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-sm text-[#991b1b]">
-          {deleteError}
-        </p>
+        <div
+          role="alert"
+          className="flex items-start gap-2.5 rounded-[8px] border border-red-500/25 bg-red-500/10 px-4 py-3 text-[13px] leading-5 text-red-200"
+        >
+          <WarningCircle aria-hidden size={18} className="mt-0.5 shrink-0 text-red-400" />
+          <span>{deleteError}</span>
+        </div>
       ) : null}
 
+      {/* Scenario Library Distribution Controls */}
       <AdsbScenarioLibraryPanel />
 
-      <section aria-labelledby="scenario-list-title" className="mt-7">
-        <ScenarioSectionHeader
-          id="scenario-list-title"
-          title="Danh sách kịch bản ADS-B"
-          description="Kịch bản mới cập nhật được hiển thị trước."
-          count={isHydrated ? scenarios.length : undefined}
-          countLabel="kịch bản"
-        />
-        <ScenarioListFrame>
-          {!isHydrated ? <LoadingRows label="Đang tải danh sách kịch bản" /> : null}
-          {isHydrated && sortedScenarios.length === 0 ? (
-            <EmptyState
-              icon={<FilePlus aria-hidden size={23} weight="duotone" />}
-              title="Chưa có kịch bản"
-              description="Tạo kịch bản đầu tiên để cấu hình trạng thái cảm biến và đáp án thao tác."
-              action={
-                <Link href="/authoring/ads-b/create" className="inline-flex min-h-10 items-center gap-1.5 rounded bg-[var(--accent)] px-3 text-xs font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2">
-                  <Plus aria-hidden size={18} weight="bold" />
-                  Tạo kịch bản
-                </Link>
-              }
-            />
+      {/* Scenarios Table Section */}
+      <section aria-labelledby="scenario-list-title" className="space-y-4 pt-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 id="scenario-list-title" className="text-[16px] font-semibold tracking-tight text-[#E6EDF5]">
+              Danh sách kịch bản ADS-B
+            </h2>
+            <p className="mt-0.5 text-[13px] text-[#9AA9BC]">
+              Kịch bản mới cập nhật được hiển thị trước.
+            </p>
+          </div>
+          {isHydrated ? (
+            <CountBadgePill>{scenarios.length} kịch bản</CountBadgePill>
           ) : null}
+        </div>
+
+        <ScenarioListFrame>
+          {!isHydrated ? (
+            <div role="status" className="flex items-center justify-center py-16 text-[13px] text-[#9AA9BC]">
+              Đang tải danh sách kịch bản…
+            </div>
+          ) : null}
+
+          {isHydrated && sortedScenarios.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-12 text-center">
+              <span className="inline-flex size-12 items-center justify-center rounded-[10px] border border-white/[0.08] bg-white/[0.04] text-[#38a3dc]">
+                <FilePlus aria-hidden size={24} weight="duotone" />
+              </span>
+              <h3 className="mt-4 text-[15px] font-semibold text-[#E6EDF5]">Chưa có kịch bản</h3>
+              <p className="mt-1 max-w-[420px] text-[13px] text-[#9AA9BC]">
+                Tạo kịch bản đầu tiên để cấu hình trạng thái cảm biến và đáp án thao tác.
+              </p>
+              <div className="mt-5">
+                <ButtonLink
+                  href="/authoring/ads-b/create"
+                  variant="primary"
+                  size="md"
+                  className="inline-flex items-center gap-1.5"
+                >
+                  <Plus aria-hidden size={16} weight="bold" />
+                  <span>Tạo kịch bản</span>
+                </ButtonLink>
+              </div>
+            </div>
+          ) : null}
+
           {isHydrated && sortedScenarios.length > 0 ? (
             <ScenarioDataTable
               items={sortedScenarios}
               caption="Danh sách kịch bản ADS-B dành cho giám khảo"
               columns={scenarioColumns}
               renderCells={(scenario, rowIndex) => {
-                const difficulty = difficultyDetails[scenario.difficulty];
                 return (
                   <>
-                    <td className="px-4 py-4 align-top">
-                      <span aria-label={`Kịch bản số ${rowIndex + 1}`} className="inline-flex size-8 items-center justify-center rounded-md border border-[var(--border-strong)] bg-[var(--surface-muted)] text-xs font-bold tabular-nums text-[var(--text-secondary)]">
+                    <td className="w-16 px-4 py-3.5 align-middle">
+                      <span
+                        aria-label={`Kịch bản số ${rowIndex + 1}`}
+                        className="inline-flex size-7 items-center justify-center rounded-[6px] border border-white/[0.08] bg-white/[0.04] text-[12px] font-semibold tabular-nums text-[#9AA9BC]"
+                      >
                         {formatScenarioNumber(rowIndex)}
                       </span>
                     </td>
-                    <td className="px-4 py-4 align-top">
-                      <h3 className="text-[15px] font-semibold text-[var(--text-primary)]">{scenario.title}</h3>
-                      <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[var(--text-secondary)]">{scenario.description}</p>
+                    <td className="px-4 py-3.5 align-middle">
+                      <h3 className="text-[14px] font-semibold text-[#E6EDF5] leading-snug">
+                        {scenario.title}
+                      </h3>
+                      {scenario.description ? (
+                        <p className="mt-0.5 line-clamp-1 text-[12px] leading-relaxed text-[#9AA9BC]">
+                          {scenario.description}
+                        </p>
+                      ) : null}
                     </td>
-                    <td className="px-4 py-4 align-top">
-                      <span className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-semibold ${difficulty.className}`}>{difficulty.label}</span>
+                    <td className="w-28 px-4 py-3.5 align-middle">
+                      <DifficultyBadge difficulty={scenario.difficulty} />
                     </td>
-                    <td className="px-4 py-4 align-top text-xs leading-5 text-[var(--text-secondary)]">
-                      <p><span className="font-mono font-semibold">{scenario.sites.length}</span> site</p>
-                      <p><span className="font-mono font-semibold">{scenario.expectedActions.length}</span> thao tác</p>
-                      <p>{scenario.updatedAt ? "Cập nhật" : "Ngày tạo"}: {new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" }).format(new Date(scenario.updatedAt ?? scenario.createdAt))}</p>
+                    <td className="w-48 px-4 py-3.5 align-middle text-[12px] leading-relaxed text-[#9AA9BC]">
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className="inline-flex items-center rounded-[4px] bg-white/[0.05] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#E6EDF5]">
+                            {scenario.sites.length}
+                          </span>
+                          <span>site</span>
+                          <span className="text-white/20">·</span>
+                          <span className="inline-flex items-center rounded-[4px] bg-white/[0.05] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#E6EDF5]">
+                            {scenario.expectedActions.length}
+                          </span>
+                          <span>thao tác</span>
+                        </div>
+                        <span className="text-[11px] text-[#9AA9BC]/80">
+                          {scenario.updatedAt ? "Cập nhật" : "Ngày tạo"}:{" "}
+                          {new Intl.DateTimeFormat("vi-VN", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                            timeZone: "UTC",
+                          }).format(new Date(scenario.updatedAt ?? scenario.createdAt))}
+                        </span>
+                      </div>
                     </td>
-                    <td className="px-4 py-4 align-top">
-                      <div className="flex justify-end gap-2">
-                        <Link href={`/authoring/ads-b/edit?id=${scenario.id}`} aria-label={`Sửa kịch bản: ${scenario.title}`} title="Sửa kịch bản" className="inline-flex size-9 items-center justify-center rounded border border-[var(--border-strong)] bg-white text-[var(--text-secondary)] transition-[background-color,border-color,color,transform] duration-150 hover:border-[var(--accent-border)] hover:bg-[var(--accent-muted)] hover:text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none">
-                          <PencilSimple aria-hidden size={18} weight="regular" />
-                        </Link>
-                        <button type="button" onClick={() => setScenarioToDelete(scenario)} aria-label={`Xóa kịch bản: ${scenario.title}`} title="Xóa kịch bản" className="inline-flex size-9 items-center justify-center rounded border border-transparent text-[var(--danger)] transition-[background-color,border-color,transform] duration-150 hover:border-[#fecaca] hover:bg-[var(--danger-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--danger)] active:scale-[0.96] motion-reduce:transform-none motion-reduce:transition-none">
-                          <Trash aria-hidden size={18} weight="regular" />
-                        </button>
+                    <td className="w-28 px-4 py-3.5 align-middle">
+                      <div className="flex justify-end gap-1.5">
+                        <ButtonLink
+                          href={`/authoring/ads-b/edit?id=${scenario.id}`}
+                          variant="secondary"
+                          size="sm"
+                          aria-label={`Sửa kịch bản: ${scenario.title}`}
+                          title="Sửa kịch bản"
+                          className="size-8 !px-0"
+                        >
+                          <PencilSimple aria-hidden size={15} weight="bold" />
+                        </ButtonLink>
+                        <Button
+                          type="button"
+                          variant="danger"
+                          size="sm"
+                          onClick={() => setScenarioToDelete(scenario)}
+                          aria-label={`Xóa kịch bản: ${scenario.title}`}
+                          title="Xóa kịch bản"
+                          className="size-8 !px-0"
+                        >
+                          <Trash aria-hidden size={15} weight="bold" />
+                        </Button>
                       </div>
                     </td>
                   </>
@@ -175,9 +267,14 @@ export function AdsbAdminDashboard() {
         </ScenarioListFrame>
       </section>
 
+      {/* Delete Confirmation Modal Dialog */}
       {scenarioToDelete ? (
-        <DeleteScenarioDialog scenarioTitle={scenarioToDelete.title} onCancel={() => setScenarioToDelete(null)} onConfirm={confirmDelete} />
+        <DeleteScenarioDialog
+          scenarioTitle={scenarioToDelete.title}
+          onCancel={() => setScenarioToDelete(null)}
+          onConfirm={confirmDelete}
+        />
       ) : null}
-    </>
+    </div>
   );
 }

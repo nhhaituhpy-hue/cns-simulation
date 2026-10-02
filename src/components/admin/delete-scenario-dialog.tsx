@@ -2,6 +2,7 @@
 
 import { Warning } from "@phosphor-icons/react/dist/csr/Warning";
 import { useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
 
 type DeleteScenarioDialogProps = {
   scenarioTitle: string;
@@ -42,41 +43,43 @@ export function DeleteScenarioDialog({
         event.preventDefault();
         onCancel();
       }}
-      className="m-auto w-[min(30rem,calc(100%-2rem))] rounded-lg border border-[var(--border)] bg-[var(--surface)] p-0 text-[var(--text-primary)] shadow-[var(--shadow-panel)] backdrop:bg-[#171717]/30"
+      className="m-auto w-[min(30rem,calc(100%-2rem))] overflow-hidden rounded-[12px] border border-white/[0.12] bg-[#141f2a] p-0 text-[#E6EDF5] shadow-2xl backdrop:bg-black/60 backdrop:backdrop-blur-sm"
     >
-      <div className="p-5 sm:p-6">
-        <span className="inline-flex size-10 items-center justify-center rounded bg-[#fef2f2] text-[#b91c1c]">
+      <div className="p-6">
+        <span className="inline-flex size-10 items-center justify-center rounded-[8px] border border-red-500/25 bg-red-500/10 text-red-400">
           <Warning aria-hidden size={22} weight="regular" />
         </span>
         <h2
           id="delete-scenario-title"
-          className="mt-4 text-lg font-semibold tracking-tight"
+          className="mt-4 text-[18px] font-semibold tracking-tight text-[#E6EDF5]"
         >
           Xóa kịch bản này?
         </h2>
         <p
           id="delete-scenario-description"
-          className="mt-2 text-sm leading-6 text-[var(--text-secondary)]"
+          className="mt-2 text-[13px] leading-relaxed text-[#9AA9BC]"
         >
           Kịch bản “{scenarioTitle}” sẽ bị xóa khỏi thiết bị này. Hành động này không thể hoàn tác.
         </p>
       </div>
-      <div className="flex flex-col-reverse gap-2 border-t border-[var(--border)] bg-[var(--background)] p-4 sm:flex-row sm:justify-end">
-        <button
+      <div className="flex flex-col-reverse gap-2.5 border-t border-white/[0.08] bg-[#101922] px-6 py-4 sm:flex-row sm:justify-end">
+        <Button
           type="button"
           autoFocus
+          variant="secondary"
+          size="md"
           onClick={onCancel}
-          className="min-h-10 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
         >
           Giữ lại
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="danger"
+          size="md"
           onClick={onConfirm}
-          className="min-h-10 rounded bg-[#b91c1c] px-3 text-xs font-semibold text-white hover:bg-[#991b1b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b91c1c] focus-visible:ring-offset-2"
         >
           Xóa kịch bản
-        </button>
+        </Button>
       </div>
     </dialog>
   );

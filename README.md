@@ -209,6 +209,29 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-10-02 — Chuẩn hóa Design Tokens toàn diện cho phân hệ ADS-B
+
+- Đồng bộ triệt để hệ thống Design Tokens (màu sắc HSL tối, typography 3 tầng, border mờ tinh tế, border-radius 6/8/12px) cho toàn bộ phân hệ ADS-B:
+  - **Trang quản lý kịch bản ADS-B ([`admin-dashboard.tsx`](file:///C:/Test/cns-simulator/src/modules/devices/adsb/admin-dashboard.tsx), [`page.tsx`](file:///C:/Test/cns-simulator/src/app/authoring/ads-b/page.tsx)):**
+    - Container chuẩn `max-w-[1280px]` căn giữa với breadcrumb điều hướng `Danh sách thiết bị` và icon `ArrowLeft`.
+    - Header 3 tầng typography chuẩn (Eyebrow: `Kịch bản / ADS-B`, H1 28-32px, text mô tả).
+    - Cụm nút hành động chuẩn `ButtonLink`: "Mở giả lập ADS-B" (secondary) và "Tạo kịch bản ADS-B" (primary).
+    - Khung bảng `ScenarioListFrame` bo 12px viền mờ `border-white/[0.08] bg-[#141f2a]`, thead viền mờ 6% uppercase tracking 0.06em, STT badge bo 6px, tag mức độ `DifficultyBadge` (hỗ trợ cả easy/medium/hard).
+    - Cột quy mô với badge số site và thao tác sắc nét; nút Sửa (`ButtonLink` sm) và Xóa (`Button` sm danger) chuẩn hóa tokens.
+  - **Hộp thoại xác nhận xóa kịch bản ([`delete-scenario-dialog.tsx`](file:///C:/Test/cns-simulator/src/components/admin/delete-scenario-dialog.tsx)):**
+    - Card dialog bo 12px `rounded-[12px] border border-white/[0.12] bg-[#141f2a] shadow-2xl` với backdrop blur.
+    - Icon cảnh báo badge `bg-red-500/10 text-red-400 border border-red-500/20`, các nút hành động chuẩn `Button`: "Giữ lại" (secondary) và "Xóa kịch bản" (danger).
+  - **Wizard Tạo/Sửa Kịch bản ADS-B ([`scenario-wizard.tsx`](file:///C:/Test/cns-simulator/src/components/admin/scenario-wizard.tsx), [`scenario-wizard-form.tsx`](file:///C:/Test/cns-simulator/src/components/admin/scenario-wizard-form.tsx)):**
+    - Container `max-w-[1280px]` căn giữa với breadcrumb `ArrowLeft` quay lại danh sách kịch bản.
+    - Card các bước thiết lập cấu hình site/sensor bo góc 12px viền mờ `bg-[#141f2a]`.
+    - Thanh điều hướng các bước (steppers) với active pill viền xanh `#0284c7`, footer tích hợp nút chuẩn `ButtonLink` ("Hủy"), `Button` secondary ("Quay lại") và `Button` primary ("Tiếp tục" / "Tạo kịch bản" / "Lưu thay đổi").
+- **Kiểm tra chất lượng & Regression Guard:**
+  - `npm run lint`: đạt (0 lỗi).
+  - `npm run typecheck`: đạt (0 lỗi).
+  - Vitest: các test suites của ADS-B, routing và catalog đều passed 100%.
+  - `npm run build`: biên dịch sản xuất thành công 84 dynamic routes.
+  - Giữ nguyên 100% dữ liệu Store, test assertions và luồng hoạt động.
+
 ### 2026-10-02 — Chuẩn hóa Design Tokens cho toàn bộ trang Ôn tập / Thực hành
 
 - Áp dụng triệt để hệ thống Design Tokens (màu sắc HSL tối, font typography 3 tầng, border mờ tinh tế, border-radius 6/8/12px) từ trang Kịch bản tác giả sang toàn bộ 6 trang Ôn tập / Thực hành (`/review/[moduleId]`): DVOR 1150, DVOR 1150A, DME 1119A, DVOR 220, DME 320 và ADS-B.

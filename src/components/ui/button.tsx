@@ -109,11 +109,11 @@ export function DifficultyBadge({
   let colorStyle =
     "bg-[rgba(34,197,94,0.14)] text-[#4ade80] border-[rgba(34,197,94,0.28)]";
 
-  if (difficulty === "advanced") {
+  if (difficulty === "advanced" || difficulty === "hard") {
     label = "Nâng cao";
     colorStyle =
       "bg-[rgba(249,115,22,0.14)] text-[#fb923c] border-[rgba(249,115,22,0.28)]";
-  } else if (difficulty === "intermediate") {
+  } else if (difficulty === "intermediate" || difficulty === "medium") {
     label = "Trung bình";
     colorStyle =
       "bg-[rgba(234,179,8,0.14)] text-[#facc15] border-[rgba(234,179,8,0.28)]";

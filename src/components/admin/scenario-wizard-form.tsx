@@ -3,8 +3,9 @@
 import { CaretLeft } from "@phosphor-icons/react/dist/csr/CaretLeft";
 import { CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { FloppyDisk } from "@phosphor-icons/react/dist/csr/FloppyDisk";
-import Link from "next/link";
+import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { useState, type FormEvent } from "react";
+import { Button, ButtonLink } from "@/components/ui/button";
 import type {
   Scenario,
   ScenarioHardwareFault,
@@ -193,7 +194,7 @@ export function ScenarioWizardForm({
   return (
     <form onSubmit={handleSubmit} className="grid gap-6">
       <nav aria-label="Các bước tạo kịch bản" className="pb-1">
-        <ol className="grid grid-cols-5 border-b border-[var(--border)]">
+        <ol className="grid grid-cols-5 border-b border-white/[0.08]">
           {steps.map((step) => {
             const active = currentStep === step.number;
             const complete = currentStep > step.number;
@@ -202,19 +203,19 @@ export function ScenarioWizardForm({
               <li
                 key={step.number}
                 aria-current={active ? "step" : undefined}
-                className={`border-b-2 px-1 pb-3 text-center text-sm sm:px-3 sm:text-left ${
+                className={`border-b-2 px-1 pb-3 text-center text-sm sm:px-3 sm:text-left transition-colors ${
                   active
-                    ? "border-[var(--accent)] text-[var(--accent)]"
+                    ? "border-[#0284c7] text-[#38a3dc] font-semibold"
                     : complete
-                      ? "border-[var(--border-strong)] text-[var(--text-primary)]"
-                      : "border-transparent text-[var(--text-muted)]"
+                      ? "border-white/20 text-[#E6EDF5]"
+                      : "border-transparent text-[#9AA9BC]/50"
                 }`}
               >
                 <span className="font-mono text-xs tabular-nums sm:mr-2">
                   {step.number}
                 </span>
                 <span className="sr-only">{step.label}</span>
-                <span aria-hidden className="hidden font-semibold sm:inline">
+                <span aria-hidden className="hidden font-medium sm:inline">
                   {step.label}
                 </span>
               </li>
@@ -223,12 +224,12 @@ export function ScenarioWizardForm({
         </ol>
       </nav>
 
-      <section className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] sm:p-6 lg:p-8">
-        <header className="mb-7 border-b border-[var(--border)] pb-5">
-          <p className="text-sm font-medium text-[var(--accent)]">
+      <section className="rounded-[12px] border border-white/[0.08] bg-[#141f2a] p-4 shadow-sm sm:p-6 lg:p-8">
+        <header className="mb-7 border-b border-white/[0.08] pb-5">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[#38a3dc]">
             Bước {currentStep} trong 5
           </p>
-          <h2 className="mt-1 text-xl font-semibold tracking-tight text-[var(--text-primary)] sm:text-2xl">
+          <h2 className="mt-1 text-[20px] sm:text-[22px] font-semibold tracking-tight text-[#E6EDF5]">
             {currentStep === 1 ? "Thông tin kịch bản" : null}
             {currentStep === 2 ? "Cấu hình trạng thái ban đầu" : null}
             {currentStep === 3 ? "Chọn vai trò đăng nhập" : null}
@@ -295,57 +296,66 @@ export function ScenarioWizardForm({
       </section>
 
       {saveError ? (
-        <p
+        <div
           role="alert"
-          className="rounded border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-sm text-[#991b1b]"
+          className="flex items-start gap-2.5 rounded-[8px] border border-red-500/25 bg-red-500/10 px-4 py-3 text-[13px] leading-5 text-red-200"
         >
-
-          {saveError}
-        </p>
+          <WarningCircle aria-hidden size={18} className="mt-0.5 shrink-0 text-red-400" />
+          <span>{saveError}</span>
+        </div>
       ) : null}
 
-      <footer className="flex flex-col-reverse gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-card)] sm:flex-row sm:items-center sm:justify-between">
-        <Link
+      <footer className="flex flex-col-reverse gap-3 rounded-[12px] border border-white/[0.08] bg-[#101922] p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <ButtonLink
           href="/authoring/ads-b"
-          className="inline-flex min-h-10 items-center justify-center rounded px-3 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+          variant="secondary"
+          size="md"
         >
           Hủy
-        </Link>
+        </ButtonLink>
 
         <div className="flex flex-col-reverse gap-2 sm:flex-row">
           {currentStep > 1 ? (
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="md"
               onClick={goBack}
               disabled={isSaving}
-              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-1.5"
             >
-              <CaretLeft aria-hidden size={17} weight="regular" />
-              Quay lại
-            </button>
+              <CaretLeft aria-hidden size={16} weight="bold" />
+              <span>Quay lại</span>
+            </Button>
           ) : null}
 
           {currentStep < 5 ? (
-            <button
+            <Button
               type="submit"
-              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded bg-[var(--accent)] px-3 text-xs font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:bg-[var(--accent-active)] disabled:cursor-not-allowed disabled:opacity-50"
+              variant="primary"
+              size="md"
+              className="inline-flex items-center gap-1.5"
             >
-              Tiếp tục
-              <CaretRight aria-hidden size={17} weight="regular" />
-            </button>
+              <span>Tiếp tục</span>
+              <CaretRight aria-hidden size={16} weight="bold" />
+            </Button>
           ) : (
-            <button
+            <Button
               type="submit"
+              variant="primary"
+              size="md"
               disabled={isSaving}
-              className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded bg-[var(--accent)] px-3 text-xs font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:bg-[var(--accent-active)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center gap-1.5"
             >
-              <FloppyDisk aria-hidden size={18} weight="regular" />
-              {isSaving
-                ? "Đang lưu"
-                : editing
-                  ? "Lưu thay đổi"
-                  : "Tạo kịch bản"}
-            </button>
+              <FloppyDisk aria-hidden size={16} weight="bold" />
+              <span>
+                {isSaving
+                  ? "Đang lưu"
+                  : editing
+                    ? "Lưu thay đổi"
+                    : "Tạo kịch bản"}
+              </span>
+            </Button>
           )}
         </div>
       </footer>
