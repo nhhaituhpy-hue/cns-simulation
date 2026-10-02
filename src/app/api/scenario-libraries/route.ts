@@ -100,6 +100,43 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Teacher authoring chưa được bật." }, { status: 403 });
   }
 
+  if (process.env.MEDIA_CAPTURE_MODE === "1") {
+    return NextResponse.json({
+      practice: [
+        {
+          membershipId: "mem-1",
+          moduleId: "dvor-1150a",
+          id: "mock-dvor-1",
+          scenarioId: "dvor1150a-carrier-power",
+          name: "Kiểm tra suy giảm công suất sóng mang Carrier (TX1)",
+          description: "Đo kiểm mức suy giảm công suất phát sóng mang máy phát 1.",
+          difficulty: "intermediate",
+          schemaVersion: 1,
+          libraryKind: "practice",
+          sortOrder: 0,
+          revision: 1,
+        },
+      ],
+      exam: [
+        {
+          membershipId: "mem-2",
+          moduleId: "dvor-1150a",
+          id: "mock-dvor-2",
+          scenarioId: "dvor1150a-sideband-deviation",
+          name: "Hiệu chỉnh độ lệch tần số và pha dải biên phụ (Sideband Subcarrier)",
+          description: "Phát hiện sai lệch pha 30Hz FM giữa tín hiệu chuẩn và tín hiệu biến điệu.",
+          difficulty: "advanced",
+          schemaVersion: 1,
+          libraryKind: "exam",
+          sortOrder: 0,
+          revision: 1,
+        },
+      ],
+      available: [],
+      libraryRevisions: { practice: 1, exam: 1 },
+    });
+  }
+
   if (profile.role === "student") {
     if (isE2eTestMode()) return NextResponse.json({ practice: [], exam: [], available: [], libraryRevisions: { practice: 0, exam: 0 } });
     try {

@@ -463,6 +463,15 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 - Mỗi card mở `/authoring/[moduleId]`, hiển thị bảng kịch bản, import JSON, sửa nhanh, tải JSON, mở simulator và xóa chỉ cho thiết bị đã chọn; thêm điều hướng quay về danh sách thiết bị.
 - Chuyển route authoring của ba PMDT Selex về namespace `/authoring/*`; không thay đổi API, schema, dữ liệu kịch bản hoặc dữ liệu Ôn tập.
 
+### 2026-10-02 — Chuẩn hóa Design Tokens và bố cục UI trang Quản lý Kịch bản
+- Chuẩn hóa hệ thống Design Tokens và bố cục UI cho trang Quản lý Kịch bản tác giả (`/authoring/[moduleId]`).
+- Bổ sung token `--cns-radius-full: 999px;` và thiết lập `[scrollbar-gutter:stable]` vào hệ thống token CSS.
+- Card "Phân chia thư viện": Sử dụng CSS Grid đồng bộ `[minmax(0,1fr)_150px_150px]`, tâm của checkbox "Chọn tất cả" và các checkbox từng hàng bên dưới thẳng hàng tuyệt đối 100%; lề phải 24px (`px-6`) cân xứng với lề trái 24px; scrollbar stable chống rung giật layout.
+- Đầu trang & Header thiết bị: Điều chỉnh khoảng cách chuẩn Windows 11; tên thiết bị 18px leading-none thẳng hàng baseline với chip trạng thái; bổ sung bản đồ mô tả chuyên môn loại bỏ hiện tượng lặp lại tên thiết bị khi `name === shortName`; nút "Thêm kịch bản" căn giữa dọc với khối thông tin.
+- Bảng kịch bản: Chống vỡ dòng tên kịch bản dài bằng `truncate` và tooltip `title`; chuyển đổi các nút phụ ("Sửa nhanh", "Tải JSON", "Xóa") sang nút icon-only 32x32px với `aria-label` và `title` tooltip đầy đủ; giữ nguyên nút "Mở simulator" (icon + text, font-medium).
+- Kiểm tra tự động CI Regression Guard: `npm run lint` (0 lỗi), `npm run typecheck` (0 lỗi), `npm run test:run` (144 test files, 881 tests passed, 0 failures), `npm run build` (84 routes biên dịch thành công).
+- Xác minh trực quan bằng ảnh chụp 1440px và 1280px: tâm checkbox thẳng hàng tuyệt đối, tên kịch bản gọn gàng trên một hàng, lề phải card đúng 24px.
+
 ### 2026-09-16 — Phân bổ Scenario Parameters vào Ôn tập
 - Thêm migration `0006_simulator_review_scenario_assignments.sql`: lưu tập con kịch bản được publish theo thiết bị, thứ tự hiển thị, người gắn và thời điểm gắn; khóa ngoại ghép chặn phân bổ chéo thiết bị và tự dọn phân bổ khi kịch bản gốc bị xóa.
 - Thêm API `/api/review-scenarios`: người đã đăng nhập được đọc danh sách đã publish; chỉ admin được thay thế danh sách của một thiết bị trong transaction. API kho kịch bản chỉ cho học viên đọc chi tiết khi kịch bản đó đã được publish.

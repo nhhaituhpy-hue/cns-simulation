@@ -30,6 +30,51 @@ function isExpectedRevision(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value >= 1;
 }
 
+const mockMediaCaptureScenarios = [
+  {
+    id: "mock-dvor-1",
+    moduleId: "dvor-1150a",
+    scenarioId: "dvor1150a-carrier-power",
+    name: "Kiểm tra suy giảm công suất sóng mang Carrier (TX1)",
+    description: "Đo kiểm mức suy giảm công suất phát sóng mang máy phát 1.",
+    difficulty: "intermediate",
+    schemaVersion: 1,
+    definition: { name: "Kiểm tra suy giảm công suất sóng mang Carrier (TX1)" },
+    sourceFileName: "carrier-power.json",
+    createdAt: "2026-09-20T08:30:00.000Z",
+    updatedAt: "2026-09-20T08:30:00.000Z",
+    revision: 1,
+  },
+  {
+    id: "mock-dvor-2",
+    moduleId: "dvor-1150a",
+    scenarioId: "dvor1150a-sideband-deviation",
+    name: "Hiệu chỉnh độ lệch tần số và pha dải biên phụ (Sideband Subcarrier)",
+    description: "Phát hiện sai lệch pha 30Hz FM giữa tín hiệu chuẩn và tín hiệu biến điệu.",
+    difficulty: "advanced",
+    schemaVersion: 1,
+    definition: { name: "Hiệu chỉnh độ lệch tần số và pha dải biên phụ (Sideband Subcarrier)" },
+    sourceFileName: "sideband-subcarrier.json",
+    createdAt: "2026-09-22T09:15:00.000Z",
+    updatedAt: "2026-09-22T09:15:00.000Z",
+    revision: 1,
+  },
+  {
+    id: "mock-dvor-3",
+    moduleId: "dvor-1150a",
+    scenarioId: "dvor1150a-morse-ident",
+    name: "Khôi phục tín hiệu nhận dạng Morse khi khóa mã bị gián đoạn",
+    description: "Khắc phục lỗi bộ tạo mã tín hiệu nhận dạng đài dẫn đường.",
+    difficulty: "basic",
+    schemaVersion: 1,
+    definition: { name: "Khôi phục tín hiệu nhận dạng Morse khi khóa mã bị gián đoạn" },
+    sourceFileName: "morse-ident.json",
+    createdAt: "2026-09-25T14:00:00.000Z",
+    updatedAt: "2026-09-25T14:00:00.000Z",
+    revision: 1,
+  },
+];
+
 export async function GET(request: Request) {
   const profile = await getCurrentProfile();
   if (!profile) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
@@ -39,6 +84,13 @@ export async function GET(request: Request) {
   }
   if (profile.role === "student" && !id) {
     return NextResponse.json({ error: "Không có quyền quản lý kịch bản." }, { status: 403 });
+  }
+  if (process.env.MEDIA_CAPTURE_MODE === "1") {
+    if (id) {
+      const match = mockMediaCaptureScenarios.find((s) => s.id === id);
+      return NextResponse.json(match ? [match] : []);
+    }
+    return NextResponse.json(mockMediaCaptureScenarios);
   }
   if (isE2eTestMode()) return NextResponse.json([]);
 

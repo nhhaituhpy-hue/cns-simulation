@@ -29,7 +29,7 @@ const LIBRARY_LABELS: Record<ScenarioLibraryKind, string> = {
 const EMPTY_SELECTION: LibrarySelection = { practice: [], exam: [] };
 
 function checkboxClass() {
-  return "size-4 rounded-[4px] accent-[#0369a1] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-1 focus-visible:ring-offset-[#101922] transition-shadow";
+  return "size-4 rounded-[4px] border border-white/20 bg-white/5 accent-[#0284c7] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-1 focus-visible:ring-offset-[#101922] transition-shadow";
 }
 
 function sameIds(left: readonly string[], right: readonly string[]) {
@@ -62,7 +62,7 @@ function SelectAllCheckbox({
   }, [indeterminate]);
 
   return (
-    <label className="inline-flex min-h-7 cursor-pointer items-center justify-center gap-1.5 text-center select-none">
+    <label className="flex flex-col items-center justify-center gap-1 cursor-pointer select-none">
       <input
         ref={inputRef}
         type="checkbox"
@@ -72,7 +72,7 @@ function SelectAllCheckbox({
         onChange={(event) => onChange(event.currentTarget.checked)}
         className={checkboxClass()}
       />
-      <span className="text-[11px] font-medium normal-case tracking-normal text-[#9AA9BC]">
+      <span className="text-[10px] sm:text-[11px] font-medium normal-case tracking-normal text-[#9AA9BC]">
         Chọn tất cả
       </span>
     </label>
@@ -200,12 +200,14 @@ export function ScenarioLibraryControls({
     setBusy(true);
     setError(null);
     setNotice(null);
-    const savedKinds: ScenarioLibraryKind[] = [];
-    let savingKind: ScenarioLibraryKind | null = null;
+
+    const successfulKinds: ScenarioLibraryKind[] = [];
+    const nextSavedSelection = { ...savedSelection };
+    const nextRevisions = { ...libraryRevisions };
+    let failureReason = "";
 
     try {
       for (const kind of changedKinds) {
-        savingKind = kind;
         const response = await fetch("/api/scenario-libraries", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -216,37 +218,38 @@ export function ScenarioLibraryControls({
             expectedRevision: libraryRevisions[kind],
           }),
         });
-        const payload = (await response.json()) as LibraryWriteResponse;
+
+        const payload = (await response.json().catch(() => null)) as
+          | LibraryWriteResponse
+          | null;
+
         if (!response.ok) {
-          throw new Error(
-            payload.error ?? `Không thể cập nhật ${LIBRARY_LABELS[kind]}.`,
-          );
+          failureReason =
+            payload?.error ??
+            `Không thể lưu ${LIBRARY_LABELS[kind]} (${response.status}).`;
+          break;
         }
 
-        if (typeof payload.libraryRevision === "number") {
-          setLibraryRevisions((current) => ({
-            ...current,
-            [kind]: payload.libraryRevision!,
-          }));
+        successfulKinds.push(kind);
+        nextSavedSelection[kind] = [...selected[kind]];
+        if (typeof payload?.libraryRevision === "number") {
+          nextRevisions[kind] = payload.libraryRevision;
         }
-        setSavedSelection((current) => ({
-          ...current,
-          [kind]: [...selected[kind]],
-        }));
-        savedKinds.push(kind);
-        savingKind = null;
       }
 
-      setNotice(`Đã lưu ${libraryNames(savedKinds)}.`);
-    } catch (saveError) {
-      const reason =
-        saveError instanceof Error
-          ? saveError.message
-          : "Không thể cập nhật thư viện.";
+      setSavedSelection(nextSavedSelection);
+      setLibraryRevisions(nextRevisions);
+
+      if (successfulKinds.length === changedKinds.length) {
+        setNotice(`Đã lưu ${libraryNames(successfulKinds)}.`);
+        return;
+      }
+
       const partialMessage =
-        savedKinds.length > 0
-          ? `Đã lưu ${libraryNames(savedKinds)} nhưng chưa lưu ${savingKind ? LIBRARY_LABELS[savingKind] : "phần còn lại"}. `
+        successfulKinds.length > 0
+          ? `Đã lưu ${libraryNames(successfulKinds)}, nhưng phần còn lại thất bại: `
           : "";
+      const reason = failureReason || "Không thể lưu thay đổi thư viện.";
       setError(`${partialMessage}${reason}`);
     } finally {
       setBusy(false);
@@ -258,12 +261,13 @@ export function ScenarioLibraryControls({
       className="mt-6 overflow-hidden rounded-[12px] border border-white/[0.08] bg-[#141f2a] shadow-sm"
       aria-label="Phân chia thư viện kịch bản"
     >
-      <header className="flex flex-col gap-3 border-b border-white/[0.06] bg-[#141f2a] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      {/* Card Header: left block (title + subtitle), right block (3 chips) centered vertically together */}
+      <header className="flex flex-col gap-3 border-b border-white/[0.06] bg-[#141f2a] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-[16px] font-semibold text-[#E6EDF5]">
+          <h2 className="text-[16px] sm:text-[17px] font-semibold text-[#E6EDF5]">
             Phân chia thư viện
           </h2>
-          <p className="mt-1 text-[13px] leading-relaxed text-[#9AA9BC]">
+          <p className="mt-0.5 text-[13px] leading-relaxed text-[#9AA9BC]">
             Chọn thư viện cho từng kịch bản rồi lưu một lần.
           </p>
         </div>
@@ -283,21 +287,22 @@ export function ScenarioLibraryControls({
         </div>
       </header>
 
+      {/* Table Region: CSS Grid based layout with unified columns */}
       <div
         role="region"
         aria-label="Danh sách kịch bản để phân chia thư viện"
         tabIndex={0}
-        className="cns-scrollbar max-h-[26rem] overflow-auto"
+        className="cns-scrollbar max-h-[26rem] overflow-auto [scrollbar-gutter:stable]"
       >
-        <table className="w-full min-w-[680px] border-collapse text-left text-sm">
+        <table className="w-full border-collapse text-left text-sm table-fixed">
           <caption className="sr-only">
             Phân chia kịch bản vào thư viện Ôn tập và thư viện Kiểm tra
           </caption>
-          <thead className="sticky top-0 z-10 border-b border-white/[0.06] bg-[#101922] text-[11px] font-semibold uppercase tracking-[0.06em] text-[#9AA9BC]">
-            <tr>
+          <thead className="sticky top-0 z-10 block border-b border-white/[0.06] bg-[#101922] text-[11px] font-semibold uppercase tracking-[0.06em] text-[#9AA9BC]">
+            <tr className="grid grid-cols-[minmax(0,1fr)_150px_150px] items-center px-6 py-2.5">
               <th
                 scope="col"
-                className="px-5 py-3 sm:px-6"
+                className="text-left font-semibold text-[11px] uppercase tracking-[0.06em] text-[#9AA9BC] min-w-0 pr-4"
               >
                 Tên kịch bản
               </th>
@@ -310,9 +315,11 @@ export function ScenarioLibraryControls({
                   <th
                     key={kind}
                     scope="col"
-                    className="w-44 px-3 py-2 text-center"
+                    className="flex flex-col items-center justify-center gap-1.5 text-center w-[150px] justify-self-center font-normal"
                   >
-                    <span className="block font-semibold text-[#E6EDF5]">{LIBRARY_LABELS[kind]}</span>
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#9AA9BC] leading-none">
+                      {LIBRARY_LABELS[kind]}
+                    </span>
                     <SelectAllCheckbox
                       kind={kind}
                       checked={allSelected}
@@ -325,22 +332,16 @@ export function ScenarioLibraryControls({
               })}
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/[0.05]">
+          <tbody className="block divide-y divide-white/[0.05]">
             {loading ? (
-              <tr>
-                <td
-                  colSpan={3}
-                  className="px-6 py-8 text-center text-[13px] text-[#6B7A8D]"
-                >
+              <tr className="block px-6 py-8 text-center text-[13px] text-[#6B7A8D]">
+                <td colSpan={3} className="block w-full">
                   Đang tải trạng thái thư viện…
                 </td>
               </tr>
             ) : available.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={3}
-                  className="px-6 py-8 text-center text-[13px] text-[#6B7A8D]"
-                >
+              <tr className="block px-6 py-8 text-center text-[13px] text-[#6B7A8D]">
+                <td colSpan={3} className="block w-full">
                   Chưa có kịch bản để phân chia thư viện.
                 </td>
               </tr>
@@ -348,23 +349,26 @@ export function ScenarioLibraryControls({
               available.map((scenario) => (
                 <tr
                   key={scenario.id}
-                  className="transition-colors duration-150 hover:bg-white/[0.035]"
+                  className="grid grid-cols-[minmax(0,1fr)_150px_150px] items-center px-6 min-h-[60px] transition-colors duration-150 hover:bg-white/[0.04]"
                 >
                   <th
                     scope="row"
-                    className="px-5 py-3.5 align-middle sm:px-6 font-normal"
+                    className="text-left font-normal min-w-0 pr-4 py-3"
                   >
-                    <span className="block text-[14px] font-medium text-[#E6EDF5]">
+                    <span
+                      className="block text-[14px] font-medium text-[#E6EDF5] truncate"
+                      title={scenario.name}
+                    >
                       {scenario.name}
                     </span>
-                    <span className="mt-1 block font-mono text-[12px] text-[#6B7A8D]">
+                    <span className="mt-0.5 block font-mono text-[12px] text-[#6B7A8D]">
                       {scenario.scenarioId}
                     </span>
                   </th>
                   {LIBRARY_KINDS.map((kind) => (
                     <td
                       key={kind}
-                      className="px-3 py-2 text-center align-middle"
+                      className="flex items-center justify-center text-center w-[150px] justify-self-center py-3"
                     >
                       <label className="inline-flex size-8 cursor-pointer items-center justify-center rounded-[6px] border border-transparent transition-colors hover:border-white/[0.12] hover:bg-white/[0.06]">
                         <input
@@ -387,7 +391,8 @@ export function ScenarioLibraryControls({
         </table>
       </div>
 
-      <footer className="sticky bottom-0 z-10 flex flex-col gap-3 border-t border-white/[0.07] bg-[#101922]/95 px-5 py-3 backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      {/* Sticky Bottom Actions Bar */}
+      <footer className="sticky bottom-0 z-10 flex flex-col gap-3 border-t border-white/[0.07] bg-[#101922] px-6 py-3.5 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-h-5 text-[13px] leading-5">
           {error ? (
             <p role="alert" className="text-[#f87171]">

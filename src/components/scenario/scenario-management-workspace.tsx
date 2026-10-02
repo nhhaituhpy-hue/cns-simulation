@@ -39,6 +39,15 @@ type QuickEditDraft = {
   difficulty: ScenarioDifficulty;
 };
 
+const moduleDescriptions: Record<string, string> = {
+  "dvor-1150a": "Thiết bị dẫn đường VOR Doppler",
+  "dvor-1150": "Thiết bị dẫn đường VOR Doppler",
+  "dme-1119a": "Thiết bị đo cự ly DME",
+  "dvor-220": "Thiết bị dẫn đường VOR Doppler MOPIENS",
+  "dme-320": "Thiết bị đo cự ly DME MOPIENS",
+  "ads-b": "Hệ thống giám sát phát sóng tự động ADS-B",
+};
+
 function formatDate(value: string | null) {
   if (!value) return "—";
   const date = new Date(value);
@@ -324,7 +333,7 @@ export function ScenarioManagementWorkspace({
   return (
     <main className="mx-auto w-full max-w-[1280px] px-4 py-8 sm:px-6 lg:px-8">
       <header className="border-b border-white/[0.08] pb-6">
-        <nav aria-label="Đường dẫn kịch bản" className="mb-3">
+        <nav aria-label="Đường dẫn kịch bản" className="mb-5">
           <Link
             href="/authoring"
             className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[#38a3dc] hover:text-[#7dd3fc] hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111a24]"
@@ -336,10 +345,10 @@ export function ScenarioManagementWorkspace({
         <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#38a3dc]">
           Kịch bản / Scenario Parameters
         </p>
-        <h1 className="mt-1.5 text-[28px] sm:text-[32px] font-semibold tracking-tight text-[#E6EDF5] leading-tight">
+        <h1 className="mt-2 text-[28px] sm:text-[30px] font-semibold tracking-[-0.01em] text-[#E6EDF5] leading-[1.3]">
           Kịch bản {simulatorModule.shortName}
         </h1>
-        <p className="mt-2 max-w-[640px] text-[13px] sm:text-[14px] leading-relaxed text-[#9AA9BC]">
+        <p className="mt-2 max-w-[640px] text-[14px] leading-relaxed text-[#9AA9BC]">
           Quản lý các Scenario Parameters của {simulatorModule.shortName}. Bấm vào từng
           tình huống để xem đầy đủ chi tiết.
         </p>
@@ -374,7 +383,7 @@ export function ScenarioManagementWorkspace({
             </caption>
             <thead className="border-b border-white/[0.06] bg-[#101922] text-[11px] font-semibold uppercase tracking-[0.06em] text-[#9AA9BC]">
               <tr>
-                <th scope="col" className="px-5 py-3 sm:px-6">
+                <th scope="col" className="px-6 py-3">
                   Kịch bản
                 </th>
                 <th scope="col" className="w-36 px-4 py-3">
@@ -386,7 +395,7 @@ export function ScenarioManagementWorkspace({
                 <th scope="col" className="w-32 px-4 py-3">
                   Trạng thái
                 </th>
-                <th scope="col" className="w-80 px-5 py-3 text-right sm:px-6">
+                <th scope="col" className="w-64 px-6 py-3 text-right">
                   Thao tác
                 </th>
               </tr>
@@ -492,21 +501,25 @@ function DeviceGroup({
     changes: Partial<Omit<QuickEditDraft, "moduleId" | "scenarioId">>,
   ) => void;
 }) {
+  const description =
+    moduleDescriptions[moduleId] ??
+    (module.name !== module.shortName ? module.name : null);
+
   return (
     <>
       <tr className="border-b border-white/[0.06] bg-[#141f2a]">
         <th
           scope="rowgroup"
           colSpan={5}
-          className="px-5 py-4 font-normal sm:px-6"
+          className="px-6 py-4 font-normal"
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="flex flex-wrap items-center gap-2.5">
-                <span className="text-[16px] font-semibold text-[#E6EDF5]">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-[18px] font-semibold leading-none text-[#E6EDF5]">
                   {module.shortName}
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.05] px-2.5 py-0.5 text-[12px] font-medium text-[#9AA9BC]">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.05] px-2.5 py-1 text-[12px] font-medium leading-none text-[#9AA9BC]">
                   <span className="size-1.5 rounded-full bg-[#22c55e]" />
                   <span>{moduleStatus(module)}</span>
                   <span className="text-white/20">·</span>
@@ -515,9 +528,11 @@ function DeviceGroup({
                   <span>{scenarios.length} tình huống</span>
                 </span>
               </div>
-              <p className="mt-1 text-[13px] leading-relaxed text-[#9AA9BC]">
-                {module.name}
-              </p>
+              {description ? (
+                <p className="mt-1 text-[13px] leading-relaxed text-[#9AA9BC]">
+                  {description}
+                </p>
+              ) : null}
             </div>
             <div>
               <Button
@@ -613,23 +628,24 @@ function ScenarioRow({
   const simulatorHref = `${module.routes.simulator}?scenarioId=${encodeURIComponent(scenario.id)}`;
   return (
     <>
-      <tr className="border-b border-white/[0.05] transition-colors duration-150 hover:bg-white/[0.035]">
-        <th scope="row" className="px-5 py-3.5 font-normal sm:px-6">
+      <tr className="border-b border-white/[0.05] transition-colors duration-150 hover:bg-white/[0.04]">
+        <th scope="row" className="px-6 py-3.5 font-normal max-w-[380px]">
           <button
             type="button"
-            className="group flex items-start gap-2.5 rounded-[6px] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+            className="group flex items-start gap-2.5 rounded-[6px] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] max-w-full"
             aria-expanded={expanded}
             aria-controls={`scenario-detail-${scenario.id}`}
             onClick={() => onToggle(scenario.id)}
+            title={scenario.name}
           >
             <span className="mt-0.5 shrink-0 text-[#6B7A8D] transition-colors group-hover:text-[#38a3dc]">
               {expanded ? <CaretDown size={16} /> : <CaretRight size={16} />}
             </span>
-            <span>
-              <span className="block text-[14px] font-medium leading-snug text-[#E6EDF5] transition-colors group-hover:text-[#38a3dc]">
+            <span className="min-w-0">
+              <span className="block truncate text-[14px] font-medium leading-snug text-[#E6EDF5] transition-colors group-hover:text-[#38a3dc]">
                 {scenario.name}
               </span>
-              <span className="mt-0.5 block font-mono text-[12px] text-[#6B7A8D]">
+              <span className="mt-0.5 block truncate font-mono text-[12px] text-[#6B7A8D]">
                 {scenario.scenarioId}
               </span>
             </span>
@@ -647,30 +663,35 @@ function ScenarioRow({
         <td className="whitespace-nowrap px-4 py-3.5 align-middle">
           <StatusSavedBadge />
         </td>
-        <td className="whitespace-nowrap px-5 py-3.5 align-middle text-right sm:px-6">
-          <div className="flex items-center justify-end gap-2">
+        <td className="whitespace-nowrap px-6 py-3.5 align-middle text-right">
+          <div className="flex items-center justify-end gap-1.5">
             <Button
               variant="secondary"
               size="sm"
+              aria-label="Sửa nhanh"
+              title="Sửa nhanh"
+              className="size-8 !px-0"
               disabled={busy}
               onClick={() => onStartEdit(moduleId, scenario)}
             >
-              <PencilSimple aria-hidden size={14} />
-              <span>Sửa nhanh</span>
+              <PencilSimple aria-hidden size={15} />
             </Button>
             <Button
               variant="secondary"
               size="sm"
+              aria-label="Tải JSON"
+              title="Tải JSON"
+              className="size-8 !px-0"
               disabled={busy}
               onClick={() => onDownload(scenario)}
             >
-              <DownloadSimple aria-hidden size={14} />
-              <span>Tải JSON</span>
+              <DownloadSimple aria-hidden size={15} />
             </Button>
             <ButtonLink
               href={simulatorHref}
               variant="primary"
               size="sm"
+              className="h-8 px-3 text-[13px] font-medium"
             >
               <ArrowSquareOut aria-hidden size={14} />
               <span>Mở simulator</span>
@@ -678,11 +699,13 @@ function ScenarioRow({
             <Button
               variant="danger"
               size="sm"
+              aria-label="Xóa"
+              title="Xóa"
+              className="size-8 !px-0"
               disabled={busy}
               onClick={() => void onDelete(scenario)}
             >
-              <Trash aria-hidden size={14} />
-              <span>Xóa</span>
+              <Trash aria-hidden size={15} />
             </Button>
           </div>
         </td>

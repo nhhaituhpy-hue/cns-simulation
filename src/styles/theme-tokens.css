@@ -165,6 +165,7 @@
   --cns-radius-sm: 6px;   /* Checkbox, tags, badges */
   --cns-radius-md: 8px;   /* Buttons, inputs, pills */
   --cns-radius-lg: 12px;  /* Cards, panels, modals */
+  --cns-radius-full: 999px; /* Badges, chips, rounded-full */
 
   /* Text hierarchy (Dark mode defaults) */
   --cns-text-primary: #E6EDF5;
@@ -221,6 +222,7 @@
 .cns-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+  scrollbar-gutter: stable;
 }
 
 .cns-scrollbar::-webkit-scrollbar {
