@@ -29,7 +29,7 @@ const LIBRARY_LABELS: Record<ScenarioLibraryKind, string> = {
 const EMPTY_SELECTION: LibrarySelection = { practice: [], exam: [] };
 
 function checkboxClass() {
-  return "relative size-4 shrink-0 cursor-pointer appearance-none rounded-full border border-white/20 bg-white/5 transition-colors checked:border-[#0284c7] checked:bg-[#0284c7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-1 focus-visible:ring-offset-[#101922] after:absolute after:inset-0 after:flex after:items-center after:justify-center after:text-[10px] after:font-bold after:text-white after:content-['✓'] after:opacity-0 checked:after:opacity-100";
+  return "relative size-4 shrink-0 cursor-pointer appearance-none rounded-full border border-slate-400 bg-slate-200 transition-colors checked:border-[#0284c7] checked:bg-[#0284c7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-1 focus-visible:ring-offset-[#e5e7eb] after:absolute after:inset-0 after:flex after:items-center after:justify-center after:text-[10px] after:font-bold after:text-[#22c55e] after:content-['✓'] after:opacity-0 checked:after:opacity-100";
 }
 
 function sameIds(left: readonly string[], right: readonly string[]) {
@@ -346,14 +346,14 @@ export function ScenarioLibraryControls({
                 </td>
               </tr>
             ) : (
-              available.map((scenario) => (
+              available.map((scenario, index) => (
                 <tr
                   key={scenario.id}
-                  className="grid grid-cols-[minmax(0,1fr)_150px_150px] items-center px-6 min-h-[60px] transition-colors duration-150 bg-[#e5e7eb]"
+                  className={`grid grid-cols-[minmax(0,1fr)_150px_150px] items-center px-6 min-h-[60px] transition-colors duration-150 ${index % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}
                 >
                   <th
                     scope="row"
-                    className="text-left font-normal min-w-0 pr-4 py-3 bg-[#e5e7eb]"
+                    className={`text-left font-normal min-w-0 pr-4 py-3 ${index % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}
                   >
                     <span
                       className="block text-[14px] font-medium text-slate-900 truncate"
@@ -368,7 +368,7 @@ export function ScenarioLibraryControls({
                   {LIBRARY_KINDS.map((kind) => (
                     <td
                       key={kind}
-                      className="flex items-center justify-center text-center w-[150px] justify-self-center py-3 bg-[#e5e7eb]"
+                      className={`flex items-center justify-center text-center w-[150px] justify-self-center py-3 ${index % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}
                     >
                       <label className="inline-flex size-8 cursor-pointer items-center justify-center rounded-[6px] border border-transparent transition-colors">
                         <input

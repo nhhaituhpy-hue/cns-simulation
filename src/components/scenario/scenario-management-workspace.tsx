@@ -436,14 +436,41 @@ export function ScenarioManagementWorkspace({
 
 function LoadingRows() {
   return (
-    <tr aria-hidden="true">
-      <td
-        colSpan={5}
-        className="px-6 py-10 text-center text-[13px] text-[#6B7A8D]"
-      >
-        Đang tải danh sách kịch bản…
-      </td>
-    </tr>
+    <>
+      {[0, 1, 2].map((i) => (
+        <tr
+          key={`skeleton-${i}`}
+          aria-hidden="true"
+          className="border-b border-white/[0.05] bg-[#e5e7eb] animate-pulse"
+        >
+          <th scope="row" className="px-6 py-3.5 font-normal max-w-[380px] bg-[#e5e7eb]">
+            <div className="flex items-start gap-2.5">
+              <div className="mt-0.5 size-4 shrink-0 rounded bg-slate-300" />
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="h-4 w-3/4 rounded bg-slate-300" />
+                <div className="h-3 w-1/2 rounded bg-slate-300" />
+              </div>
+            </div>
+          </th>
+          <td className="whitespace-nowrap px-4 py-3.5 align-middle bg-[#e5e7eb]">
+            <div className="h-5 w-16 rounded bg-slate-300" />
+          </td>
+          <td className="whitespace-nowrap px-4 py-3.5 align-middle bg-[#e5e7eb]">
+            <div className="h-4 w-20 rounded bg-slate-300" />
+          </td>
+          <td className="whitespace-nowrap px-4 py-3.5 align-middle bg-[#e5e7eb]">
+            <div className="h-5 w-12 rounded bg-slate-300" />
+          </td>
+          <td className="whitespace-nowrap px-6 py-3.5 align-middle text-right bg-[#e5e7eb]">
+            <div className="flex items-center justify-end gap-1.5">
+              <div className="size-8 rounded bg-slate-300" />
+              <div className="size-8 rounded bg-slate-300" />
+              <div className="h-8 w-24 rounded-full bg-slate-300" />
+            </div>
+          </td>
+        </tr>
+      ))}
+    </>
   );
 }
 
@@ -544,12 +571,13 @@ function DeviceGroup({
           </td>
         </tr>
       ) : (
-        scenarios.map((scenario) => (
+        scenarios.map((scenario, index) => (
           <ScenarioRow
             key={scenario.id}
             module={module}
             moduleId={moduleId}
             scenario={scenario}
+            rowIndex={index}
             expanded={expandedScenarioIds.includes(scenario.id)}
             onToggle={onToggle}
             onDownload={onDownload}
@@ -573,6 +601,7 @@ function ScenarioRow({
   module,
   moduleId,
   scenario,
+  rowIndex = 0,
   expanded,
   onToggle,
   onDownload,
@@ -587,6 +616,7 @@ function ScenarioRow({
   module: SimulatorModuleDefinition;
   moduleId: ScenarioParametersModuleId;
   scenario: StoredScenarioParameters;
+  rowIndex?: number;
   expanded: boolean;
   onToggle: (scenarioId: string) => void;
   onDownload: (scenario: StoredScenarioParameters) => void;
@@ -606,8 +636,8 @@ function ScenarioRow({
   const simulatorHref = `${module.routes.simulator}?scenarioId=${encodeURIComponent(scenario.id)}`;
   return (
     <>
-      <tr className="border-b border-white/[0.05] transition-colors duration-150 bg-[#e5e7eb]">
-        <th scope="row" className="px-6 py-3.5 font-normal max-w-[380px] bg-[#e5e7eb]">
+      <tr className={`border-b border-white/[0.05] transition-colors duration-150 ${rowIndex % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}>
+        <th scope="row" className={`px-6 py-3.5 font-normal max-w-[380px] ${rowIndex % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}>
           <button
             type="button"
             className="group flex items-start gap-2.5 rounded-[6px] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] max-w-full"
@@ -629,19 +659,19 @@ function ScenarioRow({
             </span>
           </button>
         </th>
-        <td className="whitespace-nowrap px-4 py-3.5 align-middle bg-[#e5e7eb]">
+        <td className={`whitespace-nowrap px-4 py-3.5 align-middle ${rowIndex % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}>
           <DifficultyBadge difficulty={scenario.difficulty} />
           <span className="mt-1 block text-[11px] text-slate-600">
             schema v{scenario.schemaVersion}
           </span>
         </td>
-        <td className="whitespace-nowrap px-4 py-3.5 align-middle text-[12px] tabular-nums text-slate-600 bg-[#e5e7eb]">
+        <td className={`whitespace-nowrap px-4 py-3.5 align-middle text-[12px] tabular-nums text-slate-600 ${rowIndex % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}>
           {formatDate(scenario.updatedAt)}
         </td>
-        <td className="whitespace-nowrap px-4 py-3.5 align-middle bg-[#e5e7eb]">
+        <td className={`whitespace-nowrap px-4 py-3.5 align-middle ${rowIndex % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}>
           <StatusSavedBadge />
         </td>
-        <td className="whitespace-nowrap px-6 py-3.5 align-middle text-right bg-[#e5e7eb]">
+        <td className={`whitespace-nowrap px-6 py-3.5 align-middle text-right ${rowIndex % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}>
           <div className="flex items-center justify-end gap-1.5">
             <Button
               variant="secondary"

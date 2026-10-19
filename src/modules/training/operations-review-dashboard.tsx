@@ -343,14 +343,15 @@ export function OperationsReviewDashboard({
               columns={scenarioColumns}
               emptySearchMessage={`Chưa có tình huống ${copy.shortName} nào được gắn vào ôn tập.`}
               renderCells={(scenario, rowIndex) => {
+                const rowBg = rowIndex % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]";
                 return (
                   <>
-                    <td className="w-16 px-4 py-3.5 align-middle bg-[#e5e7eb]">
+                    <td className={`w-16 px-4 py-3.5 align-middle ${rowBg}`}>
                       <span className="inline-flex size-7 items-center justify-center rounded-[6px] border border-slate-300 bg-slate-200 text-[12px] font-semibold tabular-nums text-slate-700">
                         {String(rowIndex + 1).padStart(2, "0")}
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 align-middle bg-[#e5e7eb]">
+                    <td className={`px-4 py-3.5 align-middle ${rowBg}`}>
                       <h3 className="text-[14px] font-semibold text-slate-900 leading-snug">
                         {scenario.title}
                       </h3>
@@ -360,10 +361,10 @@ export function OperationsReviewDashboard({
                         </p>
                       ) : null}
                     </td>
-                    <td className="w-28 px-4 py-3.5 align-middle bg-[#e5e7eb]">
+                    <td className={`w-28 px-4 py-3.5 align-middle ${rowBg}`}>
                       <DifficultyBadge difficulty={scenario.difficulty} />
                     </td>
-                    <td className="w-32 px-4 py-3.5 text-right align-middle bg-[#e5e7eb]">
+                    <td className={`w-32 px-4 py-3.5 text-right align-middle ${rowBg}`}>
                       <button
                         type="button"
                         disabled={loadingHref !== null}

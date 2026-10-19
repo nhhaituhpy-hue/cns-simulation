@@ -107,16 +107,16 @@ export function DifficultyBadge({
 }) {
   let label = "Cơ bản";
   let colorStyle =
-    "bg-[rgba(34,197,94,0.14)] text-[#4ade80] border-[rgba(34,197,94,0.28)]";
+    "bg-[rgba(34,197,94,0.14)] text-[#16a34a] border-[rgba(34,197,94,0.4)]";
 
   if (difficulty === "advanced" || difficulty === "hard") {
     label = "Nâng cao";
     colorStyle =
-      "bg-[rgba(249,115,22,0.14)] text-[#fb923c] border-[rgba(249,115,22,0.28)]";
+      "bg-[rgba(249,115,22,0.14)] text-[#ea580c] border-[rgba(249,115,22,0.4)]";
   } else if (difficulty === "intermediate" || difficulty === "medium") {
     label = "Trung bình";
     colorStyle =
-      "bg-[rgba(234,179,8,0.14)] text-[#facc15] border-[rgba(234,179,8,0.28)]";
+      "bg-[rgba(234,179,8,0.14)] text-[#ca8a04] border-[rgba(234,179,8,0.4)]";
   }
 
   return (
