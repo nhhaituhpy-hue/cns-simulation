@@ -598,3 +598,11 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 - `/review/dvor-1150a` (operations-review-dashboard): xen kẽ 2 màu nền `#f9fafb` ↔ `#d1d5db`; `DifficultyBadge` tăng tương phản: basic `#16a34a`, advanced `#ea580c`, intermediate `#ca8a04`, border opacity `0.4`.
 - `/admin/scenario-exams` (scenario-exam-list): xen kẽ 2 màu nền `#f9fafb` ↔ `#d1d5db` giữa các hàng kỳ thi (tr, td).
 - Kiểm thử: `npx vitest run` (881 passed), `npm run typecheck` (sạch), `npm run lint` (sạch), `npm run build` (72/72 routes đạt).
+
+### 2026-10-19 — Chuyển tổng thể sang Light Gray Mode (trừ trang chủ & simulator)
+- `src/lib/theme.ts`: `DEFAULT_APP_THEME` → `"light"`.
+- `src/app/layout.tsx`: `data-theme="light"` mặc định + thêm `ThemeRouteSync` client component.
+- `src/components/layout/theme-route-sync.tsx` (mới): Tự động set `data-theme="dark"` cho route `/` và `/simulator/*`, `data-theme="light"` cho các route còn lại.
+- `src/styles/theme-tokens.css`: CNS design system tokens (`--cns-*`) giờ theme-aware — light values under `:root`/`[data-theme="light"]`, dark values under `[data-theme="dark"]`.
+- Global replacement: Thay hardcoded dark colors (`#E6EDF5`, `#9AA9BC`, `#6B7A8D`, `#101922`, `#141f2a`, `#111a24`, `border-white/[0.0X]`, `bg-white/[0.0X]`) bằng `--cns-*` tokens và `black/[0.X]` trong ~15 file.
+- Kiểm thử: `npx vitest run` (881 passed), `npm run typecheck` (sạch), `npm run lint` (sạch), `npm run build` (72/72 routes đạt).

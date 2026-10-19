@@ -372,7 +372,7 @@ function TopNavigation({
                   : "border border-[#0369a1]/25 bg-[#0369a1]/15 text-[#38a3dc]"
                 : inverted
                   ? "border border-transparent text-white/70 hover:bg-white/8 hover:text-white"
-                  : "border border-transparent text-[#9AA9BC] hover:bg-white/[0.04] hover:text-[#E6EDF5]",
+                  : "border border-transparent text-[var(--cns-text-secondary)] hover:bg-black/[0.04] hover:text-[var(--cns-text-primary)]",
             ].join(" ")}
           >
             {item.label}

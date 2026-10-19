@@ -323,11 +323,11 @@ export function ScenarioManagementWorkspace({
 
   return (
     <main className="mx-auto w-full max-w-[1280px] px-4 py-8 sm:px-6 lg:px-8">
-      <header className="border-b border-white/[0.08] pb-6">
+      <header className="border-b border-[var(--cns-border-subtle)] pb-6">
         <nav aria-label="Đường dẫn kịch bản" className="mb-5">
           <Link
             href="/authoring"
-            className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[#38a3dc] hover:text-[#7dd3fc] hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111a24]"
+            className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[#38a3dc] hover:text-[#7dd3fc] hover:bg-black/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--cns-surface-card-subtle)]"
           >
             <ArrowLeft aria-hidden size={16} />
             back
@@ -336,10 +336,10 @@ export function ScenarioManagementWorkspace({
         <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#38a3dc]">
           Kịch bản
         </p>
-        <h1 className="mt-2 text-[28px] sm:text-[30px] font-semibold tracking-[-0.01em] text-[#E6EDF5] leading-[1.3]">
+        <h1 className="mt-2 text-[28px] sm:text-[30px] font-semibold tracking-[-0.01em] text-[var(--cns-text-primary)] leading-[1.3]">
           {simulatorModule.shortName}
         </h1>
-        <p className="mt-2 text-[14px] leading-relaxed text-[#9AA9BC] whitespace-nowrap">
+        <p className="mt-2 text-[14px] leading-relaxed text-[var(--cns-text-secondary)] whitespace-nowrap">
           Quản lý các kịch bản (scenario) giả lập sự cố của {simulatorModule.shortName}. Bấm vào từng tình huống để xem đầy đủ chi tiết.
         </p>
       </header>
@@ -365,13 +365,13 @@ export function ScenarioManagementWorkspace({
 
       <ScenarioLibraryControls moduleId={moduleId} scenarios={scenarios} />
 
-      <div className="mt-6 overflow-hidden rounded-[12px] border border-white/[0.08] bg-[#141f2a] shadow-sm">
+      <div className="mt-6 overflow-hidden rounded-[12px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[880px] border-collapse text-left text-[13px]">
             <caption className="sr-only">
               Danh sách Scenario Parameters {simulatorModule.shortName}
             </caption>
-            <thead className="border-b border-white/[0.06] bg-[#101922] text-[11px] font-semibold uppercase tracking-[0.06em] text-[#9AA9BC]">
+            <thead className="border-b border-[var(--cns-divider)] bg-[var(--cns-surface-table-header)] text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--cns-text-secondary)]">
               <tr>
                 <th scope="col" className="px-6 py-3">
                   Kịch bản
@@ -390,7 +390,7 @@ export function ScenarioManagementWorkspace({
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.05]">
+            <tbody className="divide-y divide-[var(--cns-divider)]">
               {isLoading ? <LoadingRows /> : null}
               {!isLoading ? (
                 <DeviceGroup
@@ -425,7 +425,7 @@ export function ScenarioManagementWorkspace({
         </div>
       </div>
 
-      <p className="mt-3 text-[13px] leading-relaxed text-[#6B7A8D]">
+      <p className="mt-3 text-[13px] leading-relaxed text-[var(--cns-text-muted)]">
         Có {moduleScenarios.length} kịch bản {simulatorModule.shortName} đã lưu. Chỉ
         JSON đúng schema của thiết bị mới được ghi vào kho; import cùng mã sẽ
         cập nhật bản ghi cũ.
@@ -441,7 +441,7 @@ function LoadingRows() {
         <tr
           key={`skeleton-${i}`}
           aria-hidden="true"
-          className="border-b border-white/[0.05] bg-[#e5e7eb] animate-pulse"
+          className="border-b border-[var(--cns-divider)] bg-[#e5e7eb] animate-pulse"
         >
           <th scope="row" className="px-6 py-3.5 font-normal max-w-[380px] bg-[#e5e7eb]">
             <div className="flex items-start gap-2.5">
@@ -518,7 +518,7 @@ function DeviceGroup({
 }) {
   return (
     <>
-      <tr className="border-b border-white/[0.06] bg-[#141f2a]">
+      <tr className="border-b border-[var(--cns-divider)] bg-[var(--cns-surface-card)]">
         <th
           scope="rowgroup"
           colSpan={5}
@@ -527,10 +527,10 @@ function DeviceGroup({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="flex flex-wrap items-center gap-3">
-                <span className="text-[18px] font-semibold leading-none text-[#E6EDF5]">
+                <span className="text-[18px] font-semibold leading-none text-[var(--cns-text-primary)]">
                   {module.shortName}
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.05] px-2.5 py-1 text-[12px] font-medium leading-none text-[#9AA9BC]">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--cns-border-subtle)] bg-black/[0.05] px-2.5 py-1 text-[12px] font-medium leading-none text-[var(--cns-text-secondary)]">
                   <span className="size-1.5 rounded-full bg-[#22c55e]" />
                   <span>{moduleStatus(module)}</span>
                   <span className="text-white/20">·</span>
@@ -565,7 +565,7 @@ function DeviceGroup({
         <tr>
           <td
             colSpan={5}
-            className="px-6 py-6 text-center text-[13px] text-[#6B7A8D] bg-[#e5e7eb]"
+            className="px-6 py-6 text-center text-[13px] text-[var(--cns-text-muted)] bg-[#e5e7eb]"
           >
             Chưa có kịch bản
           </td>
@@ -636,7 +636,7 @@ function ScenarioRow({
   const simulatorHref = `${module.routes.simulator}?scenarioId=${encodeURIComponent(scenario.id)}`;
   return (
     <>
-      <tr className={`border-b border-white/[0.05] transition-colors duration-150 ${rowIndex % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}>
+      <tr className={`border-b border-[var(--cns-divider)] transition-colors duration-150 ${rowIndex % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}>
         <th scope="row" className={`px-6 py-3.5 font-normal max-w-[380px] ${rowIndex % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}>
           <button
             type="button"
@@ -757,10 +757,10 @@ function ScenarioDetailRow({
       <tr id={`scenario-detail-${scenario.id}`}>
         <td
           colSpan={5}
-          className="border-l-[3px] border-[#0369a1] bg-[#111a24] px-6 py-5 sm:px-10"
+          className="border-l-[3px] border-[#0369a1] bg-[var(--cns-surface-card-subtle)] px-6 py-5 sm:px-10"
         >
           <div className="max-w-3xl">
-            <h3 className="text-[14px] font-semibold text-[#E6EDF5]">
+            <h3 className="text-[14px] font-semibold text-[var(--cns-text-primary)]">
               Sửa nhanh kịch bản
             </h3>
             <form
@@ -770,7 +770,7 @@ function ScenarioDetailRow({
                 onSaveEdit();
               }}
             >
-              <label className="grid gap-1.5 text-[12px] font-medium text-[#9AA9BC]">
+              <label className="grid gap-1.5 text-[12px] font-medium text-[var(--cns-text-secondary)]">
                 Tên kịch bản
                 <input
                   autoFocus
@@ -780,10 +780,10 @@ function ScenarioDetailRow({
                   onChange={(event) =>
                     onEditChange({ name: event.currentTarget.value })
                   }
-                  className="h-9 rounded-[8px] border border-white/[0.12] bg-[#141f2a] px-3 text-[13px] text-[#E6EDF5] outline-none focus:border-[#0284c7] focus:ring-2 focus:ring-[#0284c7]/20"
+                  className="h-9 rounded-[8px] border border-[var(--cns-btn-ghost-border)] bg-[var(--cns-surface-card)] px-3 text-[13px] text-[var(--cns-text-primary)] outline-none focus:border-[#0284c7] focus:ring-2 focus:ring-[#0284c7]/20"
                 />
               </label>
-              <label className="grid gap-1.5 text-[12px] font-medium text-[#9AA9BC]">
+              <label className="grid gap-1.5 text-[12px] font-medium text-[var(--cns-text-secondary)]">
                 Độ khó
                 <select
                   value={quickEditDraft.difficulty}
@@ -793,14 +793,14 @@ function ScenarioDetailRow({
                         .value as ScenarioDifficulty,
                     })
                   }
-                  className="h-9 rounded-[8px] border border-white/[0.12] bg-[#141f2a] px-3 text-[13px] text-[#E6EDF5] outline-none focus:border-[#0284c7] focus:ring-2 focus:ring-[#0284c7]/20 cursor-pointer"
+                  className="h-9 rounded-[8px] border border-[var(--cns-btn-ghost-border)] bg-[var(--cns-surface-card)] px-3 text-[13px] text-[var(--cns-text-primary)] outline-none focus:border-[#0284c7] focus:ring-2 focus:ring-[#0284c7]/20 cursor-pointer"
                 >
                   <option value="basic">Cơ bản</option>
                   <option value="intermediate">Trung bình</option>
                   <option value="advanced">Nâng cao</option>
                 </select>
               </label>
-              <label className="grid gap-1.5 text-[12px] font-medium text-[#9AA9BC] sm:col-span-2">
+              <label className="grid gap-1.5 text-[12px] font-medium text-[var(--cns-text-secondary)] sm:col-span-2">
                 Mô tả
                 <textarea
                   value={quickEditDraft.description}
@@ -808,10 +808,10 @@ function ScenarioDetailRow({
                     onEditChange({ description: event.currentTarget.value })
                   }
                   rows={3}
-                  className="rounded-[8px] border border-white/[0.12] bg-[#141f2a] p-3 text-[13px] leading-relaxed text-[#E6EDF5] outline-none focus:border-[#0284c7] focus:ring-2 focus:ring-[#0284c7]/20"
+                  className="rounded-[8px] border border-[var(--cns-btn-ghost-border)] bg-[var(--cns-surface-card)] p-3 text-[13px] leading-relaxed text-[var(--cns-text-primary)] outline-none focus:border-[#0284c7] focus:ring-2 focus:ring-[#0284c7]/20"
                 />
               </label>
-              <p className="mt-1 text-[12px] text-[#6B7A8D] sm:col-span-2">
+              <p className="mt-1 text-[12px] text-[var(--cns-text-muted)] sm:col-span-2">
                 Mã scenario và toàn bộ tham số kỹ thuật được giữ nguyên.
               </p>
               <div className="mt-2 flex flex-wrap gap-2 sm:col-span-2">
@@ -843,48 +843,48 @@ function ScenarioDetailRow({
     <tr id={`scenario-detail-${scenario.id}`}>
       <td
         colSpan={5}
-        className="border-l-[3px] border-[#0369a1] bg-[#111a24] px-6 py-5 sm:px-10"
+        className="border-l-[3px] border-[#0369a1] bg-[var(--cns-surface-card-subtle)] px-6 py-5 sm:px-10"
       >
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.7fr)]">
           <div>
-            <h3 className="text-[14px] font-semibold text-[#E6EDF5]">
+            <h3 className="text-[14px] font-semibold text-[var(--cns-text-primary)]">
               Chi tiết kịch bản
             </h3>
-            <p className="mt-1.5 max-w-3xl whitespace-pre-wrap text-[13px] leading-relaxed text-[#9AA9BC]">
+            <p className="mt-1.5 max-w-3xl whitespace-pre-wrap text-[13px] leading-relaxed text-[var(--cns-text-secondary)]">
               {scenario.description || "Không có mô tả."}
             </p>
             <dl className="mt-4 grid gap-x-6 gap-y-2.5 text-[12px] sm:grid-cols-2">
               <div>
-                <dt className="text-[#6B7A8D]">Thiết bị</dt>
-                <dd className="font-medium text-[#E6EDF5] mt-0.5">
+                <dt className="text-[var(--cns-text-muted)]">Thiết bị</dt>
+                <dd className="font-medium text-[var(--cns-text-primary)] mt-0.5">
                   {module.shortName}
                 </dd>
               </div>
               <div>
-                <dt className="text-[#6B7A8D]">Mã scenario</dt>
-                <dd className="font-mono text-[#E6EDF5] mt-0.5">
+                <dt className="text-[var(--cns-text-muted)]">Mã scenario</dt>
+                <dd className="font-mono text-[var(--cns-text-primary)] mt-0.5">
                   {scenario.scenarioId}
                 </dd>
               </div>
               <div>
-                <dt className="text-[#6B7A8D]">Schema</dt>
-                <dd className="text-[#E6EDF5] mt-0.5">
+                <dt className="text-[var(--cns-text-muted)]">Schema</dt>
+                <dd className="text-[var(--cns-text-primary)] mt-0.5">
                   v{scenario.schemaVersion}
                 </dd>
               </div>
               <div>
-                <dt className="text-[#6B7A8D]">Cập nhật</dt>
-                <dd className="tabular-nums text-[#E6EDF5] mt-0.5">
+                <dt className="text-[var(--cns-text-muted)]">Cập nhật</dt>
+                <dd className="tabular-nums text-[var(--cns-text-primary)] mt-0.5">
                   {formatDate(scenario.updatedAt)}
                 </dd>
               </div>
             </dl>
           </div>
           <div>
-            <p className="text-[12px] font-semibold uppercase tracking-wider text-[#9AA9BC]">
+            <p className="text-[12px] font-semibold uppercase tracking-wider text-[var(--cns-text-secondary)]">
               Nội dung JSON
             </p>
-            <pre className="cns-scrollbar mt-2 max-h-64 overflow-auto rounded-[8px] border border-white/[0.08] bg-[#0c141c] p-3 font-mono text-[11px] leading-relaxed text-[#9AA9BC]">
+            <pre className="cns-scrollbar mt-2 max-h-64 overflow-auto rounded-[8px] border border-[var(--cns-border-subtle)] bg-[#0c141c] p-3 font-mono text-[11px] leading-relaxed text-[var(--cns-text-secondary)]">
               {JSON.stringify(scenario.definition, null, 2)}
             </pre>
           </div>

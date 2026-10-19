@@ -21,7 +21,7 @@ export function cnsButtonClass({
 }: ButtonClassOptions = {}): string {
   const base =
     "inline-flex items-center justify-center gap-1.5 rounded-full font-medium text-[13px] leading-none whitespace-nowrap shrink-0 transition duration-150 ease-out select-none " +
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111a24] " +
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--cns-surface-card-subtle)] " +
     "disabled:pointer-events-none disabled:opacity-40 disabled:cursor-not-allowed";
 
   const sizeClasses =
@@ -39,7 +39,7 @@ export function cnsButtonClass({
   } else {
     // secondary / ghost
     variantClasses =
-      "bg-white/[0.03] text-[#E6EDF5] border border-white/[0.12] hover:bg-white/[0.08] hover:border-white/[0.2] active:bg-white/[0.12]";
+      "bg-black/[0.03] text-[var(--cns-text-primary)] border border-[var(--cns-btn-ghost-border)] hover:bg-black/[0.08] hover:border-black/[0.2] active:bg-black/[0.12]";
   }
 
   const disabledClasses = disabled
@@ -131,7 +131,7 @@ export function DifficultyBadge({
 export function StatusSavedBadge({ className = "" }: { className?: string }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 text-[12px] font-medium text-[#4ade80] ${className}`}
+      className={`inline-flex items-center gap-1.5 text-[12px] font-medium text-[var(--cns-status-saved-text)] ${className}`}
     >
       <span className="size-1.5 shrink-0 rounded-full bg-[#22c55e]" />
       <span>Đã lưu</span>
@@ -148,7 +148,7 @@ export function CountBadgePill({
 }) {
   return (
     <span
-      className={`inline-flex h-6 items-center gap-1 rounded-full border border-white/[0.08] bg-white/[0.05] px-2.5 text-[12px] font-medium tabular-nums text-[#9AA9BC] ${className}`}
+      className={`inline-flex h-6 items-center gap-1 rounded-full border border-[var(--cns-border-subtle)] bg-black/[0.05] px-2.5 text-[12px] font-medium tabular-nums text-[var(--cns-text-secondary)] ${className}`}
     >
       {children}
     </span>

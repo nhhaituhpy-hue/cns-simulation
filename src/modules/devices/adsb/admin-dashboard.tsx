@@ -59,7 +59,7 @@ export function AdsbAdminDashboard() {
       <div>
         <Link
           href="/authoring"
-          className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[#38a3dc] transition-colors hover:bg-white/[0.04] hover:text-[#7dd3fc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+          className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[#38a3dc] transition-colors hover:bg-black/[0.04] hover:text-[#7dd3fc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
         >
           <ArrowLeft aria-hidden size={15} />
           <span>Danh sách thiết bị</span>
@@ -67,16 +67,16 @@ export function AdsbAdminDashboard() {
       </div>
 
       {/* Main Workspace Header */}
-      <header className="border-b border-white/[0.08] pb-6">
+      <header className="border-b border-[var(--cns-border-subtle)] pb-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#38a3dc]">
               Kịch bản / ADS-B
             </p>
-            <h1 className="mt-1.5 text-[28px] sm:text-[32px] font-semibold tracking-tight text-[#E6EDF5] leading-tight">
+            <h1 className="mt-1.5 text-[28px] sm:text-[32px] font-semibold tracking-tight text-[var(--cns-text-primary)] leading-tight">
               Kịch bản ADS-B
             </h1>
-            <p className="mt-2 max-w-[640px] text-[13px] sm:text-[14px] leading-relaxed text-[#9AA9BC]">
+            <p className="mt-2 max-w-[640px] text-[13px] sm:text-[14px] leading-relaxed text-[var(--cns-text-secondary)]">
               Cấu hình trạng thái site, dữ liệu cảm biến và chuỗi thao tác chuẩn trên QCMS và terminal bảo trì.
             </p>
           </div>
@@ -139,10 +139,10 @@ export function AdsbAdminDashboard() {
       <section aria-labelledby="scenario-list-title" className="space-y-4 pt-2">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 id="scenario-list-title" className="text-[16px] font-semibold tracking-tight text-[#E6EDF5]">
+            <h2 id="scenario-list-title" className="text-[16px] font-semibold tracking-tight text-[var(--cns-text-primary)]">
               Danh sách kịch bản ADS-B
             </h2>
-            <p className="mt-0.5 text-[13px] text-[#9AA9BC]">
+            <p className="mt-0.5 text-[13px] text-[var(--cns-text-secondary)]">
               Kịch bản mới cập nhật được hiển thị trước.
             </p>
           </div>
@@ -153,18 +153,18 @@ export function AdsbAdminDashboard() {
 
         <ScenarioListFrame>
           {!isHydrated ? (
-            <div role="status" className="flex items-center justify-center py-16 text-[13px] text-[#9AA9BC]">
+            <div role="status" className="flex items-center justify-center py-16 text-[13px] text-[var(--cns-text-secondary)]">
               Đang tải danh sách kịch bản…
             </div>
           ) : null}
 
           {isHydrated && sortedScenarios.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-12 text-center">
-              <span className="inline-flex size-12 items-center justify-center rounded-[10px] border border-white/[0.08] bg-white/[0.04] text-[#38a3dc]">
+              <span className="inline-flex size-12 items-center justify-center rounded-[10px] border border-[var(--cns-border-subtle)] bg-black/[0.04] text-[#38a3dc]">
                 <FilePlus aria-hidden size={24} weight="duotone" />
               </span>
-              <h3 className="mt-4 text-[15px] font-semibold text-[#E6EDF5]">Chưa có kịch bản</h3>
-              <p className="mt-1 max-w-[420px] text-[13px] text-[#9AA9BC]">
+              <h3 className="mt-4 text-[15px] font-semibold text-[var(--cns-text-primary)]">Chưa có kịch bản</h3>
+              <p className="mt-1 max-w-[420px] text-[13px] text-[var(--cns-text-secondary)]">
                 Tạo kịch bản đầu tiên để cấu hình trạng thái cảm biến và đáp án thao tác.
               </p>
               <div className="mt-5">
@@ -192,17 +192,17 @@ export function AdsbAdminDashboard() {
                     <td className="w-16 px-4 py-3.5 align-middle">
                       <span
                         aria-label={`Kịch bản số ${rowIndex + 1}`}
-                        className="inline-flex size-7 items-center justify-center rounded-[6px] border border-white/[0.08] bg-white/[0.04] text-[12px] font-semibold tabular-nums text-[#9AA9BC]"
+                        className="inline-flex size-7 items-center justify-center rounded-[6px] border border-[var(--cns-border-subtle)] bg-black/[0.04] text-[12px] font-semibold tabular-nums text-[var(--cns-text-secondary)]"
                       >
                         {formatScenarioNumber(rowIndex)}
                       </span>
                     </td>
                     <td className="px-4 py-3.5 align-middle">
-                      <h3 className="text-[14px] font-semibold text-[#E6EDF5] leading-snug">
+                      <h3 className="text-[14px] font-semibold text-[var(--cns-text-primary)] leading-snug">
                         {scenario.title}
                       </h3>
                       {scenario.description ? (
-                        <p className="mt-0.5 line-clamp-1 text-[12px] leading-relaxed text-[#9AA9BC]">
+                        <p className="mt-0.5 line-clamp-1 text-[12px] leading-relaxed text-[var(--cns-text-secondary)]">
                           {scenario.description}
                         </p>
                       ) : null}
@@ -210,20 +210,20 @@ export function AdsbAdminDashboard() {
                     <td className="w-28 px-4 py-3.5 align-middle">
                       <DifficultyBadge difficulty={scenario.difficulty} />
                     </td>
-                    <td className="w-48 px-4 py-3.5 align-middle text-[12px] leading-relaxed text-[#9AA9BC]">
+                    <td className="w-48 px-4 py-3.5 align-middle text-[12px] leading-relaxed text-[var(--cns-text-secondary)]">
                       <div className="flex flex-col gap-0.5">
                         <div className="flex items-center gap-1.5">
-                          <span className="inline-flex items-center rounded-[4px] bg-white/[0.05] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#E6EDF5]">
+                          <span className="inline-flex items-center rounded-[4px] bg-black/[0.05] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[var(--cns-text-primary)]">
                             {scenario.sites.length}
                           </span>
                           <span>site</span>
                           <span className="text-white/20">·</span>
-                          <span className="inline-flex items-center rounded-[4px] bg-white/[0.05] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[#E6EDF5]">
+                          <span className="inline-flex items-center rounded-[4px] bg-black/[0.05] px-1.5 py-0.5 font-mono text-[11px] font-semibold text-[var(--cns-text-primary)]">
                             {scenario.expectedActions.length}
                           </span>
                           <span>thao tác</span>
                         </div>
-                        <span className="text-[11px] text-[#9AA9BC]/80">
+                        <span className="text-[11px] text-[var(--cns-text-secondary)]/80">
                           {scenario.updatedAt ? "Cập nhật" : "Ngày tạo"}:{" "}
                           {new Intl.DateTimeFormat("vi-VN", {
                             day: "2-digit",

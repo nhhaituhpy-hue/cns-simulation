@@ -72,7 +72,7 @@ function SelectAllCheckbox({
         onChange={(event) => onChange(event.currentTarget.checked)}
         className={checkboxClass()}
       />
-      <span className="text-[10px] sm:text-[11px] font-medium normal-case tracking-normal text-[#9AA9BC]">
+      <span className="text-[10px] sm:text-[11px] font-medium normal-case tracking-normal text-[var(--cns-text-secondary)]">
         Chọn tất cả
       </span>
     </label>
@@ -258,16 +258,16 @@ export function ScenarioLibraryControls({
 
   return (
     <section
-      className="mt-6 overflow-hidden rounded-[12px] border border-white/[0.08] bg-[#141f2a] shadow-sm"
+      className="mt-6 overflow-hidden rounded-[12px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] shadow-sm"
       aria-label="Phân chia thư viện kịch bản"
     >
       {/* Card Header: left block (title + subtitle), right block (3 chips) centered vertically together */}
-      <header className="flex flex-col gap-3 border-b border-white/[0.06] bg-[#141f2a] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+      <header className="flex flex-col gap-3 border-b border-[var(--cns-divider)] bg-[var(--cns-surface-card)] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-[16px] sm:text-[17px] font-semibold text-[#E6EDF5]">
+          <h2 className="text-[16px] sm:text-[17px] font-semibold text-[var(--cns-text-primary)]">
             Cài đặt thư viện
           </h2>
-          <p className="mt-0.5 text-[13px] leading-relaxed text-[#9AA9BC]">
+          <p className="mt-0.5 text-[13px] leading-relaxed text-[var(--cns-text-secondary)]">
             Phân loại kịch bản (scenario) cho thí sinh ôn tập hoặc kho dữ liệu kiểm tra
           </p>
         </div>
@@ -276,13 +276,13 @@ export function ScenarioLibraryControls({
           className="flex flex-wrap items-center gap-2"
         >
           <CountBadgePill>
-            <span className="font-semibold text-[#E6EDF5]">{available.length}</span> kịch bản
+            <span className="font-semibold text-[var(--cns-text-primary)]">{available.length}</span> kịch bản
           </CountBadgePill>
           <CountBadgePill>
-            Ôn tập <span className="font-semibold text-[#E6EDF5]">{selectedCounts.practice}</span>
+            Ôn tập <span className="font-semibold text-[var(--cns-text-primary)]">{selectedCounts.practice}</span>
           </CountBadgePill>
           <CountBadgePill>
-            Kiểm tra <span className="font-semibold text-[#E6EDF5]">{selectedCounts.exam}</span>
+            Kiểm tra <span className="font-semibold text-[var(--cns-text-primary)]">{selectedCounts.exam}</span>
           </CountBadgePill>
         </div>
       </header>
@@ -298,11 +298,11 @@ export function ScenarioLibraryControls({
           <caption className="sr-only">
             Phân chia kịch bản vào thư viện Ôn tập và thư viện Kiểm tra
           </caption>
-          <thead className="sticky top-0 z-10 block border-b border-white/[0.06] bg-[#101922] text-[11px] font-semibold uppercase tracking-[0.06em] text-[#9AA9BC]">
+          <thead className="sticky top-0 z-10 block border-b border-[var(--cns-divider)] bg-[var(--cns-surface-table-header)] text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--cns-text-secondary)]">
             <tr className="grid grid-cols-[minmax(0,1fr)_150px_150px] items-center px-6 py-2.5">
               <th
                 scope="col"
-                className="text-left font-semibold text-[11px] uppercase tracking-[0.06em] text-[#9AA9BC] min-w-0 pr-4"
+                className="text-left font-semibold text-[11px] uppercase tracking-[0.06em] text-[var(--cns-text-secondary)] min-w-0 pr-4"
               >
                 Tên kịch bản
               </th>
@@ -317,7 +317,7 @@ export function ScenarioLibraryControls({
                     scope="col"
                     className="flex flex-col items-center justify-center gap-1.5 text-center w-[150px] justify-self-center font-normal"
                   >
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#9AA9BC] leading-none">
+                    <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--cns-text-secondary)] leading-none">
                       {LIBRARY_LABELS[kind]}
                     </span>
                     <SelectAllCheckbox
@@ -332,15 +332,15 @@ export function ScenarioLibraryControls({
               })}
             </tr>
           </thead>
-          <tbody className="block divide-y divide-white/[0.05]">
+          <tbody className="block divide-y divide-[var(--cns-divider)]">
             {loading ? (
-              <tr className="block px-6 py-8 text-center text-[13px] text-[#6B7A8D] bg-[#e5e7eb]">
+              <tr className="block px-6 py-8 text-center text-[13px] text-[var(--cns-text-muted)] bg-[#e5e7eb]">
                 <td colSpan={3} className="block w-full">
                   Đang tải trạng thái thư viện…
                 </td>
               </tr>
             ) : available.length === 0 ? (
-              <tr className="block px-6 py-8 text-center text-[13px] text-[#6B7A8D] bg-[#e5e7eb]">
+              <tr className="block px-6 py-8 text-center text-[13px] text-[var(--cns-text-muted)] bg-[#e5e7eb]">
                 <td colSpan={3} className="block w-full">
                   Chưa có kịch bản để phân chia thư viện.
                 </td>
@@ -392,7 +392,7 @@ export function ScenarioLibraryControls({
       </div>
 
       {/* Sticky Bottom Actions Bar */}
-      <footer className="sticky bottom-0 z-10 flex flex-col gap-3 border-t border-white/[0.07] bg-[#101922] px-6 py-3.5 sm:flex-row sm:items-center sm:justify-between">
+      <footer className="sticky bottom-0 z-10 flex flex-col gap-3 border-t border-[var(--cns-border-subtle)] bg-[var(--cns-surface-table-header)] px-6 py-3.5 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-h-5 text-[13px] leading-5">
           {error ? (
             <p role="alert" className="text-[#f87171]">
@@ -403,7 +403,7 @@ export function ScenarioLibraryControls({
               {notice}
             </p>
           ) : (
-            <p className="text-[#6B7A8D]">
+            <p className="text-[var(--cns-text-muted)]">
               {changedKinds.length > 0
                 ? "Có thay đổi chưa lưu."
                 : "Các thay đổi sẽ áp dụng sau khi nhấn lưu."}

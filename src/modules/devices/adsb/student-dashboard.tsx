@@ -32,17 +32,17 @@ function ScenarioCells({ scenario, index }: { scenario: Scenario; index: number 
       <td className="w-16 px-5 py-3.5 align-middle sm:px-6">
         <span
           aria-label={`Bài thực hành số ${index + 1}`}
-          className="inline-flex size-7 items-center justify-center rounded-[6px] border border-white/[0.08] bg-white/[0.04] text-[12px] font-semibold tabular-nums text-[#9AA9BC]"
+          className="inline-flex size-7 items-center justify-center rounded-[6px] border border-[var(--cns-border-subtle)] bg-black/[0.04] text-[12px] font-semibold tabular-nums text-[var(--cns-text-secondary)]"
         >
           {formatScenarioNumber(index)}
         </span>
       </td>
       <td className="px-5 py-3.5 align-middle sm:px-6">
-        <h3 className="text-[14px] font-semibold text-[#E6EDF5] leading-snug hover:text-[#38a3dc] transition-colors">
+        <h3 className="text-[14px] font-semibold text-[var(--cns-text-primary)] leading-snug hover:text-[#38a3dc] transition-colors">
           {scenario.title}
         </h3>
         {scenario.description ? (
-          <p className="mt-1 line-clamp-2 text-[12px] sm:text-[13px] leading-relaxed text-[#9AA9BC]">
+          <p className="mt-1 line-clamp-2 text-[12px] sm:text-[13px] leading-relaxed text-[var(--cns-text-secondary)]">
             {scenario.description}
           </p>
         ) : null}
@@ -50,14 +50,14 @@ function ScenarioCells({ scenario, index }: { scenario: Scenario; index: number 
       <td className="w-32 px-4 py-3.5 align-middle">
         <DifficultyBadge difficulty={scenario.difficulty} />
       </td>
-      <td className="w-36 px-4 py-3.5 align-middle text-[12px] text-[#9AA9BC]">
+      <td className="w-36 px-4 py-3.5 align-middle text-[12px] text-[var(--cns-text-secondary)]">
         <div className="flex flex-col gap-1">
           <span className="flex items-center gap-1.5">
-            <MapPin aria-hidden size={14} className="text-[#6B7A8D]" />
+            <MapPin aria-hidden size={14} className="text-[var(--cns-text-muted)]" />
             <span className="font-mono tabular-nums">{scenario.sites.length} site</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <Monitor aria-hidden size={14} className="text-[#6B7A8D]" />
+            <Monitor aria-hidden size={14} className="text-[var(--cns-text-muted)]" />
             <span className="font-mono tabular-nums">{sensorCount} cảm biến</span>
           </span>
         </div>
@@ -95,7 +95,7 @@ export function AdsbStudentDashboard() {
       <div>
         <Link
           href="/review"
-          className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[#38a3dc] transition-colors hover:bg-white/[0.04] hover:text-[#7dd3fc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+          className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[#38a3dc] transition-colors hover:bg-black/[0.04] hover:text-[#7dd3fc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
         >
           <ArrowLeft aria-hidden size={15} />
           <span>Danh sách thiết bị</span>
@@ -116,18 +116,18 @@ export function AdsbStudentDashboard() {
             </p>
             <h1
               id="practice-list-title"
-              className="mt-1 text-[26px] sm:text-[28px] font-semibold tracking-tight text-[#E6EDF5] leading-tight"
+              className="mt-1 text-[26px] sm:text-[28px] font-semibold tracking-tight text-[var(--cns-text-primary)] leading-tight"
             >
               Thực hành xử lý sự cố ADS-B
             </h1>
-            <p className="mt-2 max-w-[640px] text-[13px] sm:text-[14px] leading-relaxed text-[#9AA9BC]">
+            <p className="mt-2 max-w-[640px] text-[13px] sm:text-[14px] leading-relaxed text-[var(--cns-text-secondary)]">
               Quan sát trạng thái QCMS và thực hiện chuỗi thao tác trên terminal bảo trì.
             </p>
           </div>
 
           <div className="flex shrink-0 items-center gap-3">
-            <span className="inline-flex h-6 items-center gap-1 rounded-full border border-white/[0.08] bg-white/[0.05] px-2.5 text-[12px] font-medium tabular-nums text-[#9AA9BC]">
-              <span className="font-semibold text-[#E6EDF5]">{sortedScenarios.length}</span> bài
+            <span className="inline-flex h-6 items-center gap-1 rounded-full border border-[var(--cns-border-subtle)] bg-black/[0.05] px-2.5 text-[12px] font-medium tabular-nums text-[var(--cns-text-secondary)]">
+              <span className="font-semibold text-[var(--cns-text-primary)]">{sortedScenarios.length}</span> bài
             </span>
           </div>
         </div>

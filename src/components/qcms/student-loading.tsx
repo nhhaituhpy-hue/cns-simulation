@@ -5,24 +5,24 @@ export function StudentDashboardLoading() {
       aria-busy="true"
       className="space-y-6"
     >
-      <div className="border-b border-white/[0.08] pb-6">
-        <div className="h-3 w-40 animate-pulse rounded bg-white/[0.05] motion-reduce:animate-none" />
-        <div className="mt-3 h-8 w-80 max-w-full animate-pulse rounded bg-white/[0.05] motion-reduce:animate-none" />
-        <div className="mt-3 h-4 w-full max-w-2xl animate-pulse rounded bg-white/[0.05] motion-reduce:animate-none" />
+      <div className="border-b border-[var(--cns-border-subtle)] pb-6">
+        <div className="h-3 w-40 animate-pulse rounded bg-black/[0.05] motion-reduce:animate-none" />
+        <div className="mt-3 h-8 w-80 max-w-full animate-pulse rounded bg-black/[0.05] motion-reduce:animate-none" />
+        <div className="mt-3 h-4 w-full max-w-2xl animate-pulse rounded bg-black/[0.05] motion-reduce:animate-none" />
       </div>
-      <div className="overflow-hidden rounded-[12px] border border-white/[0.08] bg-[#141f2a] shadow-sm">
-        <div className="divide-y divide-white/[0.05]">
+      <div className="overflow-hidden rounded-[12px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] shadow-sm">
+        <div className="divide-y divide-[var(--cns-divider)]">
           {Array.from({ length: 3 }, (_, index) => (
             <div
               key={index}
               className="grid min-h-24 grid-cols-[2.5rem_minmax(0,1fr)] gap-4 p-4 sm:p-5 lg:grid-cols-[2.5rem_minmax(0,1fr)_10rem]"
             >
-              <div className="size-8 animate-pulse rounded-[6px] bg-white/[0.05] motion-reduce:animate-none" />
+              <div className="size-8 animate-pulse rounded-[6px] bg-black/[0.05] motion-reduce:animate-none" />
               <div>
-                <div className="h-5 w-2/5 animate-pulse rounded bg-white/[0.05] motion-reduce:animate-none" />
-                <div className="mt-3 h-4 w-4/5 animate-pulse rounded bg-white/[0.05] motion-reduce:animate-none" />
+                <div className="h-5 w-2/5 animate-pulse rounded bg-black/[0.05] motion-reduce:animate-none" />
+                <div className="mt-3 h-4 w-4/5 animate-pulse rounded bg-black/[0.05] motion-reduce:animate-none" />
               </div>
-              <div className="col-span-2 h-9 animate-pulse rounded-[8px] bg-white/[0.05] motion-reduce:animate-none lg:col-span-1" />
+              <div className="col-span-2 h-9 animate-pulse rounded-[8px] bg-black/[0.05] motion-reduce:animate-none lg:col-span-1" />
             </div>
           ))}
         </div>

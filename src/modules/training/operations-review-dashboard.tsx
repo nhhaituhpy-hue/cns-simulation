@@ -263,7 +263,7 @@ export function OperationsReviewDashboard({
       <div>
         <Link
           href="/review"
-          className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[#38a3dc] transition-colors hover:bg-white/[0.04] hover:text-[#7dd3fc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+          className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[#38a3dc] transition-colors hover:bg-black/[0.04] hover:text-[#7dd3fc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
         >
           <ArrowLeft aria-hidden size={15} />
           <span>Back</span>
@@ -283,11 +283,11 @@ export function OperationsReviewDashboard({
             </p>
             <h1
               id={`${moduleId}-practice-title`}
-              className="mt-1 text-[26px] sm:text-[28px] font-semibold tracking-tight text-[#E6EDF5] leading-tight"
+              className="mt-1 text-[26px] sm:text-[28px] font-semibold tracking-tight text-[var(--cns-text-primary)] leading-tight"
             >
               {copy.title}
             </h1>
-            <p className="mt-2 text-[13px] sm:text-[14px] leading-relaxed text-[#9AA9BC] whitespace-nowrap">
+            <p className="mt-2 text-[13px] sm:text-[14px] leading-relaxed text-[var(--cns-text-secondary)] whitespace-nowrap">
               {copy.description}
             </p>
           </div>
@@ -332,7 +332,7 @@ export function OperationsReviewDashboard({
           {isLoading ? (
             <div
               role="status"
-              className="flex items-center justify-center py-16 text-[13px] text-[#9AA9BC]"
+              className="flex items-center justify-center py-16 text-[13px] text-[var(--cns-text-secondary)]"
             >
               Đang tải danh sách ôn tập…
             </div>
@@ -410,17 +410,17 @@ export function OperationsReviewDashboard({
             role="dialog"
             aria-modal="true"
             aria-labelledby={`${moduleId}-assign-title`}
-            className="flex max-h-[min(44rem,calc(100dvh-2rem))] w-full max-w-2xl flex-col overflow-hidden rounded-[12px] border border-white/[0.12] bg-[#141f2a] shadow-2xl"
+            className="flex max-h-[min(44rem,calc(100dvh-2rem))] w-full max-w-2xl flex-col overflow-hidden rounded-[12px] border border-[var(--cns-btn-ghost-border)] bg-[var(--cns-surface-card)] shadow-2xl"
           >
-            <header className="flex items-start justify-between gap-4 border-b border-white/[0.08] bg-[#101922] px-5 py-4">
+            <header className="flex items-start justify-between gap-4 border-b border-[var(--cns-border-subtle)] bg-[var(--cns-surface-table-header)] px-5 py-4">
               <div>
                 <h2
                   id={`${moduleId}-assign-title`}
-                  className="text-[16px] font-semibold tracking-tight text-[#E6EDF5]"
+                  className="text-[16px] font-semibold tracking-tight text-[var(--cns-text-primary)]"
                 >
                   Chọn kịch bản ôn tập · {copy.shortName}
                 </h2>
-                <p className="mt-1 text-[13px] text-[#9AA9BC]">
+                <p className="mt-1 text-[13px] text-[var(--cns-text-secondary)]">
                   Đã chọn {selectedCount}/{available.length} kịch bản. Kịch bản không
                   chọn vẫn được giữ trong kho để dùng cho mục đích khác.
                 </p>
@@ -430,7 +430,7 @@ export function OperationsReviewDashboard({
                 type="button"
                 onClick={() => setDialogOpen(false)}
                 aria-label="Đóng cửa sổ chọn kịch bản"
-                className="inline-flex size-8 shrink-0 items-center justify-center rounded-[6px] border border-white/[0.08] bg-transparent text-[#9AA9BC] transition-colors hover:bg-white/[0.06] hover:text-[#E6EDF5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+                className="inline-flex size-8 shrink-0 items-center justify-center rounded-[6px] border border-[var(--cns-border-subtle)] bg-transparent text-[var(--cns-text-secondary)] transition-colors hover:bg-black/[0.06] hover:text-[var(--cns-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
               >
                 <X aria-hidden size={16} />
               </button>
@@ -438,7 +438,7 @@ export function OperationsReviewDashboard({
 
             <div className="cns-scrollbar min-h-0 flex-1 overflow-y-auto p-5 space-y-2">
               {available.length === 0 ? (
-                <div className="rounded-[8px] border border-dashed border-white/[0.12] bg-white/[0.02] p-6 text-center text-[13px] text-[#9AA9BC]">
+                <div className="rounded-[8px] border border-dashed border-[var(--cns-btn-ghost-border)] bg-black/[0.02] p-6 text-center text-[13px] text-[var(--cns-text-secondary)]">
                   Kho chưa có kịch bản cho {copy.shortName}. Hãy tạo hoặc import
                   kịch bản tại tab Kịch bản trước.
                 </div>
@@ -454,8 +454,8 @@ export function OperationsReviewDashboard({
                         key={scenario.id}
                         className={`flex min-h-[52px] cursor-pointer items-start gap-3 rounded-[8px] border p-3 transition-colors ${
                           checked
-                            ? "border-[#0369a1] bg-[#0369a1]/10 text-[#E6EDF5]"
-                            : "border-white/[0.08] bg-[#101922] text-[#9AA9BC] hover:border-white/[0.16] hover:bg-white/[0.02]"
+                            ? "border-[#0369a1] bg-[#0369a1]/10 text-[var(--cns-text-primary)]"
+                            : "border-[var(--cns-border-subtle)] bg-[var(--cns-surface-table-header)] text-[var(--cns-text-secondary)] hover:border-[var(--cns-btn-ghost-border)] hover:bg-black/[0.02]"
                         }`}
                       >
                         <input
@@ -473,10 +473,10 @@ export function OperationsReviewDashboard({
                           className="mt-1 size-4 rounded-[4px] border-white/20 bg-white/5 accent-[#0284c7]"
                         />
                         <span className="min-w-0 flex-1">
-                          <span className="block text-[13px] font-semibold text-[#E6EDF5]">
+                          <span className="block text-[13px] font-semibold text-[var(--cns-text-primary)]">
                             {scenario.name}
                           </span>
-                          <span className="mt-0.5 block text-[12px] leading-relaxed text-[#9AA9BC]">
+                          <span className="mt-0.5 block text-[12px] leading-relaxed text-[var(--cns-text-secondary)]">
                             {scenario.description || "Không có mô tả."}
                           </span>
                         </span>
@@ -493,7 +493,7 @@ export function OperationsReviewDashboard({
               )}
             </div>
 
-            <footer className="flex flex-wrap items-center justify-end gap-3 border-t border-white/[0.08] bg-[#101922] px-5 py-3.5">
+            <footer className="flex flex-wrap items-center justify-end gap-3 border-t border-[var(--cns-border-subtle)] bg-[var(--cns-surface-table-header)] px-5 py-3.5">
               <Button
                 type="button"
                 variant="secondary"
@@ -525,12 +525,12 @@ export function OperationsReviewDashboard({
           aria-live="assertive"
           aria-label="Đang mở simulator"
         >
-          <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/[0.12] bg-[#141f2a]/90 px-8 py-6 shadow-2xl">
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-[var(--cns-btn-ghost-border)] bg-[var(--cns-surface-card)]/90 px-8 py-6 shadow-2xl">
             <svg className="size-10 animate-spin text-[var(--accent)]" viewBox="0 0 24 24" fill="none" aria-hidden>
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
-            <p className="text-sm font-semibold text-[#E6EDF5]">Đang mở simulator…</p>
+            <p className="text-sm font-semibold text-[var(--cns-text-primary)]">Đang mở simulator…</p>
           </div>
         </div>
       ) : null}

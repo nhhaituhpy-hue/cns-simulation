@@ -70,14 +70,14 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
 
   return (
     <div>
-      <div className="flex flex-col gap-3 border-b border-white/[0.06] bg-[#141f2a] p-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+      <div className="flex flex-col gap-3 border-b border-[var(--cns-divider)] bg-[var(--cns-surface-card)] p-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <label htmlFor={searchId} className="relative block w-full sm:max-w-sm">
           <span className="sr-only">{searchLabel}</span>
           <MagnifyingGlass
             aria-hidden
             size={16}
             weight="regular"
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7A8D]"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--cns-text-muted)]"
           />
           <input
             id={searchId}
@@ -88,13 +88,13 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
               setRequestedPage(1);
             }}
             placeholder="Tìm theo tiêu đề kịch bản..."
-            className="h-9 w-full rounded-[8px] border border-white/[0.12] bg-[#101922] pl-9 pr-3 text-[13px] text-[#E6EDF5] outline-none placeholder:text-[#6B7A8D] focus:border-[#0284c7] focus:ring-2 focus:ring-[#0284c7]/20"
+            className="h-9 w-full rounded-[8px] border border-[var(--cns-btn-ghost-border)] bg-[var(--cns-surface-table-header)] pl-9 pr-3 text-[13px] text-[var(--cns-text-primary)] outline-none placeholder:text-[var(--cns-text-muted)] focus:border-[#0284c7] focus:ring-2 focus:ring-[#0284c7]/20"
           />
         </label>
 
         <p
           aria-live="polite"
-          className="shrink-0 text-[12px] font-medium tabular-nums text-[#9AA9BC]"
+          className="shrink-0 text-[12px] font-medium tabular-nums text-[var(--cns-text-secondary)]"
         >
           {normalizedQuery
             ? `${filteredItems.length}/${items.length} kịch bản phù hợp`
@@ -105,7 +105,7 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
       <div className="overflow-x-auto">
         <table className="w-full min-w-[760px] border-collapse text-left text-[13px]">
           <caption className="sr-only">{caption}</caption>
-          <thead className="border-b border-white/[0.06] bg-[#101922] text-[11px] font-semibold uppercase tracking-[0.06em] text-[#9AA9BC]">
+          <thead className="border-b border-[var(--cns-divider)] bg-[var(--cns-surface-table-header)] text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--cns-text-secondary)]">
             <tr>
               {columns.map((column) => (
                 <th
@@ -118,11 +118,11 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/[0.05]">
+          <tbody className="divide-y divide-[var(--cns-divider)]">
             {visibleItems.map((item, index) => (
               <tr
                 key={item.id}
-                className="transition-colors duration-150 hover:bg-white/[0.035]"
+                className="transition-colors duration-150 hover:bg-black/[0.035]"
               >
                 {renderCells(item, startIndex + index)}
               </tr>
@@ -141,8 +141,8 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
         </table>
       </div>
 
-      <div className="flex flex-col gap-3 border-t border-white/[0.06] bg-[#141f2a] px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <p className="text-[12px] tabular-nums text-[#9AA9BC]">
+      <div className="flex flex-col gap-3 border-t border-[var(--cns-divider)] bg-[var(--cns-surface-card)] px-5 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <p className="text-[12px] tabular-nums text-[var(--cns-text-secondary)]">
           Hiển thị {firstVisible}-{lastVisible} trong {filteredItems.length} kịch bản
         </p>
 
@@ -156,7 +156,7 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
             disabled={currentPage === 1}
             aria-label="Trang trước"
             title="Trang trước"
-            className="inline-flex size-8 items-center justify-center rounded-[8px] border border-white/[0.12] bg-white/[0.04] text-[#9AA9BC] transition duration-150 hover:bg-white/[0.08] hover:text-[#E6EDF5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex size-8 items-center justify-center rounded-[8px] border border-[var(--cns-btn-ghost-border)] bg-black/[0.04] text-[var(--cns-text-secondary)] transition duration-150 hover:bg-black/[0.08] hover:text-[var(--cns-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] disabled:cursor-not-allowed disabled:opacity-40"
           >
             <CaretLeft aria-hidden size={15} weight="bold" />
           </button>
@@ -172,7 +172,7 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
                 className={`inline-flex size-8 items-center justify-center rounded-[8px] border font-mono text-[12px] font-semibold tabular-nums transition duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] ${
                   pageNumber === currentPage
                     ? "border-[#0369a1] bg-[#0369a1] text-white shadow-sm"
-                    : "border-white/[0.12] bg-white/[0.04] text-[#9AA9BC] hover:bg-white/[0.08] hover:text-[#E6EDF5]"
+                    : "border-[var(--cns-btn-ghost-border)] bg-black/[0.04] text-[var(--cns-text-secondary)] hover:bg-black/[0.08] hover:text-[var(--cns-text-primary)]"
                 }`}
               >
                 {pageNumber}
@@ -188,7 +188,7 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
             disabled={currentPage === totalPages}
             aria-label="Trang sau"
             title="Trang sau"
-            className="inline-flex size-8 items-center justify-center rounded-[8px] border border-white/[0.12] bg-white/[0.04] text-[#9AA9BC] transition duration-150 hover:bg-white/[0.08] hover:text-[#E6EDF5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex size-8 items-center justify-center rounded-[8px] border border-[var(--cns-btn-ghost-border)] bg-black/[0.04] text-[var(--cns-text-secondary)] transition duration-150 hover:bg-black/[0.08] hover:text-[var(--cns-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] disabled:cursor-not-allowed disabled:opacity-40"
           >
             <CaretRight aria-hidden size={15} weight="bold" />
           </button>

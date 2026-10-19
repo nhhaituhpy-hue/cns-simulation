@@ -17,12 +17,12 @@ type ScenarioWizardProps = {
 function WizardLoadingState() {
   return (
     <div aria-busy="true" aria-label="Đang tải trình tạo kịch bản" className="grid gap-6">
-      <div className="h-12 animate-pulse rounded-[8px] bg-white/[0.05] motion-reduce:animate-none" />
-      <div className="rounded-[12px] border border-white/[0.08] bg-[#141f2a] p-6 shadow-sm">
-        <div className="h-6 w-2/5 animate-pulse rounded bg-white/[0.05] motion-reduce:animate-none" />
+      <div className="h-12 animate-pulse rounded-[8px] bg-black/[0.05] motion-reduce:animate-none" />
+      <div className="rounded-[12px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] p-6 shadow-sm">
+        <div className="h-6 w-2/5 animate-pulse rounded bg-black/[0.05] motion-reduce:animate-none" />
         <div className="mt-7 grid gap-4">
-          <div className="h-11 animate-pulse rounded bg-white/[0.05] motion-reduce:animate-none" />
-          <div className="h-32 animate-pulse rounded bg-white/[0.05] motion-reduce:animate-none" />
+          <div className="h-11 animate-pulse rounded bg-black/[0.05] motion-reduce:animate-none" />
+          <div className="h-32 animate-pulse rounded bg-black/[0.05] motion-reduce:animate-none" />
         </div>
       </div>
     </div>
@@ -63,7 +63,7 @@ export function ScenarioWizard({ scenarioId }: ScenarioWizardProps) {
       <div>
         <Link
           href="/authoring/ads-b"
-          className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[#38a3dc] transition-colors hover:bg-white/[0.04] hover:text-[#7dd3fc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+          className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[#38a3dc] transition-colors hover:bg-black/[0.04] hover:text-[#7dd3fc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
         >
           <ArrowLeft aria-hidden size={15} />
           <span>Quay về danh sách</span>
@@ -71,14 +71,14 @@ export function ScenarioWizard({ scenarioId }: ScenarioWizardProps) {
       </div>
 
       {/* Main Header */}
-      <header className="border-b border-white/[0.08] pb-6">
+      <header className="border-b border-[var(--cns-border-subtle)] pb-6">
         <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#38a3dc]">
           Kịch bản / ADS-B
         </p>
-        <h1 className="mt-1.5 text-[28px] sm:text-[32px] font-semibold tracking-tight text-[#E6EDF5] leading-tight">
+        <h1 className="mt-1.5 text-[28px] sm:text-[32px] font-semibold tracking-tight text-[var(--cns-text-primary)] leading-tight">
           {editing ? "Chỉnh sửa kịch bản" : "Tạo kịch bản mới"}
         </h1>
-        <p className="mt-2 max-w-[640px] text-[13px] sm:text-[14px] leading-relaxed text-[#9AA9BC]">
+        <p className="mt-2 max-w-[640px] text-[13px] sm:text-[14px] leading-relaxed text-[var(--cns-text-secondary)]">
           Hoàn thành năm phần để tạo trạng thái ban đầu, đáp án và sự cố phần cứng tùy chọn.
         </p>
       </header>
@@ -86,14 +86,14 @@ export function ScenarioWizard({ scenarioId }: ScenarioWizardProps) {
       {!isHydrated ? <WizardLoadingState /> : null}
 
       {isHydrated && editing && !scenario ? (
-        <div className="rounded-[12px] border border-white/[0.08] bg-[#141f2a] px-5 py-12 text-center shadow-sm">
+        <div className="rounded-[12px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] px-5 py-12 text-center shadow-sm">
           <span className="mx-auto inline-flex size-12 items-center justify-center rounded-[10px] border border-amber-500/25 bg-amber-500/10 text-amber-400">
             <WarningCircle aria-hidden size={24} weight="regular" />
           </span>
-          <h2 className="mt-4 text-[17px] font-semibold text-[#E6EDF5]">
+          <h2 className="mt-4 text-[17px] font-semibold text-[var(--cns-text-primary)]">
             Không tìm thấy kịch bản
           </h2>
-          <p className="mx-auto mt-2 max-w-[48ch] text-[13px] leading-relaxed text-[#9AA9BC]">
+          <p className="mx-auto mt-2 max-w-[48ch] text-[13px] leading-relaxed text-[var(--cns-text-secondary)]">
             Kịch bản có thể đã bị xóa hoặc đường dẫn không còn hợp lệ.
           </p>
           <div className="mt-5">

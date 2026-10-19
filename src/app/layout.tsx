@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import { AppShell } from "@/components/layout/app-shell";
+import { ThemeRouteSync } from "@/components/layout/theme-route-sync";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import "./globals.css";
 
@@ -24,10 +25,11 @@ export default async function RootLayout({
   return (
     <html
       lang="vi"
-      data-theme="dark"
+      data-theme="light"
       className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
+        <ThemeRouteSync />
         <AppShell currentUser={currentUser}>{children}</AppShell>
       </body>
     </html>

@@ -140,7 +140,7 @@ export function ScenarioSectionHeader({
 
 export function ScenarioListFrame({ children }: { children: ReactNode }) {
   return (
-    <div className="overflow-hidden rounded-[12px] border border-white/[0.08] bg-[#141f2a] shadow-sm">
+    <div className="overflow-hidden rounded-[12px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] shadow-sm">
       {children}
     </div>
   );

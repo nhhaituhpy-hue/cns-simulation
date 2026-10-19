@@ -194,7 +194,7 @@ export function ScenarioWizardForm({
   return (
     <form onSubmit={handleSubmit} className="grid gap-6">
       <nav aria-label="Các bước tạo kịch bản" className="pb-1">
-        <ol className="grid grid-cols-5 border-b border-white/[0.08]">
+        <ol className="grid grid-cols-5 border-b border-[var(--cns-border-subtle)]">
           {steps.map((step) => {
             const active = currentStep === step.number;
             const complete = currentStep > step.number;
@@ -207,8 +207,8 @@ export function ScenarioWizardForm({
                   active
                     ? "border-[#0284c7] text-[#38a3dc] font-semibold"
                     : complete
-                      ? "border-white/20 text-[#E6EDF5]"
-                      : "border-transparent text-[#9AA9BC]/50"
+                      ? "border-white/20 text-[var(--cns-text-primary)]"
+                      : "border-transparent text-[var(--cns-text-secondary)]/50"
                 }`}
               >
                 <span className="font-mono text-xs tabular-nums sm:mr-2">
@@ -224,12 +224,12 @@ export function ScenarioWizardForm({
         </ol>
       </nav>
 
-      <section className="rounded-[12px] border border-white/[0.08] bg-[#141f2a] p-4 shadow-sm sm:p-6 lg:p-8">
-        <header className="mb-7 border-b border-white/[0.08] pb-5">
+      <section className="rounded-[12px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] p-4 shadow-sm sm:p-6 lg:p-8">
+        <header className="mb-7 border-b border-[var(--cns-border-subtle)] pb-5">
           <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[#38a3dc]">
             Bước {currentStep} trong 5
           </p>
-          <h2 className="mt-1 text-[20px] sm:text-[22px] font-semibold tracking-tight text-[#E6EDF5]">
+          <h2 className="mt-1 text-[20px] sm:text-[22px] font-semibold tracking-tight text-[var(--cns-text-primary)]">
             {currentStep === 1 ? "Thông tin kịch bản" : null}
             {currentStep === 2 ? "Cấu hình trạng thái ban đầu" : null}
             {currentStep === 3 ? "Chọn vai trò đăng nhập" : null}
@@ -305,7 +305,7 @@ export function ScenarioWizardForm({
         </div>
       ) : null}
 
-      <footer className="flex flex-col-reverse gap-3 rounded-[12px] border border-white/[0.08] bg-[#101922] p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <footer className="flex flex-col-reverse gap-3 rounded-[12px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-table-header)] p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <ButtonLink
           href="/authoring/ads-b"
           variant="secondary"
