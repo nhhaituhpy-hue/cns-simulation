@@ -38,7 +38,7 @@ function ScenarioCells({ scenario, index }: { scenario: Scenario; index: number 
         </span>
       </td>
       <td className="px-5 py-3.5 align-middle sm:px-6">
-        <h3 className="text-[14px] font-semibold text-[var(--cns-text-primary)] leading-snug hover:text-[#38a3dc] transition-colors">
+        <h3 className="text-[14px] font-semibold text-[var(--cns-text-primary)] leading-snug hover:text-[var(--cns-text-secondary)] transition-colors">
           {scenario.title}
         </h3>
         {scenario.description ? (
@@ -95,7 +95,7 @@ export function AdsbStudentDashboard() {
       <div>
         <Link
           href="/review"
-          className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[#38a3dc] transition-colors hover:bg-black/[0.04] hover:text-[#7dd3fc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+          className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[var(--cns-text-secondary)] transition-colors hover:bg-black/[0.04] hover:text-[var(--cns-text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
         >
           <ArrowLeft aria-hidden size={15} />
           <span>Danh sách thiết bị</span>
@@ -111,7 +111,7 @@ export function AdsbStudentDashboard() {
       <section aria-labelledby="practice-list-title" className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#38a3dc]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--cns-text-secondary)]">
               Ôn tập / Thực hành
             </p>
             <h1

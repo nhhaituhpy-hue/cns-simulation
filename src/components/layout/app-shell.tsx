@@ -369,7 +369,7 @@ function TopNavigation({
               active
                 ? inverted
                   ? "bg-white/15 text-white"
-                  : "border border-[#0369a1]/25 bg-[#0369a1]/15 text-[#38a3dc]"
+                  : "border border-[#0369a1]/25 bg-[#0369a1]/15 text-[var(--cns-text-secondary)]"
                 : inverted
                   ? "border border-transparent text-white/70 hover:bg-white/8 hover:text-white"
                   : "border border-transparent text-[var(--cns-text-secondary)] hover:bg-black/[0.04] hover:text-[var(--cns-text-primary)]",
@@ -448,7 +448,7 @@ export function AppShell({ children, currentUser }: AppShellProps) {
         className={[
           "sticky top-0 z-30 h-[3.75rem] border-b print:hidden",
           isLanding
-            ? "border-white/10 bg-[#061b25]/95 text-white backdrop-blur-xl"
+            ? "border-white/10 bg-[var(--cns-surface-card)]/95 text-white backdrop-blur-xl"
             : "border-[var(--border)] bg-[var(--background)] text-[var(--foreground)]",
         ].join(" ")}
       >

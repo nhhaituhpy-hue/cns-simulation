@@ -62,7 +62,7 @@ export function AuthPage({ nextPath }: { nextPath?: string; initialView?: AuthVi
 
   return (
     <main
-      className="relative min-h-[100dvh] overflow-x-hidden bg-[#061b25] text-white lg:grid lg:grid-cols-[minmax(0,1.16fr)_minmax(25rem,0.84fr)]"
+      className="relative min-h-[100dvh] overflow-x-hidden bg-[var(--cns-surface-card)] text-white lg:grid lg:grid-cols-[minmax(0,1.16fr)_minmax(25rem,0.84fr)]"
       style={{
         backgroundImage: "url('/images/cns-image.webp')",
         backgroundPosition: "center",
@@ -102,7 +102,7 @@ export function AuthPage({ nextPath }: { nextPath?: string; initialView?: AuthVi
               </p>
             </div>
 
-            <div className="rounded-[1.5rem] border border-cyan-100/15 bg-[#061b25]/52 p-5 shadow-[0_1.25rem_4rem_rgba(0,0,0,0.22)] backdrop-blur-md sm:p-6">
+            <div className="rounded-[1.5rem] border border-cyan-100/15 bg-[var(--cns-surface-card)]/52 p-5 shadow-[0_1.25rem_4rem_rgba(0,0,0,0.22)] backdrop-blur-md sm:p-6">
               <form onSubmit={submit} className="grid gap-5">
                 <label htmlFor="username" className="block">
                   <span className="sr-only">Tên đăng nhập</span>

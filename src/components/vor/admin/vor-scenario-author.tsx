@@ -242,7 +242,7 @@ function VorScenarioAuthorEditor({
 
   return (
     <div className="relative" onPointerDownCapture={selectField}>
-      <div className="flex h-8 items-center border-b border-[#334155] bg-[#0f172a] px-4">
+      <div className="flex h-8 items-center border-b border-[var(--cns-border-subtle)] bg-[#0f172a] px-4">
         <a
           href="/admin/vor"
           onClick={(e) => {

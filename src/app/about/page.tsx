@@ -21,7 +21,7 @@ const learningPrinciples = [
 
 export default function AboutCnsSimulationLabPage() {
   return (
-    <div className="min-h-[calc(100dvh-4.5rem)] bg-[#061b25] px-5 py-12 text-white sm:px-8 lg:px-12 lg:py-20">
+    <div className="min-h-[calc(100dvh-4.5rem)] bg-[var(--cns-surface-card)] px-5 py-12 text-white sm:px-8 lg:px-12 lg:py-20">
       <div className="mx-auto max-w-6xl">
         <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-cyan-100/80">
           CNS Simulation Lab

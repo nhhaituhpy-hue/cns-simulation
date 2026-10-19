@@ -205,7 +205,7 @@ export function ScenarioWizardForm({
                 aria-current={active ? "step" : undefined}
                 className={`border-b-2 px-1 pb-3 text-center text-sm sm:px-3 sm:text-left transition-colors ${
                   active
-                    ? "border-[#0284c7] text-[#38a3dc] font-semibold"
+                    ? "border-[#0284c7] text-[var(--cns-text-secondary)] font-semibold"
                     : complete
                       ? "border-white/20 text-[var(--cns-text-primary)]"
                       : "border-transparent text-[var(--cns-text-secondary)]/50"
@@ -226,7 +226,7 @@ export function ScenarioWizardForm({
 
       <section className="rounded-[12px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] p-4 shadow-sm sm:p-6 lg:p-8">
         <header className="mb-7 border-b border-[var(--cns-border-subtle)] pb-5">
-          <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[#38a3dc]">
+          <p className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[var(--cns-text-secondary)]">
             Bước {currentStep} trong 5
           </p>
           <h2 className="mt-1 text-[20px] sm:text-[22px] font-semibold tracking-tight text-[var(--cns-text-primary)]">

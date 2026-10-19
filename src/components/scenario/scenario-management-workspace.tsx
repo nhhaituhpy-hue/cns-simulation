@@ -327,13 +327,13 @@ export function ScenarioManagementWorkspace({
         <nav aria-label="Đường dẫn kịch bản" className="mb-5">
           <Link
             href="/authoring"
-            className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[#38a3dc] hover:text-[#7dd3fc] hover:bg-black/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--cns-surface-card-subtle)]"
+            className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[var(--cns-text-secondary)] hover:text-[var(--cns-text-secondary)] hover:bg-black/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--cns-surface-card-subtle)]"
           >
             <ArrowLeft aria-hidden size={16} />
             back
           </Link>
         </nav>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#38a3dc]">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--cns-text-secondary)]">
           Kịch bản
         </p>
         <h1 className="mt-2 text-[28px] sm:text-[30px] font-semibold tracking-[-0.01em] text-[var(--cns-text-primary)] leading-[1.3]">
@@ -646,11 +646,11 @@ function ScenarioRow({
             onClick={() => onToggle(scenario.id)}
             title={scenario.name}
           >
-            <span className="mt-0.5 shrink-0 text-slate-600 transition-colors group-hover:text-[#38a3dc]">
+            <span className="mt-0.5 shrink-0 text-slate-600 transition-colors group-hover:text-[var(--cns-text-secondary)]">
               {expanded ? <CaretDown size={16} /> : <CaretRight size={16} />}
             </span>
             <span className="min-w-0">
-              <span className="block truncate text-[14px] font-medium leading-snug text-slate-900 transition-colors group-hover:text-[#38a3dc]">
+              <span className="block truncate text-[14px] font-medium leading-snug text-slate-900 transition-colors group-hover:text-[var(--cns-text-secondary)]">
                 {scenario.name}
               </span>
               <span className="mt-0.5 block truncate font-mono text-[12px] text-slate-600">
@@ -884,7 +884,7 @@ function ScenarioDetailRow({
             <p className="text-[12px] font-semibold uppercase tracking-wider text-[var(--cns-text-secondary)]">
               Nội dung JSON
             </p>
-            <pre className="cns-scrollbar mt-2 max-h-64 overflow-auto rounded-[8px] border border-[var(--cns-border-subtle)] bg-[#0c141c] p-3 font-mono text-[11px] leading-relaxed text-[var(--cns-text-secondary)]">
+            <pre className="cns-scrollbar mt-2 max-h-64 overflow-auto rounded-[8px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card-subtle)] p-3 font-mono text-[11px] leading-relaxed text-[var(--cns-text-secondary)]">
               {JSON.stringify(scenario.definition, null, 2)}
             </pre>
           </div>

@@ -24,7 +24,7 @@ export default async function PlaygroundPage() {
   const isAdmin = profile?.role === "admin";
   if (isProd && !enabledByEnv && !isAdmin) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#061b25] text-white">
+      <div className="flex min-h-screen items-center justify-center bg-[var(--cns-surface-card)] text-white">
         <p className="text-sm text-slate-300">
           Playground chỉ khả dụng cho tài khoản admin (hoặc đặt PLAYGROUND_ENABLED=true).
         </p>

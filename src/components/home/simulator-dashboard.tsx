@@ -11,7 +11,7 @@ export function SimulatorDashboard() {
   const simulators = SIMULATOR_MODULES.map(createSimulatorShowcaseItem);
 
   return (
-    <div className="cns-landing min-h-[calc(100dvh-4.5rem)] overflow-hidden bg-[#061b25] text-white">
+    <div className="cns-landing min-h-[calc(100dvh-4.5rem)] overflow-hidden bg-[var(--cns-surface-card)] text-white">
       <header className="cns-landing__hero relative isolate flex min-h-[38rem] items-end overflow-hidden px-5 pb-16 pt-28 sm:min-h-[43rem] sm:px-8 sm:pb-20 lg:min-h-[48rem] lg:px-12 lg:pb-24 xl:px-16">
         <Image
           src="/images/cns-image.webp"

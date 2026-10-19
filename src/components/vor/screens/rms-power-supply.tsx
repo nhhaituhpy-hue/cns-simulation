@@ -45,8 +45,8 @@ export function RmsPowerSupply() {
     <div className="pmdt-rms-power-screen flex flex-col gap-4 p-3 text-[11px]">
       <div className="pmdt-rms-power-grid grid gap-3 lg:grid-cols-2">
         {/* Voltage Table */}
-        <section className="pmdt-rms-flat-panel border border-[#334155] bg-[#111827]">
-          <h3 className="border-b border-[#334155] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[#e2e8f0]">Voltages</h3>
+        <section className="pmdt-rms-flat-panel border border-[var(--cns-border-subtle)] bg-[#111827]">
+          <h3 className="border-b border-[var(--cns-border-subtle)] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[var(--cns-text-primary)]">Voltages</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead className="bg-[#172033] text-[#94a3b8] text-[10px]">
@@ -81,8 +81,8 @@ export function RmsPowerSupply() {
         </section>
 
         {/* Currents Table */}
-        <section className="pmdt-rms-flat-panel border border-[#334155] bg-[#111827]">
-          <h3 className="border-b border-[#334155] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[#e2e8f0]">Currents</h3>
+        <section className="pmdt-rms-flat-panel border border-[var(--cns-border-subtle)] bg-[#111827]">
+          <h3 className="border-b border-[var(--cns-border-subtle)] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[var(--cns-text-primary)]">Currents</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead className="bg-[#172033] text-[#94a3b8] text-[10px]">
@@ -123,7 +123,7 @@ export function RmsPowerSupply() {
       </div>
 
       {/* BCPS Comm Fault Status */}
-      <section className="flex gap-6 border border-[#334155] bg-[#111827] px-4 py-3">
+      <section className="flex gap-6 border border-[var(--cns-border-subtle)] bg-[#111827] px-4 py-3">
         <div data-vor-field-id="bcpsCommFaults.bcps1" className="flex items-center gap-2">
           <span>BCPS 1 Comm Fault</span>
           <Indicator color={bcps1Color} label="BCPS 1 Comm Fault" />

@@ -12,8 +12,8 @@ export function RmsAdData() {
 
   return (
     <div className="pmdt-rms-table-screen pmdt-rms-ad-screen p-3 text-[11px]">
-      <section className="pmdt-rms-flat-panel border border-[#334155] bg-[#111827]">
-        <h3 className="border-b border-[#334155] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[#e2e8f0]">A/D Channels</h3>
+      <section className="pmdt-rms-flat-panel border border-[var(--cns-border-subtle)] bg-[#111827]">
+        <h3 className="border-b border-[var(--cns-border-subtle)] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[var(--cns-text-primary)]">A/D Channels</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-[#172033] text-[#94a3b8] text-[10px]">

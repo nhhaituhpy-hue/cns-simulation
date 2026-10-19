@@ -109,21 +109,21 @@ export function DmeAuthorPanel({
 
   return (
     <div className="grid gap-4 p-4 text-xs text-[#cbd5e1]">
-      <div className="flex items-center justify-between gap-3 border-b border-[#334155] pb-3">
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--cns-border-subtle)] pb-3">
         <div><h2 className="font-semibold text-white">Xây dựng kịch bản</h2><p className="mt-1 text-[10px] text-[#94a3b8]">Chỉnh trực tiếp trên PMDT</p></div>
         <button type="button" onClick={onSave} disabled={saving} className="inline-flex h-8 items-center gap-1.5 bg-[#1e40af] px-3 font-semibold text-white hover:bg-[#1d4ed8] disabled:opacity-50"><FloppyDisk aria-hidden size={14} />{saving ? "Đang lưu" : "Lưu"}</button>
       </div>
 
       <section className="grid gap-2" aria-labelledby="dme-metadata-title">
-        <h3 id="dme-metadata-title" className="font-semibold text-[#e2e8f0]">Thông tin bài thực hành</h3>
+        <h3 id="dme-metadata-title" className="font-semibold text-[var(--cns-text-primary)]">Thông tin bài thực hành</h3>
         <label className="grid gap-1 text-[10px] text-[#94a3b8]">Tiêu đề<input value={draft.title} onChange={(event) => onDraftChange({ title: event.target.value })} className="h-8 border border-[#475569] bg-[#0f172a] px-2 text-xs text-white outline-none focus:border-[#60a5fa]" /></label>
         <label className="grid gap-1 text-[10px] text-[#94a3b8]">Mô tả<textarea value={draft.description} onChange={(event) => onDraftChange({ description: event.target.value })} rows={2} className="resize-y border border-[#475569] bg-[#0f172a] p-2 text-xs text-white outline-none focus:border-[#60a5fa]" /></label>
         <label className="grid gap-1 text-[10px] text-[#94a3b8]">Đề bài<textarea value={draft.prompt} onChange={(event) => onDraftChange({ prompt: event.target.value })} rows={3} className="resize-y border border-[#475569] bg-[#0f172a] p-2 text-xs text-white outline-none focus:border-[#60a5fa]" /></label>
         <label className="grid gap-1 text-[10px] text-[#94a3b8]">Độ khó<select value={draft.difficulty} onChange={(event) => onDraftChange({ difficulty: event.target.value as DmeScenarioInput["difficulty"] })} className="h-8 border border-[#475569] bg-[#0f172a] px-2 text-xs text-white"><option value="easy">Cơ bản</option><option value="medium">Trung bình</option><option value="hard">Nâng cao</option></select></label>
       </section>
 
-      <section className="border-t border-[#334155] pt-3" aria-labelledby="dme-field-title">
-        <h3 id="dme-field-title" className="font-semibold text-[#e2e8f0]">Giá trị / màu sự cố</h3>
+      <section className="border-t border-[var(--cns-border-subtle)] pt-3" aria-labelledby="dme-field-title">
+        <h3 id="dme-field-title" className="font-semibold text-[var(--cns-text-primary)]">Giá trị / màu sự cố</h3>
         {selectedField ? (
           <div className="mt-2 grid gap-2">
             <p className="break-all font-mono text-[10px] text-[#60a5fa]">{selectedField.fieldId}</p>
@@ -162,23 +162,23 @@ export function DmeAuthorPanel({
         ) : <p className="mt-2 text-[10px] leading-5 text-[#94a3b8]">Chọn một ô giá trị hoặc trạng thái trên màn hình PMDT.</p>}
       </section>
 
-      <section className="border-t border-[#334155] pt-3" aria-labelledby="dme-hardware-title">
-        <div className="flex items-center justify-between gap-2"><h3 id="dme-hardware-title" className="font-semibold text-[#e2e8f0]">Bước 2 - Phần cứng sự cố</h3><button type="button" onClick={onOpenHardware} className="h-7 border border-[#475569] px-2 text-[10px] hover:border-[#60a5fa]">Cấu hình</button></div>
+      <section className="border-t border-[var(--cns-border-subtle)] pt-3" aria-labelledby="dme-hardware-title">
+        <div className="flex items-center justify-between gap-2"><h3 id="dme-hardware-title" className="font-semibold text-[var(--cns-text-primary)]">Bước 2 - Phần cứng sự cố</h3><button type="button" onClick={onOpenHardware} className="h-7 border border-[#475569] px-2 text-[10px] hover:border-[#60a5fa]">Cấu hình</button></div>
         <p className="mt-2 text-[10px] text-[#94a3b8]">{draft.hardwareTask ? `${draft.hardwareTask.expectedComponentIds.length} block đã chọn · ${draft.hardwareTask.faultType}` : "Chưa bật cho kịch bản này."}</p>
       </section>
 
-      <section className="border-t border-[#334155] pt-3" aria-labelledby="dme-checkpoints-title">
-        <div className="flex items-center justify-between gap-2"><h3 id="dme-checkpoints-title" className="font-semibold text-[#e2e8f0]">Các bước kiểm tra chuẩn</h3><button type="button" onClick={() => addCheckpoint()} className="inline-flex h-7 items-center gap-1 border border-[#475569] px-2 text-[10px] hover:border-[#60a5fa]"><Plus aria-hidden size={12} />Thêm màn hình</button></div>
+      <section className="border-t border-[var(--cns-border-subtle)] pt-3" aria-labelledby="dme-checkpoints-title">
+        <div className="flex items-center justify-between gap-2"><h3 id="dme-checkpoints-title" className="font-semibold text-[var(--cns-text-primary)]">Các bước kiểm tra chuẩn</h3><button type="button" onClick={() => addCheckpoint()} className="inline-flex h-7 items-center gap-1 border border-[#475569] px-2 text-[10px] hover:border-[#60a5fa]"><Plus aria-hidden size={12} />Thêm màn hình</button></div>
         <p className="mt-2 truncate text-[10px] text-[#60a5fa]">{activeMenuPath.join(" > ")}</p>
-        <ol className="mt-2 grid gap-1.5">{checkpoints.map((checkpoint) => <li key={checkpoint.id} className="flex items-start gap-2 border border-[#334155] bg-[#0f172a] p-2"><span className="font-mono text-[10px] text-[#94a3b8]">{checkpoint.order}</span><span className="min-w-0 flex-1 truncate text-[10px]">{checkpoint.menuPath.join(" > ")}</span><button type="button" onClick={() => removeCheckpoint(checkpoint.id)} aria-label={`Xóa bước ${checkpoint.order}`} title="Xóa bước kiểm tra" className="text-[#fca5a5]"><Trash aria-hidden size={12} /></button></li>)}</ol>
+        <ol className="mt-2 grid gap-1.5">{checkpoints.map((checkpoint) => <li key={checkpoint.id} className="flex items-start gap-2 border border-[var(--cns-border-subtle)] bg-[#0f172a] p-2"><span className="font-mono text-[10px] text-[#94a3b8]">{checkpoint.order}</span><span className="min-w-0 flex-1 truncate text-[10px]">{checkpoint.menuPath.join(" > ")}</span><button type="button" onClick={() => removeCheckpoint(checkpoint.id)} aria-label={`Xóa bước ${checkpoint.order}`} title="Xóa bước kiểm tra" className="text-[#fca5a5]"><Trash aria-hidden size={12} /></button></li>)}</ol>
       </section>
 
       {interactionTargets.length > 0 ? (
-        <section className="border-t border-[#334155] pt-3" aria-labelledby="dme-sidebar-actions-title">
-          <h3 id="dme-sidebar-actions-title" className="font-semibold text-[#e2e8f0]">Thao tác sidebar cần chấm</h3>
+        <section className="border-t border-[var(--cns-border-subtle)] pt-3" aria-labelledby="dme-sidebar-actions-title">
+          <h3 id="dme-sidebar-actions-title" className="font-semibold text-[var(--cns-text-primary)]">Thao tác sidebar cần chấm</h3>
           <ul className="mt-2 grid gap-1.5">
             {interactionTargets.map((target) => (
-              <li key={target.fieldId} className="flex items-center justify-between border border-[#334155] bg-[#0f172a] p-2 text-[10px]">
+              <li key={target.fieldId} className="flex items-center justify-between border border-[var(--cns-border-subtle)] bg-[#0f172a] p-2 text-[10px]">
                 <span>{target.label}</span>
                 <span className="font-mono text-[#fef08a]">{String(target.value)} · {target.status ?? "yellow"}</span>
               </li>

@@ -21,8 +21,8 @@ function Indicator({ color, label }: { color: VorIndicatorColor; label: string }
 function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   const slug = title.toLowerCase().replace(/\s+/g, "-");
   return (
-    <section className={`pmdt-rms-panel pmdt-rms-panel--${slug} min-w-0 border border-[#334155] bg-[#111827]`}>
-      <h3 className="border-b border-[#334155] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[#e2e8f0]">{title}</h3>
+    <section className={`pmdt-rms-panel pmdt-rms-panel--${slug} min-w-0 border border-[var(--cns-border-subtle)] bg-[#111827]`}>
+      <h3 className="border-b border-[var(--cns-border-subtle)] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[var(--cns-text-primary)]">{title}</h3>
       {children}
     </section>
   );

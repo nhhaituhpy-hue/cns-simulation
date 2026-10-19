@@ -71,7 +71,7 @@ function ConfigInput({
         displayFieldId={fieldId}
         configFieldId={configFieldId}
         digits={configFieldId === "station.frequencyMHz" ? 1 : undefined}
-        className={`h-7 border border-[#475569] bg-[#0f172a] px-2 font-mono text-[11px] text-[#e2e8f0] outline-none ${className}`}
+        className={`h-7 border border-[#475569] bg-[#0f172a] px-2 font-mono text-[11px] text-[var(--cns-text-primary)] outline-none ${className}`}
       />
     );
   }
@@ -107,7 +107,7 @@ function ConfigInput({
         disabled
         value={displayValue}
         lang="en-US"
-        className={`h-7 border border-[#475569] bg-[#0f172a] px-2 font-mono text-[11px] text-[#e2e8f0] outline-none ${className}`}
+        className={`h-7 border border-[#475569] bg-[#0f172a] px-2 font-mono text-[11px] text-[var(--cns-text-primary)] outline-none ${className}`}
         onChange={() => undefined}
       >
         <option value={displayValue}>{displayValue}</option>
@@ -130,7 +130,7 @@ function ConfigInput({
           lang="en-US"
           readOnly
           value={displayValue}
-          className={`h-7 border border-[#475569] bg-[#0f172a] px-2 font-mono text-[11px] text-[#e2e8f0] outline-none ${className}`}
+          className={`h-7 border border-[#475569] bg-[#0f172a] px-2 font-mono text-[11px] text-[var(--cns-text-primary)] outline-none ${className}`}
         />
       </span>
     );
@@ -146,7 +146,7 @@ function ConfigInput({
       data-vor-field-label={fieldId}
       lang="en-US"
       value={displayValue}
-      className={`h-7 border border-[#475569] bg-[#0f172a] px-2 font-mono text-[11px] text-[#e2e8f0] outline-none ${className}`}
+      className={`h-7 border border-[#475569] bg-[#0f172a] px-2 font-mono text-[11px] text-[var(--cns-text-primary)] outline-none ${className}`}
     />
   );
 }
@@ -389,7 +389,7 @@ function RmsConfigStationTab() {
         </SectionBox>
       </div>
 
-      <div className="flex items-center gap-3 border border-[#334155] bg-[#111827] p-2.5">
+      <div className="flex items-center gap-3 border border-[var(--cns-border-subtle)] bg-[#111827] p-2.5">
         <span>Station Description:</span>
         <ConfigInput fieldId="rmsConfigStation.stationDescription" value={data.stationDescription} className="flex-1 max-w-md" />
       </div>
@@ -420,8 +420,8 @@ function RmsConfigPowerLimitsTab() {
   return (
     <div className="pmdt-rms-config-limit-screen pmdt-rms-config-power grid gap-3 p-3 lg:grid-cols-2 text-[11px]">
       <ConfigTimestamp />
-      <section className="pmdt-rms-config-power-primary border border-[#334155] bg-[#111827]">
-        <h3 className="border-b border-[#334155] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[#e2e8f0]">Volts</h3>
+      <section className="pmdt-rms-config-power-primary border border-[var(--cns-border-subtle)] bg-[#111827]">
+        <h3 className="border-b border-[var(--cns-border-subtle)] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[var(--cns-text-primary)]">Volts</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-[#172033] text-[#94a3b8] text-[10px]">
@@ -456,8 +456,8 @@ function RmsConfigPowerLimitsTab() {
         </div>
       </section>
 
-      <section className="pmdt-rms-config-power-voltage-summary border border-[#334155] bg-[#111827]">
-        <h3 className="border-b border-[#334155] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[#e2e8f0]">Volts</h3>
+      <section className="pmdt-rms-config-power-voltage-summary border border-[var(--cns-border-subtle)] bg-[#111827]">
+        <h3 className="border-b border-[var(--cns-border-subtle)] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[var(--cns-text-primary)]">Volts</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead><tr><th>Parameter</th><th>Low</th><th>Pre-Low</th><th>Pre-High</th><th>High</th></tr></thead>
@@ -479,8 +479,8 @@ function RmsConfigPowerLimitsTab() {
         </div>
       </section>
 
-      <section className="pmdt-rms-config-power-current-limits border border-[#334155] bg-[#111827]">
-        <h3 className="border-b border-[#334155] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[#e2e8f0]">Amps</h3>
+      <section className="pmdt-rms-config-power-current-limits border border-[var(--cns-border-subtle)] bg-[#111827]">
+        <h3 className="border-b border-[var(--cns-border-subtle)] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[var(--cns-text-primary)]">Amps</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-[#172033] text-[#94a3b8] text-[10px]">
@@ -529,8 +529,8 @@ function RmsConfigAdLimitsTab() {
   return (
     <div className="pmdt-rms-config-limit-screen pmdt-rms-config-ad grid gap-3 p-3 lg:grid-cols-2 text-[11px]">
       <ConfigTimestamp />
-      <section className="pmdt-rms-config-ad-table border border-[#334155] bg-[#111827]">
-        <h3 className="border-b border-[#334155] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[#e2e8f0]">Spare A/D Limits Configuration</h3>
+      <section className="pmdt-rms-config-ad-table border border-[var(--cns-border-subtle)] bg-[#111827]">
+        <h3 className="border-b border-[var(--cns-border-subtle)] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[var(--cns-text-primary)]">Spare A/D Limits Configuration</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-[#172033] text-[#94a3b8] text-[10px]">
@@ -615,7 +615,7 @@ export function RmsConfigLayout() {
   return (
     <section className="pmdt-rms-config flex min-h-full flex-col" aria-label="RMS Configuration">
       <PmdtToolbar title="RMS Configuration" />
-      <div className="flex gap-1 border-b border-[#334155] bg-[#0f172a] px-3 pt-2" role="tablist" aria-label="RMS Configuration tabs">
+      <div className="flex gap-1 border-b border-[var(--cns-border-subtle)] bg-[#0f172a] px-3 pt-2" role="tablist" aria-label="RMS Configuration tabs">
         {tabs.map((tab) => {
           const active = tab.id === activeTab;
           return (
@@ -630,7 +630,7 @@ export function RmsConfigLayout() {
               className={`min-h-8 border border-b-0 px-3 text-[11px] font-medium transition-colors ${
                 active
                   ? "border-[#475569] bg-[#1e293b] text-white"
-                  : "border-[#334155] bg-[#111827] text-[#94a3b8] hover:text-white"
+                  : "border-[var(--cns-border-subtle)] bg-[#111827] text-[#94a3b8] hover:text-white"
               }`}
             >
               {tab.label}
@@ -638,7 +638,7 @@ export function RmsConfigLayout() {
           );
         })}
       </div>
-      <div className="pmdt-rms-config-content min-h-0 flex-1 overflow-auto bg-[#0a0e1a]">
+      <div className="pmdt-rms-config-content min-h-0 flex-1 overflow-auto bg-[var(--cns-surface-card)]">
         {activeTab === "station" && <RmsConfigStationTab />}
         {activeTab === "power" && <RmsConfigPowerLimitsTab />}
         {activeTab === "ad" && <RmsConfigAdLimitsTab />}

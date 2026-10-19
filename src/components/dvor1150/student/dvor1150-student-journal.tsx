@@ -34,8 +34,8 @@ export function Dvor1150StudentJournal({
   onAnswerChange: (changes: Partial<Dvor1150StudentAnswer>) => void;
 }) {
   return (
-    <div className="text-[#e2e8f0]">
-      <header className="border-b border-[#334155] p-4">
+    <div className="text-[var(--cns-text-primary)]">
+      <header className="border-b border-[var(--cns-border-subtle)] p-4">
         <div className="flex items-center gap-2 text-[#93c5fd]">
           <ClipboardText aria-hidden size={18} />
           <h2 className="text-sm font-bold">Nhật ký học viên</h2>
@@ -69,7 +69,7 @@ export function Dvor1150StudentActivity({
   onRemoveEvent: (eventId: string) => void;
 }) {
   return (
-    <div className="flex min-h-full flex-col text-[#e2e8f0]">
+    <div className="flex min-h-full flex-col text-[var(--cns-text-primary)]">
       <div className="flex-1 space-y-5 p-4">
         <section aria-labelledby="dvor1150-activity-title">
           <div className="flex items-center justify-between gap-2">
@@ -86,7 +86,7 @@ export function Dvor1150StudentActivity({
           ) : (
             <ol className="mt-3 space-y-3">
               {events.map((event) => (
-                <li key={event.id} className="relative rounded border border-[#334155] bg-[#0f172a] p-3">
+                <li key={event.id} className="relative rounded border border-[var(--cns-border-subtle)] bg-[#0f172a] p-3">
                   <button
                     type="button"
                     onClick={() => onRemoveEvent(event.id)}
@@ -120,7 +120,7 @@ export function Dvor1150StudentActivity({
           )}
         </section>
 
-        <section aria-labelledby="dvor1150-progress-title" className="border-t border-[#334155] pt-5">
+        <section aria-labelledby="dvor1150-progress-title" className="border-t border-[var(--cns-border-subtle)] pt-5">
           <div className="flex items-center justify-between gap-2">
             <h2 id="dvor1150-progress-title" className="text-xs font-bold uppercase tracking-wide text-[#cbd5e1]">
               Tiến độ kịch bản
@@ -140,7 +140,7 @@ export function Dvor1150StudentActivity({
         </section>
       </div>
 
-      <footer className="sticky bottom-0 border-t border-[#334155] bg-[#111827] p-4">
+      <footer className="sticky bottom-0 border-t border-[var(--cns-border-subtle)] bg-[#111827] p-4">
         {onContinue ? <button type="button" onClick={onContinue} className="mb-2 inline-flex h-10 w-full items-center justify-center rounded border border-[#4ade80] bg-[#166534] px-2 text-[10px] font-semibold leading-4 text-[#f0fdf4] whitespace-nowrap hover:bg-[#15803d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4ade80]">Tiếp tục: Xác định phần cứng</button> : null}
         <Link
           href="/student/dvor-1150"

@@ -63,7 +63,7 @@ export function ScenarioWizard({ scenarioId }: ScenarioWizardProps) {
       <div>
         <Link
           href="/authoring/ads-b"
-          className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[#38a3dc] transition-colors hover:bg-black/[0.04] hover:text-[#7dd3fc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+          className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[var(--cns-text-secondary)] transition-colors hover:bg-black/[0.04] hover:text-[var(--cns-text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
         >
           <ArrowLeft aria-hidden size={15} />
           <span>Quay về danh sách</span>
@@ -72,7 +72,7 @@ export function ScenarioWizard({ scenarioId }: ScenarioWizardProps) {
 
       {/* Main Header */}
       <header className="border-b border-[var(--cns-border-subtle)] pb-6">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#38a3dc]">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--cns-text-secondary)]">
           Kịch bản / ADS-B
         </p>
         <h1 className="mt-1.5 text-[28px] sm:text-[32px] font-semibold tracking-tight text-[var(--cns-text-primary)] leading-tight">

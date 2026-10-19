@@ -73,8 +73,8 @@ export function HardwareDiagnosisStep({
   }
 
   return (
-    <main className="min-h-[calc(100dvh-4rem)] bg-[#070a12] text-[#e2e8f0]">
-      <header className="border-b border-[#334155] bg-[#111827] px-4 py-3 sm:px-6">
+    <main className="min-h-[calc(100dvh-4rem)] bg-[var(--cns-surface-card)] text-[var(--cns-text-primary)]">
+      <header className="border-b border-[var(--cns-border-subtle)] bg-[#111827] px-4 py-3 sm:px-6">
         <div className="mx-auto flex max-w-[96rem] flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#60a5fa]">Bước 2 / 2 · Xác định phần cứng</p>
@@ -110,7 +110,7 @@ export function HardwareDiagnosisStep({
           />
         </section>
 
-        <aside aria-label="Kết luận phần cứng" className="h-fit border border-[#334155] bg-[#111827] p-4 xl:sticky xl:top-4">
+        <aside aria-label="Kết luận phần cứng" className="h-fit border border-[var(--cns-border-subtle)] bg-[#111827] p-4 xl:sticky xl:top-4">
           <h2 className="text-sm font-bold text-white">Kết luận phần cứng</h2>
           <p className="mt-2 text-xs leading-5 text-[#94a3b8]">Đã chọn {selectedComponentIds.length} block · đã xem {inspectedComponentIds.length} block.</p>
           <label className="mt-5 grid gap-2 text-xs font-semibold text-[#cbd5e1]">
@@ -120,7 +120,7 @@ export function HardwareDiagnosisStep({
               onChange={(event) => { setReasoning(event.target.value); setError(""); }}
               rows={8}
               placeholder="Liên hệ các dấu hiệu đã quan sát trên PMDT với đường tín hiệu/điều khiển trên sơ đồ…"
-              className="resize-y border border-[#475569] bg-[#0a0e1a] p-3 text-sm font-normal leading-6 text-white outline-none focus:border-[#60a5fa]"
+              className="resize-y border border-[#475569] bg-[var(--cns-surface-card)] p-3 text-sm font-normal leading-6 text-white outline-none focus:border-[#60a5fa]"
             />
           </label>
           {additionalConclusion ? <div className="mt-6">{additionalConclusion}</div> : null}

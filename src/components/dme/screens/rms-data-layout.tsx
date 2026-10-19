@@ -34,7 +34,7 @@ export function RmsDataLayout() {
         active: tab.viewId === activeView,
         onSelect: () => openView("rms-data", tab.viewId, ["RMS", "Data", tab.label], tab.label),
       }))} />
-      <div className="dme-pmdt-rms-data-content min-h-0 flex-1 overflow-auto bg-[#0a0e1a]">
+      <div className="dme-pmdt-rms-data-content min-h-0 flex-1 overflow-auto bg-[var(--cns-surface-card)]">
         <time className="dme-pmdt-screen-time">{timestamp}</time>
         {activeView === "rms-digital-io" ? (
           <RmsDigitalIo />

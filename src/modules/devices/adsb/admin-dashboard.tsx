@@ -59,7 +59,7 @@ export function AdsbAdminDashboard() {
       <div>
         <Link
           href="/authoring"
-          className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[#38a3dc] transition-colors hover:bg-black/[0.04] hover:text-[#7dd3fc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+          className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[var(--cns-text-secondary)] transition-colors hover:bg-black/[0.04] hover:text-[var(--cns-text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
         >
           <ArrowLeft aria-hidden size={15} />
           <span>Danh sách thiết bị</span>
@@ -70,7 +70,7 @@ export function AdsbAdminDashboard() {
       <header className="border-b border-[var(--cns-border-subtle)] pb-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#38a3dc]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--cns-text-secondary)]">
               Kịch bản / ADS-B
             </p>
             <h1 className="mt-1.5 text-[28px] sm:text-[32px] font-semibold tracking-tight text-[var(--cns-text-primary)] leading-tight">
@@ -160,7 +160,7 @@ export function AdsbAdminDashboard() {
 
           {isHydrated && sortedScenarios.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-12 text-center">
-              <span className="inline-flex size-12 items-center justify-center rounded-[10px] border border-[var(--cns-border-subtle)] bg-black/[0.04] text-[#38a3dc]">
+              <span className="inline-flex size-12 items-center justify-center rounded-[10px] border border-[var(--cns-border-subtle)] bg-black/[0.04] text-[var(--cns-text-secondary)]">
                 <FilePlus aria-hidden size={24} weight="duotone" />
               </span>
               <h3 className="mt-4 text-[15px] font-semibold text-[var(--cns-text-primary)]">Chưa có kịch bản</h3>

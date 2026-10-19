@@ -21,8 +21,8 @@ interface VorStudentActivityProps {
 
 export function VorStudentJournal({ scenario, showConclusion = false }: VorStudentJournalProps) {
   return (
-    <div className="text-[#e2e8f0]">
-      <header className="border-b border-[#334155] p-4">
+    <div className="text-[var(--cns-text-primary)]">
+      <header className="border-b border-[var(--cns-border-subtle)] p-4">
         <div className="flex items-center gap-2 text-[#93c5fd]">
           <ClipboardText aria-hidden size={18} />
           <h2 className="text-sm font-bold">Nhật ký học viên</h2>
@@ -65,7 +65,7 @@ export function VorStudentActivity({ isSubmitting, onSubmit, onContinue }: VorSt
   }
 
   return (
-    <div className="flex min-h-full flex-col text-[#e2e8f0]">
+    <div className="flex min-h-full flex-col text-[var(--cns-text-primary)]">
       <div className="flex-1 space-y-5 p-4">
         <section aria-labelledby="activity-title">
           <div className="flex items-center justify-between gap-2">
@@ -79,7 +79,7 @@ export function VorStudentActivity({ isSubmitting, onSubmit, onContinue }: VorSt
           ) : (
             <ol className="mt-3 space-y-3">
               {events.map((event) => (
-                <li key={event.id} className="relative rounded border border-[#334155] bg-[#0f172a] p-3">
+                <li key={event.id} className="relative rounded border border-[var(--cns-border-subtle)] bg-[#0f172a] p-3">
                   <button
                     type="button"
                     onClick={() => removeEvent(event.id)}
@@ -118,7 +118,7 @@ export function VorStudentActivity({ isSubmitting, onSubmit, onContinue }: VorSt
         <ScenarioActionTimeline events={actionHistory} title="Nhật ký kỹ thuật / cách xử lý cảnh báo" />
       </div>
 
-      <footer className="sticky bottom-0 border-t border-[#334155] bg-[#111827] p-4">
+      <footer className="sticky bottom-0 border-t border-[var(--cns-border-subtle)] bg-[#111827] p-4">
         {error ? <p role="alert" className="mb-3 text-xs font-medium text-[#fca5a5]">{error}</p> : null}
         <button
           type="button"
@@ -139,7 +139,7 @@ export function VorStudentConclusion() {
   const updateAnswer = useVorPmdtStore((state) => state.updateAnswer);
 
   return (
-    <section aria-labelledby="conclusion-title" className="space-y-3 border-t border-[#334155] pt-5">
+    <section aria-labelledby="conclusion-title" className="space-y-3 border-t border-[var(--cns-border-subtle)] pt-5">
       <h2 id="conclusion-title" className="text-xs font-bold uppercase tracking-wide text-[#cbd5e1]">Kết luận sự cố</h2>
       <AnswerField label="Vị trí / sự cố nghi ngờ" value={answer.suspectedFault} onChange={(value) => updateAnswer({ suspectedFault: value })} />
       <AnswerField label="Căn cứ chẩn đoán" value={answer.reasoning} onChange={(value) => updateAnswer({ reasoning: value })} />

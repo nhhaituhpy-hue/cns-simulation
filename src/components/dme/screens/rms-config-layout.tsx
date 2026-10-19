@@ -79,7 +79,7 @@ function ConfigInput({
         disabled={!canEdit}
         value={String(resolved)}
         onChange={(event) => update(event.currentTarget.value)}
-        className={`h-7 border border-[#475569] bg-[#0f172a] px-2 font-mono text-[11px] text-[#e2e8f0] outline-none ${className}`}
+        className={`h-7 border border-[#475569] bg-[#0f172a] px-2 font-mono text-[11px] text-[var(--cns-text-primary)] outline-none ${className}`}
       >
         {fieldDefinition.options?.map((option) => <option key={option} value={option}>{option}</option>)}
       </select>
@@ -95,15 +95,15 @@ function ConfigInput({
       readOnly={!canEdit}
       value={String(resolved)}
       onChange={(event) => update(event.currentTarget.value)}
-      className={`h-7 border border-[#475569] bg-[#0f172a] px-2 font-mono text-[11px] text-[#e2e8f0] outline-none ${className}`}
+      className={`h-7 border border-[#475569] bg-[#0f172a] px-2 font-mono text-[11px] text-[var(--cns-text-primary)] outline-none ${className}`}
     />
   );
 }
 
 function SectionBox({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="dme-pmdt-rms-section-box border border-[#334155] bg-[#111827] p-2.5">
-      <h4 className="dme-pmdt-rms-section-title mb-2 text-[11px] font-semibold text-[#e2e8f0] border-b border-[#2d3a4f] pb-1">{title}</h4>
+    <div className="dme-pmdt-rms-section-box border border-[var(--cns-border-subtle)] bg-[#111827] p-2.5">
+      <h4 className="dme-pmdt-rms-section-title mb-2 text-[11px] font-semibold text-[var(--cns-text-primary)] border-b border-[#2d3a4f] pb-1">{title}</h4>
       {children}
     </div>
   );
@@ -337,7 +337,7 @@ function DmeConfigStationTab() {
         </SectionBox>
       </div>
 
-      <div className="dme-pmdt-station-description flex items-center gap-3 border border-[#334155] bg-[#111827] p-2.5">
+      <div className="dme-pmdt-station-description flex items-center gap-3 border border-[var(--cns-border-subtle)] bg-[#111827] p-2.5">
         <span>Station Description:</span>
         <ConfigInput fieldId="rmsConfigStation.stationDescription" value={station.stationDescription} className="flex-1 max-w-md" />
       </div>
@@ -351,11 +351,11 @@ function DmeConfigStationTab() {
             </header>
             <div className="pmdt-about-body text-left text-[11px]">
               <p className="mb-2 text-[#94a3b8]">Set the station backplane switches to match the user configuration before applying the change.</p>
-              <table className="w-full border-collapse border border-[#334155]">
+              <table className="w-full border-collapse border border-[var(--cns-border-subtle)]">
                 <tbody>
-                  <tr><th className="border border-[#334155] px-2 py-1 text-left">S1</th><td className="border border-[#334155] px-2 py-1">{station.powerLevel}; {station.transmitterConfig}</td></tr>
-                  <tr><th className="border border-[#334155] px-2 py-1 text-left">S2</th><td className="border border-[#334155] px-2 py-1">{station.monitorConfig}; {station.hotStandby ? "Hot Standby" : "Cold Standby"}</td></tr>
-                  <tr><th className="border border-[#334155] px-2 py-1 text-left">S3</th><td className="border border-[#334155] px-2 py-1">Channel {station.channelNumber}{station.channelType}</td></tr>
+                  <tr><th className="border border-[var(--cns-border-subtle)] px-2 py-1 text-left">S1</th><td className="border border-[var(--cns-border-subtle)] px-2 py-1">{station.powerLevel}; {station.transmitterConfig}</td></tr>
+                  <tr><th className="border border-[var(--cns-border-subtle)] px-2 py-1 text-left">S2</th><td className="border border-[var(--cns-border-subtle)] px-2 py-1">{station.monitorConfig}; {station.hotStandby ? "Hot Standby" : "Cold Standby"}</td></tr>
+                  <tr><th className="border border-[var(--cns-border-subtle)] px-2 py-1 text-left">S3</th><td className="border border-[var(--cns-border-subtle)] px-2 py-1">Channel {station.channelNumber}{station.channelType}</td></tr>
                 </tbody>
               </table>
               <button type="button" className="pmdt-about-ok mt-3" autoFocus onClick={() => setDipSwitchOpen(false)}>OK</button>
@@ -500,23 +500,23 @@ function DmeSecurityCodesTab() {
 
   return (
     <div className="dme-pmdt-rms-security-codes p-3 text-[11px]">
-      <div className="mb-3 border border-[#334155] bg-[#111827] p-2 text-[#94a3b8]">
+      <div className="mb-3 border border-[var(--cns-border-subtle)] bg-[#111827] p-2 text-[#94a3b8]">
         Security Codes is available only to Security Level 4 in Local mode. Passwords are staged with Apply (F7) and retained after RMS Config Backup.
       </div>
-      <table className="w-full border-collapse border border-[#334155]">
+      <table className="w-full border-collapse border border-[var(--cns-border-subtle)]">
         <caption className="sr-only">RMS security user accounts</caption>
-        <thead className="bg-[#1e293b] text-left text-[#e2e8f0]">
+        <thead className="bg-[#1e293b] text-left text-[var(--cns-text-primary)]">
           <tr>
-            <th scope="col" className="border border-[#334155] px-2 py-1">User ID</th>
-            <th scope="col" className="border border-[#334155] px-2 py-1">Password</th>
-            <th scope="col" className="border border-[#334155] px-2 py-1">Security Level</th>
-            <th scope="col" className="border border-[#334155] px-2 py-1">Action</th>
+            <th scope="col" className="border border-[var(--cns-border-subtle)] px-2 py-1">User ID</th>
+            <th scope="col" className="border border-[var(--cns-border-subtle)] px-2 py-1">Password</th>
+            <th scope="col" className="border border-[var(--cns-border-subtle)] px-2 py-1">Security Level</th>
+            <th scope="col" className="border border-[var(--cns-border-subtle)] px-2 py-1">Action</th>
           </tr>
         </thead>
         <tbody>
           {accounts.map((account, index) => (
             <tr key={`${account.userId}-${index}`}>
-              <td className="border border-[#334155] p-1">
+              <td className="border border-[var(--cns-border-subtle)] p-1">
                 <input
                   id={`dme-security-user-${index + 1}`}
                   name={`securityAccounts.${index}.userId`}
@@ -525,10 +525,10 @@ function DmeSecurityCodesTab() {
                   value={account.userId}
                   disabled={!canEdit}
                   onChange={(event) => updateSecurityAccount(index, { userId: event.currentTarget.value })}
-                  className="h-7 w-full border border-[#475569] bg-[#0f172a] px-2 font-mono text-[#e2e8f0]"
+                  className="h-7 w-full border border-[#475569] bg-[#0f172a] px-2 font-mono text-[var(--cns-text-primary)]"
                 />
               </td>
-              <td className="border border-[#334155] p-1">
+              <td className="border border-[var(--cns-border-subtle)] p-1">
                 <input
                   id={`dme-security-password-${index + 1}`}
                   name={`securityAccounts.${index}.password`}
@@ -537,10 +537,10 @@ function DmeSecurityCodesTab() {
                   value={account.password}
                   disabled={!canEdit}
                   onChange={(event) => updateSecurityAccount(index, { password: event.currentTarget.value })}
-                  className="h-7 w-full border border-[#475569] bg-[#0f172a] px-2 font-mono text-[#e2e8f0]"
+                  className="h-7 w-full border border-[#475569] bg-[#0f172a] px-2 font-mono text-[var(--cns-text-primary)]"
                 />
               </td>
-              <td className="border border-[#334155] p-1">
+              <td className="border border-[var(--cns-border-subtle)] p-1">
                 <select
                   id={`dme-security-level-${index + 1}`}
                   name={`securityAccounts.${index}.securityLevel`}
@@ -548,12 +548,12 @@ function DmeSecurityCodesTab() {
                   value={account.securityLevel}
                   disabled={!canEdit}
                   onChange={(event) => updateSecurityAccount(index, { securityLevel: Number(event.currentTarget.value) as DmeAccountSecurityLevel })}
-                  className="h-7 border border-[#475569] bg-[#0f172a] px-2 text-[#e2e8f0]"
+                  className="h-7 border border-[#475569] bg-[#0f172a] px-2 text-[var(--cns-text-primary)]"
                 >
                   {[1, 2, 3, 4].map((level) => <option key={level} value={level}>Level {level}</option>)}
                 </select>
               </td>
-              <td className="border border-[#334155] p-1">
+              <td className="border border-[var(--cns-border-subtle)] p-1">
                 <button type="button" disabled={!canEdit} onClick={() => removeSecurityAccount(index)} className="h-7 border border-[#475569] px-2 text-[#cbd5e1] disabled:opacity-50">Clear</button>
               </td>
             </tr>
@@ -582,7 +582,7 @@ export function RmsConfigLayout() {
   return (
     <section className="flex min-h-full flex-col" aria-label="RMS Configuration">
       <PmdtToolbar title="RMS Configuration" />
-      <div className="flex gap-1 border-b border-[#334155] bg-[#0f172a] px-3 pt-2" role="tablist" aria-label="RMS Configuration tabs">
+      <div className="flex gap-1 border-b border-[var(--cns-border-subtle)] bg-[#0f172a] px-3 pt-2" role="tablist" aria-label="RMS Configuration tabs">
         {tabs.map((tab) => {
           const active = tab.viewId === activeView;
           return (
@@ -597,7 +597,7 @@ export function RmsConfigLayout() {
               className={`min-h-8 border border-b-0 px-3 text-[11px] font-medium transition-colors ${
                 active
                   ? "border-[#475569] bg-[#1e293b] text-white"
-                  : "border-[#334155] bg-[#111827] text-[#94a3b8] hover:text-white"
+                  : "border-[var(--cns-border-subtle)] bg-[#111827] text-[#94a3b8] hover:text-white"
               }`}
             >
               {tab.label}
@@ -605,7 +605,7 @@ export function RmsConfigLayout() {
           );
         })}
       </div>
-      <div className={`dme-pmdt-rms-config-content min-h-0 flex-1 overflow-auto bg-[#0a0e1a] ${activeView === "rms-config-station" ? "dme-pmdt-rms-config-content--station" : ""}`}>
+      <div className={`dme-pmdt-rms-config-content min-h-0 flex-1 overflow-auto bg-[var(--cns-surface-card)] ${activeView === "rms-config-station" ? "dme-pmdt-rms-config-content--station" : ""}`}>
         <time className="dme-pmdt-screen-time">{timestamp}</time>
         {activeView === "rms-config-station" && <DmeConfigStationTab />}
         {activeView === "rms-config-power-limits" && <DmeConfigPowerLimitsTab />}

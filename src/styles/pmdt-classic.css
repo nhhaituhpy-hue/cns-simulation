@@ -2875,8 +2875,8 @@
   flex: 0 0 auto;
 }
 
-.pmdt-classic-window [class~="bg-[#070a12]"],
-.pmdt-classic-window [class~="bg-[#0a0e1a]"] {
+.pmdt-classic-window [class~="bg-[var(--cns-surface-card)]"],
+.pmdt-classic-window [class~="bg-[var(--cns-surface-card)]"] {
   background: #f3f3f3 !important;
 }
 
@@ -2913,7 +2913,7 @@
   background: #ffc7ce !important;
 }
 
-.pmdt-classic-window [class~="border-[#334155]"],
+.pmdt-classic-window [class~="border-[var(--cns-border-subtle)]"],
 .pmdt-classic-window [class~="border-[#475569]"],
 .pmdt-classic-window [class~="border-[#273449]"],
 .pmdt-classic-window [class~="border-[#2d3a4f]"],
@@ -2923,7 +2923,7 @@
   border-color: #808080 !important;
 }
 
-.pmdt-classic-window [class~="text-[#e2e8f0]"],
+.pmdt-classic-window [class~="text-[var(--cns-text-primary)]"],
 .pmdt-classic-window [class~="text-[#cbd5e1]"],
 .pmdt-classic-window [class~="text-[#94a3b8]"],
 .pmdt-classic-window [class~="text-[#64748b]"],

@@ -30,14 +30,14 @@ export function MonitorDataLayout() {
   return (
     <section className="flex min-h-full flex-col" aria-label={title}>
       <PmdtToolbar title={title} />
-      <div className="pmdt-monitor-tabbar flex gap-1 border-b border-[#334155] bg-[#0f172a] px-3 pt-2" role="tablist" aria-label="Monitor Data tabs">
+      <div className="pmdt-monitor-tabbar flex gap-1 border-b border-[var(--cns-border-subtle)] bg-[#0f172a] px-3 pt-2" role="tablist" aria-label="Monitor Data tabs">
           {visibleTabs.map((tab) => {
           const active = tab.viewId === activeView;
           return (
             <button key={tab.id} type="button" role="tab" aria-selected={active} aria-disabled={!tab.enabled || undefined} title={!tab.enabled ? "Chưa khả dụng" : undefined} onClick={() => {
               if (!tab.enabled || !tab.viewId) return;
                 openView("monitor-data", tab.viewId, [monitorNumber ? `Monitor ${monitorNumber}` : "Monitors", "Data", tab.label], tab.label);
-            }} className={`min-h-8 border border-b-0 px-3 text-[11px] font-medium ${!tab.enabled ? "cursor-not-allowed border-[#273449] text-[#64748b] opacity-50" : active ? "border-[#475569] bg-[#1e293b] text-white" : "border-[#334155] bg-[#111827] text-[#94a3b8] hover:text-white"}`}>
+            }} className={`min-h-8 border border-b-0 px-3 text-[11px] font-medium ${!tab.enabled ? "cursor-not-allowed border-[#273449] text-[#64748b] opacity-50" : active ? "border-[#475569] bg-[#1e293b] text-white" : "border-[var(--cns-border-subtle)] bg-[#111827] text-[#94a3b8] hover:text-white"}`}>
               {tab.label}
             </button>
           );

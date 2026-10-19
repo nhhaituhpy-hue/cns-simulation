@@ -120,8 +120,8 @@ export function AdsbSimulatorLab() {
   ]);
 
   return (
-    <div className="simulator-skin adsb-simulator-lab min-h-screen w-full bg-[#070a12] text-[#e2e8f0]">
-      <header className="border-b border-[#334155] bg-[#0f172a]">
+    <div className="simulator-skin adsb-simulator-lab min-h-screen w-full bg-[var(--cns-surface-card)] text-[var(--cns-text-primary)]">
+      <header className="border-b border-[var(--cns-border-subtle)] bg-[#0f172a]">
         <div className="flex h-8 items-center justify-between gap-3 border-b border-[#26364d] px-4">
           <Link
             href="/simulator"
@@ -130,18 +130,18 @@ export function AdsbSimulatorLab() {
             <ArrowLeft aria-hidden size={13} />
             Quay về Simulator
           </Link>
-          <span className="font-mono text-[10px] text-[#7dd3fc]">
+          <span className="font-mono text-[10px] text-[var(--cns-text-secondary)]">
             SSH {connectionIpAddress}
           </span>
         </div>
 
         <div className="flex min-h-16 flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="inline-flex size-9 shrink-0 items-center justify-center border border-[#31506d] bg-[#13283b] text-[#7dd3fc]">
+            <span className="inline-flex size-9 shrink-0 items-center justify-center border border-[#31506d] bg-[#13283b] text-[var(--cns-text-secondary)]">
               <Terminal aria-hidden size={20} weight="regular" />
             </span>
             <div className="min-w-0">
-              <h1 className="truncate text-sm font-bold tracking-wide text-[#f1f5f9]">
+              <h1 className="truncate text-sm font-bold tracking-wide text-[var(--cns-text-primary)]">
                 ADS-B SENSOR TERMINAL
               </h1>
               <p className="mt-0.5 text-[11px] text-[#94a3b8]">

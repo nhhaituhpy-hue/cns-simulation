@@ -87,7 +87,7 @@ export function PlaygroundShell({ files }: Props) {
   }, [tab, selected]);
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#061b25] text-white">
+    <div className="flex h-screen w-screen overflow-hidden bg-[var(--cns-surface-card)] text-white">
       {/* Sidebar */}
       <aside className="flex w-80 flex-col border-r border-white/10 bg-[#082630]">
         <div className="border-b border-white/10 p-3">

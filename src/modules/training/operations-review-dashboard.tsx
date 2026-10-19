@@ -263,7 +263,7 @@ export function OperationsReviewDashboard({
       <div>
         <Link
           href="/review"
-          className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[#38a3dc] transition-colors hover:bg-black/[0.04] hover:text-[#7dd3fc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
+          className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[var(--cns-text-secondary)] transition-colors hover:bg-black/[0.04] hover:text-[var(--cns-text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
         >
           <ArrowLeft aria-hidden size={15} />
           <span>Back</span>
@@ -278,7 +278,7 @@ export function OperationsReviewDashboard({
         {/* Section Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#38a3dc]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--cns-text-secondary)]">
               Ôn tập / Thực hành
             </p>
             <h1

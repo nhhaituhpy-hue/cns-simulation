@@ -100,7 +100,7 @@ export function Dvor1150StudentSession({ scenarioId, identity }: Dvor1150Student
   }
 
   if (!sessionReady) {
-    return <div role="status" className="grid min-h-[calc(100dvh-4.5rem)] place-items-center bg-[#070a12] text-sm text-[#94a3b8]">Đang chuẩn bị phiên thực hành DVOR 1150…</div>;
+    return <div role="status" className="grid min-h-[calc(100dvh-4.5rem)] place-items-center bg-[var(--cns-surface-card)] text-sm text-[#94a3b8]">Đang chuẩn bị phiên thực hành DVOR 1150…</div>;
   }
 
   const evaluation = evaluateDvor1150Scenario(runtime, derived, config, {
@@ -126,8 +126,8 @@ export function Dvor1150StudentSession({ scenarioId, identity }: Dvor1150Student
   }
 
   return (
-    <div className="dvor1150-pmdt-page min-w-[1024px] bg-[#070a12]">
-      <div className="min-w-[1024px] border-b border-[#334155] bg-[#111827] px-4 py-2 text-center text-xs text-[#cbd5e1]">
+    <div className="dvor1150-pmdt-page min-w-[1024px] bg-[var(--cns-surface-card)]">
+      <div className="min-w-[1024px] border-b border-[var(--cns-border-subtle)] bg-[#111827] px-4 py-2 text-center text-xs text-[#cbd5e1]">
         <span className="font-bold text-white">{scenario.name}</span>
         <span className="mx-2 text-[#475569]">|</span>
         <span>{identity.studentName} | {identity.workUnit}</span>

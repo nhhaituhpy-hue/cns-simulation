@@ -60,8 +60,8 @@ export function RmsMaintenanceAlerts() {
 
   return (
     <div className="pmdt-rms-maintenance-screen grid gap-3 p-3 lg:grid-cols-[minmax(15rem,0.8fr)_minmax(28rem,1.5fr)]">
-      <section className="pmdt-rms-panel pmdt-rms-general-alert-panel border border-[#334155] bg-[#111827]" aria-labelledby="general-alerts-title">
-        <h3 id="general-alerts-title" className="border-b border-[#334155] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[#e2e8f0]">
+      <section className="pmdt-rms-panel pmdt-rms-general-alert-panel border border-[var(--cns-border-subtle)] bg-[#111827]" aria-labelledby="general-alerts-title">
+        <h3 id="general-alerts-title" className="border-b border-[var(--cns-border-subtle)] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[var(--cns-text-primary)]">
           General Alerts and Alarms
         </h3>
         <div className="pmdt-rms-general-alert-grid">
@@ -73,8 +73,8 @@ export function RmsMaintenanceAlerts() {
         </div>
       </section>
 
-      <section className="pmdt-rms-panel pmdt-rms-monitor-alert-panel min-w-0 border border-[#334155] bg-[#111827]" aria-labelledby="monitor-alerts-title">
-        <h3 id="monitor-alerts-title" className="border-b border-[#334155] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[#e2e8f0]">
+      <section className="pmdt-rms-panel pmdt-rms-monitor-alert-panel min-w-0 border border-[var(--cns-border-subtle)] bg-[#111827]" aria-labelledby="monitor-alerts-title">
+        <h3 id="monitor-alerts-title" className="border-b border-[var(--cns-border-subtle)] bg-[#1e293b] px-3 py-2 text-xs font-semibold text-[var(--cns-text-primary)]">
           Monitor/Audio Generator Alerts and Alarms
         </h3>
         <div className="overflow-x-auto">
