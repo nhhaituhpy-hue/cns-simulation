@@ -131,7 +131,7 @@ export function ScenarioDataTable<T extends { id: string; title: string }>({
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="px-6 py-12 text-center text-[13px] text-[#6B7A8D]"
+                  className="px-6 py-12 text-center text-[13px] text-slate-600 bg-[#e5e7eb]"
                 >
                   {emptySearchMessage}
                 </td>

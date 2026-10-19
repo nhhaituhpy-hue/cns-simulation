@@ -32,7 +32,6 @@ export default async function ReviewModulePage({ params }: ReviewModulePageProps
   return (
     <OperationsReviewDashboard
       moduleId={moduleId}
-      canManage={profile.role === "admin"}
     />
   );
 }

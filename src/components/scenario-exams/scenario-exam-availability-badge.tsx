@@ -1,11 +1,11 @@
 import { scenarioExamAvailabilityLabel } from "@/lib/scenario-exams/presentation";
 import type { ScenarioExamAvailability } from "@/lib/scenario-exams/types";
 
-const neutralClassName = "border-[var(--border-strong)] bg-[var(--surface-muted)] text-[var(--text-secondary)]";
+const neutralClassName = "inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold text-[var(--text-secondary)]";
 const statusClassName: Record<ScenarioExamAvailability, string> = {
   draft: neutralClassName,
-  upcoming: "border-[var(--color-warning-border)] bg-[var(--color-warning-muted)] text-[var(--color-warning)]",
-  available: "border-[var(--color-success-border)] bg-[var(--color-success-muted)] text-[var(--color-success)]",
+  upcoming: "inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold text-[var(--color-warning)]",
+  available: "inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold text-[var(--color-success)]",
   ended: neutralClassName,
   locked: neutralClassName,
   closed: neutralClassName,
@@ -14,7 +14,7 @@ const statusClassName: Record<ScenarioExamAvailability, string> = {
 
 export function ScenarioExamAvailabilityBadge({ availability }: { availability: ScenarioExamAvailability }) {
   return (
-    <span className={`inline-flex rounded border px-2 py-1 text-xs font-semibold ${statusClassName[availability]}`}>
+    <span className={`inline-flex rounded px-2 py-1 text-xs font-semibold ${statusClassName[availability]}`}>
       {scenarioExamAvailabilityLabel[availability]}
     </span>
   );

@@ -12,7 +12,7 @@ describe("AuthoringPage", () => {
   it("shows Scenario Parameters devices plus the legacy ADS-B authoring workflow", () => {
     render(<AuthoringPage />);
 
-    const expectedModules = [
+    const availableModules = [
       ["DVOR 1150", "/authoring/dvor-1150"],
       ["DVOR 1150A", "/authoring/dvor-1150a"],
       ["DME 1119A", "/authoring/dme-1119a"],
@@ -21,15 +21,17 @@ describe("AuthoringPage", () => {
       ["ADS-B", "/authoring/ads-b"],
     ] as const;
 
-    for (const [name, href] of expectedModules) {
+    for (const [name, href] of availableModules) {
       const card = cardForHeading(name);
-      expect(card.getByText("Sẵn sàng")).toBeInTheDocument();
+      expect(card.getByText("ready")).toBeInTheDocument();
       expect(
-        card.getByRole("link", { name: "Quản lý kịch bản" }),
+        card.getByRole("link", { name: "Scenario Builder" }),
       ).toHaveAttribute("href", href);
     }
 
-    expect(screen.queryByRole("heading", { name: "VHF" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "VSAT" })).not.toBeInTheDocument();
+    for (const name of ["VHF", "VSAT"]) {
+      const card = cardForHeading(name);
+      expect(card.getByText("pending")).toBeInTheDocument();
+    }
   });
 });

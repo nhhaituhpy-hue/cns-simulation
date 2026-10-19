@@ -51,79 +51,40 @@ describe("OperationsReviewDashboard", () => {
     );
   });
 
-  it("allows an examiner to select a scenario without losing the checkbox event", async () => {
-    const user = userEvent.setup();
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
-      assigned: [],
-      canManage: true,
-      available: [{
-        id: "row-1",
-        moduleId: "dvor-220",
-        scenarioId: "scenario-1",
-        name: "Suy giảm Carrier",
-        description: "Khôi phục Carrier.",
-        difficulty: "intermediate",
-        schemaVersion: 1,
-        definition: {},
-        sourceFileName: "scenario.json",
-        createdAt: "2026-09-16T00:00:00.000Z",
-        updatedAt: "2026-09-16T00:00:00.000Z",
-      }],
-    }), { status: 200 })));
+  it("renders assigned scenarios with orange fully-rounded start action", () => {
     render(
       <OperationsReviewDashboard
         moduleId="dvor-220"
+        loadFromApi={false}
+        scenarios={[
+          {
+            id: "review-1",
+            title: "Suy giảm công suất TX1",
+            description: "Tình huống đã được giám khảo chọn cho ôn tập.",
+            difficulty: "intermediate",
+            href: "/review/dvor-220/session?id=review-1",
+          },
+        ]}
       />,
     );
 
-    await waitFor(() => expect(screen.getByRole("button", { name: "Thêm kịch bản" })).toBeEnabled());
-    await user.click(screen.getByRole("button", { name: "Thêm kịch bản" }));
-    await user.click(screen.getByRole("checkbox", { name: /Suy giảm Carrier/ }));
-    expect(screen.getByRole("checkbox", { name: /Suy giảm Carrier/ })).toBeChecked();
-    expect(screen.getByRole("button", { name: "Lưu 1 kịch bản" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Suy giảm công suất TX1" })).toBeInTheDocument();
+    expect(screen.getByText("Trung bình")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Bắt đầu bài DVOR 220/ })).toHaveAttribute(
+      "href",
+      "/review/dvor-220/session?id=review-1",
+    );
+    expect(screen.getByRole("link", { name: /Bắt đầu bài DVOR 220/ })).toHaveClass(
+      "!rounded-full",
+    );
   });
 
-  it("sends the library revision read by the examiner when saving", async () => {
-    const user = userEvent.setup();
-    const fetchMock = vi.fn().mockImplementation((_: RequestInfo | URL, init?: RequestInit) => {
-      if (init?.method === "PUT") {
-        return Promise.resolve(new Response(JSON.stringify({ success: true, libraryRevision: 6 }), { status: 200 }));
-      }
-      return Promise.resolve(new Response(JSON.stringify({
-        assigned: [],
-        canManage: true,
-        libraryRevision: 5,
-        available: [{
-          id: "row-1",
-          moduleId: "dvor-220",
-          scenarioId: "scenario-1",
-          name: "Suy giảm Carrier",
-          description: "Khôi phục Carrier.",
-          difficulty: "intermediate",
-          schemaVersion: 1,
-          definition: {},
-          sourceFileName: "scenario.json",
-          createdAt: "2026-09-16T00:00:00.000Z",
-          updatedAt: "2026-09-16T00:00:00.000Z",
-        }],
-      }), { status: 200 }));
-    });
-    vi.stubGlobal("fetch", fetchMock);
-    render(<OperationsReviewDashboard moduleId="dvor-220" />);
+  it("shows empty review state when no scenarios are assigned", () => {
+    render(<OperationsReviewDashboard moduleId="dvor-220" loadFromApi={false} />);
 
-    await waitFor(() => expect(screen.getByRole("button", { name: "Thêm kịch bản" })).toBeEnabled());
-    await user.click(screen.getByRole("button", { name: "Thêm kịch bản" }));
-    await user.click(screen.getByRole("checkbox", { name: /Suy giảm Carrier/ }));
-    await user.click(screen.getByRole("button", { name: "Lưu 1 kịch bản" }));
-
-    await waitFor(() => {
-      const putCall = fetchMock.mock.calls.find(([, init]) => (init as RequestInit | undefined)?.method === "PUT");
-      expect(putCall).toBeDefined();
-      expect(JSON.parse(String((putCall?.[1] as RequestInit).body))).toMatchObject({
-        moduleId: "dvor-220",
-        scenarioIds: ["row-1"],
-        expectedRevision: 5,
-      });
-    });
+    expect(screen.getByText("0 bài")).toBeInTheDocument();
+    expect(
+      screen.getByText("Chưa có tình huống DVOR 220 nào được gắn vào ôn tập."),
+    ).toBeInTheDocument();
   });
 });

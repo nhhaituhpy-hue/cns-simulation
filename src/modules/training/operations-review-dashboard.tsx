@@ -3,7 +3,7 @@
 import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { Play } from "@phosphor-icons/react/dist/csr/Play";
-import { Plus } from "@phosphor-icons/react/dist/csr/Plus";
+
 import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { X } from "@phosphor-icons/react/dist/csr/X";
 import Link from "next/link";
@@ -129,18 +129,15 @@ function toScenarioRow(
 export function OperationsReviewDashboard({
   moduleId,
   scenarios: initialScenarios = [],
-  canManage: initialCanManage = false,
   loadFromApi = true,
 }: {
   moduleId: ReviewModuleId;
   scenarios?: OperationsReviewScenarioRow[];
-  canManage?: boolean;
   loadFromApi?: boolean;
 }) {
   const copy = moduleCopy[moduleId];
   const [scenarios, setScenarios] = useState(initialScenarios);
   const [available, setAvailable] = useState<StoredScenarioParameters[]>([]);
-  const [canManage, setCanManage] = useState(initialCanManage);
   const [libraryRevision, setLibraryRevision] = useState(0);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -172,7 +169,7 @@ export function OperationsReviewDashboard({
         payload.assigned.map((scenario) => toScenarioRow(moduleId, scenario))
       );
       setAvailable(Array.isArray(payload.available) ? payload.available : []);
-      setCanManage(payload.canManage === true);
+
       setLibraryRevision(
         typeof payload.libraryRevision === "number" ? payload.libraryRevision : 0
       );
@@ -260,7 +257,7 @@ export function OperationsReviewDashboard({
           className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[#38a3dc] transition-colors hover:bg-white/[0.04] hover:text-[#7dd3fc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7]"
         >
           <ArrowLeft aria-hidden size={15} />
-          <span>Danh sách thiết bị</span>
+          <span>Back</span>
         </Link>
       </div>
 
@@ -281,27 +278,14 @@ export function OperationsReviewDashboard({
             >
               {copy.title}
             </h1>
-            <p className="mt-2 max-w-[640px] text-[13px] sm:text-[14px] leading-relaxed text-[#9AA9BC]">
+            <p className="mt-2 text-[13px] sm:text-[14px] leading-relaxed text-[#9AA9BC] whitespace-nowrap">
               {copy.description}
             </p>
           </div>
 
           <div className="flex shrink-0 items-center gap-3">
             <CountBadgePill>{scenarios.length} bài</CountBadgePill>
-            {canManage ? (
-              <Button
-                ref={addButtonRef}
-                type="button"
-                variant="primary"
-                size="md"
-                onClick={() => setDialogOpen(true)}
-                disabled={isLoading}
-                className="inline-flex items-center gap-1.5"
-              >
-                <Plus aria-hidden size={16} weight="bold" />
-                <span>Thêm kịch bản</span>
-              </Button>
-            ) : null}
+
           </div>
         </div>
 
@@ -377,7 +361,7 @@ export function OperationsReviewDashboard({
                         size="sm"
                         aria-label={`Bắt đầu bài ${copy.shortName}: ${scenario.title}`}
                         title="Bắt đầu bài thực hành"
-                        className="inline-flex items-center gap-1.5 whitespace-nowrap"
+                        className="!rounded-full !bg-[#ea580c] hover:!bg-[#c2410c] inline-flex items-center gap-1.5 whitespace-nowrap active:scale-95 transition-transform"
                       >
                         <Play aria-hidden size={12} weight="fill" className="shrink-0 translate-x-[0.5px]" />
                         <span className="whitespace-nowrap font-medium">Bắt đầu</span>

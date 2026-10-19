@@ -81,12 +81,14 @@ export function Field({
   required,
   hint,
   children,
+  className,
 }: {
   label: string;
   htmlFor: string;
   required?: boolean;
   hint?: string;
   children: ReactNode;
+  className?: string;
 }) {
   const hintId = `${htmlFor}-hint`;
   const isDirectControl = isValidElement(children)
@@ -110,7 +112,7 @@ export function Field({
     : children;
 
   return (
-    <label htmlFor={htmlFor} className="grid gap-2 text-sm font-semibold text-[var(--text-secondary)]">
+    <label htmlFor={htmlFor} className={className ?? "grid gap-2 text-sm font-semibold text-[var(--text-secondary)]"}>
       <span>
         {label}
         {required ? <span className="ml-1 text-[var(--danger)]" aria-hidden>*</span> : null}
@@ -130,7 +132,7 @@ export const textareaClassName =
   "min-h-24 w-full resize-y rounded-md border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2.5 text-sm font-normal leading-6 text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-muted)] disabled:cursor-not-allowed disabled:bg-[var(--surface-muted)]";
 
 export const primaryButtonClassName =
-  "inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[var(--accent)] px-4 text-sm font-semibold text-white transition-[background-color,transform] hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transform-none";
+  "inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-4 text-sm font-semibold text-white transition-[background-color,transform] hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transform-none";
 
 export const secondaryButtonClassName =
   "inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-[var(--border-strong)] bg-[var(--surface)] px-4 text-sm font-semibold text-[var(--text-secondary)] transition-[background-color,color,transform] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transform-none";

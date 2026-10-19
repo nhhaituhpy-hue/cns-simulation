@@ -6,7 +6,7 @@ export const DVOR_1150_MODULE = {
   status: "available",
   name: "DVOR 1150",
   shortName: "DVOR 1150",
-  description: "Mô phỏng thiết bị và giao diện PMDT đơn giản của hệ thống Model 1150 DVOR.",
+  description: "Mô phỏng thiết bị và giao diện PMDT đơn giản của hệ thống DVOR 1150.",
   routes: {
     admin: "/simulator/dvor-1150",
     student: "/student/dvor-1150",

@@ -39,15 +39,6 @@ type QuickEditDraft = {
   difficulty: ScenarioDifficulty;
 };
 
-const moduleDescriptions: Record<string, string> = {
-  "dvor-1150a": "Thiết bị dẫn đường VOR Doppler",
-  "dvor-1150": "Thiết bị dẫn đường VOR Doppler",
-  "dme-1119a": "Thiết bị đo cự ly DME",
-  "dvor-220": "Thiết bị dẫn đường VOR Doppler MOPIENS",
-  "dme-320": "Thiết bị đo cự ly DME MOPIENS",
-  "ads-b": "Hệ thống giám sát phát sóng tự động ADS-B",
-};
-
 function formatDate(value: string | null) {
   if (!value) return "—";
   const date = new Date(value);
@@ -339,18 +330,17 @@ export function ScenarioManagementWorkspace({
             className="inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-[13px] font-medium text-[#38a3dc] hover:text-[#7dd3fc] hover:bg-white/[0.04] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-2 focus-visible:ring-offset-[#111a24]"
           >
             <ArrowLeft aria-hidden size={16} />
-            Danh sách thiết bị
+            back
           </Link>
         </nav>
         <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#38a3dc]">
-          Kịch bản / Scenario Parameters
+          Kịch bản
         </p>
         <h1 className="mt-2 text-[28px] sm:text-[30px] font-semibold tracking-[-0.01em] text-[#E6EDF5] leading-[1.3]">
-          Kịch bản {simulatorModule.shortName}
+          {simulatorModule.shortName}
         </h1>
-        <p className="mt-2 max-w-[640px] text-[14px] leading-relaxed text-[#9AA9BC]">
-          Quản lý các Scenario Parameters của {simulatorModule.shortName}. Bấm vào từng
-          tình huống để xem đầy đủ chi tiết.
+        <p className="mt-2 text-[14px] leading-relaxed text-[#9AA9BC] whitespace-nowrap">
+          Quản lý các kịch bản (scenario) giả lập sự cố của {simulatorModule.shortName}. Bấm vào từng tình huống để xem đầy đủ chi tiết.
         </p>
       </header>
 
@@ -406,7 +396,7 @@ export function ScenarioManagementWorkspace({
                 <DeviceGroup
                   module={simulatorModule}
                   moduleId={moduleId}
-                  schemaVersion={scenarioModule.schemaVersion}
+
                   scenarios={moduleScenarios}
                   busy={busyModuleId !== null}
                   busyModuleId={busyModuleId}
@@ -460,7 +450,6 @@ function LoadingRows() {
 function DeviceGroup({
   module,
   moduleId,
-  schemaVersion,
   scenarios,
   busy,
   busyModuleId,
@@ -479,7 +468,6 @@ function DeviceGroup({
 }: {
   module: SimulatorModuleDefinition;
   moduleId: ScenarioParametersModuleId;
-  schemaVersion: number;
   scenarios: StoredScenarioParameters[];
   busy: boolean;
   busyModuleId: ScenarioParametersModuleId | null;
@@ -501,10 +489,6 @@ function DeviceGroup({
     changes: Partial<Omit<QuickEditDraft, "moduleId" | "scenarioId">>,
   ) => void;
 }) {
-  const description =
-    moduleDescriptions[moduleId] ??
-    (module.name !== module.shortName ? module.name : null);
-
   return (
     <>
       <tr className="border-b border-white/[0.06] bg-[#141f2a]">
@@ -523,16 +507,10 @@ function DeviceGroup({
                   <span className="size-1.5 rounded-full bg-[#22c55e]" />
                   <span>{moduleStatus(module)}</span>
                   <span className="text-white/20">·</span>
-                  <span>schema v{schemaVersion}</span>
-                  <span className="text-white/20">·</span>
                   <span>{scenarios.length} tình huống</span>
                 </span>
               </div>
-              {description ? (
-                <p className="mt-1 text-[13px] leading-relaxed text-[#9AA9BC]">
-                  {description}
-                </p>
-              ) : null}
+
             </div>
             <div>
               <Button
@@ -540,9 +518,10 @@ function DeviceGroup({
                 size="md"
                 disabled={busy}
                 onClick={onAdd}
+                className="!bg-[#ea580c] hover:!bg-[#c2410c]"
               >
                 <Plus aria-hidden size={16} weight="bold" />
-                <span>{busyModuleId === moduleId ? "Đang xử lý…" : "Thêm kịch bản"}</span>
+                <span>{busyModuleId === moduleId ? "Đang xử lý…" : "Thêm"}</span>
               </Button>
               <input
                 ref={importInputRef}
@@ -559,10 +538,9 @@ function DeviceGroup({
         <tr>
           <td
             colSpan={5}
-            className="px-6 py-6 text-center text-[13px] text-[#6B7A8D]"
+            className="px-6 py-6 text-center text-[13px] text-[#6B7A8D] bg-[#e5e7eb]"
           >
-            Chưa có kịch bản. Dùng “Thêm kịch bản” để nạp file JSON đã export từ{" "}
-            {module.shortName}.
+            Chưa có kịch bản
           </td>
         </tr>
       ) : (

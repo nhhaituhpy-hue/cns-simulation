@@ -44,9 +44,9 @@ describe("ScenarioManagementWorkspace", () => {
     render(<ScenarioManagementWorkspace moduleId="dvor-220" />);
 
     expect(
-      screen.getByRole("heading", { name: "Kịch bản DVOR 220" }),
+      screen.getByRole("heading", { name: "DVOR 220" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Danh sách thiết bị" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "back" })).toHaveAttribute(
       "href",
       "/authoring",
     );

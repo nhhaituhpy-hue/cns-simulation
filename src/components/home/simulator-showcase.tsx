@@ -227,7 +227,7 @@ export function SimulatorShowcase({ simulators }: SimulatorShowcaseProps) {
                         tabIndex={selectedCard ? 0 : -1}
                         aria-label={"Mở sơ đồ khối " + simulator.shortName}
                         onPointerDown={(event) => event.stopPropagation()}
-                        className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full border border-amber-200/55 bg-amber-100/90 px-3 text-[11px] font-bold text-slate-950 shadow-lg transition-transform hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-100 active:scale-95 motion-reduce:transform-none"
+                        className="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-full border border-cyan-100/40 bg-slate-950/80 px-3 text-[11px] font-bold text-cyan-50 shadow-lg backdrop-blur-sm transition-transform hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-100 active:scale-95 motion-reduce:transform-none"
                       >
                         Sơ đồ khối <ArrowRight aria-hidden size={14} weight="bold" />
                       </Link>

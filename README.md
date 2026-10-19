@@ -557,3 +557,17 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 - Scenario là session-only: khóa Profile Save, không ghi fault/measurement override vào cấu hình; bảo toàn Draft/Running/Flash trước bài và trì hoãn hydrate server nếu response về muộn.
 - Trong bài tập, Apply cấu hình không tự dịch ngưỡng Monitor theo setpoint mới để học viên có thể sửa đúng độ trễ theo ngưỡng đã soạn; ngoài scenario vẫn giữ cơ chế tự căn ngưỡng cũ. Thêm nút `Advance 1 s / 5 s` cho đồng hồ bài tập thủ công.
 - Hướng dẫn thao tác, preset và ranh giới dữ liệu: [DME 320 Scenario Parameters](docs/simulators/dme-320.md#6-scenario-parameters-v1).
+
+### 2026-10-19 — Điều chỉnh UI theo phản hồi trình duyệt (batch UI edits, chưa push)
+- `/playground`: harness & error boundary đã commit/push trước đó (9c3b881, 5047857, ea0c9f0).
+- Home showcase: eyebrow "Hệ thống thiết bị CNS", heading "Thực hành mô phỏng", xóa hint paragraph; nút "Sơ đồ khối" style giống "Mở simulator"; `rounded-full` trên `primaryButtonClassName`, `cnsButtonClass`, simulator-catalog & training-workspace buttons; canvas `#1f2937`; simulator card `#e5e7eb`; nút "Run" + thẻ ready/pending.
+- Authoring page: cards xám + nhãn "Scenario Builder"/"Practice"; thêm thẻ VHF/VSAT.
+- Scenario management workspace: header chỉ hiển thị shortName, mô tả 1 dòng, breadcrumb "back", eyebrow "KỊCH BẢN", xóa description p và schema v chip, "Thêm kịch bản"→"Thêm"; library controls "Cài đặt thư viện", "Lưu", hàng trống xám `#e5e7eb`; checkbox tròn custom.
+- Xóa const `moduleDescriptions` không dùng (clear lint warning).
+- Ô trống scenario → "Chưa có kịch bản"; nút lưu → text "Apply" (bỏ icon), hiệu ứng click `active:scale`.
+- Nút "Lưu" và "Thêm" đổi nền cam `#ea580c` (hover `#c2410c`).
+- `/review/dvor-1150a`: "Danh sách thiết bị"→"Back"; xóa nút "Thêm kịch bản"; mô tả 1 dòng (`whitespace-nowrap`); ô trống xám trắng `#e5e7eb`; nút "Bắt đầu" bo tròn tối đa, nền cam, hiệu ứng click.
+- `/admin/scenario-exams`: 2 nút "Tạo kỳ thi" nền cam; ô trống "Chưa có kỳ thi phù hợp." nền xám trắng; heading "Kỳ thi Scenario"→"Quản lý kỳ thi".
+- `/admin/scenario-exams/new`: section form nền `#e5e7eb`; text label `slate-800`; ô nhập liệu `!bg-white !text-slate-900`; heading "Tạo kỳ thi Scenario"→"Tạo kỳ thi mới"; xóa câu mô tả legacy; ngày nhập `dd/mm/yyyy`; nút Hủy xám đậm bo tròn; nút Tạo kỳ thi bỏ icon, nền cam.
+- `/admin/scenario-exams/[id]`: badge availability flat (bỏ viền & nền màu), đặt bên phải tên kỳ thi; nút trạng thái (Mở/Khóa/Mở lại) gom cùng container header cố định vị trí; "Mở kỳ thi" xám đậm, "Khóa kỳ thi" xanh lá; "Tạo mã code" cam; checkbox module tròn; thẻ modul nền xám trắng; ô "Chưa có mã thí sinh" nền xám trắng; "Xuất danh sách PDF" bo tròn, nền xám trắng, text `slate-900`; thêm "File" đầu mô tả PDF; xóa khung viền thông báo upcoming/ended.
+- Kiểm thử: `npx vitest run` (881 passed), `npm run typecheck` (sạch), `npm run lint` (sạch), `npm run build` (72/72 routes đạt).

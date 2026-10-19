@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { getSimulatorModule } from "@/modules/core/registry";
+import { VHF_SOFTWARE_MODULE } from "@/modules/operations/vhf/manifest";
+import { VSAT_SOFTWARE_MODULE } from "@/modules/operations/vsat/manifest";
 import { TrainingWorkspaceCatalog } from "@/modules/training/training-workspace";
 import { SCENARIO_PARAMETERS_MODULES } from "@/lib/scenario-parameters";
 import { ADSB_MODULE } from "@/modules/devices/adsb";
@@ -11,7 +13,7 @@ export default function AuthoringPage() {
     const simulatorModule = getSimulatorModule(entry.moduleId);
     return simulatorModule ? [simulatorModule] : [];
   });
-  const modules = [...scenarioParametersModules, ADSB_MODULE].filter(
+  const modules = [...scenarioParametersModules, ADSB_MODULE, VHF_SOFTWARE_MODULE, VSAT_SOFTWARE_MODULE].filter(
     (module, index, all) => all.findIndex((candidate) => candidate.id === module.id) === index,
   );
 

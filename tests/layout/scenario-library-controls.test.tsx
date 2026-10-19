@@ -96,7 +96,7 @@ describe("ScenarioLibraryControls", () => {
       }),
     ).toBeChecked();
 
-    await user.click(screen.getByRole("button", { name: "Lưu thay đổi" }));
+    await user.click(screen.getByRole("button", { name: "Apply" }));
 
     await waitFor(() => {
       const putCalls = fetchMock.mock.calls.filter(

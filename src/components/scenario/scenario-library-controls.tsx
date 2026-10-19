@@ -29,7 +29,7 @@ const LIBRARY_LABELS: Record<ScenarioLibraryKind, string> = {
 const EMPTY_SELECTION: LibrarySelection = { practice: [], exam: [] };
 
 function checkboxClass() {
-  return "size-4 rounded-[4px] border border-white/20 bg-white/5 accent-[#0284c7] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-1 focus-visible:ring-offset-[#101922] transition-shadow";
+  return "relative size-4 shrink-0 cursor-pointer appearance-none rounded-full border border-white/20 bg-white/5 transition-colors checked:border-[#0284c7] checked:bg-[#0284c7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-1 focus-visible:ring-offset-[#101922] after:absolute after:inset-0 after:flex after:items-center after:justify-center after:text-[10px] after:font-bold after:text-white after:content-['✓'] after:opacity-0 checked:after:opacity-100";
 }
 
 function sameIds(left: readonly string[], right: readonly string[]) {
@@ -265,10 +265,10 @@ export function ScenarioLibraryControls({
       <header className="flex flex-col gap-3 border-b border-white/[0.06] bg-[#141f2a] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-[16px] sm:text-[17px] font-semibold text-[#E6EDF5]">
-            Phân chia thư viện
+            Cài đặt thư viện
           </h2>
           <p className="mt-0.5 text-[13px] leading-relaxed text-[#9AA9BC]">
-            Chọn thư viện cho từng kịch bản rồi lưu một lần.
+            Phân loại kịch bản (scenario) cho thí sinh ôn tập hoặc kho dữ liệu kiểm tra
           </p>
         </div>
         <div
@@ -334,13 +334,13 @@ export function ScenarioLibraryControls({
           </thead>
           <tbody className="block divide-y divide-white/[0.05]">
             {loading ? (
-              <tr className="block px-6 py-8 text-center text-[13px] text-[#6B7A8D]">
+              <tr className="block px-6 py-8 text-center text-[13px] text-[#6B7A8D] bg-[#e5e7eb]">
                 <td colSpan={3} className="block w-full">
                   Đang tải trạng thái thư viện…
                 </td>
               </tr>
             ) : available.length === 0 ? (
-              <tr className="block px-6 py-8 text-center text-[13px] text-[#6B7A8D]">
+              <tr className="block px-6 py-8 text-center text-[13px] text-[#6B7A8D] bg-[#e5e7eb]">
                 <td colSpan={3} className="block w-full">
                   Chưa có kịch bản để phân chia thư viện.
                 </td>
@@ -415,8 +415,9 @@ export function ScenarioLibraryControls({
           size="md"
           disabled={loading || busy || available.length === 0 || changedKinds.length === 0}
           onClick={() => void saveAll()}
+          className="!bg-[#ea580c] hover:!bg-[#c2410c]"
         >
-          {busy ? "Đang lưu…" : "Lưu thay đổi"}
+          {busy ? "Đang lưu…" : "Apply"}
         </Button>
       </footer>
     </section>

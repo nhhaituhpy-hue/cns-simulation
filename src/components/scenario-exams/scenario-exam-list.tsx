@@ -55,12 +55,12 @@ export function ScenarioExamList({ items }: { items: ScenarioExamSummary[] }) {
                 <td className="px-4 py-4 text-right"><Link href={`/admin/scenario-exams/${item.id}`} className="inline-flex size-9 items-center justify-center rounded-md border border-[var(--accent-border)] text-[var(--accent)] hover:bg-[var(--accent-muted)]" aria-label={`Mở ${item.name}`}><ArrowRight aria-hidden size={18} /></Link></td>
               </tr>
             ))}
-            {visible.length === 0 ? <tr><td colSpan={7} className="px-5 py-12 text-center text-sm text-[var(--text-secondary)]">Chưa có kỳ thi phù hợp.</td></tr> : null}
+            {visible.length === 0 ? <tr><td colSpan={7} className="px-5 py-12 text-center text-sm text-slate-600 bg-[#e5e7eb]">Chưa có kỳ thi phù hợp.</td></tr> : null}
           </tbody>
         </table>
       </div>
       <div className="flex justify-end border-t border-[var(--border)] p-3">
-        <Link href="/admin/scenario-exams/new" className={primaryButtonClassName}><Plus aria-hidden size={18} /> Tạo kỳ thi</Link>
+        <Link href="/admin/scenario-exams/new" className={`${primaryButtonClassName} !bg-[#ea580c] hover:!bg-[#c2410c]`}><Plus aria-hidden size={18} /> Tạo kỳ thi</Link>
       </div>
     </section>
   );
