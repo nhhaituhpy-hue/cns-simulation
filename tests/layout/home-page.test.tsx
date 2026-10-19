@@ -8,10 +8,9 @@ describe("Home page layout", () => {
     render(<Home />);
 
     const heading = screen.getByRole("heading", {
-      name: "Khám phá thiết bị mô phỏng",
+      name: "Thực hành mô phỏng",
     });
     expect(heading).toBeInTheDocument();
-    expect(screen.getByText("Kéo, lăn chuột hoặc dùng phím mũi tên để chọn thiết bị.")).toBeInTheDocument();
 
     const simulatorLinks = screen.getAllByRole("link", { name: /^Mở simulator .+/ });
     expect(simulatorLinks).toHaveLength(6);

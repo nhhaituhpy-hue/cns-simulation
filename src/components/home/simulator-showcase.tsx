@@ -5,7 +5,6 @@ import Link from "next/link";
 import { ArrowRight } from "@phosphor-icons/react/dist/csr/ArrowRight";
 import { CaretLeft } from "@phosphor-icons/react/dist/csr/CaretLeft";
 import { CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
-import { MouseSimple } from "@phosphor-icons/react/dist/csr/MouseSimple";
 import { motion, useReducedMotion } from "motion/react";
 import {
   useCallback,
@@ -113,18 +112,14 @@ export function SimulatorShowcase({ simulators }: SimulatorShowcaseProps) {
     <div className="cns-showcase">
       <div className="mb-6 flex flex-col gap-4 px-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="cns-showcase__eyebrow">08 mô phỏng CNS</p>
+          <p className="cns-showcase__eyebrow">Hệ thống thiết bị CNS</p>
           <h2
             id="simulator-showcase-heading"
             className="mt-2 text-3xl font-semibold tracking-[-0.045em] text-white sm:text-4xl"
           >
-            Khám phá thiết bị mô phỏng
+            Thực hành mô phỏng
           </h2>
         </div>
-        <p className="flex max-w-xs items-center gap-2 text-sm leading-5 text-slate-300">
-          <MouseSimple aria-hidden size={19} weight="light" />
-          Kéo, lăn chuột hoặc dùng phím mũi tên để chọn thiết bị.
-        </p>
       </div>
 
       <div
