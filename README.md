@@ -591,3 +591,10 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 - `/authoring/dvor-1150a` (scenario-library-controls): xen kẽ 2 màu nền `#f9fafb` ↔ `#d1d5db` giữa các kịch bản liên tục (tr, th, td).
 - `/review/dvor-1150a` (operations-review-dashboard): xen kẽ 2 màu nền `#f9fafb` ↔ `#d1d5db` giữa các kịch bản; `DifficultyBadge` tăng tương phản: basic `#16a34a`, advanced `#ea580c`, intermediate `#ca8a04`, border opacity `0.4`.
 - Kiểm thử: `npx vitest run` (881 passed), `npm run typecheck` (sạch), `npm run lint` (sạch), `npm run build` (72/72 routes đạt).
+
+### 2026-10-19 — Skeleton loading, zebra striping mở rộng, DifficultyBadge, checkbox xanh (batch UI edits 4, chưa push)
+- `/authoring/dvor-1150a` (scenario-management-workspace): thay text loading bằng skeleton (3 hàng placeholder `animate-pulse`); xen kẽ 2 màu nền `#f9fafb` ↔ `#d1d5db` (tr, th, td); checkbox `checkboxClass()` đổi `border-white/20 bg-white/5` → `border-slate-400 bg-slate-200`; dấu tích ✓ đổi sang xanh lá `#22c55e`.
+- `/authoring/dvor-1150a` (scenario-library-controls): xen kẽ 2 màu nền `#f9fafb` ↔ `#d1d5db` (tr, th, td).
+- `/review/dvor-1150a` (operations-review-dashboard): xen kẽ 2 màu nền `#f9fafb` ↔ `#d1d5db`; `DifficultyBadge` tăng tương phản: basic `#16a34a`, advanced `#ea580c`, intermediate `#ca8a04`, border opacity `0.4`.
+- `/admin/scenario-exams` (scenario-exam-list): xen kẽ 2 màu nền `#f9fafb` ↔ `#d1d5db` giữa các hàng kỳ thi (tr, td).
+- Kiểm thử: `npx vitest run` (881 passed), `npm run typecheck` (sạch), `npm run lint` (sạch), `npm run build` (72/72 routes đạt).

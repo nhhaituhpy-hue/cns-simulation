@@ -43,16 +43,16 @@ export function ScenarioExamList({ items }: { items: ScenarioExamSummary[] }) {
           </thead>
           <tbody className="divide-y divide-[var(--border)]">
             {visible.map((item, index) => (
-              <tr key={item.id} className="bg-[#e5e7eb] hover:bg-[#d1d5db]">
-                <td className="px-4 py-4 font-mono text-xs text-slate-600">{index + 1}</td>
-                <td className="px-4 py-4">
+              <tr key={item.id} className={`${index % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"} hover:bg-[#d1d5db]`}>
+                <td className={`px-4 py-4 font-mono text-xs text-slate-600 ${index % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}>{index + 1}</td>
+                <td className={`px-4 py-4 ${index % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}>
                   <Link href={`/admin/scenario-exams/${item.id}`} className="font-semibold text-slate-900 hover:text-[#0284c7] hover:underline">{item.name}</Link>
                 </td>
-                <td className="px-4 py-4 text-xs text-slate-700"><p>Mở: {formatScenarioExamDate(item.opensAt, "Khi mở kỳ thi")}</p><p className="mt-1">Đóng: {formatScenarioExamDate(item.closesAt)}</p></td>
-                <td className="px-4 py-4 font-mono text-xs text-slate-700">{item.durationMinutes} phút</td>
-                <td className="px-4 py-4 text-sm text-slate-700">{item.codeCount} / {item.terminalCodeCount}</td>
-                <td className="px-4 py-4"><ScenarioExamAvailabilityBadge availability={item.availability} /></td>
-                <td className="px-4 py-4 text-right"><Link href={`/admin/scenario-exams/${item.id}`} className="inline-flex size-9 items-center justify-center rounded-md border border-slate-300 text-slate-700 bg-white hover:bg-slate-100" aria-label={`Mở ${item.name}`}><ArrowRight aria-hidden size={18} /></Link></td>
+                <td className={`px-4 py-4 text-xs text-slate-700 ${index % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}><p>Mở: {formatScenarioExamDate(item.opensAt, "Khi mở kỳ thi")}</p><p className="mt-1">Đóng: {formatScenarioExamDate(item.closesAt)}</p></td>
+                <td className={`px-4 py-4 font-mono text-xs text-slate-700 ${index % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}>{item.durationMinutes} phút</td>
+                <td className={`px-4 py-4 text-sm text-slate-700 ${index % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}>{item.codeCount} / {item.terminalCodeCount}</td>
+                <td className={`px-4 py-4 ${index % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}><ScenarioExamAvailabilityBadge availability={item.availability} /></td>
+                <td className={`px-4 py-4 text-right ${index % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}><Link href={`/admin/scenario-exams/${item.id}`} className="inline-flex size-9 items-center justify-center rounded-md border border-slate-300 text-slate-700 bg-white hover:bg-slate-100" aria-label={`Mở ${item.name}`}><ArrowRight aria-hidden size={18} /></Link></td>
               </tr>
             ))}
             {visible.length === 0 ? <tr><td colSpan={7} className="px-5 py-12 text-center text-sm text-slate-600 bg-[#e5e7eb]">Chưa có kỳ thi phù hợp.</td></tr> : null}
