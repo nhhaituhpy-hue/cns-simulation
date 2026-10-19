@@ -4,6 +4,15 @@
 
 ---
 
+## Nhật ký phiên 19/10/2026 — rà soát Light Gray Mode
+
+- Sửa `/simulator` và `/simulator/` dùng light theme; trang chủ và các màn hình thiết bị `/simulator/*` tiếp tục dùng dark theme. Thêm test chuyển route để tránh tái phát lỗi nền tối của catalog.
+- Thay dòng chữ chờ tải trong `ScenarioLibraryControls` bằng 4 hàng skeleton xen kẽ màu, có `aria-busy`, thông báo cho trình đọc màn hình và hỗ trợ giảm chuyển động. Không thay đổi API hay quy trình lưu thư viện.
+- Bỏ class `!bg-slate-200`/`!border-slate-400` ghi đè trạng thái checkbox; xác nhận trên trình duyệt nền checked là `rgb(2, 132, 199)` và dấu ✓ hiển thị.
+- Khung tiêu đề xem trước terminal và header ADS-B dùng token theme; giữ nền màn hình terminal để mô phỏng thiết bị, không đổi engine hay luồng vận hành.
+- Kiểm tra trình duyệt: `/simulator` và `/authoring/dme-320` dùng light theme, nền trang `#f5f7f9`; trang chủ vẫn dark. Trang thư viện local đang không có scenario nên chưa xác nhận trực quan trạng thái tải với dữ liệu thật; bổ sung test dùng response chờ để kiểm tra skeleton và checkbox sau tải.
+- Kiểm tra trên Node 24.18.0: `npm run check` đạt toàn bộ lint → typecheck → test → build; 145 file / 883 test passed, 1 file / 25 test skipped; build tạo 86/86 trang. Không coi phiên này là hoàn tất chuyển theme toàn bộ ứng dụng; các màn hình còn lại cần được rà soát riêng.
+
 ## 1. Thông tin chung về dự án
 
 ### 1.1. Mục đích ứng dụng

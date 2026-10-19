@@ -290,6 +290,7 @@ export function ScenarioLibraryControls({
       {/* Table Region: CSS Grid based layout with unified columns */}
       <div
         role="region"
+        aria-busy={loading}
         aria-label="Danh sách kịch bản để phân chia thư viện"
         tabIndex={0}
         className="cns-scrollbar max-h-[26rem] overflow-auto [scrollbar-gutter:stable]"
@@ -334,11 +335,23 @@ export function ScenarioLibraryControls({
           </thead>
           <tbody className="block divide-y divide-[var(--cns-divider)]">
             {loading ? (
-              <tr className="block px-6 py-8 text-center text-[13px] text-[var(--cns-text-muted)] bg-[#e5e7eb]">
-                <td colSpan={3} className="block w-full">
-                  Đang tải trạng thái thư viện…
-                </td>
-              </tr>
+              Array.from({ length: 4 }, (_, index) => (
+                <tr
+                  key={`loading-${index}`}
+                  className={`grid min-h-[60px] grid-cols-[minmax(0,1fr)_150px_150px] items-center px-6 ${index % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}
+                >
+                  <td className="min-w-0 py-3 pr-4">
+                    {index === 0 && <span className="sr-only" role="status">Đang tải trạng thái thư viện…</span>}
+                    <div aria-hidden="true" className="h-4 w-2/3 animate-pulse rounded bg-slate-400/30 motion-reduce:animate-none" />
+                    <div aria-hidden="true" className="mt-2 h-3 w-1/3 animate-pulse rounded bg-slate-400/30 motion-reduce:animate-none" />
+                  </td>
+                  {LIBRARY_KINDS.map((kind) => (
+                    <td key={kind} className="flex justify-center py-3">
+                      <div aria-hidden="true" className="size-4 animate-pulse rounded-full bg-slate-400/30 motion-reduce:animate-none" />
+                    </td>
+                  ))}
+                </tr>
+              ))
             ) : available.length === 0 ? (
               <tr className="block px-6 py-8 text-center text-[13px] text-[var(--cns-text-muted)] bg-[#e5e7eb]">
                 <td colSpan={3} className="block w-full">
@@ -379,7 +392,7 @@ export function ScenarioLibraryControls({
                           onChange={(event) =>
                             toggle(kind, scenario.id, event.currentTarget.checked)
                           }
-                          className={`${checkboxClass()} !border-slate-400 !bg-slate-200`}
+                          className={checkboxClass()}
                         />
                       </label>
                     </td>

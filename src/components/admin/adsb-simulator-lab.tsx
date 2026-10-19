@@ -122,10 +122,10 @@ export function AdsbSimulatorLab() {
   return (
     <div className="simulator-skin adsb-simulator-lab min-h-screen w-full bg-[var(--cns-surface-card)] text-[var(--cns-text-primary)]">
       <header className="border-b border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)]">
-        <div className="flex h-8 items-center justify-between gap-3 border-b border-[#26364d] px-4">
+        <div className="flex h-8 items-center justify-between gap-3 border-b border-[var(--cns-border-subtle)] px-4">
           <Link
             href="/simulator"
-            className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#cbd5e1] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60a5fa]"
+            className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-[var(--cns-text-secondary)] hover:text-[var(--cns-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
           >
             <ArrowLeft aria-hidden size={13} />
             Quay về Simulator
@@ -137,16 +137,16 @@ export function AdsbSimulatorLab() {
 
         <div className="flex min-h-16 flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="inline-flex size-9 shrink-0 items-center justify-center border border-[#31506d] bg-[#13283b] text-[var(--cns-text-secondary)]">
+            <span className="inline-flex size-9 shrink-0 items-center justify-center border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card-subtle)] text-[var(--cns-text-secondary)]">
               <Terminal aria-hidden size={20} weight="regular" />
             </span>
             <div className="min-w-0">
               <h1 className="truncate text-sm font-bold tracking-wide text-[var(--cns-text-primary)]">
                 ADS-B SENSOR TERMINAL
               </h1>
-              <p className="mt-0.5 text-[11px] text-[#94a3b8]">
-                Tài khoản: <span className="font-mono text-[#cbd5e1]">sysadmin</span> hoặc{" "}
-                <span className="font-mono text-[#cbd5e1]">maintenance</span>. Mật khẩu nhập ký tự bất kỳ.
+              <p className="mt-0.5 text-[11px] text-[var(--cns-text-muted)]">
+                Tài khoản: <span className="font-mono text-[var(--cns-text-secondary)]">sysadmin</span> hoặc{" "}
+                <span className="font-mono text-[var(--cns-text-secondary)]">maintenance</span>. Mật khẩu nhập ký tự bất kỳ.
               </p>
             </div>
           </div>
@@ -154,7 +154,7 @@ export function AdsbSimulatorLab() {
           <button
             type="button"
             onClick={terminal.reset}
-            className="inline-flex min-h-9 shrink-0 items-center justify-center gap-2 border border-[#3b5068] bg-[#172235] px-3 text-xs font-semibold text-[#cbd5e1] transition-[background-color,border-color,color,transform] hover:border-[#5f7894] hover:bg-[#1e3047] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#60a5fa] active:scale-[0.98] motion-reduce:transform-none"
+            className="inline-flex min-h-9 shrink-0 items-center justify-center gap-2 rounded-full border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card-subtle)] px-3 text-xs font-semibold text-[var(--cns-text-secondary)] transition-[background-color,border-color,color,transform] hover:bg-[var(--cns-surface-table-hover)] hover:text-[var(--cns-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] active:scale-[0.98] motion-reduce:transform-none"
           >
             <ArrowCounterClockwise aria-hidden size={16} weight="bold" />
             Khởi động lại

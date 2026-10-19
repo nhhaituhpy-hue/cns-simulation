@@ -559,11 +559,11 @@ export function ActionBuilder({
         </section>
 
         <section aria-labelledby="terminal-preview-title" className="min-w-0">
-          <div className="flex h-full min-h-96 flex-col overflow-hidden rounded-lg border border-[#262626] bg-black shadow-[var(--shadow-panel)]">
-            <div className="flex h-10 shrink-0 items-center border-b border-[#262626] bg-[#171717] px-4">
+          <div className="flex h-full min-h-96 flex-col overflow-hidden rounded-lg border border-[var(--border)] bg-black shadow-[var(--shadow-panel)]">
+            <div className="flex h-10 shrink-0 items-center border-b border-[var(--border)] bg-[var(--surface-muted)] px-4">
               <h4
                 id="terminal-preview-title"
-                className="font-mono text-xs font-semibold text-[#d4d4d4]"
+                className="font-mono text-xs font-semibold text-[var(--text-primary)]"
               >
                 Xem trước terminal
               </h4>

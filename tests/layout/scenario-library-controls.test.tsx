@@ -37,6 +37,34 @@ const scenarios = [
 describe("ScenarioLibraryControls", () => {
   afterEach(() => vi.unstubAllGlobals());
 
+  it("shows skeleton rows until library selection is loaded", async () => {
+    let resolveFetch!: (response: Response) => void;
+    vi.stubGlobal("fetch", vi.fn(() => new Promise<Response>((resolve) => {
+      resolveFetch = resolve;
+    })));
+
+    render(<ScenarioLibraryControls moduleId="dme-320" scenarios={scenarios} />);
+
+    const region = screen.getByRole("region", {
+      name: "Danh sách kịch bản để phân chia thư viện",
+    });
+    expect(region).toHaveAttribute("aria-busy", "true");
+    expect(screen.getByRole("status")).toHaveTextContent("Đang tải trạng thái thư viện");
+    expect(region.querySelectorAll("tbody tr")).toHaveLength(4);
+    expect(region.querySelector(".animate-pulse")).toBeInTheDocument();
+    expect(screen.queryByText("Chưa có kịch bản để phân chia thư viện.")).not.toBeInTheDocument();
+
+    resolveFetch(new Response(JSON.stringify({ practice: [{ id: "scenario-1" }], exam: [] })));
+
+    const selected = await screen.findByRole("checkbox", {
+      name: "Nạp “Suy giảm công suất” vào Thư viện Ôn tập",
+    });
+    expect(selected).toBeChecked();
+    expect(selected).not.toHaveClass("!bg-slate-200", "!border-slate-400");
+    expect(region).toHaveAttribute("aria-busy", "false");
+    expect(region.querySelector(".animate-pulse")).not.toBeInTheDocument();
+  });
+
   it("supports select-all checkboxes with indeterminate state and one save action", async () => {
     const user = userEvent.setup();
     const fetchMock = vi.fn().mockImplementation((_: RequestInfo | URL, init?: RequestInit) => {

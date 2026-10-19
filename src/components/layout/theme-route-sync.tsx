@@ -3,12 +3,10 @@
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 
-const DARK_ROUTES = ["/", "/simulator"];
-
 function isDarkRoute(pathname: string): boolean {
-  return DARK_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`),
-  );
+  const normalizedPath = pathname.replace(/\/+$/, "") || "/";
+  // Keep equipment screens dark; the simulator catalog uses the light theme.
+  return normalizedPath === "/" || normalizedPath.startsWith("/simulator/");
 }
 
 export function ThemeRouteSync() {
