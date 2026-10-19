@@ -59,9 +59,15 @@ export function TrainingWorkspaceCatalog({
               </div>
               <h2 className="mt-4 text-base font-bold text-slate-900">{module.shortName}</h2>
               <p className="mt-2 min-h-12 text-sm leading-5 text-slate-600">{module.description}</p>
-              <Link href={module.routes[mode]} className={`mt-4 inline-flex min-h-9 items-center justify-center rounded-full px-3 text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] active:scale-[0.98] bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] focus-visible:ring-offset-2`}>
-                {trainingAvailable ? copy.availableAction : copy.plannedAction}
-              </Link>
+              {trainingAvailable ? (
+                <Link href={module.routes[mode]} className="mt-4 inline-flex min-h-9 items-center justify-center rounded-full bg-[var(--accent)] px-3 text-xs font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98]">
+                  {copy.availableAction}
+                </Link>
+              ) : (
+                <span className="mt-4 inline-flex min-h-9 items-center justify-center rounded-full bg-[#d1d5db] px-3 text-xs font-semibold text-slate-500 cursor-not-allowed" aria-disabled="true">
+                  {copy.plannedAction}
+                </span>
+              )}
             </article>
           );
         })}

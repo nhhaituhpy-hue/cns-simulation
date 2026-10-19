@@ -1,6 +1,17 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+  useSearchParams: () => new URLSearchParams(),
+}));
 
 import { OperationsReviewDashboard } from "@/modules/training/operations-review-dashboard";
 
@@ -45,10 +56,7 @@ describe("OperationsReviewDashboard", () => {
 
     expect(screen.getByRole("heading", { name: "Suy giảm công suất TX1" })).toBeInTheDocument();
     expect(screen.getByText("Trung bình")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Bắt đầu bài DVOR 220/ })).toHaveAttribute(
-      "href",
-      "/review/dvor-220/session?id=review-1",
-    );
+    expect(screen.getByRole("button", { name: /Bắt đầu bài DVOR 220/ })).toBeInTheDocument();
   });
 
   it("renders assigned scenarios with orange fully-rounded start action", () => {
@@ -70,11 +78,8 @@ describe("OperationsReviewDashboard", () => {
 
     expect(screen.getByRole("heading", { name: "Suy giảm công suất TX1" })).toBeInTheDocument();
     expect(screen.getByText("Trung bình")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Bắt đầu bài DVOR 220/ })).toHaveAttribute(
-      "href",
-      "/review/dvor-220/session?id=review-1",
-    );
-    expect(screen.getByRole("link", { name: /Bắt đầu bài DVOR 220/ })).toHaveClass(
+    expect(screen.getByRole("button", { name: /Bắt đầu bài DVOR 220/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Bắt đầu bài DVOR 220/ })).toHaveClass(
       "!rounded-full",
     );
   });

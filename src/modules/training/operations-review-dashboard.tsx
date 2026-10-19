@@ -3,14 +3,13 @@
 import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { CheckCircle } from "@phosphor-icons/react/dist/csr/CheckCircle";
 import { Play } from "@phosphor-icons/react/dist/csr/Play";
-
 import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { X } from "@phosphor-icons/react/dist/csr/X";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Button,
-  ButtonLink,
   CountBadgePill,
   DifficultyBadge,
 } from "@/components/ui/button";
@@ -136,6 +135,7 @@ export function OperationsReviewDashboard({
   loadFromApi?: boolean;
 }) {
   const copy = moduleCopy[moduleId];
+  const router = useRouter();
   const [scenarios, setScenarios] = useState(initialScenarios);
   const [available, setAvailable] = useState<StoredScenarioParameters[]>([]);
   const [libraryRevision, setLibraryRevision] = useState(0);
@@ -145,6 +145,15 @@ export function OperationsReviewDashboard({
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [loadingHref, setLoadingHref] = useState<string | null>(null);
+
+  const handleStart = useCallback((href: string) => {
+    if (loadingHref) return;
+    setLoadingHref(href);
+    window.setTimeout(() => {
+      router.push(href);
+    }, 1000);
+  }, [loadingHref, router]);
   const addButtonRef = useRef<HTMLButtonElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -336,36 +345,48 @@ export function OperationsReviewDashboard({
               renderCells={(scenario, rowIndex) => {
                 return (
                   <>
-                    <td className="w-16 px-4 py-3.5 align-middle">
-                      <span className="inline-flex size-7 items-center justify-center rounded-[6px] border border-white/[0.08] bg-white/[0.04] text-[12px] font-semibold tabular-nums text-[#9AA9BC]">
+                    <td className="w-16 px-4 py-3.5 align-middle bg-[#e5e7eb]">
+                      <span className="inline-flex size-7 items-center justify-center rounded-[6px] border border-slate-300 bg-slate-200 text-[12px] font-semibold tabular-nums text-slate-700">
                         {String(rowIndex + 1).padStart(2, "0")}
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 align-middle">
-                      <h3 className="text-[14px] font-semibold text-[#E6EDF5] leading-snug">
+                    <td className="px-4 py-3.5 align-middle bg-[#e5e7eb]">
+                      <h3 className="text-[14px] font-semibold text-slate-900 leading-snug">
                         {scenario.title}
                       </h3>
                       {scenario.description ? (
-                        <p className="mt-0.5 line-clamp-1 text-[12px] leading-relaxed text-[#9AA9BC]">
+                        <p className="mt-0.5 line-clamp-1 text-[12px] leading-relaxed text-slate-600">
                           {scenario.description}
                         </p>
                       ) : null}
                     </td>
-                    <td className="w-28 px-4 py-3.5 align-middle">
+                    <td className="w-28 px-4 py-3.5 align-middle bg-[#e5e7eb]">
                       <DifficultyBadge difficulty={scenario.difficulty} />
                     </td>
-                    <td className="w-32 px-4 py-3.5 text-right align-middle">
-                      <ButtonLink
-                        href={scenario.href}
-                        variant="primary"
-                        size="sm"
+                    <td className="w-32 px-4 py-3.5 text-right align-middle bg-[#e5e7eb]">
+                      <button
+                        type="button"
+                        disabled={loadingHref !== null}
+                        onClick={() => handleStart(scenario.href)}
+                        className="!rounded-full !bg-[#ea580c] hover:!bg-[#c2410c] inline-flex items-center gap-1.5 whitespace-nowrap active:scale-95 transition-transform h-8 px-3 text-[13px] font-medium text-white disabled:cursor-not-allowed disabled:opacity-70"
                         aria-label={`Bắt đầu bài ${copy.shortName}: ${scenario.title}`}
                         title="Bắt đầu bài thực hành"
-                        className="!rounded-full !bg-[#ea580c] hover:!bg-[#c2410c] inline-flex items-center gap-1.5 whitespace-nowrap active:scale-95 transition-transform"
                       >
-                        <Play aria-hidden size={12} weight="fill" className="shrink-0 translate-x-[0.5px]" />
-                        <span className="whitespace-nowrap font-medium">Bắt đầu</span>
-                      </ButtonLink>
+                        {loadingHref === scenario.href ? (
+                          <>
+                            <svg className="size-3.5 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden>
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                            <span className="whitespace-nowrap font-medium">Đang mở…</span>
+                          </>
+                        ) : (
+                          <>
+                            <Play aria-hidden size={12} weight="fill" className="shrink-0 translate-x-[0.5px]" />
+                            <span className="whitespace-nowrap font-medium">Bắt đầu</span>
+                          </>
+                        )}
+                      </button>
                     </td>
                   </>
                 );
@@ -492,6 +513,24 @@ export function OperationsReviewDashboard({
               </Button>
             </footer>
           </section>
+        </div>
+      ) : null}
+
+      {/* Loading overlay (mờ) khi bấm Bắt đầu */}
+      {loadingHref ? (
+        <div
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4 bg-black/40 backdrop-blur-sm"
+          role="status"
+          aria-live="assertive"
+          aria-label="Đang mở simulator"
+        >
+          <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/[0.12] bg-[#141f2a]/90 px-8 py-6 shadow-2xl">
+            <svg className="size-10 animate-spin text-[var(--accent)]" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            <p className="text-sm font-semibold text-[#E6EDF5]">Đang mở simulator…</p>
+          </div>
         </div>
       ) : null}
     </div>

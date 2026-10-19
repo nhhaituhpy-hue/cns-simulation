@@ -606,8 +606,8 @@ function ScenarioRow({
   const simulatorHref = `${module.routes.simulator}?scenarioId=${encodeURIComponent(scenario.id)}`;
   return (
     <>
-      <tr className="border-b border-white/[0.05] transition-colors duration-150 hover:bg-white/[0.04]">
-        <th scope="row" className="px-6 py-3.5 font-normal max-w-[380px]">
+      <tr className="border-b border-white/[0.05] transition-colors duration-150 bg-[#e5e7eb]">
+        <th scope="row" className="px-6 py-3.5 font-normal max-w-[380px] bg-[#e5e7eb]">
           <button
             type="button"
             className="group flex items-start gap-2.5 rounded-[6px] text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] max-w-full"
@@ -616,39 +616,39 @@ function ScenarioRow({
             onClick={() => onToggle(scenario.id)}
             title={scenario.name}
           >
-            <span className="mt-0.5 shrink-0 text-[#6B7A8D] transition-colors group-hover:text-[#38a3dc]">
+            <span className="mt-0.5 shrink-0 text-slate-600 transition-colors group-hover:text-[#38a3dc]">
               {expanded ? <CaretDown size={16} /> : <CaretRight size={16} />}
             </span>
             <span className="min-w-0">
-              <span className="block truncate text-[14px] font-medium leading-snug text-[#E6EDF5] transition-colors group-hover:text-[#38a3dc]">
+              <span className="block truncate text-[14px] font-medium leading-snug text-slate-900 transition-colors group-hover:text-[#38a3dc]">
                 {scenario.name}
               </span>
-              <span className="mt-0.5 block truncate font-mono text-[12px] text-[#6B7A8D]">
+              <span className="mt-0.5 block truncate font-mono text-[12px] text-slate-600">
                 {scenario.scenarioId}
               </span>
             </span>
           </button>
         </th>
-        <td className="whitespace-nowrap px-4 py-3.5 align-middle">
+        <td className="whitespace-nowrap px-4 py-3.5 align-middle bg-[#e5e7eb]">
           <DifficultyBadge difficulty={scenario.difficulty} />
-          <span className="mt-1 block text-[11px] text-[#6B7A8D]">
+          <span className="mt-1 block text-[11px] text-slate-600">
             schema v{scenario.schemaVersion}
           </span>
         </td>
-        <td className="whitespace-nowrap px-4 py-3.5 align-middle text-[12px] tabular-nums text-[#9AA9BC]">
+        <td className="whitespace-nowrap px-4 py-3.5 align-middle text-[12px] tabular-nums text-slate-600 bg-[#e5e7eb]">
           {formatDate(scenario.updatedAt)}
         </td>
-        <td className="whitespace-nowrap px-4 py-3.5 align-middle">
+        <td className="whitespace-nowrap px-4 py-3.5 align-middle bg-[#e5e7eb]">
           <StatusSavedBadge />
         </td>
-        <td className="whitespace-nowrap px-6 py-3.5 align-middle text-right">
+        <td className="whitespace-nowrap px-6 py-3.5 align-middle text-right bg-[#e5e7eb]">
           <div className="flex items-center justify-end gap-1.5">
             <Button
               variant="secondary"
               size="sm"
               aria-label="Sửa nhanh"
               title="Sửa nhanh"
-              className="size-8 !px-0"
+              className="size-8 !px-0 !bg-slate-200 !text-slate-700 !border-slate-300 hover:!bg-slate-300"
               disabled={busy}
               onClick={() => onStartEdit(moduleId, scenario)}
             >
@@ -659,7 +659,7 @@ function ScenarioRow({
               size="sm"
               aria-label="Tải JSON"
               title="Tải JSON"
-              className="size-8 !px-0"
+              className="size-8 !px-0 !bg-slate-200 !text-slate-700 !border-slate-300 hover:!bg-slate-300"
               disabled={busy}
               onClick={() => onDownload(scenario)}
             >

@@ -1,7 +1,7 @@
 import { scenarioExamAvailabilityLabel } from "@/lib/scenario-exams/presentation";
 import type { ScenarioExamAvailability } from "@/lib/scenario-exams/types";
 
-const neutralClassName = "inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold text-[var(--text-secondary)]";
+const neutralClassName = "inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold text-slate-700";
 const statusClassName: Record<ScenarioExamAvailability, string> = {
   draft: neutralClassName,
   upcoming: "inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-semibold text-[var(--color-warning)]",

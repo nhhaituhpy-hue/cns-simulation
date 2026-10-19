@@ -569,5 +569,19 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 - `/review/dvor-1150a`: "Danh sách thiết bị"→"Back"; xóa nút "Thêm kịch bản"; mô tả 1 dòng (`whitespace-nowrap`); ô trống xám trắng `#e5e7eb`; nút "Bắt đầu" bo tròn tối đa, nền cam, hiệu ứng click.
 - `/admin/scenario-exams`: 2 nút "Tạo kỳ thi" nền cam; ô trống "Chưa có kỳ thi phù hợp." nền xám trắng; heading "Kỳ thi Scenario"→"Quản lý kỳ thi".
 - `/admin/scenario-exams/new`: section form nền `#e5e7eb`; text label `slate-800`; ô nhập liệu `!bg-white !text-slate-900`; heading "Tạo kỳ thi Scenario"→"Tạo kỳ thi mới"; xóa câu mô tả legacy; ngày nhập `dd/mm/yyyy`; nút Hủy xám đậm bo tròn; nút Tạo kỳ thi bỏ icon, nền cam.
+- `/admin/scenario-exams/new`: section form nền `#e5e7eb`; text label `slate-800`; ô nhập liệu `!bg-white !text-slate-900`; heading "Tạo kỳ thi Scenario"→"Tạo kỳ thi mới"; xóa câu mô tả legacy; ngày nhập `dd/mm/yyyy`; nút Hủy xám đậm bo tròn; nút Tạo kỳ thi bỏ icon, nền cam.
 - `/admin/scenario-exams/[id]`: badge availability flat (bỏ viền & nền màu), đặt bên phải tên kỳ thi; nút trạng thái (Mở/Khóa/Mở lại) gom cùng container header cố định vị trí; "Mở kỳ thi" xám đậm, "Khóa kỳ thi" xanh lá; "Tạo mã code" cam; checkbox module tròn; thẻ modul nền xám trắng; ô "Chưa có mã thí sinh" nền xám trắng; "Xuất danh sách PDF" bo tròn, nền xám trắng, text `slate-900`; thêm "File" đầu mô tả PDF; xóa khung viền thông báo upcoming/ended.
+- Kiểm thử: `npx vitest run` (881 passed), `npm run typecheck` (sạch), `npm run lint` (sạch), `npm run build` (72/72 routes đạt).
+
+### 2026-10-19 — Bổ sung hiệu ứng loading và sửa contrast hàng kịch bản (batch UI edits 2, chưa push)
+- `/authoring/dvor-1150a` (scenario-management-workspace): hàng kịch bản trong bảng đổi nền `#e5e7eb`, text `slate-900`/`slate-600`, xóa `hover:bg-white/[0.04]`; các ô `td` và nút "Sửa nhanh"/"Tải JSON" (`!bg-slate-200 !text-slate-700 !border-slate-300`) tương phản trên nền xám.
+- `/authoring/dvor-1150a` (scenario-library-controls): hàng kịch bản trong danh sách thư viện đổi nền `#e5e7eb`, text `slate-900`/`slate-600`, xóa `hover:bg-white/[0.04]`; các ô `td` và label checkbox (`border-slate-300 bg-white hover:bg-slate-100`) tương phản, bỏ viền vuông checkbox label.
+- `/review/dvor-1150a` (operations-review-dashboard): hàng kịch bản nền `#e5e7eb`, text `slate-900`/`slate-600`, STT badge `slate-700`/`slate-200`/`slate-300`; nút "Bắt đầu" cam bo tròn; thêm hiệu ứng loading 1s (overlay mờ `backdrop-blur-sm`) trước khi mở simulator; thay `ButtonLink` bằng `<button>` + `useRouter`; cập nhật 2 test (link → button) và mock `next/navigation`.
+- `/admin/scenario-exams`: hàng kỳ thi nền `#e5e7eb`, text `slate-600`/`slate-700`/`slate-900`; badge "Đã khóa" (neutral) text `slate-700`; nút mở `slate-300`/`white`/`slate-100`.
+- `/simulator`: thêm framework hiệu ứng loading 1s (overlay mờ) khi bấm **Run** trước khi mở simulator; chuyển `SimulatorCatalog` sang client component; cập nhật test `operations-catalog.test.tsx` thêm mock `next/navigation`.
+- `/student/scenario-exams`: nút "Vào phiên thi" đổi cam `#ea580c`; bỏ icon `Key` vuông trong tiêu đề.
+- `/review` (training-workspace): module `pending` khóa click — thay `<Link>` bằng `<span>` xám `#d1d5db` với `aria-disabled="true"`.
+- `/admin/scenario-exams` (scenario-exam-list): hàng kỳ thi nền `#e5e7eb`, text `slate-600`/`slate-700`/`slate-900`, badge tương phản, nút mở `slate-300`/`white`/`slate-100`.
+- Cập nhật `scenario-data-table.tsx`: empty cell nền `#e5e7eb` text `slate-600`.
+- Cập nhật test `operations-review-dashboard.test.tsx` thêm mock `next/navigation` và đổi `getByRole("link")` → `getByRole("button")`.
 - Kiểm thử: `npx vitest run` (881 passed), `npm run typecheck` (sạch), `npm run lint` (sạch), `npm run build` (72/72 routes đạt).

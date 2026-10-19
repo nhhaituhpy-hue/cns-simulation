@@ -349,28 +349,28 @@ export function ScenarioLibraryControls({
               available.map((scenario) => (
                 <tr
                   key={scenario.id}
-                  className="grid grid-cols-[minmax(0,1fr)_150px_150px] items-center px-6 min-h-[60px] transition-colors duration-150 hover:bg-white/[0.04]"
+                  className="grid grid-cols-[minmax(0,1fr)_150px_150px] items-center px-6 min-h-[60px] transition-colors duration-150 bg-[#e5e7eb]"
                 >
                   <th
                     scope="row"
-                    className="text-left font-normal min-w-0 pr-4 py-3"
+                    className="text-left font-normal min-w-0 pr-4 py-3 bg-[#e5e7eb]"
                   >
                     <span
-                      className="block text-[14px] font-medium text-[#E6EDF5] truncate"
+                      className="block text-[14px] font-medium text-slate-900 truncate"
                       title={scenario.name}
                     >
                       {scenario.name}
                     </span>
-                    <span className="mt-0.5 block font-mono text-[12px] text-[#6B7A8D]">
+                    <span className="mt-0.5 block font-mono text-[12px] text-slate-600">
                       {scenario.scenarioId}
                     </span>
                   </th>
                   {LIBRARY_KINDS.map((kind) => (
                     <td
                       key={kind}
-                      className="flex items-center justify-center text-center w-[150px] justify-self-center py-3"
+                      className="flex items-center justify-center text-center w-[150px] justify-self-center py-3 bg-[#e5e7eb]"
                     >
-                      <label className="inline-flex size-8 cursor-pointer items-center justify-center rounded-[6px] border border-transparent transition-colors hover:border-white/[0.12] hover:bg-white/[0.06]">
+                      <label className="inline-flex size-8 cursor-pointer items-center justify-center rounded-[6px] border border-transparent transition-colors">
                         <input
                           type="checkbox"
                           checked={selected[kind].includes(scenario.id)}
@@ -379,7 +379,7 @@ export function ScenarioLibraryControls({
                           onChange={(event) =>
                             toggle(kind, scenario.id, event.currentTarget.checked)
                           }
-                          className={checkboxClass()}
+                          className={`${checkboxClass()} !border-slate-400 !bg-slate-200`}
                         />
                       </label>
                     </td>
