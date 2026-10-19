@@ -13,7 +13,9 @@ export function proxy(request: NextRequest) {
   const hasSessionCookie = Boolean(request.cookies.get(sessionCookieName())?.value);
   const isLoginPage = pathname === "/login";
   const isPasswordChangePage = pathname === "/change-password";
-  const isProtectedPage = !isLoginPage && !isPasswordChangePage;
+  const isPlayground = pathname === "/playground" || pathname.startsWith("/playground/");
+  const isDevPlayground = isPlayground && process.env.NODE_ENV !== "production";
+  const isProtectedPage = !isLoginPage && !isPasswordChangePage && !isDevPlayground;
 
   if (isProtectedPage && !hasSessionCookie) {
     const loginUrl = request.nextUrl.clone();

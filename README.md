@@ -209,7 +209,14 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
-### 2026-10-02 — Chuẩn hóa Design Tokens cho phân hệ Ôn tập ADS-B (Student Dashboard)
+### 2026-10-19 — Dựng harness giao diện (component playground) để chỉnh sửa UI
+
+- Bổ sung route dev `/playground` liệt kê toàn bộ component trong `src/components` (225 file), nhóm theo thư mục, có tìm kiếm và xem source.
+- Preview component best-effort qua dynamic import (`@/components/<path>`) bọc trong Error Boundary; hiển thị lỗi import/render thay vì crash.
+- API `/api/playground/source` trả nội dung file (chỉ dev hoặc `PLAYGROUND_ENABLED=true`).
+- Gỡ bỏ yêu cầu đăng nhập cho `/playground` trong môi trường dev (cập nhật `src/proxy.ts`) để thuận tiện chỉnh sửa UI.
+- Gate an toàn: playground và source API tự tắt trong production trừ khi `PLAYGROUND_ENABLED=true`.
+- Kiểm tra: `npm run lint` (0 lỗi), `npm run typecheck` (0 lỗi), `npm run build` (thành công).
 
 - Đồng bộ triệt để hệ thống Design Tokens cho trang Ôn tập ADS-B (`/student/ads-b`):
   - **Khung giao diện & Điều hướng ([`page.tsx`](file:///C:/Test/cns-simulator/src/app/student/ads-b/page.tsx), [`student-dashboard.tsx`](file:///C:/Test/cns-simulator/src/modules/devices/adsb/student-dashboard.tsx)):**
