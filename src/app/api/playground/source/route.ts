@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
 import { readFileSync } from "node:fs";
 import { normalize, resolve } from "node:path";
+import { getCurrentProfile } from "@/lib/auth/profile";
 
 export async function GET(request: Request) {
-  if (process.env.NODE_ENV === "production" && process.env.PLAYGROUND_ENABLED !== "true") {
-    return NextResponse.json({ error: "disabled" }, { status: 403 });
+  const isProd = process.env.NODE_ENV === "production";
+  const enabledByEnv = process.env.PLAYGROUND_ENABLED === "true";
+  if (isProd && !enabledByEnv) {
+    const profile = await getCurrentProfile();
+    if (profile?.role !== "admin") {
+      return NextResponse.json({ error: "disabled" }, { status: 403 });
+    }
   }
   const { searchParams } = new URL(request.url);
   const rel = searchParams.get("path") ?? "";

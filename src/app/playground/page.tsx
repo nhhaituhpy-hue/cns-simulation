@@ -1,5 +1,6 @@
 import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { getCurrentProfile } from "@/lib/auth/profile";
 import { PlaygroundShell } from "@/components/playground/playground-shell";
 
 function walk(dir: string, base: string): string[] {
@@ -16,11 +17,17 @@ function walk(dir: string, base: string): string[] {
   return out.sort();
 }
 
-export default function PlaygroundPage() {
-  if (process.env.NODE_ENV === "production" && process.env.PLAYGROUND_ENABLED !== "true") {
+export default async function PlaygroundPage() {
+  const isProd = process.env.NODE_ENV === "production";
+  const enabledByEnv = process.env.PLAYGROUND_ENABLED === "true";
+  const profile = isProd ? await getCurrentProfile() : null;
+  const isAdmin = profile?.role === "admin";
+  if (isProd && !enabledByEnv && !isAdmin) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#061b25] text-white">
-        <p className="text-sm text-slate-300">Playground chỉ khả dụng trong môi trường dev (NODE_ENV=development).</p>
+        <p className="text-sm text-slate-300">
+          Playground chỉ khả dụng cho tài khoản admin (hoặc đặt PLAYGROUND_ENABLED=true).
+        </p>
       </div>
     );
   }
