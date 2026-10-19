@@ -30,7 +30,7 @@ export function RmsDataLayout() {
   return (
     <section className="pmdt-rms-data-layout flex min-h-full flex-col" aria-label="RMS Data">
       <PmdtToolbar title="RMS Data" />
-      <div className="pmdt-rms-tabbar flex items-end gap-1 border-b border-[var(--cns-border-subtle)] bg-[#0f172a] px-3 pt-2">
+      <div className="pmdt-rms-tabbar flex items-end gap-1 border-b border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] px-3 pt-2">
         <div className="flex min-w-0 flex-1 items-end gap-1" role="tablist" aria-label="RMS Data tabs">
           {tabs.map((tab) => {
             const active = tab.viewId === activeView;

@@ -89,7 +89,7 @@ export function PlaygroundShell({ files }: Props) {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[var(--cns-surface-card)] text-white">
       {/* Sidebar */}
-      <aside className="flex w-80 flex-col border-r border-white/10 bg-[#082630]">
+      <aside className="flex w-80 flex-col border-r border-white/10 bg-[var(--cns-surface-card)]">
         <div className="border-b border-white/10 p-3">
           <h1 className="text-sm font-bold uppercase tracking-wider text-cyan-100">Playground</h1>
           <p className="mt-1 text-xs text-slate-400">{files.length} components</p>
@@ -97,7 +97,7 @@ export function PlaygroundShell({ files }: Props) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Tìm component..."
-            className="mt-2 w-full rounded-md border border-white/10 bg-[#0a2f3a] px-2 py-1.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-300"
+            className="mt-2 w-full rounded-md border border-white/10 bg-[var(--cns-surface-card)] px-2 py-1.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-300"
           />
         </div>
         <div className="flex-1 overflow-auto p-2 text-sm">
@@ -151,7 +151,7 @@ export function PlaygroundShell({ files }: Props) {
 
         <div className="flex-1 overflow-auto p-4">
           {tab === "preview" && (
-            <div className="rounded-lg border border-white/10 bg-[#0a2f3a]/60 p-4">
+            <div className="rounded-lg border border-white/10 bg-[var(--cns-surface-card)]/60 p-4">
               {!selected && <p className="text-sm text-slate-400">Chọn một component từ sidebar để xem trước.</p>}
               {selected && importError && (
                 <div className="text-sm text-red-300">
@@ -179,7 +179,7 @@ export function PlaygroundShell({ files }: Props) {
           )}
 
           {tab === "source" && (
-            <div className="rounded-lg border border-white/10 bg-[#0a2f3a]/60 p-4">
+            <div className="rounded-lg border border-white/10 bg-[var(--cns-surface-card)]/60 p-4">
               {sourceLoading && <p className="text-sm text-slate-400">Đang tải source…</p>}
               {!sourceLoading && (
                 <pre className="whitespace-pre-wrap break-words font-mono text-xs text-slate-200">{source}</pre>

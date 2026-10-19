@@ -24,7 +24,7 @@ export function RmsLogsLayout() {
   return (
     <section className="pmdt-rms-logs-layout flex min-h-full flex-col" aria-label="RMS Logs">
       <PmdtToolbar title="RMS Logs" />
-      <div className="pmdt-rms-tabbar flex gap-1 border-b border-[var(--cns-border-subtle)] bg-[#0f172a] px-3 pt-2" role="tablist" aria-label="RMS Logs tabs">
+      <div className="pmdt-rms-tabbar flex gap-1 border-b border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] px-3 pt-2" role="tablist" aria-label="RMS Logs tabs">
         {tabs.map((tab) => {
           const active = tab.viewId === activeView;
           return (

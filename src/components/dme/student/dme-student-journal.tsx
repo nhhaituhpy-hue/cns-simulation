@@ -79,7 +79,7 @@ export function DmeStudentActivity({ isSubmitting, onSubmit, onContinue }: DmeSt
           ) : (
             <ol className="mt-3 space-y-3">
               {events.map((event) => (
-                <li key={event.id} className="relative rounded border border-[var(--cns-border-subtle)] bg-[#0f172a] p-3">
+                <li key={event.id} className="relative rounded border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] p-3">
                   <button
                     type="button"
                     onClick={() => removeEvent(event.id)}
@@ -156,7 +156,7 @@ function AnswerField({ label, value, onChange }: { label: string; value: string;
         value={value}
         onChange={(event) => onChange(event.target.value)}
         rows={3}
-        className="resize-y rounded border border-[#475569] bg-[#0f172a] p-2 text-xs font-normal leading-5 text-white outline-none focus:border-[#60a5fa]"
+        className="resize-y rounded border border-[#475569] bg-[var(--cns-surface-card)] p-2 text-xs font-normal leading-5 text-white outline-none focus:border-[#60a5fa]"
       />
     </label>
   );

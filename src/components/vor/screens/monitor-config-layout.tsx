@@ -12,7 +12,7 @@ export function MonitorConfigLayout() {
   return (
     <section className="flex min-h-full flex-col" aria-label="Monitor Configuration">
       <PmdtToolbar title="Monitor Configuration" />
-      <div className="pmdt-monitor-tabbar flex gap-1 border-b border-[var(--cns-border-subtle)] bg-[#0f172a] px-3 pt-2" role="tablist" aria-label="Monitor Configuration tabs">
+      <div className="pmdt-monitor-tabbar flex gap-1 border-b border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] px-3 pt-2" role="tablist" aria-label="Monitor Configuration tabs">
         <button
           type="button"
           role="tab"

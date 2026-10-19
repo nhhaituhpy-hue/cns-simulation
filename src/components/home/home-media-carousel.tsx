@@ -121,7 +121,7 @@ export function HomeMediaCarousel({ baseUrl }: HomeMediaCarouselProps) {
 
   return (
     <div
-      className="relative h-full min-h-0 overflow-hidden rounded-xl bg-[#07111b]"
+      className="relative h-full min-h-0 overflow-hidden rounded-xl bg-[var(--cns-surface-card)]"
       data-cache-strategy="supabase-immutable"
     >
       <video
@@ -156,7 +156,7 @@ export function HomeMediaCarousel({ baseUrl }: HomeMediaCarouselProps) {
         <button
           type="button"
           onClick={() => setIsVoiceOverEnabled(!isVoiceOverEnabled)}
-          className="absolute right-3 top-3 z-10 flex items-center gap-1.5 rounded-lg border border-white/20 bg-[#07111b]/80 px-2.5 py-1.5 text-[11px] font-medium text-white shadow-lg backdrop-blur-sm transition-all hover:bg-[#07111b]/95 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          className="absolute right-3 top-3 z-10 flex items-center gap-1.5 rounded-lg border border-white/20 bg-[var(--cns-surface-card)]/80 px-2.5 py-1.5 text-[11px] font-medium text-white shadow-lg backdrop-blur-sm transition-all hover:bg-[var(--cns-surface-card)]/95 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
         >
           {isVoiceOverEnabled ? (
             <>
@@ -176,7 +176,7 @@ export function HomeMediaCarousel({ baseUrl }: HomeMediaCarouselProps) {
         type="button"
         aria-label="Xem clip trước"
         onClick={showPrevious}
-        className="absolute left-3 top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-full border border-white/35 bg-[#07111b]/70 text-white shadow-lg backdrop-blur-sm transition-colors hover:bg-[#07111b]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+        className="absolute left-3 top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-full border border-white/35 bg-[var(--cns-surface-card)]/70 text-white shadow-lg backdrop-blur-sm transition-colors hover:bg-[var(--cns-surface-card)]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
       >
         <CaretLeft aria-hidden size={20} weight="bold" />
       </button>
@@ -184,13 +184,13 @@ export function HomeMediaCarousel({ baseUrl }: HomeMediaCarouselProps) {
         type="button"
         aria-label="Xem clip tiếp theo"
         onClick={showNext}
-        className="absolute right-3 top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-full border border-white/35 bg-[#07111b]/70 text-white shadow-lg backdrop-blur-sm transition-colors hover:bg-[#07111b]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+        className="absolute right-3 top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-full border border-white/35 bg-[var(--cns-surface-card)]/70 text-white shadow-lg backdrop-blur-sm transition-colors hover:bg-[var(--cns-surface-card)]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
       >
         <CaretRight aria-hidden size={20} weight="bold" />
       </button>
 
       <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-center">
-        <span className="rounded-full border border-white/25 bg-[#07111b]/65 px-2.5 py-1 font-mono text-[11px] font-semibold tabular-nums text-white backdrop-blur-sm">
+        <span className="rounded-full border border-white/25 bg-[var(--cns-surface-card)]/65 px-2.5 py-1 font-mono text-[11px] font-semibold tabular-nums text-white backdrop-blur-sm">
           {activeIndex + 1}/{items.length}
         </span>
       </div>

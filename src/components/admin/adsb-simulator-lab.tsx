@@ -121,7 +121,7 @@ export function AdsbSimulatorLab() {
 
   return (
     <div className="simulator-skin adsb-simulator-lab min-h-screen w-full bg-[var(--cns-surface-card)] text-[var(--cns-text-primary)]">
-      <header className="border-b border-[var(--cns-border-subtle)] bg-[#0f172a]">
+      <header className="border-b border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)]">
         <div className="flex h-8 items-center justify-between gap-3 border-b border-[#26364d] px-4">
           <Link
             href="/simulator"

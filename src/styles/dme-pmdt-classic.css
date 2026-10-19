@@ -295,7 +295,7 @@
 .dme-pmdt-window .pmdt-classic-main > section,
 .dme-pmdt-window .pmdt-classic-main > section > div,
 .dme-pmdt-window .pmdt-classic-main [class*="bg-[var(--cns-surface-card)]"],
-.dme-pmdt-window .pmdt-classic-main [class*="bg-[#0f172a]"],
+.dme-pmdt-window .pmdt-classic-main [class*="bg-[var(--cns-surface-card)]"],
 .dme-pmdt-window .pmdt-classic-main [class*="bg-[#111827]"],
 .dme-pmdt-window .pmdt-classic-main [class*="bg-[#172033]"],
 .dme-pmdt-window .pmdt-classic-main [class*="bg-[#1e293b]"] {

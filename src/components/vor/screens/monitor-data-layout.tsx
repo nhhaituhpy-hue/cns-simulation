@@ -30,7 +30,7 @@ export function MonitorDataLayout() {
   return (
     <section className="flex min-h-full flex-col" aria-label={title}>
       <PmdtToolbar title={title} />
-      <div className="pmdt-monitor-tabbar flex gap-1 border-b border-[var(--cns-border-subtle)] bg-[#0f172a] px-3 pt-2" role="tablist" aria-label="Monitor Data tabs">
+      <div className="pmdt-monitor-tabbar flex gap-1 border-b border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] px-3 pt-2" role="tablist" aria-label="Monitor Data tabs">
           {visibleTabs.map((tab) => {
           const active = tab.viewId === activeView;
           return (

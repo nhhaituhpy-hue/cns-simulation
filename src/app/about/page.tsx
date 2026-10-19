@@ -35,7 +35,7 @@ export default function AboutCnsSimulationLabPage() {
 
         <section className="mt-14 grid gap-px overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/10 md:grid-cols-3">
           {learningPrinciples.map((principle, index) => (
-            <article key={principle.title} className="bg-[#082630] p-7 sm:p-8">
+            <article key={principle.title} className="bg-[var(--cns-surface-card)] p-7 sm:p-8">
               <span className="text-sm font-semibold text-cyan-200">
                 0{index + 1}
               </span>

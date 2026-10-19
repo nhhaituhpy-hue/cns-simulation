@@ -66,7 +66,7 @@ export function EquipmentBlockDiagram({ diagrams, selectedComponentIds, inspecte
             maxWidth: `${diagram.canvas?.widthRem ?? 52}rem`,
           }}
         >
-          {diagram.groups?.map((group) => <div key={group.id} aria-hidden className="pointer-events-none absolute z-0 border border-dashed border-[var(--cns-border-subtle)] bg-[#0f172a]/35" style={{ left: `${group.bounds.x}%`, top: `${group.bounds.y}%`, width: `${group.bounds.width}%`, height: `${group.bounds.height}%` }}><span className="absolute left-2 top-1 text-[9px] font-bold uppercase tracking-widest text-[#64748b]">{group.label}</span></div>)}
+          {diagram.groups?.map((group) => <div key={group.id} aria-hidden className="pointer-events-none absolute z-0 border border-dashed border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)]/35" style={{ left: `${group.bounds.x}%`, top: `${group.bounds.y}%`, width: `${group.bounds.width}%`, height: `${group.bounds.height}%` }}><span className="absolute left-2 top-1 text-[9px] font-bold uppercase tracking-widest text-[#64748b]">{group.label}</span></div>)}
           <svg aria-hidden className="absolute inset-0 z-10 size-full" viewBox="0 0 100 100" preserveAspectRatio="none">
             <defs>
               {(Object.keys(markerColors) as EquipmentLinkKind[]).map((kind) => <marker key={kind} id={`${markerPrefix}-${kind}`} viewBox="0 0 6 6" refX="5" refY="3" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 6 3 L 0 6 z" fill={markerColors[kind]} /></marker>)}

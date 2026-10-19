@@ -71,7 +71,7 @@ function ConfigInput({
         displayFieldId={fieldId}
         configFieldId={configFieldId}
         digits={configFieldId === "station.frequencyMHz" ? 1 : undefined}
-        className={`h-7 border border-[#475569] bg-[#0f172a] px-2 font-mono text-[11px] text-[var(--cns-text-primary)] outline-none ${className}`}
+        className={`h-7 border border-[#475569] bg-[var(--cns-surface-card)] px-2 font-mono text-[11px] text-[var(--cns-text-primary)] outline-none ${className}`}
       />
     );
   }
@@ -107,7 +107,7 @@ function ConfigInput({
         disabled
         value={displayValue}
         lang="en-US"
-        className={`h-7 border border-[#475569] bg-[#0f172a] px-2 font-mono text-[11px] text-[var(--cns-text-primary)] outline-none ${className}`}
+        className={`h-7 border border-[#475569] bg-[var(--cns-surface-card)] px-2 font-mono text-[11px] text-[var(--cns-text-primary)] outline-none ${className}`}
         onChange={() => undefined}
       >
         <option value={displayValue}>{displayValue}</option>
@@ -130,7 +130,7 @@ function ConfigInput({
           lang="en-US"
           readOnly
           value={displayValue}
-          className={`h-7 border border-[#475569] bg-[#0f172a] px-2 font-mono text-[11px] text-[var(--cns-text-primary)] outline-none ${className}`}
+          className={`h-7 border border-[#475569] bg-[var(--cns-surface-card)] px-2 font-mono text-[11px] text-[var(--cns-text-primary)] outline-none ${className}`}
         />
       </span>
     );
@@ -146,7 +146,7 @@ function ConfigInput({
       data-vor-field-label={fieldId}
       lang="en-US"
       value={displayValue}
-      className={`h-7 border border-[#475569] bg-[#0f172a] px-2 font-mono text-[11px] text-[var(--cns-text-primary)] outline-none ${className}`}
+      className={`h-7 border border-[#475569] bg-[var(--cns-surface-card)] px-2 font-mono text-[11px] text-[var(--cns-text-primary)] outline-none ${className}`}
     />
   );
 }
@@ -615,7 +615,7 @@ export function RmsConfigLayout() {
   return (
     <section className="pmdt-rms-config flex min-h-full flex-col" aria-label="RMS Configuration">
       <PmdtToolbar title="RMS Configuration" />
-      <div className="flex gap-1 border-b border-[var(--cns-border-subtle)] bg-[#0f172a] px-3 pt-2" role="tablist" aria-label="RMS Configuration tabs">
+      <div className="flex gap-1 border-b border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] px-3 pt-2" role="tablist" aria-label="RMS Configuration tabs">
         {tabs.map((tab) => {
           const active = tab.id === activeTab;
           return (

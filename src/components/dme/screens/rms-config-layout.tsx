@@ -79,7 +79,7 @@ function ConfigInput({
         disabled={!canEdit}
         value={String(resolved)}
         onChange={(event) => update(event.currentTarget.value)}
-        className={`h-7 border border-[#475569] bg-[#0f172a] px-2 font-mono text-[11px] text-[var(--cns-text-primary)] outline-none ${className}`}
+        className={`h-7 border border-[#475569] bg-[var(--cns-surface-card)] px-2 font-mono text-[11px] text-[var(--cns-text-primary)] outline-none ${className}`}
       >
         {fieldDefinition.options?.map((option) => <option key={option} value={option}>{option}</option>)}
       </select>
@@ -95,7 +95,7 @@ function ConfigInput({
       readOnly={!canEdit}
       value={String(resolved)}
       onChange={(event) => update(event.currentTarget.value)}
-      className={`h-7 border border-[#475569] bg-[#0f172a] px-2 font-mono text-[11px] text-[var(--cns-text-primary)] outline-none ${className}`}
+      className={`h-7 border border-[#475569] bg-[var(--cns-surface-card)] px-2 font-mono text-[11px] text-[var(--cns-text-primary)] outline-none ${className}`}
     />
   );
 }
@@ -525,7 +525,7 @@ function DmeSecurityCodesTab() {
                   value={account.userId}
                   disabled={!canEdit}
                   onChange={(event) => updateSecurityAccount(index, { userId: event.currentTarget.value })}
-                  className="h-7 w-full border border-[#475569] bg-[#0f172a] px-2 font-mono text-[var(--cns-text-primary)]"
+                  className="h-7 w-full border border-[#475569] bg-[var(--cns-surface-card)] px-2 font-mono text-[var(--cns-text-primary)]"
                 />
               </td>
               <td className="border border-[var(--cns-border-subtle)] p-1">
@@ -537,7 +537,7 @@ function DmeSecurityCodesTab() {
                   value={account.password}
                   disabled={!canEdit}
                   onChange={(event) => updateSecurityAccount(index, { password: event.currentTarget.value })}
-                  className="h-7 w-full border border-[#475569] bg-[#0f172a] px-2 font-mono text-[var(--cns-text-primary)]"
+                  className="h-7 w-full border border-[#475569] bg-[var(--cns-surface-card)] px-2 font-mono text-[var(--cns-text-primary)]"
                 />
               </td>
               <td className="border border-[var(--cns-border-subtle)] p-1">
@@ -548,7 +548,7 @@ function DmeSecurityCodesTab() {
                   value={account.securityLevel}
                   disabled={!canEdit}
                   onChange={(event) => updateSecurityAccount(index, { securityLevel: Number(event.currentTarget.value) as DmeAccountSecurityLevel })}
-                  className="h-7 border border-[#475569] bg-[#0f172a] px-2 text-[var(--cns-text-primary)]"
+                  className="h-7 border border-[#475569] bg-[var(--cns-surface-card)] px-2 text-[var(--cns-text-primary)]"
                 >
                   {[1, 2, 3, 4].map((level) => <option key={level} value={level}>Level {level}</option>)}
                 </select>
@@ -582,7 +582,7 @@ export function RmsConfigLayout() {
   return (
     <section className="flex min-h-full flex-col" aria-label="RMS Configuration">
       <PmdtToolbar title="RMS Configuration" />
-      <div className="flex gap-1 border-b border-[var(--cns-border-subtle)] bg-[#0f172a] px-3 pt-2" role="tablist" aria-label="RMS Configuration tabs">
+      <div className="flex gap-1 border-b border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] px-3 pt-2" role="tablist" aria-label="RMS Configuration tabs">
         {tabs.map((tab) => {
           const active = tab.viewId === activeView;
           return (

@@ -9,7 +9,7 @@ import {
 } from "@/stores/vor-pmdt-store";
 
 const statusClasses: Record<VorIndicatorColor, string> = {
-  green: "bg-[#0f3a1f] text-[#bbf7d0]",
+  green: "bg-[var(--cns-surface-card)] text-[#bbf7d0]",
   yellow: "bg-[#3a2f0f] text-[#fef08a]",
   red: "bg-[#3a0f0f] text-[#fecaca]",
   gray: "bg-[#1e293b] text-[#94a3b8]",

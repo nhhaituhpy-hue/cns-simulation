@@ -19,7 +19,7 @@ export function TxConfigLayout() {
   return (
     <section className="flex min-h-full flex-col" aria-label="Transmitter Configuration">
       <PmdtToolbar title="Transmitter Configuration" />
-      <div className="pmdt-tx-tabbar flex gap-1 border-b border-[var(--cns-border-subtle)] bg-[#0f172a] px-3 pt-2" role="tablist" aria-label="Transmitter Configuration tabs">
+      <div className="pmdt-tx-tabbar flex gap-1 border-b border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] px-3 pt-2" role="tablist" aria-label="Transmitter Configuration tabs">
         {tabs.map((tab) => {
           const active = tab.viewId === activeView;
           return <button key={tab.id} type="button" role="tab" aria-selected={active} aria-disabled={!tab.enabled || undefined} title={!tab.enabled ? "Chưa khả dụng" : undefined} onClick={() => {

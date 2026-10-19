@@ -111,10 +111,10 @@ export function VorAuthorPanel({
 
       <section className="grid gap-2" aria-labelledby="vor-metadata-title">
         <h3 id="vor-metadata-title" className="font-semibold text-[var(--cns-text-primary)]">Thông tin bài thực hành</h3>
-        <label className="grid gap-1 text-[10px] text-[#94a3b8]">Tiêu đề<input value={draft.title} onChange={(event) => onDraftChange({ title: event.target.value })} className="h-8 border border-[#475569] bg-[#0f172a] px-2 text-xs text-white outline-none focus:border-[#60a5fa]" /></label>
-        <label className="grid gap-1 text-[10px] text-[#94a3b8]">Mô tả<textarea value={draft.description} onChange={(event) => onDraftChange({ description: event.target.value })} rows={2} className="resize-y border border-[#475569] bg-[#0f172a] p-2 text-xs text-white outline-none focus:border-[#60a5fa]" /></label>
-        <label className="grid gap-1 text-[10px] text-[#94a3b8]">Đề bài<textarea value={draft.prompt} onChange={(event) => onDraftChange({ prompt: event.target.value })} rows={3} className="resize-y border border-[#475569] bg-[#0f172a] p-2 text-xs text-white outline-none focus:border-[#60a5fa]" /></label>
-        <label className="grid gap-1 text-[10px] text-[#94a3b8]">Độ khó<select value={draft.difficulty} onChange={(event) => onDraftChange({ difficulty: event.target.value as VorScenarioInput["difficulty"] })} className="h-8 border border-[#475569] bg-[#0f172a] px-2 text-xs text-white"><option value="easy">Cơ bản</option><option value="medium">Trung bình</option><option value="hard">Nâng cao</option></select></label>
+        <label className="grid gap-1 text-[10px] text-[#94a3b8]">Tiêu đề<input value={draft.title} onChange={(event) => onDraftChange({ title: event.target.value })} className="h-8 border border-[#475569] bg-[var(--cns-surface-card)] px-2 text-xs text-white outline-none focus:border-[#60a5fa]" /></label>
+        <label className="grid gap-1 text-[10px] text-[#94a3b8]">Mô tả<textarea value={draft.description} onChange={(event) => onDraftChange({ description: event.target.value })} rows={2} className="resize-y border border-[#475569] bg-[var(--cns-surface-card)] p-2 text-xs text-white outline-none focus:border-[#60a5fa]" /></label>
+        <label className="grid gap-1 text-[10px] text-[#94a3b8]">Đề bài<textarea value={draft.prompt} onChange={(event) => onDraftChange({ prompt: event.target.value })} rows={3} className="resize-y border border-[#475569] bg-[var(--cns-surface-card)] p-2 text-xs text-white outline-none focus:border-[#60a5fa]" /></label>
+        <label className="grid gap-1 text-[10px] text-[#94a3b8]">Độ khó<select value={draft.difficulty} onChange={(event) => onDraftChange({ difficulty: event.target.value as VorScenarioInput["difficulty"] })} className="h-8 border border-[#475569] bg-[var(--cns-surface-card)] px-2 text-xs text-white"><option value="easy">Cơ bản</option><option value="medium">Trung bình</option><option value="hard">Nâng cao</option></select></label>
       </section>
 
       <section className="border-t border-[var(--cns-border-subtle)] pt-3" aria-labelledby="vor-field-title">
@@ -129,11 +129,11 @@ export function VorAuthorPanel({
               </p>
             ) : null}
             {logStateOptions ? (
-              <label className="grid gap-1 text-[10px] text-[#94a3b8]">Giá trị State<select value={fieldValue} onChange={(event) => setFieldValue(event.target.value)} className="h-8 border border-[#475569] bg-[#0f172a] px-2 text-xs text-white">{logStateOptions.map((state) => <option key={state} value={state}>{state}</option>)}</select></label>
+              <label className="grid gap-1 text-[10px] text-[#94a3b8]">Giá trị State<select value={fieldValue} onChange={(event) => setFieldValue(event.target.value)} className="h-8 border border-[#475569] bg-[var(--cns-surface-card)] px-2 text-xs text-white">{logStateOptions.map((state) => <option key={state} value={state}>{state}</option>)}</select></label>
             ) : typeof selectedField.value === "boolean" ? (
               <label className="flex items-center gap-2"><input type="checkbox" checked={fieldChecked} onChange={(event) => setFieldChecked(event.target.checked)} />Bật trạng thái</label>
             ) : (
-              <label className="grid gap-1 text-[10px] text-[#94a3b8]">{isLogTimeTag ? "Time Tag (DD/MM/YYYY HH:mm:ss)" : "Giá trị"}<input type={typeof selectedField.value === "number" ? "number" : "text"} step="any" value={fieldValue} onChange={(event) => setFieldValue(event.target.value)} className="h-8 border border-[#475569] bg-[#0f172a] px-2 font-mono text-xs text-white" /></label>
+              <label className="grid gap-1 text-[10px] text-[#94a3b8]">{isLogTimeTag ? "Time Tag (DD/MM/YYYY HH:mm:ss)" : "Giá trị"}<input type={typeof selectedField.value === "number" ? "number" : "text"} step="any" value={fieldValue} onChange={(event) => setFieldValue(event.target.value)} className="h-8 border border-[#475569] bg-[var(--cns-surface-card)] px-2 font-mono text-xs text-white" /></label>
             )}
             {logStateOptions ? null : (
               <label className="grid gap-1 text-[10px] text-[#94a3b8]">
@@ -141,7 +141,7 @@ export function VorAuthorPanel({
                 <select
                   value={fieldStatus}
                   onChange={(event) => setFieldStatus(event.target.value)}
-                  className="h-8 border border-[#475569] bg-[#0f172a] px-2 text-xs text-white"
+                  className="h-8 border border-[#475569] bg-[var(--cns-surface-card)] px-2 text-xs text-white"
                 >
                   <option value="">Giữ nguyên</option>
                   <option value="green">Màu xanh (Green)</option>
@@ -165,7 +165,7 @@ export function VorAuthorPanel({
       <section className="border-t border-[var(--cns-border-subtle)] pt-3" aria-labelledby="vor-checkpoints-title">
         <div className="flex items-center justify-between gap-2"><h3 id="vor-checkpoints-title" className="font-semibold text-[var(--cns-text-primary)]">Các bước kiểm tra chuẩn</h3><button type="button" onClick={() => addCheckpoint()} className="inline-flex h-7 items-center gap-1 border border-[#475569] px-2 text-[10px] hover:border-[#60a5fa]"><Plus aria-hidden size={12} />Thêm màn hình</button></div>
         <p className="mt-2 truncate text-[10px] text-[#60a5fa]">{activeMenuPath.join(" > ")}</p>
-        <ol className="mt-2 grid gap-1.5">{checkpoints.map((checkpoint) => <li key={checkpoint.id} className="flex items-start gap-2 border border-[var(--cns-border-subtle)] bg-[#0f172a] p-2"><span className="font-mono text-[10px] text-[#94a3b8]">{checkpoint.order}</span><span className="min-w-0 flex-1 truncate text-[10px]">{checkpoint.menuPath.join(" > ")}</span><button type="button" onClick={() => removeCheckpoint(checkpoint.id)} aria-label={`Xóa bước ${checkpoint.order}`} title="Xóa bước kiểm tra" className="text-[#fca5a5]"><Trash aria-hidden size={12} /></button></li>)}</ol>
+        <ol className="mt-2 grid gap-1.5">{checkpoints.map((checkpoint) => <li key={checkpoint.id} className="flex items-start gap-2 border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] p-2"><span className="font-mono text-[10px] text-[#94a3b8]">{checkpoint.order}</span><span className="min-w-0 flex-1 truncate text-[10px]">{checkpoint.menuPath.join(" > ")}</span><button type="button" onClick={() => removeCheckpoint(checkpoint.id)} aria-label={`Xóa bước ${checkpoint.order}`} title="Xóa bước kiểm tra" className="text-[#fca5a5]"><Trash aria-hidden size={12} /></button></li>)}</ol>
       </section>
 
       {interactionTargets.length > 0 ? (
@@ -173,7 +173,7 @@ export function VorAuthorPanel({
           <h3 id="vor-sidebar-actions-title" className="font-semibold text-[var(--cns-text-primary)]">Thao tác sidebar cần chấm</h3>
           <ul className="mt-2 grid gap-1.5">
             {interactionTargets.map((target) => (
-              <li key={target.fieldId} className="flex items-center justify-between border border-[var(--cns-border-subtle)] bg-[#0f172a] p-2 text-[10px]">
+              <li key={target.fieldId} className="flex items-center justify-between border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] p-2 text-[10px]">
                 <span>{target.label}</span>
                 <span className="font-mono text-[#fef08a]">{String(target.value)} · {target.status ?? "yellow"}</span>
               </li>

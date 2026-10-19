@@ -2880,7 +2880,7 @@
   background: #f3f3f3 !important;
 }
 
-.pmdt-classic-window [class~="bg-[#0f172a]"] {
+.pmdt-classic-window [class~="bg-[var(--cns-surface-card)]"] {
   background: #f0f0f0 !important;
 }
 
@@ -2893,7 +2893,7 @@
   background: #e8e8e8 !important;
 }
 
-.pmdt-classic-window [class*="bg-[#0f172a]"] {
+.pmdt-classic-window [class*="bg-[var(--cns-surface-card)]"] {
   background: #f0f0f0 !important;
 }
 
@@ -2901,7 +2901,7 @@
   background: #316ac5 !important;
 }
 
-.pmdt-classic-window [class~="bg-[#0f3a1f]"] {
+.pmdt-classic-window [class~="bg-[var(--cns-surface-card)]"] {
   background: #c6efce !important;
 }
 
@@ -3019,7 +3019,7 @@
 }
 
 /* Status cells in the reference client use saturated traffic-light fills. */
-.pmdt-classic-window [class~="bg-[#0f3a1f]"] {
+.pmdt-classic-window [class~="bg-[var(--cns-surface-card)]"] {
   background: #00ff00 !important;
   color: #000 !important;
 }
@@ -3039,7 +3039,7 @@
   color: #000 !important;
 }
 
-.pmdt-tx-data-panel [class~="bg-[#0f3a1f]"],
+.pmdt-tx-data-panel [class~="bg-[var(--cns-surface-card)]"],
 .pmdt-tx-data-panel [class~="bg-[#3a2f0f]"],
 .pmdt-tx-data-panel [class~="bg-[#3a0f0f]"],
 .pmdt-tx-data-panel [class~="bg-[#1e293b]"] {

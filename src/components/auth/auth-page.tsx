@@ -12,8 +12,8 @@ import { loginAction, type AuthActionResult } from "@/app/login/actions";
 
 export type AuthView = "login";
 
-const AUTH_INPUT_CLASS = "h-12 w-full rounded-xl border border-white/15 bg-[#061720]/80 pl-11 font-normal text-white placeholder:text-slate-500 outline-none transition-[border-color,box-shadow,background-color] focus:border-cyan-100/70 focus:bg-[#081d27] focus:ring-2 focus:ring-cyan-100/15";
-const AUTH_PRIMARY_BUTTON_CLASS = "inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-cyan-100 px-5 text-[15px] font-semibold text-[#06232d] shadow-[0_0.8rem_2.5rem_rgba(79,209,225,0.12)] transition-[background-color,transform] hover:bg-white active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-100 focus-visible:ring-offset-2 focus-visible:ring-offset-[#061b25] disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:active:scale-100";
+const AUTH_INPUT_CLASS = "h-12 w-full rounded-xl border border-white/15 bg-[var(--cns-surface-card)]/80 pl-11 font-normal text-white placeholder:text-slate-500 outline-none transition-[border-color,box-shadow,background-color] focus:border-cyan-100/70 focus:bg-[var(--cns-surface-card)] focus:ring-2 focus:ring-cyan-100/15";
+const AUTH_PRIMARY_BUTTON_CLASS = "inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-cyan-100 px-5 text-[15px] font-semibold text-[var(--cns-text-primary)] shadow-[0_0.8rem_2.5rem_rgba(79,209,225,0.12)] transition-[background-color,transform] hover:bg-white active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-100 focus-visible:ring-offset-2 focus-visible:ring-offset-[#061b25] disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:active:scale-100";
 
 function Brand() {
   return (

@@ -31,7 +31,7 @@ export function RmsLogsMaintenance() {
               overrides,
             );
             return (
-              <tr key={`${log.timeTag}-${log.type}-${index}`} className="border-t border-[#273449] bg-[#111827] text-[#cbd5e1] even:bg-[#0f172a]">
+              <tr key={`${log.timeTag}-${log.type}-${index}`} className="border-t border-[#273449] bg-[#111827] text-[#cbd5e1] even:bg-[var(--cns-surface-card)]">
                 <td data-vor-field-id={`${prefix}.timeTag`} data-vor-field-label={`Time Tag dòng ${index + 1}`} data-vor-field-value={String(timeTag)} data-vor-field-type="string" className="px-3 py-2 font-mono tabular-nums text-[#94a3b8]">{timeTag}</td>
                 <td data-vor-field-id={`${prefix}.type`} data-vor-field-label={`Type dòng ${index + 1}`} data-vor-field-value={String(type)} data-vor-field-type="string" className="px-3 py-2">{type}</td>
                 <td data-vor-field-id={`${prefix}.alert`} data-vor-field-label={`Nội dung Maintenance Alert dòng ${index + 1}`} data-vor-field-value={String(alert)} data-vor-field-type="string" className="px-3 py-2">{alert}</td>

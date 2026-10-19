@@ -34,7 +34,7 @@ export function TerminalInput({
 
   return (
     <form
-      className="flex min-h-14 items-center gap-2 border-t border-[#2b2b2b] bg-[#080808] px-4 py-2 font-mono text-sm sm:px-5"
+      className="flex min-h-14 items-center gap-2 border-t border-[#2b2b2b] bg-[var(--cns-surface-card)] px-4 py-2 font-mono text-sm sm:px-5"
       onSubmit={(event) => {
         event.preventDefault();
         onSubmit(value);

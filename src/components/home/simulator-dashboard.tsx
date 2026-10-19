@@ -49,7 +49,7 @@ export function SimulatorDashboard() {
       </header>
 
       <section className="relative z-10 -mt-10 px-4 pb-16 sm:-mt-14 sm:px-6 lg:px-10 lg:pb-24 xl:px-12">
-        <div className="mx-auto max-w-[1320px] rounded-[2rem] border border-white/10 bg-[#082630]/95 p-5 shadow-[0_2rem_7rem_rgba(0,0,0,0.28)] backdrop-blur-sm sm:p-8 lg:p-10">
+        <div className="mx-auto max-w-[1320px] rounded-[2rem] border border-white/10 bg-[var(--cns-surface-card)]/95 p-5 shadow-[0_2rem_7rem_rgba(0,0,0,0.28)] backdrop-blur-sm sm:p-8 lg:p-10">
           <SimulatorShowcase simulators={simulators} />
         </div>
       </section>
