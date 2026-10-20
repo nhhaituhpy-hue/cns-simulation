@@ -1,9 +1,8 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
-  pull_request:
+  # Automatic push/PR CI paused at the repository owner's request.
+  workflow_dispatch:
 
 permissions:
   contents: read

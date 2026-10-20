@@ -4,6 +4,11 @@
 
 ---
 
+## Trạng thái CI GitHub
+
+- Theo yêu cầu chủ repository, workflow **CI** chỉ chạy thủ công qua **Actions → CI → Run workflow**; không tự chạy khi push hoặc mở pull request.
+- Việc này không tắt webhook triển khai Dokploy và không thay đổi các lệnh lint, typecheck, test, build cục bộ.
+
 ## Tạo kịch bản bằng AI (native)
 
 - Ở trang **Kịch bản** của một trong sáu thiết bị, chọn **Tạo kịch bản bằng AI**, nhập tên/mô tả, tùy chọn độ khó và tài liệu. Import JSON và tạo thủ công vẫn giữ nguyên.
