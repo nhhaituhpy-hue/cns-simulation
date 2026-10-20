@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { queryDatabase } from "@/lib/db";
+import { withExamActorTransaction } from "./actor-transaction";
 import { mapExamAttempt } from "./queries";
 import { mapRowToDmeScenario } from "@/lib/dme-scenario-storage";
 import { mapRowToScenario } from "@/lib/supabase/scenarios";
@@ -85,7 +86,7 @@ export async function saveExamSetAction(input: ExamSetInput, finalize = true): P
     const parsed = validateExamSetInput(input);
     const result = await queryDatabase<{ id: string }>(
       "select public.save_exam_set($1, $2, $3, $4, $5, $6) as id",
-      [profile.id, parsed.id ?? null, parsed.name, parsed.description ?? "", parsed.subjects, finalize === true],
+      [profile.id, parsed.id ?? null, parsed.name, parsed.description ?? "", JSON.stringify(parsed.subjects), finalize === true],
     );
     const id = validateUuid(result.rows[0]?.id, "Mã bộ đề");
     refreshExamSetPaths(id);
@@ -202,7 +203,9 @@ async function replaceExaminers(examId: string, input: ExamExaminerInput[]): Pro
   const examiners = input.map(validateExaminerInput);
   const positions = new Set(examiners.map((examiner) => examiner.position));
   if (positions.size !== examiners.length) return { ok: false, message: "Thứ tự giám khảo không được trùng nhau." };
-  await queryDatabase("select public.save_exam_examiners($1, $2)", [examId, examiners]);
+  await withExamActorTransaction((client) => client.query(
+    "select public.save_exam_examiners($1, $2)", [examId, JSON.stringify(examiners)],
+  ));
   return { ok: true, message: "Danh sách giám khảo đã được lưu." };
 }
 
@@ -221,10 +224,10 @@ export async function saveExamExaminersAction(examIdValue: string, input: ExamEx
 
 async function saveCandidate(input: ExamCandidateInput): Promise<ExamActionResult<{ id: string }>> {
   const candidate = validateCandidateInput(input);
-  const result = await queryDatabase<{ id: string }>(
+  const result = await withExamActorTransaction((client) => client.query<{ id: string }>(
     "select public.save_exam_candidate($1, $2, $3, $4, $5, $6) as id",
-    [candidate.id ?? null, candidate.examId, candidate.fullName, candidate.workUnit, candidate.email, candidate.subjects],
-  );
+    [candidate.id ?? null, candidate.examId, candidate.fullName, candidate.workUnit, candidate.email, JSON.stringify(candidate.subjects)],
+  ));
   const id = validateUuid(result.rows[0]?.id, "Mã thí sinh");
   return { ok: true, message: "Thông tin thí sinh và phân đề đã được lưu.", data: { id } };
 }
@@ -270,10 +273,10 @@ export async function saveCandidateResultAction(input: CandidateResultInput): Pr
   try {
     await requireAdmin();
     const parsed = validateCandidateResultInput(input);
-    const result = await queryDatabase<{ id: string }>(
+    const result = await withExamActorTransaction((client) => client.query<{ id: string }>(
       "select public.save_candidate_result($1, $2, $3) as id",
       [parsed.candidateSubjectId, parsed.officialScore, parsed.examinerComment ?? ""],
-    );
+    ));
     refreshExamPaths(validateUuid(result.rows[0]?.id, "Mã kỳ thi"));
     return { ok: true, message: "Kết quả chính thức do giám khảo nhập đã được lưu." };
   } catch (error) {

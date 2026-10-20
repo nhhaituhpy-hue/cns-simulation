@@ -4,6 +4,15 @@
 
 ---
 
+## Nhật ký phiên 20/10/2026 — gia cố kỳ thi PostgreSQL (chưa deploy)
+
+- Tái hiện trong PostgreSQL 17 cô lập: các RPC lưu thí sinh/giám khảo/điểm gọi `public.current_app_role()` chưa tồn tại; bổ sung migration **0014** chỉ thêm resolver, không sửa 13 migration đã áp dụng hoặc dữ liệu bài thi.
+- Resolver lấy role từ user đang hoạt động qua actor UUID transaction-local, mặc định từ chối khi không có actor hợp lệ. Helper server-only lấy actor từ phiên xác thực, dùng cùng client/transaction cho RPC và trigger; không nhận role/admin từ trình duyệt và không lưu role vào session connection.
+- Sửa tham số JSONB của bộ đề, phân môn và giám khảo: serialize JSON rõ ràng thay vì để node-pg chuyển JavaScript array sang PostgreSQL array.
+- Bổ sung kiểm thử SQL thật cho luồng kỳ thi legacy, bảo toàn evidence/điểm 0/retry/hồ sơ đã lưu trữ, từ chối tài khoản không đủ quyền và cách ly actor giữa commit/rollback/kết nối đồng thời. Suite code-based hiện có cũng chạy với database kiểm thử thật, không dùng DB production.
+- Đồng bộ `.node-version` về Node 24 theo CI và Dockerfile. Chi tiết release/migration an toàn tại `database/README.md`; **chưa push, chưa chạy migration hoặc deploy production**.
+- Kiểm tra trên Node 24.22.0: lint, typecheck và production build đạt; **920 test passed, 0 skipped**, gồm 12 test integration legacy mới và 25 test integration code-based chạy trên PostgreSQL 17 cô lập. Không coi đây là xác minh browser production hoặc bằng chứng mọi rủi ro vận hành đã hết.
+
 ## Nhật ký phiên 19/10/2026 — rà soát Light Gray Mode
 
 - Sửa `/simulator` và `/simulator/` dùng light theme; trang chủ và các màn hình thiết bị `/simulator/*` tiếp tục dùng dark theme. Thêm test chuyển route để tránh tái phát lỗi nền tối của catalog.
@@ -20,18 +29,18 @@
 - **Phục vụ đào tạo & sát hạch kỹ thuật viên:**
   - *Dành cho Giám khảo:* Thiết lập kịch bản sự cố (fault injection), cấu hình dung sai và đáp án tham chiếu, tổ chức bộ đề, quản lý kỳ thi chính thức và chấm điểm dựa trên bằng chứng kỹ thuật.
   - *Dành cho Học viên:* Luyện tập quy trình kiểm tra tham số, thao tác chuyển đổi chế độ, sửa chữa hư hỏng theo whitelist quy định, ghi nhận bằng chứng thao tác và nộp bài đánh giá.
-- **Tài khoản ứng dụng:** Hệ thống quản lý tài khoản nội bộ trên PostgreSQL với 2 tài khoản: **admin** (dành cho quản trị / giám khảo) và **user** (dành cho học viên / thực hành). Tài khoản terminal bên trong bài mô phỏng chỉ là dữ liệu của kịch bản đào tạo, không phải tài khoản hệ thống.
+- **Tài khoản ứng dụng:** Hệ thống quản lý tài khoản nội bộ trên PostgreSQL với vai trò `admin`, `teacher`, `student` (không phải chỉ hai tài khoản cố định). Authoring UI hiện dành cho admin; teacher authoring API vẫn có rollout flag và kiểm tra tài nguyên. Tài khoản terminal bên trong bài mô phỏng chỉ là dữ liệu của kịch bản đào tạo, không phải tài khoản hệ thống.
 
 ### 1.2. Công nghệ ứng dụng
 - **Giao diện & Ứng dụng (Frontend):**
   - Framework: Next.js 16.2.11 (App Router, kiến trúc standalone output tối ưu container Docker).
   - Thư viện hiển thị: React 19.2.4, TypeScript 5, Tailwind CSS 4, Motion (micro-animations), Geist Font và Phosphor Icons.
-  - Phong cách thiết kế: Fluent / Windows 11 dark mode, tối ưu cho dashboard nghiệp vụ mật độ thông tin cao.
+  - Phong cách thiết kế: workspace Light Gray qua token; trang chủ/màn hình thiết bị giữ dark và giao diện PMDT/LMI cổ điển.
   - Quản lý trạng thái client: Zustand 5 quản lý store độc lập cho từng simulator và phiên thi.
 - **Cơ sở dữ liệu & Xác thực (Backend):**
   - Database: PostgreSQL 17 self-hosted container trên máy chủ Oracle Cloud VM ARM64.
   - Data Access & Session: Node-pg connection pool server-only, xác thực phiên qua cookie HttpOnly (`cns_session`, `SameSite=Lax`, `Secure` trên production, TTL 12h).
-  - Schema & Migration: Hệ thống migration SQL portable (`database/migrations/0001–0006`), quản lý version và checksum chặt chẽ.
+  - Schema & Migration: Hệ thống migration SQL portable (`database/migrations/`, hiện đến `0014`), quản lý version và checksum chặt chẽ.
 - **Công cụ kiểm thử & Đồ thị tri thức:**
   - Vitest, React Testing Library, Playwright (E2E) và CodeGraph CLI (quản lý đồ thị phụ thuộc mã nguồn).
 
@@ -119,14 +128,14 @@ Mọi hành vi mô phỏng, công thức toán học, giao diện điều khiể
 ### 4.1. Cấu trúc thư mục mã nguồn
 ```text
 cns-simulator/
-├── database/migrations/  # SQL migrations cho PostgreSQL portable (0001–0006)
+├── database/migrations/  # SQL migrations PostgreSQL portable; không sửa bản đã áp dụng
 ├── doc/                  # Sổ tay kỹ thuật, manual gốc của các thiết bị (gitignored)
 ├── public/               # Tài nguyên tĩnh, ảnh catalogue, manuals PDF hướng dẫn
 ├── src/
 │   ├── app/              # Next.js App Router (admin, student, simulator, api, login)
 │   ├── components/       # Giao diện PMDT Selex, QCMS, Terminal, Sơ đồ khối SVG
 │   ├── lib/              # Domain engines (dvor1150a, dvor1150, dme1119a), db, auth
-│   ├── modules/          # Module thiết bị Mopiens (devices/dvor220, devices/dme320, operations)
+│   ├── modules/          # Registry, devices và Mopiens operations/dvor-220, operations/dme-320
 │   └── stores/           # Zustand stores quản lý trạng thái client cho từng simulator
 └── tests/                # Bộ kiểm thử Unit, Component, Integration và E2E
 ```
