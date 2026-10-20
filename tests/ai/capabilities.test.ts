@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import * as capabilitiesModule from "@/lib/ai/scenario-generation/capabilities";
 import * as validationModule from "@/lib/ai/scenario-generation/validation";
+import { buildScenarioPrompt } from "@/lib/ai/scenario-generation/prompt";
 import { SCENARIO_PARAMETERS_MODULES, parseScenarioParameters } from "@/lib/scenario-parameters";
 
 describe("native AI capability boundary", () => {
@@ -67,4 +68,19 @@ it("every advertised native fault passes schema and detached semantic preview", 
       expect(parseScenarioParameters(moduleId, result.definition), `${moduleId}:${template.templateId}`).not.toBeNull();
     }
   }
+});
+
+it("advertises ADS-B parameter scaffolds with actual native profile settings", () => {
+  const ids=capabilitiesModule.getScenarioCapabilities("ads-b").map(t=>t.templateId);
+  expect(ids).toContain("adsb-11-configure-e2e-thresholds");
+  expect(ids).toContain("adsb-08-configure-sac-sic");
+  expect(ids).toContain("adsb-06-configure-network");
+});
+
+it("selects approved ADS-B configuration scaffolds instead of restricting every request to a physical fault",()=>{
+ const input={moduleId:"ads-b" as const,name:"Threshold training",description:"Use adsb-11-configure-e2e-thresholds and set alertPower 181, recover to 170.",difficulty:"intermediate" as const};
+ const messages=buildScenarioPrompt(input,[]);
+ expect(messages[0].content).toContain("configuration exercise");
+ expect(messages[0].content).not.toContain("If no exact supported fault matches");
+ expect(JSON.parse(messages[1].content).approvedTemplates).toContainEqual(expect.objectContaining({templateId:"adsb-11-configure-e2e-thresholds"}));
 });

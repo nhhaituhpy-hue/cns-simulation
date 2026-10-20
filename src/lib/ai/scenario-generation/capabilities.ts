@@ -16,8 +16,8 @@ const templates: Record<ScenarioParametersModuleId, readonly Template[]> = {
   "dme-1119a": DME1119A_BUILT_IN_SCENARIOS,
   "dvor-220": DVOR220_BUILT_IN_SCENARIOS,
   "dme-320": DME320_BUILT_IN_SCENARIOS,
-  // Other ADS-B built-ins are inspections/configuration exercises, not fault stimuli.
-  "ads-b": DEFAULT_SCENARIOS.filter((item) => ["seed-sa-enable-cat21", "seed-ma-restore-gps"].includes(item.id))
+  // Include verified native configuration exercises with persisted sensor profiles.
+  "ads-b": DEFAULT_SCENARIOS.filter((item) => ["seed-sa-enable-cat21", "seed-ma-restore-gps", "adsb-11-configure-e2e-thresholds", "adsb-08-configure-sac-sic", "adsb-06-configure-network"].includes(item.id))
     .map((item) => ({ id: item.id, label: item.title, create: () => structuredClone(item) })),
 };
 export function createTemplateDefinition(moduleId: ScenarioParametersModuleId, templateId: string): ScenarioParametersDefinition {
@@ -44,9 +44,17 @@ export function previewNativeDefinition(moduleId: ScenarioParametersModuleId, de
     case "ads-b": {
       const parsed = parseScenarioParameters(moduleId, definition)!;
       const sensor = parsed.sites.flatMap((site) => [site.sensorA, site.sensorB]).find((item) => item?.id === parsed.targetSensorId)!;
-      const engine = new TerminalEngine({ targetLoginUser: parsed.targetLoginUser, sensorDataProfile: sensor.dataProfile });
+      let engine = new TerminalEngine({ targetLoginUser: parsed.targetLoginUser, sensorDataProfile: sensor.dataProfile, sensorMonitoring: sensor.monitoring });
       for (const action of parsed.expectedActions) {
-        if (!engine.processInput(action.input).accepted) throw new AiScenarioError("INVALID_TEMPLATE", "Native ADS-B action preview failed.");
+        if (engine.getState().exited) {
+          const role = action.menuId === "sa.root" ? "sysadmin" : action.menuId === "ma.root" ? "maintenance" : null;
+          if (!role) throw new AiScenarioError("INVALID_TEMPLATE", "Native ADS-B login transition is invalid.");
+          const persistent=engine.getPersistentState();
+          engine=new TerminalEngine({targetLoginUser:role,sensorDataProfile:sensor.dataProfile,sensorMonitoring:sensor.monitoring});
+          engine.restorePersistentState(persistent);
+        }
+        const result=engine.processInput(action.input);
+        if (!result.accepted || result.recordableAction?.menuId !== action.menuId || result.recordableAction?.kind !== action.kind) throw new AiScenarioError("INVALID_TEMPLATE", "Native ADS-B action preview failed.");
       }
     }
   }

@@ -9,6 +9,7 @@ import { saveDocuments } from "../documents/storage";
 import { DOCUMENT_LIMITS, validateUploads, type DocumentUpload } from "../documents/validation";
 import { createGenerationJob, getGenerationJob, listGenerationJobs, validateGenerationInput, GenerationJobError, GENERATION_STATUSES, isGenerationJobId, type GenerationJob, type GenerationStatus } from "./jobs";
 import { isScenarioParametersModuleId } from "@/lib/scenario-parameters";
+import { readParameterReview } from "./parameter-review";
 
 export function generationJson(value: unknown, status = 200) {
   return NextResponse.json(value, { status, headers: { "Cache-Control": "private, no-store" } });
@@ -24,6 +25,7 @@ export function generationJobDto(job: GenerationJob) {
   return { id: job.id, moduleId: job.moduleId, name: job.name, status: job.status, phase: job.phase,
     errorCode: job.errorCode, errorMessage: job.errorMessage, scenarioId: job.scenarioId, scenarioRowId: job.scenarioRowId,
     createdAt: job.createdAt, updatedAt: job.updatedAt,
+    ...(job.status === "completed" ? { parameterReview: readParameterReview(job.provenance?.parameters) } : {}),
     documents: job.documents.map(({ id, name, mimeType, bytes, sha256 }) => ({ id, name, mimeType, bytes, sha256 })) };
 }
 function apiError(error: unknown) {

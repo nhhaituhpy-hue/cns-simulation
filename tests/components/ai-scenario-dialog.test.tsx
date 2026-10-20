@@ -70,10 +70,11 @@ it.each(["dvor-1150", "dvor-1150a", "dme-1119a", "dvor-220", "dme-320", "ads-b"]
   await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
   const modal = within(screen.getByRole("dialog"));
   const template = modal.getByRole("link", { name: "Tải file mẫu (.docx)" });
-  expect(template).toHaveAttribute("href", "/templates/mau-tai-lieu-tao-kich-ban-ai.docx");
-  expect(template).toHaveAttribute("download", "mau-tai-lieu-tao-kich-ban-ai.docx");
+  expect(template).toHaveAttribute("href", `/templates/ai-scenario-${moduleId}.docx`);
+  expect(template).toHaveAttribute("download", `ai-scenario-${moduleId}.docx`);
   expect(template.previousElementSibling).toContainElement(modal.getByLabelText("Tài liệu đính kèm (không bắt buộc)"));
   expect(modal.getByText(/Tải mẫu, thay nội dung hướng dẫn bằng tình huống của bạn/)).toBeInTheDocument();
+  expect(modal.getByText(/giá trị ban đầu.*đơn vị.*ngưỡng.*khởi động.*thành công.*quyền chỉnh sửa/i)).toBeInTheDocument();
   template.addEventListener("click", (event) => event.preventDefault(), { once: true });
   await user.click(template);
   expect(modal.getByRole("button", { name: "Bắt đầu tạo" })).toBeEnabled();
@@ -370,4 +371,75 @@ it.each(["dvor-1150", "dvor-1150a", "dme-1119a", "dvor-220", "dme-320", "ads-b"]
   const modal = within(screen.getByRole("dialog"));
   expect(modal.getByLabelText("Thiết bị")).toHaveValue(moduleId);
   expect(modal.getByLabelText("Mô tả yêu cầu")).toHaveAttribute("maxlength", "2000");
+});
+
+const persistedReview = () => ({
+  version: 2, configuredFieldCount: 16,
+  initial: [{ fieldId: "config.power", label: "Công suất đã lưu", value: 23, unit: "W", citation: 4 }],
+  recovery: [{ fieldId: "config.power", value: 100, unit: "W" }],
+  verification: { mode: "engine-recovery", initial: [{ id: "fault", passed: true, detail: "Cảnh báo ban đầu" }], recovered: [{ id: "clear", passed: true, detail: "Khôi phục trong engine" }], recoveryVerified: true, notes: ["Giám khảo kiểm tra trước khi xuất bản."] },
+  workerKey: "worker-secret", citations: [{ path: "/private/source" }],
+});
+
+it("reviews persisted settings alongside the completed scenario link and retains no provider internals", async () => {
+  const completed = savedJob({ status: "completed", phase: "completed", scenarioRowId: "saved-source", parameterReview: persistedReview(), provenance: { workerKey: "worker-secret" } });
+  vi.stubGlobal("fetch", vi.fn((url: string) => Promise.resolve(reply(url.includes("/job-saved") ? { job: completed } : { jobs: [completed] }))));
+  const onCompleted = vi.fn();
+  render(<AiScenarioDialog moduleId="dvor-220" onCompleted={onCompleted} />);
+  await waitFor(() => expect(onCompleted).toHaveBeenCalledTimes(1));
+  expect(JSON.stringify(onCompleted.mock.calls[0][0])).not.toMatch(/worker-secret|private|citation|provenance|configuredFieldCount/);
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
+  const modal = within(screen.getByRole("dialog"));
+  const history = modal.getByText("Lịch sử yêu cầu AI");
+  expect(history.closest("details")).not.toHaveAttribute("open");
+  await user.click(history);
+  await user.click(modal.getByRole("button", { name: "Xem tiến độ: Lỗi Carrier đã lưu" }));
+  const panel = within(await modal.findByRole("region", { name: "Cấu hình Scenario Parameters" }));
+  expect(panel.getByText("Công suất đã lưu")).toBeVisible();
+  expect(panel.getByText("23 W")).toBeVisible();
+  expect(modal.getByRole("link", { name: "Mở kịch bản để kiểm tra" })).toBeInTheDocument();
+  expect(panel.getByText("100 W")).not.toBeVisible();
+  await user.click(panel.getByText("Kế hoạch khôi phục và kiểm tra"));
+  expect(panel.getByText("100 W")).toBeVisible();
+  expect(panel.getByText("Khôi phục trong engine")).toBeVisible();
+  expect(modal.queryByText(/worker-secret|private/)).not.toBeInTheDocument();
+});
+
+it.each([undefined, { ...persistedReview(), initial: [{ fieldId: "config.power", value: { secret: true } }] }])("omits parameter review for legacy or malformed summaries without fabricating settings", async (parameterReview) => {
+  const completed = savedJob({ status: "completed", phase: "completed", scenarioRowId: "saved-source", parameterReview });
+  const onCompleted = vi.fn();
+  vi.stubGlobal("fetch", vi.fn((url: string) => Promise.resolve(reply(url.includes("/job-saved") ? { job: completed } : { jobs: [completed] }))));
+  render(<AiScenarioDialog moduleId="dvor-220" onCompleted={onCompleted} />);
+  await waitFor(() => expect(onCompleted).toHaveBeenCalledTimes(1));
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
+  const modal = within(screen.getByRole("dialog"));
+  await user.click(modal.getByText("Lịch sử yêu cầu AI"));
+  await user.click(modal.getByRole("button", { name: "Xem tiến độ: Lỗi Carrier đã lưu" }));
+  expect(modal.getByRole("link", { name: "Mở kịch bản để kiểm tra" })).toBeInTheDocument();
+  expect(modal.queryByRole("region", { name: "Cấu hình Scenario Parameters" })).not.toBeInTheDocument();
+  expect(onCompleted.mock.calls[0][0].parameterReview).toBeUndefined();
+});
+
+it.each([
+  ["INVALID_PARAMETERS", /giá trị.*không hợp lệ.*kiểm tra/i],
+  ["INVALID_PARAMETER_UNIT", /đơn vị.*kiểm tra/i],
+  ["UNGROUNDED_PARAMETER", /nguồn.*giá trị.*bổ sung/i],
+  ["UNHANDLED_PARAMETER", /chưa.*đáp ứng.*tách/i],
+  ["INVALID_RECOVERY", /khôi phục.*điều chỉnh/i],
+  ["UNSUPPORTED_PARAMETERS", /chưa.*hỗ trợ.*thủ công/i],
+  ["REQUEST_TOO_COMPLEX", /quá nhiều.*tách/i],
+] as const)("shows an actionable safe message for %s without exposing diagnostics or a review panel", async (errorCode, message) => {
+  const failed = savedJob({ status: "failed", phase: "failed", errorCode, errorMessage: "/private/source worker-secret", parameterReview: persistedReview() });
+  vi.stubGlobal("fetch", vi.fn((url: string) => Promise.resolve(reply(url.includes("/job-saved") ? { job: failed } : { jobs: [failed] }))));
+  render(<AiScenarioDialog moduleId="dvor-220" />);
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
+  const modal = within(screen.getByRole("dialog"));
+  await user.click(await modal.findByText("Lịch sử yêu cầu AI"));
+  await user.click(modal.getByRole("button", { name: "Xem tiến độ: Lỗi Carrier đã lưu" }));
+  expect(modal.getByRole("alert")).toHaveTextContent(message);
+  expect(modal.queryByText(/private|worker-secret/)).not.toBeInTheDocument();
+  expect(modal.queryByRole("region", { name: "Cấu hình Scenario Parameters" })).not.toBeInTheDocument();
 });

@@ -88,6 +88,15 @@ describe.skipIf(!testUrl)("durable AI queue in isolated PostgreSQL", () => {
     expect((await pool.query("select * from public.simulator_scenario_library_memberships where scenario_parameters_id=$1",[result.scenarioRowId])).rows).toEqual([]);
     expect((await pool.query("select * from public.simulator_review_scenario_assignments where scenario_parameters_id=$1",[result.scenarioRowId])).rows).toEqual([]);
   });
+  it("returns only bounded persisted parameter review to its authenticated owner", async () => {
+    const job=await createGenerationJob(pool,input,{actorId,idempotencyKey:randomUUID()});const claim=(await claimGenerationJob(pool,"parameter-review-worker"))!;
+    const parameters={version:2,initial:[{fieldId:"configuration.transmitters.tx1.nominal.outputPower",label:"TX1 output power",value:12,unit:"W",citation:0}],recovery:[{fieldId:"configuration.transmitters.tx1.nominal.outputPower",value:70,unit:"W",citation:1}],verification:{mode:"engine-recovery",initial:[{id:"fault",passed:true,detail:"Initial fault"}],recovered:[{id:"normal",passed:true,detail:"Recovered"}],recoveryVerified:true,notes:[]},configuredFieldCount:15};
+    await completeGenerationJob(pool,job.id,claim.attemptToken!,{definition:createDefaultDvor1150aScenarioDefinition(),provenance:{...provenance,parameters,privateStorageKey:"/private/path",providerSecret:"must-not-leak"}});
+    const token=randomUUID();await pool.query("insert into public.user_sessions(user_id,token_hash,expires_at) values($1,$2,now()+interval '1 hour')",[actorId,hashSessionToken(token)]);cookieJar.set(sessionCookieName(),token);
+    const response=await pollJob(new Request("http://localhost"),{params:Promise.resolve({jobId:job.id})});expect(response.status).toBe(200);const body=await response.json();
+    expect(body.job.parameterReview).toMatchObject({version:2,initial:[{fieldId:"configuration.transmitters.tx1.nominal.outputPower",value:12,unit:"W"}],verification:{recoveryVerified:true}});
+    expect(JSON.stringify(body)).not.toMatch(/must-not-leak|privateStorageKey|providerSecret|configuredFieldCount|citation/);
+  });
   it("rechecks demoted initiator before writing any source", async () => {
     const job=await createGenerationJob(pool,input,{actorId,idempotencyKey:randomUUID()}); const claim=(await claimGenerationJob(pool,"worker"))!;
     await pool.query("update public.users set role='student' where id=$1",[actorId]);

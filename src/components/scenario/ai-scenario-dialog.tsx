@@ -3,6 +3,8 @@
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Sparkle } from "@phosphor-icons/react/dist/csr/Sparkle";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { ParameterReviewPanel } from "./parameter-review-panel";
+import { readParameterReview, type ParameterReview } from "@/lib/ai/scenario-generation/parameter-review";
 import { getSimulatorModule } from "@/modules/core/registry";
 import { SCENARIO_PARAMETERS_MODULES, type ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 
@@ -19,6 +21,7 @@ export type AiScenarioJob = {
   scenarioRowId?: string | null;
   createdAt: string;
   updatedAt: string;
+  parameterReview?: ParameterReview;
 };
 
 const phaseLabels: Record<string, string> = {
@@ -26,6 +29,13 @@ const phaseLabels: Record<string, string> = {
   validating: "Đang kiểm tra kịch bản", completed: "Hoàn tất · Chưa xuất bản", failed: "Tạo kịch bản thất bại",
 };
 const failureLabels: Record<string, string> = {
+  INVALID_PARAMETERS: "Giá trị tham số không hợp lệ hoặc vượt phạm vi simulator. Kiểm tra trường và giá trị trong mẫu rồi tạo yêu cầu mới.",
+  INVALID_PARAMETER_UNIT: "Đơn vị tham số không khớp simulator. Kiểm tra đơn vị theo mẫu của thiết bị rồi gửi lại.",
+  UNGROUNDED_PARAMETER: "Chưa có nguồn xác nhận trường và giá trị tham số. Bổ sung đoạn tài liệu hoặc yêu cầu có ghi rõ trường, giá trị và đơn vị.",
+  UNHANDLED_PARAMETER: "Một số tham số yêu cầu chưa được đáp ứng. Tách nhỏ yêu cầu hoặc dùng mẫu để ghi rõ từng trường cần thiết.",
+  INVALID_RECOVERY: "Kế hoạch khôi phục chưa đạt kiểm tra trong simulator. Điều chỉnh giá trị ban đầu, giá trị khôi phục hoặc tiêu chí thành công rồi thử lại.",
+  UNSUPPORTED_PARAMETERS: "Simulator chưa hỗ trợ các tham số hoặc tình huống được yêu cầu. Chọn trường được hỗ trợ trong mẫu hoặc tạo thủ công.",
+  REQUEST_TOO_COMPLEX: "Yêu cầu có quá nhiều thiết lập tham số. Tách thành các kịch bản nhỏ hơn rồi gửi lại.",
   UNSUPPORTED_REQUEST: "Tình huống này chưa nằm trong các lỗi simulator hỗ trợ. Hãy chọn lỗi phù hợp hoặc tạo thủ công.",
   INVALID_DOCUMENT: "Tài liệu không có lớp văn bản hoặc vượt giới hạn. PDF scan cần OCR trước khi gửi lại.",
   DOCUMENT_TIMEOUT: "Tài liệu quá phức tạp. Hãy tách các trang liên quan rồi gửi lại.",
@@ -45,9 +55,11 @@ function readJob(value: unknown, moduleId: ScenarioParametersModuleId): AiScenar
   if (item.moduleId !== moduleId || typeof item.id !== "string" || typeof item.name !== "string" ||
     typeof item.status !== "string" || typeof item.phase !== "string" ||
     typeof item.createdAt !== "string" || typeof item.updatedAt !== "string") return null;
-  // Only retain public progress metadata; never store source documents/provider details.
+  const parameterReview = readParameterReview(item.parameterReview);
+  // Only retain public progress metadata and the allowlisted review, never raw provenance.
   return { id: item.id, moduleId, name: item.name, status: item.status, phase: item.phase,
     createdAt: item.createdAt, updatedAt: item.updatedAt,
+    ...(parameterReview ? { parameterReview } : {}),
     errorCode: typeof item.errorCode === "string" ? item.errorCode : null,
     scenarioId: typeof item.scenarioId === "string" ? item.scenarioId : null,
     scenarioRowId: typeof item.scenarioRowId === "string" ? item.scenarioRowId : null };
@@ -266,6 +278,7 @@ export function AiScenarioDialog({ moduleId, onCompleted, actions }: {
               <p role="status" aria-live="polite" className="mt-2 text-[13px] text-[var(--cns-text-secondary)]">{phaseLabel(job)}</p>
               <p className="mt-3 text-[12px] leading-relaxed text-[var(--cns-text-secondary)]">Bạn có thể đóng cửa sổ; tiến độ được lưu trên máy chủ. Kịch bản phải được giám khảo kiểm tra trước khi xuất bản vào thư viện.</p>
               {job.status === "failed" || job.phase === "failed" ? <p role="alert" className="mt-3 rounded-[8px] bg-red-50 p-3 text-[13px] text-red-800">{failureLabels[job.errorCode || ""] || "Không thể hoàn tất yêu cầu. Kiểm tra mô tả và tài liệu (PDF scan cần OCR), rồi tạo một yêu cầu mới."}</p> : null}
+              {job.status === "completed" && job.parameterReview ? <ParameterReviewPanel review={job.parameterReview} /> : null}
               <div className="mt-5 flex flex-wrap gap-2">
                 {job.status === "completed" && resultHref(job) ? <ButtonLink href={resultHref(job)!} variant="primary">Mở kịch bản để kiểm tra</ButtonLink> : null}
                 {isTerminal(job) ? <Button onClick={() => { setSelectedId(null); attemptRef.current = null; setHasAttempt(false); setError(null); }}>Tạo yêu cầu mới</Button> : null}
@@ -291,8 +304,8 @@ export function AiScenarioDialog({ moduleId, onCompleted, actions }: {
               <label className="grid gap-1.5 text-[13px] font-medium">Tài liệu đính kèm (không bắt buộc)
                 <input type="file" name="files" multiple accept=".pdf,.docx,.txt,.md" onChange={(event) => selectFiles(Array.from(event.currentTarget.files ?? []))} disabled={sending || hasAttempt} className={fieldClass} />
               </label>
-              <a href="/templates/mau-tai-lieu-tao-kich-ban-ai.docx" download="mau-tai-lieu-tao-kich-ban-ai.docx" className="w-fit rounded text-[13px] font-medium text-[#0369a1] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-2">Tải file mẫu (.docx)</a>
-              <p className="text-[12px] leading-relaxed text-[var(--cns-text-secondary)]">Tải mẫu, thay nội dung hướng dẫn bằng tình huống của bạn, lưu lại rồi đính kèm. Mẫu có khung điền và ví dụ minh họa, không phải tài liệu kỹ thuật của nhà sản xuất.</p>
+              <a href={`/templates/ai-scenario-${moduleId}.docx`} download={`ai-scenario-${moduleId}.docx`} className="w-fit rounded text-[13px] font-medium text-[#0369a1] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-2">Tải file mẫu (.docx)</a>
+              <p className="text-[12px] leading-relaxed text-[var(--cns-text-secondary)]">Tải mẫu, thay nội dung hướng dẫn bằng tình huống của bạn, lưu lại rồi đính kèm. Ghi rõ giá trị ban đầu, đơn vị, ngưỡng, điều kiện khởi động, tiêu chí thành công và quyền chỉnh sửa; không chỉ mô tả tình huống bằng lời. Mẫu có khung điền và ví dụ minh họa theo thiết bị, không phải tài liệu kỹ thuật của nhà sản xuất.</p>
               {files.length ? <ul aria-label="Tài liệu đã chọn" className="grid gap-1 text-[12px] text-[var(--cns-text-secondary)]">{files.map((file, index) => <li key={`${file.name}-${index}`} className="break-all">{file.name}</li>)}</ul> : null}
               <p className="text-[12px] leading-relaxed text-[var(--cns-text-secondary)]">PDF có văn bản, DOCX, TXT hoặc MD; tối đa 5 tệp, 10 MiB/tệp và 25 MiB tổng. Tài liệu scan cần OCR trước khi tải lên.</p>
               <aside className="rounded-[10px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card-subtle)] p-3 text-[12px] leading-relaxed text-[var(--cns-text-secondary)]">

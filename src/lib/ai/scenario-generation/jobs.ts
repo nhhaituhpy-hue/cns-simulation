@@ -114,6 +114,13 @@ export async function heartbeatGenerationJob(pool: Pool, id: string, attemptToke
   return result.rows[0] ? mapJob(result.rows[0]) : null;
 }
 const publicFailures: Record<string, string> = {
+  INVALID_PARAMETERS: "Cấu hình tham số không hợp lệ hoặc chưa được simulator hỗ trợ.",
+  INVALID_PARAMETER_UNIT: "Đơn vị tham số không khớp với thiết bị. Hãy dùng đơn vị trong file mẫu.",
+  UNGROUNDED_PARAMETER: "Chưa có căn cứ rõ cho giá trị tham số. Ghi đúng tên trường, giá trị và đơn vị.",
+  UNHANDLED_PARAMETER: "Một tham số đã yêu cầu chưa được áp dụng. Hãy kiểm tra các dòng SET và RECOVER.",
+  INVALID_RECOVERY: "Chưa kiểm chứng được đường khôi phục với các tham số đã chọn.",
+  UNSUPPORTED_PARAMETERS: "Yêu cầu cấu hình vượt khả năng simulator hiện tại. Không tạo kịch bản thay thế.",
+  REQUEST_TOO_COMPLEX: "Yêu cầu chứa quá nhiều tham số. Hãy tách nhỏ tình huống.",
   GENERATION_FAILED: "Không thể tạo kịch bản. Vui lòng thử lại.", PROVIDER_ERROR: "Dịch vụ AI chưa thể xử lý yêu cầu.", PROVIDER_UNAVAILABLE: "Dịch vụ AI tạm thời không khả dụng.",
   INVALID_DEFINITION: "Kịch bản AI không đạt yêu cầu kiểm tra.", EXTRACTION_FAILED: "Không thể đọc nội dung tài liệu.", DOCUMENT_ERROR: "Tài liệu không thể được xử lý.",
   INVALID_DOCUMENT: "Tài liệu không có văn bản đọc được hoặc vượt giới hạn; PDF scan cần OCR.",
