@@ -235,17 +235,6 @@ export function AiScenarioDialog({ moduleId, onCompleted, actions }: {
       </Button>
       {actions}
       </div>
-      {jobs.length ? (
-        <div className="mt-3 rounded-[10px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] px-4 py-3">
-          <p className="text-[12px] font-medium text-[var(--cns-text-secondary)]">Yêu cầu AI gần đây</p>
-          <ul className="mt-2 grid gap-2">
-            {jobs.map((item) => <li key={item.id} className="flex flex-wrap items-center justify-between gap-2 text-[12px]">
-              <span className="min-w-0 break-words text-[var(--cns-text-primary)]">{item.name} <span className="text-[var(--cns-text-secondary)]">· {phaseLabel(item)}</span></span>
-              <Button size="sm" aria-label={`Xem tiến độ: ${item.name}`} onClick={() => { setSelectedId(item.id); setOpen(true); }}>Xem tiến độ</Button>
-            </li>)}
-          </ul>
-        </div>
-      ) : null}
       {!open && listError ? <p role="status" className="mt-2 text-[12px] text-[var(--cns-text-secondary)]">{listError} <button className="underline" onClick={() => setRefreshToken((value) => value + 1)}>Tải lại yêu cầu AI</button></p> : null}
       <dialog ref={dialogRef} aria-labelledby={titleId} aria-describedby={descriptionId}
           onCancel={(event) => { event.preventDefault(); setOpen(false); }}
@@ -258,6 +247,17 @@ export function AiScenarioDialog({ moduleId, onCompleted, actions }: {
                 <p id={descriptionId} className="mt-1 text-[13px] text-[var(--cns-text-secondary)]">Mô tả tình huống và thêm tài liệu tham khảo nếu có.</p></div>
               <Button size="sm" aria-label="Đóng" onClick={() => setOpen(false)}>Đóng</Button>
             </header>
+            {open && jobs.length ? (
+              <details className="mt-4 rounded-[10px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] px-4 py-3">
+                <summary className="cursor-pointer text-[12px] font-medium text-[var(--cns-text-secondary)]">Lịch sử yêu cầu AI</summary>
+                <ul className="mt-2 grid gap-2">
+                  {jobs.map((item) => <li key={item.id} className="flex flex-wrap items-center justify-between gap-2 text-[12px]">
+                    <span className="min-w-0 break-words text-[var(--cns-text-primary)]">{item.name} <span className="text-[var(--cns-text-secondary)]">· {phaseLabel(item)}</span></span>
+                    <Button size="sm" aria-label={`Xem tiến độ: ${item.name}`} onClick={() => { setSelectedId(item.id); setOpen(true); }}>Xem tiến độ</Button>
+                  </li>)}
+                </ul>
+              </details>
+            ) : null}
             {error || fileError ? <p role="alert" className="mt-4 rounded-[8px] bg-red-50 p-3 text-[13px] text-red-800">{fileError ?? error}</p> : null}
             {listError ? <p role="status" className="mt-4 text-[12px] text-[var(--cns-text-secondary)]">{listError}</p> : null}
             {paused ? <div className="mt-4 text-[12px]"><p>Đã tạm dừng cập nhật tự động. Yêu cầu vẫn tiếp tục trên máy chủ.</p><Button size="sm" onClick={() => setRefreshToken((value) => value + 1)}>Tiếp tục cập nhật</Button></div> : null}
@@ -291,6 +291,8 @@ export function AiScenarioDialog({ moduleId, onCompleted, actions }: {
               <label className="grid gap-1.5 text-[13px] font-medium">Tài liệu đính kèm (không bắt buộc)
                 <input type="file" name="files" multiple accept=".pdf,.docx,.txt,.md" onChange={(event) => selectFiles(Array.from(event.currentTarget.files ?? []))} disabled={sending || hasAttempt} className={fieldClass} />
               </label>
+              <a href="/templates/mau-tai-lieu-tao-kich-ban-ai.docx" download="mau-tai-lieu-tao-kich-ban-ai.docx" className="w-fit rounded text-[13px] font-medium text-[#0369a1] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-2">Tải file mẫu (.docx)</a>
+              <p className="text-[12px] leading-relaxed text-[var(--cns-text-secondary)]">Tải mẫu, thay nội dung hướng dẫn bằng tình huống của bạn, lưu lại rồi đính kèm. Mẫu có khung điền và ví dụ minh họa, không phải tài liệu kỹ thuật của nhà sản xuất.</p>
               {files.length ? <ul aria-label="Tài liệu đã chọn" className="grid gap-1 text-[12px] text-[var(--cns-text-secondary)]">{files.map((file, index) => <li key={`${file.name}-${index}`} className="break-all">{file.name}</li>)}</ul> : null}
               <p className="text-[12px] leading-relaxed text-[var(--cns-text-secondary)]">PDF có văn bản, DOCX, TXT hoặc MD; tối đa 5 tệp, 10 MiB/tệp và 25 MiB tổng. Tài liệu scan cần OCR trước khi tải lên.</p>
               <aside className="rounded-[10px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card-subtle)] p-3 text-[12px] leading-relaxed text-[var(--cns-text-secondary)]">

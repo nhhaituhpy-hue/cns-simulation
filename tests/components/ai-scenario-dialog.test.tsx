@@ -64,6 +64,23 @@ describe("AI scenario dialog", () => {
   });
 });
 
+it.each(["dvor-1150", "dvor-1150a", "dme-1119a", "dvor-220", "dme-320", "ads-b"] as const)("offers an editable Word template on %s without submitting a job", async (moduleId) => {
+  const user = userEvent.setup();
+  render(<AiScenarioDialog moduleId={moduleId} />);
+  await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
+  const modal = within(screen.getByRole("dialog"));
+  const template = modal.getByRole("link", { name: "Tải file mẫu (.docx)" });
+  expect(template).toHaveAttribute("href", "/templates/mau-tai-lieu-tao-kich-ban-ai.docx");
+  expect(template).toHaveAttribute("download", "mau-tai-lieu-tao-kich-ban-ai.docx");
+  expect(template.previousElementSibling).toContainElement(modal.getByLabelText("Tài liệu đính kèm (không bắt buộc)"));
+  expect(modal.getByText(/Tải mẫu, thay nội dung hướng dẫn bằng tình huống của bạn/)).toBeInTheDocument();
+  template.addEventListener("click", (event) => event.preventDefault(), { once: true });
+  await user.click(template);
+  expect(modal.getByRole("button", { name: "Bắt đầu tạo" })).toBeEnabled();
+  expect(screen.getByRole("dialog")).toBeInTheDocument();
+  expect(vi.mocked(fetch).mock.calls.every(([, init]) => !init?.method || init.method === "GET")).toBe(true);
+});
+
 it("retries an ambiguous network failure with the same multipart payload and UUID without duplicate pending submits", async () => {
   const user = userEvent.setup();
   const requests: RequestInit[] = [];
@@ -131,7 +148,30 @@ const savedJob = (overrides: Record<string, unknown> = {}) => ({
   createdAt: "2026-10-20T00:00:00Z", updatedAt: "2026-10-20T00:00:00Z", ...overrides,
 });
 
-it("restores durable jobs outside the modal, polls real phases only while open, and refreshes completed source once", async () => {
+it("keeps completed-job notices off the page while retaining history inside the AI modal", async () => {
+  const user = userEvent.setup();
+  const onCompleted = vi.fn();
+  const fetcher = vi.fn((_url: string, init?: RequestInit) => {
+    if (init?.method && init.method !== "GET") throw new Error("History access must not mutate saved data");
+    return Promise.resolve(reply(_url.includes("/job-saved") ? { job: savedJob({ status: "completed", phase: "completed", scenarioRowId: "saved-source" }) } : { jobs: [savedJob({ status: "completed", phase: "completed", scenarioRowId: "saved-source" })] }));
+  });
+  vi.stubGlobal("fetch", fetcher);
+  render(<AiScenarioDialog moduleId="dvor-220" onCompleted={onCompleted} />);
+  await waitFor(() => expect(onCompleted).toHaveBeenCalledTimes(1));
+  expect(screen.queryByText("Yêu cầu AI gần đây")).not.toBeInTheDocument();
+  expect(screen.queryByText("Hoàn tất · Chưa xuất bản")).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
+  const modal = within(screen.getByRole("dialog"));
+  await user.click(modal.getByText("Lịch sử yêu cầu AI"));
+  await user.click(modal.getByRole("button", { name: "Xem tiến độ: Lỗi Carrier đã lưu" }));
+  expect(modal.getByRole("link", { name: "Mở kịch bản để kiểm tra" })).toHaveAttribute("href", "/simulator/software/dvor-220?scenarioId=saved-source");
+  await user.click(screen.getByRole("button", { name: "Đóng" }));
+  expect(screen.getByText("Hoàn tất · Chưa xuất bản")).not.toBeVisible();
+  expect(screen.queryByText("Lịch sử yêu cầu AI")).not.toBeInTheDocument();
+  expect(fetcher.mock.calls.every(([, init]) => !init?.method || init.method === "GET")).toBe(true);
+});
+
+it("restores durable history inside the modal, polls real phases only while open, and refreshes completed source once", async () => {
   vi.useFakeTimers();
   let phase = "extracting";
   const fetcher = vi.fn((url: string) => Promise.resolve(reply(url.includes("/job-saved")
@@ -142,10 +182,12 @@ it("restores durable jobs outside the modal, polls real phases only while open, 
   const view = render(<AiScenarioDialog moduleId="dvor-220" onCompleted={onCompleted} />);
   await act(async () => {});
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Xem tiến độ: Lỗi Carrier đã lưu" })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Xem tiến độ: Lỗi Carrier đã lưu" })).not.toBeInTheDocument();
   const initial = fetcher.mock.calls.length;
   await act(async () => { await vi.advanceTimersByTimeAsync(6000); });
   expect(fetcher.mock.calls).toHaveLength(initial);
+  fireEvent.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
+  fireEvent.click(screen.getByText("Lịch sử yêu cầu AI"));
   fireEvent.click(screen.getByRole("button", { name: "Xem tiến độ: Lỗi Carrier đã lưu" }));
   await act(async () => {});
   expect(within(screen.getByRole("dialog")).getByText("Đang đọc tài liệu")).toBeInTheDocument();
@@ -159,6 +201,8 @@ it("restores durable jobs outside the modal, polls real phases only while open, 
   await act(async () => { await vi.advanceTimersByTimeAsync(9000); });
   expect(fetcher.mock.calls).toHaveLength(closed);
   phase = "validating";
+  fireEvent.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
+  fireEvent.click(screen.getByText("Lịch sử yêu cầu AI"));
   fireEvent.click(screen.getByRole("button", { name: "Xem tiến độ: Lỗi Carrier đã lưu" }));
   await act(async () => {});
   expect(within(screen.getByRole("dialog")).getByText("Đang kiểm tra kịch bản")).toBeInTheDocument();
@@ -184,7 +228,7 @@ it("refreshes generic source and canonical library after a persisted job complet
   vi.stubGlobal("fetch", fetcher);
   const user = userEvent.setup();
   render(<ScenarioManagementWorkspace moduleId="dvor-220" />);
-  await screen.findByRole("button", { name: "Xem tiến độ: Lỗi Carrier đã lưu" });
+  await waitFor(() => expect(fetcher.mock.calls.some(([url]) => url.startsWith("/api/ai/"))).toBe(true));
   complete = true;
   await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
   await user.click(screen.getByRole("button", { name: "Đóng" }));
@@ -206,13 +250,15 @@ it("offers AI alongside ADS-B manual actions and refreshes legacy and canonical 
     expect(screen.getByRole("link", { name: "Tạo kịch bản ADS-B" })).toHaveAttribute("href", "/authoring/ads-b/create");
     const trigger = screen.getByRole("button", { name: "Tạo kịch bản bằng AI" });
     expect(trigger.parentElement).toContainElement(screen.getByRole("link", { name: "Tạo kịch bản ADS-B" }));
-    await screen.findByRole("button", { name: "Xem tiến độ: Lỗi Carrier đã lưu" });
+    await waitFor(() => expect(fetcher.mock.calls.some(([url]) => url.startsWith("/api/ai/"))).toBe(true));
     const initialCanonicalReads = fetcher.mock.calls.filter(([url]) => url === "/api/scenario-parameters").length;
     complete = true;
     await user.click(trigger);
     await waitFor(() => expect(hydrate).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(fetcher.mock.calls.filter(([url]) => url === "/api/scenario-parameters").length).toBeGreaterThan(initialCanonicalReads));
     await user.click(screen.getByRole("button", { name: "Đóng" }));
+    await user.click(trigger);
+    await user.click(screen.getByText("Lịch sử yêu cầu AI"));
     await user.click(screen.getByRole("button", { name: "Xem tiến độ: Lỗi Carrier đã lưu" }));
     expect(await within(screen.getByRole("dialog")).findByRole("link", { name: "Mở kịch bản để kiểm tra" })).toHaveAttribute("href", "/authoring/ads-b/edit?id=adsb-generated");
   } finally {
@@ -308,6 +354,7 @@ it("keeps restored progress visible when a poll fails instead of fabricating com
   await act(async () => {});
   fireEvent.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
   await act(async () => {});
+  fireEvent.click(screen.getByText("Lịch sử yêu cầu AI"));
   offline = true;
   await act(async () => { await vi.advanceTimersByTimeAsync(3000); });
   const modal = within(screen.getByRole("dialog"));
