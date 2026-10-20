@@ -4,13 +4,39 @@
 
 ---
 
-## Nhật ký phiên 20/10/2026 — gia cố kỳ thi PostgreSQL (chưa deploy)
+## Tạo kịch bản bằng AI (native)
+
+- Ở trang **Kịch bản** của một trong sáu thiết bị, chọn **Tạo kịch bản bằng AI**, nhập tên/mô tả, tùy chọn độ khó và tài liệu. Import JSON và tạo thủ công vẫn giữ nguyên.
+- Backend lưu job PostgreSQL; worker độc lập gọi **CLIProxy VN / gpt-5.6-luna**, kiểm tra lựa chọn với schema/engine của thiết bị rồi lưu một nguồn kịch bản mới. Có thể đóng modal/tải lại trang để xem tiếp yêu cầu gần đây.
+- Bản đầu là **AI chọn tình huống từ thư viện lỗi native đã kiểm chứng**, không sinh công thức RF, wiring, menu hay fault mới. Tên/mô tả do giám khảo nhập; cấu hình, điều khiển và đáp án kỹ thuật giữ theo tình huống native phù hợp. Nếu không có lỗi tương ứng, hệ thống báo không hỗ trợ. Độ khó là nhãn phân loại, không tự thay đổi engine.
+- Kịch bản hoàn chỉnh **chưa được xuất bản** vào kho Ôn tập/Kỳ thi. Giám khảo mở simulator/editor, kiểm tra rồi dùng điều khiển phân thư viện hiện hành. Nguồn ADS-B được lưu đồng thời vào canonical và legacy để xuất hiện đúng màn hình; không cập nhật bài thi/snapshot hiện có.
+- Bản nháp ADS-B và đáp án không được trả qua API legacy cho học viên: chỉ snapshot **Ôn tập** đã xuất bản được đọc. Trình soạn thảo lưu canonical + legacy trong một transaction, yêu cầu revision hiện hành và không sửa snapshot đã phát hành; thay đổi chỉ tới học viên sau khi công bố lại.
+- DOCX kiểm tra local/central ZIP headers, payload không chồng lấn, CRC và output thật trong lúc inflate. Trước khi dựng cây XML: giới hạn 20.000 node/part, tổng 50.000 node, sâu 64, tổng 120.000 ký tự text đã giải mã và 512.000 ký tự thuộc tính; tài liệu quá phức tạp phải tách nhỏ.
+- Đọc tài liệu chạy trong tiến trình con không có khóa AI/DB: heap 192 MiB, watchdog RSS 256 MiB trên Linux, timeout 30 giây/tệp và hỗ trợ hủy. Worker dừng khi shutdown trong lúc claim và chỉ có một heartbeat đang chạy.
+- Bộ nhớ/cache kịch bản gắn với tài khoản và scope; đổi tài khoản/đăng xuất xóa dữ liệu cũ, chặn response đến muộn và không render bản nháp admin trong phiên học viên. Nếu đăng xuất gặp lỗi mạng, lớp bảo vệ vẫn giữ dữ liệu riêng tư đã xóa và hiển thị liên kết tải lại trang đăng nhập để xác minh phiên từ server, không để trắng trang.
+- Gate phát hành: Node 24, lint không warning, typecheck, full suite với PostgreSQL cô lập (không bỏ qua integration tests), Next production build, worker bundle và kiểm thử trình duyệt có đăng nhập. Review phải khớp đúng staged tree trước commit.
+- Tài liệu: PDF có lớp chữ (tối đa 200 trang), DOCX không có macro/liên kết ngoài, TXT/MD UTF-8; tối đa 5 tệp, 10 MiB/tệp, tổng 25 MiB. PDF scan cần OCR trước. Mỗi tài liệu tối đa 120.000 ký tự trích xuất; chỉ cửa sổ trích đoạn tối đa 40.000 ký tự được gửi sang AI, không phải cam kết đã đọc toàn bộ manual. Nên tải trang/đoạn liên quan.
+- Tài liệu lưu riêng tư dưới `CNS_AI_STORAGE_DIR`, không có URL public. Trích đoạn được gửi tới gateway AI đã cấu hình; không gửi dữ liệu bài làm học viên ở tính năng này. Provenance lưu model/template/source hash/citation; trích dẫn yêu cầu của giám khảo được phân biệt với tài liệu nhà sản xuất. Giữ tài liệu gốc cho đến khi có chính sách retention được duyệt.
+
+### Vận hành web và worker AI
+
+```text
+npm run ai:worker:build
+CNS_AI_WORKER_ENABLED=true npm run ai:worker:start
+```
+
+- Web cần `CNS_AI_ENABLED=true`, `CNS_PUBLIC_ORIGIN=https://labs.cnsvn.com` và storage; **không cần API key AI**. Worker cần DATABASE_URL, `CNS_AI_BASE_URL=https://cliproxy-vn.hainh.tech/v1`, CNS_AI_MODEL và CNS_AI_API_KEY riêng qua secret store, cùng đường dẫn storage.
+- Worker Docker target `ai-worker`, một replica, mặc định xử lý tuần tự. Docker target cuối `web` giữ nguyên Next standalone; worker không có domain/port public và không chạy qua n8n.
+- Migration mới `0015_ai_scenario_generation.sql`; không sửa migration đã apply. Lease 10 phút, heartbeat, tối đa hai lần claim khi crash; hoàn tất có attempt-token fencing/idempotency. Provider call có thể lặp sau crash, không phải exactly-once billing. Failures thông thường kết thúc rõ ràng; không retry API vô hạn.
+- Bộ test có PostgreSQL thật và kiểm thử provider bằng doubles trong CI. Smoke riêng đã chạy **artifact worker + CLIProxy thật + database cô lập**, một source được tạo, parser chấp nhận, không có library membership. Browser QA production build cô lập đã upload thật, đóng/tải lại/mở tiến độ, nhận completed và giữ focus; anonymous/student bị chặn. Không dùng mock này làm bằng chứng phiên đăng nhập production.
+
+## Nhật ký phiên 20/10/2026 — gia cố kỳ thi PostgreSQL
 
 - Tái hiện trong PostgreSQL 17 cô lập: các RPC lưu thí sinh/giám khảo/điểm gọi `public.current_app_role()` chưa tồn tại; bổ sung migration **0014** chỉ thêm resolver, không sửa 13 migration đã áp dụng hoặc dữ liệu bài thi.
 - Resolver lấy role từ user đang hoạt động qua actor UUID transaction-local, mặc định từ chối khi không có actor hợp lệ. Helper server-only lấy actor từ phiên xác thực, dùng cùng client/transaction cho RPC và trigger; không nhận role/admin từ trình duyệt và không lưu role vào session connection.
 - Sửa tham số JSONB của bộ đề, phân môn và giám khảo: serialize JSON rõ ràng thay vì để node-pg chuyển JavaScript array sang PostgreSQL array.
 - Bổ sung kiểm thử SQL thật cho luồng kỳ thi legacy, bảo toàn evidence/điểm 0/retry/hồ sơ đã lưu trữ, từ chối tài khoản không đủ quyền và cách ly actor giữa commit/rollback/kết nối đồng thời. Suite code-based hiện có cũng chạy với database kiểm thử thật, không dùng DB production.
-- Đồng bộ `.node-version` về Node 24 theo CI và Dockerfile. Chi tiết release/migration an toàn tại `database/README.md`; **chưa push, chưa chạy migration hoặc deploy production**.
+- Đồng bộ `.node-version` về Node 24 theo CI và Dockerfile. Chi tiết release/migration an toàn tại `database/README.md`; **đã phát hành bản `3b590ad` với migration 0014 và production health được xác minh**.
 - Kiểm tra trên Node 24.22.0: lint, typecheck và production build đạt; **920 test passed, 0 skipped**, gồm 12 test integration legacy mới và 25 test integration code-based chạy trên PostgreSQL 17 cô lập. Không coi đây là xác minh browser production hoặc bằng chứng mọi rủi ro vận hành đã hết.
 
 ## Nhật ký phiên 19/10/2026 — rà soát Light Gray Mode
@@ -40,7 +66,7 @@
 - **Cơ sở dữ liệu & Xác thực (Backend):**
   - Database: PostgreSQL 17 self-hosted container trên máy chủ Oracle Cloud VM ARM64.
   - Data Access & Session: Node-pg connection pool server-only, xác thực phiên qua cookie HttpOnly (`cns_session`, `SameSite=Lax`, `Secure` trên production, TTL 12h).
-  - Schema & Migration: Hệ thống migration SQL portable (`database/migrations/`, hiện đến `0014`), quản lý version và checksum chặt chẽ.
+  - Schema & Migration: Hệ thống migration SQL portable (`database/migrations/`, hiện đến `0015`), quản lý version và checksum chặt chẽ.
 - **Công cụ kiểm thử & Đồ thị tri thức:**
   - Vitest, React Testing Library, Playwright (E2E) và CodeGraph CLI (quản lý đồ thị phụ thuộc mã nguồn).
 

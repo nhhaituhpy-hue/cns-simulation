@@ -17,6 +17,8 @@ vi.mock("@/app/login/actions", () => ({
 }));
 
 import { AuthPage } from "@/components/auth/auth-page";
+import { DEFAULT_SCENARIOS, useScenarioStore } from "@/stores/scenario-store";
+import { SCENARIO_STORAGE_KEY, serializeScenarioStorage } from "@/lib/storage";
 
 async function submitLogin() {
   const user = userEvent.setup();
@@ -35,6 +37,22 @@ describe("AuthPage redirect", () => {
       role: "admin",
       mustChangePassword: false,
     });
+  });
+
+  it("clears the previous identity before navigating after a student login", async () => {
+    useScenarioStore.getState().bindSession("previous-admin", "source");
+    const draft = { ...DEFAULT_SCENARIOS[0], id: "previous-private-draft" };
+    useScenarioStore.setState({ scenarios: [draft], isHydrated: true });
+    window.localStorage.setItem(SCENARIO_STORAGE_KEY, serializeScenarioStorage([draft]));
+    const atNavigation: string[][] = [];
+    mocks.replace.mockImplementationOnce(() => { atNavigation.push(useScenarioStore.getState().scenarios.map(s => s.id)); });
+    mocks.loginAction.mockResolvedValueOnce({ ok: true, role: "student", mustChangePassword: false });
+    render(<AuthPage />);
+    await submitLogin();
+    await waitFor(() => expect(mocks.replace).toHaveBeenCalled());
+    expect(atNavigation).toEqual([[]]);
+    expect(useScenarioStore.getState().isHydrated).toBe(false);
+    expect(window.localStorage.getItem(SCENARIO_STORAGE_KEY)).toBeNull();
   });
 
   it("redirects a normal login to the home page", async () => {

@@ -68,3 +68,6 @@ yarn-error.log*
 # Wrangler & local database mocks
 .wrangler/
 .dev-db.json
+
+# Compiled durable AI worker artifact
+/dist-ai-worker/

@@ -54,3 +54,12 @@ npm run test:run -- tests/integration --maxWorkers=2
 ```
 
 SQL/schema/transactions are real; profile/Next.js cache/cookie APIs are mocked. These tests do not replace authenticated browser QA. Legacy regressions cover examiner/candidate JSONB payloads, roster-to-submission-to-grading, zero score and frozen evidence, fail-closed roles, archived protections and actor isolation across commit/rollback/concurrent connections.
+
+
+## Native AI generation queue (0015)
+
+`ai_scenario_generation_jobs` holds private admin-owned requests, document manifests and bounded provenance. Source insertion and terminal job completion share one transaction; library memberships are never inserted by the worker. Claims use `FOR UPDATE SKIP LOCKED`, a lease and attempt token; stale completions are refused. Disabled/demoted/must-change-password actors are rejected before claim and rechecked on heartbeat/completion.
+
+Web and worker must share the same private document directory and non-root UID 1001. Keep the worker credential separate from web environment. Set `CNS_PUBLIC_ORIGIN` explicitly behind Traefik; don't authorize browser origins from untrusted forwarded headers. Pause new creates using CNS_AI_ENABLED while leaving GET/status available. Worker enabled flag controls claiming separately.
+
+A malformed/unsupported AI request produces a failed job, never an invented fallback source. The next claim recovers an expired worker up to the hard two-attempt limit. Preserve job/source IDs and original evidence for auditing; do not purge completed-job files or alter published exam snapshots as cleanup.

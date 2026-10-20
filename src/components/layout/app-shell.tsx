@@ -23,6 +23,8 @@ import { motion } from "motion/react";
 import { useState, type MouseEvent, type ReactNode } from "react";
 import { logoutAction } from "@/app/login/actions";
 import { ChangeOwnPasswordDialog } from "@/components/auth/change-own-password-dialog";
+import { ScenarioSessionBoundary } from "@/components/auth/scenario-session-boundary";
+import { useScenarioStore } from "@/stores/scenario-store";
 import type { AuthProfile } from "@/lib/auth/profile";
 import { SIMULATOR_MODULES, TRAINING_MODULES } from "@/modules/core/registry";
 
@@ -400,6 +402,14 @@ function PageTransition({ children }: { children: ReactNode }) {
 }
 
 export function AppShell({ children, currentUser }: AppShellProps) {
+  return (
+    <ScenarioSessionBoundary currentUser={currentUser}>
+      <AppShellContent currentUser={currentUser}>{children}</AppShellContent>
+    </ScenarioSessionBoundary>
+  );
+}
+
+function AppShellContent({ children, currentUser }: AppShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileNavigationOpen, setMobileNavigationOpen] = useState(false);
@@ -421,6 +431,7 @@ export function AppShell({ children, currentUser }: AppShellProps) {
 
   async function signOut() {
     setSigningOut(true);
+    useScenarioStore.getState().bindSession(null, null);
     try {
       await logoutAction();
     } catch (error) {

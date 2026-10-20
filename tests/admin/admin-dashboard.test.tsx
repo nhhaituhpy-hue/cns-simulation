@@ -1,6 +1,6 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AdminDashboard } from "@/components/admin/admin-dashboard";
 import type { Scenario } from "@/lib/types";
@@ -36,6 +36,7 @@ function scenarioFixture(overrides: Partial<Scenario> = {}): Scenario {
 }
 
 beforeEach(() => {
+  vi.stubGlobal("fetch", vi.fn((url: string) => Promise.resolve(new Response(JSON.stringify(url.startsWith("/api/ai/") ? { jobs: [] } : [])))));
   useScenarioStore.setState({
     scenarios: [scenarioFixture()],
     isHydrated: true,
@@ -45,6 +46,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  vi.unstubAllGlobals();
   useScenarioStore.setState({
     scenarios: [],
     isHydrated: false,
@@ -53,8 +55,8 @@ afterEach(() => {
 });
 
 describe("AdminDashboard", () => {
-  it("keeps ADS-B scenario actions in the authoring namespace", () => {
-    render(<AdminDashboard activeModule="ads-b" />);
+  it("keeps ADS-B scenario actions in the authoring namespace", async () => {
+    await act(async () => { render(<AdminDashboard activeModule="ads-b" />); });
 
     expect(
       screen.getByRole("link", { name: "Tạo kịch bản ADS-B" }),
@@ -67,7 +69,7 @@ describe("AdminDashboard", () => {
     );
   });
 
-  it("sorts newest scenarios first and shows matching ordinal numbers", () => {
+  it("sorts newest scenarios first and shows matching ordinal numbers", async () => {
     useScenarioStore.setState({
       scenarios: [
         scenarioFixture({
@@ -85,7 +87,7 @@ describe("AdminDashboard", () => {
       isHydrated: true,
     });
 
-    render(<AdminDashboard activeModule="ads-b" />);
+    await act(async () => { render(<AdminDashboard activeModule="ads-b" />); });
 
     const markers = screen.getAllByLabelText(/Kịch bản số/);
     expect(markers[0]).toHaveTextContent("01");

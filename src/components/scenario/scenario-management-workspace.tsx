@@ -21,6 +21,7 @@ import {
   type ScenarioParametersModuleId,
 } from "@/lib/scenario-parameters";
 import type { StoredScenarioParameters } from "@/lib/scenario-parameters-storage";
+import { AiScenarioDialog } from "@/components/scenario/ai-scenario-dialog";
 import { ScenarioLibraryControls } from "@/components/scenario/scenario-library-controls";
 import {
   Button,
@@ -363,6 +364,12 @@ export function ScenarioManagementWorkspace({
         </div>
       ) : null}
 
+      <AiScenarioDialog key={moduleId} moduleId={moduleId} onCompleted={() => loadScenarios()}
+        actions={<Button variant="primary" disabled={isLoading || busyModuleId !== null} onClick={() => importInputRefs.current[moduleId]?.click()} className="!bg-[#ea580c] hover:!bg-[#c2410c]">
+          <Plus aria-hidden size={16} weight="bold" />
+          <span>{busyModuleId === moduleId ? "Đang xử lý…" : "Thêm"}</span>
+        </Button>}
+      />
       <ScenarioLibraryControls moduleId={moduleId} scenarios={scenarios} />
 
       <div className="mt-6 overflow-hidden rounded-[12px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] shadow-sm">
@@ -399,11 +406,9 @@ export function ScenarioManagementWorkspace({
 
                   scenarios={moduleScenarios}
                   busy={busyModuleId !== null}
-                  busyModuleId={busyModuleId}
                   importInputRef={(node) => {
                     importInputRefs.current[moduleId] = node;
                   }}
-                  onAdd={() => importInputRefs.current[moduleId]?.click()}
                   onImport={(event) => void importScenario(moduleId, event)}
                   expandedScenarioIds={expandedScenarioIds}
                   onToggle={toggleScenario}
@@ -479,9 +484,7 @@ function DeviceGroup({
   moduleId,
   scenarios,
   busy,
-  busyModuleId,
   importInputRef,
-  onAdd,
   onImport,
   expandedScenarioIds,
   onToggle,
@@ -497,9 +500,7 @@ function DeviceGroup({
   moduleId: ScenarioParametersModuleId;
   scenarios: StoredScenarioParameters[];
   busy: boolean;
-  busyModuleId: ScenarioParametersModuleId | null;
   importInputRef: (node: HTMLInputElement | null) => void;
-  onAdd: () => void;
   onImport: (event: ChangeEvent<HTMLInputElement>) => void;
   expandedScenarioIds: string[];
   onToggle: (scenarioId: string) => void;
@@ -540,16 +541,6 @@ function DeviceGroup({
 
             </div>
             <div>
-              <Button
-                variant="primary"
-                size="md"
-                disabled={busy}
-                onClick={onAdd}
-                className="!bg-[#ea580c] hover:!bg-[#c2410c]"
-              >
-                <Plus aria-hidden size={16} weight="bold" />
-                <span>{busyModuleId === moduleId ? "Đang xử lý…" : "Thêm"}</span>
-              </Button>
               <input
                 ref={importInputRef}
                 hidden

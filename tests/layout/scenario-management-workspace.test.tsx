@@ -25,8 +25,7 @@ describe("ScenarioManagementWorkspace", () => {
   it("shows only the selected device scenarios and restores navigation to the catalog", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        new Response(
+      vi.fn((url: string) => Promise.resolve(url.startsWith("/api/ai/") ? new Response(JSON.stringify({ jobs: [] })) : new Response(
           JSON.stringify([
             scenario({}),
             scenario({
@@ -37,8 +36,7 @@ describe("ScenarioManagementWorkspace", () => {
             }),
           ]),
           { status: 200 },
-        ),
-      ),
+        ))),
     );
 
     render(<ScenarioManagementWorkspace moduleId="dvor-220" />);

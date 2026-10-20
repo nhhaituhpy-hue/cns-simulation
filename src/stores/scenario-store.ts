@@ -23,19 +23,24 @@ export type UpdateScenarioInput = Partial<
   Omit<Scenario, "id" | "createdAt" | "updatedAt">
 >;
 
+export type ScenarioAccessScope = "source" | "scoped-source" | "practice";
+
 export interface ScenarioStoreState {
+  sessionIdentity: string | null;
+  sessionScope: ScenarioAccessScope | null;
   scenarios: Scenario[];
   isHydrated: boolean;
   storageError: string | null;
 }
 
 export interface ScenarioStoreActions {
+  bindSession: (identity: string | null, scope: ScenarioAccessScope | null) => void;
   hydrate: () => void;
-  createScenario: (input: CreateScenarioInput) => Scenario;
+  createScenario: (input: CreateScenarioInput) => Promise<Scenario>;
   updateScenario: (
     scenarioId: string,
     updates: UpdateScenarioInput,
-  ) => Scenario | null;
+  ) => Promise<Scenario | null>;
   deleteScenario: (scenarioId: string) => boolean;
   getScenarioById: (scenarioId: string) => Scenario | undefined;
   resetToDefaults: () => Scenario[];
@@ -92,7 +97,7 @@ function mergeMissingTrainingScenarios(
   const refreshed: Scenario[] = [];
   const existing = cloneScenarios(existingScenarios).map((scenario) => {
     const standard = refreshableDefaults.get(scenario.id);
-    if (!standard || standard.updatedAt === scenario.updatedAt) return scenario;
+    if (scenario.revision !== undefined || !standard || standard.updatedAt === scenario.updatedAt) return scenario;
 
     const replacement = cloneScenarios([standard], monitoringTimestamp)[0];
     refreshed.push(replacement);
@@ -127,6 +132,7 @@ export function createScenarioStore(
       : getBrowserStorage();
 
   return create<ScenarioStore>()((set, get) => {
+    let sessionEpoch = 0;
     const persist = (scenarios: readonly Scenario[]): string | null => {
       const storage = resolveStorage();
 
@@ -173,10 +179,43 @@ export function createScenarioStore(
       }
     };
 
+    const saveRemote = async (scenario: Scenario, expectedRevision?: number): Promise<Scenario> => {
+      const requestEpoch = sessionEpoch;
+      try {
+        const response = await fetcher("/api/scenarios", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...scenario, ...(expectedRevision === undefined ? {} : { expectedRevision }) }),
+        });
+        const body = await response.json();
+        if (requestEpoch !== sessionEpoch) throw new Error("Scenario session changed.");
+        if (!response.ok || body.success !== true || !body.scenario) {
+          throw new Error(typeof body.error === "string" ? body.error : "Không thể lưu kịch bản.");
+        }
+        return body.scenario as Scenario;
+      } catch (error) {
+        if (requestEpoch === sessionEpoch) set({ storageError: errorMessage(error) });
+        throw error;
+      }
+    };
+
     return {
-      scenarios: cloneScenarios(defaults),
+      sessionIdentity: null,
+      sessionScope: null,
+      scenarios: isTest ? cloneScenarios(defaults) : [],
       isHydrated: false,
       storageError: null,
+
+      bindSession: (identity, scope) => {
+        if (identity && get().sessionIdentity === identity && get().sessionScope === scope) return;
+        sessionEpoch += 1;
+        let storageError: string | null = null;
+        try {
+          resolveStorage()?.removeItem(SCENARIO_STORAGE_KEY);
+        } catch (error) {
+          storageError = errorMessage(error);
+        }
+        set({ sessionIdentity: identity, sessionScope: scope, scenarios: [], isHydrated: false, storageError });
+      },
 
       hydrate: () => {
         if (get().isHydrated) {
@@ -211,15 +250,35 @@ export function createScenarioStore(
           return;
         }
 
-        // Ưu tiên dữ liệu Supabase; localStorage là lớp fallback ngoại tuyến
+        if (!get().sessionIdentity || !get().sessionScope) {
+          get().bindSession(null, null);
+          return;
+        }
+        const requestEpoch = sessionEpoch;
+        const requestScope = get().sessionScope;
+        let sourceAccess = false;
         fetcher("/api/scenarios")
           .then((res) => {
+            if (requestEpoch !== sessionEpoch) throw new Error("Scenario session changed.");
+            const responseScope = res.headers.get("x-cns-scenario-access");
+            if ((responseScope === "source" && requestScope !== "source") ||
+                (responseScope === "scoped-source" && requestScope === "practice")) {
+              throw new Error("Scenario response exceeds the session scope.");
+            }
+            sourceAccess = requestScope === "source" && responseScope === "source";
             if (res.ok) {
-              return res.json();
+              return res.json().then((data: Scenario[]) => ({ data, scoped: !sourceAccess }));
             }
             throw new Error("API response not ok");
           })
-          .then((data: Scenario[]) => {
+          .then(({ data, scoped }: { data: Scenario[]; scoped: boolean }) => {
+            if (requestEpoch !== sessionEpoch) return;
+            if (scoped && Array.isArray(data)) {
+              // Never restore private cached sources or seed/refresh published snapshots.
+              set({ scenarios: data, isHydrated: true, storageError: null });
+              storage?.removeItem(SCENARIO_STORAGE_KEY);
+              return;
+            }
             if (data && Array.isArray(data) && data.length > 0) {
               const merged = mergeMissingTrainingScenarios(
                 data,
@@ -238,6 +297,11 @@ export function createScenarioStore(
             }
           })
           .catch((err) => {
+            if (requestEpoch !== sessionEpoch) return;
+            if (!sourceAccess) {
+              set({ scenarios: [], isHydrated: true, storageError: errorMessage(err) });
+              return;
+            }
             console.warn("Using localStorage fallback for scenarios:", err.message);
             if (!storage) {
               return;
@@ -274,8 +338,9 @@ export function createScenarioStore(
           });
       },
 
-      createScenario: (input) => {
+      createScenario: async (input) => {
         ensureHydrated();
+        const requestEpoch = sessionEpoch;
 
         const createdAt = input.createdAt ?? now().toISOString();
         const scenario: Scenario = {
@@ -283,53 +348,27 @@ export function createScenarioStore(
           id: input.id?.trim() || generateId(),
           createdAt,
         };
-        const scenarios = upsertScenario(get().scenarios, scenario);
-
+        const saved = isTest ? scenario : await saveRemote(scenario);
+        if (requestEpoch !== sessionEpoch) throw new Error("Scenario session changed.");
+        const scenarios = upsertScenario(get().scenarios, saved);
         set({ scenarios, storageError: persist(scenarios) });
-
-        if (!isTest) {
-          // Đồng bộ lên Supabase
-          fetcher("/api/scenarios", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(scenario),
-          }).catch((err) => console.error("Failed to sync scenario with Supabase:", err));
-        }
-
-        return scenario;
+        return saved;
       },
 
-      updateScenario: (scenarioId, updates) => {
+      updateScenario: async (scenarioId, updates) => {
         ensureHydrated();
-
-        const existing = get().scenarios.find(
-          (scenario) => scenario.id === scenarioId,
-        );
-        if (!existing) {
-          return null;
-        }
-
+        const requestEpoch = sessionEpoch;
+        const existing = get().scenarios.find(scenario => scenario.id === scenarioId);
+        if (!existing) return null;
         const updated: Scenario = {
-          ...existing,
-          ...updates,
-          id: existing.id,
-          createdAt: existing.createdAt,
-          updatedAt: now().toISOString(),
+          ...existing, ...updates, id: existing.id, createdAt: existing.createdAt,
+          revision: existing.revision, updatedAt: now().toISOString(),
         };
-        const scenarios = upsertScenario(get().scenarios, updated);
-
+        const saved = isTest ? updated : await saveRemote(updated, existing.revision);
+        if (requestEpoch !== sessionEpoch) throw new Error("Scenario session changed.");
+        const scenarios = upsertScenario(get().scenarios, saved);
         set({ scenarios, storageError: persist(scenarios) });
-
-        if (!isTest) {
-          // Đồng bộ lên Supabase
-          fetcher("/api/scenarios", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(updated),
-          }).catch((err) => console.error("Failed to sync updated scenario with Supabase:", err));
-        }
-
-        return updated;
+        return saved;
       },
 
       deleteScenario: (scenarioId) => {

@@ -1,8 +1,12 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AppShell } from "@/components/layout/app-shell";
+import { DEFAULT_SCENARIOS, useScenarioStore } from "@/stores/scenario-store";
+import { SCENARIO_STORAGE_KEY, serializeScenarioStorage } from "@/lib/storage";
 
+const mockLogout = vi.hoisted(() => vi.fn());
+vi.mock("@/app/login/actions", () => ({ logoutAction: mockLogout }));
 const mockUsePathname = vi.hoisted(() => vi.fn());
 const mockRouter = vi.hoisted(() => ({ back: vi.fn(), push: vi.fn(), refresh: vi.fn() }));
 
@@ -37,6 +41,62 @@ function desktopNavigation() {
 }
 
 describe("AppShell", () => {
+  it("clears the private singleton before awaiting logout and keeps consumers gated", () => {
+    let duringLogout: string[] | undefined;
+    mockLogout.mockImplementationOnce(() => {
+      duringLogout = useScenarioStore.getState().scenarios.map(scenario => scenario.id);
+      return new Promise<void>(() => {});
+    });
+    renderShell();
+    const draft = { ...DEFAULT_SCENARIOS[0], id: "logout-private-draft" };
+    act(() => { useScenarioStore.setState({ scenarios: [draft], isHydrated: true }); });
+    window.localStorage.setItem(SCENARIO_STORAGE_KEY, serializeScenarioStorage([draft]));
+    fireEvent.click(screen.getByRole("button", { name: "Tài khoản: Quản trị viên" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Đăng xuất" }));
+    expect(duringLogout).toEqual([]);
+    expect(window.localStorage.getItem(SCENARIO_STORAGE_KEY)).toBeNull();
+    expect(screen.queryByText("Nội dung kiểm thử")).not.toBeInTheDocument();
+  });
+  it("keeps a hard-navigation recovery visible after logout rejects without restoring private state", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    mockLogout.mockRejectedValueOnce(new Error("Network unavailable"));
+    try {
+      const view = renderShell();
+      const draft = { ...DEFAULT_SCENARIOS[0], id: "failed-logout-private-draft" };
+      act(() => { useScenarioStore.setState({ scenarios: [draft], isHydrated: true }); });
+      window.localStorage.setItem(SCENARIO_STORAGE_KEY, serializeScenarioStorage([draft]));
+      fireEvent.click(screen.getByRole("button", { name: "Tài khoản: Quản trị viên" }));
+      fireEvent.click(screen.getByRole("menuitem", { name: "Đăng xuất" }));
+      await waitFor(() => expect(log).toHaveBeenCalled());
+      view.rerender(<AppShell currentUser={adminUser}><p>Nội dung kiểm thử</p></AppShell>);
+      expect(screen.getByRole("link", { name: "Tải lại trang đăng nhập" })).toHaveAttribute("href", "/login");
+      expect(screen.getByRole("status")).toHaveTextContent("xác minh phiên đăng nhập");
+      expect(screen.queryByText("Nội dung kiểm thử")).not.toBeInTheDocument();
+      expect(useScenarioStore.getState().scenarios).toEqual([]);
+      expect(useScenarioStore.getState().sessionIdentity).toBeNull();
+      expect(window.localStorage.getItem(SCENARIO_STORAGE_KEY)).toBeNull();
+    } finally { log.mockRestore(); }
+  });
+  it.each([
+    { ...adminUser, id: "student-user", role: "student" as const },
+    { ...adminUser, role: "student" as const },
+    { ...adminUser, id: "other-admin" },
+    { ...adminUser, role: "teacher" as const },
+    null,
+  ])("does not render a private source even once after profile transition to %j", (nextUser) => {
+    const observed: string[][] = [];
+    function ScenarioConsumer() {
+      const ids = useScenarioStore(state => state.scenarios).map(scenario => scenario.id);
+      observed.push(ids);
+      return <p>{ids.join(",")}</p>;
+    }
+    const view = render(<AppShell currentUser={adminUser}><ScenarioConsumer /></AppShell>);
+    act(() => { useScenarioStore.setState({ scenarios: [{ ...DEFAULT_SCENARIOS[0], id: "private-admin-draft" }], isHydrated: true }); });
+    observed.length = 0;
+    view.rerender(<AppShell currentUser={nextUser}><ScenarioConsumer /></AppShell>);
+    expect(observed.flat()).not.toContain("private-admin-draft");
+    expect(useScenarioStore.getState().scenarios).toEqual([]);
+  });
   it("shows the horizontal admin navigation and marks Kịch bản active", () => {
     renderShell();
 

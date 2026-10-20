@@ -19,20 +19,25 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "check": "npm run lint && npm run typecheck && npm run test:run && npm run build"
+    "check": "npm run lint && npm run typecheck && npm run test:run && npm run build",
+    "ai:worker:build": "node scripts/build-ai-worker.mjs",
+    "ai:worker:start": "node dist-ai-worker/entry.mjs"
   },
   "dependencies": {
     "@next/env": "^16.2.11",
     "@phosphor-icons/react": "^2.1.10",
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.110.6",
+    "fflate": "^0.8.3",
     "geist": "^1.7.2",
+    "mammoth": "^1.13.0",
     "motion": "^12.42.2",
     "next": "16.2.11",
     "pdfkit": "^0.20.2",
     "pg": "^8.23.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "unpdf": "^1.9.1",
     "zustand": "^5.0.14"
   },
   "devDependencies": {
@@ -50,6 +55,7 @@
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.0.3",
     "@vitest/coverage-v8": "^4.1.10",
+    "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.11",
     "ffmpeg-static": "^5.3.0",

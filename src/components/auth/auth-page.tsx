@@ -9,6 +9,7 @@ import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { loginAction, type AuthActionResult } from "@/app/login/actions";
+import { useScenarioStore } from "@/stores/scenario-store";
 
 export type AuthView = "login";
 
@@ -52,6 +53,7 @@ export function AuthPage({ nextPath }: { nextPath?: string; initialView?: AuthVi
       const response = await loginAction({ username, password });
       setResult(response);
       if (response.ok) {
+        useScenarioStore.getState().bindSession(null, null);
         router.replace(destination(response, nextPath));
         router.refresh();
       }

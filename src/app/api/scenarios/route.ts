@@ -1,54 +1,23 @@
 import { NextResponse } from "next/server";
-
 import { getCurrentProfile } from "@/lib/auth/profile";
-import { queryDatabase, upsertDatabaseRow } from "@/lib/db";
-import { mapRowToScenario } from "@/lib/supabase/scenarios";
-import type { Scenario } from "@/lib/types";
+import { canAuthorScenario } from "@/lib/scenario-authorization";
+import { deleteLegacyScenario, listLegacyScenarios, saveLegacyScenario, validateLegacyScenario, ScenarioWriteError } from "@/lib/scenarios/adsb-source-service";
 
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Unknown error";
-}
-
-function isE2eTestMode(): boolean {
-  return process.env.E2E_TEST_MODE === "1";
-}
-
-function toRow(scenario: Scenario) {
-  return {
-    id: scenario.id,
-    title: scenario.title,
-    description: scenario.description,
-    difficulty: scenario.difficulty,
-    sites_json: JSON.stringify(scenario.sites),
-    target_sensor_id: scenario.targetSensorId,
-    target_login_user: scenario.targetLoginUser,
-    expected_actions_json: JSON.stringify(scenario.expectedActions),
-    hardware_fault_json: scenario.hardwareFault
-      ? JSON.stringify(scenario.hardwareFault)
-      : null,
-    event_log_json: scenario.eventLog ? JSON.stringify(scenario.eventLog) : null,
-    created_at: scenario.createdAt || new Date().toISOString(),
-    updated_at: scenario.updatedAt ?? null,
-  };
-}
+function isE2eTestMode() { return process.env.E2E_TEST_MODE === "1"; }
 
 export async function GET() {
   const profile = await getCurrentProfile();
   if (!profile) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
-
-  if (isE2eTestMode()) {
-    return NextResponse.json([]);
+  if (profile.role === "teacher" && !canAuthorScenario(profile)) {
+    return NextResponse.json({ error: "Teacher authoring chưa được bật." }, { status: 403 });
   }
-
+  const headers = { "Cache-Control": "private, no-store", "x-cns-scenario-access": profile.role === "student" ? "practice" : profile.role === "teacher" ? "scoped-source" : "source" };
+  if (isE2eTestMode()) return NextResponse.json([], { headers });
   try {
-    const result = await queryDatabase("select * from public.scenarios order by created_at desc");
-    return NextResponse.json(result.rows.map(mapRowToScenario));
-  } catch (error: unknown) {
+    return NextResponse.json(await listLegacyScenarios(profile), { headers });
+  } catch (error) {
     console.error("PostgreSQL scenario fetch error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch scenarios", details: errorMessage(error) },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Không thể tải kịch bản." }, { status: 500, headers });
   }
 }
 
@@ -56,26 +25,17 @@ export async function POST(request: Request) {
   const profile = await getCurrentProfile();
   if (!profile) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
   if (profile.role !== "admin") return NextResponse.json({ error: "Không có quyền quản lý kịch bản." }, { status: 403 });
-
   try {
-    const scenario = (await request.json()) as Scenario;
-
-    if (!scenario.id || !scenario.title) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-    }
-
-    if (isE2eTestMode()) {
-      return NextResponse.json({ success: true, scenario, testMode: true });
-    }
-
-    const result = await upsertDatabaseRow("scenarios", toRow(scenario));
-    return NextResponse.json({ success: true, scenario: mapRowToScenario(result.rows[0]) });
-  } catch (error: unknown) {
+    const body: unknown = await request.json();
+    const scenario = validateLegacyScenario(body);
+    if (isE2eTestMode()) return NextResponse.json({ success: true, scenario, testMode: true });
+    const expectedRevision = (body as Record<string, unknown>).expectedRevision;
+    return NextResponse.json({ success: true, scenario: await saveLegacyScenario(profile.id, scenario, expectedRevision) });
+  } catch (error) {
+    if (error instanceof ScenarioWriteError) return NextResponse.json({ error: error.message }, { status: error.status });
+    if (error instanceof SyntaxError) return NextResponse.json({ error: "JSON không hợp lệ." }, { status: 400 });
     console.error("PostgreSQL scenario write error:", error);
-    return NextResponse.json(
-      { error: "Failed to save scenario", details: errorMessage(error) },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Không thể lưu kịch bản." }, { status: 500 });
   }
 }
 
@@ -83,26 +43,15 @@ export async function DELETE(request: Request) {
   const profile = await getCurrentProfile();
   if (!profile) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
   if (profile.role !== "admin") return NextResponse.json({ error: "Không có quyền quản lý kịch bản." }, { status: 403 });
-
   try {
     const id = new URL(request.url).searchParams.get("id");
-
-    if (!id) {
-      return NextResponse.json({ error: "Missing scenario ID" }, { status: 400 });
-    }
-
-    if (isE2eTestMode()) {
-      return NextResponse.json({ success: true, testMode: true });
-    }
-
-    await queryDatabase("delete from public.scenarios where id = $1", [id]);
-
+    if (!id) return NextResponse.json({ error: "Missing scenario ID" }, { status: 400 });
+    if (isE2eTestMode()) return NextResponse.json({ success: true, testMode: true });
+    await deleteLegacyScenario(profile.id, id);
     return NextResponse.json({ success: true });
-  } catch (error: unknown) {
+  } catch (error) {
+    if (error instanceof ScenarioWriteError) return NextResponse.json({ error: error.message }, { status: error.status });
     console.error("PostgreSQL scenario delete error:", error);
-    return NextResponse.json(
-      { error: "Failed to delete scenario", details: errorMessage(error) },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Không thể xóa kịch bản." }, { status: 500 });
   }
 }

@@ -9,6 +9,7 @@ import { Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { AiScenarioDialog } from "@/components/scenario/ai-scenario-dialog";
 import { DeleteScenarioDialog } from "@/components/admin/delete-scenario-dialog";
 import { AdsbScenarioLibraryPanel } from "@/components/scenario/adsb-scenario-library-panel";
 import {
@@ -39,6 +40,14 @@ export function AdsbAdminDashboard() {
   const deleteScenario = useScenarioStore((state) => state.deleteScenario);
   const [scenarioToDelete, setScenarioToDelete] = useState<Scenario | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [sourceRefreshKey, setSourceRefreshKey] = useState(0);
+
+  function refreshAiScenarioSources() {
+    // hydrate intentionally short-circuits after its first load; invalidate that guard.
+    useScenarioStore.setState({ isHydrated: false });
+    hydrate();
+    setSourceRefreshKey((value) => value + 1);
+  }
 
   useEffect(() => {
     hydrate();
@@ -93,15 +102,7 @@ export function AdsbAdminDashboard() {
               <Terminal aria-hidden size={16} weight="bold" />
               <span>Mở giả lập ADS-B</span>
             </ButtonLink>
-            <ButtonLink
-              href="/authoring/ads-b/create"
-              variant="primary"
-              size="md"
-              className="inline-flex items-center gap-1.5"
-            >
-              <Plus aria-hidden size={16} weight="bold" />
-              <span>Tạo kịch bản ADS-B</span>
-            </ButtonLink>
+
           </div>
         </div>
       </header>
@@ -133,7 +134,18 @@ export function AdsbAdminDashboard() {
       ) : null}
 
       {/* Scenario Library Distribution Controls */}
-      <AdsbScenarioLibraryPanel />
+      <AiScenarioDialog moduleId="ads-b" onCompleted={refreshAiScenarioSources}
+        actions={<ButtonLink
+              href="/authoring/ads-b/create"
+              variant="primary"
+              size="md"
+              className="inline-flex items-center gap-1.5"
+            >
+              <Plus aria-hidden size={16} weight="bold" />
+              <span>Tạo kịch bản ADS-B</span>
+            </ButtonLink>}
+      />
+      <AdsbScenarioLibraryPanel refreshKey={sourceRefreshKey} />
 
       {/* Scenarios Table Section */}
       <section aria-labelledby="scenario-list-title" className="space-y-4 pt-2">

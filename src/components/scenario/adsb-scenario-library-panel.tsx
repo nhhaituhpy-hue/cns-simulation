@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { ScenarioLibraryControls } from "@/components/scenario/scenario-library-controls";
 import type { StoredScenarioParameters } from "@/lib/scenario-parameters-storage";
 
-export function AdsbScenarioLibraryPanel() {
+export function AdsbScenarioLibraryPanel({ refreshKey = 0 }: { refreshKey?: number }) {
   const [scenarios, setScenarios] = useState<StoredScenarioParameters[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
+    setError(null);
 
     fetch("/api/scenario-parameters", { cache: "no-store" })
       .then(async (response) => {
@@ -30,7 +31,7 @@ export function AdsbScenarioLibraryPanel() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [refreshKey]);
 
   return (
     <section aria-label="Phân chia thư viện Scenario ADS-B" className="mt-7">

@@ -46,12 +46,12 @@ export function ScenarioWizard({ scenarioId }: ScenarioWizardProps) {
 
   async function saveScenario(draft: ScenarioDraft) {
     if (scenarioId) {
-      const updated = updateScenario(scenarioId, draft);
+      const updated = await updateScenario(scenarioId, draft);
       if (!updated) {
         throw new Error("Scenario not found.");
       }
     } else {
-      createScenario(draft);
+      await createScenario(draft);
     }
 
     router.push("/authoring/ads-b");

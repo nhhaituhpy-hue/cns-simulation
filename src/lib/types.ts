@@ -87,6 +87,8 @@ export interface ScenarioHardwareFault {
 export type RecordableAction = Omit<RecordedAction, "step" | "timestamp">;
 
 export interface Scenario {
+  /** Current mutable canonical source revision; absent for practice snapshots and legacy-only sources. */
+  revision?: number;
   id: string;
   title: string;
   description: string;
