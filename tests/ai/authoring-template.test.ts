@@ -2,53 +2,80 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { unzipSync } from "fflate";
 import { expect, it } from "vitest";
 import { extractDocumentBytes } from "@/lib/ai/documents/extract";
-import { explicitParameterRows, validateParameterProposal } from "@/lib/ai/scenario-generation/parameter-proposal";
-import { createTemplateDefinition } from "@/lib/ai/scenario-generation/capabilities";
+import { DOCX_XML_LIMITS, inspectBoundedDocxXml } from "@/lib/ai/documents/bounded-xml";
 import { DOCUMENT_LIMITS } from "@/lib/ai/documents/validation";
+import { authoringAdapterFor } from "@/lib/ai/scenario-authoring/forms/registry";
+import type { ValueSchema } from "@/lib/ai/scenario-authoring/types";
 
-it("ships an editable Vietnamese template that the production DOCX extractor accepts", async () => {
-  const name = "mau-tai-lieu-tao-kich-ban-ai.docx";
+const moduleIds = ["dvor-1150", "dvor-1150a", "dme-1119a", "dvor-220", "dme-320", "ads-b"] as const;
+async function extractTemplate(name: string) {
   const bytes = await readFile(resolve("public/templates", name));
   expect(bytes.length).toBeGreaterThan(0);
   expect(bytes.length).toBeLessThanOrEqual(DOCUMENT_LIMITS.fileBytes);
   const document = await extractDocumentBytes({ id: "9cd64c3c-62fd-4e8f-bc37-0cbce22a9157", name,
     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     bytes: bytes.length, sha256: createHash("sha256").update(bytes).digest("hex"), storageKey: "template-test" }, bytes);
-  const text = document.segments.map(segment => segment.text).join("\n");
+  return { bytes, text: document.segments.map(segment => segment.text).join("\n") };
+}
+function schemas(schema: ValueSchema): ValueSchema[] {
+  return [schema, ...Object.values(schema.properties ?? {}).flatMap(schemas),
+    ...(schema.item ? schemas(schema.item) : []), ...(schema.variants ?? []).flatMap(variant => schemas(variant.schema))];
+}
+function referenceRows(schema: ValueSchema, value: unknown): number {
+  if (schema.type === "object") return 1 + Object.entries(schema.properties ?? {}).reduce((count, [key, child]) =>
+    count + referenceRows(child, value && typeof value === "object" ? (value as Record<string, unknown>)[key] : null), 0);
+  if (schema.type === "array") {
+    const items = Array.isArray(value) && value.length ? value : [null];
+    return 1 + (schema.item ? items.reduce((count, item) => count + referenceRows(schema.item!, item), 0) : 0)
+      + (schema.variants ?? []).reduce((count, variant) => count + referenceRows(variant.schema, null), 0);
+  }
+  return 1;
+}
+
+it("preserves the existing generic editable Vietnamese writing guide", async () => {
+  const { text } = await extractTemplate("mau-tai-lieu-tao-kich-ban-ai.docx");
   for (const content of [/mẫu trống/i, /ví dụ/i, /mục tiêu/i, /nguồn/i, /trang/i, /carrier-9960/, /không phải/i]) expect(text).toMatch(content);
   for (const moduleLabel of ["DVOR 1150", "DVOR 1150A", "DME 1119A", "DVOR 220", "DME 320", "ADS-B"]) expect(text).toContain(moduleLabel);
-  expect(document.segments.length).toBeGreaterThan(0);
 });
 
-
-it.each(["dvor-1150", "dvor-1150a", "dme-1119a", "dvor-220", "dme-320", "ads-b"] as const)("ships a readable %s parameter template with executable settings rows", async moduleId => {
-  const name=`ai-scenario-${moduleId}.docx`;
-  const bytes=await readFile(resolve("public/templates",name));
-  const document=await extractDocumentBytes({id:"9cd64c3c-62fd-4e8f-bc37-0cbce22a9157",name,mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex"),storageKey:"module-template-test"},bytes);
-  const text=document.segments.map(s=>s.text).join("\n");
-  for(const word of ["SET ","RECOVER ","Trạng thái khởi động","Điều kiện đạt","Quyền sửa","Chẩn đoán","đơn vị"])expect(text).toContain(word);
-  expect(text).toMatch(/configuration\.|targetSensor\./);
-  expect(text).not.toContain("API_KEY");
-});
-
-it.each(["dvor-1150", "dvor-1150a", "dme-1119a", "dvor-220", "dme-320", "ads-b"] as const)("round-trips the edited %s example through extraction, requirements and native proposal validation", async moduleId=>{
- const name=`ai-scenario-${moduleId}.docx`;const bytes=await readFile(resolve("public/templates",name));
- const document=await extractDocumentBytes({id:"9cd64c3c-62fd-4e8f-bc37-0cbce22a9157",name,mimeType:"application/vnd.openxmlformats-officedocument.wordprocessingml.document",bytes:bytes.length,sha256:createHash("sha256").update(bytes).digest("hex"),storageKey:"native-example-test"},bytes);
- const input={moduleId,name:"Edited module parameter example",description:"Use the supported native exercise example and its explicitly stated SET and RECOVER values.",difficulty:"intermediate" as const};
- const rows=explicitParameterRows(input,[document]);
- const templateId=moduleId==="dme-1119a"?"tx1-delay-drift":moduleId==="dme-320"?"low-power":moduleId==="ads-b"?"adsb-11-configure-e2e-thresholds":"carrier-9960";
- const citations=rows.map(row=>{
-  const text=`${row.phase==="initial"?"SET":"RECOVER"} ${row.fieldId} = ${row.rawValue}`;
-  const segment=document.segments.find(segment=>segment.text.includes(text));expect(segment).toBeDefined();
-  return{documentId:document.id,segmentLabel:segment!.label,quote:text};
- });
- const assignments=rows.map((row,citation)=>{
-  const match=/^(true|false|-?\d+(?:\.\d+)?)(?: (.+))?$/.exec(row.rawValue)!;expect(match).not.toBeNull();
-  return{fieldId:row.fieldId,value:JSON.parse(match[1]),...(match[2]?{unit:match[2]}:{}),citation};
- });
- const value={version:2,status:"supported",moduleId,templateId,explanation:"Materialize every actual parameter row from the module example.",initial:assignments.filter((_,index)=>rows[index].phase==="initial"),recovery:assignments.filter((_,index)=>rows[index].phase==="recovery"),citations,unhandledRequirements:[]};
- const result=validateParameterProposal(input,[document],createTemplateDefinition(moduleId,templateId),templateId,value);
- expect(result.provenance).toMatchObject({mode:"native-parameter-generation",parameters:{verification:{recoveryVerified:true}}});
+it.each(moduleIds)("ships a complete editable %s default reference, not offline scenario homework", async moduleId => {
+  const adapter = authoringAdapterFor(moduleId);
+  const form = adapter.form(adapter.createDefault());
+  const baseline = form.fields.filter(field => field.baselineEligible && !field.schema.readOnly);
+  expect(baseline.length).toBeGreaterThan(0);
+  const { bytes, text } = await extractTemplate(`ai-scenario-${moduleId}.docx`);
+  expect(text).toContain(`Mẫu thông số nền — ${form.label}`);
+  for (const phrase of ["chuẩn hóa", "xác nhận", "không phải viết toàn bộ kịch bản", "có thể điền trong modal", "Giá trị tài liệu", "Nguồn/trang", "Để trống", "không phải yêu cầu", "Mặc định mô phỏng", "không phải manual"]) expect(text).toContain(phrase);
+  expect(text).not.toMatch(/\bSET\b|\bRECOVER\b|API_KEY|password|securityAccounts|configuration\.|targetSensor\.|dataProfile\./);
+  const expectedRows = baseline.reduce((count, field) => count + referenceRows(field.schema, field.value), 0);
+  expect(text.match(/Giá trị: ______; Nguồn\/trang: ______/g)).toHaveLength(expectedRows);
+  for (const field of baseline) {
+    expect(text, `missing ${field.id}`).toContain(field.schema.label);
+    expect(text).not.toContain(field.id);
+    for (const schema of schemas(field.schema)) {
+      expect(text).toContain(schema.label);
+      if (schema.unit) expect(text).toContain(schema.unit);
+      if (schema.min !== undefined) expect(text).toContain(`≥ ${schema.min}`);
+      if (schema.max !== undefined) expect(text).toContain(`≤ ${schema.max}`);
+      for (const option of schema.options ?? []) expect(text).toContain(option.label);
+    }
+  }
+  if (moduleId === "dvor-220" || moduleId === "dme-320") {
+    expect(text).toContain("Không có bước chẩn đoán hai bước kiểu SELEX");
+    expect(text).not.toContain("4. Chẩn đoán hai bước");
+  }
+  const budget = { nodes: 0, textCharacters: 0, attributeCharacters: 0 };
+  let maxPartNodes = 0;
+  for (const [name, xml] of Object.entries(unzipSync(bytes))) if (/\.(xml|rels)$/i.test(name)) {
+    const before = budget.nodes;
+    inspectBoundedDocxXml(xml, budget, /\.rels$/i.test(name));
+    maxPartNodes = Math.max(maxPartNodes, budget.nodes - before);
+  }
+  expect(maxPartNodes).toBeLessThan(DOCX_XML_LIMITS.partNodes);
+  expect(budget.nodes).toBeLessThan(DOCX_XML_LIMITS.totalNodes);
+  expect(budget.textCharacters).toBeLessThan(DOCUMENT_LIMITS.textCharacters);
+  process.stdout.write(JSON.stringify({ moduleId, baselineFields: baseline.length, rows: expectedRows, bytes: bytes.length, maxPartNodes, ...budget }) + "\n");
 });

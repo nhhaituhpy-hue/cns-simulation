@@ -31,6 +31,8 @@ export function ScenarioParametersRouteLoader<
   const requestedSessionKey = searchParams?.get("sessionKey")?.trim() || undefined;
   const [message, setMessage] = useState<string | null>(null);
   const loadedRef = useRef<string | null>(null);
+  const onLoadedRef = useRef(onLoaded);
+  useEffect(() => { onLoadedRef.current = onLoaded; }, [onLoaded]);
 
   useEffect(() => {
     // Assigned exams are hydrated directly from the authorized server snapshot.
@@ -43,7 +45,7 @@ export function ScenarioParametersRouteLoader<
       if (!definition) return;
       loadedRef.current = requestKey;
       try {
-        const loaded = onLoaded(definition, { review: true, sessionKey: examSnapshot.sessionKey, revisionKey: examSnapshot.revisionKey });
+        const loaded = onLoadedRef.current(definition, { review: true, sessionKey: examSnapshot.sessionKey, revisionKey: examSnapshot.revisionKey });
         if (loaded === false) setMessage("Không thể khởi tạo Scenario đã cấp. Hãy quay lại phiên thi và liên hệ giám khảo.");
       } catch {
         setMessage("Không thể khởi tạo Scenario đã cấp. Hãy quay lại phiên thi và liên hệ giám khảo.");
@@ -53,7 +55,8 @@ export function ScenarioParametersRouteLoader<
     if (!enabled || !scenarioId || loadedRef.current === `${moduleId}:${scenarioId}`) return;
     let cancelled = false;
     const requestKey = `${moduleId}:${scenarioId}`;
-    loadedRef.current = requestKey;
+    // Mark complete only after the fetch is consumed. StrictMode cleanup must
+    // not turn an abandoned request into an already-loaded source.
 
     async function load() {
       try {
@@ -72,7 +75,8 @@ export function ScenarioParametersRouteLoader<
           ? row.revision
           : 1;
         if (cancelled) return;
-        onLoaded(definition, {
+        loadedRef.current = requestKey;
+        onLoadedRef.current(definition, {
           review,
           revisionKey: `${review ? "published" : "source"}:${storedRevision}`,
           ...(requestedSessionKey ? { sessionKey: requestedSessionKey } : {}),
@@ -91,7 +95,7 @@ export function ScenarioParametersRouteLoader<
     return () => {
       cancelled = true;
     };
-  }, [enabled, examSnapshot, moduleId, onLoaded, requestedSessionKey, review, scenarioId]);
+  }, [enabled, examSnapshot, moduleId, requestedSessionKey, review, scenarioId]);
 
   return message ? examSnapshot
     ? <p role="alert" className="m-4 rounded border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-sm text-[#991b1b]">{message}</p>

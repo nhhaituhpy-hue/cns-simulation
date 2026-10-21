@@ -1,0 +1,9 @@
+"use client";
+import type { AuthoringSessionDto } from "@/lib/ai/scenario-authoring/types";
+import { authoringCardClass, sourceLabel, valueLabel } from "./ai-authoring-field";
+export function AiAuthoringSummary({ session }: { session: AuthoringSessionDto }) {
+  return <section aria-label="Tổng kết bản nháp" className="grid gap-3"><h4 className="font-semibold">Kiểm tra trước khi hoàn tất</h4><p className="text-sm">Chỉ nút Hoàn tất tạo kịch bản mới lưu nguồn JSON. Nguồn chưa được xuất bản vào Ôn tập hoặc Kỳ thi.</p>
+    {session.form.sections.map((section) => <details key={section.id} className={authoringCardClass}><summary className="cursor-pointer text-sm font-medium">{section.title} · {session.confirmedSections.includes(section.id) ? "Đã xác nhận" : "Chưa xác nhận"}</summary><dl className="mt-3 grid gap-3">{session.form.fields.filter((field) => field.sectionId === section.id).map((field) => <div key={field.id} className="min-w-0 text-sm"><dt className="font-medium">{field.schema.label}</dt><dd className="break-words">Nền: {valueLabel(session.baselineValues[field.id], field.schema)} → Hiện tại: {valueLabel(field.value, field.schema)}</dd><dd className="text-xs text-[var(--cns-text-secondary)]">{sourceLabel(session.sources[field.id])}</dd></div>)}</dl></details>)}
+    <div className={authoringCardClass}><h5 className="font-medium">Kiểm tra simulator</h5><ul className="mt-2 grid gap-1 text-sm">{session.preview.checks.map((check) => <li key={check.id}>{check.passed ? "Đạt" : "Chưa đạt"}: {check.label} — {check.detail}</li>)}{session.preview.notes.map((note, index) => <li key={index}>{note}</li>)}</ul><p className="mt-2 text-xs text-[var(--cns-text-secondary)]">Xem trước không chứng minh học viên đã khôi phục thiết bị; không thay thế kiểm thử thao tác thực tế.</p></div>
+  </section>;
+}

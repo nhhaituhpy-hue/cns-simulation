@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
 import { createDefaultDvor1150aScenarioDefinition } from "@/lib/dvor1150a/scenario";
@@ -67,4 +67,17 @@ describe("ScenarioParametersRouteLoader", () => {
       revisionKey: "published:7",
     }));
   });
+});
+
+it("does not lose a source fetch when StrictMode cleans up the first effect",async()=>{
+ const definition=createDefaultDvor1150aScenarioDefinition();definition.name="Wizard source";const onLoaded=vi.fn();
+ vi.stubGlobal("fetch",vi.fn(async()=>new Response(JSON.stringify([{moduleId:"dvor-1150a",definition,revision:1}]))));
+ render(<StrictMode><ScenarioParametersRouteLoader moduleId="dvor-1150a" enabled onLoaded={onLoaded}/></StrictMode>);
+ await waitFor(()=>expect(onLoaded).toHaveBeenCalledTimes(1));
+});
+it("finishes a pending source load even when parent recreates the onLoaded closure",async()=>{
+ const definition=createDefaultDvor1150aScenarioDefinition();let resolve!: (r:Response)=>void;vi.stubGlobal("fetch",vi.fn(()=>new Promise<Response>(r=>{resolve=r;})));const first=vi.fn(),latest=vi.fn();
+ const v=render(<ScenarioParametersRouteLoader moduleId="dvor-1150a" enabled onLoaded={first}/>);v.rerender(<ScenarioParametersRouteLoader moduleId="dvor-1150a" enabled onLoaded={latest}/>);
+ await act(async()=>resolve(new Response(JSON.stringify([{moduleId:"dvor-1150a",definition,revision:1}]))));
+ await waitFor(()=>expect(latest).toHaveBeenCalledTimes(1));expect(first).not.toHaveBeenCalled();
 });

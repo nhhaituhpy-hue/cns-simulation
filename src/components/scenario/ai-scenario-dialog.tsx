@@ -1,15 +1,13 @@
 "use client";
-
-import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Sparkle } from "@phosphor-icons/react/dist/csr/Sparkle";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { ParameterReviewPanel } from "./parameter-review-panel";
 import { readParameterReview, type ParameterReview } from "@/lib/ai/scenario-generation/parameter-review";
 import { getSimulatorModule } from "@/modules/core/registry";
-import { SCENARIO_PARAMETERS_MODULES, type ScenarioParametersModuleId } from "@/lib/scenario-parameters";
-
-const fieldClass = "w-full rounded-[8px] border border-[var(--cns-btn-ghost-border)] bg-[var(--cns-surface-card)] px-3 py-2 text-[13px] text-[var(--cns-text-primary)] outline-none focus:border-[#0284c7] focus:ring-2 focus:ring-[#0284c7]/20 disabled:opacity-70";
-
+import type { ScenarioParametersModuleId } from "@/lib/scenario-parameters";
+import type { AuthoringSessionDto } from "@/lib/ai/scenario-authoring/types";
+import { AiAuthoringWizard } from "./ai-authoring-wizard";
 export type AiScenarioJob = {
   id: string;
   moduleId: ScenarioParametersModuleId;
@@ -49,7 +47,7 @@ const failureLabels: Record<string, string> = {
 const isTerminal = (job: AiScenarioJob) => ["completed", "failed"].includes(job.status) || ["completed", "failed"].includes(job.phase);
 const phaseLabel = (job: AiScenarioJob) => phaseLabels[isTerminal(job) ? (job.status === "failed" || job.phase === "failed" ? "failed" : "completed") : job.phase] ?? "Đang xử lý";
 
-function readJob(value: unknown, moduleId: ScenarioParametersModuleId): AiScenarioJob | null {
+export function readJob(value: unknown, moduleId: ScenarioParametersModuleId): AiScenarioJob | null {
   if (!value || typeof value !== "object") return null;
   const item = value as Record<string, unknown>;
   if (item.moduleId !== moduleId || typeof item.id !== "string" || typeof item.name !== "string" ||
@@ -71,251 +69,32 @@ function resultHref(job: AiScenarioJob) {
   return route && job.scenarioRowId ? `${route}?scenarioId=${encodeURIComponent(job.scenarioRowId)}` : null;
 }
 
-/** Native dialog supplies top-layer placement, Escape and keyboard containment. */
-export function AiScenarioDialog({ moduleId, onCompleted, actions }: {
-  moduleId: ScenarioParametersModuleId;
-  onCompleted?: (job: AiScenarioJob) => void | Promise<void>;
-  actions?: ReactNode;
-}) {
-  const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [difficulty, setDifficulty] = useState("intermediate");
-  const [files, setFiles] = useState<File[]>([]);
-  const [fileError, setFileError] = useState<string | null>(null);
-  const [hasAttempt, setHasAttempt] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [jobs, setJobs] = useState<AiScenarioJob[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [listError, setListError] = useState<string | null>(null);
-  const [paused, setPaused] = useState(false);
-  const [refreshToken, setRefreshToken] = useState(0);
-  const completedIds = useRef(new Set<string>());
-  const progressRef = useRef<HTMLDivElement>(null);
-  const job = jobs.find((item) => item.id === selectedId) ?? null;
-  const attemptRef = useRef<{ key: string; body: FormData } | null>(null);
-  const submittingRef = useRef(false);
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const nameRef = useRef<HTMLInputElement>(null);
-  const titleId = useId();
-  const descriptionId = useId();
 
-  useEffect(() => {
-    if (!open) return;
-    const dialog = dialogRef.current!;
-    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    dialog.showModal();
-    return () => {
-      if (dialog.open) dialog.close();
-      if (previousFocus?.isConnected) previousFocus.focus();
-    };
-  }, [open]);
-
-  useEffect(() => {
-    if (open) (selectedId ? progressRef.current : nameRef.current)?.focus();
-  }, [open, selectedId]);
-
-  useEffect(() => {
-    for (const item of jobs) {
-      if (item.status !== "completed" || completedIds.current.has(item.id)) continue;
-      completedIds.current.add(item.id);
-      void Promise.resolve(onCompleted?.(item)).catch(() => {
-        setListError("Kịch bản đã tạo xong nhưng chưa tải lại được danh sách. Hãy tải lại trang.");
-      });
-    }
-  }, [jobs, onCompleted]);
-
-  useEffect(() => {
-    let cancelled = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    let controller: AbortController | undefined;
-    let polls = 0;
-    setPaused(false);
-    async function refresh() {
-      controller = new AbortController();
-      const deadline = setTimeout(() => controller?.abort(), 15000);
-      try {
-        const response = await fetch(`/api/ai/scenario-jobs?moduleId=${encodeURIComponent(moduleId)}`, { cache: "no-store", signal: controller.signal });
-        if (!response.ok) throw new Error("list");
-        const payload: unknown = await response.json();
-        if (!payload || typeof payload !== "object" || !("jobs" in payload) || !Array.isArray(payload.jobs)) throw new Error("list");
-        let incoming = payload.jobs.map((item: unknown) => readJob(item, moduleId)).filter((item): item is AiScenarioJob => item !== null);
-        if (open && selectedId) {
-          const detail = await fetch(`/api/ai/scenario-jobs/${encodeURIComponent(selectedId)}`, { cache: "no-store", signal: controller.signal });
-          if (!detail.ok) throw new Error("detail");
-          const body = await detail.json();
-          const selected = readJob(body?.job, moduleId);
-          if (!selected) throw new Error("detail");
-          incoming = [selected, ...incoming.filter((item) => item.id !== selected.id)];
-        }
-        if (cancelled) return;
-        incoming = Array.from(new Map(incoming.map((item) => [item.id, item])).values());
-        setJobs(incoming);
-        setListError(null);
-        if (!open || !incoming.some((item) => !isTerminal(item))) return;
-      } catch {
-        if (cancelled) return;
-        setListError("Chưa tải được tiến độ AI. Yêu cầu đã nhận vẫn tiếp tục trên máy chủ.");
-        if (!open) return;
-      } finally {
-        clearTimeout(deadline);
-      }
-      // No overlapping requests or background polling; at most 200 refreshes per opening.
-      polls += 1;
-      if (polls >= 200) { setPaused(true); return; }
-      timer = setTimeout(() => void refresh(), 3000);
-    }
-    void refresh();
-    return () => { cancelled = true; clearTimeout(timer); controller?.abort(); };
-  }, [moduleId, open, selectedId, refreshToken]);
-
-  function selectFiles(selectedFiles: File[]) {
-    setFiles(selectedFiles);
-    const problem = selectedFiles.some((file) => file.size === 0) ? "Không thể dùng tệp trống." :
-      selectedFiles.length > 5 ? "Chỉ chọn tối đa 5 tệp." :
-      selectedFiles.some((file) => !/\.(pdf|docx|txt|md)$/i.test(file.name)) ? "Chỉ chấp nhận PDF có văn bản, DOCX, TXT hoặc MD." :
-      selectedFiles.some((file) => file.size > 10 * 1024 * 1024) ? "Mỗi tệp không được vượt quá 10 MiB." :
-      selectedFiles.reduce((total, file) => total + file.size, 0) > 25 * 1024 * 1024 ? "Tổng tài liệu không được vượt quá 25 MiB." : null;
-    setFileError(problem);
+/** Old jobs remain readable; no legacy create operation is exposed in the wizard. */
+function LegacyHistory({moduleId,onCompleted}:{moduleId:ScenarioParametersModuleId;onCompleted?:(job:AiScenarioJob)=>void|Promise<void>}){
+ const[jobs,setJobs]=useState<AiScenarioJob[]>([]),[error,setError]=useState(false),[selected,setSelected]=useState<string|null>(null),[refresh,setRefresh]=useState(0),[paused,setPaused]=useState(false);
+ const notified=useRef(new Set<string>()),callback=useRef(onCompleted);
+ useEffect(()=>{callback.current=onCompleted;},[onCompleted]);
+ useEffect(()=>{
+  let cancelled=false,count=0;let timer:ReturnType<typeof setTimeout>|undefined;let controller:AbortController|undefined;
+  async function poll(){controller=new AbortController();const timeout=setTimeout(()=>controller?.abort(),15000);
+   try{const response=await fetch(`/api/ai/scenario-jobs?moduleId=${encodeURIComponent(moduleId)}`,{cache:"no-store",signal:controller.signal});if(!response.ok)throw Error();const data=await response.json();if(!Array.isArray(data.jobs))throw Error();let incoming=data.jobs.map((x:unknown)=>readJob(x,moduleId)).filter((x:AiScenarioJob|null):x is AiScenarioJob=>x!==null);
+    if(selected){const detail=await fetch(`/api/ai/scenario-jobs/${encodeURIComponent(selected)}`,{cache:"no-store",signal:controller.signal});if(!detail.ok)throw Error();const found=readJob((await detail.json()).job,moduleId);if(!found)throw Error();incoming=[found,...incoming.filter((j:AiScenarioJob)=>j.id!==found.id)];}
+    if(cancelled)return;setJobs(incoming);setError(false);
+    for(const job of incoming)if(job.status==="completed"&&!notified.current.has(job.id)){notified.current.add(job.id);void Promise.resolve(callback.current?.(job)).catch(()=>setError(true));}
+    if(!incoming.some((j:AiScenarioJob)=>!isTerminal(j)))return;
+   }catch{if(cancelled)return;setError(true);}finally{clearTimeout(timeout);}
+   if(++count>=200){setPaused(true);return;}timer=setTimeout(()=>void poll(),3000);
   }
-
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (submittingRef.current || job || fileError) return;
-    if (!name.trim() || !description.trim()) {
-      setError("Nhập tên kịch bản và mô tả yêu cầu.");
-      return;
-    }
-    if (!attemptRef.current) {
-      const body = new FormData();
-      body.set("moduleId", moduleId);
-      body.set("name", name.trim());
-      body.set("description", description.trim());
-      body.set("difficulty", difficulty);
-      for (const file of files) body.append("files", file);
-      attemptRef.current = { key: crypto.randomUUID(), body };
-      setHasAttempt(true);
-    }
-    submittingRef.current = true;
-    setSending(true);
-    setError(null);
-    try {
-      const response = await fetch("/api/ai/scenario-jobs", {
-        method: "POST",
-        headers: { "Idempotency-Key": attemptRef.current.key },
-        body: attemptRef.current.body,
-      });
-      const payload = await response.json();
-      const accepted = readJob(payload?.job, moduleId);
-      if (!response.ok || !accepted) {
-        if (payload?.code === "PROVIDER_NOT_CONFIGURED" || payload?.code === "PROVIDER_CONFIGURATION") {
-          attemptRef.current = null;
-          setHasAttempt(false);
-          setError("Chức năng AI chưa được bật hoặc chưa được cấu hình. Liên hệ quản trị viên; nội dung đã nhập được giữ lại.");
-        } else if (response.status >= 400 && response.status < 500 && response.status !== 408) {
-          attemptRef.current = null;
-          setHasAttempt(false);
-          setError(response.status === 401 || response.status === 403
-            ? "Phiên đăng nhập hoặc quyền tạo kịch bản không còn hợp lệ. Hãy kiểm tra đăng nhập."
-            : response.status === 429
-              ? "Đã có quá nhiều yêu cầu AI. Hãy chờ rồi thử lại."
-              : "Yêu cầu bị từ chối. Hãy kiểm tra tên, mô tả và tài liệu rồi thử lại.");
-        } else {
-          setError("Chưa xác nhận được yêu cầu AI. Hãy gửi lại yêu cầu; mã yêu cầu sẽ được giữ nguyên.");
-        }
-        return;
-      }
-      setJobs((current) => [accepted, ...current.filter((item) => item.id !== accepted.id)]);
-      setSelectedId(accepted.id);
-      attemptRef.current = null;
-      setHasAttempt(false);
-      setRefreshToken((value) => value + 1);
-    } catch {
-      setError("Chưa xác nhận được yêu cầu. Hãy gửi lại; hệ thống sẽ không tạo trùng yêu cầu đã nhận.");
-    } finally {
-      submittingRef.current = false;
-      setSending(false);
-    }
-  }
-
-  return (
-    <section aria-label="Tạo kịch bản AI" className="mt-5">
-      <div className="flex flex-wrap items-center gap-2.5">
-      <Button onClick={() => { setSelectedId(null); setOpen(true); }} variant="secondary">
-        <Sparkle aria-hidden size={16} /><span>Tạo kịch bản bằng AI</span>
-      </Button>
-      {actions}
-      </div>
-      {!open && listError ? <p role="status" className="mt-2 text-[12px] text-[var(--cns-text-secondary)]">{listError} <button className="underline" onClick={() => setRefreshToken((value) => value + 1)}>Tải lại yêu cầu AI</button></p> : null}
-      <dialog ref={dialogRef} aria-labelledby={titleId} aria-describedby={descriptionId}
-          onCancel={(event) => { event.preventDefault(); setOpen(false); }}
-          onClose={() => setOpen(false)}
-          onClick={(event) => { if (event.target === event.currentTarget) setOpen(false); }}
-          className="m-auto max-h-[calc(100dvh-2rem)] w-[min(40rem,calc(100%-2rem))] overflow-y-auto rounded-[16px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] p-0 text-[var(--cns-text-primary)] shadow-2xl backdrop:bg-black/40 backdrop:backdrop-blur-sm">
-          <div className="p-5 sm:p-6">
-            <header className="flex items-start justify-between gap-4">
-              <div><h2 id={titleId} className="text-[20px] font-semibold">Tạo kịch bản bằng AI</h2>
-                <p id={descriptionId} className="mt-1 text-[13px] text-[var(--cns-text-secondary)]">Mô tả tình huống và thêm tài liệu tham khảo nếu có.</p></div>
-              <Button size="sm" aria-label="Đóng" onClick={() => setOpen(false)}>Đóng</Button>
-            </header>
-            {open && jobs.length ? (
-              <details className="mt-4 rounded-[10px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] px-4 py-3">
-                <summary className="cursor-pointer text-[12px] font-medium text-[var(--cns-text-secondary)]">Lịch sử yêu cầu AI</summary>
-                <ul className="mt-2 grid gap-2">
-                  {jobs.map((item) => <li key={item.id} className="flex flex-wrap items-center justify-between gap-2 text-[12px]">
-                    <span className="min-w-0 break-words text-[var(--cns-text-primary)]">{item.name} <span className="text-[var(--cns-text-secondary)]">· {phaseLabel(item)}</span></span>
-                    <Button size="sm" aria-label={`Xem tiến độ: ${item.name}`} onClick={() => { setSelectedId(item.id); setOpen(true); }}>Xem tiến độ</Button>
-                  </li>)}
-                </ul>
-              </details>
-            ) : null}
-            {error || fileError ? <p role="alert" className="mt-4 rounded-[8px] bg-red-50 p-3 text-[13px] text-red-800">{fileError ?? error}</p> : null}
-            {listError ? <p role="status" className="mt-4 text-[12px] text-[var(--cns-text-secondary)]">{listError}</p> : null}
-            {paused ? <div className="mt-4 text-[12px]"><p>Đã tạm dừng cập nhật tự động. Yêu cầu vẫn tiếp tục trên máy chủ.</p><Button size="sm" onClick={() => setRefreshToken((value) => value + 1)}>Tiếp tục cập nhật</Button></div> : null}
-            {job ? <div ref={progressRef} tabIndex={-1} className="mt-5 outline-none">
-              <h3 className="break-words text-[15px] font-medium">{job.name}</h3>
-              <p role="status" aria-live="polite" className="mt-2 text-[13px] text-[var(--cns-text-secondary)]">{phaseLabel(job)}</p>
-              <p className="mt-3 text-[12px] leading-relaxed text-[var(--cns-text-secondary)]">Bạn có thể đóng cửa sổ; tiến độ được lưu trên máy chủ. Kịch bản phải được giám khảo kiểm tra trước khi xuất bản vào thư viện.</p>
-              {job.status === "failed" || job.phase === "failed" ? <p role="alert" className="mt-3 rounded-[8px] bg-red-50 p-3 text-[13px] text-red-800">{failureLabels[job.errorCode || ""] || "Không thể hoàn tất yêu cầu. Kiểm tra mô tả và tài liệu (PDF scan cần OCR), rồi tạo một yêu cầu mới."}</p> : null}
-              {job.status === "completed" && job.parameterReview ? <ParameterReviewPanel review={job.parameterReview} /> : null}
-              <div className="mt-5 flex flex-wrap gap-2">
-                {job.status === "completed" && resultHref(job) ? <ButtonLink href={resultHref(job)!} variant="primary">Mở kịch bản để kiểm tra</ButtonLink> : null}
-                {isTerminal(job) ? <Button onClick={() => { setSelectedId(null); attemptRef.current = null; setHasAttempt(false); setError(null); }}>Tạo yêu cầu mới</Button> : null}
-              </div>
-            </div> : (
-            <form className="mt-5 grid gap-4" onSubmit={(event) => void submit(event)}>
-              <label className="grid gap-1.5 text-[13px] font-medium">Thiết bị
-                <select disabled value={moduleId} className={fieldClass}>
-                  {SCENARIO_PARAMETERS_MODULES.map((module) => <option key={module.moduleId} value={module.moduleId}>{module.label}</option>)}
-                </select>
-              </label>
-              <label className="grid gap-1.5 text-[13px] font-medium">Tên kịch bản
-                <input ref={nameRef} required name="name" maxLength={200} value={name} onChange={(event) => setName(event.currentTarget.value)} disabled={sending || hasAttempt} className={fieldClass} />
-              </label>
-              <label className="grid gap-1.5 text-[13px] font-medium">Mô tả yêu cầu
-                <textarea required name="description" rows={4} maxLength={2000} value={description} onChange={(event) => setDescription(event.currentTarget.value)} disabled={sending || hasAttempt} className={fieldClass} />
-              </label>
-              <label className="grid gap-1.5 text-[13px] font-medium">Độ khó
-                <select name="difficulty" value={difficulty} onChange={(event) => setDifficulty(event.currentTarget.value)} disabled={sending || hasAttempt} className={fieldClass}>
-                  <option value="basic">Cơ bản</option><option value="intermediate">Trung bình</option><option value="advanced">Nâng cao</option>
-                </select>
-              </label>
-              <label className="grid gap-1.5 text-[13px] font-medium">Tài liệu đính kèm (không bắt buộc)
-                <input type="file" name="files" multiple accept=".pdf,.docx,.txt,.md" onChange={(event) => selectFiles(Array.from(event.currentTarget.files ?? []))} disabled={sending || hasAttempt} className={fieldClass} />
-              </label>
-              <a href={`/templates/ai-scenario-${moduleId}.docx`} download={`ai-scenario-${moduleId}.docx`} className="w-fit rounded text-[13px] font-medium text-[#0369a1] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-2">Tải file mẫu (.docx)</a>
-              <p className="text-[12px] leading-relaxed text-[var(--cns-text-secondary)]">Tải mẫu, thay nội dung hướng dẫn bằng tình huống của bạn, lưu lại rồi đính kèm. Ghi rõ giá trị ban đầu, đơn vị, ngưỡng, điều kiện khởi động, tiêu chí thành công và quyền chỉnh sửa; không chỉ mô tả tình huống bằng lời. Mẫu có khung điền và ví dụ minh họa theo thiết bị, không phải tài liệu kỹ thuật của nhà sản xuất.</p>
-              {files.length ? <ul aria-label="Tài liệu đã chọn" className="grid gap-1 text-[12px] text-[var(--cns-text-secondary)]">{files.map((file, index) => <li key={`${file.name}-${index}`} className="break-all">{file.name}</li>)}</ul> : null}
-              <p className="text-[12px] leading-relaxed text-[var(--cns-text-secondary)]">PDF có văn bản, DOCX, TXT hoặc MD; tối đa 5 tệp, 10 MiB/tệp và 25 MiB tổng. Tài liệu scan cần OCR trước khi tải lên.</p>
-              <aside className="rounded-[10px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card-subtle)] p-3 text-[12px] leading-relaxed text-[var(--cns-text-secondary)]">
-                Tài liệu đã chọn sẽ được gửi tới dịch vụ AI bên ngoài đã cấu hình. Kịch bản tạo ra chưa được xuất bản; giám khảo phải kiểm tra và duyệt trước khi đưa vào thư viện.
-              </aside>
-              <div className="flex justify-end"><Button type="submit" variant="primary" disabled={sending || !!fileError}>{sending ? "Đang gửi…" : hasAttempt ? "Gửi lại yêu cầu" : "Bắt đầu tạo"}</Button></div>
-            </form>
-            )}
-          </div>
-      </dialog>
-    </section>
-  );
+  setPaused(false);void poll();return()=>{cancelled=true;clearTimeout(timer);controller?.abort();};
+ },[moduleId,selected,refresh]);
+ const active=jobs.find(j=>j.id===selected);
+ return <details className="mt-4 rounded-xl border border-[var(--cns-border-subtle)] p-3"><summary className="cursor-pointer text-sm">Lịch sử yêu cầu AI trước đây</summary>{error?<p role="status" className="mt-2 text-xs">Chưa tải được lịch sử. Không có dữ liệu nào bị xóa. <button className="underline" onClick={()=>setRefresh(x=>x+1)}>Tải lại</button></p>:null}{paused?<Button onClick={()=>setRefresh(x=>x+1)}>Tiếp tục cập nhật lịch sử</Button>:null}<ul className="mt-3 grid gap-2">{jobs.map(job=><li key={job.id} className="flex flex-wrap items-center justify-between gap-2 text-sm"><span>{job.name}</span><span>{phaseLabel(job)}</span>{job.status==="completed"&&resultHref(job)?<ButtonLink href={resultHref(job)!}>Mở kịch bản cũ để kiểm tra</ButtonLink>:null}<Button size="sm" onClick={()=>setSelected(job.id)} aria-label={`Xem tiến độ: ${job.name}`}>Xem tiến độ</Button></li>)}</ul>{active?<section className="mt-3" aria-label="Chi tiết yêu cầu trước đây"><p role="status">{phaseLabel(active)}</p>{active.status==="failed"?<p role="alert">{failureLabels[active.errorCode??""]??"Yêu cầu cũ chưa hoàn tất. Bạn có thể tạo bản nháp mới bằng trình hướng dẫn."}</p>:null}{active.status==="completed"&&active.parameterReview?<ParameterReviewPanel review={active.parameterReview}/>:null}</section>:null}</details>;
+}
+export function AiScenarioDialog({moduleId,onCompleted,actions}:{moduleId:ScenarioParametersModuleId;onCompleted?:(job:AiScenarioJob)=>void|Promise<void>;actions?:ReactNode}){
+ const[open,setOpen]=useState(false),[closing,setClosing]=useState(false);const dialog=useRef<HTMLDialogElement>(null),trigger=useRef<HTMLButtonElement>(null),closeHandler=useRef<(()=>Promise<boolean>)|null>(null);const titleId=useId(),descriptionId=useId();
+ useEffect(()=>{if(!open)return;const node=dialog.current!,previous=trigger.current;node.showModal();return()=>{if(node.open)node.close();previous?.focus();};},[open]);
+ async function close(){if(closing)return;setClosing(true);try{if(!closeHandler.current||await closeHandler.current())setOpen(false);}finally{setClosing(false);}}
+ async function completed(session:AuthoringSessionDto){const name=session.form.fields.find(f=>f.id==="name")?.value;await onCompleted?.({id:session.id,moduleId,name:typeof name==="string"?name:"Kịch bản mới",status:"completed",phase:"completed",scenarioId:session.scenarioId,scenarioRowId:session.scenarioRowId,createdAt:session.createdAt,updatedAt:session.updatedAt});}
+ return <section aria-label="Tạo kịch bản AI" className="mt-5"><div className="flex flex-wrap items-center gap-2.5"><Button ref={trigger} variant="secondary" onClick={()=>setOpen(true)}><Sparkle aria-hidden size={16}/><span>Tạo kịch bản bằng AI</span></Button>{actions}</div>{open?<dialog ref={dialog} aria-labelledby={titleId} aria-describedby={descriptionId} onCancel={event=>{event.preventDefault();void close();}} onClick={event=>{if(event.target===event.currentTarget)void close();}} onClose={()=>setOpen(false)} className="m-auto max-h-[calc(100dvh-1rem)] w-[min(74rem,calc(100%-1rem))] overflow-y-auto rounded-2xl border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] p-0 text-[var(--cns-text-primary)] shadow-2xl backdrop:bg-black/40 backdrop:backdrop-blur-sm"><div className="p-4 sm:p-6"><header className="mb-4 flex items-start justify-between gap-3"><div><h2 id={titleId} className="text-xl font-semibold">Tạo kịch bản bằng AI</h2><p id={descriptionId} className="mt-1 text-sm text-[var(--cns-text-secondary)]">Tải tài liệu, kiểm tra thông số đã điền và xác nhận từng bước. Chỉ hoàn tất mới tạo kịch bản.</p></div><Button size="sm" disabled={closing} onClick={()=>void close()} aria-label="Đóng">Đóng</Button></header><AiAuthoringWizard key={moduleId} moduleId={moduleId} onCompleted={completed} registerClose={handler=>{closeHandler.current=handler;}}/><LegacyHistory moduleId={moduleId} onCompleted={onCompleted}/></div></dialog>:null}</section>;
 }

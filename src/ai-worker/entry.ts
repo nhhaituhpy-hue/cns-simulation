@@ -5,6 +5,8 @@ import { setTimeout as delay } from "node:timers/promises";
 import pg from "pg";
 import { claimGenerationJob, heartbeatGenerationJob, completeGenerationJob, failGenerationJob } from "../lib/ai/scenario-generation/jobs";
 import { processNextGeneration } from "../lib/ai/scenario-generation/worker";
+import { processNextAuthoring } from "../lib/ai/scenario-authoring/worker";
+import { runAiWorkerCycle } from "../lib/ai/scenario-authoring/worker-dispatch";
 import { generateScenario } from "../lib/ai/scenario-generation/generator";
 import { extractIsolatedDocuments } from "../lib/ai/documents/isolated";
 
@@ -44,7 +46,9 @@ async function main() {
   console.log("AI worker ready.");
   do {
     if (controller.signal.aborted) break;
-    const outcome = await processNextGeneration({
+    const outcome = await runAiWorkerCycle(
+      () => processNextAuthoring(pool!, workerId, controller.signal),
+      () => processNextGeneration({
       claim: () => claimGenerationJob(pool!, workerId),
       heartbeat: async (job, phase) => Boolean(await heartbeatGenerationJob(pool!, job.id, job.attemptToken, phase)),
       loadDocuments: (documents, signal) => extractIsolatedDocuments(documents, signal),
@@ -52,7 +56,7 @@ async function main() {
       complete: async (job, result) => Boolean(await completeGenerationJob(pool!, job.id, job.attemptToken, result)),
       fail: (job, error) => failGenerationJob(pool!, job.id, job.attemptToken, error),
       signal: controller.signal,
-    });
+    }));
     await health(outcome === "stopped" ? "stopping" : "ready");
     if (once) break;
     await delay(interval, undefined, { signal: controller.signal }).catch(() => undefined);
