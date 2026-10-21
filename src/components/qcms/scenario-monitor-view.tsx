@@ -9,7 +9,8 @@ import { completeExamAttemptItemAction } from "@/lib/exams/actions";
 import type { OfficialExamScenarioContext } from "@/lib/exams/client-types";
 import type { Scenario } from "@/lib/types";
 import { HardwareDiagnosisWorkspace } from "@/components/hardware/hardware-diagnosis-workspace";
-import { HardwareGradingResult } from "@/components/grading/hardware-grading-result";
+import { usePracticeSubmission } from "@/components/scenario/attempt-feedback-client";
+import { useTerminalStore } from "@/stores/terminal-store";
 import { PracticeAiFeedbackButton } from "@/components/scenario/practice-ai-feedback-button";
 import { useRecordingStore } from "@/stores/recording-store";
 import { useScenarioStore } from "@/stores/scenario-store";
@@ -36,6 +37,15 @@ export function ScenarioMonitorView({
   officialScenario,
 }: ScenarioMonitorViewProps) {
   const recording = useRecordingStore();
+  const practice = usePracticeSubmission({
+    moduleId: "ads-b", scenarioId, enabled: !officialExam,
+    getPayload: () => {
+      const state = useRecordingStore.getState();
+      return { allActions: state.allActions, selectedActions: state.selectedActions,
+        authenticatedCorrectly: state.authenticatedCorrectly, qcmsMonitoringOpened: state.qcmsMonitoringOpened,
+        scenarioHardwareSelection: state.diagnosedComponentIds, scenarioHardwareInspected: state.inspectedComponentIds };
+    },
+  });
   const [activePanel, setActivePanel] = useState<QcmsPanel>("sites");
   const [groundStationsOpen, setGroundStationsOpen] = useState(true);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
@@ -127,10 +137,6 @@ export function ScenarioMonitorView({
     );
   }
 
-  const expectedHardwareComponents =
-    scenario.hardwareFault?.hardwareLayout.filter((component) =>
-      scenario.hardwareFault?.faultyComponentIds.includes(component.id),
-    ) ?? [];
   const difficulty = DIFFICULTY_DETAILS[scenario.difficulty];
   const hardwareAvailable =
     Boolean(scenario.hardwareFault) && recording.phase === "hardware";
@@ -163,6 +169,14 @@ export function ScenarioMonitorView({
         <div className="flex flex-wrap items-center gap-3">
           {!officialExam ? (
             <PracticeAiFeedbackButton
+              submission={practice}
+              hideSubmit
+              onRestart={() => {
+                useTerminalStore.getState().clearPersistedSession();
+                recording.resetAttempt();
+                recording.beginAttempt(scenario.id);
+                closeHardwareDiagnosis();
+              }}
               moduleId="ads-b"
               scenarioId={scenario.id}
               scenarioName={scenario.title}
@@ -230,7 +244,7 @@ export function ScenarioMonitorView({
             </Link>
             <button
               type="button"
-              disabled={!hardwareAvailable}
+              disabled={!hardwareAvailable || practice.pending || Boolean(practice.submissionId)}
               onClick={openHardwareDiagnosis}
               className="inline-flex min-h-10 items-center rounded bg-[var(--accent)] px-4 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:bg-[var(--surface-muted)] disabled:text-[var(--text-muted)]"
             >
@@ -318,33 +332,22 @@ export function ScenarioMonitorView({
               });
               return;
             }
-            recording.submitCombinedAttempt(
-              scenario.expectedActions,
-              scenario.hardwareFault?.faultyComponentIds ?? [],
-              diagnosis.componentIds,
-              diagnosis.inspectedComponents,
-            );
+            useRecordingStore.setState({ diagnosedComponentIds: diagnosis.componentIds, inspectedComponentIds: diagnosis.inspectedComponents });
             closeHardwareDiagnosis();
+            void practice.submit().then((id) => {
+              if (id) recording.submitCombinedAttempt(
+                scenario.expectedActions,
+                scenario.hardwareFault?.faultyComponentIds ?? [],
+                diagnosis.componentIds,
+                diagnosis.inspectedComponents,
+              );
+            });
           }}
         />
       ) : null}
 
-      {!officialExam && recording.combinedGradingResult &&
-      scenario.hardwareFault &&
-      expectedHardwareComponents.length > 0 ? (
-        <div className="fixed inset-0 z-[70] grid place-items-center overflow-y-auto bg-[#172033]/60 p-4">
-          <HardwareGradingResult
-            result={recording.combinedGradingResult}
-            expectedComponents={scenario.hardwareFault.hardwareLayout}
-            hardwareFault={scenario.hardwareFault}
-            onRetry={() => {
-              recording.resetAttempt();
-              recording.beginAttempt(scenario.id);
-              closeHardwareDiagnosis();
-            }}
-          />
-        </div>
-      ) : null}
+      {!officialExam && practice.pending ? <p role="status" className="mt-4">Đang nộp bài ôn tập…</p> : null}
+      {!officialExam && recording.combinedGradingResult ? <p role="status" className="mt-4 text-sm text-[var(--text-secondary)]">Kết quả chấm ôn tập: {recording.combinedGradingResult.score}/100. Đây không phải điểm thi chính thức.</p> : null}
 
       {showExitConfirm ? (
         <div

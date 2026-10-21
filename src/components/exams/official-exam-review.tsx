@@ -17,6 +17,7 @@ import type { Scenario } from "@/lib/types";
 import { VOR_EQUIPMENT_DIAGRAMS } from "@/lib/vor-hardware-model";
 import type { VorScenario } from "@/lib/vor-types";
 import { CandidateResultEditor } from "./candidate-result-editor";
+import { AttemptFeedbackResult } from "@/components/scenario/attempt-feedback-result";
 
 function formatDateTime(value: string | null) {
   if (!value) return "Chưa ghi nhận";
@@ -196,6 +197,7 @@ function AttemptItemReview({ item }: { item: AdminExamAttemptItemDetail }) {
       ) : item.moduleCode === "ads-b" && item.scenario?.moduleCode === "ads-b" ? (
         <AdsbEvidence result={item.result} scenario={item.scenario.scenario} />
       ) : null}
+      {item.status === "submitted" ? <div className="mt-4"><AttemptFeedbackResult target={{ legacyAttemptItemId: item.id }} /></div> : null}
     </article>
   );
 }

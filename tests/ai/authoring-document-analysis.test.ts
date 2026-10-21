@@ -29,6 +29,15 @@ beforeEach(() => {
   state = { version: 1, moduleId: "dme-320", nativeBase: definition, baseline: definition, definition, sources: {}, baselineSources: {}, confirmations: {}, currentStep: "rf", proposal: null, issues: [], context: "" };
 });
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
+it.each(["baseline","guidance"] as const)("filters credential-bearing uploads before the legacy %s provider seam",async kind=>{
+ const unsafe=doc("DME 320. Inspect output settings.\nPassword\nsynthetic-upload-secret");
+ const fetcher=provider({message:"Không có nguồn an toàn; giữ cấu hình hiện tại.",changes:[],issues:[]});
+ const result=await analyzeAuthoring(state,{kind,question:"Explain output settings",...(kind==="guidance"?{sectionId:"rf"}:{})},[unsafe]);
+ expect(JSON.stringify(fetcher.mock.calls).includes("synthetic-upload-secret")).toBe(false);
+ expect(JSON.stringify(result).includes("synthetic-upload-secret")).toBe(false);
+ expect(result.changes).toEqual([]);expect(result.coverage.documents).toBe(0);
+ expect(result.issues.some(issue=>issue.code==="EVIDENCE_WITHHELD")).toBe(true);
+});
 it.each([
   ["wrong target", "DME 320: TX2 Output power nominal = 80 %.", 80],
   ["adjacent value", "DME 320: TX1 Output power = 90 %; TX2 Output power = 80 %.", 80],

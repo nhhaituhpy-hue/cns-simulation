@@ -6,6 +6,7 @@ import type { ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 import type { AuthoringSessionDto, AuthoringMutation, JsonValue, AuthoringIssue } from "@/lib/ai/scenario-authoring/types";
 import { AiAuthoringSummary } from "./ai-authoring-summary";
 import { AiAuthoringAssistant } from "./ai-authoring-assistant";
+import { ScenarioBlueprintReview } from "./scenario-blueprint-review";
 import {
   AiAuthoringField,
   authoringInputClass,
@@ -17,6 +18,12 @@ import {
   sourceLabel,
 } from "./ai-authoring-field";
 const api = "/api/ai/scenario-authoring";
+const analysisFailures: Record<string, string> = {
+  CLARIFICATION_REQUIRED: "Hãy bổ sung triệu chứng, mục tiêu xử lý hoặc phạm vi bài tập rồi yêu cầu AI soạn lại. Tài liệu đã lưu được dùng lại.",
+  KNOWLEDGE_UNAVAILABLE: "Chưa có manual được xác minh cho đúng thiết bị. Bổ sung tài liệu phù hợp hoặc liên hệ quản trị viên rồi thử lại.",
+  UNSUPPORTED_REQUEST: "Simulator chưa hỗ trợ tình huống này. Điều chỉnh mục tiêu trong phạm vi mô phỏng rồi thử lại; chưa tạo kịch bản.",
+  INVALID_RECOVERY: "Simulator chưa kiểm chứng được quy trình khôi phục. Điều chỉnh tình huống hoặc mục tiêu rồi thử lại; chưa tạo kịch bản.",
+};
 export function AiAuthoringWizard({
   moduleId,
   initialMode,
@@ -25,7 +32,7 @@ export function AiAuthoringWizard({
   registerClose,
 }: {
   moduleId: ScenarioParametersModuleId;
-  initialMode?: "documents" | "native";
+  initialMode?: "documents" | "description" | "native";
   onCompleted?: (session: AuthoringSessionDto) => void | Promise<void>;
   onClose?: () => void;
   registerClose?: (handler: (() => Promise<boolean>) | null) => void;
@@ -33,14 +40,17 @@ export function AiAuthoringWizard({
   const fileInputId = useId();
   const uploadAttempt = useRef<{ key: string; body: FormData; url: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const nativeAutoStarted = useRef(false);
+
+  const [advanced, setAdvanced] = useState(false);
   const [uploadUncertain, setUploadUncertain] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const finalizeAttempt = useRef<{ key: string; body: string } | null>(null);
   const [finalUncertain, setFinalUncertain] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [context, setContext] = useState("");
+  const contextRef = useRef("");
   const [session, setSession] = useState<AuthoringSessionDto | null>(null);
+  const mode = session?.mode ?? (initialMode === "description" || initialMode === "native" ? "description" : "documents");
   const current = useRef<AuthoringSessionDto | null>(null);
   const [dirty, setDirty] = useState<Record<string, JsonValue>>({});
   const dirtyRef = useRef<Record<string, JsonValue>>({});
@@ -55,7 +65,10 @@ export function AiAuthoringWizard({
   const [question, setQuestion] = useState("");
   const [paused, setPaused] = useState(false);
   const [pollToken, setPollToken] = useState(0);
+  const [closePrompt, setClosePrompt] = useState(false);
+  const closeDecision = useRef<((discard: boolean) => void) | null>(null);
   const pending = session?.analysis?.status === "queued" || session?.analysis?.status === "running";
+  const contextDirty = context !== (session?.context ?? "");
   const sessionId = session?.id;
   const analysisId = session?.analysis?.id;
   useEffect(() => {
@@ -74,7 +87,10 @@ export function AiAuthoringWizard({
         if (!response.ok) throw new Error("poll");
         const payload = await response.json();
         const next: AuthoringSessionDto = payload.session;
-        if (!stopped && next?.id === current.current?.id && next.moduleId === moduleId && next.revision >= current.current.revision && !lock.current) { current.current = next; setSession(next); }
+        if (!stopped && next?.id === current.current?.id && next.moduleId === moduleId && next.revision >= current.current.revision && !lock.current) {
+          if (next.blueprint && !current.current.blueprint && next.currentStep === "review" && !Object.keys(dirtyRef.current).length && contextRef.current === (next.context ?? "")) { setStep("review"); setAdvanced(false); }
+          current.current = next; setSession(next);
+        }
         if (next?.analysis && !["queued", "running"].includes(next.analysis.status)) return;
       } catch { if (!stopped) setError("Chưa tải được tiến độ AI. Công việc vẫn ở máy chủ; bản chỉnh được giữ lại."); }
       finally { clearTimeout(deadline); }
@@ -107,6 +123,7 @@ export function AiAuthoringWizard({
     return () => controller.abort();
   }, [moduleId]);
   const accept = (next: AuthoringSessionDto) => { current.current = next; setSession(next); };
+  function editContext(value: string) { contextRef.current = value; setContext(value); setSaved(false); }
   function edit(id: string, value: JsonValue) { dirtyRef.current = { ...dirtyRef.current, [id]: value }; setDirty(dirtyRef.current); setSaved(false); }
   async function request(url: string, init: RequestInit): Promise<AuthoringSessionDto> {
     let response: Response;
@@ -115,6 +132,7 @@ export function AiAuthoringWizard({
     if (!response.ok && response.status >= 400 && response.status < 500 && response.status !== 408) { finalizeAttempt.current = null; setFinalUncertain(false); uploadAttempt.current = null; setUploadUncertain(false); }
     if (response.status === 409) { setConflict(true); throw new Error("Có phiên khác đã thay đổi bản nháp. Tải lại phiên mới trước khi lưu; bản chỉnh của bạn vẫn được giữ."); }
     if (!response.ok) {
+      if (Object.hasOwn(analysisFailures, payload.code)) throw new Error(analysisFailures[payload.code]);
       const issues = Array.isArray(payload.issues) ? payload.issues.filter((issue: AuthoringIssue) => typeof issue.message === "string") as AuthoringIssue[] : [];
       throw new Error(issues.length ? issues.map((issue) => issue.message.slice(0, 400)).join(" · ") : response.status === 401 || response.status === 403 ? "Phiên đăng nhập hoặc quyền tạo kịch bản không còn hợp lệ. Kiểm tra đăng nhập; bản chỉnh vẫn được giữ." : payload.code === "PROVIDER_NOT_CONFIGURED" || payload.code === "PROVIDER_CONFIGURATION" ? "AI chưa được cấu hình. Liên hệ quản trị viên; bản nháp và tài liệu vẫn được giữ." : "Không lưu được bản nháp. Kiểm tra thông tin và thử lại; phần chỉnh sửa vẫn được giữ.");
     }
@@ -132,6 +150,11 @@ export function AiAuthoringWizard({
   async function save(ids?: string[]) {
     if (conflict || finalUncertain || uploadUncertain) throw new Error("Tải lại phiên mới trước khi lưu. Bản chỉnh của bạn vẫn được giữ.");
     const changes = Object.entries(dirtyRef.current).filter(([id]) => !ids || ids.includes(id)).map(([fieldId, value]) => ({ fieldId, value }));
+    const changedContext = current.current && contextRef.current !== (current.current.context ?? "");
+    if (changedContext || changes.length) {
+      if (pending) throw new Error("AI đang đọc bản nháp hiện tại. Chờ kết quả rồi lưu phần chỉnh sửa để không làm mất ngữ cảnh.");
+      if (changedContext) await patch({ action: "edit-context", context: contextRef.current });
+    }
     if (changes.length) {
       if(pending)throw new Error("AI đang đọc bản nháp hiện tại. Chờ kết quả rồi lưu phần chỉnh sửa để không làm mất ngữ cảnh.");
       await patch({ action: "edit", changes });
@@ -144,6 +167,11 @@ export function AiAuthoringWizard({
     await save();
     if (confirm) await patch({ action: "confirm", sectionId: step });
     await patch({ action: "navigate", sectionId: next }); setStep(next);
+  }
+  async function showReview() {
+    await save();
+    setAdvanced(false);
+    setStep(current.current?.blueprint ? "review" : "documents");
   }
   function selectFiles(selected: File[]) {
     setFiles(selected);
@@ -159,24 +187,19 @@ export function AiAuthoringWizard({
   async function create(native = false) {
     if (!uploadAttempt.current) {
       const body = new FormData(); body.set("moduleId", moduleId); body.set("context", context);
-      if (!native) for (const file of files) body.append("files", file);
+      if (!native) { body.set("mode", mode); for (const file of files) body.append("files", file); }
       uploadAttempt.current = { url: api, key: crypto.randomUUID(), body };
     }
-    const next = await submitUpload(); setStep(next.currentStep);
+    const next = await submitUpload(); setStep(native ? next.currentStep : "documents"); setAdvanced(native);
   }
-  useEffect(() => {
-    if (initialMode === "native" && !nativeAutoStarted.current && !current.current) {
-      nativeAutoStarted.current = true;
-      void run(() => create(true));
-    }
-  });
-  async function analyze(kind: "baseline" | "guidance", prompt?: string) {
+
+  async function analyze(kind: "baseline" | "guidance" | "blueprint", prompt?: string) {
     if (!uploadAttempt.current) {
       await save();
       const body = new FormData(); body.set("expectedRevision", String(current.current!.revision)); body.set("kind", kind);
-      body.set("question", kind === "guidance" ? prompt ?? question : context);
+      body.set("question", kind === "guidance" ? prompt ?? question : current.current!.context ?? "");
       if (kind === "guidance") body.set("sectionId", step);
-      if (kind === "baseline") for (const file of files) body.append("files", file);
+      if (kind !== "guidance") for (const file of files) body.append("files", file);
       uploadAttempt.current = { url: `${api}/${encodeURIComponent(current.current!.id)}/analysis`, key: crypto.randomUUID(), body };
     }
     await submitUpload();
@@ -194,11 +217,25 @@ export function AiAuthoringWizard({
     await patch({action:"dismiss-proposal",proposalId:proposal.id});
     await save();
   }
+  async function prepareClose() {
+    if (lock.current || uploadUncertain || finalUncertain || closeDecision.current) return false;
+    if ((pending || !current.current) && (Object.keys(dirtyRef.current).length || contextRef.current !== (current.current?.context ?? ""))) {
+      setClosePrompt(true);
+      return new Promise<boolean>(resolve => { closeDecision.current = resolve; });
+    }
+    let ready = false;
+    await run(async () => { if (current.current?.status === "editing") await save(); ready = true; });
+    return ready;
+  }
+  function decideClose(discard: boolean) {
+    if (discard) { dirtyRef.current = {}; setDirty({}); editContext(current.current?.context ?? ""); }
+    setClosePrompt(false);
+    closeDecision.current?.(discard);
+    closeDecision.current = null;
+  }
+  useEffect(() => () => { closeDecision.current?.(false); }, []);
   useEffect(()=>{
-    registerClose?.(async()=>{
-      if(lock.current||uploadUncertain||finalUncertain)return false;
-      let ready=false;await run(async()=>{if(current.current?.status==="editing")await save();ready=true;});return ready;
-    });
+    registerClose?.(prepareClose);
     return()=>registerClose?.(null);
   });
   async function resetField(fieldId: string) {
@@ -217,13 +254,14 @@ export function AiAuthoringWizard({
     setFinalUncertain(false);
     setFiles([]);
     setFileError(null);
-    setContext("");
+    editContext("");
     setQuestion("");
     setConflict(false);
     setSaved(false);
     setPaused(false);
     setError(null);
     setStep("documents");
+    setAdvanced(false);
   }
   async function deleteSession(targetId: string) {
     const response = await fetch(`${api}/${encodeURIComponent(targetId)}`, { method: "DELETE" });
@@ -236,8 +274,13 @@ export function AiAuthoringWizard({
     }
   }
   async function finalize() {
-    if (!current.current || step !== "confirmation" || pending || conflict || Object.keys(dirtyRef.current).length || current.current.issues.some((issue) => issue.severity === "error") || current.current.preview.status === "invalid" || !current.current.form.sections.every((section) => current.current!.confirmedSections.includes(section.id))) return;
-    if (!finalizeAttempt.current) finalizeAttempt.current = { key: crypto.randomUUID(), body: JSON.stringify({ expectedRevision: current.current.revision }) };
+    if (!current.current || pending || conflict || contextRef.current !== (current.current.context ?? "") || Object.keys(dirtyRef.current).length || current.current.issues.some((issue) => issue.severity === "error") || current.current.preview.status === "invalid") return;
+    if (current.current.mode && (!current.current.blueprint || advanced)) return;
+    if (!finalizeAttempt.current) {
+      if (current.current.blueprint && !advanced) await patch({ action: "confirm-blueprint" });
+      else if (step !== "confirmation" || !current.current.form.sections.every((section) => current.current!.confirmedSections.includes(section.id))) return;
+      finalizeAttempt.current = { key: crypto.randomUUID(), body: JSON.stringify({ expectedRevision: current.current.revision }) };
+    }
     setFinalUncertain(true);
     const next = await request(`${api}/${encodeURIComponent(current.current.id)}/finalize`, { method: "POST", headers: { "Content-Type": "application/json", "Idempotency-Key": finalizeAttempt.current.key }, body: finalizeAttempt.current.body });
     if (next.status !== "completed") throw new Error("Máy chủ chưa xác nhận hoàn tất. Thử lại cùng yêu cầu.");
@@ -250,7 +293,7 @@ export function AiAuthoringWizard({
     return <section aria-label="Kịch bản đã tạo" className={`${authoringCardClass} grid gap-3`}><h3 className="font-semibold">Đã tạo kịch bản · Chưa xuất bản</h3><p className="text-sm">Giám khảo kiểm tra kịch bản trước khi đưa vào Ôn tập hoặc Kỳ thi. Chưa tự áp dụng vào simulator.</p>{error ? <p role="alert">{error}</p> : null}<div className="flex flex-wrap items-center gap-2 text-xs"><a className={`${authoringBtnBlueClass} inline-flex items-center no-underline`} href={`${api}/${encodeURIComponent(session.id)}/download`} download>Tải JSON đầy đủ</a>{href ? <a className={`${authoringBtnOrangeClass} inline-flex items-center no-underline`} href={href}>Mở trong simulator</a> : null}<Button size="sm" className={authoringBtnGrayClass} disabled={busy} onClick={() => void run(() => deleteSession(session.id))}>Xóa & tạo lại từ đầu</Button>{onClose ? <Button size="sm" className={authoringBtnGrayClass} onClick={onClose}>Đóng</Button> : null}</div></section>;
   }
   const sections = session?.form.sections ?? [];
-  const section = sections.find((item) => item.id === step);
+  const section = advanced ? sections.find((item) => item.id === step) : undefined;
   const fields = session?.form.fields.filter((field) => field.sectionId === step) ?? [];
   const groups = [...new Set(fields.map((field) => field.group))];
   const steps = ["documents", ...sections.map((item) => item.id), "confirmation"];
@@ -258,21 +301,36 @@ export function AiAuthoringWizard({
     <section aria-label="Trình tạo kịch bản từng bước" className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 text-[var(--cns-text-primary)]">
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--cns-border-subtle)] pb-2.5">
         <div>
-          <h3 className="text-base font-semibold">{session ? session.form.label : "Tải tài liệu để AI chuẩn bị thông số"}</h3>
+          <h3 className="text-base font-semibold">{session ? session.form.label : mode === "description" ? "Mô tả tình huống" : "Tải tài liệu"}</h3>
           <p className="mt-0.5 text-xs text-[var(--cns-text-secondary)]">
-            {session ? saved ? "Đã lưu nháp trên máy chủ" : Object.keys(dirty).length ? "Có thay đổi chưa lưu" : "Bản nháp trên máy chủ · Chưa tạo kịch bản" : getSimulatorModule(moduleId)?.name ?? moduleId}
+            {contextDirty || Object.keys(dirty).length ? "Có thay đổi chưa lưu" : session ? saved ? "Đã lưu nháp trên máy chủ" : "Bản nháp trên máy chủ · Chưa tạo kịch bản" : getSimulatorModule(moduleId)?.name ?? moduleId}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {session ? <Button size="sm" className={authoringBtnBlueClass} disabled={busy || uploadUncertain || finalUncertain} onClick={() => { if (advanced) void run(showReview); else { setAdvanced(true); setStep(sections[0]?.id ?? "documents"); } }}>{advanced ? "Quay lại bản xem thử" : "Chỉnh sửa nâng cao"}</Button> : null}
           {session ? (
             <Button size="sm" className={authoringBtnGrayClass} disabled={busy || uploadUncertain || finalUncertain} onClick={() => void run(() => deleteSession(session.id))}>
               Xóa & tạo lại từ đầu
             </Button>
           ) : null}
-          {onClose ? <Button size="sm" className={authoringBtnGrayClass} disabled={busy} onClick={() => void run(async () => { if (current.current) await save(); onClose(); })}>Đóng</Button> : null}
+          {onClose ? <Button size="sm" className={authoringBtnGrayClass} disabled={busy || closePrompt} onClick={() => void prepareClose().then(ready => { if (ready) onClose(); })}>Đóng</Button> : null}
         </div>
       </header>
 
+      {closePrompt ? <section aria-label="Thay đổi chưa lưu" className={`${authoringCardClass} grid gap-3`}>
+        <p role="alert" className="text-sm">{session ? "AI đang xử lý bản nháp đã lưu nên chưa thể lưu phần chỉnh mới. Bạn có thể tiếp tục chờ, hoặc bỏ riêng thay đổi chưa lưu để đóng. Bản nháp và công việc AI trên máy chủ vẫn được giữ." : "Mô tả chưa được lưu trên máy chủ. Tiếp tục chỉnh sửa hoặc bỏ thay đổi chưa lưu để đóng."}</p>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" className={authoringBtnBlueClass} onClick={() => decideClose(false)}>Giữ bản chỉnh và tiếp tục</Button>
+          <Button size="sm" className={authoringBtnGrayClass} onClick={() => decideClose(true)}>Bỏ thay đổi chưa lưu và đóng</Button>
+        </div>
+      </section> : null}
+
+      {conflict ? <Button size="sm" className={`${authoringBtnBlueClass} w-fit`} disabled={busy} onClick={() => void run(async () => { await request(`${api}/${encodeURIComponent(current.current!.id)}`, { cache: "no-store" }); setConflict(false); })}>Tải lại phiên mới, giữ bản chỉnh</Button> : null}
+
+      {session?.blueprint && !advanced && !contextDirty ? <>
+        {error ? <p role="alert" className="rounded-lg border border-red-300 bg-red-50 p-3 text-xs text-red-900">{error}</p> : null}
+        <ScenarioBlueprintReview blueprint={session.blueprint} onSave={() => void run(finalize)} disabled={busy || pending || conflict || uploadUncertain || contextDirty || Object.keys(dirty).length > 0 || session.issues.some(issue => issue.severity === "error") || session.preview.status === "invalid"} />
+      </> : <>
       <div
         data-testid="authoring-wizard-columns"
         className="grid min-w-0 grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)]"
@@ -282,7 +340,7 @@ export function AiAuthoringWizard({
             <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--cns-text-secondary)]">
               Menu tính năng
             </p>
-            {session ? (
+            {session && advanced ? (
               <nav aria-label="Các bước tạo kịch bản" className="grid gap-1.5">
                 {steps.map((id) => {
                   const isCurrent = step === id;
@@ -325,10 +383,10 @@ export function AiAuthoringWizard({
             ) : (
               <div className="grid gap-1.5">
                 <div className="rounded-lg border border-[#0369a1] bg-[#0369a1] px-2.5 py-2 text-xs font-semibold text-white">
-                  1. Tài liệu & Khởi tạo
+                  Tình huống → Xem thử → Lưu
                 </div>
                 <p className="text-[11px] leading-relaxed text-[var(--cns-text-secondary)]">
-                  Các mục thông số thiết bị, lỗi giả lập, quyền chỉnh sửa và tiêu chí hoàn thành sẽ hiển thị tại đây sau khi khởi tạo bản nháp.
+                  AI dựng tình huống, nguyên nhân, quy trình xử lý và tiêu chí đạt. Chi tiết native nằm trong Chỉnh sửa nâng cao.
                 </p>
               </div>
             )}
@@ -343,7 +401,7 @@ export function AiAuthoringWizard({
                   <li key={item.id} className="flex flex-wrap items-center justify-between gap-1.5 rounded-lg border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card-subtle)] p-2 text-xs">
                     <span className="break-words">{item.name} · {item.status === "completed" ? "Đã tạo, chưa xuất bản" : "Bản nháp"}</span>
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <Button size="sm" className={authoringBtnBlueClass} aria-label={`Tiếp tục: ${item.name}`} disabled={busy} onClick={() => void run(async () => { const next = await request(`${api}/${encodeURIComponent(item.id)}`, { cache: "no-store" }); setStep(next.currentStep); })}>Tiếp tục</Button>
+                      <Button size="sm" className={authoringBtnBlueClass} aria-label={`Tiếp tục: ${item.name}`} disabled={busy} onClick={() => void run(async () => { const next = await request(`${api}/${encodeURIComponent(item.id)}`, { cache: "no-store" }); editContext(next.context ?? ""); setStep(next.currentStep); setAdvanced(next.currentStep !== "documents" && next.currentStep !== "review"); })}>Tiếp tục</Button>
                       <Button size="sm" className={authoringBtnGrayClass} aria-label={`Xóa bản nháp: ${item.name}`} disabled={busy} onClick={() => void run(() => deleteSession(item.id))}>Xóa</Button>
                     </div>
                   </li>
@@ -363,12 +421,12 @@ export function AiAuthoringWizard({
         <div role="region" aria-label="Nội dung tính năng" className="grid min-w-0 gap-3">
           {error || fileError ? <p role="alert" className="rounded-lg border border-red-300 bg-red-50/80 p-2.5 text-xs text-red-900">{fileError ?? error}</p> : null}
           {uploadUncertain ? <Button size="sm" className={`${authoringBtnOrangeClass} w-fit`} disabled={busy} onClick={() => void run(async () => { const next = await submitUpload(); if (!session) setStep(next.currentStep); })}>Gửi lại yêu cầu</Button> : null}
-          {conflict ? <Button size="sm" className={`${authoringBtnBlueClass} w-fit`} disabled={busy} onClick={() => void run(async () => { await request(`${api}/${encodeURIComponent(current.current!.id)}`, { cache: "no-store" }); setConflict(false); })}>Tải lại phiên mới, giữ bản chỉnh</Button> : null}
 
-          {step === "documents" ? (
+
+          {(!advanced || step === "documents") ? (
             <div className={`${authoringCardClass} grid gap-3.5`}>
-              <p className="text-xs leading-relaxed">Dùng manual hoặc tài liệu thông số của đúng thiết bị. Tài liệu chỉ chuẩn bị giá trị nền cho bản nháp này, không thay mặc định toàn hệ thống.</p>
-              <div className="grid gap-1.5">
+              <p className="text-xs leading-relaxed">{mode === "description" && !advanced ? "Mô tả sự cố, triệu chứng và mục tiêu huấn luyện bằng lời của bạn. AI tra manual đúng thiết bị; nếu thiếu nguồn hoặc mục tiêu, AI sẽ yêu cầu bổ sung, không tự chọn lỗi." : "Dùng manual hoặc tài liệu của đúng thiết bị. Mục tiêu bài tập có thể bổ sung bên dưới; không thay mặc định toàn hệ thống."}</p>
+              {mode === "documents" || advanced || session ? <div className="grid gap-1.5">
                 <label htmlFor={fileInputId} className="text-xs font-semibold text-[var(--cns-text-primary)]">
                   Tài liệu thông số nền
                 </label>
@@ -414,24 +472,20 @@ export function AiAuthoringWizard({
                       : "Không có tệp nào được chọn"}
                   </div>
                 </div>
-              </div>
+              </div> : null}
               {session?.documents.length ? <ul aria-label="Tài liệu đã lưu" className="grid gap-1 text-xs">{session.documents.map((document, index) => <li key={index}>{document.name}</li>)}</ul> : null}
               {files.length ? <ul className="text-xs">{files.map((file, i) => <li key={i} className="break-all">{file.name}</li>)}</ul> : null}
-              <label className="grid gap-1 text-xs font-medium">Phạm vi tài liệu (không bắt buộc)<input value={context} maxLength={2000} className={authoringInputClass} disabled={busy || uploadUncertain} onChange={(event) => setContext(event.currentTarget.value)} /></label>
+              <label className="grid gap-1 text-xs font-medium">{mode === "description" && !advanced ? "Mô tả tình huống" : "Mục tiêu huấn luyện (không bắt buộc)"}<textarea rows={5} value={context} maxLength={2000} className={authoringInputClass} disabled={busy || uploadUncertain} onChange={(event) => editContext(event.currentTarget.value)} /></label>
               <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-[var(--cns-border-subtle)]/70 pt-3">
                 <a className="text-xs font-medium text-[#0369a1] underline" href={`/templates/ai-scenario-${moduleId}.docx`} download>Tải mẫu thông số nền (.docx)</a>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Button size="sm" variant="primary" className={authoringBtnOrangeClass} disabled={busy || uploadUncertain || pending || conflict || !!session?.proposal || !!fileError || !files.length} onClick={() => void run(() => session ? analyze("baseline") : create())}>
-                    {session ? "Phân tích lại tài liệu" : "Phân tích tài liệu và điền biểu mẫu"}
+                  <Button size="sm" variant="primary" className={authoringBtnOrangeClass} disabled={busy || uploadUncertain || pending || conflict || !!session?.proposal || !!fileError || (mode === "description" && !advanced ? !context.trim() : !files.length && !session?.documents.length)} onClick={() => void run(() => session ? analyze(advanced ? "baseline" : "blueprint") : create())}>
+                    {advanced ? "Phân tích lại tài liệu" : "AI soạn kịch bản"}
                   </Button>
-                  {!session && !initialMode ? (
-                    <Button size="sm" className={authoringBtnGrayClass} disabled={busy || uploadUncertain} onClick={() => void run(() => create(true))}>
-                      Dùng mặc định simulator
-                    </Button>
-                  ) : null}
+
                 </div>
               </div>
-              <p className="text-[11px] text-[var(--cns-text-secondary)]">Nếu dùng mặc định simulator, các giá trị chưa được đối chiếu với tài liệu.</p>
+              <p className="text-[11px] text-[var(--cns-text-secondary)]">Mặc định simulator chỉ làm nền nội bộ. Bản nháp và tài liệu chưa được xuất bản.</p>
             </div>
           ) : null}
 
@@ -474,9 +528,9 @@ export function AiAuthoringWizard({
             </>
           ) : null}
 
-          {session && step === "confirmation" ? <AiAuthoringSummary session={session} /> : null}
+          {session && advanced && step === "confirmation" ? <AiAuthoringSummary session={session} /> : null}
 
-          {session ? (
+          {session && advanced ? (
             <footer className="mt-0.5 flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] px-4 py-3 shadow-2xs">
               <Button size="sm" className={authoringBtnGrayClass} disabled={busy || pending || finalUncertain || step === "documents"} onClick={() => void run(() => navigate(steps[Math.max(0, steps.indexOf(step) - 1)]))}>
                 Quay lại
@@ -485,12 +539,15 @@ export function AiAuthoringWizard({
                 <Button size="sm" className={authoringBtnBlueClass} disabled={busy || pending || conflict || finalUncertain} onClick={() => void run(() => save())}>
                   Lưu nháp
                 </Button>
+                {step === "documents" && sections[0] ? <Button size="sm" className={authoringBtnOrangeClass} disabled={busy || pending || conflict || uploadUncertain || finalUncertain} onClick={() => void run(() => navigate(sections[0].id))}>Tiếp tục chỉnh sửa</Button> : null}
                 {section ? (
                   <Button size="sm" variant="primary" className={authoringBtnOrangeClass} disabled={busy || pending || uploadUncertain || conflict} onClick={() => void run(() => navigate(steps[steps.indexOf(step) + 1], true))}>
                     Xác nhận bước và tiếp tục
                   </Button>
+                ) : step === "confirmation" && session.mode ? (
+                  <p className="max-w-prose text-xs text-[var(--cns-text-secondary)]">{session.blueprint ? "Quay lại bản xem thử để lưu bài tập đã kiểm chứng." : "Cần AI soạn lại và kiểm chứng bài tập sau chỉnh sửa. Quay lại bản xem thử để tiếp tục."}</p>
                 ) : step === "confirmation" ? (
-                  <Button size="sm" variant="primary" className={authoringBtnOrangeClass} disabled={busy || pending || conflict || !!session.proposal || Object.keys(dirty).length > 0 || session.issues.some((issue) => issue.severity === "error") || session.preview.status === "invalid" || !sections.every((item) => session.confirmedSections.includes(item.id))} onClick={() => void run(finalize)}>
+                  <Button size="sm" variant="primary" className={authoringBtnOrangeClass} disabled={busy || pending || conflict || !!session.proposal || contextDirty || Object.keys(dirty).length > 0 || session.issues.some((issue) => issue.severity === "error") || session.preview.status === "invalid" || !sections.every((item) => session.confirmedSections.includes(item.id))} onClick={() => void run(finalize)}>
                     Hoàn tất tạo kịch bản
                   </Button>
                 ) : null}
@@ -528,7 +585,7 @@ export function AiAuthoringWizard({
                   : session.analysis.status === "running"
                     ? "AI đang phân tích tài liệu hoặc câu hỏi"
                     : session.analysis.status === "failed"
-                      ? "AI chưa phân tích được. Kiểm tra tài liệu (scan cần OCR) hoặc rút gọn câu hỏi rồi thử lại; bản chỉnh không mất."
+                      ? analysisFailures[session.analysis.errorCode ?? ""] ?? "AI chưa phân tích được. Kiểm tra tài liệu (scan cần OCR) hoặc rút gọn câu hỏi rồi thử lại; bản chỉnh không mất."
                       : session.analysis.status === "stale"
                         ? "Kết quả AI đã cũ do bản nháp thay đổi. Hãy phân tích lại."
                         : "AI đã xử lý xong. Xem nguồn và duyệt đề xuất bên dưới."}
@@ -543,9 +600,9 @@ export function AiAuthoringWizard({
             </div>
           ) : null}
 
-          {session?.proposal ? (
+          {session?.proposal || session?.lastExplanation ? (
             <AiAuthoringAssistant
-              key={session.proposal.id}
+              key={session.proposal?.id ?? "explanation"}
               session={session}
               dirty={dirty}
               disabled={busy || uploadUncertain || conflict || pending}
@@ -613,6 +670,7 @@ export function AiAuthoringWizard({
           ) : null}
         </aside>
       </div>
+      </>}
     </section>
   );
 }

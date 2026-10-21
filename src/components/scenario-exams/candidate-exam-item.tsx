@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { ExamPageFrame, primaryButtonClassName, secondaryButtonClassName, textareaClassName } from "@/components/exams/shared";
 import { getScenarioParametersModule } from "@/lib/scenario-parameters";
 import type { CandidateScenarioExamItem, ScenarioExamAnswer } from "@/lib/scenario-exams/types";
-import { CandidateExamTimer, useScenarioExamRemainingTime } from "./candidate-exam-timer";
+import { CandidateExamTimer, useScenarioExamExpiration, useScenarioExamRemainingTime } from "./candidate-exam-timer";
 import { ScenarioExamSnapshotProvider, type ScenarioExamResultReader } from "./scenario-exam-snapshot-context";
 import { saveScenarioExamItemAction, submitScenarioExamItemAction, type ScenarioExamActionResult } from "@/lib/scenario-exams/actions";
 import { buildCandidateScenarioExamResult, cacheCandidateScenarioExamResult, cacheCandidateAnswer, readCandidateAnswer } from "@/lib/scenario-exams/browser-results";
@@ -44,6 +44,7 @@ export function CandidateExamItem({ item }: { item: CandidateScenarioExamItem })
   const resultReader = useRef<ScenarioExamResultReader | null>(null);
   const inFlight = useRef<Promise<ScenarioExamActionResult<{ id: string }>> | null>(null);
   const active = remaining > 0 && !submitted;
+  useScenarioExamExpiration(remaining, !submitted);
   const registerResultReader = useCallback((reader: ScenarioExamResultReader) => {
     resultReader.current = reader;
     return () => { if (resultReader.current === reader) resultReader.current = null; };
@@ -116,7 +117,7 @@ export function CandidateExamItem({ item }: { item: CandidateScenarioExamItem })
         {feedback ? <p role={feedback.error ? "alert" : "status"} className={`mt-3 text-sm ${feedback.error ? "text-[var(--color-danger)]" : "text-[var(--text-secondary)]"}`}>{feedback.message}</p> : null}
         {active ? <div className="mt-3"><ScenarioExamLiveStatus item={item} reader={resultReader} /></div> : null}
       </ExamPageFrame>
-      {submitted ? <p role="status" className="mx-4 text-sm text-[var(--color-success)]">Đã nộp môn thi. Bạn có thể quay lại phiên thi để nộp toàn bộ bài.</p> : remaining === 0 ? (
+      {submitted ? <div className="mx-4 grid gap-3"><p role="status" className="text-sm text-[var(--color-success)]">Đã nộp môn thi. Bạn có thể quay lại phiên thi để nộp toàn bộ bài.</p><p className="text-sm text-[var(--text-secondary)]">Nhận xét chỉ được tải sau khi kết thúc toàn bộ phiên thi.</p></div> : remaining === 0 ? (
         <p role="alert" className="mx-4 rounded border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-sm text-[#991b1b]">Phiên thi đã hết thời gian. Hãy quay lại phiên thi để xem trạng thái các môn.</p>
       ) : (
         <ScenarioExamSnapshotProvider answer={answer} registerResultReader={registerResultReader} snapshot={{ moduleId: item.moduleId, definition: item.definition, sessionKey: `scenario-exam:${item.sessionId}:${item.id}`, revisionKey: `exam:${item.id}:${item.revision}` }}>

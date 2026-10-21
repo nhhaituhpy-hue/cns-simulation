@@ -35,6 +35,7 @@ import {
   type SimulatorParameterChangeLogEntry,
 } from "@/lib/simulator-config/parameter-change";
 import { create, type StoreApi, type UseBoundStore } from "zustand";
+import { createNativeParameterEvidence, recordNativeParameterChanges, type NativeParameterEvidence } from "@/lib/simulator-config/native-parameter-evidence";
 
 const defaultViews: Record<Dvor1150ScreenId, Dvor1150ViewId> = {
   home: "home",
@@ -96,6 +97,7 @@ export interface Dvor1150PmdtStoreState {
   configDirty: boolean;
   needBackup: boolean;
   parameterChangeLogs: SimulatorParameterChangeLogEntry[];
+  parameterEvidence?: NativeParameterEvidence;
   derived: Dvor1150Snapshot;
   loginDialogOpen: boolean;
   authenticatedUserId: string | null;
@@ -182,6 +184,7 @@ function buildInitialState(now: () => Date): Dvor1150PmdtStoreState {
     configDirty: false,
     needBackup: false,
     parameterChangeLogs: [],
+    parameterEvidence: createNativeParameterEvidence("dvor-1150", null, now().getTime()),
     derived,
     loginDialogOpen: true,
     authenticatedUserId: null,
@@ -368,6 +371,17 @@ export function createDvor1150PmdtStore(
       return next;
     };
 
+    const parameterProof = (state: Dvor1150PmdtStoreState, after: Dvor1150Config,
+      phase: "apply" | "command" | "restore", controlId: string, actionLabel: string, fields?: readonly string[]) => {
+      const timestampMs = now().getTime();
+      const scenarioId = state.scenario.active ? state.scenario.definition?.id ?? null : null;
+      const evidence = state.parameterEvidence?.scenarioId === scenarioId ? state.parameterEvidence
+        : createNativeParameterEvidence("dvor-1150", scenarioId, timestampMs);
+      const recorded = recordNativeParameterChanges({ existing: state.parameterChangeLogs, evidence,
+        before: state.config, after, timestampMs, userName: state.authenticatedUserId, phase, controlId, actionLabel, fields });
+      return { parameterChangeLogs: recorded.logs, parameterEvidence: recorded.evidence };
+    };
+
     const applyScenarioBaseline = (
       definition: Dvor1150ScenarioDefinition,
       command: string,
@@ -391,6 +405,7 @@ export function createDvor1150PmdtStore(
         needBackup: false,
         derived,
         scenario: { active: true, definition: storedDefinition, startedAt: startedAt ?? config.simulation.timestamp },
+        parameterEvidence: createNativeParameterEvidence("dvor-1150", storedDefinition.id, now().getTime()),
         scenarioDraft: structuredClone(storedDefinition),
         scenarioVisitedViewIds: [],
         scenarioAcceptedActionControlIds: [],
@@ -431,6 +446,7 @@ export function createDvor1150PmdtStore(
             startedAt: config.simulation.timestamp,
           },
           scenarioDraft: structuredClone(definition),
+          parameterEvidence: createNativeParameterEvidence("dvor-1150", definition.id, now().getTime()),
           lastCommand: null,
         });
         return true;
@@ -571,6 +587,7 @@ export function createDvor1150PmdtStore(
             : automaticTransfer?.action === "shutdown"
               ? "Automatic monitor shutdown: both transmitters off"
               : enabled ? "Integral Monitor Bypass On" : "Integral Monitor Bypass Off",
+          ...parameterProof(state, nextConfig, "command", "integral-monitor-bypass", "Integral Monitor Bypass", ["simulation.integralMonitorBypass"]),
         });
         return true;
       },
@@ -619,13 +636,7 @@ export function createDvor1150PmdtStore(
           persistentConfigValue(state.config),
           persistentConfigValue(config),
         );
-        const nextParameterLogs = createParameterChangeLogEntries({
-          changedFields,
-          timeTag: config.simulation.timestamp,
-          userName: state.authenticatedUserId,
-          file: "Monitor / Transmitter / RMS",
-          actionLabel: "Configuration Apply",
-        });
+
         set({
           config: nextConfig,
           configDraft: cloneDvor1150Config(nextConfig),
@@ -633,7 +644,7 @@ export function createDvor1150PmdtStore(
           configDirty: false,
           // Training changes must be contained in the current browser session.
           needBackup: state.scenario.active ? false : true,
-          parameterChangeLogs: prependParameterChangeLogEntries(state.parameterChangeLogs, nextParameterLogs),
+          ...parameterProof(state, nextConfig, "apply", "config-apply", "Configuration Apply", changedFields),
           scenarioAcceptedActionControlIds: state.scenario.active
             ? [...new Set([...state.scenarioAcceptedActionControlIds, "config-apply"])]
             : state.scenarioAcceptedActionControlIds,

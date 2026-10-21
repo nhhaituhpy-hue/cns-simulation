@@ -5,6 +5,7 @@ import { mkdtemp, readFile, rm, symlink, truncate, writeFile } from "node:fs/pro
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { retrieveDeviceKnowledge } from "@/lib/ai/knowledge/retrieve";
+import { validateEvidenceDocuments } from "@/lib/ai/scenario-generation/validation";
 
 const MODULES = ["dvor-1150", "dvor-1150a", "dme-1119a", "dvor-220", "dme-320", "ads-b"] as const;
 const roots: string[] = [];
@@ -121,6 +122,146 @@ it("skips entire clearly credential-bearing pages but leaves technical safety te
   const result = await retrieveDeviceKnowledge("dvor-1150", "power", { root });
   expect(result.documents[0].segments.map(s => s.text)).toEqual([safe]);
   expect(result.notice).toContain("1 security-sensitive");
+});
+function fixtureChapter(corpus: FixtureCorpus, text: string, label = "DOCX section 3") {
+  const doc = corpus.documents[0];
+  Object.assign(doc, { name: "Synthetic chapter.docx", mediaType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", pageCount: null });
+  Object.assign(doc.segments[0], { label, page: null, printedPage: null, text, textSha256: hash(text) });
+}
+const procedure = "Synthetic SAC SIC procedure: inspect the configured codes, correct the assigned values, and apply the configuration.";
+const spacing = Array.from({ length: 8 }, (_, i) => `Unrelated technical paragraph ${i}. ${"Inspect the equipment status before maintenance. ".repeat(8)}`).join("\n\n");
+it("retrieves exact distant procedure windows from a credential-bearing DOCX chapter", async () => {
+  const blocked = ["Adjacent account context.", "Username: synthetic-user\nPassword: synthetic-value", "Adjacent account note."];
+  const text = [spacing, ...blocked, spacing, procedure, "Verify the resulting codes."].join("\n\n");
+  const { root } = await fixture(c => fixtureChapter(c, text));
+  const result = await retrieveDeviceKnowledge("dvor-1150", "SAC SIC", { root });
+  expect(result.documents).toHaveLength(1);
+  expect(result.documents[0].sha256).toBe(fixtureCorpus("dvor-1150").documents[0].sha256);
+  expect(result.documents[0].segments.some(s => s.text.includes(procedure))).toBe(true);
+  for (const segment of result.documents[0].segments) {
+    expect(text.includes(segment.text)).toBe(true);
+    expect(segment.label).toMatch(/^DOCX section 3 · excerpt \d+$/);
+    for (const secret of blocked) expect(segment.text.includes(secret)).toBe(false);
+  }
+  expect(await retrieveDeviceKnowledge("dvor-1150", "SAC SIC", { root })).toEqual(result);
+  expect(result.notice).toContain("1 security-sensitive");
+});
+it.each([
+  "Logon defaults\n\nUser name\n\nsynthetic-operator\n\nPassword\n\nsynthetic-first-fragment\n\nsynthetic-second-fragment\n\nsynthetic-third-fragment",
+  "Đăng nhập mặc định\nTên đăng nhập\nsynthetic-operator\nMật khẩu\nsynthetic-first-fragment\nsynthetic-second-fragment\nsynthetic-third-fragment",
+  "Default login\r\n\r\nUsername\r\n\r\nsynthetic-operator\r\n\r\nPassword\r\n\r\nsynthetic-first-fragment\r\n\r\nsynthetic-second-fragment\r\n\r\nsynthetic-third-fragment",
+])("quarantines contextual credential values and their neighbors across lines %#", async credentials => {
+  const text = [spacing, "SAC SIC preceding account note.", credentials, "SAC SIC following account note.", spacing, procedure].join("\n\n");
+  const { root } = await fixture(c => fixtureChapter(c, text));
+  const result = await retrieveDeviceKnowledge("dvor-1150", "SAC SIC", { root });
+  const quotes = result.documents.flatMap(d => d.segments).map(s => s.text);
+  expect(quotes.some(q => q.includes(procedure))).toBe(true);
+  for (const quote of quotes) {
+    expect(text.includes(quote)).toBe(true);
+    expect(/synthetic-(?:operator|first|second|third)|account note/i.test(quote)).toBe(false);
+  }
+});
+it("resumes only beyond credential values and a prose boundary without dropping distant short instructions", async () => {
+  const safe = Array.from({ length: 40 }, (_, i) => `Synthetic procedure item ${i}: inspect equipment.`).join("\n\n");
+  const text = ["Default password: synthetic-value", "Account note.", "Second account note.",
+    "This paragraph ends the account setup and describes equipment maintenance safety.", "Boundary neighbor.", safe, procedure].join("\n\n");
+  const { root } = await fixture(c => fixtureChapter(c, text));
+  const result = await retrieveDeviceKnowledge("dvor-1150", "SAC SIC", { root });
+  expect(result.documents.flatMap(d => d.segments).some(s => s.text.includes(procedure))).toBe(true);
+  for (const s of result.documents.flatMap(d => d.segments)) {
+    expect(text.includes(s.text)).toBe(true);
+    expect(/synthetic-value|account|Boundary neighbor/i.test(s.text)).toBe(false);
+  }
+});
+it.each(["PRIVATE KEY", "RSA PRIVATE KEY", "EC PRIVATE KEY", "OPENSSH PRIVATE KEY", "DSA PRIVATE KEY", "ENCRYPTED PRIVATE KEY"])("drops the whole segment containing a %s block", async kind => {
+  const text = [spacing, procedure, spacing, `-----BEGIN ${kind}-----\n${"QUJD".repeat(16)}\n-----END ${kind}-----`].join("\n\n");
+  const { root } = await fixture(c => fixtureChapter(c, text));
+  expect((await retrieveDeviceKnowledge("dvor-1150", "SAC SIC", { root })).documents).toEqual([]);
+});
+it.each(["QUJD".repeat(32), `${"QUJD".repeat(8)}\n${"REVG".repeat(8)}\n${"R0hJ".repeat(8)}`])("fails closed on unlabelled base64 material rather than moving it into an excerpt %#", async encoded => {
+  const text = [spacing, procedure, encoded, spacing].join("\n\n");
+  const { root } = await fixture(c => fixtureChapter(c, text));
+  const result = await retrieveDeviceKnowledge("dvor-1150", "SAC SIC", { root });
+  expect(result.documents.length).toBe(0);
+});
+it("bounds recovered windows and reports unique source segments rather than invented source totals", async () => {
+  const text = ["Password: synthetic-value", spacing, ...Array.from({ length: 12 }, (_, i) => `${procedure} Step ${i}. ${spacing.split("\n\n")[0]}`)].join("\n\n");
+  const { root } = await fixture(c => fixtureChapter(c, text));
+  const result = await retrieveDeviceKnowledge("dvor-1150", "SAC SIC", { root, maxCharacters: 100000 });
+  const segments = result.documents.flatMap(d => d.segments);
+  expect(segments).toHaveLength(6);
+  expect(new Set(segments.map(s => s.label)).size).toBe(segments.length);
+  expect(segments.reduce((n, s) => n + s.text.length, 0)).toBeLessThanOrEqual(12000);
+  for (const s of segments) { expect(s.text.length).toBeLessThanOrEqual(1600); expect(text.includes(s.text)).toBe(true); }
+  expect(result.notice).toContain("1/1 segments");
+  expect(result.notice).toContain("6 excerpts");
+  const bounded = await retrieveDeviceKnowledge("dvor-1150", "SAC SIC", { root, maxCharacters: 1600 });
+  expect(bounded.documents.flatMap(d => d.segments).reduce((n, s) => n + s.text.length, 0)).toBeLessThanOrEqual(1600);
+  expect(bounded.documents.flatMap(d => d.segments).every(s => segments.some(full => full.text === s.text && full.label === s.label))).toBe(true);
+});
+it("rejects ambiguous excerpt labels that collide with an original source label", async () => {
+  const text = ["Password: synthetic-value", spacing, procedure].join("\n\n");
+  const { root } = await fixture(c => {
+    fixtureChapter(c, text);
+    const source = c.documents[0].segments[0];
+    c.documents[0].segments.push({ ...source, label: "DOCX section 3 · excerpt 1", text: procedure, textSha256: hash(procedure) });
+  });
+  await expect(retrieveDeviceKnowledge("dvor-1150", "SAC SIC", { root })).rejects.toMatchObject({ code: "KNOWLEDGE_INVALID" });
+});
+it.each(["trailing-newline", "leading-space", "uppercase", "short", "long"])("rejects malformed original document hashes before excerpt isolation: %s", async kind => {
+  const { root } = await fixture(c => {
+    fixtureChapter(c, ["Password: synthetic-value", spacing, procedure].join("\n\n"));
+    const doc = c.documents[0], original = doc.sha256;
+    doc.sha256 = kind === "trailing-newline" ? `${original}\n` : kind === "leading-space" ? ` ${original}`
+      : kind === "uppercase" ? original.toUpperCase() : kind === "short" ? original.slice(1) : `${original}a`;
+  });
+  await expect(retrieveDeviceKnowledge("dvor-1150", "SAC SIC", { root })).rejects.toMatchObject({ code: "KNOWLEDGE_INVALID" });
+});
+it.each([
+  "Password: synthetic-value\n" + spacing.replaceAll("\n\n", "\n") + procedure,
+  "Password: synthetic-value\n\n" + Array.from({ length: 514 }, (_, i) => `SAC SIC fragment ${i}`).join("\n\n"),
+  Array.from({ length: 65 }, () => [procedure, "Before one.", "Before two.", "Password: synthetic-value", "After one.", "After two.",
+    "This paragraph ends the account setup and describes equipment maintenance safety.", "After three.", "After four."].join("\n\n")).join("\n\n"),
+])("fails closed when safe paragraph/window isolation exceeds structural limits %#", async text => {
+  const { root } = await fixture(c => fixtureChapter(c, text));
+  expect((await retrieveDeviceKnowledge("dvor-1150", "SAC SIC", { root })).documents.length).toBe(0);
+});
+it("does not truncate a long original label to manufacture excerpt provenance", async () => {
+  const { root } = await fixture(c => fixtureChapter(c, ["Password: synthetic-value", spacing, procedure].join("\n\n"), "x".repeat(100)));
+  expect((await retrieveDeviceKnowledge("dvor-1150", "SAC SIC", { root })).documents.length).toBe(0);
+});
+it("leaves a nonsensitive DOCX chapter and its original label intact", async () => {
+  const text = [spacing, procedure].join("\n\n");
+  const { root } = await fixture(c => fixtureChapter(c, text));
+  expect((await retrieveDeviceKnowledge("dvor-1150", "SAC SIC", { root })).documents[0].segments).toEqual([{ label: "DOCX section 3", text }]);
+});
+it("passes only exact recovered quotes into the existing citation compiler", async () => {
+  const { buildScenarioPrompt, selectDocumentExcerpts } = await import("@/lib/ai/scenario-generation/prompt");
+  const { compileScenarioBlueprint } = await import("@/lib/ai/scenario-blueprint/compiler");
+  const safe = "Synthetic DVOR 1150 procedure: inspect transmitter output power and apply the configuration.";
+  const text = ["Password: synthetic-value", spacing, safe].join("\n\n");
+  const { root } = await fixture(c => fixtureChapter(c, text));
+  const { documents } = await retrieveDeviceKnowledge("dvor-1150", "transmitter output", { root });
+  validateEvidenceDocuments(documents);
+  const input = { moduleId: "dvor-1150", name: "Synthetic training", description: "Recover transmitter power in simulation.", difficulty: "basic" } as const;
+  const excerpts = selectDocumentExcerpts(input, documents);
+  const shown = JSON.parse(buildScenarioPrompt(input, documents)[1].content).quotedEvidence;
+  const doc = excerpts[0], segment = doc.segments.find(s => s.text.includes(safe))!;
+  expect(shown.some((d: { id: string; segments: { label: string; text: string }[] }) => d.id === doc.id && d.segments.some(s => s.label === segment.label && s.text.includes(safe)))).toBe(true);
+  expect(JSON.stringify(shown).includes("synthetic-value")).toBe(false);
+  const proposal = { status: "supported", moduleId: input.moduleId, templateId: "carrier-9960", title: "Synthetic training", situation: input.description,
+    cause: "Synthetic configuration hypothesis", citations: [{ documentId: doc.id, segmentLabel: segment.label, quote: safe }],
+    initial: [{ fieldId: "configuration.transmitters.tx1.nominal.outputPower", value: 37.4, citationIndexes: [0] }],
+    recovery: [{ fieldId: "configuration.transmitters.tx1.nominal.outputPower", value: 125, citationIndexes: [0] }, { fieldId: "startPolicy.startMonitorBypassed", value: false, citationIndexes: [0] }], diagnosisCitationIndexes: [0] };
+  const blueprintInput = { moduleId: input.moduleId, description: input.description, mode: "documents" } as const;
+  const output = compileScenarioBlueprint(blueprintInput, excerpts, proposal);
+  expect(output.citations[0]).toMatchObject({ sha256: doc.sha256, segmentLabel: segment.label, quote: safe });
+  expect(text.includes(output.citations[0].quote)).toBe(true);
+  for (const citation of [
+    { ...proposal.citations[0], quote: "Password: synthetic-value" },
+    { ...proposal.citations[0], quote: safe.replace("inspect", "change") },
+    { ...proposal.citations[0], segmentLabel: "DOCX section 3" },
+  ]) expect(() => compileScenarioBlueprint(blueprintInput, excerpts, { ...proposal, citations: [citation] })).toThrow(expect.objectContaining({ code: "INVALID_CITATION" }));
 });
 it("bounds annotated display names without losing source classification", async () => {
   const { root } = await fixture(c => { c.documents[0].name = "x".repeat(255); });

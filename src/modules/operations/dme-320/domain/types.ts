@@ -1,4 +1,5 @@
 import type { SimulatorParameterChangeLogEntry } from "@/lib/simulator-config/parameter-change";
+import type { NativeParameterEvidence } from "@/lib/simulator-config/native-parameter-evidence";
 
 export type Dme320ChannelSuffix = "X" | "Y";
 export type Dme320TransponderId = "tx1" | "tx2";
@@ -503,6 +504,7 @@ export interface Dme320SimulationState {
   lastCertification: Dme320CertificationResult | null;
   logs: Dme320LogEntry[];
   parameterChangeLogs: SimulatorParameterChangeLogEntry[];
+  parameterEvidence?: NativeParameterEvidence;
 }
 
 export type Dme320Command =

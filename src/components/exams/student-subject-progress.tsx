@@ -8,6 +8,7 @@ import { useState, useTransition } from "react";
 import { completeExamAttemptAction, startExamAttemptAction } from "@/lib/exams/actions";
 import { ActionFeedback } from "./action-feedback";
 import { primaryButtonClassName, secondaryButtonClassName } from "./shared";
+import { AttemptFeedbackResult } from "@/components/scenario/attempt-feedback-result";
 
 export interface StudentAttemptItemView {
   id: string;
@@ -109,6 +110,10 @@ export function StudentSubjectProgress({
           {attempt.status === "submitted" ? <div className="border-t border-[#bbf7d0] bg-[#f0fdf4] p-4 text-sm font-semibold text-[#166534]">Môn thi đã được nộp. Điểm chính thức sẽ do giám khảo nhập.</div> : null}
         </section>
       ) : null}
+
+      {attempt?.status === "submitted" && allSubmitted ? <section aria-label="Nhận xét lượt thi đã nộp" className="grid gap-4">
+        {attempt.items.map(item => <div key={`${attempt.id}:${item.id}`} className="grid gap-2"><h3 className="text-sm font-semibold">{item.scenarioTitle}</h3><AttemptFeedbackResult target={{ legacyAttemptItemId: item.id }} /></div>)}
+      </section> : null}
 
       {feedback ? <ActionFeedback tone="error" message={feedback} /> : null}
       <div><button type="button" onClick={() => router.push(`/student/exams/${examId}`)} className={secondaryButtonClassName}>Quay lại thông tin kỳ thi</button></div>

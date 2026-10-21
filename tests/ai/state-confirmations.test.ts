@@ -12,7 +12,7 @@ function confirmed(): AuthoringState {
   expect(confirmedAuthoringSections(state)).toEqual(["metadata", "initial", "faults", "criteria", "diagnosis", "permissions"]);
   return state;
 }
-it.each(["navigate", "same-values"])("preserves confirmed hashes and pending guidance for %s without a semantic edit", action => {
+it.each(["navigate", "same-values"])("preserves confirmed hashes and explanation for %s without a semantic edit", action => {
   let state = confirmed();
   state = applyAnalysisProposal(state, {
     id: "no-op-guidance", baseRevision: 1, kind: "guidance", sectionId: "faults", message: "Review current faults", changes: [], issues: [],
@@ -23,7 +23,8 @@ it.each(["navigate", "same-values"])("preserves confirmed hashes and pending gui
   if (action === "navigate") state = mutateAuthoringState(state, { action: "navigate", sectionId: "criteria" });
   else state = mutateAuthoringState(state, { action: "edit", changes: authoringAdapterFor(state.moduleId).form(state.definition).fields.filter(field => !field.schema.readOnly).map(({ id, value }) => ({ fieldId: id, value })) });
   expect(state.confirmations).toEqual(hashes);
-  expect(state.proposal?.id).toBe("no-op-guidance");
+  expect(state.proposal).toBeNull();
+  expect(state.lastExplanation).toBe("Review current faults");
   expect(state.sources).toEqual(sources);
 });
 it("invalidates goal-dependent confirmations after editing description", () => {

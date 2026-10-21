@@ -1,4 +1,5 @@
 import { cloneDvor220, createDefaultDvor220Configuration, createInitialDvor220State } from "./defaults";
+import { createNativeParameterEvidence } from "@/lib/simulator-config/native-parameter-evidence";
 import {
   advanceDvor220Time,
   appendDvor220Log,
@@ -162,6 +163,7 @@ export function startDvor220Scenario(
     definition: scenario,
     startedAtMs: current.nowMs,
   };
+  next.parameterEvidence = createNativeParameterEvidence("dvor-220", scenario.id, current.nowMs);
   appendDvor220Log(next, "event", `Scenario started: ${scenario.name}`, "SYSTEM");
   next = reconcileDvor220State(next);
   return next;

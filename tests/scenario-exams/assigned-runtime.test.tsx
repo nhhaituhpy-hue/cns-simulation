@@ -28,7 +28,7 @@ import { ScenarioExamSubmissionReviewView } from "@/components/scenario-exams/sc
 import { evaluateScenarioExamResult } from "@/lib/scenario-exams/evaluation";
 
 const actionMocks = vi.hoisted(() => ({ save: vi.fn(), submit: vi.fn(), grade: vi.fn(), push: vi.fn(), refresh: vi.fn() }));
-vi.mock("@/lib/scenario-exams/actions", () => ({ saveScenarioExamItemAction: actionMocks.save, submitScenarioExamItemAction: actionMocks.submit, saveScenarioExamReviewAction: actionMocks.grade }));
+vi.mock("@/lib/scenario-exams/actions", () => ({ expireScenarioExamSessionAction: vi.fn(async () => ({ ok: true, data: { timedOut: true } })), saveScenarioExamItemAction: actionMocks.save, submitScenarioExamItemAction: actionMocks.submit, saveScenarioExamReviewAction: actionMocks.grade }));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: actionMocks.push, replace: vi.fn(), back: vi.fn(), forward: vi.fn(), refresh: actionMocks.refresh, prefetch: vi.fn() }),
@@ -68,6 +68,16 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
 describe("assigned simulator snapshots", () => {
+  it("never requests feedback for an item while the full exam session is still active", async () => {
+    vi.mocked(fetch).mockImplementation(async () => new Response(JSON.stringify({ status: "withheld" })));
+    render(<CandidateExamItem item={runtimeItem("dvor-1150a", createDefaultDvor1150aScenarioDefinition())} />);
+    await waitFor(() => expect(useVorPmdtStore.getState().sessionKey).toBe(sessionKey), { timeout: 10000 });
+    expect(fetch).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Nộp môn" }));
+    await screen.findByText(/Đã nộp môn thi. Bạn có thể/);
+    expect(fetch).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: "Nộp bài ôn tập" })).not.toBeInTheDocument();
+  });
   it("shows editable conclusions and saves their exact values", async () => {
     render(<CandidateExamItem item={runtimeItem("dvor-1150a", createDefaultDvor1150aScenarioDefinition())} />);
     await waitFor(() => expect(useVorPmdtStore.getState().sessionKey).toBe(sessionKey));
@@ -124,6 +134,7 @@ describe("assigned simulator snapshots", () => {
     expect(within(hardware).getByText("RMS nguồn +5V thấp liên hệ với LVPS 1A3A4")).toBeVisible();
     expect(within(hardware).getByText("Khớp đáp án")).toBeVisible();
     expect(within(hardware).queryByText("Another live session")).not.toBeInTheDocument();
+    await screen.findByText("Source catalog must not be fetched");
   });
 
   it("lets the candidate return to the session when the assigned runtime cannot initialize", async () => {

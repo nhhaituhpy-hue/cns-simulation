@@ -53,9 +53,10 @@ async function jsonBody(request:Request,allowed:string[]){
 }
 function mutation(value:unknown):AuthoringMutation{
  if(!value||typeof value!=="object"||Array.isArray(value))input();const v=value as Record<string,unknown>;
- const fields:Record<string,string[]>={edit:["action","changes"],confirm:["action","sectionId"],navigate:["action","sectionId"],"apply-proposal":["action","proposalId","fieldIds"],"dismiss-proposal":["action","proposalId"],"reset-field":["action","fieldId"]};
+ const fields:Record<string,string[]>={edit:["action","changes"],"edit-context":["action","context"],confirm:["action","sectionId"],navigate:["action","sectionId"],"apply-proposal":["action","proposalId","fieldIds"],"dismiss-proposal":["action","proposalId"],"reset-field":["action","fieldId"],"confirm-blueprint":["action"]};
  const keys=typeof v.action==="string"?fields[v.action]:null;if(!keys||Object.keys(v).some(k=>!keys.includes(k))||keys.some(k=>!Object.hasOwn(v,k)))input();
  if(v.action==="edit"&&(!Array.isArray(v.changes)||v.changes.length>1000))input();
+ if(v.action==="edit-context"&&(typeof v.context!=="string"||v.context.length>2000||v.context.includes("\0")))input("Mục tiêu huấn luyện tối đa 2000 ký tự.");
  for(const k of ["sectionId","proposalId","fieldId"])if(k in v&&(typeof v[k]!=="string"||v[k].length>300))input();
  if("fieldIds"in v&&(!Array.isArray(v.fieldIds)||v.fieldIds.length>1000||v.fieldIds.some(x=>typeof x!=="string"||x.length>300)))input();
  return v as unknown as AuthoringMutation;
@@ -67,10 +68,14 @@ export async function listAuthoringResponse(request:Request){const a=await auth(
  try{const moduleId=new URL(request.url).searchParams.get("moduleId")??"";if(!isScenarioParametersModuleId(moduleId))input();const sessions=await listAuthoringSessions(getDatabasePool(),a.profile!.id,moduleId);return json({sessions:sessions.map(s=>({id:s.id,moduleId:s.moduleId,status:s.status,revision:s.revision,name:s.state.definition.name,updatedAt:s.updatedAt,scenarioRowId:s.scenarioRowId,scenarioId:s.scenarioId}))});}catch(e){return errorResponse(e);}
 }
 export async function createAuthoringResponse(request:Request){const a=await auth(request);if(a.response)return a.response;const directory=randomUUID();let retained=false,saved=false,cleanupSafe=false;
- try{available();const idempotencyKey=key(request);const{form,files}=await multipart(request,["moduleId","context","files"]);const moduleId=form.get("moduleId");if(typeof moduleId!=="string"||!isScenarioParametersModuleId(moduleId))input();const context=String(form.get("context")??"");if(context.length>4000)input();
+ try{available();const idempotencyKey=key(request);const{form,files}=await multipart(request,["moduleId","context","files","mode"]);const moduleId=form.get("moduleId");if(typeof moduleId!=="string"||!isScenarioParametersModuleId(moduleId))input();const context=String(form.get("context")??"");if(context.length>4000)input();
+  const mode=form.get("mode");if(mode!==null&&mode!=="documents"&&mode!=="description")input();
+  if(mode&&context.length>2000)input("Mô tả tình huống tối đa 2000 ký tự.");
+  if(mode==="description"&&!context.trim())input("Hãy mô tả tình huống cần tạo.");
+  if(mode==="documents"&&!files.length)input("Hãy chọn tài liệu trước khi tạo bài.");
   const documents=await saveDocuments(directory,files);saved=documents.length>0;
-  let session=await createAuthoringSession(getDatabasePool(),moduleId,{actorId:a.profile!.id,idempotencyKey,id:directory,documents,context});retained=session.id===directory;cleanupSafe=!retained;
-  if(session.documents?.length&&!(await latestAuthoringAnalysis(getDatabasePool(),session.id,a.profile!.id))){await enqueueAuthoringAnalysis(getDatabasePool(),session.id,a.profile!.id,session.revision,{kind:"baseline",question:context},{idempotencyKey:createHash("sha256").update(idempotencyKey+":baseline").digest("hex")});session=(await getAuthoringSession(getDatabasePool(),session.id,a.profile!.id))!;}
+  let session=await createAuthoringSession(getDatabasePool(),moduleId,{actorId:a.profile!.id,idempotencyKey,id:directory,documents,context,...(mode?{mode}:{})});retained=session.id===directory;cleanupSafe=!retained;
+  if((mode||session.documents?.length)&&!(await latestAuthoringAnalysis(getDatabasePool(),session.id,a.profile!.id))){const kind=mode?"blueprint":"baseline";await enqueueAuthoringAnalysis(getDatabasePool(),session.id,a.profile!.id,session.revision,{kind,question:context},{idempotencyKey:createHash("sha256").update(idempotencyKey+":"+kind).digest("hex")});session=(await getAuthoringSession(getDatabasePool(),session.id,a.profile!.id))!;}
   return json({session:await dto(session,a.profile!.id)},201);
  }catch(e){return errorResponse(e);}finally{if(saved&&cleanupSafe&&!retained)await cleanup(directory);}
 }
@@ -81,7 +86,8 @@ export async function updateAuthoringResponse(request:Request,id:string){const a
  try{if(!isGenerationJobId(id))input();const b=await jsonBody(request,["expectedRevision","mutation"]);const session=await updateAuthoringSession(getDatabasePool(),id,a.profile!.id,revision(b.expectedRevision),mutation(b.mutation));return json({session:await dto(session,a.profile!.id)});}catch(e){return errorResponse(e);}
 }
 export async function analyzeAuthoringResponse(request:Request,id:string){const a=await auth(request);if(a.response)return a.response;const directory=randomUUID();let retained=false,saved=false,cleanupSafe=false;
- try{available();if(!isGenerationJobId(id))input();const idempotencyKey=key(request);const{form,files}=await multipart(request,["expectedRevision","kind","sectionId","question","files"]);const raw=String(form.get("expectedRevision")??"");if(!/^[1-9]\d*$/.test(raw))input();const expected=revision(Number(raw));const kind=form.get("kind");if(kind!=="baseline"&&kind!=="guidance")input();const question=String(form.get("question")??"");const sectionId=form.get("sectionId");if(question.length>4000||(kind==="guidance"&&(!question.trim()||typeof sectionId!=="string"||!sectionId))||(sectionId!==null&&String(sectionId).length>100))input();
+ try{available();if(!isGenerationJobId(id))input();const idempotencyKey=key(request);const{form,files}=await multipart(request,["expectedRevision","kind","sectionId","question","files"]);const raw=String(form.get("expectedRevision")??"");if(!/^[1-9]\d*$/.test(raw))input();const expected=revision(Number(raw));const kind=form.get("kind");if(kind!=="baseline"&&kind!=="guidance"&&kind!=="blueprint")input();const question=String(form.get("question")??"");const sectionId=form.get("sectionId");if(question.length>4000||(kind==="guidance"&&(!question.trim()||typeof sectionId!=="string"||!sectionId))||(sectionId!==null&&String(sectionId).length>100)||(kind==="blueprint"&&sectionId!==null))input();
+  if(kind==="blueprint"&&question.length>2000)input("Mô tả tình huống tối đa 2000 ký tự.");
   const current=await getAuthoringSession(getDatabasePool(),id,a.profile!.id);if(!current)return json({error:"Không tìm thấy bản nháp.",code:"NOT_FOUND"},404);
   const documents=files.length?await saveDocuments(directory,files):undefined;saved=!!documents?.length;
   const job=await enqueueAuthoringAnalysis(getDatabasePool(),id,a.profile!.id,expected,{kind,question,...(sectionId?{sectionId:String(sectionId)}:{})},{idempotencyKey,...(documents?{documents}:{})});

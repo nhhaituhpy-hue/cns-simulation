@@ -7,9 +7,14 @@ const mocks = vi.hoisted(() => ({
   revalidatePath: vi.fn(),
   cookieGet: vi.fn(),
   cookieSet: vi.fn(),
+  lockOwned: vi.fn(),
+  finalizeExpired: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
+// SQL/ownership/expiry are exercised against PG in the integration suite;
+// isolate the web orchestration assertions here.
+vi.mock("@/lib/scenario-exams/expiration", () => ({ lockOwnedScenarioExamSession: mocks.lockOwned, finalizeExpiredScenarioExamSession: mocks.finalizeExpired }));
 vi.mock("@/lib/auth/profile", () => ({ getCurrentProfile: mocks.getCurrentProfile }));
 vi.mock("@/lib/db", () => ({ withDatabaseTransaction: mocks.withDatabaseTransaction }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
@@ -91,6 +96,8 @@ beforeEach(() => {
   mocks.getCurrentProfile.mockResolvedValue(profile());
   mocks.cookieGet.mockReturnValue({ value: token });
   mocks.query.mockResolvedValue({ rows: [], rowCount: 0 });
+  mocks.lockOwned.mockResolvedValue({ id: sessionId, code_id: codeId, exam_id: examId, status: "in_progress", code_status: "in_progress", expired: false });
+  mocks.finalizeExpired.mockResolvedValue(false);
   mocks.withDatabaseTransaction.mockImplementation(
     async (work: (client: { query: typeof mocks.query }) => Promise<unknown>) => work({ query: mocks.query }),
   );
@@ -315,11 +322,11 @@ describe("redeemScenarioExamCodeAction", () => {
     const result = await redeemScenarioExamCodeAction(examId, " abcd-2345-efgh ");
 
     expect(result).toMatchObject({ ok: true, data: { sessionId } });
-    expect(mocks.query.mock.calls[1]?.[1]).toEqual([examId, hashScenarioExamCode(validCode)]);
+    expect(mocks.query.mock.calls[1]?.[1]).toEqual([examId, hashScenarioExamCode(validCode), userId]);
     const cookie = mocks.cookieSet.mock.calls[0];
     expect(cookie?.[0]).toBe("cns_scenario_exam_session");
     expect(cookie?.[2]).toMatchObject({
-      httpOnly: true, sameSite: "lax", path: "/student/scenario-exams", expires: new Date(deadline),
+      httpOnly: true, sameSite: "lax", path: "/student/scenario-exams", expires: new Date(new Date(deadline).getTime() + 24 * 60 * 60_000),
     });
     expect(mocks.query.mock.calls[2]?.[1]).toEqual([
       codeId, userId, hashScenarioExamSessionToken(String(cookie?.[1])), now, new Date(deadline),

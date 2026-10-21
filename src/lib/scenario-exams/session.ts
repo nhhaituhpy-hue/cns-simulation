@@ -23,7 +23,9 @@ export async function setScenarioExamSessionCookie(token: string, expiresAt: Dat
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    expires: expiresAt,
+    // Retain the same code-scoped token only for post-deadline review. Every
+    // mutation still checks the immutable database deadline and current owner.
+    expires: new Date(expiresAt.getTime() + 24 * 60 * 60_000),
     path: "/student/scenario-exams",
     priority: "high",
   });

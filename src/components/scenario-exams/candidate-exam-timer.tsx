@@ -1,7 +1,22 @@
 "use client";
 
 import { Clock } from "@phosphor-icons/react/dist/csr/Clock";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { expireScenarioExamSessionAction } from "@/lib/scenario-exams/actions";
+
+export function useScenarioExamExpiration(remaining: number, active = true) {
+  const router = useRouter();
+  const requested = useRef(false);
+  useEffect(() => {
+    if (!active || remaining > 0 || requested.current) return;
+    requested.current = true;
+    // Only request server finalization: never upload post-deadline browser data.
+    void expireScenarioExamSessionAction().then(result => {
+      if (result.ok && result.data?.timedOut) router.refresh();
+    }).catch(() => { /* The durable worker retries independently of this page. */ });
+  }, [active, remaining, router]);
+}
 
 export function useScenarioExamRemainingTime(deadlineAt: string): number {
   const [now, setNow] = useState(() => Date.now());

@@ -7,7 +7,8 @@ import { generateScenarioExamCode, hashScenarioExamCode, isScenarioExamCode } fr
 import { encryptScenarioExamCode, ScenarioExamCodeEncryptionError } from "./code-encryption";
 import { createScenarioExamSessionToken, hashScenarioExamSessionToken, setScenarioExamSessionCookie } from "./session";
 import { getScenarioExamSessionToken } from "./session";
-import { saveCandidateScenarioExamItem, submitCandidateScenarioExamSession } from "./submissions";
+import { finalizeCandidateScenarioExamExpiration, saveCandidateScenarioExamItem, submitCandidateScenarioExamSession } from "./submissions";
+import { finalizeExpiredScenarioExamSession, lockOwnedScenarioExamSession } from "./expiration";
 import { saveScenarioExamReview } from "./reviews";
 import {
   ScenarioExamValidationError,
@@ -206,8 +207,9 @@ export async function redeemScenarioExamCodeAction(
         `select id, candidate_name, candidate_unit
            from public.scenario_exam_codes
           where exam_id = $1 and code_hash = $2 and status = 'issued'
+            and revoked_at is null and (redeem_user_id is null or redeem_user_id = $3)
           for update`,
-        [examId, normalizedHash],
+        [examId, normalizedHash, profile.id],
       );
       const candidateCode = codeResult.rows[0];
       if (!candidateCode) throw new ScenarioExamValidationError("Mã code không đúng hoặc đã được sử dụng. Vui lòng liên hệ giám khảo để được hỗ trợ.");
@@ -227,9 +229,9 @@ export async function redeemScenarioExamCodeAction(
       if (!sessionId) throw new Error("Không tạo được phiên thi.");
       await client.query(
         `update public.scenario_exam_codes
-            set status = 'in_progress', redeemed_at = now()
+            set status = 'in_progress', redeemed_at = now(), redeem_user_id = $2
           where id = $1`,
-        [candidateCode.id],
+        [candidateCode.id, profile.id],
       );
       await client.query(
         `insert into public.scenario_exam_audit_events (exam_id, code_id, session_id, actor_user_id, event_type)
@@ -259,6 +261,9 @@ export async function startScenarioExamSubjectAction(
     const sessionHash = hashScenarioExamSessionToken(token);
 
     const data = await withDatabaseTransaction(async (client) => {
+      const ownedSession = await lockOwnedScenarioExamSession(client, sessionHash, profile.id);
+      if (!ownedSession) throw new ScenarioExamValidationError("Không tìm thấy phiên thi hiện tại.");
+      if (await finalizeExpiredScenarioExamSession(client, ownedSession, profile.id)) return null;
       const subjectResult = await client.query<{
         session_id: string;
         session_status: string;
@@ -323,6 +328,7 @@ export async function startScenarioExamSubjectAction(
       );
       const membership = membershipResult.rows[0];
       if (!membership) throw new ScenarioExamValidationError("Môn thi chưa có scenario trong thư viện Kiểm tra.");
+      if (await finalizeExpiredScenarioExamSession(client, ownedSession, profile.id)) return null;
       const itemResult = await client.query<{ id: string }>(
         `insert into public.scenario_exam_session_items
            (session_id, code_subject_id, module_id, library_membership_id,
@@ -342,6 +348,7 @@ export async function startScenarioExamSubjectAction(
       );
       return { examId: subject.exam_id, id: itemId, moduleId: subject.module_id, scenarioName: membership.name };
     });
+    if (!data) throw new ScenarioExamValidationError("Phiên thi đã hết thời gian.");
     revalidatePath(`/admin/scenario-exams/${data.examId}`);
     revalidatePath("/student/scenario-exams/session");
     return {
@@ -383,6 +390,16 @@ export async function submitScenarioExamSessionAction(): Promise<ScenarioExamAct
     return { ok: true, message: "Đã nộp bài và kết thúc phiên thi.", data: { id: data.id } };
   } catch (error) {
     return { ok: false, message: errorMessage(error, "submit_session") };
+  }
+}
+
+export async function expireScenarioExamSessionAction(): Promise<ScenarioExamActionResult<{ id: string; timedOut: boolean }>> {
+  try {
+    const data = await finalizeCandidateScenarioExamExpiration();
+    revalidatePath("/student/scenario-exams/session", "layout");
+    return { ok: true, message: data.timedOut ? "Phiên thi đã hết thời gian." : "Phiên thi vẫn còn thời gian.", data };
+  } catch (error) {
+    return { ok: false, message: errorMessage(error, "expire_session") };
   }
 }
 

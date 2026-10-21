@@ -41,6 +41,7 @@ export function Dvor1150PmdtLayout({
       scenarioHardwareSelection: state.scenarioHardwareSelection, scenarioHardwareInspected: state.scenarioHardwareInspected,
       scenarioHardwareReasoning: state.scenarioHardwareReasoning, scenarioHardwareDispositionConfirmed: state.scenarioHardwareDispositionConfirmed,
       parameterChangeLogs: state.parameterChangeLogs,
+      parameterEvidence: state.parameterEvidence,
       checkpoint: { config: state.config, configDraft: state.configDraft, configurationBackup: state.configurationBackup,
         configDirty: state.configDirty, needBackup: state.needBackup, scenarioStage: state.scenarioStage, diagnosticState: state.diagnosticState } };
   });
@@ -111,6 +112,8 @@ export function Dvor1150PmdtLayout({
             moduleId="dvor-1150"
             scenarioId={scenario.definition.id}
             scenarioName={scenario.definition.name}
+            attemptKey={scenario.startedAt}
+            onRestart={() => initializeStudentScenario(scenario.definition!)}
             getPayload={() => {
               const state = useDvor1150PmdtStore.getState();
               return {
@@ -121,6 +124,7 @@ export function Dvor1150PmdtLayout({
                 scenarioHardwareReasoning: state.scenarioHardwareReasoning,
                 scenarioHardwareDispositionConfirmed: state.scenarioHardwareDispositionConfirmed,
                 parameterChangeLogs: state.parameterChangeLogs,
+                parameterEvidence: state.parameterEvidence,
                 checkpoint: {
                   config: state.config,
                   configDraft: state.configDraft,

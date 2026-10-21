@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GradingResult } from "@/components/grading/grading-result";
 import { PracticeAiFeedbackButton } from "@/components/scenario/practice-ai-feedback-button";
+import { usePracticeSubmission } from "@/components/scenario/attempt-feedback-client";
 import { completeExamAttemptItemAction } from "@/lib/exams/actions";
 import type { OfficialExamScenarioContext } from "@/lib/exams/client-types";
 import {
@@ -66,6 +67,14 @@ export function TerminalSession({
 
   const terminal = useTerminalStore();
   const recording = useRecordingStore();
+  const practice = usePracticeSubmission({
+    moduleId: "ads-b", scenarioId, enabled: !officialExam,
+    getPayload: () => {
+      const state = useRecordingStore.getState();
+      return { allActions: state.allActions, selectedActions: state.selectedActions,
+        authenticatedCorrectly: state.authenticatedCorrectly, qcmsMonitoringOpened: state.qcmsMonitoringOpened };
+    },
+  });
   const initializedKey = useRef<string | null>(null);
   const [officialSubmitted, setOfficialSubmitted] = useState(false);
   const [officialSaving, setOfficialSaving] = useState(false);
@@ -120,6 +129,7 @@ export function TerminalSession({
 
   const retry = useCallback(() => {
     if (!scenario || !selectedSensor || !terminalCacheKey) return;
+    practice.reset();
     terminal.clearPersistedSession();
     recording.resetAttempt();
     recording.beginAttempt(scenario.id, officialExam?.sessionKey ?? scenario.id);
@@ -132,7 +142,7 @@ export function TerminalSession({
       sensorMonitoring: selectedSensor.monitoring,
       persistenceKey: terminalCacheKey,
     });
-  }, [officialExam?.sessionKey, recording, scenario, selectedSensor, terminal, terminalCacheKey]);
+  }, [officialExam?.sessionKey, practice, recording, scenario, selectedSensor, terminal, terminalCacheKey]);
 
   if (!officialScenario && !isHydrated) return <SessionSkeleton />;
 
@@ -192,6 +202,8 @@ export function TerminalSession({
       <div className="mx-auto w-full max-w-[1200px] px-4 py-6 sm:px-6 lg:px-8">
         <div className="mb-4 flex justify-end">
           <PracticeAiFeedbackButton
+            submission={practice}
+            hideSubmit
             moduleId="ads-b"
             scenarioId={scenario.id}
             scenarioName={scenario.title}
@@ -239,6 +251,9 @@ export function TerminalSession({
         <div className="flex flex-wrap items-center gap-3">
           {!officialExam ? (
             <PracticeAiFeedbackButton
+              submission={practice}
+              hideSubmit
+              onRestart={retry}
               moduleId="ads-b"
               scenarioId={scenario.id}
               scenarioName={scenario.title}
@@ -295,7 +310,7 @@ export function TerminalSession({
               : "Nộp bài"
           }
           canSubmit={
-            recording.selectedActions.length > 0 &&
+            !practice.pending && !practice.submissionId && recording.selectedActions.length > 0 &&
             (!scenario.hardwareFault || recording.authenticatedCorrectly)
           }
           onSubmit={() => {
@@ -332,7 +347,9 @@ export function TerminalSession({
               });
               return;
             }
-            recording.submitForGrading(scenario.expectedActions);
+            void practice.submit().then((id) => {
+              if (id) recording.submitForGrading(scenario.expectedActions);
+            });
           }}
         />
       </div>

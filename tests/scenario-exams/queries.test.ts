@@ -4,11 +4,15 @@ const mocks = vi.hoisted(() => ({
   getCurrentProfile: vi.fn(),
   queryDatabase: vi.fn(),
   cookieGet: vi.fn(),
+  lockOwned: vi.fn(),
+  finalizeExpired: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/auth/profile", () => ({ getCurrentProfile: mocks.getCurrentProfile }));
-vi.mock("@/lib/db", () => ({ queryDatabase: mocks.queryDatabase }));
+vi.mock("@/lib/db", () => ({ queryDatabase: mocks.queryDatabase, withDatabaseTransaction: async (work: (client: object) => unknown) => work({}) }));
+// PG integration owns lock/identity/deadline behavior, not these DTO tests.
+vi.mock("@/lib/scenario-exams/expiration", () => ({ lockOwnedScenarioExamSession: mocks.lockOwned, finalizeExpiredScenarioExamSession: mocks.finalizeExpired }));
 vi.mock("next/headers", () => ({ cookies: vi.fn(async () => ({ get: mocks.cookieGet })) }));
 
 import {
@@ -85,6 +89,8 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.getCurrentProfile.mockResolvedValue({ id: "admin-gate", role: "admin" });
   mocks.queryDatabase.mockResolvedValue({ rows: [] });
+  mocks.lockOwned.mockResolvedValue({ id: "session-1", status: "in_progress", code_status: "in_progress" });
+  mocks.finalizeExpired.mockResolvedValue(false);
   mocks.cookieGet.mockReturnValue({ value: token });
 });
 
@@ -170,12 +176,12 @@ describe("getCandidateScenarioExamItem", () => {
     mocks.queryDatabase.mockResolvedValueOnce({ rows: [itemRow({ code_hash: "private", result_json: { answer: "private" } })] });
     const item = await getCandidateScenarioExamItem(itemId);
     expect(item).toMatchObject({ id: itemId, sessionId: "session-1", subjectId: "subject-1", revision: 7, definition, deadlineAt: "2026-09-30T11:00:00.000Z" });
-    expect(mocks.queryDatabase.mock.calls[0]?.[1]).toEqual([hashScenarioExamSessionToken(token), itemId]);
+    expect(mocks.queryDatabase.mock.calls[0]?.[1]).toEqual([hashScenarioExamSessionToken(token), itemId, "student-gate"]);
     expect(sqlAt(0)).toContain("s.session_token_hash = $1 and item.id = $2");
     expect(sqlAt(0)).toContain("s.deadline_at > now()");
     expect(sqlAt(0)).toContain("cs.code_id = s.code_id and cs.module_id = item.module_id");
     expect(sqlAt(0)).toContain("cs.status = 'in_progress' and item.status = 'in_progress'");
-    expect(sqlAt(0)).not.toMatch(/simulator_scenario_library_memberships|simulator_scenario_parameters|candidate_user_id|email/);
+    expect(sqlAt(0)).not.toMatch(/simulator_scenario_library_memberships|simulator_scenario_parameters|email/);
     expect(item).not.toHaveProperty("code_hash");
     expect(item).not.toHaveProperty("result_json");
     expect(JSON.stringify(item)).not.toContain(token);
@@ -351,7 +357,7 @@ describe("getCandidateScenarioExamSession", () => {
 
   it("returns null for a token that does not resolve to a session", async () => {
     await expect(getCandidateScenarioExamSession()).resolves.toBeNull();
-    expect(mocks.queryDatabase.mock.calls[0]?.[1]).toEqual([hashScenarioExamSessionToken(token)]);
+    expect(mocks.queryDatabase.mock.calls[0]?.[1]).toEqual([hashScenarioExamSessionToken(token), "student-gate"]);
   });
 
   it("loads only the code-selected subjects using token identity, not student account assignment", async () => {
@@ -378,9 +384,9 @@ describe("getCandidateScenarioExamSession", () => {
     expect(session?.subjects[1]).toMatchObject({
       id: "subject-2", moduleId: "dme-1119a", status: "not_started", sessionItemId: null, scenarioName: null,
     });
-    expect(mocks.queryDatabase.mock.calls[0]?.[1]).toEqual([hashScenarioExamSessionToken(token)]);
+    expect(mocks.queryDatabase.mock.calls[0]?.[1]).toEqual([hashScenarioExamSessionToken(token), "student-gate"]);
     expect(sqlAt(0)).toContain("where s.session_token_hash = $1");
-    expect(sqlAt(0)).not.toMatch(/candidate_user_id|email/);
+    expect(sqlAt(0)).toContain("s.candidate_user_id = $2");
     expect(JSON.stringify(session)).not.toContain(token);
   });
 });

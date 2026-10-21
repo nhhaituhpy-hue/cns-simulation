@@ -8,6 +8,7 @@ import {
   DEFAULT_DME320_ACCOUNTS,
 } from "./defaults";
 import { getDme320ChannelAllocation } from "./channel-allocation";
+import { createNativeParameterEvidence, recordNativeParameterChanges } from "@/lib/simulator-config/native-parameter-evidence";
 import { dme320FaultBlocksCalibrationStep } from "./faults";
 import { parseDme320ScenarioDefinition } from "./scenario";
 import {
@@ -728,6 +729,7 @@ function startDme320Scenario(current: Dme320SimulationState, definition: Dme320S
   next.config.flash = cloneDme320Config(returnConfiguration.flash);
   next.config.flashDirty = JSON.stringify(next.config.running) !== JSON.stringify(next.config.flash);
   next.scenario = { active: true, definition: scenario, startedAtMs: current.nowMs, returnConfiguration };
+  next.parameterEvidence = createNativeParameterEvidence("dme-320", scenario.id, current.nowMs);
   const main = scenario.runtime.mainTransponder;
   const standby = otherTransponder(main);
   const outputOn = scenario.configuration.station.transmitterOutputOnBoot;
@@ -1359,6 +1361,12 @@ export function executeDme320Command(
       // In an exercise the examiner's limits are the reference. Re-centering
       // them on a student's correction would make a delay-offset fault persist.
       if (!state.scenario.active) rebaseChannelDependentMonitorLimits(state.config.running, nextRunningConfig);
+      const proof = recordNativeParameterChanges({ existing: state.parameterChangeLogs,
+        evidence: state.parameterEvidence ?? createNativeParameterEvidence("dme-320", state.scenario.definition?.id ?? null, state.nowMs),
+        before: state.config.running, after: nextRunningConfig, timestampMs: state.nowMs, userName: state.session.userId,
+        phase: "apply", controlId: "apply-draft", actionLabel: "Configuration Apply" });
+      state.parameterChangeLogs = proof.logs;
+      state.parameterEvidence = proof.evidence;
       state.config.running = nextRunningConfig;
       state.config.draft = cloneDme320Config(nextRunningConfig);
       state.config.draftDirty = false;

@@ -70,6 +70,7 @@ describe("DME 320 scenario lifecycle and recovery", () => {
     expect(data.readings.erpDb.value).toBeCloseTo(10 * Math.log10(0.4));
     expect(state.serviceStatus).toBe("alarm");
     expect(evaluateDme320Scenario(state)).toMatchObject({ solved: false, correctable: true });
+    const initialPower = state.config.running.transmitters.tx1.outputPowerPercent;
     const config = structuredClone(state.config.running);
     config.transmitters.tx1.outputPowerPercent = 100;
     state = run(state, { type: "set-draft-config", config });
@@ -81,7 +82,11 @@ describe("DME 320 scenario lifecycle and recovery", () => {
       message: expect.stringContaining("session-only"),
       state,
     });
-    expect(state.parameterChangeLogs).toEqual([]);
+    // Session-only evidence records effective Apply; flash remains unchanged.
+    expect(state.parameterChangeLogs).toEqual(expect.arrayContaining([
+      expect.objectContaining({ nativeFieldId: "transmitters.tx1.outputPowerPercent", before: initialPower,
+        after: 100, phase: "apply", moduleId: "dme-320", scenarioId: state.scenario.definition!.id }),
+    ]));
   });
 
   it("requires real correction rather than Bypass or switching to a healthy standby", () => {

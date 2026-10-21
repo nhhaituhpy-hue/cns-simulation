@@ -1,8 +1,9 @@
 import { createHash } from "node:crypto";
-import type { ScenarioParametersModuleId } from "@/lib/scenario-parameters";
+import { parseScenarioParameters, type ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 import { authoringAdapterFor } from "./forms/registry";
 import { assertSafeJson, validateFieldValue, validateMetadata, canonicalJson } from "./forms/helpers";
 import { AuthoringError } from "./errors";
+import { validateScenarioRubric, validateManualCitations } from "../scenario-blueprint/validation";
 import type { AuthoringForm, AnalysisJob, AuthoringIssue, AuthoringMutation, AuthoringProposal, AuthoringSession, AuthoringSessionDto, AuthoringState, FieldChange, FieldSource } from "./types";
 
 function fail(code:string,message:string,issues:AuthoringIssue[]=[]):never{throw new AuthoringError(code,message,issues);}
@@ -55,6 +56,7 @@ function applyChanges(state:AuthoringState,changes:readonly FieldChange[]):strin
  }
  state.definition=adapter.apply(state.definition,changes);
  const changed=changedFields(form,adapter.form(state.definition));
+ if(changed.length&&state.blueprint){delete state.blueprint;state.confirmations={};}
  invalidate(state,changed,form);
  state.issues=state.issues.filter(i=>!i.fieldId||!changed.includes(i.fieldId));
  return changed;
@@ -73,6 +75,20 @@ export function confirmedAuthoringSections(state:AuthoringState,form:AuthoringFo
 export function mutateAuthoringState(input:AuthoringState,mutation:AuthoringMutation):AuthoringState{
  assertSafeJson(mutation);const s=structuredClone(input),adapter=authoringAdapterFor(s.moduleId),form=adapter.form(s.definition);
  switch(mutation.action){
+  case "edit-context":{
+   if(typeof mutation.context!=="string"||mutation.context.length>2000||mutation.context.includes("\0"))fail("INVALID_INPUT","Mục tiêu huấn luyện tối đa 2000 ký tự.");
+   if(s.context!==mutation.context){
+    s.context=mutation.context;delete s.blueprint;s.confirmations={};s.proposal=null;delete s.lastExplanation;s.currentStep="documents";
+   }
+   break;
+  }
+  case "confirm-blueprint":{
+   assertCurrentBlueprint(s);
+   const errors=[...validateMetadata(s.definition),...adapter.validate(s.definition,"final"),...s.issues].filter(i=>i.severity==="error");
+   if(errors.length)fail("INVALID_BLUEPRINT","Bài tập chưa đạt kiểm chứng để lưu.",errors);
+   for(const section of form.sections)s.confirmations[section.id]=fieldHash(s,section.id,form);
+   break;
+  }
   case "edit":{
    const edited=new Set(applyChanges(s,mutation.changes));
    s.sources=Object.fromEntries(adapter.form(s.definition).fields.map(field=>[field.id,edited.has(field.id)&&!field.schema.readOnly?{kind:"user"}:s.sources[field.id]??{kind:"native-default"}]));
@@ -85,7 +101,7 @@ export function mutateAuthoringState(input:AuthoringState,mutation:AuthoringMuta
    if(errors.length)fail("INVALID_SECTION","Hãy sửa các trường cần kiểm tra trước khi xác nhận bước.",errors);
    s.confirmations[mutation.sectionId]=fieldHash(s,mutation.sectionId);break;
   }
-  case "navigate":if(!["documents","confirmation",...form.sections.map(x=>x.id)].includes(mutation.sectionId))fail("INVALID_STEP","Bước không hợp lệ.");s.currentStep=mutation.sectionId;break;
+  case "navigate":if(!["documents","confirmation",...(s.blueprint?["review"]:[]),...form.sections.map(x=>x.id)].includes(mutation.sectionId))fail("INVALID_STEP","Bước không hợp lệ.");s.currentStep=mutation.sectionId;break;
   case "reset-field":{
    const baselineForm=adapter.form(s.baseline),baselineField=baselineForm.fields.find(f=>f.id===mutation.fieldId);
    if(!baselineField)fail("INVALID_FIELD","Không tìm thấy giá trị nền.");
@@ -128,24 +144,44 @@ export function mutateAuthoringState(input:AuthoringState,mutation:AuthoringMuta
 }
 export function applyAnalysisProposal(input:AuthoringState,proposal:AuthoringProposal):AuthoringState{
  assertSafeJson(proposal);const s=structuredClone(input),adapter=authoringAdapterFor(s.moduleId),form=adapter.form(s.definition);
+ if(proposal.kind==="blueprint"){
+  const blueprint=proposal.blueprint;
+  if(!blueprint||blueprint.version!==1||blueprint.moduleId!==s.moduleId||blueprint.rubric?.moduleId!==s.moduleId||blueprint.rubric.version!==1||!blueprint.rubric.steps?.length||!blueprint.citations?.length||blueprint.verification?.recoveryVerified!==true||!blueprint.verification.initial.length||!blueprint.verification.recovered.length)fail("INVALID_BLUEPRINT","Bản thiết kế bài tập chưa đủ căn cứ hoặc chưa được kiểm chứng.");
+  validateScenarioRubric(blueprint.rubric,s.moduleId);validateManualCitations(blueprint.citations);
+  if(canonicalJson(blueprint.rubric.citations)!==canonicalJson(blueprint.citations))fail("INVALID_BLUEPRINT","Căn cứ trong đáp án không khớp bản thiết kế.");
+  const definition=parseScenarioParameters(s.moduleId,{...blueprint.definition,id:s.definition.id});
+  if(!definition)fail("INVALID_BLUEPRINT","Cấu hình tình huống không hợp lệ.");
+  const issues=[...validateMetadata(definition),...adapter.validate(definition,"final"),...proposal.issues];
+  if(issues.some(i=>i.severity==="error"))fail("INVALID_BLUEPRINT","Bài tập chưa đạt kiểm tra native.",issues);
+  s.definition=definition;s.blueprint={...structuredClone(blueprint),definition:structuredClone(definition)};
+  s.confirmations={};s.proposal=null;s.issues=issues;s.currentStep="review";s.lastExplanation=proposal.message;
+  s.sources=Object.fromEntries(adapter.form(definition).fields.map(f=>[f.id,{kind:"ai-suggestion",note:"Bản thiết kế đã kiểm chứng trên simulator; xem căn cứ và giả định trước khi lưu."}]));
+  return s;
+ }
  const ids=new Set<string>();
  for(const c of proposal.changes){
   const field=form.fields.find(f=>f.id===c.fieldId);
   if(!field||field.schema.readOnly||ids.has(c.fieldId)||(proposal.kind==="baseline"&&!field.baselineEligible)||validateFieldValue(field.schema,c.value).length)fail("INVALID_PROPOSAL","AI đã đề xuất trường hoặc giá trị không hợp lệ.");
   ids.add(c.fieldId);
  }
- s.proposal=structuredClone(proposal);s.issues=proposal.issues.map(i=>({...i}));
+ s.lastExplanation=proposal.message;
+ s.proposal=proposal.changes.length||proposal.issues.length?structuredClone(proposal):null;s.issues=proposal.issues.map(i=>({...i}));
  if(proposal.kind==="baseline"){
   const fresh=proposal.changes.filter(c=>s.sources[c.fieldId]?.kind==="native-default"&&s.baselineSources[c.fieldId]?.kind==="native-default");
   if(fresh.length){
    const changes=fresh.map(({fieldId,value})=>({fieldId,value}));
-   try{const tentative=structuredClone(s);applyChanges(tentative,changes);adapter.apply(s.baseline,changes);s.definition=tentative.definition;s.confirmations=tentative.confirmations;s.sources=sourcesAfter(form,adapter.form(s.definition),s.sources,fresh);s.proposal.prefilledFieldIds=fresh.map(c=>c.fieldId);}
+   try{const tentative=structuredClone(s);applyChanges(tentative,changes);adapter.apply(s.baseline,changes);s.definition=tentative.definition;s.confirmations=tentative.confirmations;s.sources=sourcesAfter(form,adapter.form(s.definition),s.sources,fresh);if(s.proposal)s.proposal.prefilledFieldIds=fresh.map(c=>c.fieldId);}
    catch{s.issues.push({code:"BASELINE_REVIEW_REQUIRED",sectionId:form.sections.find(x=>x.id!=="metadata")?.id??"metadata",severity:"warning",message:"Các thông số liên quan cần được kiểm tra cùng nhau trước khi áp dụng. Giá trị hiện tại được giữ nguyên."});}
   }
  }
  return s;
 }
+function assertCurrentBlueprint(state:AuthoringState):void{
+ if(!state.blueprint||state.blueprint.verification.recoveryVerified!==true||canonicalJson(state.blueprint.definition)!==canonicalJson(state.definition))fail("INVALID_BLUEPRINT","Cấu hình đã thay đổi hoặc chưa có bài tập kiểm chứng. Hãy yêu cầu AI soạn lại trước khi lưu.");
+ validateScenarioRubric(state.blueprint.rubric,state.moduleId);
+}
 export function validateFinalAuthoring(state:AuthoringState){
+ if(state.mode||state.blueprint)assertCurrentBlueprint(state);
  const adapter=authoringAdapterFor(state.moduleId),form=adapter.form(state.definition);
  const issues=[...validateMetadata(state.definition),...adapter.validate(state.definition,"final"),...state.issues];
  const confirmed=confirmedAuthoringSections(state,form);
@@ -157,7 +193,8 @@ export function validateFinalAuthoring(state:AuthoringState){
 export function authoringStateDto(session:AuthoringSession,latest:AnalysisJob|null):AuthoringSessionDto{
  const s=session.state,adapter=authoringAdapterFor(s.moduleId),form=adapter.form(s.definition);
  const known=new Set(form.fields.map(f=>f.id));const sources=Object.fromEntries(Object.entries(s.sources).filter(([id])=>known.has(id)));
- return{id:session.id,moduleId:s.moduleId,revision:session.revision,status:session.status,currentStep:s.currentStep,form,sources,
+ const publicBlueprint=s.blueprint?{version:s.blueprint.version,moduleId:s.blueprint.moduleId,title:s.blueprint.title,situation:s.blueprint.situation,cause:s.blueprint.cause,symptoms:s.blueprint.symptoms,assumptions:s.blueprint.assumptions,rubric:s.blueprint.rubric,verification:s.blueprint.verification,citations:s.blueprint.citations}:undefined;
+ return{id:session.id,moduleId:s.moduleId,revision:session.revision,status:session.status,currentStep:s.currentStep,form,sources,context:s.context,...(s.mode?{mode:s.mode}:{}),...(publicBlueprint?{blueprint:publicBlueprint}:{}),...(s.lastExplanation?{lastExplanation:s.lastExplanation}:{}),
   baselineValues:Object.fromEntries(adapter.form(s.baseline).fields.filter(f=>known.has(f.id)).map(f=>[f.id,f.value])),confirmedSections:confirmedAuthoringSections(s,form),
   issues:[...s.issues,...validateMetadata(s.definition),...adapter.validate(s.definition,"draft")],proposal:s.proposal,preview:adapter.preview(s.definition),
   documents:session.documents.map(({id,name,mimeType,bytes,sha256})=>({id,name,mimeType,bytes,sha256})),

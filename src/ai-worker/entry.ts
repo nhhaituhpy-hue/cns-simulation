@@ -6,6 +6,7 @@ import pg from "pg";
 import { claimGenerationJob, heartbeatGenerationJob, completeGenerationJob, failGenerationJob } from "../lib/ai/scenario-generation/jobs";
 import { processNextGeneration } from "../lib/ai/scenario-generation/worker";
 import { processNextAuthoring } from "../lib/ai/scenario-authoring/worker";
+import { runNextFeedback } from "../lib/ai/feedback/worker";
 import { runAiWorkerCycle } from "../lib/ai/scenario-authoring/worker-dispatch";
 import { generateScenario } from "../lib/ai/scenario-generation/generator";
 import { extractIsolatedDocuments } from "../lib/ai/documents/isolated";
@@ -35,7 +36,8 @@ async function main() {
     console.log("AI worker is disabled; no jobs claimed.");
     return;
   }
-  if (!process.env.DATABASE_URL || !process.env.CNS_AI_API_KEY) throw new Error("WORKER_CONFIGURATION_MISSING");
+  if (!process.env.DATABASE_URL) throw new Error("WORKER_CONFIGURATION_MISSING");
+  const providerConfigured = Boolean(process.env.CNS_AI_API_KEY);
   pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 3,
     connectionTimeoutMillis: 5000, idleTimeoutMillis: 30_000, application_name: "cns-ai-worker",
     ssl: ["true", "require"].includes(process.env.DATABASE_SSL || "")
@@ -47,16 +49,18 @@ async function main() {
   do {
     if (controller.signal.aborted) break;
     const outcome = await runAiWorkerCycle(
-      () => processNextAuthoring(pool!, workerId, controller.signal),
-      () => processNextGeneration({
-      claim: () => claimGenerationJob(pool!, workerId),
-      heartbeat: async (job, phase) => Boolean(await heartbeatGenerationJob(pool!, job.id, job.attemptToken, phase)),
-      loadDocuments: (documents, signal) => extractIsolatedDocuments(documents, signal),
-      generate: (input, documents, signal) => generateScenario(input, documents, signal),
-      complete: async (job, result) => Boolean(await completeGenerationJob(pool!, job.id, job.attemptToken, result)),
-      fail: (job, error) => failGenerationJob(pool!, job.id, job.attemptToken, error),
-      signal: controller.signal,
-    }));
+      async () => providerConfigured ? processNextAuthoring(pool!, workerId, controller.signal) : "idle",
+      async () => providerConfigured ? processNextGeneration({
+        claim: () => claimGenerationJob(pool!, workerId),
+        heartbeat: async (job, phase) => Boolean(await heartbeatGenerationJob(pool!, job.id, job.attemptToken, phase)),
+        loadDocuments: (documents, signal) => extractIsolatedDocuments(documents, signal),
+        generate: (input, documents, signal) => generateScenario(input, documents, signal),
+        complete: async (job, result) => Boolean(await completeGenerationJob(pool!, job.id, job.attemptToken, result)),
+        fail: (job, error) => failGenerationJob(pool!, job.id, job.attemptToken, error),
+        signal: controller.signal,
+      }) : "idle",
+      () => runNextFeedback(pool!, workerId, controller.signal),
+    );
     await health(outcome === "stopped" ? "stopping" : "ready");
     if (once) break;
     await delay(interval, undefined, { signal: controller.signal }).catch(() => undefined);

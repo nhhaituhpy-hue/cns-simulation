@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import type { AttemptFeedbackReport } from "@/lib/ai/feedback/attempt-feedback";
+import type { AttemptStepAssessment } from "@/lib/ai/feedback/step-assessment";
+import type { ManualCitation } from "@/lib/ai/scenario-blueprint/types";
 import type { ScenarioParametersModuleId } from "@/lib/scenario-parameters";
+import { usePracticeSubmission, type PracticeSubmissionController } from "./attempt-feedback-client";
+import { AttemptFeedbackResult } from "./attempt-feedback-result";
+import { sanitizeScenarioExamPayload } from "@/lib/scenario-exams/results";
+import { useScenarioStore } from "@/stores/scenario-store";
 
 export interface PracticeAiFeedbackButtonProps {
   moduleId: ScenarioParametersModuleId;
@@ -10,13 +16,17 @@ export interface PracticeAiFeedbackButtonProps {
   scenarioName?: string;
   getPayload: () => Record<string, unknown> | null;
   buttonClassName?: string;
+  attemptKey?: string | number | null;
+  onRestart?: () => boolean | void;
+  submission?: PracticeSubmissionController;
+  hideSubmit?: boolean;
 }
 
 export function AttemptFeedbackCard({
   report,
   onInsertComment,
 }: {
-  report: AttemptFeedbackReport;
+  report: AttemptFeedbackReport & { stepAssessment?: AttemptStepAssessment; citations?: ManualCitation[] };
   onInsertComment?: (text: string) => void;
 }) {
   return (
@@ -30,7 +40,7 @@ export function AttemptFeedbackCard({
                 : "bg-amber-100 text-amber-800"
             }`}
           >
-            {report.solved ? "SOLVED · Đạt yêu cầu" : "Đang thực hiện · Chưa SOLVED"}
+            {report.status === "UNVERIFIED" ? "UNVERIFIED · Chưa đủ bằng chứng kỹ thuật" : report.status === "SOLVED" ? "SOLVED · Đạt tiêu chí kỹ thuật" : "Chưa SOLVED · Chưa đạt tiêu chí kỹ thuật"}
           </span>
           <p className="mt-2 text-sm leading-relaxed text-[var(--text-primary)]">{report.summary}</p>
         </div>
@@ -45,6 +55,29 @@ export function AttemptFeedbackCard({
         ) : null}
       </div>
 
+      {report.stepAssessment ? <section aria-label="Đối chiếu quy trình" className="rounded-lg border border-[var(--border)] p-3.5">
+        <h4 className="font-bold">{report.stepAssessment.correct}/{report.stepAssessment.totalRequiredSteps} bước đúng</h4>
+        <p className="mt-1 text-xs text-[var(--text-secondary)]">Rubric v{report.stepAssessment.rubricVersion}. Kết quả quy trình tách biệt với trạng thái kỹ thuật SOLVED.</p>
+        <ol className="mt-3 grid gap-3">
+          {report.stepAssessment.steps.map((step) => <li key={step.id} className="rounded border border-[var(--border)] p-3">
+            <div className="flex flex-wrap gap-2"><strong>{step.label}</strong><span>{({ correct: "Đúng", missing: "Thiếu", incorrect: "Sai", unverified: "Chưa đủ bằng chứng" } as const)[step.status]}</span></div>
+            {step.evidenceIds.length ? <p className="mt-1 break-all text-xs text-[var(--text-secondary)]">Bằng chứng: {step.evidenceIds.join(", ")}</p> : null}
+            {step.citationIds.map((id) => {
+              const citation = report.citations?.find((item) => item.id === id);
+              return citation ? <details key={id} className="mt-2 text-xs">
+                <summary className="cursor-pointer font-semibold">Căn cứ: {citation.documentName} · {citation.segmentLabel}</summary>
+                <blockquote className="my-2 border-l-2 border-[var(--border-strong)] pl-3">{citation.quote}</blockquote>
+                <p className="break-all">Tài liệu {citation.documentId} · SHA-256: {citation.sha256}</p>
+                {citation.sourceKind === "reference-only" ? <p className="mt-1 text-[var(--text-muted)]">Chỉ dùng tham khảo; không thay thế quy trình vận hành được phê duyệt.</p> : null}
+              </details> : null;
+            })}
+          </li>)}
+        </ol>
+        {report.stepAssessment.unrelatedParameterChanges.length ? <section className="mt-4"><h5 className="font-semibold">Thay đổi tham số không liên quan</h5><ul className="mt-2 list-disc space-y-2 pl-4">{report.stepAssessment.unrelatedParameterChanges.map((change) => <li key={change.fieldId}><span>{change.label}</span><p className="text-xs">{String(change.before)} → {String(change.after)} · {change.reason}</p></li>)}</ul></section> : null}
+        {report.stepAssessment.redundantActions.length ? <section className="mt-4"><h5 className="font-semibold">Thao tác thừa</h5><ul className="mt-2 list-disc pl-4">{report.stepAssessment.redundantActions.map((action, index) => <li key={`${action.controlId}-${index}`}>{action.label}</li>)}</ul></section> : null}
+        <p className="mt-3 text-xs text-[var(--text-muted)]">{report.stepAssessment.notice}</p>
+      </section> : <p className="text-xs text-[var(--text-secondary)]">Chưa có rubric quy trình; không suy ra số bước đúng từ nhật ký hay trạng thái alarm.</p>}
+
       <div className="grid gap-4 md:grid-cols-3">
         <section className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3.5">
           <h4 className="text-xs font-bold text-[var(--text-primary)]">Những gì cần đạt để solve</h4>
@@ -55,7 +88,7 @@ export function AttemptFeedbackCard({
               ))}
             </ul>
           ) : (
-            <p className="mt-2 text-xs text-[var(--text-muted)]">Đã hoàn thành toàn bộ tiêu chí.</p>
+            <p className="mt-2 text-xs text-[var(--text-muted)]">Không có tiêu chí chi tiết trong báo cáo này.</p>
           )}
         </section>
 
@@ -110,18 +143,37 @@ export function AttemptFeedbackCard({
         </section>
       ) : null}
 
+      {report.explanations?.length ? <section aria-label="Diễn giải hỗ trợ" className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3.5">
+        <h4 className="text-xs font-bold">Diễn giải hỗ trợ theo bằng chứng</h4>
+        <ul className="mt-2 space-y-2 text-xs">{report.explanations.map(explanation=><li key={explanation.id}><p>{explanation.text}</p><p className="mt-1 text-[var(--text-muted)]">{report.stepAssessment?.steps.find(step=>step.id===explanation.stepId)?.label ?? "Đối chiếu quy trình"}</p></li>)}</ul>
+      </section> : null}
       <p className="text-[11px] text-[var(--text-muted)]">{report.notice}</p>
     </div>
   );
 }
 
-export function PracticeAiFeedbackButton({
+export function PracticeAiFeedbackButton(props: PracticeAiFeedbackButtonProps) {
+  const identity = useScenarioStore((state) => state.sessionIdentity);
+  return props.submission
+    ? <PracticeFeedbackControls key={JSON.stringify([identity, props.moduleId, props.scenarioId])} {...props} submission={props.submission} />
+    : <StandalonePracticeFeedback key={JSON.stringify([identity, props.moduleId, props.scenarioId])} {...props} />;
+}
+
+function StandalonePracticeFeedback(props: PracticeAiFeedbackButtonProps) {
+  const submission = usePracticeSubmission(props);
+  return <PracticeFeedbackControls key={props.attemptKey ?? "current"} {...props} submission={submission} />;
+}
+
+function PracticeFeedbackControls({
   moduleId,
   scenarioId,
   scenarioName,
   getPayload,
   buttonClassName,
-}: PracticeAiFeedbackButtonProps) {
+  onRestart,
+  submission,
+  hideSubmit = false,
+}: PracticeAiFeedbackButtonProps & { submission: PracticeSubmissionController }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -138,7 +190,7 @@ export function PracticeAiFeedbackButton({
         body: JSON.stringify({
           moduleId,
           scenarioId,
-          payload: getPayload(),
+          payload: sanitizeScenarioExamPayload(getPayload()),
         }),
       });
       const data = (await response.json().catch(() => null)) as {
@@ -158,7 +210,16 @@ export function PracticeAiFeedbackButton({
 
   return (
     <>
-      <button
+      {submission.submissionId ? <>
+        <AttemptFeedbackResult target={{ practiceSubmissionId: submission.submissionId }} />
+        {onRestart ? <button type="button" onClick={() => { if (onRestart() !== false) submission.reset(); }} className={buttonClassName}>Bắt đầu lượt ôn tập mới</button> : null}
+      </> : !hideSubmit ? (
+        <button type="button" disabled={submission.pending} onClick={() => void submission.submit()} className={buttonClassName ?? "inline-flex min-h-8 items-center justify-center rounded-md border border-[#0284c7] bg-[#e0f2fe] px-2.5 py-1 text-xs font-semibold text-[#0369a1] hover:bg-[#bae6fd] disabled:opacity-60"}>
+          {submission.pending ? "Đang nộp bài…" : "Nộp bài ôn tập"}
+        </button>
+      ) : null}
+      {submission.error ? <p role="alert">{submission.error}</p> : null}
+      {!submission.submissionId ? <button
         type="button"
         onClick={() => void requestFeedback()}
         disabled={loading}
@@ -168,9 +229,9 @@ export function PracticeAiFeedbackButton({
         }
       >
         {loading ? "AI đang nhận xét…" : "AI nhận xét bài làm"}
-      </button>
+      </button> : null}
 
-      {open ? (
+      {open && !submission.submissionId ? (
         <div
           className="fixed inset-0 z-[90] flex items-center justify-center bg-black/55 p-4"
           role="presentation"

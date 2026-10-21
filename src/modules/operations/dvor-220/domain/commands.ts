@@ -1,4 +1,5 @@
 import { configurationsEqual, mergeDvor220Patch } from "./configuration";
+import { createNativeParameterEvidence, recordNativeParameterChanges } from "@/lib/simulator-config/native-parameter-evidence";
 import { cloneDvor220, createInitialDvor220State } from "./defaults";
 import {
   collectChangedConfigFields,
@@ -604,11 +605,19 @@ export function reduceDvor220Command(
     case "apply-draft": {
       const denied = requirePermission(state, "configure");
       if (denied) return failure(state, denied);
+      const authoredFields = collectChangedConfigFields(state.configuration.running, state.configuration.draft);
       const nextRunning = cloneDvor220(state.configuration.draft);
       applyPersistentSidebandTracking(state.configuration.running, nextRunning);
       const issues = validateDvor220Configuration(nextRunning);
       const firstError = issues.find((item) => item.severity === "error");
       if (firstError) return failure(state, `${firstError.path}: ${firstError.message}`);
+      const proof = recordNativeParameterChanges({ existing: state.history.parameterChanges,
+        evidence: state.parameterEvidence ?? createNativeParameterEvidence("dvor-220", state.scenario.definition?.id ?? null, state.nowMs),
+        before: state.configuration.running, after: nextRunning, timestampMs: state.nowMs, userName: state.session.username,
+        authoredFields,
+        phase: "apply", controlId: "apply-draft", actionLabel: "Configuration Apply" });
+      state.history.parameterChanges = proof.logs;
+      state.parameterEvidence = proof.evidence;
       state.configuration.running = nextRunning;
       state.configuration.draft = cloneDvor220(nextRunning);
       state.configuration.draftDirty = false;
@@ -632,6 +641,12 @@ export function reduceDvor220Command(
         (item) => item.severity === "error" && item.path.startsWith("transmitters."),
       );
       if (firstError) return failure(state, `${firstError.path}: ${firstError.message}`);
+      const proof = recordNativeParameterChanges({ existing: state.history.parameterChanges,
+        evidence: state.parameterEvidence ?? createNativeParameterEvidence("dvor-220", state.scenario.definition?.id ?? null, state.nowMs),
+        before: state.configuration.running, after: nextRunning, timestampMs: state.nowMs, userName: state.session.username,
+        phase: "apply", controlId: "apply-transmitter-helper", actionLabel: "Transmitter Helper Apply" });
+      state.history.parameterChanges = proof.logs;
+      state.parameterEvidence = proof.evidence;
       for (const transmitterId of transmitterIds) {
         writeTransmitterHelperSettings(state.configuration.running, transmitterId, command.settings);
         writeTransmitterHelperSettings(state.configuration.draft, transmitterId, command.settings);

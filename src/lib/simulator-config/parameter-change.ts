@@ -10,6 +10,19 @@ export interface SimulatorParameterChangeLogEntry {
   file: string;
   parameter: string;
   state: SimulatorParameterChangeState;
+  /** Optional native proof; legacy display/history rows intentionally omit it. */
+  nativeFieldId?: string;
+  /** Attribution of the effective change; absent on historical proof. */
+  origin?: "student" | "native-derived";
+  before?: string | number | boolean | null;
+  after?: string | number | boolean | null;
+  phase?: "apply" | "command" | "restore";
+  controlId?: string;
+  sequence?: number;
+  timestampMs?: number;
+  evidenceRunId?: string;
+  moduleId?: "dvor-1150" | "dvor-220" | "dme-320";
+  scenarioId?: string | null;
 }
 
 /** Hard cap for the parameter-change view/history retained in one session. */

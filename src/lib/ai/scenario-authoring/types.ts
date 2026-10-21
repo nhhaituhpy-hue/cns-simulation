@@ -1,6 +1,7 @@
 import type { ScenarioParametersDefinition, ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 import type { EvidenceDocument } from "@/lib/ai/scenario-generation/types";
 import type { DocumentMetadata } from "@/lib/ai/documents/validation";
+import type { ScenarioBlueprint } from "@/lib/ai/scenario-blueprint/types";
 
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 export interface ValueOption { value: string; label: string }
@@ -79,7 +80,8 @@ export interface ProposedChange extends FieldChange { source: FieldSource; reaso
 export interface AuthoringProposal {
   id: string;
   baseRevision: number;
-  kind: "baseline" | "guidance";
+  kind: "baseline" | "guidance" | "blueprint";
+  blueprint?: ScenarioBlueprint;
   sectionId?: string;
   /** First untouched baseline values shown before explicit confirmation. */
   prefilledFieldIds?: string[];
@@ -102,15 +104,20 @@ export interface AuthoringState {
   issues: AuthoringIssue[];
   /** Analysis scope, not a final scenario description. */
   context: string;
+  mode?: "documents" | "description";
+  blueprint?: ScenarioBlueprint;
+  lastExplanation?: string;
 }
 export type AuthoringMutation =
+  | { action: "confirm-blueprint" }
+  | { action: "edit-context"; context: string }
   | { action: "edit"; changes: FieldChange[] }
   | { action: "confirm"; sectionId: string }
   | { action: "navigate"; sectionId: string }
   | { action: "apply-proposal"; proposalId: string; fieldIds: string[] }
   | { action: "dismiss-proposal"; proposalId: string }
   | { action: "reset-field"; fieldId: string };
-export interface AnalysisRequest { kind: "baseline" | "guidance"; sectionId?: string; question: string }
+export interface AnalysisRequest { kind: "baseline" | "guidance" | "blueprint"; sectionId?: string; question: string }
 export interface AuthoringSession {
   id: string;
   actorId: string;
@@ -139,6 +146,10 @@ export interface AnalysisJob {
 }
 /** Public DTO deliberately contains form values, not raw secret-bearing config. */
 export interface AuthoringSessionDto {
+  context?: string;
+  mode?: "documents" | "description";
+  blueprint?: Omit<ScenarioBlueprint, "definition">;
+  lastExplanation?: string;
   id: string;
   moduleId: ScenarioParametersModuleId;
   revision: number;

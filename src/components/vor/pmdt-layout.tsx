@@ -188,6 +188,8 @@ export function PmdtLayout({
               moduleId="dvor-1150a"
               scenarioId={scenario.definition.id}
               scenarioName={scenario.definition.name}
+              attemptKey={scenario.startedAt}
+              onRestart={() => startReviewScenario(scenario.definition!)}
               getPayload={() => {
                 const state = useVorPmdtStore.getState();
                 return {

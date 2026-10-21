@@ -14,6 +14,7 @@ import {
   saveScenarioExamItemAction,
   submitScenarioExamItemAction,
   submitScenarioExamSessionAction,
+  expireScenarioExamSessionAction,
   saveScenarioExamReviewAction,
 } from "@/lib/scenario-exams/actions";
 import {
@@ -104,8 +105,8 @@ describe.skipIf(!testUrl)("Scenario Exam actions against real PostgreSQL", () =>
         if (file === "0001_users_and_sessions.sql") {
           for (const profile of [admin, student]) {
             await client.query(
-              `insert into public.users (id, username, email, password_hash, full_name, work_unit, role)
-               values ($1, $2, $3, 'non-login-test-fixture', $4, $5, $6)`,
+              `insert into public.users (id, username, email, password_hash, full_name, work_unit, role, must_change_password)
+               values ($1, $2, $3, 'non-login-test-fixture', $4, $5, $6, false)`,
               [profile.id, `test-${profile.role}`, profile.email, profile.fullName, profile.workUnit, profile.role],
             );
           }
@@ -195,6 +196,47 @@ describe.skipIf(!testUrl)("Scenario Exam actions against real PostgreSQL", () =>
     return { item, result: buildCandidateScenarioExamResult(item, { actionHistory: [], answer: { suspectedFault: "Fixture conclusion", reasoning: "Measured parameters", remediation: "Adjusted configuration" }, checkpoint: { parameter: 42 } }) };
   }
 
+  it("does not redeem a revoked or explicitly assigned conflicting code", async () => {
+    const examId = await openExam();
+    const code = await issueCode(examId);
+    vi.mocked(getCurrentProfile).mockResolvedValue(student);
+    await queryDatabase("update public.scenario_exam_codes set redeem_user_id=$2 where id=$1", [code.id, admin.id]);
+    expect((await redeemScenarioExamCodeAction(examId, code.code)).ok).toBe(false);
+    await queryDatabase("update public.scenario_exam_codes set redeem_user_id=null,revoked_at=now() where id=$1", [code.id]);
+    expect((await redeemScenarioExamCodeAction(examId, code.code)).ok).toBe(false);
+    expect((await queryDatabase("select id from public.scenario_exam_sessions where code_id=$1", [code.id])).rows).toHaveLength(0);
+  });
+
+  it("redeems through production entrypoints and releases feedback only to the valid owner after final submission", async () => {
+    const { readAttemptFeedback } = await import("@/lib/ai/feedback/jobs");
+    const { runNextFeedback } = await import("@/lib/ai/feedback/worker");
+    await queryDatabase("update public.users set must_change_password=false where id in ($1,$2)", [admin.id, student.id]);
+    await queryDatabase("update public.ai_attempt_feedback_jobs set status='failed'");
+    const { session, code } = await enterExam();
+    expect((await queryDatabase("select redeem_user_id from public.scenario_exam_codes where id=$1", [code.id])).rows[0].redeem_user_id).toBe(student.id);
+    const first = await startWithResult(session.subjects[0].id);
+    const second = await startWithResult(session.subjects[1].id);
+    expect((await saveScenarioExamItemAction(first.item.id, first.result)).ok).toBe(true);
+    expect((await submitScenarioExamItemAction(first.item.id, first.result)).ok).toBe(true);
+    vi.stubEnv("CNS_AI_ENABLED", "false");
+    try {
+      expect(await runNextFeedback(pool!, "actual-redeem")).toBe("completed");
+      const target = { examItemId: first.item.id };
+      expect(await readAttemptFeedback(pool!, student.id, target)).toEqual({ status: "withheld" });
+      expect(await readAttemptFeedback(pool!, admin.id, target)).toMatchObject({ status: "completed" });
+      expect((await saveScenarioExamItemAction(second.item.id, second.result)).ok).toBe(true);
+      expect((await submitScenarioExamSessionAction()).ok).toBe(true);
+      expect(await readAttemptFeedback(pool!, student.id, target)).toMatchObject({ status: "completed" });
+      // Existing legitimate sessions created before the redemption fix have no
+      // code owner: use the immutable session owner, never backfill a new answer.
+      await queryDatabase("update public.scenario_exam_codes set redeem_user_id=null where id=$1", [code.id]);
+      expect(await readAttemptFeedback(pool!, student.id, target)).toMatchObject({ status: "completed" });
+      expect(await runNextFeedback(pool!, "legacy-null-owner")).toBe("completed");
+      await queryDatabase("update public.scenario_exam_codes set redeem_user_id=$2 where id=$1", [code.id, admin.id]);
+      for (const actor of [student.id, admin.id]) await expect(readAttemptFeedback(pool!, actor, target)).rejects.toMatchObject({ code: "NOT_FOUND" });
+    } finally { vi.unstubAllEnvs(); }
+  });
+
   it("computes and stores technical summary from the frozen definition, ignoring a client SOLVED claim", async () => {
     const { examId, code, session } = await enterExam();
     const { item } = await startWithResult(session.subjects[0].id);
@@ -234,10 +276,16 @@ describe.skipIf(!testUrl)("Scenario Exam actions against real PostgreSQL", () =>
 
   it("persists the selected hardware card and reasoning through submission and the examiner query", async () => {
     const memberships = await queryDatabase("select id, scenario_id, definition_json from public.simulator_scenario_library_memberships where module_id = 'dvor-1150a' and library_kind = 'exam' and archived_at is null");
+    const replacements: string[] = [];
     try {
       for (const row of memberships.rows) {
         const definition = { ...createLvpsTx1PowerScenario(), id: row.scenario_id };
-        await queryDatabase("update public.simulator_scenario_library_memberships set definition_json = $2 where id = $1", [row.id, definition]);
+        await queryDatabase("update public.simulator_scenario_library_memberships set archived_at=now() where id=$1", [row.id]);
+        const replacement = await queryDatabase(`insert into public.simulator_scenario_library_memberships
+          (module_id,scenario_parameters_id,library_kind,revision_number,scenario_id,name,description,difficulty,schema_version,definition_json,published_by,sort_order)
+          select module_id,scenario_parameters_id,library_kind,revision_number+100,scenario_id,name,description,difficulty,schema_version,$2,published_by,sort_order
+          from public.simulator_scenario_library_memberships where id=$1 returning id`, [row.id, definition]);
+        replacements.push(replacement.rows[0].id);
       }
       const examId = await openExam();
       const code = await issueCode(examId, ["dvor-1150a"]);
@@ -260,7 +308,8 @@ describe.skipIf(!testUrl)("Scenario Exam actions against real PostgreSQL", () =>
       expect(presentExamHardwareEvidence(review.subjects[0])).toMatchObject({ passed: true,
         selected: [{ key, position: "1A3A4", matchesReference: true }], inspected: [{ key }], reasoning: payload.scenarioHardwareReasoning });
     } finally {
-      for (const row of memberships.rows) await queryDatabase("update public.simulator_scenario_library_memberships set definition_json = $2 where id = $1", [row.id, row.definition_json]);
+      for (const id of replacements) await queryDatabase("update public.simulator_scenario_library_memberships set archived_at=now() where id=$1", [id]);
+      for (const row of memberships.rows) await queryDatabase("update public.simulator_scenario_library_memberships set archived_at=null where id=$1", [row.id]);
     }
   });
 
@@ -366,6 +415,152 @@ describe.skipIf(!testUrl)("Scenario Exam actions against real PostgreSQL", () =>
     await enterExam();
     expect((await saveScenarioExamItemAction(item.id, result)).ok).toBe(false);
     expect((await queryDatabase("select result_json from public.scenario_exam_session_items where id = $1", [item.id])).rows[0].result_json).toBeNull();
+  });
+
+  it("binds every candidate read and mutation to the authenticated session owner, not merely the bearer token", async () => {
+    const { session } = await enterExam();
+    const first = await startWithResult(session.subjects[0].id);
+    const otherId = randomUUID();
+    await queryDatabase(`insert into public.users(id,username,email,password_hash,full_name,work_unit,role,must_change_password)
+      values($1::uuid,$1::text,$2,'non-login-fixture','Other','Lab','student',false)`, [otherId, `${otherId}@attech.com.vn`]);
+    vi.mocked(getCurrentProfile).mockResolvedValue({ ...student, id: otherId });
+    expect(await getCandidateScenarioExamSession()).toBeNull();
+    expect(await getCandidateScenarioExamItem(first.item.id)).toBeNull();
+    expect((await startScenarioExamSubjectAction(session.subjects[1].id)).ok).toBe(false);
+    expect((await saveScenarioExamItemAction(first.item.id, first.result)).ok).toBe(false);
+    expect((await submitScenarioExamItemAction(first.item.id, first.result)).ok).toBe(false);
+    expect((await submitScenarioExamSessionAction()).ok).toBe(false);
+    expect((await queryDatabase("select result_json from public.scenario_exam_session_items where id=$1", [first.item.id])).rows[0].result_json).toBeNull();
+  });
+
+  it("finalizes expired sessions from the real save entrypoint, preserving saved evidence and releasing terminal feedback", async () => {
+    const { readAttemptFeedback } = await import("@/lib/ai/feedback/jobs");
+    const { runNextFeedback } = await import("@/lib/ai/feedback/worker");
+    await queryDatabase("update public.users set must_change_password=false where id in ($1,$2)", [admin.id, student.id]);
+    await queryDatabase("update public.ai_attempt_feedback_jobs set status='failed'");
+    const { session, code } = await enterExam();
+    const first = await startWithResult(session.subjects[0].id);
+    expect((await saveScenarioExamItemAction(first.item.id, first.result)).ok).toBe(true);
+    const saved = (await queryDatabase("select result_json from public.scenario_exam_session_items where id=$1", [first.item.id])).rows[0].result_json;
+    // Advance only the test clock at the persistent scheduling boundary; all
+    // lifecycle/outbox transitions below must run through shipped entrypoints.
+    await queryDatabase("update public.scenario_exam_sessions set started_at=now()-interval '2 hours',deadline_at=now()-interval '1 hour' where id=$1", [session.id]);
+    expect((await saveScenarioExamItemAction(first.item.id, { ...first.result, payload: { late: true } })).ok).toBe(false);
+    const ended = await getCandidateScenarioExamSession();
+    expect(ended?.status).toBe("timed_out");
+    expect(ended?.subjects.map(subject => subject.status)).toEqual(["timed_out", "timed_out"]);
+    expect(ended?.subjects[1].sessionItemId).toBeNull();
+    expect((await queryDatabase("select status,redeem_user_id from public.scenario_exam_codes where id=$1", [code.id])).rows[0]).toEqual({ status: "timed_out", redeem_user_id: student.id });
+    expect((await queryDatabase("select result_json from public.scenario_exam_session_items where id=$1", [first.item.id])).rows[0].result_json).toEqual(saved);
+    const jobs = (await queryDatabase("select payload_json from public.ai_attempt_feedback_jobs where exam_item_id=$1", [first.item.id])).rows;
+    expect(jobs).toEqual([{ payload_json: saved.payload }]);
+    expect((await submitScenarioExamSessionAction()).ok).toBe(false);
+    expect((await queryDatabase("select id from public.ai_attempt_feedback_jobs where exam_item_id=$1", [first.item.id])).rows).toHaveLength(1);
+    vi.stubEnv("CNS_AI_ENABLED", "false");
+    try {
+      expect(await runNextFeedback(pool!, "expiry-entrypoint")).toBe("completed");
+      for (const actor of [student.id, admin.id]) expect(await readAttemptFeedback(pool!, actor, { examItemId: first.item.id })).toMatchObject({ status: "completed" });
+    } finally { vi.unstubAllEnvs(); }
+  });
+
+  it("durably sweeps expired sessions without cookies, skips locked rows, and preserves partial submissions without inventing unstarted exercises", async () => {
+    const { runNextFeedback } = await import("@/lib/ai/feedback/worker");
+    const { readAttemptFeedback } = await import("@/lib/ai/feedback/jobs");
+    await queryDatabase("update public.ai_attempt_feedback_jobs set status='failed'");
+    const partial = await enterExam();
+    const submitted = await startWithResult(partial.session.subjects[0].id);
+    expect((await submitScenarioExamItemAction(submitted.item.id, submitted.result)).ok).toBe(true);
+    const submittedBefore = (await queryDatabase("select * from public.scenario_exam_session_items where id=$1", [submitted.item.id])).rows[0];
+    vi.mocked(getCurrentProfile).mockResolvedValue(admin);
+    expect((await saveScenarioExamReviewAction({ examId: partial.examId, codeId: partial.code.id, itemId: submitted.item.id, score: 73, comment: "Preserve examiner review" })).ok).toBe(true);
+    const reviewedBefore = (await queryDatabase("select * from public.scenario_exam_session_items where id=$1", [submitted.item.id])).rows[0];
+    expect(reviewedBefore.examiner_score).toBe("73.00");
+    expect(reviewedBefore.result_json).toEqual(submittedBefore.result_json);
+    const missing = await enterExam();
+    const noEvidence = await startWithResult(missing.session.subjects[0].id);
+    const missingToken = cookieJar.get("cns_scenario_exam_session")!;
+    vi.mocked(getCurrentProfile).mockResolvedValue(admin);
+    const empty = await enterExam();
+    for (const session of [partial.session, missing.session, empty.session]) await queryDatabase("update public.scenario_exam_sessions set started_at=now()-interval '2 hours',deadline_at=now()-interval '1 hour' where id=$1", [session.id]);
+    cookieJar.clear();
+    const stopped = new AbortController(); stopped.abort();
+    expect(await runNextFeedback(pool!, "already-stopped", stopped.signal)).toBe("stopped");
+    expect((await queryDatabase("select status from public.scenario_exam_sessions where id=$1", [missing.session.id])).rows[0].status).toBe("in_progress");
+    const lock = await pool!.connect();
+    vi.stubEnv("CNS_AI_ENABLED", "false");
+    try {
+      await lock.query("begin");
+      await lock.query("select id from public.scenario_exam_sessions where id=$1 for update", [partial.session.id]);
+      // Worker sweep is independent of browser identity and must not wait for
+      // another request holding a session lock. Do not claim the locked job.
+      await queryDatabase("update public.ai_attempt_feedback_jobs set status='failed' where exam_item_id=$1", [submitted.item.id]);
+      expect(await runNextFeedback(pool!, "durable-expiry")).toBe("completed");
+      expect((await queryDatabase("select status from public.scenario_exam_sessions where id=$1", [partial.session.id])).rows[0].status).toBe("in_progress");
+      expect((await queryDatabase("select status from public.scenario_exam_sessions where id=any($1::uuid[])", [[missing.session.id, empty.session.id]])).rows).toEqual([{ status: "timed_out" }, { status: "timed_out" }]);
+      expect(await readAttemptFeedback(pool!, student.id, { examItemId: noEvidence.item.id })).toMatchObject({ status: "completed", feedback: { status: "UNVERIFIED", solved: null } });
+      expect((await queryDatabase("select payload_json from public.ai_attempt_feedback_jobs where exam_item_id=$1", [noEvidence.item.id])).rows[0].payload_json).toBeNull();
+      expect((await queryDatabase("select id from public.scenario_exam_session_items where session_id=$1", [empty.session.id])).rows).toHaveLength(0);
+      await lock.query("rollback");
+      const { sweepExpiredScenarioExamSessions } = await import("@/lib/scenario-exams/expiration");
+      expect(await sweepExpiredScenarioExamSessions(pool!, 1)).toBe(1);
+      expect(await sweepExpiredScenarioExamSessions(pool!, 1)).toBe(0);
+      expect((await queryDatabase("select * from public.scenario_exam_session_items where id=$1", [submitted.item.id])).rows[0]).toEqual(reviewedBefore);
+      cookieJar.set("cns_scenario_exam_session", missingToken);
+      const [submitRetry, swept] = await Promise.all([submitScenarioExamSessionAction(), sweepExpiredScenarioExamSessions(pool!, 1)]);
+      expect(submitRetry.ok).toBe(false); expect(swept).toBe(0);
+      expect((await queryDatabase("select id from public.ai_attempt_feedback_jobs where exam_item_id=$1", [noEvidence.item.id])).rows).toHaveLength(1);
+    } finally { await lock.query("rollback"); lock.release(); vi.unstubAllEnvs(); }
+  });
+
+  it("denies conflicting owners, revoked codes and changed roles on actual candidate mutation and feedback paths", async () => {
+    const { readAttemptFeedback, claimFeedbackJob } = await import("@/lib/ai/feedback/jobs");
+    const { sweepExpiredScenarioExamSessions } = await import("@/lib/scenario-exams/expiration");
+    await queryDatabase("update public.ai_attempt_feedback_jobs set status='failed'");
+    const { session, code } = await enterExam();
+    const first = await startWithResult(session.subjects[0].id);
+    expect((await submitScenarioExamItemAction(first.item.id, first.result)).ok).toBe(true);
+    for (const invalid of ["owner", "revoked", "role"] as const) {
+      if (invalid === "owner") await queryDatabase("update public.scenario_exam_codes set redeem_user_id=$2 where id=$1", [code.id, admin.id]);
+      if (invalid === "revoked") await queryDatabase("update public.scenario_exam_codes set revoked_at=now() where id=$1", [code.id]);
+      if (invalid === "role") await queryDatabase("update public.users set role='teacher' where id=$1", [student.id]);
+      try {
+        expect(await getCandidateScenarioExamSession()).toBeNull();
+        expect((await startScenarioExamSubjectAction(session.subjects[1].id)).ok).toBe(false);
+        expect((await submitScenarioExamSessionAction()).ok).toBe(false);
+        for (const actor of [student.id, admin.id]) await expect(readAttemptFeedback(pool!, actor, { examItemId: first.item.id })).rejects.toMatchObject({ code: "NOT_FOUND" });
+        expect(await claimFeedbackJob(pool!, "invalid-owner")).toBeNull();
+      } finally {
+        await queryDatabase("update public.scenario_exam_codes set redeem_user_id=$2,revoked_at=null where id=$1", [code.id, student.id]);
+        await queryDatabase("update public.users set role='student' where id=$1", [student.id]);
+      }
+    }
+    await queryDatabase("update public.scenario_exam_sessions set started_at=now()-interval '2 hours',deadline_at=now()-interval '1 hour' where id=$1", [session.id]);
+    await queryDatabase("update public.scenario_exam_codes set revoked_at=now() where id=$1", [code.id]);
+    expect(await sweepExpiredScenarioExamSessions(pool!, 25)).toBe(0);
+    expect((await queryDatabase("select status from public.scenario_exam_sessions where id=$1", [session.id])).rows[0].status).toBe("in_progress");
+  });
+
+  it("rolls back expiry and outbox together on audit failure, then settles a concurrent submit/sweep exactly once", async () => {
+    const { sweepExpiredScenarioExamSessions } = await import("@/lib/scenario-exams/expiration");
+    const { session } = await enterExam();
+    const first = await startWithResult(session.subjects[0].id);
+    const second = await startWithResult(session.subjects[1].id);
+    expect((await saveScenarioExamItemAction(first.item.id, first.result)).ok).toBe(true);
+    expect((await saveScenarioExamItemAction(second.item.id, second.result)).ok).toBe(true);
+    await queryDatabase("update public.scenario_exam_sessions set started_at=now()-interval '2 hours',deadline_at=now()-interval '1 hour' where id=$1", [session.id]);
+    await queryDatabase(`create function public.test_reject_expiry() returns trigger language plpgsql as $$ begin
+      if new.event_type='session_timed_out' then raise exception 'test expiry rollback'; end if; return new; end $$;
+      create trigger test_expiry_failure before insert on public.scenario_exam_audit_events for each row execute function public.test_reject_expiry()`);
+    try {
+      expect((await submitScenarioExamSessionAction()).ok).toBe(false);
+      expect((await queryDatabase("select status from public.scenario_exam_sessions where id=$1", [session.id])).rows[0].status).toBe("in_progress");
+      expect((await queryDatabase("select id from public.ai_attempt_feedback_jobs where exam_item_id=any($1::uuid[])", [[first.item.id, second.item.id]])).rows).toHaveLength(0);
+    } finally { await queryDatabase("drop trigger test_expiry_failure on public.scenario_exam_audit_events; drop function public.test_reject_expiry()"); }
+    const [submit, count] = await Promise.all([submitScenarioExamSessionAction(), sweepExpiredScenarioExamSessions(pool!, 25)]);
+    expect(submit.ok).toBe(false); expect([0, 1]).toContain(count);
+    expect((await queryDatabase("select status from public.scenario_exam_sessions where id=$1", [session.id])).rows[0].status).toBe("timed_out");
+    expect((await queryDatabase("select id from public.ai_attempt_feedback_jobs where exam_item_id=any($1::uuid[])", [[first.item.id, second.item.id]])).rows).toHaveLength(2);
+    expect((await queryDatabase("select id from public.scenario_exam_audit_events where session_id=$1 and event_type='session_timed_out'", [session.id])).rows).toHaveLength(1);
   });
 
   it("rejects saving or finishing after the original deadline", async () => {
@@ -590,10 +785,18 @@ describe.skipIf(!testUrl)("Scenario Exam actions against real PostgreSQL", () =>
     expect((await getCandidateScenarioExamItem(started.data!.id))?.sessionId).toBe(first.session.id);
     const firstToken = cookieJar.get("cns_scenario_exam_session")!;
     vi.mocked(getCurrentProfile).mockResolvedValue(admin);
-    await enterExam();
+    const second = await enterExam();
     expect(await getCandidateScenarioExamItem(started.data!.id)).toBeNull();
+    expect((await getCandidateScenarioExamSession())?.id).toBe(second.session.id);
     cookieJar.set("cns_scenario_exam_session", firstToken);
     expect((await getCandidateScenarioExamItem(started.data!.id))?.id).toBe(started.data!.id);
+    await queryDatabase("update public.scenario_exam_sessions set started_at=now()-interval '2 hours',deadline_at=now()-interval '1 hour' where id=$1", [first.session.id]);
+    expect(await expireScenarioExamSessionAction()).toMatchObject({ ok: true, data: { id: first.session.id, timedOut: true } });
+    expect((await getCandidateScenarioExamSession())?.id).toBe(first.session.id);
+    expect((await getCandidateScenarioExamSession())?.status).toBe("timed_out");
+    expect((await queryDatabase("select status from public.scenario_exam_sessions where id=$1", [second.session.id])).rows[0].status).toBe("in_progress");
+    cookieJar.clear();
+    expect(await getCandidateScenarioExamSession()).toBeNull(); // No same-account fallback.
   });
 
   it("prevents opening submitted subjects, revoked codes, and terminal sessions", async () => {

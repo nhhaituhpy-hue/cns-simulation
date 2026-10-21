@@ -420,6 +420,19 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
             moduleId="dvor-220"
             scenarioId={device.scenario.definition.id}
             scenarioName={device.scenario.definition.name}
+            attemptKey={device.scenario.startedAtMs}
+            onRestart={() => {
+              const current = store.getState().device;
+              const result = dispatch({ type: "apply-scenario", scenario: current.scenario.definition! });
+              if (!result.ok) return false;
+              // A new training attempt clears learner evidence, not saved profiles.
+              store.setState(({ device: restarted }) => ({ device: { ...restarted,
+                history: { ...restarted.history, pmdt: [], lmi: [], parameterChanges: [] },
+                configuration: { ...restarted.configuration, flash: current.configuration.flash,
+                  flashDirty: JSON.stringify(restarted.configuration.running) !== JSON.stringify(current.configuration.flash) },
+              } }));
+              return true;
+            }}
             getPayload={() => ({ device: store.getState().device })}
           />
         ) : null}

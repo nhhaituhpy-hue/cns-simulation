@@ -5,6 +5,8 @@ import { AiScenarioDialog } from "@/components/scenario/ai-scenario-dialog";
 import { AdsbAdminDashboard } from "@/modules/devices/adsb/admin-dashboard";
 import { useScenarioStore } from "@/stores/scenario-store";
 import { ScenarioManagementWorkspace } from "@/components/scenario/scenario-management-workspace";
+import { authoringStateDto, createAuthoringState } from "@/lib/ai/scenario-authoring/state";
+import type { AuthoringSession } from "@/lib/ai/scenario-authoring/types";
 
 const originalShowModal = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, "showModal");
 const originalClose = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, "close");
@@ -32,21 +34,89 @@ afterEach(() => {
 });
 
 
+it("offers the two brief entry paths without creating a draft or exposing native defaults", async () => {
+  const user = userEvent.setup();
+  render(<AiScenarioDialog moduleId="dvor-220" />);
+  await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
+  expect(screen.getByRole("button", { name: "Tải tài liệu" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Mô tả tình huống" })).toBeEnabled();
+  expect(screen.queryByRole("button", { name: "Dùng mặc định simulator" })).not.toBeInTheDocument();
+  expect(vi.mocked(fetch).mock.calls.every(([, init]) => !init?.method || init.method === "GET")).toBe(true);
+});
+
+it.each(["documents", "description"] as const)("resumes, resets and explicitly creates through the real %s dialog path", async mode => {
+  const saved: AuthoringSession = { id: "draft-saved", actorId: "test-admin", moduleId: "dvor-220", revision: 1, status: "editing", state: { ...createAuthoringState("dvor-220", "test-source"), mode, currentStep: "documents", context: "Mục tiêu đã lưu" }, documents: [], scenarioRowId: null, scenarioId: null, createdAt: "now", updatedAt: "now" };
+  const fetcher = vi.fn(async (url: string, init?: RequestInit) => {
+    if (url.includes("scenario-jobs")) return reply({ jobs: [] });
+    if (url.includes("?moduleId=")) return reply({ sessions: [{ id: saved.id, name: "Bản nháp cũ", status: "editing" }] });
+    if (init?.method === "DELETE") return reply({ deleted: true });
+    return reply({ session: authoringStateDto(saved, null) });
+  });
+  vi.stubGlobal("fetch", fetcher);
+  const user = userEvent.setup();
+  render(<AiScenarioDialog moduleId="dvor-220" />);
+  await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
+  await user.click(screen.getByRole("button", { name: mode === "description" ? "Mô tả tình huống" : "Tải tài liệu" }));
+  await user.click(await screen.findByRole("button", { name: "Tiếp tục: Bản nháp cũ" }));
+  expect(fetcher.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(0);
+  await user.click(screen.getByRole("button", { name: "Xóa & tạo lại từ đầu" }));
+  const contextLabel = mode === "description" ? "Mô tả tình huống" : "Mục tiêu huấn luyện (không bắt buộc)";
+  expect(screen.getByLabelText(contextLabel)).toHaveValue("");
+  expect(fetcher.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(0);
+  fireEvent.change(screen.getByLabelText(contextLabel), { target: { value: "Luyện khôi phục công suất." } });
+  const file = new File(["Synthetic test document"], "manual.txt");
+  if (mode === "documents") fireEvent.change(screen.getByLabelText("Tài liệu thông số nền"), { target: { files: [file] } });
+  await user.click(screen.getByRole("button", { name: "AI soạn kịch bản" }));
+  const posts = fetcher.mock.calls.filter(([, init]) => init?.method === "POST");
+  expect(posts).toHaveLength(1);
+  expect(posts[0][0]).toBe("/api/ai/scenario-authoring");
+  const body = posts[0][1]!.body as FormData;
+  expect(body.get("mode")).toBe(mode);
+  expect(body.get("context")).toBe("Luyện khôi phục công suất.");
+  expect(body.get("moduleId")).toBe("dvor-220");
+  expect(body.getAll("files")).toEqual(mode === "documents" ? [file] : []);
+});
+
+it("keeps dirty pending close decisions inside the real dialog and resumes the saved draft afterwards", async () => {
+  const saved: AuthoringSession = { id: "draft-saved", actorId: "test-admin", moduleId: "dvor-220", revision: 1, status: "editing", state: createAuthoringState("dvor-220", "test-source"), documents: [], scenarioRowId: null, scenarioId: null, createdAt: "now", updatedAt: "now" };
+  const dto = { ...authoringStateDto(saved, null), analysis: { id: "a1", status: "running", errorCode: null } };
+  const fetcher = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(async url => reply(url.includes("scenario-jobs") ? { jobs: [] } : url.includes("?moduleId=") ? { sessions: [{ id: saved.id, name: "Bản nháp cũ", status: "editing" }] } : { session: dto }));
+  vi.stubGlobal("fetch", fetcher);
+  const user = userEvent.setup();
+  render(<AiScenarioDialog moduleId="dvor-220" />);
+  const open = async () => {
+    await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
+    await user.click(screen.getByRole("button", { name: "Mô tả tình huống" }));
+    await user.click(await screen.findByRole("button", { name: "Tiếp tục: Bản nháp cũ" }));
+  };
+  await open();
+  fireEvent.change(screen.getByLabelText("Tên kịch bản"), { target: { value: "Chưa lưu" } });
+  fireEvent(screen.getByRole("dialog"), new Event("cancel", { cancelable: true }));
+  await user.click(await screen.findByRole("button", { name: "Giữ bản chỉnh và tiếp tục" }));
+  expect(screen.getByLabelText("Tên kịch bản")).toHaveValue("Chưa lưu");
+  await user.click(screen.getByRole("button", { name: "Đóng" }));
+  await user.click(screen.getByRole("button", { name: "Bỏ thay đổi chưa lưu và đóng" }));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  await open();
+  expect(screen.getByLabelText("Tên kịch bản")).not.toHaveValue("Chưa lưu");
+  expect(fetcher.mock.calls.every(([, init]) => !init?.method || init.method === "GET")).toBe(true);
+});
+
 const savedJob = (overrides: Record<string, unknown> = {}) => ({id:"job-saved",moduleId:"dvor-220",name:"Lỗi Carrier đã lưu",status:"running",phase:"extracting",createdAt:"2026-10-20T00:00:00Z",updatedAt:"2026-10-20T00:00:00Z",...overrides});
-it.each(["dvor-1150","dvor-1150a","dme-1119a","dvor-220","dme-320","ads-b"] as const)("starts document-first %s wizard with template, native fallback and no immediate generation",async moduleId=>{
+it.each(["dvor-1150","dvor-1150a","dme-1119a","dvor-220","dme-320","ads-b"] as const)("starts document-first %s wizard with template, description choice and no immediate generation",async moduleId=>{
  const user=userEvent.setup();render(<AiScenarioDialog moduleId={moduleId}/>);await user.click(screen.getByRole("button",{name:"Tạo kịch bản bằng AI"}));
  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
- expect(screen.getByRole("button",{name:"Phân tích tài liệu và điền biểu mẫu"})).toBeEnabled();
- expect(screen.getByRole("button",{name:"Dùng mặc định simulator"})).toBeEnabled();
- await user.click(screen.getByRole("button",{name:"Phân tích tài liệu và điền biểu mẫu"}));
+ expect(screen.getByRole("button",{name:"Tải tài liệu"})).toBeEnabled();
+ expect(screen.getByRole("button",{name:"Mô tả tình huống"})).toBeEnabled();
+ await user.click(screen.getByRole("button",{name:"Tải tài liệu"}));
  const modal=within(screen.getByRole("dialog"));
  expect(modal.getByRole("button",{name:"Chọn tệp"})).toBeVisible();
  expect(modal.getByTestId("selected-files-status")).toHaveTextContent("Không có tệp nào được chọn");
- expect(modal.getByRole("button",{name:"Phân tích tài liệu và điền biểu mẫu"})).toBeDisabled();
+ expect(modal.getByRole("button",{name:"AI soạn kịch bản"})).toBeDisabled();
  expect(modal.queryByRole("button",{name:"Dùng mặc định simulator"})).not.toBeInTheDocument();
  expect(modal.getByRole("link",{name:"Tải mẫu thông số nền (.docx)"})).toHaveAttribute("href",`/templates/ai-scenario-${moduleId}.docx`);expect(modal.queryByLabelText("Tên kịch bản")).not.toBeInTheDocument();expect(modal.queryByRole("button",{name:"Bắt đầu tạo"})).not.toBeInTheDocument();expect(vi.mocked(fetch).mock.calls.every(([,init])=>!init?.method||init.method==="GET")).toBe(true);
 });
-it.each([ ["empty",[new File([],"empty.txt")],/trống/], ["unsupported",[new File(["x"],"scan.png")],/PDF.*DOCX/], ["count",Array.from({length:6},(_,i)=>new File(["x"],`${i}.txt`)),/5 tệp/], ["size",[Object.defineProperty(new File(["x"],"large.pdf"),"size",{value:10485761})],/10 MiB/], ["total",Array.from({length:3},(_,i)=>Object.defineProperty(new File(["x"],`${i}.txt`),"size",{value:9437184})),/25 MiB/] ] as const)("rejects %s upload without submitting",async(_label,files,message)=>{render(<AiScenarioDialog moduleId="dvor-1150a"/>);fireEvent.click(screen.getByRole("button",{name:"Tạo kịch bản bằng AI"}));fireEvent.click(screen.getByRole("button",{name:"Phân tích tài liệu và điền biểu mẫu"}));fireEvent.change(screen.getByLabelText("Tài liệu thông số nền"),{target:{files:[...files]}});expect(await screen.findByRole("alert")).toHaveTextContent(message);expect(screen.getByRole("button",{name:"Phân tích tài liệu và điền biểu mẫu"})).toBeDisabled();expect(vi.mocked(fetch).mock.calls.every(([,init])=>!init?.method||init.method==="GET")).toBe(true);});
+it.each([ ["empty",[new File([],"empty.txt")],/trống/], ["unsupported",[new File(["x"],"scan.png")],/PDF.*DOCX/], ["count",Array.from({length:6},(_,i)=>new File(["x"],`${i}.txt`)),/5 tệp/], ["size",[Object.defineProperty(new File(["x"],"large.pdf"),"size",{value:10485761})],/10 MiB/], ["total",Array.from({length:3},(_,i)=>Object.defineProperty(new File(["x"],`${i}.txt`),"size",{value:9437184})),/25 MiB/] ] as const)("rejects %s upload without submitting",async(_label,files,message)=>{render(<AiScenarioDialog moduleId="dvor-1150a"/>);fireEvent.click(screen.getByRole("button",{name:"Tạo kịch bản bằng AI"}));fireEvent.click(screen.getByRole("button",{name:"Tải tài liệu"}));fireEvent.change(screen.getByLabelText("Tài liệu thông số nền"),{target:{files:[...files]}});expect(await screen.findByRole("alert")).toHaveTextContent(message);expect(screen.getByRole("button",{name:"AI soạn kịch bản"})).toBeDisabled();expect(vi.mocked(fetch).mock.calls.every(([,init])=>!init?.method||init.method==="GET")).toBe(true);});
 it("keeps manual generic authoring actions next to the AI trigger and refreshes only unpublished sources",async()=>{
  const source={id:"row-generated",moduleId:"dvor-220",scenarioId:"generated",name:"Nguồn AI mới",description:"Mô tả",difficulty:"intermediate",schemaVersion:1,definition:{},sourceFileName:null,createdAt:"2026-10-20T00:00:00Z",updatedAt:"2026-10-20T00:00:00Z"};let complete=false;
  const fetcher=vi.fn((url:string)=>Promise.resolve(reply(url.includes("scenario-authoring")?{sessions:[]}:url.includes("scenario-jobs")?{jobs:[savedJob({status:"completed",phase:"completed",scenarioRowId:source.id})]}:url.includes("scenario-libraries")?{practice:[],exam:[]}:complete?[source]:[])));vi.stubGlobal("fetch",fetcher);
@@ -77,7 +147,7 @@ it("reviews persisted settings alongside the completed scenario link and retains
 
   const user = userEvent.setup();
   await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
-  await user.click(screen.getByRole("button", { name: "Phân tích tài liệu và điền biểu mẫu" }));
+  await user.click(screen.getByRole("button", { name: "Tải tài liệu" }));
   const modal = within(screen.getByRole("dialog"));
   const history = await modal.findByText("Lịch sử yêu cầu AI trước đây");
   expect(history.closest("details")).not.toHaveAttribute("open");
@@ -104,7 +174,7 @@ it.each([undefined, { ...persistedReview(), initial: [{ fieldId: "config.power",
 
   const user = userEvent.setup();
   await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
-  await user.click(screen.getByRole("button", { name: "Phân tích tài liệu và điền biểu mẫu" }));
+  await user.click(screen.getByRole("button", { name: "Tải tài liệu" }));
   const modal = within(screen.getByRole("dialog"));
   await user.click(modal.getByText("Lịch sử yêu cầu AI trước đây"));
   await user.click(modal.getByRole("button", { name: "Xem tiến độ: Lỗi Carrier đã lưu" }));
@@ -127,7 +197,7 @@ it.each([
   render(<AiScenarioDialog moduleId="dvor-220" />);
   const user = userEvent.setup();
   await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
-  await user.click(screen.getByRole("button", { name: "Phân tích tài liệu và điền biểu mẫu" }));
+  await user.click(screen.getByRole("button", { name: "Tải tài liệu" }));
   const modal = within(screen.getByRole("dialog"));
   await user.click(await modal.findByText("Lịch sử yêu cầu AI trước đây"));
   await user.click(modal.getByRole("button", { name: "Xem tiến độ: Lỗi Carrier đã lưu" }));
@@ -140,7 +210,7 @@ it("does not close the AI scenario modal when the user cancels the native file p
   const user = userEvent.setup();
   render(<AiScenarioDialog moduleId="dvor-220" />);
   await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
-  await user.click(screen.getByRole("button", { name: "Phân tích tài liệu và điền biểu mẫu" }));
+  await user.click(screen.getByRole("button", { name: "Tải tài liệu" }));
   const dialog = screen.getByRole("dialog");
   const fileInput = within(dialog).getByLabelText("Tài liệu thông số nền");
 
@@ -164,7 +234,7 @@ it("lets the user delete a previous AI job from LegacyHistory", async () => {
   const user = userEvent.setup();
   render(<AiScenarioDialog moduleId="dvor-220" />);
   await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
-  await user.click(screen.getByRole("button", { name: "Phân tích tài liệu và điền biểu mẫu" }));
+  await user.click(screen.getByRole("button", { name: "Tải tài liệu" }));
   const modal = within(screen.getByRole("dialog"));
   await user.click(await modal.findByText("Lịch sử yêu cầu AI trước đây"));
   expect(await modal.findByText("Lỗi Carrier đã lưu")).toBeVisible();

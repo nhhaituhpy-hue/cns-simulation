@@ -8,15 +8,9 @@ import { parseCandidateScenarioExamResult } from "./results";
 import { ScenarioExamValidationError, validateScenarioExamUuid } from "./validation";
 import { evaluateScenarioExamResult } from "./evaluation";
 import type { ScenarioParametersModuleId } from "@/lib/scenario-parameters";
+import { finalizeExpiredScenarioExamSession, lockOwnedScenarioExamSession, type LockedScenarioExamSession } from "./expiration";
 
-interface LockedSession {
-  id: string;
-  code_id: string;
-  exam_id: string;
-  status: string;
-  code_status: string;
-  deadline_at: string;
-}
+type LockedSession = LockedScenarioExamSession;
 
 interface LockedItem {
   id: string;
@@ -38,15 +32,8 @@ async function candidateIdentity() {
   return { userId: profile.id, tokenHash: hashScenarioExamSessionToken(token) };
 }
 
-async function lockSession(client: PoolClient, tokenHash: string): Promise<LockedSession> {
-  const result = await client.query<LockedSession>(
-    `select s.id, s.code_id, c.exam_id, s.status, c.status as code_status, s.deadline_at
-       from public.scenario_exam_sessions s
-       join public.scenario_exam_codes c on c.id = s.code_id
-      where s.session_token_hash = $1
-      for update of s, c`, [tokenHash],
-  );
-  const session = result.rows[0];
+async function lockSession(client: PoolClient, tokenHash: string, actorId: string): Promise<LockedSession> {
+  const session = await lockOwnedScenarioExamSession(client, tokenHash, actorId);
   if (!session) throw new ScenarioExamValidationError("Không tìm thấy phiên thi hiện tại.");
   if (session.code_status === "revoked" || session.status === "revoked") throw new ScenarioExamValidationError("Mã hoặc phiên thi đã bị thu hồi.");
   return session;
@@ -79,8 +66,9 @@ async function recordItemSubmission(client: PoolClient, session: LockedSession, 
 export async function saveCandidateScenarioExamItem(itemIdValue: unknown, input: unknown, submit: boolean) {
   const identity = await candidateIdentity();
   const itemId = validateScenarioExamUuid(itemIdValue, "Mã bài thi");
-  return withDatabaseTransaction(async (client) => {
-    const session = await lockSession(client, identity.tokenHash);
+  const saved = await withDatabaseTransaction(async (client) => {
+    const session = await lockSession(client, identity.tokenHash, identity.userId);
+    if (await finalizeExpiredScenarioExamSession(client, session, identity.userId)) return null;
     const itemResult = await client.query<LockedItem>(
       `select item.id, item.code_subject_id, item.module_id, item.scenario_id,
               item.library_revision_number, item.status, cs.status as subject_status, item.result_json, item.definition_snapshot_json
@@ -91,6 +79,7 @@ export async function saveCandidateScenarioExamItem(itemIdValue: unknown, input:
     );
     const item = itemResult.rows[0];
     if (!item) throw new ScenarioExamValidationError("Bài làm không thuộc phiên thi hiện tại.");
+    if (await finalizeExpiredScenarioExamSession(client, session, identity.userId)) return null;
     // A retry after a successful submit cannot rewrite the frozen evidence.
     if (submit && item.status === "submitted" && item.subject_status === "submitted") return { id: item.id, examId: session.exam_id };
     requireActiveSession(session);
@@ -106,13 +95,16 @@ export async function saveCandidateScenarioExamItem(itemIdValue: unknown, input:
     if (submit) await recordItemSubmission(client, session, item, identity.userId);
     return { id: item.id, examId: session.exam_id };
   });
+  if (!saved) throw new ScenarioExamValidationError("Phiên thi đã hết thời gian.");
+  return saved;
 }
 
 /** Finalize all selected subjects together after their evidence has been saved. */
 export async function submitCandidateScenarioExamSession() {
   const identity = await candidateIdentity();
-  return withDatabaseTransaction(async (client) => {
-    const session = await lockSession(client, identity.tokenHash);
+  const saved = await withDatabaseTransaction(async (client) => {
+    const session = await lockSession(client, identity.tokenHash, identity.userId);
+    if (await finalizeExpiredScenarioExamSession(client, session, identity.userId)) return null;
     if (session.status === "submitted") return { id: session.id, examId: session.exam_id };
     requireActiveSession(session);
     const subjects = await client.query<{ id: string; status: string }>(
@@ -135,6 +127,7 @@ export async function submitCandidateScenarioExamSession() {
       if (!item.result_json) throw new ScenarioExamValidationError("Có môn chưa lưu bài làm. Hãy mở lại môn đó và bấm Lưu bài làm hoặc Nộp môn.");
       validItemResult(item, item.result_json);
     }
+    if (await finalizeExpiredScenarioExamSession(client, session, identity.userId)) return null;
     for (const item of items.rows) if (item.status !== "submitted") await recordItemSubmission(client, session, item, identity.userId);
     await client.query("update public.scenario_exam_sessions set status = 'submitted', submitted_at = now(), terminal_reason = 'submitted', last_seen_at = now(), updated_at = now() where id = $1", [session.id]);
     await client.query("update public.scenario_exam_codes set status = 'submitted', terminal_at = now(), updated_at = now() where id = $1", [session.code_id]);
@@ -144,5 +137,16 @@ export async function submitCandidateScenarioExamSession() {
       [session.exam_id, session.code_id, session.id, identity.userId, items.rows.length],
     );
     return { id: session.id, examId: session.exam_id };
+  });
+  if (!saved) throw new ScenarioExamValidationError("Phiên thi đã hết thời gian.");
+  return saved;
+}
+
+export async function finalizeCandidateScenarioExamExpiration() {
+  const identity = await candidateIdentity();
+  return withDatabaseTransaction(async client => {
+    const session = await lockSession(client, identity.tokenHash, identity.userId);
+    await finalizeExpiredScenarioExamSession(client, session, identity.userId);
+    return { id: session.id, examId: session.exam_id, timedOut: session.status === "timed_out" };
   });
 }

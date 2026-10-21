@@ -2,6 +2,7 @@ import { loadAiProviderConfig } from "../provider/config";
 import { requestScenarioJson } from "../provider/client";
 import { AiScenarioError, type EvidenceDocument } from "../scenario-generation/types";
 import { validateEvidenceDocuments } from "../scenario-generation/validation";
+import { safeBlueprintDocuments } from "../scenario-blueprint/validation";
 import { authoringAdapterFor } from "./forms/registry";
 import { validateFieldValue, writePath } from "./forms/helpers";
 import type { AnalysisRequest, AuthoringProposal, AuthoringState, ProposedChange, AuthoringIssue } from "./types";
@@ -15,6 +16,9 @@ import { guidanceContext } from "./analysis-context";
 /** Analysis produces a reviewable proposal only; state/source writes belong to the caller. */
 export async function analyzeAuthoring(state: AuthoringState, request: AnalysisRequest, documents: EvidenceDocument[], signal?: AbortSignal): Promise<Omit<AuthoringProposal, "id" | "baseRevision">> {
  validateEvidenceDocuments(documents);
+ const segmentsAvailable=documents.reduce((count,doc)=>count+doc.segments.length,0);
+ documents=safeBlueprintDocuments(documents,state.moduleId);
+ const evidenceWithheld=documents.reduce((count,doc)=>count+doc.segments.length,0)<segmentsAvailable;
  const form=authoringAdapterFor(state.moduleId).form(state.definition);
  const section=form.sections.find(s=>s.id===request.sectionId);
  if(!["baseline","guidance"].includes(request.kind)||typeof request.question!=="string"||request.question.length>4000||(request.kind==="guidance"&&!section))throw new AiScenarioError("INVALID_SELECTION","Bước hỗ trợ không hợp lệ.");
@@ -24,6 +28,7 @@ export async function analyzeAuthoring(state: AuthoringState, request: AnalysisR
  const filled=documents.flatMap(doc=>doc.segments.flatMap(segment=>filledTemplateExcerpts(segment.text).map(row=>({doc,segment,row}))));
  const windows=filled.length&&request.kind==="baseline"?filled.slice(0,48).map(({doc,segment,row})=>[{id:doc.id,name:doc.name,sha256:doc.sha256,segments:[{label:segment.label,text:row.text}]}]):evidenceWindows(documents);
  const accepted=new Map<string,ProposedChange>(),conflicts=new Set<string>(),issues:AuthoringIssue[]=[],messages:string[]=[];
+ if(evidenceWithheld)issues.push({code:"EVIDENCE_WITHHELD",sectionId:"documents",severity:"warning",message:"Một số đoạn tài liệu không qua kiểm tra an toàn/phạm vi thiết bị và không được gửi AI hoặc dùng làm căn cứ. Hãy cung cấp tài liệu phù hợp không chứa thông tin đăng nhập."});
  if(draftContext?.coverage.truncated)issues.push({code:"GUIDANCE_CONTEXT_LIMIT",sectionId:section!.id,severity:"warning",message:`Ngữ cảnh bản nháp chỉ gồm ${draftContext.coverage.fieldsIncluded}/${draftContext.coverage.fieldsAvailable} trường ngoài bước hiện tại; ${draftContext.coverage.omittedUnsafeFields} trường không an toàn bị loại. Phần vượt ngân sách hoặc bị loại không được gửi AI.`});
  const config={...loadAiProviderConfig(),timeoutMs:60000};
  const boundedSignal=AbortSignal.any([...(signal?[signal]:[]),AbortSignal.timeout(185000)]);

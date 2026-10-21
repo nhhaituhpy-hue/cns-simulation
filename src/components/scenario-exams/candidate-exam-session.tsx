@@ -9,8 +9,9 @@ import type { CandidateScenarioExamSession, CandidateSessionSubject } from "@/li
 import { SCENARIO_PARAMETERS_MODULES } from "@/lib/scenario-parameters";
 import { primaryButtonClassName } from "@/components/exams/shared";
 import { candidateScenarioExamItemHref } from "@/lib/scenario-exams/presentation";
-import { CandidateExamTimer, useScenarioExamRemainingTime } from "./candidate-exam-timer";
+import { CandidateExamTimer, useScenarioExamExpiration, useScenarioExamRemainingTime } from "./candidate-exam-timer";
 import { readCandidateScenarioExamResult } from "@/lib/scenario-exams/browser-results";
+import { AttemptFeedbackResult } from "@/components/scenario/attempt-feedback-result";
 
 function moduleLabel(moduleId: CandidateSessionSubject["moduleId"]) {
   return SCENARIO_PARAMETERS_MODULES.find((module) => module.moduleId === moduleId)?.label ?? moduleId;
@@ -21,6 +22,11 @@ function statusLabel(status: CandidateSessionSubject["status"]) {
 }
 
 export function CandidateExamSession({ session }: { session: CandidateScenarioExamSession }) {
+  const revision = JSON.stringify([session.id, session.status, session.subjects.map((subject) => [subject.id, subject.status, subject.sessionItemId])]);
+  return <CandidateExamSessionState key={revision} session={session} />;
+}
+
+function CandidateExamSessionState({ session }: { session: CandidateScenarioExamSession }) {
   const router = useRouter();
   const [items, setItems] = useState(session.subjects);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -29,6 +35,7 @@ export function CandidateExamSession({ session }: { session: CandidateScenarioEx
   const [submitted, setSubmitted] = useState(session.status === "submitted");
 
   const remaining = useScenarioExamRemainingTime(session.deadlineAt);
+  useScenarioExamExpiration(remaining, session.status === "in_progress" && !submitted);
   const sessionActive = session.status === "in_progress" && remaining > 0 && !submitted;
   const unstarted = items.filter((subject) => subject.status === "not_started").length;
 
@@ -96,6 +103,12 @@ export function CandidateExamSession({ session }: { session: CandidateScenarioEx
           {items.length === 0 ? <p className="px-5 py-10 text-sm text-[var(--text-muted)]">Không có môn thi trong phiên này.</p> : null}
         </div>
       </section>
+      {(submitted || session.status === "timed_out") && items.filter((subject) => subject.sessionItemId && (subject.status === "submitted" || subject.status === "timed_out")).map((subject) => (
+        <section key={`${session.id}:${subject.sessionItemId}:${submitted}`} className="grid gap-2">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)]">{moduleLabel(subject.moduleId)} · {subject.scenarioName}</h2>
+          <AttemptFeedbackResult target={{ examItemId: subject.sessionItemId! }} />
+        </section>
+      ))}
       {sessionActive ? <section className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
         <div><h2 className="font-semibold text-[var(--text-primary)]">Nộp bài thi</h2><p className="mt-1 text-sm text-[var(--text-secondary)]">{unstarted > 0 ? `Còn ${unstarted} môn chưa bắt đầu. Hãy làm và lưu bài trước khi kết thúc phiên.` : "Nộp kết quả của tất cả các môn và kết thúc phiên thi. Sau khi nộp, bài làm sẽ được khóa."}</p></div>
         <button type="button" className={primaryButtonClassName} onClick={submitSession} disabled={pending || unstarted > 0 || items.length === 0}>{pending ? "Đang nộp bài…" : "Nộp bài và kết thúc phiên thi"}</button>

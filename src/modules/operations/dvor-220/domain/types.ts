@@ -1,4 +1,5 @@
 import type { SimulatorParameterChangeLogEntry } from "@/lib/simulator-config/parameter-change";
+import type { NativeParameterEvidence } from "@/lib/simulator-config/native-parameter-evidence";
 
 export const DVOR220_TRANSMITTER_IDS = ["tx1", "tx2"] as const;
 export type Dvor220TransmitterId = (typeof DVOR220_TRANSMITTER_IDS)[number];
@@ -511,6 +512,7 @@ export interface Dvor220DeviceState {
   executive: Dvor220ExecutiveState;
   scenario: Dvor220ScenarioRuntime;
   history: Dvor220HistoryState;
+  parameterEvidence?: NativeParameterEvidence;
 }
 
 export interface Dvor220ValidationIssue {

@@ -73,10 +73,11 @@ describe("Practice & examiner AI feedback UI", () => {
     expect(screen.getByText(/chưa nhấn F7 \(Apply\)/i)).toBeInTheDocument();
   });
 
-  it("lets the examiner request AI review feedback and insert the suggested comment without auto-saving score", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+  it("automatically reads saved examiner feedback and inserts the suggested comment without auto-saving score", async () => {
+    const fetcher = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
       new Response(
         JSON.stringify({
+          status: "completed",
           feedback: {
             moduleId: "dvor-1150a",
             scenarioId: "s-dvor-1",
@@ -132,11 +133,13 @@ describe("Practice & examiner AI feedback UI", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /AI gợi ý nhận xét/i }));
-
     await waitFor(() => {
       expect(screen.getByText(/Thí sinh xử lý đúng nguyên nhân gốc/i)).toBeInTheDocument();
     });
+    expect(fetcher).toHaveBeenCalledWith(`/api/ai/attempt-feedback?examItemId=${subject.itemId}`, expect.objectContaining({ cache: "no-store" }));
+    expect(screen.getByLabelText(/Nhận xét của giám khảo/i)).toHaveValue("");
+    const { saveScenarioExamReviewAction } = await import("@/lib/scenario-exams/actions");
+    expect(saveScenarioExamReviewAction).not.toHaveBeenCalled();
     expect(screen.getByText(/Bật Monitor Bypass và khôi phục công suất TX1/i)).toBeInTheDocument();
     expect(screen.getByText(/Thao tác thừa ở màn hình Ident/i)).toBeInTheDocument();
 

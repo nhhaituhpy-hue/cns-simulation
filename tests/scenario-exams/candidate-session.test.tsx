@@ -2,8 +2,8 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CandidateScenarioExamSession } from "@/lib/scenario-exams/types";
 
-const mocks = vi.hoisted(() => ({ start: vi.fn(), push: vi.fn(), save: vi.fn(), submit: vi.fn(), refresh: vi.fn() }));
-vi.mock("@/lib/scenario-exams/actions", () => ({ startScenarioExamSubjectAction: mocks.start, saveScenarioExamItemAction: mocks.save, submitScenarioExamSessionAction: mocks.submit }));
+const mocks = vi.hoisted(() => ({ start: vi.fn(), push: vi.fn(), save: vi.fn(), submit: vi.fn(), refresh: vi.fn(), expire: vi.fn() }));
+vi.mock("@/lib/scenario-exams/actions", () => ({ expireScenarioExamSessionAction: mocks.expire, startScenarioExamSubjectAction: mocks.start, saveScenarioExamItemAction: mocks.save, submitScenarioExamSessionAction: mocks.submit }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mocks.push, replace: vi.fn(), back: vi.fn(), forward: vi.fn(), refresh: mocks.refresh, prefetch: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
@@ -31,10 +31,56 @@ beforeEach(() => {
   mocks.save.mockResolvedValue({ ok: true, message: "Đã lưu" });
   mocks.submit.mockResolvedValue({ ok: true, message: "Đã nộp" });
   vi.spyOn(Date, "now").mockReturnValue(now);
+  vi.spyOn(globalThis, "fetch").mockImplementation(async () => new Response(JSON.stringify({ status: "withheld" })));
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 describe("candidate subject navigation", () => {
+  it("requests server expiry once and refreshes only after timeout ACK without uploading a late payload", async () => {
+    mocks.expire.mockResolvedValue({ ok: true, data: { id: "session-1", timedOut: true } });
+    const expired = session({ deadlineAt: new Date(now - 1000).toISOString() });
+    const view = render(<CandidateExamSession session={expired} />);
+    await waitFor(() => expect(mocks.expire).toHaveBeenCalledOnce());
+    await waitFor(() => expect(mocks.refresh).toHaveBeenCalledOnce());
+    expect(mocks.save).not.toHaveBeenCalled();
+    expect(mocks.submit).not.toHaveBeenCalled();
+    view.rerender(<CandidateExamSession session={expired} />);
+    expect(mocks.expire).toHaveBeenCalledOnce();
+  });
+  it("drops the previous session's results synchronously when navigating to an active session", async () => {
+    const finished = session({ status: "submitted" });
+    finished.subjects[0] = { ...finished.subjects[0], status: "submitted", sessionItemId: itemId };
+    const view = render(<CandidateExamSession session={finished} />);
+    await screen.findByText(/Nhận xét chưa được công bố/);
+    vi.mocked(fetch).mockClear();
+    view.rerender(<CandidateExamSession session={session({ id: "new-active-session" })} />);
+    expect(screen.queryByRole("region", { name: "Nhận xét sau nộp" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Bắt đầu môn" })).toBeEnabled();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it("reads finalized items when refreshed server state changes from active to timed out", async () => {
+    const data = session();
+    data.subjects[0] = { ...data.subjects[0], status: "in_progress", sessionItemId: itemId };
+    const view = render(<CandidateExamSession session={data} />);
+    expect(fetch).not.toHaveBeenCalled();
+    view.rerender(<CandidateExamSession session={{ ...data, status: "timed_out", subjects: [{ ...data.subjects[0], status: "timed_out" }] }} />);
+    await screen.findByText(/Nhận xét chưa được công bố/);
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+  it("automatically reads only submitted items and obeys server release after final ACK and reload", async () => {
+    const data = session();
+    data.subjects[0] = { ...data.subjects[0], status: "in_progress", sessionItemId: itemId };
+    const view = render(<CandidateExamSession session={data} />);
+    expect(fetch).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Nộp bài và kết thúc phiên thi" }));
+    expect(await screen.findByText(/Nhận xét chưa được công bố/)).toBeInTheDocument();
+    expect(fetch).toHaveBeenCalledWith(`/api/ai/attempt-feedback?examItemId=${itemId}`, expect.objectContaining({ cache: "no-store" }));
+    view.unmount();
+    vi.mocked(fetch).mockClear();
+    render(<CandidateExamSession session={{ ...data, status: "submitted", subjects: [{ ...data.subjects[0], status: "submitted" }] }} />);
+    await screen.findByText(/Nhận xét chưa được công bố/);
+    expect(fetch).toHaveBeenCalledOnce();
+  });
   function startedSession() {
     const data = session();
     data.subjects[0] = { ...data.subjects[0], status: "in_progress", sessionItemId: itemId, scenarioId: "scenario-1", revision: 1, scenarioName: "Scenario A" };
@@ -123,11 +169,12 @@ describe("candidate subject navigation", () => {
     expect(mocks.push).not.toHaveBeenCalled();
   });
 
-  it.each(["submitted", "timed_out"] as const)("does not offer resume for a %s subject", (status) => {
+  it.each(["submitted", "timed_out"] as const)("does not offer resume for a %s subject", async (status) => {
     const data = session();
     data.subjects[0] = { ...data.subjects[0], status, sessionItemId: itemId };
     render(<CandidateExamSession session={data} />);
     expect(screen.queryByRole("link", { name: "Tiếp tục môn" })).not.toBeInTheDocument();
+    expect(fetch).not.toHaveBeenCalled();
   });
 
   it.each(["submitted", "timed_out", "revoked"] as const)("disables start and resume after the session is %s", (status) => {

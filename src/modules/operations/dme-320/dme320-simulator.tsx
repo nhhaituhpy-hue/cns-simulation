@@ -509,6 +509,14 @@ export function Dme320Simulator({
             moduleId="dme-320"
             scenarioId={simulation.scenario.definition.id}
             scenarioName={simulation.scenario.definition.name}
+            attemptKey={simulation.scenario.startedAtMs}
+            onRestart={() => {
+              const result = dispatch({ type: "apply-scenario", scenario: store.getState().simulation.scenario.definition! });
+              if (!result.accepted) return false;
+              // Native apply preserves the operator's flash/return configuration.
+              store.setState(({ simulation: restarted }) => ({ simulation: { ...restarted, logs: [], parameterChangeLogs: [] } }));
+              return true;
+            }}
             getPayload={() => ({ simulation: store.getState().simulation })}
           />
         ) : null}

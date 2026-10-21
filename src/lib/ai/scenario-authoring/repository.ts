@@ -79,11 +79,12 @@ function editable(row:Record<string,unknown>,expected:number) {
  if(row.status!=="editing")throw new AuthoringError("SESSION_COMPLETED","Bản nháp đã hoàn tất.");
  if(Number(row.revision)!==expected)throw new AuthoringError("REVISION_CONFLICT","Bản nháp đã thay đổi. Tải lại trước khi tiếp tục.");
 }
-export async function createAuthoringSession(pool:Pool,device:ScenarioParametersModuleId,options:{actorId:string;idempotencyKey:string;id?:string;documents?:DocumentMetadata[];context?:string}):Promise<AuthoringSession> {
+export async function createAuthoringSession(pool:Pool,device:ScenarioParametersModuleId,options:{actorId:string;idempotencyKey:string;id?:string;documents?:DocumentMetadata[];context?:string;mode?:"documents"|"description"}):Promise<AuthoringSession> {
  ids(options.actorId);if(options.id!==undefined)ids(options.id);key(options.idempotencyKey);moduleId(device);
  const docs=documents(options.documents??[]),context=options.context??"";
  if(typeof context!=="string"||context.length>8000||context.includes("\0"))invalid("Mô tả phân tích tối đa 8000 ký tự.");
- const inputHash=hash({moduleId:device,context,documents:documentContent(docs)});
+ if(options.mode!==undefined&&!['documents','description'].includes(options.mode))invalid("Phương thức tạo bài không hợp lệ.");
+ const inputHash=hash({moduleId:device,context,documents:documentContent(docs),...(options.mode?{mode:options.mode}:{})});
  return transaction(pool,async client=>{
   await client.query("select pg_advisory_xact_lock(hashtextextended($1,0))",[`ai-authoring:${options.actorId}`]);
   await requireAdmin(client,options.actorId);
@@ -91,7 +92,7 @@ export async function createAuthoringSession(pool:Pool,device:ScenarioParameters
   if(previous){if(previous.input_hash!==inputHash)throw new AuthoringError("IDEMPOTENCY_CONFLICT","Mã yêu cầu đã dùng cho nội dung khác.");return session(previous);}
   const count=(await client.query("select count(*)::integer total from public.ai_authoring_sessions where actor_id=$1 and status='editing'",[options.actorId])).rows[0].total;
   if(count>=20)throw new AuthoringError("SESSION_QUOTA","Hoàn tất một bản nháp trước khi tạo thêm (tối đa 20).");
-  const state=createAuthoringState(device,`${device}-guided-${randomUUID()}`);state.context=context;
+  const state=createAuthoringState(device,`${device}-guided-${randomUUID()}`);state.context=context;if(options.mode)state.mode=options.mode;
   const result=await client.query("insert into public.ai_authoring_sessions(id,actor_id,module_id,state_json,documents_json,input_hash,idempotency_key) values($1,$2,$3,$4::jsonb,$5::jsonb,$6,$7) returning *",[options.id??randomUUID(),options.actorId,device,boundedJson(state),JSON.stringify(docs),inputHash,options.idempotencyKey]);
   await reserveDocuments(client,String(result.rows[0].id),options.actorId,docs);
   return session(result.rows[0]);
@@ -120,7 +121,7 @@ export async function deleteAuthoringSession(pool:Pool,id:string,actorId:string)
 export async function updateAuthoringSession(pool:Pool,id:string,actorId:string,expectedRevision:number,mutation:AuthoringMutation):Promise<AuthoringSession> {
  ids(id,actorId);revision(expectedRevision);assertSafeJson(mutation);
  return transaction(pool,async client=>{await requireAdmin(client,actorId);const row=await owned(client,id,actorId);editable(row,expectedRevision);
-  if(mutation.action==="navigate")await requireIdleAnalysis(client,id);
+  if(mutation.action==="navigate"||mutation.action==="edit-context")await requireIdleAnalysis(client,id);
   const next=mutateAuthoringState(row.state_json,mutation);
   return session((await client.query("update public.ai_authoring_sessions set state_json=$2::jsonb,revision=revision+1 where id=$1 returning *",[id,boundedJson(next)])).rows[0]);
  });
@@ -128,7 +129,7 @@ export async function updateAuthoringSession(pool:Pool,id:string,actorId:string,
 
 function analysisRequest(value:AnalysisRequest):AnalysisRequest {
  assertSafeJson(value);
- if(!value||!["baseline","guidance"].includes(value.kind)||typeof value.question!=="string"||value.question.length>8000||Object.keys(value).some(k=>!["kind","question","sectionId"].includes(k))||(value.sectionId!==undefined&&(typeof value.sectionId!=="string"||!/^[A-Za-z0-9._-]{1,100}$/.test(value.sectionId))))invalid("Câu hỏi phân tích không hợp lệ.");
+ if(!value||!["baseline","guidance","blueprint"].includes(value.kind)||typeof value.question!=="string"||value.question.length>8000||Object.keys(value).some(k=>!["kind","question","sectionId"].includes(k))||(value.sectionId!==undefined&&(typeof value.sectionId!=="string"||!/^[A-Za-z0-9._-]{1,100}$/.test(value.sectionId)))||(value.kind==="blueprint"&&value.sectionId!==undefined))invalid("Câu hỏi phân tích không hợp lệ.");
  return {kind:value.kind,question:value.question,...(value.sectionId!==undefined?{sectionId:value.sectionId}:{})};
 }
 export async function enqueueAuthoringAnalysis(pool:Pool,id:string,actorId:string,expectedRevision:number,request:AnalysisRequest,options:{idempotencyKey:string;documents?:DocumentMetadata[]}):Promise<AnalysisJob> {
@@ -147,6 +148,12 @@ export async function enqueueAuthoringAnalysis(pool:Pool,id:string,actorId:strin
   const daily=(await client.query("select count(*)::integer total from public.ai_authoring_analysis_jobs where actor_id=$1 and created_at>=clock_timestamp()-interval $$24 hours$$",[actorId])).rows[0].total;
   if(daily>=50)throw new AuthoringError("DAILY_QUOTA","Tối đa 50 lần phân tích trong 24 giờ.");
   const snapshot=structuredClone(row.state_json) as AuthoringState;
+  if(input.kind==="blueprint"){
+   snapshot.context=input.question;
+   delete snapshot.blueprint;
+   snapshot.confirmations={};
+   snapshot.currentStep="documents";
+  }
   const docs=replacement??row.documents_json;
   await reserveDocuments(client,id,actorId,docs);
   const updated=(await client.query("update public.ai_authoring_sessions set revision=revision+1,state_json=$2::jsonb,documents_json=$3::jsonb where id=$1 returning revision",[id,boundedJson(snapshot),JSON.stringify(docs)])).rows[0];
@@ -199,7 +206,7 @@ export async function finishAuthoringAnalysis(pool:Pool,id:string,attemptToken:s
   return true;
  });
 }
-const FAILURE_CODES=new Set(["ANALYSIS_FAILED","PROVIDER_ERROR","PROVIDER_UNAVAILABLE","PROVIDER_AUTH","PROVIDER_RATE_LIMIT","PROVIDER_TIMEOUT","PROVIDER_TRUNCATED","PROVIDER_INVALID_RESPONSE","INVALID_PROPOSAL","INVALID_CITATION","EXTRACTION_FAILED","DOCUMENT_ERROR","INVALID_DOCUMENT","DOCUMENT_TIMEOUT","DOCUMENT_RESOURCE_LIMIT","INVALID_STORAGE_KEY","DOCUMENT_INTEGRITY","TIMEOUT","ACTOR_FORBIDDEN","ATTEMPTS_EXHAUSTED"]);
+const FAILURE_CODES=new Set(["CLARIFICATION_REQUIRED","KNOWLEDGE_UNAVAILABLE","UNSUPPORTED_REQUEST","INVALID_RECOVERY","INVALID_BLUEPRINT","ANALYSIS_FAILED","PROVIDER_ERROR","PROVIDER_UNAVAILABLE","PROVIDER_AUTH","PROVIDER_RATE_LIMIT","PROVIDER_TIMEOUT","PROVIDER_TRUNCATED","PROVIDER_INVALID_RESPONSE","INVALID_PROPOSAL","INVALID_CITATION","EXTRACTION_FAILED","DOCUMENT_ERROR","INVALID_DOCUMENT","DOCUMENT_TIMEOUT","DOCUMENT_RESOURCE_LIMIT","INVALID_STORAGE_KEY","DOCUMENT_INTEGRITY","TIMEOUT","ACTOR_FORBIDDEN","ATTEMPTS_EXHAUSTED"]);
 export async function failAuthoringAnalysis(pool:Pool,id:string,attemptToken:string,code:string):Promise<void> {
  ids(id,attemptToken);await transaction(pool,async client=>{if(!await liveJob(client,id,attemptToken))return;await client.query("update public.ai_authoring_analysis_jobs set status='failed',error_code=$2,lease_expires_at=null,completed_at=now() where id=$1 and lease_expires_at>clock_timestamp()",[id,FAILURE_CODES.has(code)?code:"ANALYSIS_FAILED"]);});
 }
@@ -235,6 +242,8 @@ export async function finalizeAuthoringSession(pool:Pool,id:string,actorId:strin
   const scenarioRowId=randomUUID(),columns=Object.keys(stored) as Array<keyof typeof stored>;
   await client.query(`insert into public.simulator_scenario_parameters(id,${columns.join(",")}) values($1,${columns.map((_,i)=>`$${i+2}`).join(",")})`,[scenarioRowId,...columns.map(k=>stored[k])]);
   if(legacy){const keys=Object.keys(legacy);await client.query(`insert into public.scenarios(${keys.join(",")}) values(${keys.map((_,i)=>`$${i+1}`).join(",")})`,keys.map(k=>legacy![k]));}
+  const blueprint=(row.state_json as AuthoringState).blueprint;
+  if(blueprint)await client.query("update public.simulator_scenario_parameters set assessment_rubric_json=$2::jsonb where id=$1",[scenarioRowId,boundedJson(blueprint.rubric)]);
   return session((await client.query("update public.ai_authoring_sessions set status='completed',scenario_id=$2,scenario_row_id=$3,finalize_idempotency_key=$4,finalized_revision=$5,completed_at=now() where id=$1 returning *",[id,reviewed.id,scenarioRowId,idempotencyKey,expectedRevision])).rows[0]);
  });
 }

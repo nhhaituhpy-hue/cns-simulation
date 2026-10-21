@@ -20,8 +20,116 @@ function fixture(): AuthoringSessionDto {
     preview: { status: "valid", checks: [], notes: [], recoveryVerified: false }, documents: [], analysis: null,
     scenarioRowId: null, scenarioId: null, createdAt: "2026-10-20T00:00:00Z", updatedAt: "2026-10-20T00:00:00Z" };
 }
+function reviewedFixture(): AuthoringSessionDto {
+  return { ...fixture(), mode: "description", context: "Luyện khôi phục máy phát.", currentStep: "review", blueprint: {
+    version: 1, moduleId: "dvor-220", title: "Bài tập đã kiểm chứng", situation: "Công suất thấp", cause: "Lỗi máy phát", symptoms: ["Báo động"], assumptions: [],
+    rubric: { version: 1, moduleId: "dvor-220", steps: [{ id: "restore", label: "Khôi phục công suất", required: true, prerequisites: [], alternatives: [], citationIds: ["c1"] }], parameterRelevance: [], citations: [] },
+    verification: { mode: "engine-recovery", initial: [{ id: "a", passed: true, detail: "Cảnh báo" }], recovered: [{ id: "b", passed: true, detail: "Khôi phục" }], recoveryVerified: true, notes: [] },
+    citations: [{ id: "c1", documentId: "doc-1", documentName: "Manual", sha256: "a".repeat(64), segmentLabel: "Trang 2", quote: "Check power.", sourceKind: "reference-only" }],
+  } };
+}
+
+it("polls a generated blueprint then confirms the exact revision before idempotent unpublished save", async () => {
+  vi.useFakeTimers();
+  const draft = fixture(); draft.mode = "description"; draft.analysis = { id: "a1", status: "queued", errorCode: null };
+  const api = server(draft); const completed = vi.fn();
+  render(<AiAuthoringWizard moduleId="dvor-220" initialMode="description" onCompleted={completed} />);
+  fireEvent.change(screen.getByLabelText("Mô tả tình huống"), { target: { value: "Luyện khôi phục máy phát." } });
+  fireEvent.click(screen.getByRole("button", { name: "AI soạn kịch bản" }));
+  await act(async () => {});
+  expect(screen.getByText("AI đang chờ xử lý")).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Lưu kịch bản" })).not.toBeInTheDocument();
+  api.set({ ...reviewedFixture(), revision: 3, analysis: { id: "a1", status: "completed", errorCode: null } });
+  await act(async () => { await vi.advanceTimersByTimeAsync(3100); });
+  vi.useRealTimers();
+  expect(screen.getByRole("region", { name: "Bản xem thử kịch bản" })).toBeInTheDocument();
+  expect(screen.queryByLabelText("Tên kịch bản")).not.toBeInTheDocument();
+  expect(api.fetcher.mock.calls.some(([url]) => url.endsWith("/finalize"))).toBe(false);
+  let failed = false; const impl = api.fetcher.getMockImplementation()!;
+  api.fetcher.mockImplementation(async (url, init) => {
+    if (url.endsWith("/finalize") && !failed) { failed = true; throw new Error("network"); }
+    return impl(url, init);
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Lưu kịch bản" }));
+  await screen.findByRole("alert");
+  fireEvent.click(screen.getByRole("button", { name: "Lưu kịch bản" }));
+  await screen.findByRole("region", { name: "Kịch bản đã tạo" });
+  const confirms = api.fetcher.mock.calls.filter(([, init]) => init?.method === "PATCH");
+  expect(confirms).toHaveLength(1);
+  expect(JSON.parse(confirms[0][1]!.body as string)).toEqual({ expectedRevision: 3, mutation: { action: "confirm-blueprint" } });
+  const finals = api.fetcher.mock.calls.filter(([url]) => url.endsWith("/finalize"));
+  expect(finals).toHaveLength(2);
+  expect(JSON.parse(finals[0][1]!.body as string)).toEqual({ expectedRevision: 4 });
+  expect(finals[1][1]!.body).toBe(finals[0][1]!.body);
+  expect(new Headers(finals[1][1]!.headers).get("Idempotency-Key")).toBe(new Headers(finals[0][1]!.headers).get("Idempotency-Key"));
+  expect(completed).toHaveBeenCalledOnce();
+  expect(api.fetcher.mock.calls.some(([url]) => /publish|library/.test(url))).toBe(false);
+});
+
+it("shows blueprint review automatically after polling while keeping later advanced navigation usable", async () => {
+  vi.useFakeTimers();
+  const draft = fixture(); draft.mode = "description"; draft.analysis = { id: "a1", status: "queued", errorCode: null };
+  const api = server(draft);
+  render(<AiAuthoringWizard moduleId="dvor-220" initialMode="description" />);
+  fireEvent.change(screen.getByLabelText("Mô tả tình huống"), { target: { value: "Luyện khôi phục máy phát." } });
+  fireEvent.click(screen.getByRole("button", { name: "AI soạn kịch bản" }));
+  await act(async () => {});
+  fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa nâng cao" }));
+  expect(screen.getByLabelText("Tên kịch bản")).toBeInTheDocument();
+  api.set({ ...reviewedFixture(), revision: 3, analysis: { id: "a1", status: "completed", errorCode: null } });
+  await act(async () => { await vi.advanceTimersByTimeAsync(3100); });
+  expect(screen.getByRole("region", { name: "Bản xem thử kịch bản" })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa nâng cao" }));
+  expect(screen.getByLabelText("Tên kịch bản")).toBeInTheDocument();
+});
+
+it("recovers a stale blueprint review from the server before confirming and saving again", async () => {
+  const api = server(reviewedFixture());
+  render(<AiAuthoringWizard moduleId="dvor-220" initialMode="description" />);
+  fireEvent.click(await screen.findByRole("button", { name: "Tiếp tục: Bài đã lưu" }));
+  await screen.findByRole("button", { name: "Lưu kịch bản" });
+  api.set({ ...reviewedFixture(), revision: 5 });
+  fireEvent.click(screen.getByRole("button", { name: "Lưu kịch bản" }));
+  await screen.findByRole("alert");
+  fireEvent.click(screen.getByRole("button", { name: "Tải lại phiên mới, giữ bản chỉnh" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Lưu kịch bản" })).toBeEnabled());
+  fireEvent.click(screen.getByRole("button", { name: "Lưu kịch bản" }));
+  await screen.findByRole("region", { name: "Kịch bản đã tạo" });
+  const lastConfirm = api.fetcher.mock.calls.filter(([, init]) => init?.method === "PATCH").at(-1)!;
+  expect(JSON.parse(lastConfirm[1]!.body as string)).toEqual({ expectedRevision: 5, mutation: { action: "confirm-blueprint" } });
+});
+
+it("retains pending local edits when a blueprint arrives rather than hiding them under review", async () => {
+  vi.useFakeTimers();
+  const draft = fixture(); draft.mode = "description"; draft.analysis = { id: "a1", status: "queued", errorCode: null };
+  const api = server(draft);
+  render(<AiAuthoringWizard moduleId="dvor-220" initialMode="description" />);
+  fireEvent.change(screen.getByLabelText("Mô tả tình huống"), { target: { value: "Luyện khôi phục máy phát." } });
+  fireEvent.click(screen.getByRole("button", { name: "AI soạn kịch bản" }));
+  await act(async () => {});
+  fireEvent.click(screen.getByRole("button", { name: "Chỉnh sửa nâng cao" }));
+  fireEvent.change(screen.getByLabelText("Tên kịch bản"), { target: { value: "Bản chỉnh đang chờ" } });
+  api.set({ ...reviewedFixture(), revision: 3, analysis: { id: "a1", status: "completed", errorCode: null } });
+  await act(async () => { await vi.advanceTimersByTimeAsync(3100); });
+  expect(screen.getByLabelText("Tên kịch bản")).toHaveValue("Bản chỉnh đang chờ");
+  expect(screen.queryByRole("button", { name: "Lưu kịch bản" })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Lưu nháp" }));
+  await act(async () => {});
+  expect(api.get().form.fields[0].value).toBe("Bản chỉnh đang chờ");
+});
+
+it("offers an explicit continue action after revisiting documents in advanced editing", async () => {
+  server();
+  render(<AiAuthoringWizard moduleId="dvor-220" />);
+  await nativeStart();
+  fireEvent.click(screen.getByRole("button", { name: "Tài liệu" }));
+  await screen.findByLabelText("Tài liệu thông số nền");
+  fireEvent.click(screen.getByRole("button", { name: "Tiếp tục chỉnh sửa" }));
+  expect(await screen.findByLabelText("Tên kịch bản")).toBeInTheDocument();
+});
+
 // Explicit HTTP boundary double. React controls, effects and handlers are real.
-function server(initial = fixture(), history = false) {
+function server(initial = fixture(), history = true) {
   let current = initial;
   const fetcher = vi.fn(async (url: string, init?: RequestInit) => {
     if (url.includes("?moduleId=")) return reply({ sessions: history ? [{ ...current, name: "Bài đã lưu" }] : [] });
@@ -51,25 +159,56 @@ function server(initial = fixture(), history = false) {
 }
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.unstubAllGlobals(); });
 
-it("uploads actual documents first and displays returned fields without creating a source or nested modal", async () => {
+it.each(["documents", "description", "native"] as const)("keeps existing drafts reachable before explicit creation in %s mode", async (initialMode) => {
+  const api = server(fixture(), true);
+  render(<AiAuthoringWizard moduleId="dvor-220" initialMode={initialMode} />);
+  fireEvent.click(await screen.findByRole("button", { name: "Tiếp tục: Bài đã lưu" }));
+  expect(await screen.findByLabelText("Tên kịch bản")).toHaveValue("Bài tập mới");
+  expect(api.fetcher.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(0);
+});
+
+it("creates from prose only after AI soạn kịch bản with the explicit description wire contract", async () => {
+  const api = server();
+  render(<AiAuthoringWizard moduleId="dvor-220" initialMode="description" />);
+  expect(screen.queryByLabelText("Tên kịch bản")).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "AI soạn kịch bản" })).toBeDisabled();
+  fireEvent.change(screen.getByLabelText("Mô tả tình huống"), { target: { value: "Máy phát báo lỗi công suất; luyện xác định nguyên nhân và khôi phục." } });
+  expect(api.fetcher.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(0);
+  fireEvent.click(screen.getByRole("button", { name: "AI soạn kịch bản" }));
+  await waitFor(() => expect(api.fetcher.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(1));
+  const [url, init] = api.fetcher.mock.calls.find(([, init]) => init?.method === "POST")!;
+  const body = init!.body as FormData;
+  expect(url).toBe(base);
+  expect(body.get("mode")).toBe("description");
+  expect(body.get("context")).toContain("Máy phát báo lỗi");
+  expect(body.get("moduleId")).toBe("dvor-220");
+  expect(body.getAll("files")).toEqual([]);
+  expect(new Headers(init!.headers).get("Idempotency-Key")).toBeTruthy();
+  expect(screen.queryByLabelText("Tên kịch bản")).not.toBeInTheDocument();
+});
+
+it("uploads actual documents with optional aim and keeps native fields behind advanced editing", async () => {
   const { fetcher } = server();
   const { container } = render(<AiAuthoringWizard moduleId="dvor-220" />);
   expect(container.querySelector("dialog")).toBeNull();
   expect(screen.queryByLabelText("Tên kịch bản")).not.toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Phân tích tài liệu và điền biểu mẫu" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "AI soạn kịch bản" })).toBeDisabled();
   const file = new File(["Công suất 80 W"], "manual.txt", { type: "text/plain" });
   fireEvent.change(screen.getByLabelText("Tài liệu thông số nền"), { target: { files: [file] } });
-  fireEvent.click(screen.getByRole("button", { name: "Phân tích tài liệu và điền biểu mẫu" }));
+  fireEvent.click(screen.getByRole("button", { name: "AI soạn kịch bản" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Chỉnh sửa nâng cao" }));
   expect(await screen.findByLabelText("Tên kịch bản")).toHaveValue("Bài tập mới");
   const [, request] = fetcher.mock.calls.find(([, init]) => init?.method === "POST")!;
   expect((request!.body as FormData).get("moduleId")).toBe("dvor-220");
   expect((request!.body as FormData).getAll("files")).toEqual([file]);
+  expect((request!.body as FormData).get("mode")).toBe("documents");
+  expect((request!.body as FormData).get("context")).toBe("");
   expect(new Headers(request!.headers).get("Idempotency-Key")).toBeTruthy();
   expect(fetcher.mock.calls.some(([url]) => url.includes("finalize"))).toBe(false);
 });
 
 async function nativeStart() {
-  fireEvent.click(screen.getByRole("button", { name: "Dùng mặc định simulator" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Tiếp tục: Bài đã lưu" }));
   await screen.findByLabelText("Tên kịch bản");
 }
 it("guides native defaults through editable groups, typed nested unions, source comparison and revision-fenced confirmations", async () => {
@@ -141,7 +280,8 @@ it("asks real per-step AI, polls bounded work, shows opt-in diff and preserves e
   vi.useFakeTimers();
   const api = server();
   const view = render(<AiAuthoringWizard moduleId="dvor-220" />);
-  fireEvent.click(screen.getByRole("button", { name: "Dùng mặc định simulator" }));
+  await act(async () => {});
+  fireEvent.click(screen.getByRole("button", { name: "Tiếp tục: Bài đã lưu" }));
   await act(async () => {});
   fireEvent.click(screen.getByRole("button", { name: /Trạng thái khởi đầu/ }));
   await act(async () => {});
@@ -247,14 +387,15 @@ it("rejects unsafe uploads locally and retries an uncertain upload with its orig
   });
   render(<AiAuthoringWizard moduleId="dvor-220" />);
   fireEvent.change(screen.getByLabelText("Tài liệu thông số nền"), { target: { files: [new File([], "empty.txt")] } });
-  expect(screen.getByRole("button", { name: "Phân tích tài liệu và điền biểu mẫu" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "AI soạn kịch bản" })).toBeDisabled();
   expect(screen.getByRole("alert")).toHaveTextContent(/trống/);
   const file = new File(["manual"], "real.txt");
   fireEvent.change(screen.getByLabelText("Tài liệu thông số nền"), { target: { files: [file] } });
-  fireEvent.click(screen.getByRole("button", { name: "Phân tích tài liệu và điền biểu mẫu" }));
+  fireEvent.click(screen.getByRole("button", { name: "AI soạn kịch bản" }));
   await screen.findByRole("alert");
   expect(screen.getByLabelText("Tài liệu thông số nền")).toBeDisabled();
   fireEvent.click(screen.getByRole("button", { name: "Gửi lại yêu cầu" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Chỉnh sửa nâng cao" }));
   await screen.findByLabelText("Tên kịch bản");
   const posts = api.fetcher.mock.calls.filter(([, init]) => init?.method === "POST");
   expect(posts).toHaveLength(2);

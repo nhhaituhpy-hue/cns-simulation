@@ -1,152 +1,51 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { authoringAdapterFor } from "@/lib/ai/scenario-authoring/forms/registry";
-
-const mocks = vi.hoisted(() => ({
-  getCurrentProfile: vi.fn(),
-  queryDatabase: vi.fn(),
-  generateAttemptAiFeedback: vi.fn(),
-}));
-
-vi.mock("@/lib/auth/profile", () => ({ getCurrentProfile: mocks.getCurrentProfile }));
-vi.mock("@/lib/db", () => ({ queryDatabase: mocks.queryDatabase }));
-vi.mock("@/lib/ai/feedback/attempt-feedback", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/ai/feedback/attempt-feedback")>();
-  return {
-    ...actual,
-    generateAttemptAiFeedback: mocks.generateAttemptAiFeedback,
-  };
-});
-
-describe("AI feedback HTTP boundaries (practice & examiner review)", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    process.env.CNS_PUBLIC_ORIGIN = "https://labs.cnsvn.com";
+const mocks = vi.hoisted(() => ({ profile: vi.fn(), pool: {}, query: vi.fn(), create: vi.fn(), read: vi.fn(), generate: vi.fn(),analyze:vi.fn() }));
+vi.mock("@/lib/auth/profile", () => ({ getCurrentProfile: mocks.profile }));
+vi.mock("@/lib/db", () => ({ getDatabasePool: () => mocks.pool, queryDatabase: mocks.query }));
+vi.mock("@/lib/ai/feedback/jobs", () => ({ createPracticeSubmission: mocks.create, readAttemptFeedback: mocks.read,
+  FeedbackJobError: class extends Error { constructor(public code: string) { super(code); } } }));
+vi.mock("@/lib/ai/feedback/attempt-feedback", () => ({ generateAttemptAiFeedback: mocks.generate,analyzeAttemptEvidence:mocks.analyze }));
+const id = "11111111-1111-4111-8111-111111111111";
+const codeId = "22222222-2222-4222-8222-222222222222";
+const examId = "33333333-3333-4333-8333-333333333333";
+function request(body: unknown = { examId, codeId, itemId: id }, headers: Record<string,string> = {}) {
+  return new Request("https://labs.cnsvn.com/api/ai/exam-review-feedback", { method: "POST", headers: { "content-type": "application/json", origin: "https://labs.cnsvn.com", ...headers }, body: JSON.stringify(body) });
+}
+describe("compatibility feedback endpoints never invoke the model in web", () => {
+  beforeEach(() => { vi.clearAllMocks(); mocks.profile.mockResolvedValue({ id, role: "admin" }); mocks.query.mockResolvedValue({ rows: [{ id }] }); process.env.CNS_PUBLIC_ORIGIN = "https://labs.cnsvn.com"; });
+  it("preserves on-demand practice hints without submitting or invoking a provider",async()=>{
+    const {POST}=await import("@/app/api/ai/practice-feedback/route");
+    const definition={id:"practice",name:"Published practice"},rubric={version:1};
+    mocks.query.mockResolvedValueOnce({rows:[{definition_json:definition,assessment_rubric_json:rubric}]});mocks.analyze.mockReturnValue({summary:"Bằng chứng hiện tại"});
+    const result=await POST(request({moduleId:"dvor-1150a",scenarioId:"practice",payload:{actionHistory:[]}}));
+    expect(result.status).toBe(200);expect(await result.json()).toEqual({feedback:{summary:"Bằng chứng hiện tại"}});
+    expect(mocks.analyze).toHaveBeenCalledWith("dvor-1150a",definition,{actionHistory:[]},rubric);
+    expect(mocks.create).not.toHaveBeenCalled();expect(mocks.generate).not.toHaveBeenCalled();
   });
-
-  it("rejects unauthenticated or cross-origin requests on practice feedback", async () => {
-    const { POST } = await import("@/app/api/ai/practice-feedback/route");
-    mocks.getCurrentProfile.mockResolvedValueOnce(null);
-    const unauth = await POST(new Request("https://labs.cnsvn.com/api/ai/practice-feedback", {
-      method: "POST",
-      headers: { origin: "https://labs.cnsvn.com", "content-type": "application/json" },
-      body: JSON.stringify({ moduleId: "dvor-1150a", scenarioId: "s1", payload: {} }),
-    }));
-    expect(unauth.status).toBe(401);
-
-    mocks.getCurrentProfile.mockResolvedValueOnce({ id: "u1", role: "student" });
-    const crossOrigin = await POST(new Request("https://labs.cnsvn.com/api/ai/practice-feedback", {
-      method: "POST",
-      headers: { origin: "https://evil.example.com", "content-type": "application/json" },
-      body: JSON.stringify({ moduleId: "dvor-1150a", scenarioId: "s1", payload: {} }),
-    }));
-    expect(crossOrigin.status).toBe(403);
-  });
-
-  it("serves practice feedback to a student only for published practice scenarios, never exam-only scenarios", async () => {
-    const { POST } = await import("@/app/api/ai/practice-feedback/route");
-    mocks.getCurrentProfile.mockResolvedValue({ id: "student-1", role: "student" });
-    mocks.queryDatabase.mockResolvedValueOnce({ rows: [] });
-
-    const denied = await POST(new Request("https://labs.cnsvn.com/api/ai/practice-feedback", {
-      method: "POST",
-      headers: { origin: "https://labs.cnsvn.com", "content-type": "application/json" },
-      body: JSON.stringify({ moduleId: "dvor-1150a", scenarioId: "exam-only-id", payload: {} }),
-    }));
-    expect(denied.status).toBe(404);
-
-    const def = authoringAdapterFor("dvor-1150a").createDefault();
-    mocks.queryDatabase.mockResolvedValueOnce({ rows: [{ definition_json: def }] });
-    mocks.generateAttemptAiFeedback.mockResolvedValueOnce({
-      moduleId: "dvor-1150a",
-      scenarioId: def.id,
-      scenarioName: def.name,
-      status: "IN_PROGRESS",
-      solved: false,
-      sourceMode: "ai-assisted",
-      summary: "Nhận xét bài ôn tập",
-      whatToAchieve: ["[Cần đạt] Integral Monitor Normal"],
-      correctActions: ["Đã mở màn hình Monitor"],
-      redundantOrWrongAdjustments: ["Chưa nhấn F7 Apply"],
-      nextSteps: ["Nhấn F7 Apply"],
-      suggestedExaminerComment: "Cần nhấn F7 Apply.",
-      references: [],
-      notice: "Tham khảo",
-    });
-
-    const allowed = await POST(new Request("https://labs.cnsvn.com/api/ai/practice-feedback", {
-      method: "POST",
-      headers: { origin: "https://labs.cnsvn.com", "content-type": "application/json" },
-      body: JSON.stringify({ moduleId: "dvor-1150a", scenarioId: def.id, payload: { visitedViewIds: ["monitor"] } }),
-    }));
-    expect(allowed.status).toBe(200);
-    const json = await allowed.json();
-    expect(json.feedback.summary).toBe("Nhận xét bài ôn tập");
-    expect(mocks.generateAttemptAiFeedback).toHaveBeenCalledWith(expect.objectContaining({
-      moduleId: "dvor-1150a",
-      mode: "practice",
-    }));
-  });
-
-  it("restricts exam-review feedback to admin and reads only submitted/timed_out snapshot evidence", async () => {
+  it("reads persisted examiner feedback and binds all supplied resource identifiers", async () => {
     const { POST } = await import("@/app/api/ai/exam-review-feedback/route");
-    mocks.getCurrentProfile.mockResolvedValueOnce({ id: "student-1", role: "student" });
-    const forbidden = await POST(new Request("https://labs.cnsvn.com/api/ai/exam-review-feedback", {
-      method: "POST",
-      headers: { origin: "https://labs.cnsvn.com", "content-type": "application/json" },
-      body: JSON.stringify({ examId: "e1", codeId: "c1", itemId: "i1" }),
-    }));
-    expect(forbidden.status).toBe(403);
-
-    mocks.getCurrentProfile.mockResolvedValueOnce({ id: "admin-1", role: "admin" });
-    const def = authoringAdapterFor("dvor-1150a").createDefault();
-    mocks.queryDatabase.mockResolvedValueOnce({
-      rows: [{
-        id: "11111111-1111-4111-8111-111111111111",
-        status: "submitted",
-        module_id: "dvor-1150a",
-        scenario_id: def.id,
-        library_revision_number: 1,
-        definition_snapshot_json: def,
-        result_json: {
-          version: 1,
-          sessionItemId: "11111111-1111-4111-8111-111111111111",
-          moduleId: "dvor-1150a",
-          scenarioId: def.id,
-          revision: 1,
-          capturedAt: "2026-10-21T04:00:00.000Z",
-          payload: { visitedViewIds: ["monitor"] },
-        },
-      }],
-    });
-    mocks.generateAttemptAiFeedback.mockResolvedValueOnce({
-      moduleId: "dvor-1150a",
-      scenarioId: def.id,
-      scenarioName: def.name,
-      status: "SOLVED",
-      solved: true,
-      sourceMode: "ai-assisted",
-      summary: "Thí sinh xử lý đúng quy trình.",
-      whatToAchieve: ["[Đã đạt] Tất cả tiêu chí"],
-      correctActions: ["Đã xử lý đúng"],
-      redundantOrWrongAdjustments: [],
-      nextSteps: [],
-      suggestedExaminerComment: "Thí sinh nắm vững quy trình và hoàn thành đúng yêu cầu.",
-      references: [],
-      notice: "Tham khảo",
-    });
-
-    const ok = await POST(new Request("https://labs.cnsvn.com/api/ai/exam-review-feedback", {
-      method: "POST",
-      headers: { origin: "https://labs.cnsvn.com", "content-type": "application/json" },
-      body: JSON.stringify({
-        examId: "22222222-2222-4222-8222-222222222222",
-        codeId: "33333333-3333-4333-8333-333333333333",
-        itemId: "11111111-1111-4111-8111-111111111111",
-      }),
-    }));
-    expect(ok.status).toBe(200);
-    const body = await ok.json();
-    expect(body.feedback.suggestedExaminerComment).toContain("Thí sinh nắm vững quy trình");
+    mocks.read.mockResolvedValue({ status: "completed", feedback: { summary: "Frozen result" } });
+    const response = await POST(request());
+    expect(response.status).toBe(200); expect(await response.json()).toEqual({ status: "completed", feedback: { summary: "Frozen result" } });
+    expect(mocks.query).toHaveBeenCalledWith(expect.stringContaining("c.exam_id = $1"), [examId, codeId, id, id]);
+    expect(mocks.read).toHaveBeenCalledWith(mocks.pool, id, { examItemId: id });
+    expect(mocks.generate).not.toHaveBeenCalled(); expect(response.headers.get("cache-control")).toBe("private, no-store");
+  });
+  it("rejects unauthenticated, non-admin and cross-origin callers", async () => {
+    const { POST } = await import("@/app/api/ai/exam-review-feedback/route");
+    mocks.profile.mockResolvedValueOnce(null); expect((await POST(request())).status).toBe(401);
+    mocks.profile.mockResolvedValueOnce({ id, role: "teacher" }); expect((await POST(request())).status).toBe(403);
+    expect((await POST(request({}, { origin: "https://evil.invalid" }))).status).toBe(403);
+    expect(mocks.read).not.toHaveBeenCalled(); expect(mocks.generate).not.toHaveBeenCalled();
+  });
+  it("preserves literal UUID validation, bounded input and ownership/revocation denial", async () => {
+    const { POST } = await import("@/app/api/ai/exam-review-feedback/route");
+    for (const value of [{ examId, codeId, itemId: ` ${id}` }, { examId, codeId, itemId: id, rubric: {} }, { examId, codeId, itemId: "a".repeat(32769) }]) expect((await POST(request(value))).status).toBe(400);
+    mocks.query.mockResolvedValueOnce({ rows: [] }); expect((await POST(request())).status).toBe(404);
+    const { FeedbackJobError } = await import("@/lib/ai/feedback/jobs");
+    mocks.read.mockRejectedValueOnce(new FeedbackJobError("NOT_FOUND")); expect((await POST(request())).status).toBe(404);
+    mocks.read.mockResolvedValueOnce({ status: "withheld" }); expect(await (await POST(request())).json()).toEqual({ status: "withheld" });
+    expect(mocks.generate).not.toHaveBeenCalled();
   });
 });

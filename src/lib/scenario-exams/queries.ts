@@ -1,7 +1,8 @@
 import "server-only";
 
 import { getCurrentProfile } from "@/lib/auth/profile";
-import { queryDatabase } from "@/lib/db";
+import { queryDatabase, withDatabaseTransaction } from "@/lib/db";
+import { finalizeExpiredScenarioExamSession, lockOwnedScenarioExamSession } from "./expiration";
 import { isScenarioParametersModuleId, parseScenarioParameters, SCENARIO_PARAMETERS_MODULES, type ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 import type {
   CandidateOpenScenarioExam,
@@ -249,6 +250,14 @@ export async function getCandidateScenarioExamSession(): Promise<CandidateScenar
   if (!profile || profile.role !== "student") throw new Error("Bạn cần đăng nhập tài khoản Thí sinh.");
   const token = await getScenarioExamSessionToken();
   if (!token) return null;
+  const tokenHash = hashScenarioExamSessionToken(token);
+  const authorized = await withDatabaseTransaction(async client => {
+    const session = await lockOwnedScenarioExamSession(client, tokenHash, profile.id);
+    if (!session) return false;
+    await finalizeExpiredScenarioExamSession(client, session, profile.id);
+    return true;
+  });
+  if (!authorized) return null;
   const result = await queryDatabase(
     `select s.id, c.exam_id, e.name as exam_name,
             c.candidate_name, c.candidate_unit, s.status, s.started_at,
@@ -271,10 +280,12 @@ export async function getCandidateScenarioExamSession(): Promise<CandidateScenar
        join public.scenario_exams e on e.id = c.exam_id
        left join public.scenario_exam_code_subjects cs on cs.code_id = c.id
        left join public.scenario_exam_session_items item on item.code_subject_id = cs.id and item.session_id = s.id
-      where s.session_token_hash = $1
+      where s.session_token_hash = $1 and s.candidate_user_id = $2
+        and (c.redeem_user_id is null or c.redeem_user_id = s.candidate_user_id)
+        and s.status <> 'revoked' and c.status <> 'revoked' and c.revoked_at is null
       group by s.id, c.exam_id, e.name, c.candidate_name, c.candidate_unit,
                s.status, s.started_at, s.deadline_at, s.submitted_at`,
-    [hashScenarioExamSessionToken(token)],
+    [tokenHash, profile.id],
   );
   const row = result.rows[0] as Row | undefined;
   if (!row) return null;
@@ -317,6 +328,13 @@ export async function getCandidateScenarioExamItem(itemIdValue: string): Promise
   }
   const token = await getScenarioExamSessionToken();
   if (!token) return null;
+  const authorized = await withDatabaseTransaction(async client => {
+    const session = await lockOwnedScenarioExamSession(client, hashScenarioExamSessionToken(token), profile.id);
+    if (!session) return false;
+    await finalizeExpiredScenarioExamSession(client, session, profile.id);
+    return session.status === "in_progress";
+  });
+  if (!authorized) return null;
   const result = await queryDatabase(
     `select item.id, item.session_id, item.code_subject_id, item.module_id,
             item.scenario_id, item.scenario_name, item.library_revision_number,
@@ -328,10 +346,11 @@ export async function getCandidateScenarioExamItem(itemIdValue: string): Promise
        join public.scenario_exams e on e.id = c.exam_id
        join public.scenario_exam_code_subjects cs
          on cs.id = item.code_subject_id and cs.code_id = s.code_id and cs.module_id = item.module_id
-      where s.session_token_hash = $1 and item.id = $2
+      where s.session_token_hash = $1 and item.id = $2 and s.candidate_user_id = $3
+        and (c.redeem_user_id is null or c.redeem_user_id = s.candidate_user_id) and c.revoked_at is null
         and s.status = 'in_progress' and s.deadline_at > now()
         and c.status = 'in_progress' and cs.status = 'in_progress' and item.status = 'in_progress'`,
-    [hashScenarioExamSessionToken(token), itemId],
+    [hashScenarioExamSessionToken(token), itemId, profile.id],
   );
   const row = result.rows[0] as Row | undefined;
   if (!row) return null;

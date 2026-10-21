@@ -25,7 +25,7 @@ function nativeServer(moduleId: ScenarioParametersModuleId, sectionId: string) {
   session.state = mutateAuthoringState(session.state, { action: "navigate", sectionId });
   const reply = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status });
   const fetcher = vi.fn(async (url: string, init?: RequestInit) => {
-    if (url.includes("?moduleId=")) return reply({ sessions: [] });
+    if (url.includes("?moduleId=")) return reply({ sessions: [{ id: session.id, name: "Bản nháp native", status: "editing" }] });
     if (init?.method === "PATCH") {
       const { mutation, expectedRevision } = JSON.parse(init.body as string) as { mutation: AuthoringMutation; expectedRevision: number };
       expect(expectedRevision).toBe(session.revision);
@@ -172,7 +172,7 @@ it("connects all ADS-B menu suggestions to native inputs without restricting fre
   ];
   expect(options.some(option => option.value === "183")).toBe(false);
   render(<AiAuthoringWizard moduleId="ads-b" />);
-  fireEvent.click(screen.getByRole("button", { name: "Dùng mặc định simulator" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Tiếp tục: Bản nháp native" }));
   const addSession = await screen.findByRole("button", { name: "Thêm Phiên terminal / chuỗi input" });
   for (const [index, segment] of plan.entries()) {
     fireEvent.click(addSession);
@@ -202,7 +202,7 @@ it("saves DVOR220 temperature 50 and boolean variants through native form → wi
   const api = nativeServer("dvor-220", "faults");
   const adapter = authoringAdapterFor("dvor-220");
   render(<AiAuthoringWizard moduleId="dvor-220" />);
-  fireEvent.click(screen.getByRole("button", { name: "Dùng mặc định simulator" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Tiếp tục: Bản nháp native" }));
   fireEvent.click(await screen.findByRole("button", { name: "Thêm Typed Faults" }));
   fireEvent.change(screen.getByLabelText("Loại Typed Faults 1"), { target: { value: "environment" } });
   expect(screen.getByLabelText("Sensor state")).toBeChecked();

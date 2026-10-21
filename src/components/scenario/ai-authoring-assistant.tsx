@@ -15,7 +15,11 @@ export function AiAuthoringAssistant({ session, dirty, disabled, onApply, onDism
 }) {
   const [selected, setSelected] = useState<string[]>(session.proposal?.prefilledFieldIds ?? []);
   const proposal = session.proposal;
-  if (!proposal) return null;
+  if (!proposal) return session.lastExplanation ? <aside aria-label="Giải thích từ AI" className={`${authoringCardClass} grid gap-2.5 border-[#0284c7]/30`}>
+    <h4 className="text-sm font-semibold text-[#0369a1]">Giải thích từ AI</h4>
+    <p className="whitespace-pre-wrap text-xs leading-relaxed">{session.lastExplanation}</p>
+    <p className="text-[11px] text-[var(--cns-text-secondary)]">Chỉ giải thích, không thay đổi bản nháp. Bạn có thể hỏi tiếp hoặc tiếp tục xác nhận.</p>
+  </aside> : null;
   return <aside aria-label="Đề xuất AI cần duyệt" className={`${authoringCardClass} grid gap-2.5 border-[#0284c7]/30`}>
     <h4 className="text-sm font-semibold text-[#0369a1]">Đề xuất AI · Chờ xác nhận</h4><p className="text-xs leading-relaxed">{proposal.message}</p>
     <p className="text-[11px] text-[var(--cns-text-secondary)]">Đã đọc {proposal.coverage.charactersRead}/{proposal.coverage.charactersAvailable} ký tự từ {proposal.coverage.documents} tài liệu.{proposal.coverage.truncated ? " Chỉ xử lý một phần tài liệu, không phải toàn bộ manual." : ""}</p>

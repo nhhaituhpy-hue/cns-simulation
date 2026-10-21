@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { OfficialExamReview } from "@/components/exams/official-exam-review";
 import type { AdminCandidateSubjectReview } from "@/lib/exams/types";
+vi.mock("@/components/scenario/attempt-feedback-result",()=>({AttemptFeedbackResult:({target}:{target:{legacyAttemptItemId:string}})=><div data-testid="frozen-legacy-feedback">{target.legacyAttemptItemId}</div>}));
 
 vi.mock("@/components/exams/candidate-result-editor", () => ({
   CandidateResultEditor: () => <div data-testid="result-editor">Result editor</div>,
@@ -86,5 +87,6 @@ describe("OfficialExamReview", () => {
     expect(screen.getByText("Đúng tài khoản")).toBeInTheDocument();
     expect(screen.getAllByText("System status")).toHaveLength(2);
     expect(screen.getByTestId("result-editor")).toBeInTheDocument();
+    expect(screen.getByTestId("frozen-legacy-feedback")).toHaveTextContent(detail.attempt!.items[0].id);
   });
 });

@@ -32,6 +32,72 @@ describe.skipIf(!testUrl)("guided drafts in isolated real PostgreSQL",()=>{
   await pool.query("delete from public.ai_authoring_analysis_jobs;delete from public.ai_authoring_document_namespaces;delete from public.ai_authoring_sessions;delete from public.simulator_scenario_parameters;delete from public.scenarios;update public.users set role='admin',is_active=true,must_change_password=false");
  });
  const create=(moduleId:import("@/lib/scenario-parameters").ScenarioParametersModuleId="ads-b",key=randomUUID())=>repo.createAuthoringSession(pool,moduleId,{actorId,idempotencyKey:key});
+ it("persists a changed goal and invalidates confirmed blueprint atomically without queuing AI",async()=>{
+  const {nativeBlueprintFixture}=await import("../helpers/native-blueprint");
+  let s=await repo.createAuthoringSession(pool,"dvor-220",{actorId,idempotencyKey:randomUUID(),mode:"description",context:"Original goal"});
+  await repo.enqueueAuthoringAnalysis(pool,s.id,actorId,s.revision,{kind:"blueprint",question:s.state.context},{idempotencyKey:randomUUID()});
+  const job=(await repo.claimAuthoringAnalysis(pool,"goal-worker"))!;
+  await repo.finishAuthoringAnalysis(pool,job.id,job.attemptToken!,{kind:"blueprint",blueprint:nativeBlueprintFixture("dvor-220"),message:"Verified",changes:[],issues:[],coverage:{documents:1,charactersRead:100,charactersAvailable:100,truncated:false}});
+  s=(await repo.getAuthoringSession(pool,s.id,actorId))!;
+  s=await repo.updateAuthoringSession(pool,s.id,actorId,s.revision,{action:"confirm-blueprint"});
+  const originalRevision=s.revision;
+  await expect(repo.updateAuthoringSession(pool,s.id,otherId,s.revision,{action:"edit-context",context:"Foreign"})).rejects.toMatchObject({code:"NOT_FOUND"});
+  s=await repo.updateAuthoringSession(pool,s.id,actorId,s.revision,{action:"edit-context",context:"Changed goal"});
+  const reopened=(await repo.getAuthoringSession(pool,s.id,actorId))!;
+  expect(reopened.revision).toBe(originalRevision+1);expect(reopened.state.context).toBe("Changed goal");expect(reopened.state.blueprint).toBeUndefined();expect(reopened.state.confirmations).toEqual({});expect(reopened.state.currentStep).toBe("documents");
+  await expect(repo.updateAuthoringSession(pool,s.id,actorId,originalRevision,{action:"edit-context",context:"Stale"})).rejects.toMatchObject({code:"REVISION_CONFLICT"});
+  await expect(repo.finalizeAuthoringSession(pool,s.id,actorId,s.revision,randomUUID())).rejects.toMatchObject({code:"INVALID_BLUEPRINT"});
+  expect((await pool.query("select count(*)::int total from public.ai_authoring_analysis_jobs where session_id=$1",[s.id])).rows[0].total).toBe(1);
+  expect((await pool.query("select * from public.simulator_scenario_parameters")).rows).toEqual([]);
+ });
+ it.each(["queued","running"])("rejects goal persistence while analysis is %s without staling its completion",async status=>{
+  const s=await create("dvor-220");
+  const job=await repo.enqueueAuthoringAnalysis(pool,s.id,actorId,s.revision,{kind:"guidance",question:"Explain"},{idempotencyKey:randomUUID()});
+  const claim=status==="running"?(await repo.claimAuthoringAnalysis(pool,"goal-worker"))!:null;
+  await expect(repo.updateAuthoringSession(pool,s.id,actorId,job.baseRevision,{action:"edit-context",context:"Pending goal"})).rejects.toMatchObject({code:"ANALYSIS_BUSY"});
+  const current=(await repo.getAuthoringSession(pool,s.id,actorId))!;expect(current.revision).toBe(job.baseRevision);expect(current.state.context).toBe(s.state.context);
+  const active=claim??(await repo.claimAuthoringAnalysis(pool,"goal-worker"))!;
+  expect(await repo.finishAuthoringAnalysis(pool,job.id,active.attemptToken!,{kind:"guidance",message:"Explanation only",changes:[],issues:[],coverage:{documents:0,charactersRead:0,charactersAvailable:0,truncated:false}})).toBe(true);
+ });
+ it.each(["CLARIFICATION_REQUIRED","KNOWLEDGE_UNAVAILABLE","UNSUPPORTED_REQUEST","INVALID_RECOVERY","INVALID_BLUEPRINT"])("preserves safe blueprint failure %s without leaking raw error text",async code=>{
+  const s=await repo.createAuthoringSession(pool,"dvor-1150a",{actorId,idempotencyKey:randomUUID(),mode:"description",context:"TX1 công suất thấp"});
+  await repo.enqueueAuthoringAnalysis(pool,s.id,actorId,s.revision,{kind:"blueprint",question:s.state.context},{idempotencyKey:randomUUID()});
+  const claim=(await repo.claimAuthoringAnalysis(pool,"blueprint-worker"))!;
+  await repo.failAuthoringAnalysis(pool,claim.id,claim.attemptToken!,code);
+  expect((await repo.latestAuthoringAnalysis(pool,s.id,actorId))?.errorCode).toBe(code);
+  expect((await repo.getAuthoringSession(pool,s.id,actorId))?.state.context).toBe("TX1 công suất thấp");
+ });
+ it.each(["dvor-1150","dvor-1150a","dme-1119a","dvor-220","dme-320","ads-b"] as const)("atomically stores verified %s blueprint rubric with unpublished source",async moduleId=>{
+  const {nativeBlueprintFixture}=await import("../helpers/native-blueprint");
+  const blueprint=nativeBlueprintFixture(moduleId);
+  let s=await repo.createAuthoringSession(pool,moduleId,{actorId,idempotencyKey:randomUUID(),mode:"description",context:"Mô tả tình huống kiểm thử"});
+  expect(s.state.mode).toBe("description");
+  const queued=await repo.enqueueAuthoringAnalysis(pool,s.id,actorId,s.revision,{kind:"blueprint",question:s.state.context},{idempotencyKey:randomUUID()});
+  const claim=(await repo.claimAuthoringAnalysis(pool,"blueprint-worker"))!;expect(claim.id).toBe(queued.id);
+  expect(await repo.finishAuthoringAnalysis(pool,claim.id,claim.attemptToken!,{kind:"blueprint",blueprint,message:"Native engine fixture",changes:[],issues:[],coverage:{documents:1,charactersRead:100,charactersAvailable:100,truncated:false}})).toBe(true);
+  s=(await repo.getAuthoringSession(pool,s.id,actorId))!;
+  expect(s.state.currentStep).toBe("review");expect(s.scenarioRowId).toBeNull();
+  await expect(repo.finalizeAuthoringSession(pool,s.id,actorId,s.revision,randomUUID())).rejects.toMatchObject({code:"AUTHORING_INCOMPLETE"});
+  s=await repo.updateAuthoringSession(pool,s.id,actorId,s.revision,{action:"confirm-blueprint"});
+  const key=randomUUID();const saved=await repo.finalizeAuthoringSession(pool,s.id,actorId,s.revision,key);
+  const row=(await pool.query("select definition_json,assessment_rubric_json from public.simulator_scenario_parameters where id=$1",[saved.scenarioRowId])).rows[0];
+  expect(row.assessment_rubric_json).toEqual(blueprint.rubric);expect(row.definition_json).toEqual(s.state.definition);
+  expect((await repo.finalizeAuthoringSession(pool,s.id,actorId,s.revision,key)).scenarioRowId).toBe(saved.scenarioRowId);
+  expect((await pool.query("select * from public.simulator_scenario_library_memberships where scenario_parameters_id=$1",[saved.scenarioRowId])).rows).toEqual([]);
+ });
+ it("invalidates an old verified blueprint when a changed brief is queued",async()=>{
+  const {nativeBlueprintFixture}=await import("../helpers/native-blueprint");
+  let s=await repo.createAuthoringSession(pool,"dvor-1150a",{actorId,idempotencyKey:randomUUID(),mode:"description",context:"TX1 công suất thấp"});
+  await repo.enqueueAuthoringAnalysis(pool,s.id,actorId,s.revision,{kind:"blueprint",question:s.state.context},{idempotencyKey:randomUUID()});
+  const claim=(await repo.claimAuthoringAnalysis(pool,"worker"))!;
+  await repo.finishAuthoringAnalysis(pool,claim.id,claim.attemptToken!,{kind:"blueprint",blueprint:nativeBlueprintFixture("dvor-1150a"),message:"First blueprint",changes:[],issues:[],coverage:{documents:1,charactersRead:100,charactersAvailable:100,truncated:false}});
+  s=(await repo.getAuthoringSession(pool,s.id,actorId))!;
+  s=await repo.updateAuthoringSession(pool,s.id,actorId,s.revision,{action:"confirm-blueprint"});
+  await repo.enqueueAuthoringAnalysis(pool,s.id,actorId,s.revision,{kind:"blueprint",question:"Đổi mục tiêu sang chẩn đoán phần cứng"},{idempotencyKey:randomUUID()});
+  const changed=(await repo.getAuthoringSession(pool,s.id,actorId))!;
+  expect(changed.state.blueprint).toBeUndefined();expect(changed.state.confirmations).toEqual({});
+  expect(changed.state.context).toBe("Đổi mục tiêu sang chẩn đoán phần cứng");
+ });
  it("rejects duplicate active analysis and finalization while analysis is pending",async()=>{
   let s=await confirmed("ads-b");
   await repo.enqueueAuthoringAnalysis(pool,s.id,actorId,s.revision,{kind:"guidance",question:"Explain"},{idempotencyKey:randomUUID()});
@@ -103,7 +169,7 @@ describe.skipIf(!testUrl)("guided drafts in isolated real PostgreSQL",()=>{
  it("blocks pending proposals after all sections are reconfirmed",async()=>{
   let s=await confirmed("ads-b");await repo.enqueueAuthoringAnalysis(pool,s.id,actorId,s.revision,{kind:"guidance",question:"Explain"},{idempotencyKey:randomUUID()});
   const claim=(await repo.claimAuthoringAnalysis(pool,"worker"))!;
-  await repo.finishAuthoringAnalysis(pool,claim.id,claim.attemptToken!,{kind:"guidance",message:"Review this",changes:[],issues:[],coverage:{documents:0,charactersRead:0,charactersAvailable:0,truncated:false}});
+  await repo.finishAuthoringAnalysis(pool,claim.id,claim.attemptToken!,{kind:"guidance",message:"Review this",changes:[],issues:[{code:"REVIEW_REQUIRED",sectionId:"metadata",severity:"warning",message:"Cần duyệt điểm chưa rõ trong tài liệu."}],coverage:{documents:0,charactersRead:0,charactersAvailable:0,truncated:false}});
   s=(await repo.getAuthoringSession(pool,s.id,actorId))!;
   const {authoringAdapterFor}=await import("@/lib/ai/scenario-authoring/forms/registry");
   for(const section of authoringAdapterFor("ads-b").form(s.state.definition).sections)s=await repo.updateAuthoringSession(pool,s.id,actorId,s.revision,{action:"confirm",sectionId:section.id});
@@ -176,7 +242,7 @@ describe.skipIf(!testUrl)("guided drafts in isolated real PostgreSQL",()=>{
  it("rejects reanalysis until the existing proposal is explicitly resolved",async()=>{
   const s=await create("ads-b");await repo.enqueueAuthoringAnalysis(pool,s.id,actorId,1,{kind:"baseline",question:"Read"},{idempotencyKey:randomUUID()});
   const claim=(await repo.claimAuthoringAnalysis(pool,"worker"))!;
-  await repo.finishAuthoringAnalysis(pool,claim.id,claim.attemptToken!,{kind:"baseline",message:"Review",changes:[],issues:[],coverage:{documents:0,charactersRead:0,charactersAvailable:0,truncated:false}});
+  await repo.finishAuthoringAnalysis(pool,claim.id,claim.attemptToken!,{kind:"baseline",message:"Review",changes:[],issues:[{code:"REVIEW_REQUIRED",sectionId:"metadata",severity:"warning",message:"Cần duyệt phần chưa rõ."}],coverage:{documents:0,charactersRead:0,charactersAvailable:0,truncated:false}});
   const current=(await repo.getAuthoringSession(pool,s.id,actorId))!;
   await expect(repo.enqueueAuthoringAnalysis(pool,s.id,actorId,current.revision,{kind:"baseline",question:"Read again"},{idempotencyKey:randomUUID(),documents:[]}).then(()=>"accepted")).rejects.toMatchObject({code:"PROPOSAL_PENDING"});
   expect((await repo.getAuthoringSession(pool,s.id,actorId))?.state).toEqual(current.state);
@@ -192,7 +258,7 @@ describe.skipIf(!testUrl)("guided drafts in isolated real PostgreSQL",()=>{
   expect((await repo.getAuthoringSession(pool,s.id,actorId))?.revision).toBe(2);
   expect((await repo.latestAuthoringAnalysis(pool,s.id,actorId))?.status).toBe("running");
  });
- it("preserves confirmations through non-mutating guidance and dismiss",async()=>{
+ it("preserves confirmations through explanation-only guidance without a pointless dismiss",async()=>{
   const s=await confirmed("ads-b"),request={kind:"guidance" as const,question:"Explain this step"};
   const queued=await repo.enqueueAuthoringAnalysis(pool,s.id,actorId,s.revision,request,{idempotencyKey:randomUUID()});
   expect(queued.state.confirmations).toEqual(s.state.confirmations);
@@ -200,8 +266,8 @@ describe.skipIf(!testUrl)("guided drafts in isolated real PostgreSQL",()=>{
   const claim=(await repo.claimAuthoringAnalysis(pool,"worker"))!;
   await repo.finishAuthoringAnalysis(pool,claim.id,claim.attemptToken!,{kind:"guidance",message:"Explanation only",changes:[],issues:[],coverage:{documents:0,charactersRead:0,charactersAvailable:0,truncated:false}});
   const reviewed=(await repo.getAuthoringSession(pool,s.id,actorId))!;expect(reviewed.state.confirmations).toEqual(s.state.confirmations);
-  const dismissed=await repo.updateAuthoringSession(pool,s.id,actorId,reviewed.revision,{action:"dismiss-proposal",proposalId:reviewed.state.proposal!.id});
-  expect((await repo.finalizeAuthoringSession(pool,s.id,actorId,dismissed.revision,randomUUID())).status).toBe("completed");
+  expect(reviewed.state.proposal).toBeNull();expect(reviewed.state.lastExplanation).toBe("Explanation only");
+  expect((await repo.finalizeAuthoringSession(pool,s.id,actorId,reviewed.revision,randomUUID())).status).toBe("completed");
  });
  it("blocks persisted navigation while analysis is active without advancing its revision",async()=>{
   const s=await create(),j=await repo.enqueueAuthoringAnalysis(pool,s.id,actorId,1,{kind:"guidance",question:"Explain"},{idempotencyKey:randomUUID()});

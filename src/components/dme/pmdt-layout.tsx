@@ -221,6 +221,8 @@ export function PmdtLayout({
               moduleId="dme-1119a"
               scenarioId={scenario.definition.id}
               scenarioName={scenario.definition.name}
+              attemptKey={scenario.startedAt}
+              onRestart={() => startReviewScenario(scenario.definition!)}
               getPayload={() => {
                 const state = useDmePmdtStore.getState();
                 return {
