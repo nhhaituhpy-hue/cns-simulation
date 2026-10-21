@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { getSimulatorModule } from "@/modules/core/registry";
 import type { ScenarioParametersModuleId } from "@/lib/scenario-parameters";
@@ -17,9 +17,23 @@ import {
   sourceLabel,
 } from "./ai-authoring-field";
 const api = "/api/ai/scenario-authoring";
-export function AiAuthoringWizard({ moduleId, onClose, onCompleted, registerClose }: { moduleId: ScenarioParametersModuleId; onCompleted?: (session: AuthoringSessionDto) => void | Promise<void>; onClose?: () => void; registerClose?: (handler: (() => Promise<boolean>) | null) => void }) {
+export function AiAuthoringWizard({
+  moduleId,
+  initialMode,
+  onClose,
+  onCompleted,
+  registerClose,
+}: {
+  moduleId: ScenarioParametersModuleId;
+  initialMode?: "documents" | "native";
+  onCompleted?: (session: AuthoringSessionDto) => void | Promise<void>;
+  onClose?: () => void;
+  registerClose?: (handler: (() => Promise<boolean>) | null) => void;
+}) {
+  const fileInputId = useId();
   const uploadAttempt = useRef<{ key: string; body: FormData; url: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const nativeAutoStarted = useRef(false);
   const [uploadUncertain, setUploadUncertain] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const finalizeAttempt = useRef<{ key: string; body: string } | null>(null);
@@ -150,6 +164,12 @@ export function AiAuthoringWizard({ moduleId, onClose, onCompleted, registerClos
     }
     const next = await submitUpload(); setStep(next.currentStep);
   }
+  useEffect(() => {
+    if (initialMode === "native" && !nativeAutoStarted.current && !current.current) {
+      nativeAutoStarted.current = true;
+      void run(() => create(true));
+    }
+  });
   async function analyze(kind: "baseline" | "guidance", prompt?: string) {
     if (!uploadAttempt.current) {
       await save();
@@ -346,16 +366,19 @@ export function AiAuthoringWizard({ moduleId, onClose, onCompleted, registerClos
           {conflict ? <Button size="sm" className={`${authoringBtnBlueClass} w-fit`} disabled={busy} onClick={() => void run(async () => { await request(`${api}/${encodeURIComponent(current.current!.id)}`, { cache: "no-store" }); setConflict(false); })}>Tải lại phiên mới, giữ bản chỉnh</Button> : null}
 
           {step === "documents" ? (
-            <div className={`${authoringCardClass} grid gap-3`}>
+            <div className={`${authoringCardClass} grid gap-3.5`}>
               <p className="text-xs leading-relaxed">Dùng manual hoặc tài liệu thông số của đúng thiết bị. Tài liệu chỉ chuẩn bị giá trị nền cho bản nháp này, không thay mặc định toàn hệ thống.</p>
-              <label className="grid gap-1 text-xs font-medium">
-                Tài liệu thông số nền
+              <div className="grid gap-1.5">
+                <label htmlFor={fileInputId} className="text-xs font-semibold text-[var(--cns-text-primary)]">
+                  Tài liệu thông số nền
+                </label>
                 <input
                   ref={fileInputRef}
+                  id={fileInputId}
                   type="file"
                   multiple
                   accept=".pdf,.docx,.txt,.md"
-                  className={authoringInputClass}
+                  className="sr-only"
                   disabled={busy || uploadUncertain}
                   onClick={(event) => {
                     const dlg = event.currentTarget.closest("dialog");
@@ -367,17 +390,41 @@ export function AiAuthoringWizard({ moduleId, onClose, onCompleted, registerClos
                     selectFiles(Array.from(event.currentTarget.files ?? []));
                   }}
                 />
-              </label>
+                <div className="flex flex-wrap items-center gap-2.5 pt-0.5">
+                  <button
+                    type="button"
+                    disabled={busy || uploadUncertain}
+                    onClick={(event) => {
+                      const dlg = event.currentTarget.closest("dialog");
+                      if (dlg) dlg.dataset.filePickerActive = "true";
+                      fileInputRef.current?.click();
+                    }}
+                    className={`${authoringBtnBlueClass} cursor-pointer select-none shadow-xs transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0.5 active:scale-95 active:brightness-90`}
+                  >
+                    Chọn tệp
+                  </button>
+                  <div
+                    role="status"
+                    aria-live="polite"
+                    data-testid="selected-files-status"
+                    className="min-w-[14rem] flex-1 rounded-lg border border-dashed border-[#cbd5e1] bg-[#f8fafc] px-3 py-1.5 text-xs text-[var(--cns-text-secondary)]"
+                  >
+                    {files.length
+                      ? `Đã chọn ${files.length} tệp: ${files.map((file) => file.name).join(", ")}`
+                      : "Không có tệp nào được chọn"}
+                  </div>
+                </div>
+              </div>
               {session?.documents.length ? <ul aria-label="Tài liệu đã lưu" className="grid gap-1 text-xs">{session.documents.map((document, index) => <li key={index}>{document.name}</li>)}</ul> : null}
               {files.length ? <ul className="text-xs">{files.map((file, i) => <li key={i} className="break-all">{file.name}</li>)}</ul> : null}
               <label className="grid gap-1 text-xs font-medium">Phạm vi tài liệu (không bắt buộc)<input value={context} maxLength={2000} className={authoringInputClass} disabled={busy || uploadUncertain} onChange={(event) => setContext(event.currentTarget.value)} /></label>
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+              <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-[var(--cns-border-subtle)]/70 pt-3">
                 <a className="text-xs font-medium text-[#0369a1] underline" href={`/templates/ai-scenario-${moduleId}.docx`} download>Tải mẫu thông số nền (.docx)</a>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Button size="sm" variant="primary" className={authoringBtnOrangeClass} disabled={busy || uploadUncertain || pending || conflict || !!session?.proposal || !!fileError || !files.length} onClick={() => void run(() => session ? analyze("baseline") : create())}>
                     {session ? "Phân tích lại tài liệu" : "Phân tích tài liệu và điền biểu mẫu"}
                   </Button>
-                  {!session ? (
+                  {!session && !initialMode ? (
                     <Button size="sm" className={authoringBtnGrayClass} disabled={busy || uploadUncertain} onClick={() => void run(() => create(true))}>
                       Dùng mặc định simulator
                     </Button>
@@ -391,27 +438,34 @@ export function AiAuthoringWizard({ moduleId, onClose, onCompleted, registerClos
           {section ? (
             <>
               {groups.map((group) => (
-                <details key={group} open={groups.length <= 2 || group === groups[0]} aria-label={group} className={`${authoringCardClass} grid gap-3`}>
+                <details key={group} open={groups.length <= 2 || group === groups[0]} aria-label={group} className={`${authoringCardClass} grid gap-3.5`}>
                   <summary className="cursor-pointer text-sm font-semibold">
                     {group} <span className="text-xs font-normal text-[var(--cns-text-secondary)]">· {fields.filter(field => field.group === group).length} trường</span>
                   </summary>
                   {fields.filter((field) => field.group === group).map((field) => (
-                    <div key={field.id} className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-1.5 border-t border-[var(--cns-border-subtle)]/70 pt-2.5 first:border-t-0 first:pt-0">
+                    <div key={field.id} className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2 rounded-lg border border-[var(--cns-border-subtle)]/80 bg-[var(--cns-surface-card-subtle)]/50 p-3">
                       <AiAuthoringField schema={field.schema} value={Object.hasOwn(dirty, field.id) ? dirty[field.id] : field.value} disabled={busy} onChange={(value) => edit(field.id, value)} />
-                      <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="mt-1 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--cns-border-subtle)]/60 pt-2">
                         <div className="min-w-0 space-y-0.5">
                           <p className="text-[11px] text-[var(--cns-text-secondary)]">{Object.hasOwn(dirty, field.id) ? "Bạn đã chỉnh · Chưa lưu" : sourceLabel(session!.sources[field.id])}</p>
                           <p className="break-words text-[11px] text-[var(--cns-text-secondary)]">Giá trị nền: {valueLabel(session!.baselineValues[field.id], field.schema)}</p>
                         </div>
-                        <Button size="sm" disabled={busy || pending || uploadUncertain || conflict || field.schema.readOnly} className={`${authoringBtnGrayClass} w-fit text-left`} onClick={() => void run(async () => { await resetField(field.id); })}>
-                          Khôi phục nền: {field.schema.label}
+                        <Button
+                          size="sm"
+                          disabled={busy || pending || uploadUncertain || conflict || field.schema.readOnly}
+                          aria-label={`Khôi phục nền: ${field.schema.label}`}
+                          title={`Khôi phục nền: ${field.schema.label}`}
+                          className={authoringBtnGrayClass}
+                          onClick={() => void run(async () => { await resetField(field.id); })}
+                        >
+                          Khôi phục nền
                         </Button>
                       </div>
                       {session!.sources[field.id]?.quote ? <blockquote className="break-words border-l-2 border-[#0284c7] pl-2.5 text-[11px] text-[var(--cns-text-secondary)]">{session!.sources[field.id].quote!.slice(0, 600)}</blockquote> : null}
                     </div>
                   ))}
-                  <div className="flex justify-end pt-1">
-                    <Button size="sm" className={`${authoringBtnBlueClass} w-fit`} disabled={busy || pending} onClick={() => void run(() => save(fields.filter((field) => field.group === group).map((field) => field.id)))}>
+                  <div className="mt-0.5 flex justify-end border-t border-[var(--cns-border-subtle)]/70 pt-2.5">
+                    <Button size="sm" className={authoringBtnBlueClass} disabled={busy || pending} onClick={() => void run(() => save(fields.filter((field) => field.group === group).map((field) => field.id)))}>
                       Lưu nhóm {group}
                     </Button>
                   </div>
@@ -423,7 +477,7 @@ export function AiAuthoringWizard({ moduleId, onClose, onCompleted, registerClos
           {session && step === "confirmation" ? <AiAuthoringSummary session={session} /> : null}
 
           {session ? (
-            <footer className="sticky bottom-0 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)]/95 px-3.5 py-2.5 shadow-sm backdrop-blur-xl">
+            <footer className="mt-0.5 flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] px-4 py-3 shadow-2xs">
               <Button size="sm" className={authoringBtnGrayClass} disabled={busy || pending || finalUncertain || step === "documents"} onClick={() => void run(() => navigate(steps[Math.max(0, steps.indexOf(step) - 1)]))}>
                 Quay lại
               </Button>
@@ -512,7 +566,7 @@ export function AiAuthoringWizard({ moduleId, onClose, onCompleted, registerClos
                       ? "Học viên cần được phép sửa gì để làm bài? AI giúp đối chiếu quyền với mục tiêu, bạn quyết định trước khi lưu."
                       : "Bạn có thể giữ các giá trị đã điền. Nếu chưa rõ, nhờ AI giải thích mục này và chỉ ra thông tin cần xác nhận."}
               </p>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap items-center gap-2 pt-0.5">
                 <Button
                   size="sm"
                   className={authoringBtnBlueClass}
@@ -535,9 +589,11 @@ export function AiAuthoringWizard({ moduleId, onClose, onCompleted, registerClos
                 <textarea rows={2} value={question} maxLength={2000} className={authoringInputClass} disabled={busy || uploadUncertain || pending} onChange={(event) => setQuestion(event.currentTarget.value)} />
               </label>
               <p className="text-[11px] text-[var(--cns-text-secondary)]">Ví dụ: Giá trị này có ý nghĩa gì? Hãy đề xuất theo tài liệu. Câu hỏi được gửi tới AI; mọi thay đổi cần bạn duyệt.</p>
-              <Button size="sm" className={`${authoringBtnOrangeClass} w-fit`} disabled={busy || pending || uploadUncertain || conflict || !!session?.proposal || !question.trim()} onClick={() => void run(() => analyze("guidance"))}>
-                Hỏi AI về bước này
-              </Button>
+              <div className="flex justify-end border-t border-[var(--cns-border-subtle)]/60 pt-2">
+                <Button size="sm" className={authoringBtnOrangeClass} disabled={busy || pending || uploadUncertain || conflict || !!session?.proposal || !question.trim()} onClick={() => void run(() => analyze("guidance"))}>
+                  Hỏi AI về bước này
+                </Button>
+              </div>
             </div>
           ) : null}
 

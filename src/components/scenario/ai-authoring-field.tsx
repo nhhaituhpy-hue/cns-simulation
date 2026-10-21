@@ -4,11 +4,15 @@ import { Button } from "@/components/ui/button";
 import type { FieldSource, JsonValue, ValueSchema } from "@/lib/ai/scenario-authoring/types";
 import { resolveValueVariant } from "@/lib/ai/scenario-authoring/forms/helpers";
 
-export const authoringInputClass = "min-w-0 w-full rounded-lg border border-[var(--cns-btn-ghost-border)] bg-[var(--cns-surface-card)] px-2.5 py-1.5 text-[13px] text-[var(--cns-text-primary)] outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] disabled:opacity-60";
-export const authoringCardClass = "max-w-full break-words min-w-0 rounded-xl border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)]/95 p-3.5 shadow-2xs backdrop-blur-md";
-export const authoringBtnOrangeClass = "h-auto min-h-7 max-w-full whitespace-normal rounded-lg px-2.5 py-1 text-[12px] font-medium leading-tight !bg-[#ea580c] !text-white !border !border-[#ea580c] shadow-2xs hover:!bg-[#c2410c] hover:!border-[#c2410c] active:!bg-[#9a3412]";
-export const authoringBtnBlueClass = "h-auto min-h-7 max-w-full whitespace-normal rounded-lg px-2.5 py-1 text-[12px] font-medium leading-tight !bg-[#0369a1] !text-white !border !border-[#0369a1] shadow-2xs hover:!bg-[#075985] hover:!border-[#075985] active:!bg-[#0c4a6e]";
-export const authoringBtnGrayClass = "h-auto min-h-7 max-w-full whitespace-normal rounded-lg px-2.5 py-1 text-[12px] font-medium leading-tight !bg-[#f1f5f9] !text-[#334155] !border !border-[#cbd5e1] hover:!bg-[#e2e8f0] hover:!border-[#94a3b8] active:!bg-[#cbd5e1]";
+export const authoringInputClass = "min-w-0 w-full rounded-md border border-[var(--cns-btn-ghost-border)] bg-[var(--cns-surface-card)] px-2.5 py-1.5 text-[12.5px] text-[var(--cns-text-primary)] outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] disabled:opacity-60";
+export const authoringCardClass = "max-w-full break-words min-w-0 rounded-xl border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)]/95 p-4 shadow-2xs backdrop-blur-md";
+
+const authoringBtnBase =
+  "!h-auto !min-h-[26px] !w-fit !max-w-full !shrink !whitespace-normal !rounded-md !px-2.5 !py-1 !text-[11px] !font-medium !leading-snug justify-self-start select-none transition-all duration-150 active:scale-[0.96] active:translate-y-[0.5px]";
+
+export const authoringBtnOrangeClass = `${authoringBtnBase} !bg-[#ea580c] !text-white !border !border-[#ea580c] shadow-2xs hover:!bg-[#c2410c] hover:!border-[#c2410c] active:!bg-[#9a3412]`;
+export const authoringBtnBlueClass = `${authoringBtnBase} !bg-[#0369a1] !text-white !border !border-[#0369a1] shadow-2xs hover:!bg-[#075985] hover:!border-[#075985] active:!bg-[#0c4a6e]`;
+export const authoringBtnGrayClass = `${authoringBtnBase} !bg-[#f1f5f9] !text-[#334155] !border !border-[#cbd5e1] hover:!bg-[#e2e8f0] hover:!border-[#94a3b8] active:!bg-[#cbd5e1]`;
 
 export function initialValue(schema: ValueSchema): JsonValue {
   if (schema.initial !== undefined) return structuredClone(schema.initial);
@@ -42,7 +46,7 @@ export function AiAuthoringField({ schema, value, onChange, disabled = false }: 
   const helpId = `${id}-help`;
   const listId = schema.type === "text" && schema.options?.length ? `${id}-options` : undefined;
   const locked = disabled || schema.readOnly;
-  const help = <p id={helpId} className="text-xs leading-relaxed text-[var(--cns-text-secondary)]">{schema.help}{schema.unit ? ` Đơn vị: ${schema.unit}.` : ""}{schema.min !== undefined ? ` Tối thiểu: ${schema.min}.` : ""}{schema.max !== undefined ? ` Tối đa: ${schema.max}.` : ""}{schema.readOnly ? " Trường chỉ đọc của simulator." : ""}</p>;
+  const help = <p id={helpId} className="text-[11px] leading-relaxed text-[var(--cns-text-secondary)]">{schema.help}{schema.unit ? ` Đơn vị: ${schema.unit}.` : ""}{schema.min !== undefined ? ` Tối thiểu: ${schema.min}.` : ""}{schema.max !== undefined ? ` Tối đa: ${schema.max}.` : ""}{schema.readOnly ? " Trường chỉ đọc của simulator." : ""}</p>;
   if (schema.nullable && (schema.type === "object" || schema.type === "array")) {
     return <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2.5"><label className="flex items-center gap-2 text-xs font-medium"><input type="checkbox" disabled={locked} checked={value !== null} onChange={(event) => onChange(event.currentTarget.checked ? initialValue({ ...schema, nullable: false }) : null)} />Sử dụng {schema.label}</label>{value === null ? <p className="text-xs text-[var(--cns-text-secondary)]">Không áp dụng. {schema.help}</p> : <AiAuthoringField schema={{...schema,nullable:false}} value={value} onChange={onChange} disabled={locked} />}</div>;
   }
@@ -52,7 +56,7 @@ export function AiAuthoringField({ schema, value, onChange, disabled = false }: 
       const discriminator = schema.discriminator ?? "kind";
       const variant = resolveValueVariant(schema, value);
       const selector = schema.properties?.[discriminator];
-      return <fieldset disabled={locked} aria-describedby={helpId} className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2.5 rounded-lg border border-[var(--cns-border-subtle)] p-2.5"><legend className="px-1 text-xs font-semibold">{schema.label}</legend>{help}
+      return <fieldset disabled={locked} aria-describedby={helpId} className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 rounded-lg border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] p-3"><legend className="px-1.5 text-xs font-semibold">{schema.label}</legend>{help}
         <AiAuthoringField schema={{ ...selector, type: "select", label: selector?.label ?? `Loại ${schema.label}`, help: selector?.help ?? schema.help, required: true, options: schema.variants.map(({ value, label }) => ({ value, label })) }} value={variant?.value ?? ""} disabled={locked} onChange={(next) => {
           const selected = schema.variants!.find(option => option.value === next);
           if (selected) onChange(structuredClone(selected.initial));
@@ -60,7 +64,7 @@ export function AiAuthoringField({ schema, value, onChange, disabled = false }: 
         {variant ? <AiAuthoringField schema={{ ...variant.schema, properties: Object.fromEntries(Object.entries(variant.schema.properties ?? {}).filter(([key]) => key !== discriminator)) }} value={value} disabled={locked} onChange={onChange} /> : <p role="alert">Chưa có mô tả trường cho loại này. Không thể chỉnh an toàn.</p>}
       </fieldset>;
     }
-    return <fieldset disabled={locked} aria-describedby={helpId} className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2.5 rounded-lg border border-[var(--cns-border-subtle)] p-2.5"><legend className="px-1 text-xs font-semibold">{schema.label}</legend>{help}
+    return <fieldset disabled={locked} aria-describedby={helpId} className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 rounded-lg border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] p-3"><legend className="px-1.5 text-xs font-semibold">{schema.label}</legend>{help}
       {Object.entries(schema.properties ?? {}).map(([key, child]) => <AiAuthoringField key={key} schema={child} value={object[key] ?? null} disabled={locked} onChange={(next) => onChange({ ...object, [key]: next })} />)}
     </fieldset>;
   }
@@ -68,22 +72,26 @@ export function AiAuthoringField({ schema, value, onChange, disabled = false }: 
     const items = Array.isArray(value) ? value : [];
     const variants = schema.variants;
     const replace = (index: number, next: JsonValue) => onChange(items.map((item, i) => i === index ? next : item));
-    return <fieldset disabled={locked} aria-describedby={helpId} className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2.5 rounded-lg border border-[var(--cns-border-subtle)] p-2.5"><legend className="px-1 text-xs font-semibold">{schema.label}</legend>{help}
-      {!items.length ? <p className="text-xs">Chưa có mục. Thêm nếu bài tập cần; không tự chọn lỗi.</p> : null}
+    return <fieldset disabled={locked} aria-describedby={helpId} className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 rounded-lg border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] p-3"><legend className="px-1.5 text-xs font-semibold">{schema.label}</legend>{help}
+      {!items.length ? <p className="text-xs text-[var(--cns-text-secondary)]">Chưa có mục. Thêm nếu bài tập cần; không tự chọn lỗi.</p> : null}
       {items.map((item, index) => {
         const variant = resolveValueVariant(schema, item);
         const kind = variant?.value;
-        return <div key={index} className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2.5 rounded-lg border border-[var(--cns-border-subtle)] p-2.5">
+        return <div key={index} className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2.5 rounded-lg border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card-subtle)]/70 p-3">
           {variants ? <label className="grid gap-1 text-xs font-medium">Loại {schema.label} {index + 1}<select disabled={locked} className={authoringInputClass} value={String(kind ?? "")} onChange={(event) => { const selected = variants.find((option) => option.value === event.currentTarget.value); if (selected) replace(index, structuredClone(selected.initial)); }}><option disabled value="">Chọn loại được hỗ trợ</option>{variants.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label> : null}
           {variant || schema.item ? <AiAuthoringField schema={variant?.schema ?? schema.item!} value={item} disabled={locked} onChange={(next) => replace(index, next)} /> : <p role="alert">Chưa có mô tả trường cho loại này. Không thể chỉnh an toàn.</p>}
-          <Button disabled={locked} size="sm" className={`${authoringBtnGrayClass} w-fit`} onClick={() => onChange(items.filter((_, i) => i !== index))} aria-label={`Xóa ${schema.label} ${index + 1}`}>Xóa mục</Button>
+          <div className="mt-1 flex justify-end border-t border-[var(--cns-border-subtle)]/60 pt-2">
+            <Button disabled={locked} size="sm" className={authoringBtnGrayClass} onClick={() => onChange(items.filter((_, i) => i !== index))} aria-label={`Xóa ${schema.label} ${index + 1}`}>Xóa mục</Button>
+          </div>
         </div>;
       })}
-      <Button disabled={locked || (schema.maxItems !== undefined && items.length >= schema.maxItems) || (!variants?.length && !schema.item)} size="sm" className={`${authoringBtnBlueClass} w-fit`} onClick={() => onChange([...items, variants?.length ? structuredClone(variants[0].initial) : initialValue(schema.item!)])}>Thêm {schema.label}</Button>
+      <div className="mt-0.5 flex items-center pt-1">
+        <Button disabled={locked || (schema.maxItems !== undefined && items.length >= schema.maxItems) || (!variants?.length && !schema.item)} size="sm" className={authoringBtnBlueClass} onClick={() => onChange([...items, variants?.length ? structuredClone(variants[0].initial) : initialValue(schema.item!)])}>Thêm {schema.label}</Button>
+      </div>
     </fieldset>;
   }
   return <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-1.5">
-    <label htmlFor={id} className="text-[13px] font-medium">{schema.label}</label>
+    <label htmlFor={id} className="text-[12.5px] font-medium">{schema.label}</label>
     {schema.nullable ? <label className="flex items-center gap-2 text-xs"><input type="checkbox" disabled={locked} checked={value !== null} onChange={(event) => onChange(event.currentTarget.checked ? initialValue({ ...schema, nullable: false }) : null)} />Đặt giá trị {schema.label}</label> : null}
     {schema.type === "select" ? <select id={id} aria-describedby={helpId} disabled={locked || (schema.nullable && value === null)} required={schema.required} value={String(value ?? "")} className={authoringInputClass} onChange={(event) => onChange(event.currentTarget.value)}><option value="" disabled>Chọn giá trị</option>{schema.options?.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select> : schema.type === "boolean" ? <input id={id} aria-describedby={helpId} type="checkbox" disabled={locked || (schema.nullable && value === null)} checked={value === true} onChange={(event) => onChange(event.currentTarget.checked)} className="h-4 w-4" /> : <input id={id} aria-describedby={helpId} list={listId} className={authoringInputClass} type={schema.type === "number" ? "number" : "text"} disabled={locked || (schema.nullable && value === null)} value={value === null ? "" : String(value)} required={schema.required} min={schema.min} max={schema.max} step={schema.step ?? "any"} maxLength={schema.maxLength} onChange={(event) => onChange(schema.type === "number" ? event.currentTarget.value === "" ? null : Number(event.currentTarget.value) : event.currentTarget.value)} />}
     {listId ? <datalist id={listId} aria-label={`Gợi ý ${schema.label}`}>{schema.options!.map((option, index) => <option key={`${option.value}-${index}`} value={option.value} label={option.label}>{option.label}</option>)}</datalist> : null}

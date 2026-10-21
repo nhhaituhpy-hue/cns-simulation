@@ -8,7 +8,7 @@ import { getSimulatorModule } from "@/modules/core/registry";
 import type { ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 import type { AuthoringSessionDto } from "@/lib/ai/scenario-authoring/types";
 import { AiAuthoringWizard } from "./ai-authoring-wizard";
-import { authoringBtnBlueClass, authoringBtnGrayClass, authoringBtnOrangeClass } from "./ai-authoring-field";
+import { authoringBtnBlueClass, authoringBtnGrayClass, authoringBtnOrangeClass, authoringCardClass } from "./ai-authoring-field";
 
 export type AiScenarioJob = {
   id: string;
@@ -71,9 +71,9 @@ function resultHref(job: AiScenarioJob) {
 }
 
 /** Old jobs remain readable; no legacy create operation is exposed in the wizard. */
-function LegacyHistory({moduleId,onCompleted}:{moduleId:ScenarioParametersModuleId;onCompleted?:(job:AiScenarioJob)=>void|Promise<void>}){
+function LegacyHistory({moduleId,onCompleted,notified}:{moduleId:ScenarioParametersModuleId;onCompleted?:(job:AiScenarioJob)=>void|Promise<void>;notified:React.MutableRefObject<Set<string>>}){
  const[jobs,setJobs]=useState<AiScenarioJob[]>([]),[error,setError]=useState(false),[selected,setSelected]=useState<string|null>(null),[refresh,setRefresh]=useState(0),[paused,setPaused]=useState(false),[deletingId,setDeletingId]=useState<string|null>(null);
- const notified=useRef(new Set<string>()),callback=useRef(onCompleted);
+ const callback=useRef(onCompleted);
  useEffect(()=>{callback.current=onCompleted;},[onCompleted]);
  useEffect(()=>{
   let cancelled=false,count=0;let timer:ReturnType<typeof setTimeout>|undefined;let controller:AbortController|undefined;
@@ -87,7 +87,7 @@ function LegacyHistory({moduleId,onCompleted}:{moduleId:ScenarioParametersModule
    if(++count>=200){setPaused(true);return;}timer=setTimeout(()=>void poll(),3000);
   }
   setPaused(false);void poll();return()=>{cancelled=true;clearTimeout(timer);controller?.abort();};
- },[moduleId,selected,refresh]);
+ },[moduleId,selected,refresh,notified]);
  async function deleteJob(jobId:string){
   if(deletingId)return;setDeletingId(jobId);
   try{
@@ -102,9 +102,56 @@ function LegacyHistory({moduleId,onCompleted}:{moduleId:ScenarioParametersModule
 }
 
 export function AiScenarioDialog({moduleId,onCompleted,actions}:{moduleId:ScenarioParametersModuleId;onCompleted?:(job:AiScenarioJob)=>void|Promise<void>;actions?:ReactNode}){
- const[open,setOpen]=useState(false),[closing,setClosing]=useState(false);const dialog=useRef<HTMLDialogElement>(null),trigger=useRef<HTMLButtonElement>(null),closeHandler=useRef<(()=>Promise<boolean>)|null>(null);const titleId=useId(),descriptionId=useId();
+ const[chooserOpen,setChooserOpen]=useState(false),[open,setOpen]=useState(false),[initialMode,setInitialMode]=useState<"documents"|"native">("documents"),[closing,setClosing]=useState(false);
+ const dialog=useRef<HTMLDialogElement>(null),trigger=useRef<HTMLButtonElement>(null),closeHandler=useRef<(()=>Promise<boolean>)|null>(null),notified=useRef(new Set<string>());const titleId=useId(),descriptionId=useId();
  useEffect(()=>{if(!open)return;const node=dialog.current!,previous=trigger.current;node.showModal();return()=>{if(node.open)node.close();previous?.focus();};},[open]);
- async function close(){if(closing)return;setClosing(true);try{if(!closeHandler.current||await closeHandler.current())setOpen(false);}finally{setClosing(false);}}
+ async function close(){if(closing)return;setClosing(true);try{if(!closeHandler.current||await closeHandler.current()){setOpen(false);setChooserOpen(false);}}finally{setClosing(false);}}
  async function completed(session:AuthoringSessionDto){const name=session.form.fields.find(f=>f.id==="name")?.value;await onCompleted?.({id:session.id,moduleId,name:typeof name==="string"?name:"Kịch bản mới",status:"completed",phase:"completed",scenarioId:session.scenarioId,scenarioRowId:session.scenarioRowId,createdAt:session.createdAt,updatedAt:session.updatedAt});}
- return <section aria-label="Tạo kịch bản AI" className="mt-5"><div className="flex flex-wrap items-center gap-2"><Button ref={trigger} variant="primary" size="md" onClick={()=>setOpen(true)}><Sparkle aria-hidden size={15}/><span>Tạo kịch bản bằng AI</span></Button>{actions}</div>{open?<dialog ref={dialog} aria-labelledby={titleId} aria-describedby={descriptionId} onCancel={event=>{if(event.target!==event.currentTarget||dialog.current?.dataset.filePickerActive==="true"){event.preventDefault();return;}event.preventDefault();void close();}} onClose={event=>{if(event.target===event.currentTarget)setOpen(false);}} className="m-auto max-h-[calc(100dvh-1.5rem)] w-[min(92rem,calc(100%-1.5rem))] overflow-y-auto rounded-2xl border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] p-0 text-[var(--cns-text-primary)] shadow-2xl backdrop:bg-black/40 backdrop:backdrop-blur-sm"><div className="p-4 sm:p-5"><header className="mb-3 flex items-start justify-between gap-3 border-b border-[var(--cns-border-subtle)] pb-3"><div><h2 id={titleId} className="text-lg font-semibold">Tạo kịch bản bằng AI</h2><p id={descriptionId} className="mt-0.5 text-xs text-[var(--cns-text-secondary)]">Tải tài liệu, kiểm tra thông số đã điền và xác nhận từng bước. Chỉ hoàn tất mới tạo kịch bản.</p></div><Button size="sm" className={authoringBtnGrayClass} disabled={closing} onClick={()=>void close()} aria-label="Đóng">Đóng</Button></header><AiAuthoringWizard key={moduleId} moduleId={moduleId} onCompleted={completed} registerClose={handler=>{closeHandler.current=handler;}}/><LegacyHistory moduleId={moduleId} onCompleted={onCompleted}/></div></dialog>:null}</section>;
+ function pickMode(mode:"documents"|"native"){setInitialMode(mode);setChooserOpen(false);setOpen(true);}
+ return (
+  <section aria-label="Tạo kịch bản AI" className="mt-5">
+   <div className="flex flex-wrap items-center gap-2">
+    <Button ref={trigger} variant="primary" size="md" aria-expanded={chooserOpen} onClick={()=>setChooserOpen(prev=>!prev)}>
+     <Sparkle aria-hidden size={15}/>
+     <span>Tạo kịch bản bằng AI</span>
+    </Button>
+    {actions}
+   </div>
+
+   {chooserOpen&&!open?(
+    <div role="region" aria-label="Chọn phương thức khởi tạo kịch bản AI" className={`${authoringCardClass} mt-3 max-w-2xl`}>
+     <div className="flex items-start justify-between gap-3">
+      <div>
+       <p className="text-xs font-semibold text-[var(--cns-text-primary)]">Chọn phương thức khởi tạo kịch bản AI</p>
+       <p className="mt-0.5 text-[11.5px] text-[var(--cns-text-secondary)]">Chọn cách chuẩn bị thông số nền trước khi mở cửa sổ tạo kịch bản.</p>
+      </div>
+      <Button size="sm" className={authoringBtnGrayClass} onClick={()=>setChooserOpen(false)} aria-label="Đóng">Đóng</Button>
+     </div>
+     <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+      <div className="flex flex-col justify-between gap-2.5 rounded-lg border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card-subtle)] p-3">
+       <div>
+        <p className="text-xs font-semibold text-[var(--cns-text-primary)]">Từ tài liệu thông số nền</p>
+        <p className="mt-1 text-[11px] leading-relaxed text-[var(--cns-text-secondary)]">Tải tài liệu (.pdf, .docx, .txt, .md) để AI phân tích và điền sẵn biểu mẫu.</p>
+       </div>
+       <Button size="sm" variant="primary" className={authoringBtnOrangeClass} onClick={()=>pickMode("documents")}>
+        Phân tích tài liệu và điền biểu mẫu
+       </Button>
+      </div>
+      <div className="flex flex-col justify-between gap-2.5 rounded-lg border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card-subtle)] p-3">
+       <div>
+        <p className="text-xs font-semibold text-[var(--cns-text-primary)]">Từ thông số mặc định thiết bị</p>
+        <p className="mt-1 text-[11px] leading-relaxed text-[var(--cns-text-secondary)]">Khởi tạo kịch bản ngay từ bộ thông số mặc định chuẩn của simulator.</p>
+       </div>
+       <Button size="sm" className={authoringBtnBlueClass} onClick={()=>pickMode("native")}>
+        Dùng mặc định simulator
+       </Button>
+      </div>
+     </div>
+     <LegacyHistory moduleId={moduleId} onCompleted={onCompleted} notified={notified}/>
+    </div>
+   ):null}
+
+   {open?<dialog ref={dialog} aria-labelledby={titleId} aria-describedby={descriptionId} onCancel={event=>{if(event.target!==event.currentTarget||dialog.current?.dataset.filePickerActive==="true"){event.preventDefault();return;}event.preventDefault();void close();}} onClose={event=>{if(event.target===event.currentTarget)setOpen(false);}} className="m-auto max-h-[calc(100dvh-1.5rem)] w-[min(92rem,calc(100%-1.5rem))] overflow-y-auto rounded-2xl border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] p-0 text-[var(--cns-text-primary)] shadow-2xl backdrop:bg-black/40 backdrop:backdrop-blur-sm"><div className="p-4 sm:p-5"><header className="mb-3 flex items-start justify-between gap-3 border-b border-[var(--cns-border-subtle)] pb-3"><div><h2 id={titleId} className="text-lg font-semibold">Tạo kịch bản bằng AI</h2><p id={descriptionId} className="mt-0.5 text-xs text-[var(--cns-text-secondary)]">Tải tài liệu, kiểm tra thông số đã điền và xác nhận từng bước. Chỉ hoàn tất mới tạo kịch bản.</p></div><Button size="sm" className={authoringBtnGrayClass} disabled={closing} onClick={()=>void close()} aria-label="Đóng">Đóng</Button></header><AiAuthoringWizard key={`${moduleId}-${initialMode}`} moduleId={moduleId} initialMode={initialMode} onCompleted={completed} registerClose={handler=>{closeHandler.current=handler;}}/><LegacyHistory moduleId={moduleId} onCompleted={onCompleted} notified={notified}/></div></dialog>:null}
+  </section>
+ );
 }

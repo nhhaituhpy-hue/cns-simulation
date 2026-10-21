@@ -34,10 +34,19 @@ afterEach(() => {
 
 const savedJob = (overrides: Record<string, unknown> = {}) => ({id:"job-saved",moduleId:"dvor-220",name:"Lỗi Carrier đã lưu",status:"running",phase:"extracting",createdAt:"2026-10-20T00:00:00Z",updatedAt:"2026-10-20T00:00:00Z",...overrides});
 it.each(["dvor-1150","dvor-1150a","dme-1119a","dvor-220","dme-320","ads-b"] as const)("starts document-first %s wizard with template, native fallback and no immediate generation",async moduleId=>{
- const user=userEvent.setup();render(<AiScenarioDialog moduleId={moduleId}/>);await user.click(screen.getByRole("button",{name:"Tạo kịch bản bằng AI"}));const modal=within(screen.getByRole("dialog"));
- expect(modal.getByLabelText("Tài liệu thông số nền")).toBeVisible();expect(modal.getByRole("button",{name:"Phân tích tài liệu và điền biểu mẫu"})).toBeDisabled();expect(modal.getByRole("button",{name:"Dùng mặc định simulator"})).toBeEnabled();expect(modal.getByRole("link",{name:"Tải mẫu thông số nền (.docx)"})).toHaveAttribute("href",`/templates/ai-scenario-${moduleId}.docx`);expect(modal.queryByLabelText("Tên kịch bản")).not.toBeInTheDocument();expect(modal.queryByRole("button",{name:"Bắt đầu tạo"})).not.toBeInTheDocument();expect(vi.mocked(fetch).mock.calls.every(([,init])=>!init?.method||init.method==="GET")).toBe(true);
+ const user=userEvent.setup();render(<AiScenarioDialog moduleId={moduleId}/>);await user.click(screen.getByRole("button",{name:"Tạo kịch bản bằng AI"}));
+ expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+ expect(screen.getByRole("button",{name:"Phân tích tài liệu và điền biểu mẫu"})).toBeEnabled();
+ expect(screen.getByRole("button",{name:"Dùng mặc định simulator"})).toBeEnabled();
+ await user.click(screen.getByRole("button",{name:"Phân tích tài liệu và điền biểu mẫu"}));
+ const modal=within(screen.getByRole("dialog"));
+ expect(modal.getByRole("button",{name:"Chọn tệp"})).toBeVisible();
+ expect(modal.getByTestId("selected-files-status")).toHaveTextContent("Không có tệp nào được chọn");
+ expect(modal.getByRole("button",{name:"Phân tích tài liệu và điền biểu mẫu"})).toBeDisabled();
+ expect(modal.queryByRole("button",{name:"Dùng mặc định simulator"})).not.toBeInTheDocument();
+ expect(modal.getByRole("link",{name:"Tải mẫu thông số nền (.docx)"})).toHaveAttribute("href",`/templates/ai-scenario-${moduleId}.docx`);expect(modal.queryByLabelText("Tên kịch bản")).not.toBeInTheDocument();expect(modal.queryByRole("button",{name:"Bắt đầu tạo"})).not.toBeInTheDocument();expect(vi.mocked(fetch).mock.calls.every(([,init])=>!init?.method||init.method==="GET")).toBe(true);
 });
-it.each([ ["empty",[new File([],"empty.txt")],/trống/], ["unsupported",[new File(["x"],"scan.png")],/PDF.*DOCX/], ["count",Array.from({length:6},(_,i)=>new File(["x"],`${i}.txt`)),/5 tệp/], ["size",[Object.defineProperty(new File(["x"],"large.pdf"),"size",{value:10485761})],/10 MiB/], ["total",Array.from({length:3},(_,i)=>Object.defineProperty(new File(["x"],`${i}.txt`),"size",{value:9437184})),/25 MiB/] ] as const)("rejects %s upload without submitting",async(_label,files,message)=>{render(<AiScenarioDialog moduleId="dvor-1150a"/>);fireEvent.click(screen.getByRole("button",{name:"Tạo kịch bản bằng AI"}));fireEvent.change(screen.getByLabelText("Tài liệu thông số nền"),{target:{files:[...files]}});expect(await screen.findByRole("alert")).toHaveTextContent(message);expect(screen.getByRole("button",{name:"Phân tích tài liệu và điền biểu mẫu"})).toBeDisabled();expect(vi.mocked(fetch).mock.calls.every(([,init])=>!init?.method||init.method==="GET")).toBe(true);});
+it.each([ ["empty",[new File([],"empty.txt")],/trống/], ["unsupported",[new File(["x"],"scan.png")],/PDF.*DOCX/], ["count",Array.from({length:6},(_,i)=>new File(["x"],`${i}.txt`)),/5 tệp/], ["size",[Object.defineProperty(new File(["x"],"large.pdf"),"size",{value:10485761})],/10 MiB/], ["total",Array.from({length:3},(_,i)=>Object.defineProperty(new File(["x"],`${i}.txt`),"size",{value:9437184})),/25 MiB/] ] as const)("rejects %s upload without submitting",async(_label,files,message)=>{render(<AiScenarioDialog moduleId="dvor-1150a"/>);fireEvent.click(screen.getByRole("button",{name:"Tạo kịch bản bằng AI"}));fireEvent.click(screen.getByRole("button",{name:"Phân tích tài liệu và điền biểu mẫu"}));fireEvent.change(screen.getByLabelText("Tài liệu thông số nền"),{target:{files:[...files]}});expect(await screen.findByRole("alert")).toHaveTextContent(message);expect(screen.getByRole("button",{name:"Phân tích tài liệu và điền biểu mẫu"})).toBeDisabled();expect(vi.mocked(fetch).mock.calls.every(([,init])=>!init?.method||init.method==="GET")).toBe(true);});
 it("keeps manual generic authoring actions next to the AI trigger and refreshes only unpublished sources",async()=>{
  const source={id:"row-generated",moduleId:"dvor-220",scenarioId:"generated",name:"Nguồn AI mới",description:"Mô tả",difficulty:"intermediate",schemaVersion:1,definition:{},sourceFileName:null,createdAt:"2026-10-20T00:00:00Z",updatedAt:"2026-10-20T00:00:00Z"};let complete=false;
  const fetcher=vi.fn((url:string)=>Promise.resolve(reply(url.includes("scenario-authoring")?{sessions:[]}:url.includes("scenario-jobs")?{jobs:[savedJob({status:"completed",phase:"completed",scenarioRowId:source.id})]}:url.includes("scenario-libraries")?{practice:[],exam:[]}:complete?[source]:[])));vi.stubGlobal("fetch",fetcher);
@@ -68,6 +77,7 @@ it("reviews persisted settings alongside the completed scenario link and retains
 
   const user = userEvent.setup();
   await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
+  await user.click(screen.getByRole("button", { name: "Phân tích tài liệu và điền biểu mẫu" }));
   const modal = within(screen.getByRole("dialog"));
   const history = await modal.findByText("Lịch sử yêu cầu AI trước đây");
   expect(history.closest("details")).not.toHaveAttribute("open");
@@ -94,6 +104,7 @@ it.each([undefined, { ...persistedReview(), initial: [{ fieldId: "config.power",
 
   const user = userEvent.setup();
   await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
+  await user.click(screen.getByRole("button", { name: "Phân tích tài liệu và điền biểu mẫu" }));
   const modal = within(screen.getByRole("dialog"));
   await user.click(modal.getByText("Lịch sử yêu cầu AI trước đây"));
   await user.click(modal.getByRole("button", { name: "Xem tiến độ: Lỗi Carrier đã lưu" }));
@@ -116,6 +127,7 @@ it.each([
   render(<AiScenarioDialog moduleId="dvor-220" />);
   const user = userEvent.setup();
   await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
+  await user.click(screen.getByRole("button", { name: "Phân tích tài liệu và điền biểu mẫu" }));
   const modal = within(screen.getByRole("dialog"));
   await user.click(await modal.findByText("Lịch sử yêu cầu AI trước đây"));
   await user.click(modal.getByRole("button", { name: "Xem tiến độ: Lỗi Carrier đã lưu" }));
@@ -128,6 +140,7 @@ it("does not close the AI scenario modal when the user cancels the native file p
   const user = userEvent.setup();
   render(<AiScenarioDialog moduleId="dvor-220" />);
   await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
+  await user.click(screen.getByRole("button", { name: "Phân tích tài liệu và điền biểu mẫu" }));
   const dialog = screen.getByRole("dialog");
   const fileInput = within(dialog).getByLabelText("Tài liệu thông số nền");
 
@@ -137,7 +150,8 @@ it("does not close the AI scenario modal when the user cancels the native file p
   });
 
   expect(screen.getByRole("dialog")).toBeVisible();
-  expect(within(screen.getByRole("dialog")).getByLabelText("Tài liệu thông số nền")).toBeVisible();
+  expect(within(screen.getByRole("dialog")).getByRole("button", { name: "Chọn tệp" })).toBeVisible();
+  expect(within(screen.getByRole("dialog")).getByTestId("selected-files-status")).toHaveTextContent("Không có tệp nào được chọn");
 });
 
 it("lets the user delete a previous AI job from LegacyHistory", async () => {
@@ -150,6 +164,7 @@ it("lets the user delete a previous AI job from LegacyHistory", async () => {
   const user = userEvent.setup();
   render(<AiScenarioDialog moduleId="dvor-220" />);
   await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
+  await user.click(screen.getByRole("button", { name: "Phân tích tài liệu và điền biểu mẫu" }));
   const modal = within(screen.getByRole("dialog"));
   await user.click(await modal.findByText("Lịch sử yêu cầu AI trước đây"));
   expect(await modal.findByText("Lỗi Carrier đã lưu")).toBeVisible();
