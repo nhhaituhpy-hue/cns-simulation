@@ -85,6 +85,14 @@ export async function listGenerationJobs(pool: Pool, actorId: string, filters: {
   const result = await pool.query(`select * from public.ai_scenario_generation_jobs where actor_id=$1 and ($2::text is null or module_id=$2) and ($3::text is null or status=$3) order by created_at desc,id desc limit $4`,[actorId,filters.moduleId ?? null,filters.status ?? null,Math.min(50,Math.max(1,Math.floor(filters.limit ?? 20)))]);
   return result.rows.map(mapJob);
 }
+export async function deleteGenerationJob(pool: Pool, id: string, actorId: string): Promise<boolean> {
+  if (!isGenerationJobId(id) || !isGenerationJobId(actorId)) return false;
+  return transaction(pool, async client => {
+    await requireAdmin(client, actorId);
+    const result = await client.query("delete from public.ai_scenario_generation_jobs where id=$1 and actor_id=$2 returning id", [id, actorId]);
+    return Boolean(result.rowCount);
+  });
+}
 export async function claimGenerationJob(pool: Pool, workerId: string): Promise<(GenerationJob & { attemptToken: string }) | null> {
   if (!workerId || workerId.length > 200) throw new GenerationJobError("INVALID_WORKER", "Invalid worker identity.");
   return transaction(pool, async client => {

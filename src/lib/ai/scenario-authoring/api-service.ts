@@ -12,7 +12,7 @@ import { isGenerationJobId } from "@/lib/ai/scenario-generation/jobs";
 import { AuthoringError } from "./errors";
 import { authoringStateDto } from "./state";
 import { assertSafeJson } from "./forms/helpers";
-import { createAuthoringSession, getAuthoringSession, listAuthoringSessions, updateAuthoringSession, enqueueAuthoringAnalysis, latestAuthoringAnalysis, finalizeAuthoringSession } from "./repository";
+import { createAuthoringSession, getAuthoringSession, listAuthoringSessions, updateAuthoringSession, enqueueAuthoringAnalysis, latestAuthoringAnalysis, finalizeAuthoringSession, deleteAuthoringSession } from "./repository";
 import type { AuthoringMutation, AuthoringSession } from "./types";
 const json=(value:unknown,status=200)=>NextResponse.json(value,{status,headers:{"Cache-Control":"private, no-store"}});
 async function auth(request?:Request){
@@ -94,4 +94,7 @@ export async function finalizeAuthoringResponse(request:Request,id:string){const
 }
 export async function downloadAuthoringResponse(id:string){const a=await auth();if(a.response)return a.response;
  try{if(!isGenerationJobId(id))input();const s=await getAuthoringSession(getDatabasePool(),id,a.profile!.id);if(!s)return json({error:"Không tìm thấy kịch bản.",code:"NOT_FOUND"},404);if(s.status!=="completed")throw new AuthoringError("AUTHORING_INCOMPLETE","Hãy xác nhận và hoàn tất trước khi tải JSON.");const name=/^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/.test(s.state.definition.id)?s.state.definition.id:"scenario";return new Response(JSON.stringify(s.state.definition,null,2),{headers:{"Content-Type":"application/json; charset=utf-8","Content-Disposition":`attachment; filename="${name}.json"`,"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff"}});}catch(e){return errorResponse(e);}
+}
+export async function deleteAuthoringResponse(request:Request,id:string){const a=await auth(request);if(a.response)return a.response;if(!isGenerationJobId(id))return json({error:"Không tìm thấy bản nháp.",code:"NOT_FOUND"},404);
+ try{const removed=await deleteAuthoringSession(getDatabasePool(),id,a.profile!.id);for(const dir of removed.namespaces)if(isGenerationJobId(dir))await cleanup(dir);return json({deleted:true,id:removed.id});}catch(e){return errorResponse(e);}
 }

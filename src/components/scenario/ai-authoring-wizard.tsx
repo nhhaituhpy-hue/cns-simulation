@@ -19,6 +19,7 @@ import {
 const api = "/api/ai/scenario-authoring";
 export function AiAuthoringWizard({ moduleId, onClose, onCompleted, registerClose }: { moduleId: ScenarioParametersModuleId; onCompleted?: (session: AuthoringSessionDto) => void | Promise<void>; onClose?: () => void; registerClose?: (handler: (() => Promise<boolean>) | null) => void }) {
   const uploadAttempt = useRef<{ key: string; body: FormData; url: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadUncertain, setUploadUncertain] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const finalizeAttempt = useRef<{ key: string; body: string } | null>(null);
@@ -71,6 +72,17 @@ export function AiAuthoringWizard({ moduleId, onClose, onCompleted, registerClos
     timer = setTimeout(() => void poll(), 3000);
     return () => { stopped = true; clearTimeout(timer); controller?.abort(); };
   }, [pending, sessionId, analysisId, moduleId, pollToken]);
+  useEffect(() => {
+    const node = fileInputRef.current;
+    if (!node) return;
+    const onNativeCancel = (event: Event) => {
+      event.stopPropagation();
+      const dlg = node.closest("dialog");
+      if (dlg) setTimeout(() => { delete dlg.dataset.filePickerActive; }, 400);
+    };
+    node.addEventListener("cancel", onNativeCancel);
+    return () => node.removeEventListener("cancel", onNativeCancel);
+  }, [step, session?.status]);
   useEffect(() => {
     const controller = new AbortController();
     fetch(`${api}?moduleId=${encodeURIComponent(moduleId)}`, { cache: "no-store", signal: controller.signal }).then(async (response) => {
@@ -174,6 +186,35 @@ export function AiAuthoringWizard({ moduleId, onClose, onCompleted, registerClos
     await patch({ action: "reset-field", fieldId });
     const remaining = { ...dirtyRef.current }; delete remaining[fieldId]; dirtyRef.current = remaining; setDirty(remaining);
   }
+  function resetToCleanStart() {
+    current.current = null;
+    setSession(null);
+    dirtyRef.current = {};
+    setDirty({});
+    uploadAttempt.current = null;
+    setUploadUncertain(false);
+    finalizeAttempt.current = null;
+    setFinalUncertain(false);
+    setFiles([]);
+    setFileError(null);
+    setContext("");
+    setQuestion("");
+    setConflict(false);
+    setSaved(false);
+    setPaused(false);
+    setError(null);
+    setStep("documents");
+  }
+  async function deleteSession(targetId: string) {
+    const response = await fetch(`${api}/${encodeURIComponent(targetId)}`, { method: "DELETE" });
+    if (!response.ok && response.status !== 404) {
+      throw new Error("Không xóa được phiên tạo kịch bản. Hãy thử lại.");
+    }
+    setHistory((prev) => prev.filter((item) => item.id !== targetId));
+    if (current.current?.id === targetId) {
+      resetToCleanStart();
+    }
+  }
   async function finalize() {
     if (!current.current || step !== "confirmation" || pending || conflict || Object.keys(dirtyRef.current).length || current.current.issues.some((issue) => issue.severity === "error") || current.current.preview.status === "invalid" || !current.current.form.sections.every((section) => current.current!.confirmedSections.includes(section.id))) return;
     if (!finalizeAttempt.current) finalizeAttempt.current = { key: crypto.randomUUID(), body: JSON.stringify({ expectedRevision: current.current.revision }) };
@@ -186,7 +227,7 @@ export function AiAuthoringWizard({ moduleId, onClose, onCompleted, registerClos
   if (session?.status === "completed") {
     const route = getSimulatorModule(moduleId)?.routes.simulator;
     const href = moduleId === "ads-b" ? session.scenarioId ? `/authoring/ads-b/edit?id=${encodeURIComponent(session.scenarioId)}` : null : route && session.scenarioRowId ? `${route}?scenarioId=${encodeURIComponent(session.scenarioRowId)}` : null;
-    return <section aria-label="Kịch bản đã tạo" className={`${authoringCardClass} grid gap-3`}><h3 className="font-semibold">Đã tạo kịch bản · Chưa xuất bản</h3><p className="text-sm">Giám khảo kiểm tra kịch bản trước khi đưa vào Ôn tập hoặc Kỳ thi. Chưa tự áp dụng vào simulator.</p>{error ? <p role="alert">{error}</p> : null}<div className="flex flex-wrap items-center gap-2 text-xs"><a className={`${authoringBtnBlueClass} inline-flex items-center no-underline`} href={`${api}/${encodeURIComponent(session.id)}/download`} download>Tải JSON đầy đủ</a>{href ? <a className={`${authoringBtnOrangeClass} inline-flex items-center no-underline`} href={href}>Mở trong simulator</a> : null}{onClose ? <Button size="sm" className={authoringBtnGrayClass} onClick={onClose}>Đóng</Button> : null}</div></section>;
+    return <section aria-label="Kịch bản đã tạo" className={`${authoringCardClass} grid gap-3`}><h3 className="font-semibold">Đã tạo kịch bản · Chưa xuất bản</h3><p className="text-sm">Giám khảo kiểm tra kịch bản trước khi đưa vào Ôn tập hoặc Kỳ thi. Chưa tự áp dụng vào simulator.</p>{error ? <p role="alert">{error}</p> : null}<div className="flex flex-wrap items-center gap-2 text-xs"><a className={`${authoringBtnBlueClass} inline-flex items-center no-underline`} href={`${api}/${encodeURIComponent(session.id)}/download`} download>Tải JSON đầy đủ</a>{href ? <a className={`${authoringBtnOrangeClass} inline-flex items-center no-underline`} href={href}>Mở trong simulator</a> : null}<Button size="sm" className={authoringBtnGrayClass} disabled={busy} onClick={() => void run(() => deleteSession(session.id))}>Xóa & tạo lại từ đầu</Button>{onClose ? <Button size="sm" className={authoringBtnGrayClass} onClick={onClose}>Đóng</Button> : null}</div></section>;
   }
   const sections = session?.form.sections ?? [];
   const section = sections.find((item) => item.id === step);
@@ -202,7 +243,14 @@ export function AiAuthoringWizard({ moduleId, onClose, onCompleted, registerClos
             {session ? saved ? "Đã lưu nháp trên máy chủ" : Object.keys(dirty).length ? "Có thay đổi chưa lưu" : "Bản nháp trên máy chủ · Chưa tạo kịch bản" : getSimulatorModule(moduleId)?.name ?? moduleId}
           </p>
         </div>
-        {onClose ? <Button size="sm" className={authoringBtnGrayClass} disabled={busy} onClick={() => void run(async () => { if (current.current) await save(); onClose(); })}>Đóng</Button> : null}
+        <div className="flex flex-wrap items-center gap-2">
+          {session ? (
+            <Button size="sm" className={authoringBtnGrayClass} disabled={busy || uploadUncertain || finalUncertain} onClick={() => void run(() => deleteSession(session.id))}>
+              Xóa & tạo lại từ đầu
+            </Button>
+          ) : null}
+          {onClose ? <Button size="sm" className={authoringBtnGrayClass} disabled={busy} onClick={() => void run(async () => { if (current.current) await save(); onClose(); })}>Đóng</Button> : null}
+        </div>
       </header>
 
       <div
@@ -274,7 +322,10 @@ export function AiAuthoringWizard({ moduleId, onClose, onCompleted, registerClos
                 {history.map((item) => (
                   <li key={item.id} className="flex flex-wrap items-center justify-between gap-1.5 rounded-lg border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card-subtle)] p-2 text-xs">
                     <span className="break-words">{item.name} · {item.status === "completed" ? "Đã tạo, chưa xuất bản" : "Bản nháp"}</span>
-                    <Button size="sm" className={authoringBtnBlueClass} aria-label={`Tiếp tục: ${item.name}`} disabled={busy} onClick={() => void run(async () => { const next = await request(`${api}/${encodeURIComponent(item.id)}`, { cache: "no-store" }); setStep(next.currentStep); })}>Tiếp tục</Button>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Button size="sm" className={authoringBtnBlueClass} aria-label={`Tiếp tục: ${item.name}`} disabled={busy} onClick={() => void run(async () => { const next = await request(`${api}/${encodeURIComponent(item.id)}`, { cache: "no-store" }); setStep(next.currentStep); })}>Tiếp tục</Button>
+                      <Button size="sm" className={authoringBtnGrayClass} aria-label={`Xóa bản nháp: ${item.name}`} disabled={busy} onClick={() => void run(() => deleteSession(item.id))}>Xóa</Button>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -297,7 +348,26 @@ export function AiAuthoringWizard({ moduleId, onClose, onCompleted, registerClos
           {step === "documents" ? (
             <div className={`${authoringCardClass} grid gap-3`}>
               <p className="text-xs leading-relaxed">Dùng manual hoặc tài liệu thông số của đúng thiết bị. Tài liệu chỉ chuẩn bị giá trị nền cho bản nháp này, không thay mặc định toàn hệ thống.</p>
-              <label className="grid gap-1 text-xs font-medium">Tài liệu thông số nền<input type="file" multiple accept=".pdf,.docx,.txt,.md" className={authoringInputClass} disabled={busy || uploadUncertain} onChange={(event) => selectFiles(Array.from(event.currentTarget.files ?? []))} /></label>
+              <label className="grid gap-1 text-xs font-medium">
+                Tài liệu thông số nền
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept=".pdf,.docx,.txt,.md"
+                  className={authoringInputClass}
+                  disabled={busy || uploadUncertain}
+                  onClick={(event) => {
+                    const dlg = event.currentTarget.closest("dialog");
+                    if (dlg) dlg.dataset.filePickerActive = "true";
+                  }}
+                  onChange={(event) => {
+                    const dlg = event.currentTarget.closest("dialog");
+                    if (dlg) setTimeout(() => { delete dlg.dataset.filePickerActive; }, 400);
+                    selectFiles(Array.from(event.currentTarget.files ?? []));
+                  }}
+                />
+              </label>
               {session?.documents.length ? <ul aria-label="Tài liệu đã lưu" className="grid gap-1 text-xs">{session.documents.map((document, index) => <li key={index}>{document.name}</li>)}</ul> : null}
               {files.length ? <ul className="text-xs">{files.map((file, i) => <li key={i} className="break-all">{file.name}</li>)}</ul> : null}
               <label className="grid gap-1 text-xs font-medium">Phạm vi tài liệu (không bắt buộc)<input value={context} maxLength={2000} className={authoringInputClass} disabled={busy || uploadUncertain} onChange={(event) => setContext(event.currentTarget.value)} /></label>

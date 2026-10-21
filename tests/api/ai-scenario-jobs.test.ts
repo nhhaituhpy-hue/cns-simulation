@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getCurrentProfile, type AuthProfile } from "@/lib/auth/profile";
 import { POST, GET } from "@/app/api/ai/scenario-jobs/route";
-import { GET as getJob } from "@/app/api/ai/scenario-jobs/[jobId]/route";
+import { GET as getJob, DELETE as deleteJob } from "@/app/api/ai/scenario-jobs/[jobId]/route";
 vi.mock("@/lib/auth/profile", () => ({ getCurrentProfile: vi.fn() }));
 vi.mock("@/lib/db", () => ({ getDatabasePool: () => { throw new Error("Database must not be touched by rejected requests"); } }));
 const admin: AuthProfile = { id: "11111111-1111-4111-8111-111111111111", email: "admin@test.invalid", fullName: "Examiner", workUnit: "Lab", role: "admin", mustChangePassword: false };
@@ -44,4 +44,8 @@ describe("AI generation upload/security validation", () => {
   it("rejects over five real multipart files",async()=>{const req=multipart();const form=await req.formData(); for(let i=0;i<6;i++)form.append("files",new File(["plain text"],`manual-${i}.txt`,{type:"text/plain"}));expect((await POST(new Request(req.url,{method:"POST",headers:{origin:"http://localhost","idempotency-key":"six-files"},body:form}))).status).toBe(400);});
   it("rejects unsupported query filters without SQL",async()=>{expect((await GET(new Request("http://localhost/api/ai/scenario-jobs?moduleId=vsat"))).status).toBe(400);expect((await GET(new Request("http://localhost/api/ai/scenario-jobs?status=published"))).status).toBe(400);});
   it("returns 404 for malformed job IDs without SQL",async()=>{expect((await getJob(new Request("http://localhost/api/ai/scenario-jobs/no"),{params:Promise.resolve({jobId:"not-a-uuid"})})).status).toBe(404);});
+  it("enforces auth, origin, and UUID validation on DELETE job history",async()=>{
+    expect((await deleteJob(new Request("http://localhost/api/ai/scenario-jobs/no",{method:"DELETE",headers:{origin:"https://bad.invalid"}}),{params:Promise.resolve({jobId:"not-a-uuid"})})).status).toBe(403);
+    expect((await deleteJob(new Request("http://localhost/api/ai/scenario-jobs/no",{method:"DELETE",headers:{origin:"http://localhost"}}),{params:Promise.resolve({jobId:"not-a-uuid"})})).status).toBe(404);
+  });
 });

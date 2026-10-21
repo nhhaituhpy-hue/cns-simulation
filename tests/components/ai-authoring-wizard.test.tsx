@@ -315,3 +315,29 @@ it("renders the 3-column (1:2:1) authoring layout with left feature menu, center
   expect(saveDraftBtn.className).toContain("#0369a1");
   expect(backBtn.className).toContain("#f1f5f9");
 });
+
+it("lets the user delete a saved authoring session from history or reset an active session to start fresh", async () => {
+  const api = server(fixture(), true);
+  const impl = api.fetcher.getMockImplementation()!;
+  api.fetcher.mockImplementation(async (url, init) => {
+    if (init?.method === "DELETE") return reply({ deleted: true, id: "draft-1" });
+    return impl(url, init);
+  });
+
+  render(<AiAuthoringWizard moduleId="dvor-220" />);
+  const deleteHistoryBtn = await screen.findByRole("button", { name: "Xóa bản nháp: Bài đã lưu" });
+  expect(deleteHistoryBtn).toBeInTheDocument();
+
+  // Resume the session first, then click "Xóa & tạo lại từ đầu" to start a clean scenario
+  fireEvent.click(screen.getByRole("button", { name: "Tiếp tục: Bài đã lưu" }));
+  expect(await screen.findByLabelText("Tên kịch bản")).toHaveValue("Bài tập mới");
+
+  fireEvent.click(screen.getByRole("button", { name: "Xóa & tạo lại từ đầu" }));
+  await waitFor(() => expect(screen.getByLabelText("Tài liệu thông số nền")).toBeInTheDocument());
+  expect(screen.queryByLabelText("Tên kịch bản")).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Tiếp tục: Bài đã lưu" })).not.toBeInTheDocument();
+  expect(api.fetcher).toHaveBeenCalledWith(
+    `${base}/draft-1`,
+    expect.objectContaining({ method: "DELETE" }),
+  );
+});

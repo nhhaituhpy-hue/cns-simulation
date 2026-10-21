@@ -123,3 +123,41 @@ it.each([
   expect(modal.queryByText(/private|worker-secret/)).not.toBeInTheDocument();
   expect(modal.queryByRole("region", { name: "Cấu hình Scenario Parameters" })).not.toBeInTheDocument();
 });
+
+it("does not close the AI scenario modal when the user cancels the native file picker", async () => {
+  const user = userEvent.setup();
+  render(<AiScenarioDialog moduleId="dvor-220" />);
+  await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
+  const dialog = screen.getByRole("dialog");
+  const fileInput = within(dialog).getByLabelText("Tài liệu thông số nền");
+
+  await act(async () => {
+    fireEvent.click(fileInput);
+    fireEvent(fileInput, new Event("cancel", { bubbles: true, cancelable: true }));
+  });
+
+  expect(screen.getByRole("dialog")).toBeVisible();
+  expect(within(screen.getByRole("dialog")).getByLabelText("Tài liệu thông số nền")).toBeVisible();
+});
+
+it("lets the user delete a previous AI job from LegacyHistory", async () => {
+  const job = savedJob({ status: "failed", phase: "failed", errorCode: "INVALID_PARAMETERS" });
+  const fetcher = vi.fn((url: string, init?: RequestInit) => {
+    if (init?.method === "DELETE") return Promise.resolve(reply({ deleted: true, id: job.id }));
+    return Promise.resolve(reply(url.includes("scenario-authoring") ? { sessions: [] } : { jobs: [job] }));
+  });
+  vi.stubGlobal("fetch", fetcher);
+  const user = userEvent.setup();
+  render(<AiScenarioDialog moduleId="dvor-220" />);
+  await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
+  const modal = within(screen.getByRole("dialog"));
+  await user.click(await modal.findByText("Lịch sử yêu cầu AI trước đây"));
+  expect(await modal.findByText("Lỗi Carrier đã lưu")).toBeVisible();
+
+  await user.click(modal.getByRole("button", { name: "Xóa yêu cầu: Lỗi Carrier đã lưu" }));
+  await waitFor(() => expect(modal.queryByText("Lỗi Carrier đã lưu")).not.toBeInTheDocument());
+  expect(fetcher).toHaveBeenCalledWith(
+    `/api/ai/scenario-jobs/${job.id}`,
+    expect.objectContaining({ method: "DELETE" }),
+  );
+});

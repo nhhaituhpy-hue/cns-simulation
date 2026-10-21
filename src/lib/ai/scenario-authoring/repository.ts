@@ -103,6 +103,20 @@ export async function getAuthoringSession(pool:Pool,id:string,actorId:string):Pr
 export async function listAuthoringSessions(pool:Pool,actorId:string,device:ScenarioParametersModuleId):Promise<AuthoringSession[]> {
  ids(actorId);moduleId(device);return transaction(pool,async client=>{await requireAdmin(client,actorId);return (await client.query("select * from public.ai_authoring_sessions where actor_id=$1 and module_id=$2 order by updated_at desc,id desc limit 20",[actorId,device])).rows.map(session);});
 }
+export async function deleteAuthoringSession(pool:Pool,id:string,actorId:string):Promise<{id:string;namespaces:string[]}> {
+ ids(id,actorId);
+ return transaction(pool,async client=>{
+  await client.query("select pg_advisory_xact_lock(hashtextextended($1,0))",[`ai-authoring:${actorId}`]);
+  await requireAdmin(client,actorId);
+  await owned(client,id,actorId);
+  const nsRows=(await client.query("select namespace from public.ai_authoring_document_namespaces where session_id=$1 and actor_id=$2",[id,actorId])).rows;
+  const namespaces=nsRows.map(r=>String(r.namespace));
+  await client.query("delete from public.ai_authoring_analysis_jobs where session_id=$1 and actor_id=$2",[id,actorId]);
+  await client.query("delete from public.ai_authoring_document_namespaces where session_id=$1 and actor_id=$2",[id,actorId]);
+  await client.query("delete from public.ai_authoring_sessions where id=$1 and actor_id=$2",[id,actorId]);
+  return {id,namespaces:[...new Set([id,...namespaces])]};
+ });
+}
 export async function updateAuthoringSession(pool:Pool,id:string,actorId:string,expectedRevision:number,mutation:AuthoringMutation):Promise<AuthoringSession> {
  ids(id,actorId);revision(expectedRevision);assertSafeJson(mutation);
  return transaction(pool,async client=>{await requireAdmin(client,actorId);const row=await owned(client,id,actorId);editable(row,expectedRevision);

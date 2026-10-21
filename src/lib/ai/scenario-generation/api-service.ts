@@ -7,7 +7,7 @@ import { getCurrentProfile } from "@/lib/auth/profile";
 import { getDatabasePool } from "@/lib/db";
 import { saveDocuments } from "../documents/storage";
 import { DOCUMENT_LIMITS, validateUploads, type DocumentUpload } from "../documents/validation";
-import { createGenerationJob, getGenerationJob, listGenerationJobs, validateGenerationInput, GenerationJobError, GENERATION_STATUSES, isGenerationJobId, type GenerationJob, type GenerationStatus } from "./jobs";
+import { createGenerationJob, deleteGenerationJob, getGenerationJob, listGenerationJobs, validateGenerationInput, GenerationJobError, GENERATION_STATUSES, isGenerationJobId, type GenerationJob, type GenerationStatus } from "./jobs";
 import { isScenarioParametersModuleId } from "@/lib/scenario-parameters";
 import { readParameterReview } from "./parameter-review";
 
@@ -106,4 +106,21 @@ export async function getGenerationResponse(jobId: string) {
     const job = await getGenerationJob(getDatabasePool(),jobId,auth.profile!.id);
     return job ? generationJson({ job: generationJobDto(job) }) : generationJson({ error: "Không tìm thấy yêu cầu." },404);
   } catch(error) { return apiError(error); }
+}
+export async function deleteGenerationResponse(request: Request, jobId: string) {
+  const auth = await authorizeGenerationRequest(); if (auth.response) return auth.response;
+  const origin = request.headers.get("origin");
+  const expectedOrigin = process.env.CNS_PUBLIC_ORIGIN || new URL(request.url).origin;
+  if (!origin || origin !== expectedOrigin || request.headers.get("sec-fetch-site") === "cross-site") {
+    return generationJson({ error: "Nguồn yêu cầu không hợp lệ." }, 403);
+  }
+  if (!isGenerationJobId(jobId)) return generationJson({ error: "Không tìm thấy yêu cầu." }, 404);
+  try {
+    const deleted = await deleteGenerationJob(getDatabasePool(), jobId, auth.profile!.id);
+    if (!deleted) return generationJson({ error: "Không tìm thấy yêu cầu." }, 404);
+    await rm(/* turbopackIgnore: true */ join(/* turbopackIgnore: true */ process.env.CNS_AI_STORAGE_DIR || "/app/storage/ai-scenarios", jobId), { recursive: true, force: true }).catch(() => undefined);
+    return generationJson({ deleted: true, id: jobId });
+  } catch (error) {
+    return apiError(error);
+  }
 }
