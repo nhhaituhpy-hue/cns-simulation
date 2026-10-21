@@ -290,3 +290,28 @@ it("applies an explicitly selected proposal before unsaved edits can invalidate 
  api.fetcher.mockImplementation(async(url,init)=>{const response=await impl(url,init);if(init?.method==="PATCH"&&JSON.parse(init.body as string).mutation.action==="edit"){api.set({...api.get(),proposal:null});return reply({session:api.get()});}return response;});
  render(<AiAuthoringWizard moduleId="dvor-220"/>);fireEvent.click(await screen.findByRole("button",{name:"Tiếp tục: Bài đã lưu"}));fireEvent.change(await screen.findByLabelText("Công suất"),{target:{value:"42"}});fireEvent.click(screen.getByRole("checkbox",{name:"Áp dụng Công suất"}));fireEvent.click(screen.getByRole("button",{name:"Áp dụng đề xuất đã chọn"}));await waitFor(()=>expect(screen.getByLabelText("Công suất")).toHaveValue(90));expect(api.get().form.fields[1].value).toBe(90);
 });
+
+it("renders the 3-column (1:2:1) authoring layout with left feature menu, center content, right AI panel, and compact orange/blue/gray buttons", async () => {
+  server();
+  render(<AiAuthoringWizard moduleId="dvor-220" />);
+  await nativeStart();
+
+  const layout = screen.getByTestId("authoring-wizard-columns");
+  expect(layout.className).toContain("lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)]");
+
+  const leftCol = screen.getByRole("region", { name: "Menu tính năng tạo kịch bản" });
+  const centerCol = screen.getByRole("region", { name: "Nội dung tính năng" });
+  const rightCol = screen.getByRole("region", { name: "Mô tả và gợi ý từ AI" });
+
+  expect(leftCol).toContainElement(screen.getByRole("navigation", { name: "Các bước tạo kịch bản" }));
+  expect(centerCol).toContainElement(screen.getByLabelText("Tên kịch bản"));
+  expect(rightCol).toContainElement(screen.getByLabelText("Câu hỏi cho AI"));
+
+  const confirmBtn = screen.getByRole("button", { name: "Xác nhận bước và tiếp tục" });
+  const saveDraftBtn = screen.getByRole("button", { name: "Lưu nháp" });
+  const backBtn = screen.getByRole("button", { name: "Quay lại" });
+
+  expect(confirmBtn.className).toContain("#ea580c");
+  expect(saveDraftBtn.className).toContain("#0369a1");
+  expect(backBtn.className).toContain("#f1f5f9");
+});

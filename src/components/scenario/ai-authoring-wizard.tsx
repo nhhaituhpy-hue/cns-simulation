@@ -6,7 +6,16 @@ import type { ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 import type { AuthoringSessionDto, AuthoringMutation, JsonValue, AuthoringIssue } from "@/lib/ai/scenario-authoring/types";
 import { AiAuthoringSummary } from "./ai-authoring-summary";
 import { AiAuthoringAssistant } from "./ai-authoring-assistant";
-import { AiAuthoringField, authoringInputClass, authoringCardClass, valueLabel, sourceLabel } from "./ai-authoring-field";
+import {
+  AiAuthoringField,
+  authoringInputClass,
+  authoringCardClass,
+  authoringBtnOrangeClass,
+  authoringBtnBlueClass,
+  authoringBtnGrayClass,
+  valueLabel,
+  sourceLabel,
+} from "./ai-authoring-field";
 const api = "/api/ai/scenario-authoring";
 export function AiAuthoringWizard({ moduleId, onClose, onCompleted, registerClose }: { moduleId: ScenarioParametersModuleId; onCompleted?: (session: AuthoringSessionDto) => void | Promise<void>; onClose?: () => void; registerClose?: (handler: (() => Promise<boolean>) | null) => void }) {
   const uploadAttempt = useRef<{ key: string; body: FormData; url: string } | null>(null);
@@ -177,42 +186,307 @@ export function AiAuthoringWizard({ moduleId, onClose, onCompleted, registerClos
   if (session?.status === "completed") {
     const route = getSimulatorModule(moduleId)?.routes.simulator;
     const href = moduleId === "ads-b" ? session.scenarioId ? `/authoring/ads-b/edit?id=${encodeURIComponent(session.scenarioId)}` : null : route && session.scenarioRowId ? `${route}?scenarioId=${encodeURIComponent(session.scenarioRowId)}` : null;
-    return <section aria-label="Kịch bản đã tạo" className={`${authoringCardClass} grid gap-3`}><h3 className="font-semibold">Đã tạo kịch bản · Chưa xuất bản</h3><p className="text-sm">Giám khảo kiểm tra kịch bản trước khi đưa vào Ôn tập hoặc Kỳ thi. Chưa tự áp dụng vào simulator.</p>{error ? <p role="alert">{error}</p> : null}<div className="flex flex-wrap gap-3 text-sm"><a className="underline" href={`${api}/${encodeURIComponent(session.id)}/download`} download>Tải JSON đầy đủ</a>{href ? <a className="underline" href={href}>Mở trong simulator</a> : null}{onClose ? <Button onClick={onClose}>Đóng</Button> : null}</div></section>;
+    return <section aria-label="Kịch bản đã tạo" className={`${authoringCardClass} grid gap-3`}><h3 className="font-semibold">Đã tạo kịch bản · Chưa xuất bản</h3><p className="text-sm">Giám khảo kiểm tra kịch bản trước khi đưa vào Ôn tập hoặc Kỳ thi. Chưa tự áp dụng vào simulator.</p>{error ? <p role="alert">{error}</p> : null}<div className="flex flex-wrap items-center gap-2 text-xs"><a className={`${authoringBtnBlueClass} inline-flex items-center no-underline`} href={`${api}/${encodeURIComponent(session.id)}/download`} download>Tải JSON đầy đủ</a>{href ? <a className={`${authoringBtnOrangeClass} inline-flex items-center no-underline`} href={href}>Mở trong simulator</a> : null}{onClose ? <Button size="sm" className={authoringBtnGrayClass} onClick={onClose}>Đóng</Button> : null}</div></section>;
   }
   const sections = session?.form.sections ?? [];
   const section = sections.find((item) => item.id === step);
   const fields = session?.form.fields.filter((field) => field.sectionId === step) ?? [];
   const groups = [...new Set(fields.map((field) => field.group))];
   const steps = ["documents", ...sections.map((item) => item.id), "confirmation"];
-  return <section aria-label="Trình tạo kịch bản từng bước" className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-4 text-[var(--cns-text-primary)]">
-    <header className="flex items-start justify-between gap-3"><div><h3 className="text-lg font-semibold">{session ? session.form.label : "Tải tài liệu để AI chuẩn bị thông số"}</h3><p className="mt-1 text-xs text-[var(--cns-text-secondary)]">{session ? saved ? "Đã lưu nháp trên máy chủ" : Object.keys(dirty).length ? "Có thay đổi chưa lưu" : "Bản nháp trên máy chủ · Chưa tạo kịch bản" : getSimulatorModule(moduleId)?.name ?? moduleId}</p></div>{onClose ? <Button size="sm" disabled={busy} onClick={() => void run(async () => { if (current.current) await save(); onClose(); })}>Đóng</Button> : null}</header>
-    {error || fileError ? <p role="alert" className="rounded-lg border border-red-300 p-3 text-sm">{fileError ?? error}</p> : null}
-    {uploadUncertain ? <Button disabled={busy} onClick={() => void run(async () => { const next = await submitUpload(); if (!session) setStep(next.currentStep); })}>Gửi lại yêu cầu</Button> : null}
-    {conflict ? <Button disabled={busy} onClick={() => void run(async () => { await request(`${api}/${encodeURIComponent(current.current!.id)}`, { cache: "no-store" }); setConflict(false); })}>Tải lại phiên mới, giữ bản chỉnh</Button> : null}
-    {listError ? <p role="status">Chưa tải được lịch sử bản nháp. Đóng và mở lại để thử lại.</p> : null}
-    {!session && history.length ? <details aria-label="Bản nháp đã lưu" className={authoringCardClass}><summary className="cursor-pointer font-medium">Tiếp tục bản nháp trên máy chủ</summary><ul className="mt-2 grid gap-2">{history.map((item) => <li key={item.id} className="flex flex-wrap items-center justify-between gap-2 text-sm"><span className="break-words">{item.name} · {item.status === "completed" ? "Đã tạo, chưa xuất bản" : "Bản nháp"}</span><Button size="sm" aria-label={`Tiếp tục: ${item.name}`} disabled={busy} onClick={() => void run(async () => { const next = await request(`${api}/${encodeURIComponent(item.id)}`, { cache: "no-store" }); setStep(next.currentStep); })}>Tiếp tục</Button></li>)}</ul></details> : null}
-    {session ? <nav aria-label="Các bước tạo kịch bản" className="flex max-w-full flex-wrap gap-2">{steps.map((id) => <button key={id} type="button" disabled={busy || pending || uploadUncertain || finalUncertain} aria-current={step === id ? "step" : undefined} className={`rounded-lg border px-3 py-2 text-left text-xs ${step === id ? "border-[#0284c7] bg-[#0284c7]/10" : "border-[var(--cns-border-subtle)]"}`} onClick={() => void run(() => navigate(id))}>{id === "documents" ? "Tài liệu" : id === "confirmation" ? "Xác nhận" : sections.find((item) => item.id === id)?.title}{sections.some((item) => item.id === id) ? <span className="block pt-1 text-[var(--cns-text-secondary)]">{session.issues.some((issue) => issue.sectionId === id && issue.severity === "error") ? "Cần bổ sung" : session.confirmedSections.includes(id) ? "Đã xác nhận" : "Chưa xác nhận"}</span> : null}</button>)}</nav> : null}
-    {session?.form.notices.length ? <details className="text-xs text-[var(--cns-text-secondary)]"><summary className="cursor-pointer">Phạm vi mô phỏng và trường được bảo vệ</summary><ul className="mt-2 grid gap-1 break-words">{session.form.notices.map((notice, index) => <li key={index}>{notice}</li>)}</ul></details> : null}
-    {session?.analysis ? <p role="status" aria-live="polite" className="text-sm">{session.analysis.status === "queued" ? "AI đang chờ xử lý" : session.analysis.status === "running" ? "AI đang phân tích tài liệu hoặc câu hỏi" : session.analysis.status === "failed" ? "AI chưa phân tích được. Kiểm tra tài liệu (scan cần OCR) hoặc rút gọn câu hỏi rồi thử lại; bản chỉnh không mất." : session.analysis.status === "stale" ? "Kết quả AI đã cũ do bản nháp thay đổi. Hãy phân tích lại." : "AI đã xử lý xong. Xem nguồn và duyệt đề xuất bên dưới."}</p> : null}
-    {paused ? <div className="grid gap-2 text-sm"><p>Đã tạm dừng cập nhật tự động. Công việc vẫn tiếp tục trên máy chủ.</p><Button onClick={() => setPollToken((token) => token + 1)}>Tiếp tục cập nhật</Button></div> : null}
-    {session?.proposal ? <AiAuthoringAssistant key={session.proposal.id} session={session} dirty={dirty} disabled={busy || uploadUncertain || conflict || pending} onApply={(ids) => void run(() => applySelectedProposal(ids))} onDismiss={() => void run(dismissProposal)} /> : null}
-    {step === "documents" ? <div className={`${authoringCardClass} grid gap-3`}>
-      <p className="text-sm">Dùng manual hoặc tài liệu thông số của đúng thiết bị. Tài liệu chỉ chuẩn bị giá trị nền cho bản nháp này, không thay mặc định toàn hệ thống.</p>
-      <label className="grid gap-1.5 text-sm">Tài liệu thông số nền<input type="file" multiple accept=".pdf,.docx,.txt,.md" className={authoringInputClass} disabled={busy || uploadUncertain} onChange={(event) => selectFiles(Array.from(event.currentTarget.files ?? []))} /></label>
-      {session?.documents.length ? <ul aria-label="Tài liệu đã lưu" className="grid gap-1 text-xs">{session.documents.map((document, index) => <li key={index}>{document.name}</li>)}</ul> : null}
-      {files.length ? <ul className="text-xs">{files.map((file, i) => <li key={i} className="break-all">{file.name}</li>)}</ul> : null}
-      <label className="grid gap-1.5 text-sm">Phạm vi tài liệu (không bắt buộc)<input value={context} maxLength={2000} className={authoringInputClass} disabled={busy || uploadUncertain} onChange={(event) => setContext(event.currentTarget.value)} /></label>
-      <p className="text-xs text-[var(--cns-text-secondary)]">Ghi trạm, phiên bản hoặc mục cần đọc. PDF có văn bản, DOCX, TXT, MD; tối đa 5 tệp, 10 MiB/tệp, 25 MiB tổng. Scan cần OCR. Tài liệu được gửi tới dịch vụ AI bên ngoài đã cấu hình.</p>
-      <a className="text-sm underline" href={`/templates/ai-scenario-${moduleId}.docx`} download>Tải mẫu thông số nền (.docx)</a>
-      <div className="flex flex-wrap gap-2"><Button variant="primary" className="h-auto min-h-9 whitespace-normal py-2" disabled={busy || uploadUncertain || pending || conflict || !!session?.proposal || !!fileError || !files.length} onClick={() => void run(() => session ? analyze("baseline") : create())}>{session ? "Phân tích lại tài liệu" : "Phân tích tài liệu và điền biểu mẫu"}</Button>{!session ? <Button disabled={busy || uploadUncertain} onClick={() => void run(() => create(true))}>Dùng mặc định simulator</Button> : null}</div>
-      <p className="text-xs">Nếu dùng mặc định simulator, các giá trị chưa được đối chiếu với tài liệu.</p>
-    </div> : null}
-    {section ? <><div><h4 className="font-semibold">{section.title}</h4><p className="mt-1 text-sm text-[var(--cns-text-secondary)]">{section.help}</p><p className="mt-1 text-xs text-[var(--cns-text-secondary)]">Trợ giúp trường bên dưới có sẵn từ biểu mẫu simulator, không phải câu trả lời AI.</p></div>
-      {groups.map((group) => <details key={group} open={groups.length <= 2 || group === groups[0]} aria-label={group} className={`${authoringCardClass} grid gap-4`}><summary className="cursor-pointer font-medium">{group} <span className="text-xs font-normal text-[var(--cns-text-secondary)]">· {fields.filter(field => field.group === group).length} trường</span></summary>{fields.filter((field) => field.group === group).map((field) => <div key={field.id} className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-2"><AiAuthoringField schema={field.schema} value={Object.hasOwn(dirty, field.id) ? dirty[field.id] : field.value} disabled={busy} onChange={(value) => edit(field.id, value)} /><p className="text-xs text-[var(--cns-text-secondary)]">{Object.hasOwn(dirty, field.id) ? "Bạn đã chỉnh · Chưa lưu" : sourceLabel(session!.sources[field.id])}</p>{session!.sources[field.id]?.quote ? <blockquote className="break-words border-l-2 pl-3 text-xs">{session!.sources[field.id].quote!.slice(0, 600)}</blockquote> : null}<p className="break-words text-xs">Giá trị nền: {valueLabel(session!.baselineValues[field.id], field.schema)}</p><Button size="sm" disabled={busy || pending || uploadUncertain || conflict || field.schema.readOnly} className="h-auto min-h-9 max-w-full w-fit whitespace-normal py-2 text-left" onClick={() => void run(async () => { await resetField(field.id); })}>Khôi phục nền: {field.schema.label}</Button></div>)}<Button className="h-auto min-h-9 max-w-full w-fit whitespace-normal py-2 text-left" disabled={busy || pending} onClick={() => void run(() => save(fields.filter((field) => field.group === group).map((field) => field.id)))}>Lưu nhóm {group}</Button></details>)}
-      <aside className={`${authoringCardClass} grid gap-3`}><h5 className="font-medium">AI hướng dẫn bước này</h5><p className="text-sm">{section.id === "faults" ? "Bạn muốn học viên phát hiện hoặc khắc phục lỗi gì? AI sẽ hướng dẫn chọn các trường liên quan, không bắt bạn biết mã tham số." : section.id === "criteria" || section.id === "success-criteria" ? "Học viên cần đạt kết quả nào? Để AI giải thích các lựa chọn trước khi bạn xác nhận." : section.id === "permissions" ? "Học viên cần được phép sửa gì để làm bài? AI giúp đối chiếu quyền với mục tiêu, bạn quyết định trước khi lưu." : "Bạn có thể giữ các giá trị đã điền. Nếu chưa rõ, nhờ AI giải thích mục này và chỉ ra thông tin cần xác nhận."}</p><div className="flex flex-wrap gap-2"><Button className="h-auto min-h-9 whitespace-normal py-2" disabled={busy || pending || uploadUncertain || conflict || !!session?.proposal} onClick={() => void run(() => analyze("guidance", `Hướng dẫn người mới điền bước ${section.title}, giải thích các nhóm và những giá trị có thể giữ mặc định. Chỉ giải thích, không thay đổi dữ liệu.`))}>Hướng dẫn tôi điền bước này</Button><Button className="h-auto min-h-9 whitespace-normal py-2" disabled={busy || pending || uploadUncertain || conflict || !!session?.proposal} onClick={() => void run(() => analyze("guidance", `Dựa vào cấu hình bản nháp và mục tiêu bài, đề xuất cách điền bước ${section.title}. Chỉ đề xuất các thay đổi có thể thực hiện trong simulator; hỏi rõ khi thiếu mục tiêu.`))}>Gợi ý giá trị phù hợp</Button></div><label className="grid gap-1.5 text-sm">Câu hỏi cho AI<textarea rows={2} value={question} maxLength={2000} className={authoringInputClass} disabled={busy || uploadUncertain || pending} onChange={(event) => setQuestion(event.currentTarget.value)} /></label><p className="text-xs text-[var(--cns-text-secondary)]">Ví dụ: Giá trị này có ý nghĩa gì? Hãy đề xuất theo tài liệu. Câu hỏi được gửi tới AI; mọi thay đổi cần bạn duyệt.</p><Button className="h-auto min-h-9 max-w-full w-fit whitespace-normal py-2 text-left" disabled={busy || uploadUncertain || pending || conflict || !!session?.proposal || !question.trim()} onClick={() => void run(() => analyze("guidance"))}>Hỏi AI về bước này</Button></aside>
-    </> : null}
-    {session && step === "confirmation" ? <AiAuthoringSummary session={session} /> : null}
-    {session?.issues.length ? <details open={session.issues.some(i=>i.severity==="error")} className="text-sm"><summary className="cursor-pointer">Mục cần kiểm tra · {session.issues.filter(i=>i.severity==="error").length} cần sửa, {session.issues.filter(i=>i.severity==="warning").length} lưu ý</summary><ul aria-label="Mục cần kiểm tra" className="mt-2 grid gap-2">{session.issues.map((issue, i) => <li key={i}>{issue.severity === "error" ? "Cần sửa" : "Lưu ý"}: {issue.message}</li>)}</ul></details> : null}
-    {session ? <footer className="sticky bottom-0 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)]/95 py-3 backdrop-blur-xl"><Button disabled={busy || pending || finalUncertain || step === "documents"} onClick={() => void run(() => navigate(steps[Math.max(0, steps.indexOf(step) - 1)]))}>Quay lại</Button><Button disabled={busy || pending || conflict || finalUncertain} onClick={() => void run(() => save())}>Lưu nháp</Button>{section ? <Button variant="primary" className="h-auto min-h-9 whitespace-normal py-2" disabled={busy || pending || uploadUncertain || conflict} onClick={() => void run(() => navigate(steps[steps.indexOf(step) + 1], true))}>Xác nhận bước và tiếp tục</Button> : step === "confirmation" ? <Button variant="primary" className="h-auto min-h-9 whitespace-normal py-2" disabled={busy || pending || conflict || !!session.proposal || Object.keys(dirty).length > 0 || session.issues.some((issue) => issue.severity === "error") || session.preview.status === "invalid" || !sections.every((item) => session.confirmedSections.includes(item.id))} onClick={() => void run(finalize)}>Hoàn tất tạo kịch bản</Button> : null}</footer> : null}
-  </section>;
+  return (
+    <section aria-label="Trình tạo kịch bản từng bước" className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 text-[var(--cns-text-primary)]">
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--cns-border-subtle)] pb-2.5">
+        <div>
+          <h3 className="text-base font-semibold">{session ? session.form.label : "Tải tài liệu để AI chuẩn bị thông số"}</h3>
+          <p className="mt-0.5 text-xs text-[var(--cns-text-secondary)]">
+            {session ? saved ? "Đã lưu nháp trên máy chủ" : Object.keys(dirty).length ? "Có thay đổi chưa lưu" : "Bản nháp trên máy chủ · Chưa tạo kịch bản" : getSimulatorModule(moduleId)?.name ?? moduleId}
+          </p>
+        </div>
+        {onClose ? <Button size="sm" className={authoringBtnGrayClass} disabled={busy} onClick={() => void run(async () => { if (current.current) await save(); onClose(); })}>Đóng</Button> : null}
+      </header>
+
+      <div
+        data-testid="authoring-wizard-columns"
+        className="grid min-w-0 grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)]"
+      >
+        <aside role="region" aria-label="Menu tính năng tạo kịch bản" className="grid min-w-0 gap-3 lg:sticky lg:top-2">
+          <div className={`${authoringCardClass} grid gap-2`}>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--cns-text-secondary)]">
+              Menu tính năng
+            </p>
+            {session ? (
+              <nav aria-label="Các bước tạo kịch bản" className="grid gap-1.5">
+                {steps.map((id) => {
+                  const isCurrent = step === id;
+                  const isSection = sections.some((item) => item.id === id);
+                  const hasError = isSection && session.issues.some((issue) => issue.sectionId === id && issue.severity === "error");
+                  const isConfirmed = isSection && session.confirmedSections.includes(id);
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      disabled={busy || pending || uploadUncertain || finalUncertain}
+                      aria-current={isCurrent ? "step" : undefined}
+                      className={`w-full rounded-lg border px-2.5 py-2 text-left text-xs transition ${
+                        isCurrent
+                          ? "border-[#0369a1] bg-[#0369a1] font-semibold text-white shadow-2xs"
+                          : "border-[#cbd5e1] bg-[#f8fafc] text-[#334155] hover:bg-[#e2e8f0]"
+                      } disabled:opacity-50`}
+                      onClick={() => void run(() => navigate(id))}
+                    >
+                      <span>{id === "documents" ? "Tài liệu" : id === "confirmation" ? "Xác nhận" : sections.find((item) => item.id === id)?.title}</span>
+                      {isSection ? (
+                        <span
+                          className={`mt-0.5 block text-[11px] font-normal ${
+                            isCurrent
+                              ? "text-sky-100"
+                              : hasError
+                                ? "text-[#ea580c]"
+                                : isConfirmed
+                                  ? "text-emerald-700"
+                                  : "text-[var(--cns-text-secondary)]"
+                          }`}
+                        >
+                          {hasError ? "Cần bổ sung" : isConfirmed ? "Đã xác nhận" : "Chưa xác nhận"}
+                        </span>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </nav>
+            ) : (
+              <div className="grid gap-1.5">
+                <div className="rounded-lg border border-[#0369a1] bg-[#0369a1] px-2.5 py-2 text-xs font-semibold text-white">
+                  1. Tài liệu & Khởi tạo
+                </div>
+                <p className="text-[11px] leading-relaxed text-[var(--cns-text-secondary)]">
+                  Các mục thông số thiết bị, lỗi giả lập, quyền chỉnh sửa và tiêu chí hoàn thành sẽ hiển thị tại đây sau khi khởi tạo bản nháp.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {listError ? <p role="status" className="text-xs text-[var(--cns-text-secondary)]">Chưa tải được lịch sử bản nháp. Đóng và mở lại để thử lại.</p> : null}
+          {!session && history.length ? (
+            <details open aria-label="Bản nháp đã lưu" className={authoringCardClass}>
+              <summary className="cursor-pointer text-xs font-semibold">Tiếp tục bản nháp trên máy chủ</summary>
+              <ul className="mt-2 grid gap-2">
+                {history.map((item) => (
+                  <li key={item.id} className="flex flex-wrap items-center justify-between gap-1.5 rounded-lg border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card-subtle)] p-2 text-xs">
+                    <span className="break-words">{item.name} · {item.status === "completed" ? "Đã tạo, chưa xuất bản" : "Bản nháp"}</span>
+                    <Button size="sm" className={authoringBtnBlueClass} aria-label={`Tiếp tục: ${item.name}`} disabled={busy} onClick={() => void run(async () => { const next = await request(`${api}/${encodeURIComponent(item.id)}`, { cache: "no-store" }); setStep(next.currentStep); })}>Tiếp tục</Button>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ) : null}
+
+          {session?.form.notices.length ? (
+            <details className={`${authoringCardClass} text-xs text-[var(--cns-text-secondary)]`}>
+              <summary className="cursor-pointer font-medium text-[var(--cns-text-primary)]">Phạm vi mô phỏng và trường được bảo vệ</summary>
+              <ul className="mt-2 grid gap-1 break-words">{session.form.notices.map((notice, index) => <li key={index}>{notice}</li>)}</ul>
+            </details>
+          ) : null}
+        </aside>
+
+        <div role="region" aria-label="Nội dung tính năng" className="grid min-w-0 gap-3">
+          {error || fileError ? <p role="alert" className="rounded-lg border border-red-300 bg-red-50/80 p-2.5 text-xs text-red-900">{fileError ?? error}</p> : null}
+          {uploadUncertain ? <Button size="sm" className={`${authoringBtnOrangeClass} w-fit`} disabled={busy} onClick={() => void run(async () => { const next = await submitUpload(); if (!session) setStep(next.currentStep); })}>Gửi lại yêu cầu</Button> : null}
+          {conflict ? <Button size="sm" className={`${authoringBtnBlueClass} w-fit`} disabled={busy} onClick={() => void run(async () => { await request(`${api}/${encodeURIComponent(current.current!.id)}`, { cache: "no-store" }); setConflict(false); })}>Tải lại phiên mới, giữ bản chỉnh</Button> : null}
+
+          {step === "documents" ? (
+            <div className={`${authoringCardClass} grid gap-3`}>
+              <p className="text-xs leading-relaxed">Dùng manual hoặc tài liệu thông số của đúng thiết bị. Tài liệu chỉ chuẩn bị giá trị nền cho bản nháp này, không thay mặc định toàn hệ thống.</p>
+              <label className="grid gap-1 text-xs font-medium">Tài liệu thông số nền<input type="file" multiple accept=".pdf,.docx,.txt,.md" className={authoringInputClass} disabled={busy || uploadUncertain} onChange={(event) => selectFiles(Array.from(event.currentTarget.files ?? []))} /></label>
+              {session?.documents.length ? <ul aria-label="Tài liệu đã lưu" className="grid gap-1 text-xs">{session.documents.map((document, index) => <li key={index}>{document.name}</li>)}</ul> : null}
+              {files.length ? <ul className="text-xs">{files.map((file, i) => <li key={i} className="break-all">{file.name}</li>)}</ul> : null}
+              <label className="grid gap-1 text-xs font-medium">Phạm vi tài liệu (không bắt buộc)<input value={context} maxLength={2000} className={authoringInputClass} disabled={busy || uploadUncertain} onChange={(event) => setContext(event.currentTarget.value)} /></label>
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                <a className="text-xs font-medium text-[#0369a1] underline" href={`/templates/ai-scenario-${moduleId}.docx`} download>Tải mẫu thông số nền (.docx)</a>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="primary" className={authoringBtnOrangeClass} disabled={busy || uploadUncertain || pending || conflict || !!session?.proposal || !!fileError || !files.length} onClick={() => void run(() => session ? analyze("baseline") : create())}>
+                    {session ? "Phân tích lại tài liệu" : "Phân tích tài liệu và điền biểu mẫu"}
+                  </Button>
+                  {!session ? (
+                    <Button size="sm" className={authoringBtnGrayClass} disabled={busy || uploadUncertain} onClick={() => void run(() => create(true))}>
+                      Dùng mặc định simulator
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+              <p className="text-[11px] text-[var(--cns-text-secondary)]">Nếu dùng mặc định simulator, các giá trị chưa được đối chiếu với tài liệu.</p>
+            </div>
+          ) : null}
+
+          {section ? (
+            <>
+              {groups.map((group) => (
+                <details key={group} open={groups.length <= 2 || group === groups[0]} aria-label={group} className={`${authoringCardClass} grid gap-3`}>
+                  <summary className="cursor-pointer text-sm font-semibold">
+                    {group} <span className="text-xs font-normal text-[var(--cns-text-secondary)]">· {fields.filter(field => field.group === group).length} trường</span>
+                  </summary>
+                  {fields.filter((field) => field.group === group).map((field) => (
+                    <div key={field.id} className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-1.5 border-t border-[var(--cns-border-subtle)]/70 pt-2.5 first:border-t-0 first:pt-0">
+                      <AiAuthoringField schema={field.schema} value={Object.hasOwn(dirty, field.id) ? dirty[field.id] : field.value} disabled={busy} onChange={(value) => edit(field.id, value)} />
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="min-w-0 space-y-0.5">
+                          <p className="text-[11px] text-[var(--cns-text-secondary)]">{Object.hasOwn(dirty, field.id) ? "Bạn đã chỉnh · Chưa lưu" : sourceLabel(session!.sources[field.id])}</p>
+                          <p className="break-words text-[11px] text-[var(--cns-text-secondary)]">Giá trị nền: {valueLabel(session!.baselineValues[field.id], field.schema)}</p>
+                        </div>
+                        <Button size="sm" disabled={busy || pending || uploadUncertain || conflict || field.schema.readOnly} className={`${authoringBtnGrayClass} w-fit text-left`} onClick={() => void run(async () => { await resetField(field.id); })}>
+                          Khôi phục nền: {field.schema.label}
+                        </Button>
+                      </div>
+                      {session!.sources[field.id]?.quote ? <blockquote className="break-words border-l-2 border-[#0284c7] pl-2.5 text-[11px] text-[var(--cns-text-secondary)]">{session!.sources[field.id].quote!.slice(0, 600)}</blockquote> : null}
+                    </div>
+                  ))}
+                  <div className="flex justify-end pt-1">
+                    <Button size="sm" className={`${authoringBtnBlueClass} w-fit`} disabled={busy || pending} onClick={() => void run(() => save(fields.filter((field) => field.group === group).map((field) => field.id)))}>
+                      Lưu nhóm {group}
+                    </Button>
+                  </div>
+                </details>
+              ))}
+            </>
+          ) : null}
+
+          {session && step === "confirmation" ? <AiAuthoringSummary session={session} /> : null}
+
+          {session ? (
+            <footer className="sticky bottom-0 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)]/95 px-3.5 py-2.5 shadow-sm backdrop-blur-xl">
+              <Button size="sm" className={authoringBtnGrayClass} disabled={busy || pending || finalUncertain || step === "documents"} onClick={() => void run(() => navigate(steps[Math.max(0, steps.indexOf(step) - 1)]))}>
+                Quay lại
+              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button size="sm" className={authoringBtnBlueClass} disabled={busy || pending || conflict || finalUncertain} onClick={() => void run(() => save())}>
+                  Lưu nháp
+                </Button>
+                {section ? (
+                  <Button size="sm" variant="primary" className={authoringBtnOrangeClass} disabled={busy || pending || uploadUncertain || conflict} onClick={() => void run(() => navigate(steps[steps.indexOf(step) + 1], true))}>
+                    Xác nhận bước và tiếp tục
+                  </Button>
+                ) : step === "confirmation" ? (
+                  <Button size="sm" variant="primary" className={authoringBtnOrangeClass} disabled={busy || pending || conflict || !!session.proposal || Object.keys(dirty).length > 0 || session.issues.some((issue) => issue.severity === "error") || session.preview.status === "invalid" || !sections.every((item) => session.confirmedSections.includes(item.id))} onClick={() => void run(finalize)}>
+                    Hoàn tất tạo kịch bản
+                  </Button>
+                ) : null}
+              </div>
+            </footer>
+          ) : null}
+        </div>
+
+        <aside role="region" aria-label="Mô tả và gợi ý từ AI" className="grid min-w-0 gap-3 lg:sticky lg:top-2">
+          <div className={`${authoringCardClass} grid gap-1.5`}>
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-[#0369a1]">
+              {section ? section.title : step === "confirmation" ? "Kiểm tra & Xác nhận" : "Hướng dẫn tài liệu"}
+            </h4>
+            {section ? (
+              <>
+                <p className="text-xs leading-relaxed text-[var(--cns-text-secondary)]">{section.help}</p>
+                <p className="text-[11px] text-[var(--cns-text-muted)]">Trợ giúp trường bên dưới có sẵn từ biểu mẫu simulator, không phải câu trả lời AI.</p>
+              </>
+            ) : step === "confirmation" ? (
+              <p className="text-xs leading-relaxed text-[var(--cns-text-secondary)]">
+                Đối chiếu toàn bộ thông số nền, trạng thái lỗi và tiêu chí chấm trước khi lưu kịch bản vào danh sách nguồn chưa xuất bản.
+              </p>
+            ) : (
+              <p className="text-xs leading-relaxed text-[var(--cns-text-secondary)]">
+                Ghi trạm, phiên bản hoặc mục cần đọc. PDF có văn bản, DOCX, TXT, MD; tối đa 5 tệp, 10 MiB/tệp, 25 MiB tổng. Scan cần OCR. Tài liệu được gửi tới dịch vụ AI bên ngoài đã cấu hình.
+              </p>
+            )}
+          </div>
+
+          {session?.analysis ? (
+            <div className={`${authoringCardClass} border-[#0284c7]/30 bg-[#f0f9ff]/60`}>
+              <p role="status" aria-live="polite" className="text-xs font-medium text-[#0369a1]">
+                {session.analysis.status === "queued"
+                  ? "AI đang chờ xử lý"
+                  : session.analysis.status === "running"
+                    ? "AI đang phân tích tài liệu hoặc câu hỏi"
+                    : session.analysis.status === "failed"
+                      ? "AI chưa phân tích được. Kiểm tra tài liệu (scan cần OCR) hoặc rút gọn câu hỏi rồi thử lại; bản chỉnh không mất."
+                      : session.analysis.status === "stale"
+                        ? "Kết quả AI đã cũ do bản nháp thay đổi. Hãy phân tích lại."
+                        : "AI đã xử lý xong. Xem nguồn và duyệt đề xuất bên dưới."}
+              </p>
+            </div>
+          ) : null}
+
+          {paused ? (
+            <div className={`${authoringCardClass} grid gap-2 text-xs`}>
+              <p>Đã tạm dừng cập nhật tự động. Công việc vẫn tiếp tục trên máy chủ.</p>
+              <Button size="sm" className={authoringBtnBlueClass} onClick={() => setPollToken((token) => token + 1)}>Tiếp tục cập nhật</Button>
+            </div>
+          ) : null}
+
+          {session?.proposal ? (
+            <AiAuthoringAssistant
+              key={session.proposal.id}
+              session={session}
+              dirty={dirty}
+              disabled={busy || uploadUncertain || conflict || pending}
+              onApply={(ids) => void run(() => applySelectedProposal(ids))}
+              onDismiss={() => void run(dismissProposal)}
+            />
+          ) : null}
+
+          {section ? (
+            <div className={`${authoringCardClass} grid gap-2.5`}>
+              <h5 className="text-xs font-semibold uppercase tracking-wider text-[var(--cns-text-primary)]">AI hướng dẫn bước này</h5>
+              <p className="text-xs leading-relaxed text-[var(--cns-text-secondary)]">
+                {section.id === "faults"
+                  ? "Bạn muốn học viên phát hiện hoặc khắc phục lỗi gì? AI sẽ hướng dẫn chọn các trường liên quan, không bắt bạn biết mã tham số."
+                  : section.id === "criteria" || section.id === "success-criteria"
+                    ? "Học viên cần đạt kết quả nào? Để AI giải thích các lựa chọn trước khi bạn xác nhận."
+                    : section.id === "permissions"
+                      ? "Học viên cần được phép sửa gì để làm bài? AI giúp đối chiếu quyền với mục tiêu, bạn quyết định trước khi lưu."
+                      : "Bạn có thể giữ các giá trị đã điền. Nếu chưa rõ, nhờ AI giải thích mục này và chỉ ra thông tin cần xác nhận."}
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                <Button
+                  size="sm"
+                  className={authoringBtnBlueClass}
+                  disabled={busy || pending || uploadUncertain || conflict || !!session?.proposal}
+                  onClick={() => void run(() => analyze("guidance", `Hướng dẫn người mới điền bước ${section.title}, giải thích các nhóm và những giá trị có thể giữ mặc định. Chỉ giải thích, không thay đổi dữ liệu.`))}
+                >
+                  Hướng dẫn tôi điền bước này
+                </Button>
+                <Button
+                  size="sm"
+                  className={authoringBtnGrayClass}
+                  disabled={busy || pending || uploadUncertain || conflict || !!session?.proposal}
+                  onClick={() => void run(() => analyze("guidance", `Dựa vào cấu hình bản nháp và mục tiêu bài, đề xuất cách điền bước ${section.title}. Chỉ đề xuất các thay đổi có thể thực hiện trong simulator; hỏi rõ khi thiếu mục tiêu.`))}
+                >
+                  Gợi ý giá trị phù hợp
+                </Button>
+              </div>
+              <label className="grid gap-1 text-xs font-medium">
+                Câu hỏi cho AI
+                <textarea rows={2} value={question} maxLength={2000} className={authoringInputClass} disabled={busy || uploadUncertain || pending} onChange={(event) => setQuestion(event.currentTarget.value)} />
+              </label>
+              <p className="text-[11px] text-[var(--cns-text-secondary)]">Ví dụ: Giá trị này có ý nghĩa gì? Hãy đề xuất theo tài liệu. Câu hỏi được gửi tới AI; mọi thay đổi cần bạn duyệt.</p>
+              <Button size="sm" className={`${authoringBtnOrangeClass} w-fit`} disabled={busy || pending || uploadUncertain || conflict || !!session?.proposal || !question.trim()} onClick={() => void run(() => analyze("guidance"))}>
+                Hỏi AI về bước này
+              </Button>
+            </div>
+          ) : null}
+
+          {session?.issues.length ? (
+            <details open={session.issues.some(i => i.severity === "error")} className={`${authoringCardClass} text-xs`}>
+              <summary className="cursor-pointer font-semibold">
+                Mục cần kiểm tra · {session.issues.filter(i => i.severity === "error").length} cần sửa, {session.issues.filter(i => i.severity === "warning").length} lưu ý
+              </summary>
+              <ul aria-label="Mục cần kiểm tra" className="mt-2 grid gap-1.5">
+                {session.issues.map((issue, i) => (
+                  <li key={i} className={issue.severity === "error" ? "text-[#ea580c]" : "text-[var(--cns-text-secondary)]"}>
+                    {issue.severity === "error" ? "Cần sửa" : "Lưu ý"}: {issue.message}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ) : null}
+        </aside>
+      </div>
+    </section>
+  );
 }
