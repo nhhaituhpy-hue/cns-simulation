@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GradingResult } from "@/components/grading/grading-result";
+import { PracticeAiFeedbackButton } from "@/components/scenario/practice-ai-feedback-button";
 import { completeExamAttemptItemAction } from "@/lib/exams/actions";
 import type { OfficialExamScenarioContext } from "@/lib/exams/client-types";
 import {
@@ -189,6 +190,22 @@ export function TerminalSession({
   if (!officialExam && recording.gradingResult) {
     return (
       <div className="mx-auto w-full max-w-[1200px] px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mb-4 flex justify-end">
+          <PracticeAiFeedbackButton
+            moduleId="ads-b"
+            scenarioId={scenario.id}
+            scenarioName={scenario.title}
+            getPayload={() => {
+              const state = useRecordingStore.getState();
+              return {
+                allActions: state.allActions,
+                selectedActions: state.selectedActions,
+                authenticatedCorrectly: state.authenticatedCorrectly,
+                qcmsMonitoringOpened: state.qcmsMonitoringOpened,
+              };
+            }}
+          />
+        </div>
         <GradingResult
           result={recording.gradingResult}
           onRetry={retry}
@@ -219,14 +236,32 @@ export function TerminalSession({
             {scenario.title}. Cảm biến {selectedSensor.sensorLabel} tại {connectionIpAddress}.
           </p>
         </div>
-        <div className="rounded border border-blue-200 bg-blue-50 px-3 py-2">
-          <p className="text-xs text-blue-700">Địa chỉ IP thiết bị</p>
-          <p className="mt-0.5 font-mono text-sm font-bold text-blue-950">
-            {connectionIpAddress}
-          </p>
-          <p className="mt-1 font-mono text-[11px] text-blue-800">
-            Định dạng: &lt;tài khoản&gt;@{connectionIpAddress}
-          </p>
+        <div className="flex flex-wrap items-center gap-3">
+          {!officialExam ? (
+            <PracticeAiFeedbackButton
+              moduleId="ads-b"
+              scenarioId={scenario.id}
+              scenarioName={scenario.title}
+              getPayload={() => {
+                const state = useRecordingStore.getState();
+                return {
+                  allActions: state.allActions,
+                  selectedActions: state.selectedActions,
+                  authenticatedCorrectly: state.authenticatedCorrectly,
+                  qcmsMonitoringOpened: state.qcmsMonitoringOpened,
+                };
+              }}
+            />
+          ) : null}
+          <div className="rounded border border-blue-200 bg-blue-50 px-3 py-2">
+            <p className="text-xs text-blue-700">Địa chỉ IP thiết bị</p>
+            <p className="mt-0.5 font-mono text-sm font-bold text-blue-950">
+              {connectionIpAddress}
+            </p>
+            <p className="mt-1 font-mono text-[11px] text-blue-800">
+              Định dạng: &lt;tài khoản&gt;@{connectionIpAddress}
+            </p>
+          </div>
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import { Suspense, useEffect, type ReactNode } from "react";
 import { SimulatorConfigPersistence } from "@/components/simulator/simulator-config-persistence";
 import { SimulatorToolbarBackButton } from "@/components/simulator/simulator-toolbar-back-button";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
+import { PracticeAiFeedbackButton } from "@/components/scenario/practice-ai-feedback-button";
 import { useScenarioExamAnswer, useScenarioExamResultReader, useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
 import { DmeScenarioSessionPersistence } from "@/components/scenario/scenario-session-persistence";
 import type { SupportedSimulatorConfigId } from "@/lib/simulator-config/types";
@@ -215,6 +216,36 @@ export function PmdtLayout({
           {scenarioAuthoringEnabled ? <button type="button" onClick={() => { setConfigPanelOpen(false); setScenarioParametersOpen(true); }}>Scenario Parameters</button> : null}
           {scenarioAuthoringEnabled ? <span className="dme1119a-scenario-role-badge">EXAMINER</span> : null}
           <Dme1119aTrainingHud examinerView={scenarioAuthoringEnabled} />
+          {!examSnapshot && scenario.active && scenario.definition ? (
+            <PracticeAiFeedbackButton
+              moduleId="dme-1119a"
+              scenarioId={scenario.definition.id}
+              scenarioName={scenario.definition.name}
+              getPayload={() => {
+                const state = useDmePmdtStore.getState();
+                return {
+                  actionHistory: state.actionHistory,
+                  evidenceStats: state.evidenceStats,
+                  attemptEvents: state.attemptEvents,
+                  answer: state.answer,
+                  scenarioHardwareSelection: state.scenarioHardwareSelection,
+                  scenarioHardwareInspected: state.scenarioHardwareInspected,
+                  scenarioHardwareReasoning: state.scenarioHardwareReasoning,
+                  scenarioHardwareDispositionConfirmed: state.scenarioHardwareDispositionConfirmed,
+                  checkpoint: {
+                    data: state.data,
+                    configDraft: state.configDraft,
+                    configurationBackup: state.configurationBackup,
+                    savedConfiguration: state.savedConfiguration,
+                    configDirty: state.configDirty,
+                    needBackup: state.needBackup,
+                    scenarioStage: state.scenarioStage,
+                    scenarioDiagnosticState: state.scenarioDiagnosticState,
+                  },
+                };
+              }}
+            />
+          ) : null}
           {scenarioAuthoringEnabled && scenario.active ? <span className="dme1119a-scenario-active-badge">Scenario active: {scenario.definition?.name}</span> : null}
           {twoStageScenario && scenarioEvaluation ? <div className="dme1119a-scenario-stagebar" role="status">
             <span><strong>{scenarioStage === "pmdt" ? "Bước 1/2" : scenarioStage === "hardware" ? "Bước 2/2" : "Hoàn thành"}</strong> · {scenario.definition?.diagnosis?.disposition === "software-adjustment" ? "PMDT configuration" : "PMDT → hardware"}</span>

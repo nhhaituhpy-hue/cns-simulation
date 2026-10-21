@@ -4,6 +4,7 @@ import { Suspense, useEffect, type ReactNode } from "react";
 import { SimulatorConfigPersistence } from "@/components/simulator/simulator-config-persistence";
 import { SimulatorToolbarBackButton } from "@/components/simulator/simulator-toolbar-back-button";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
+import { PracticeAiFeedbackButton } from "@/components/scenario/practice-ai-feedback-button";
 import { useScenarioExamAnswer, useScenarioExamResultReader, useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
 import { VorScenarioSessionPersistence } from "@/components/scenario/scenario-session-persistence";
 import type { SupportedSimulatorConfigId } from "@/lib/simulator-config/types";
@@ -182,6 +183,35 @@ export function PmdtLayout({
           {scenarioAuthoringEnabled ? <button type="button" onClick={() => setScenarioParametersOpen(true)}>Scenario Parameters</button> : null}
           {scenarioAuthoringEnabled ? <span className="dvor1150a-scenario-role-badge">EXAMINER</span> : null}
           <Dvor1150aTrainingHud examinerView={scenarioAuthoringEnabled} />
+          {!examSnapshot && scenario.active && scenario.definition ? (
+            <PracticeAiFeedbackButton
+              moduleId="dvor-1150a"
+              scenarioId={scenario.definition.id}
+              scenarioName={scenario.definition.name}
+              getPayload={() => {
+                const state = useVorPmdtStore.getState();
+                return {
+                  actionHistory: state.actionHistory,
+                  evidenceStats: state.evidenceStats,
+                  attemptEvents: state.attemptEvents,
+                  answer: state.answer,
+                  scenarioHardwareSelection: state.scenarioHardwareSelection,
+                  scenarioHardwareInspected: state.scenarioHardwareInspected,
+                  scenarioHardwareReasoning: state.scenarioHardwareReasoning,
+                  scenarioHardwareDispositionConfirmed: state.scenarioHardwareDispositionConfirmed,
+                  checkpoint: {
+                    config: state.config,
+                    configDraft: state.configDraft,
+                    configurationBackup: state.configurationBackup,
+                    configDirty: state.configDirty,
+                    needBackup: state.needBackup,
+                    scenarioStage: state.scenarioStage,
+                    diagnosticState: state.diagnosticState,
+                  },
+                };
+              }}
+            />
+          ) : null}
           {scenarioAuthoringEnabled && scenario.active ? <span className="dvor1150a-scenario-active-badge">Scenario active: {scenario.definition?.name}</span> : null}
           {twoStageScenario && scenarioEvaluation ? (
             <div className="dvor1150a-scenario-stagebar" role="status">

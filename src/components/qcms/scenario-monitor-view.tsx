@@ -10,6 +10,7 @@ import type { OfficialExamScenarioContext } from "@/lib/exams/client-types";
 import type { Scenario } from "@/lib/types";
 import { HardwareDiagnosisWorkspace } from "@/components/hardware/hardware-diagnosis-workspace";
 import { HardwareGradingResult } from "@/components/grading/hardware-grading-result";
+import { PracticeAiFeedbackButton } from "@/components/scenario/practice-ai-feedback-button";
 import { useRecordingStore } from "@/stores/recording-store";
 import { useScenarioStore } from "@/stores/scenario-store";
 import { GeneralSettingsDialog } from "./general-settings-dialog";
@@ -159,7 +160,27 @@ export function ScenarioMonitorView({
             {scenario.description}
           </p>
         </div>
-        <ElapsedTimer />
+        <div className="flex flex-wrap items-center gap-3">
+          {!officialExam ? (
+            <PracticeAiFeedbackButton
+              moduleId="ads-b"
+              scenarioId={scenario.id}
+              scenarioName={scenario.title}
+              getPayload={() => {
+                const state = useRecordingStore.getState();
+                return {
+                  allActions: state.allActions,
+                  selectedActions: state.selectedActions,
+                  authenticatedCorrectly: state.authenticatedCorrectly,
+                  qcmsMonitoringOpened: state.qcmsMonitoringOpened,
+                  scenarioHardwareSelection: state.diagnosedComponentIds,
+                  scenarioHardwareInspected: state.inspectedComponentIds,
+                };
+              }}
+            />
+          ) : null}
+          <ElapsedTimer />
+        </div>
       </header>
 
       {scenario.hardwareFault ? (

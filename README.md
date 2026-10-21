@@ -34,6 +34,11 @@ Dùng `scripts/export-ai-authoring-forms.mts` để xuất projection baseline c
 - Dùng `scripts/build-device-knowledge.mjs /absolute/sources.json /absolute/new-private-directory` để trích text layer theo trang (PDF/DOCX/MD) từ các tài liệu kỹ thuật gốc kèm SHA-256 gốc, SHA-256 từng đoạn và số trang PDF. Không đóng gói các tài liệu bản quyền vào Git hoặc public assets.
 - Worker tùy chọn đọc kho này qua `CNS_AI_KNOWLEDGE_DIR` (`src/lib/ai/knowledge/retrieve.ts` và `context.ts`) **chỉ trong bước hướng dẫn (`guidance`)**, không dùng để tự điền baseline, không ghi đè mặc định simulator và không thay điểm chính thức. Nếu biến chưa cấu hình hoặc kiểm tra toàn vẹn thất bại, luồng soạn thảo vẫn hoạt động bình thường với thông báo phạm vi rõ ràng.
 
+### AI nhận xét bài làm trong Ôn tập và Chấm bài của Giám khảo
+
+- **Trong mục Ôn tập của thí sinh (`/api/ai/practice-feedback` + `PracticeAiFeedbackButton`):** Khi thực hành kịch bản ôn tập trên cả 6 thiết bị (`dvor-1150`, `dvor-1150a`, `dme-1119a`, `dvor-220`, `dme-320`, `ads-b`), thí sinh có thể nhấn **AI nhận xét bài làm** để xem phân tích chi tiết: **Những gì cần đạt để solve**, **Những gì đã làm đúng**, **Làm thừa hoặc điều chỉnh sai** (thao tác bị từ chối, lệnh thừa, chọn thừa card, chưa nhấn F7 Apply) và **Gợi ý bước tiếp theo**. Tính năng này tự động ẩn hoàn toàn trong phiên thi chính thức và từ chối mọi kịch bản chỉ thuộc đề thi (`exam`).
+- **Trên trang chấm bài của Giám khảo (`/api/ai/exam-review-feedback` + `ScenarioExamScoreEditor`):** Giám khảo có nút **AI gợi ý nhận xét** cho các bài đã nộp/kết thúc để đối chiếu kết quả kỹ thuật và đưa đoạn nhận xét gợi ý vào ô nhận xét trước khi chỉnh sửa và bấm **Lưu điểm và nhận xét** (không tự động thay đổi điểm số chính thức).
+
 ## Nhật ký phiên 20/10/2026 — gia cố kỳ thi PostgreSQL
 
 - Tái hiện trong PostgreSQL 17 cô lập: các RPC lưu thí sinh/giám khảo/điểm gọi `public.current_app_role()` chưa tồn tại; bổ sung migration **0014** chỉ thêm resolver, không sửa 13 migration đã áp dụng hoặc dữ liệu bài thi.

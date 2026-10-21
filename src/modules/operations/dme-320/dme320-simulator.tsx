@@ -6,6 +6,7 @@ import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { useStore } from "zustand";
 import { Dme320ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
+import { PracticeAiFeedbackButton } from "@/components/scenario/practice-ai-feedback-button";
 import { useScenarioExamResultReader, useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
 import { evaluateDme320Scenario } from "./domain/scenario";
 import {
@@ -502,6 +503,14 @@ export function Dme320Simulator({
           <span className={styles.scenarioActiveBadge} role="status">
             Scenario Active · {simulation.scenario.definition?.name} · {scenarioEvaluation.solved ? "SOLVED" : "IN PROGRESS"} · Profile Save disabled
           </span>
+        ) : null}
+        {simulation.scenario.active && simulation.scenario.definition ? (
+          <PracticeAiFeedbackButton
+            moduleId="dme-320"
+            scenarioId={simulation.scenario.definition.id}
+            scenarioName={simulation.scenario.definition.name}
+            getPayload={() => ({ simulation: store.getState().simulation })}
+          />
         ) : null}
       </section> : null}
       {viewMode === "pmdt" ? (

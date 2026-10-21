@@ -6,6 +6,7 @@ import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { useStore } from "zustand";
 import { Dvor220ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
+import { PracticeAiFeedbackButton } from "@/components/scenario/practice-ai-feedback-button";
 import { useScenarioExamResultReader, useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
 import {
   MopiensBeveledButton,
@@ -413,6 +414,14 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
           <span className={styles.scenarioActiveBadge} role="status">
             Scenario Active · {device.scenario.definition?.name}
           </span>
+        ) : null}
+        {device.scenario.active && device.scenario.definition ? (
+          <PracticeAiFeedbackButton
+            moduleId="dvor-220"
+            scenarioId={device.scenario.definition.id}
+            scenarioName={device.scenario.definition.name}
+            getPayload={() => ({ device: store.getState().device })}
+          />
         ) : null}
       </section> : null}
       {simulatorToolScreen ? (

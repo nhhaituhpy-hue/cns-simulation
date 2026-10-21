@@ -15,6 +15,7 @@ import type { Dvor1150PmdtMode } from "@/lib/dvor1150";
 import { Dvor1150ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
 import { SimulatorToolbarBackButton } from "@/components/simulator/simulator-toolbar-back-button";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
+import { PracticeAiFeedbackButton } from "@/components/scenario/practice-ai-feedback-button";
 import { Dvor1150HardwareStage } from "./dvor1150-hardware-stage";
 import { evaluateDvor1150Scenario } from "@/lib/dvor1150";
 import { useScenarioExamResultReader, useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
@@ -105,6 +106,34 @@ export function Dvor1150PmdtLayout({
         {scenarioAuthoringEnabled ? <button type="button" onClick={() => setScenarioParametersOpen(true)}>Scenario Parameters</button> : null}
         {scenarioAuthoringEnabled ? <span className="dvor1150-scenario-role-badge">EXAMINER</span> : null}
         <Dvor1150TrainingHud examinerView={scenarioAuthoringEnabled} />
+        {!examSnapshot && scenario.active && scenario.definition ? (
+          <PracticeAiFeedbackButton
+            moduleId="dvor-1150"
+            scenarioId={scenario.definition.id}
+            scenarioName={scenario.definition.name}
+            getPayload={() => {
+              const state = useDvor1150PmdtStore.getState();
+              return {
+                visitedViewIds: state.scenarioVisitedViewIds,
+                acceptedActionControlIds: state.scenarioAcceptedActionControlIds,
+                scenarioHardwareSelection: state.scenarioHardwareSelection,
+                scenarioHardwareInspected: state.scenarioHardwareInspected,
+                scenarioHardwareReasoning: state.scenarioHardwareReasoning,
+                scenarioHardwareDispositionConfirmed: state.scenarioHardwareDispositionConfirmed,
+                parameterChangeLogs: state.parameterChangeLogs,
+                checkpoint: {
+                  config: state.config,
+                  configDraft: state.configDraft,
+                  configurationBackup: state.configurationBackup,
+                  configDirty: state.configDirty,
+                  needBackup: state.needBackup,
+                  scenarioStage: state.scenarioStage,
+                  diagnosticState: state.diagnosticState,
+                },
+              };
+            }}
+          />
+        ) : null}
         {examSnapshot && scenario.definition?.diagnosis ? <button type="button" disabled={!examEvaluation?.pmdtComplete} onClick={() => runtime.setScenarioStage("hardware")}>Tiếp tục: Xác định phần cứng</button> : null}
         {scenarioAuthoringEnabled && scenario.active ? <span className="dvor1150-scenario-active-badge">Scenario active: {scenario.definition?.name}</span> : null}
       </nav> : null}
