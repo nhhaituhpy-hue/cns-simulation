@@ -11,6 +11,7 @@ const LIBRARY_LABELS: Record<ScenarioLibraryKind, string> = {
   practice: "Thư viện Ôn tập",
   exam: "Thư viện Kiểm tra",
 };
+const LIBRARY_TITLES: Record<ScenarioLibraryKind, string> = { practice: "Ôn tập", exam: "Kiểm tra" };
 type LibrarySelection = Record<ScenarioLibraryKind, string[]>;
 type LibrarySnapshot = { selected: LibrarySelection; revisions: Record<ScenarioLibraryKind, number> };
 const EMPTY_SNAPSHOT: LibrarySnapshot = { selected: { practice: [], exam: [] }, revisions: { practice: 0, exam: 0 } };
@@ -65,11 +66,11 @@ function SelectAllCheckbox({ kind, checked, indeterminate, disabled, onChange }:
   useEffect(() => {
     if (inputRef.current) inputRef.current.indeterminate = indeterminate;
   }, [indeterminate]);
-  return <label className="flex cursor-pointer select-none flex-col items-center justify-center gap-1">
+  return <label className="inline-flex size-8 cursor-pointer select-none items-center justify-center">
     <input ref={inputRef} type="checkbox" checked={checked} disabled={disabled}
       aria-label={`Chọn tất cả ${LIBRARY_LABELS[kind]}`}
+      title={`Chọn tất cả ${LIBRARY_TITLES[kind]}`}
       onChange={event => onChange(event.currentTarget.checked)} className={checkboxClass()} />
-    <span className="text-[10px] font-medium normal-case tracking-normal text-[var(--cns-text-secondary)] sm:text-[11px]">Chọn tất cả</span>
   </label>;
 }
 
@@ -187,15 +188,15 @@ export function ScenarioLibraryColumnHeading({ kind }: { kind: ScenarioLibraryKi
   const controls = useLibraryControls();
   const count = controls.selectedCounts[kind];
   const all = controls.availableCount > 0 && count === controls.availableCount;
-  return <>
-    <span className="mb-2 block text-[11px] font-semibold normal-case leading-4">{LIBRARY_LABELS[kind]}</span>
+  return <div className="flex flex-col items-center justify-center gap-0.5">
+    <span className="block whitespace-nowrap text-[11px] font-semibold normal-case leading-4 tracking-normal">{LIBRARY_TITLES[kind]}</span>
     <SelectAllCheckbox kind={kind} checked={all} indeterminate={count > 0 && !all}
       disabled={controls.disabled || controls.availableCount === 0} onChange={checked => controls.toggleAll(kind, checked)} />
-  </>;
+  </div>;
 }
 
 export function ScenarioLibraryColumnHeaders() {
-  return LIBRARY_KINDS.map(kind => <th key={kind} scope="col" className="w-32 min-w-28 px-2 py-3 text-center">
+  return LIBRARY_KINDS.map(kind => <th key={kind} scope="col" className="w-24 min-w-24 px-2 py-3 text-center">
     <ScenarioLibraryColumnHeading kind={kind} />
   </th>);
 }

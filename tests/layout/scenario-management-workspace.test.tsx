@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ScenarioManagementWorkspace } from "@/components/scenario/scenario-management-workspace";
 
@@ -34,14 +34,54 @@ describe("ScenarioManagementWorkspace", () => {
     expect(screen.queryByText("Cài đặt thư viện")).not.toBeInTheDocument();
     const table = screen.getByRole("table");
     expect(within(table).getAllByRole("columnheader")).toHaveLength(7);
-    expect(within(table).getByRole("columnheader", { name: /Thư viện Ôn tập/ })).toBeInTheDocument();
-    expect(within(table).getByRole("columnheader", { name: /Thư viện Kiểm tra/ })).toBeInTheDocument();
+    expect(within(table).getByRole("columnheader", { name: /^Ôn tập/ })).toBeInTheDocument();
+    expect(within(table).getByRole("columnheader", { name: /^Kiểm tra/ })).toBeInTheDocument();
+    expect(within(table).queryByText("Thư viện Ôn tập")).not.toBeInTheDocument();
+    expect(within(table).queryByText("Chọn tất cả")).not.toBeInTheDocument();
     const row = scenarioButton.closest("tr")!;
     const practice = within(row).getByRole("checkbox", { name: /Thư viện Ôn tập/ });
     const exam = within(row).getByRole("checkbox", { name: /Thư viện Kiểm tra/ });
     await waitFor(() => expect(practice).toBeChecked());
     expect(exam).not.toBeChecked();
-    expect(within(row).getByRole("button", { name: "Sửa nhanh" })).toBeInTheDocument();
+    expect(within(row).queryByRole("button", { name: "Sửa nhanh" })).not.toBeInTheDocument();
+  });
+
+  it.each(["dvor-1150", "dvor-1150a", "dme-1119a", "dvor-220", "dme-320"] as const)("keeps only AI creation and two SVG-only row actions for %s", async moduleId => {
+    const fetcher = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(url => Promise.resolve(new Response(JSON.stringify(
+      url.startsWith("/api/ai/") ? { jobs: [] }
+        : url.startsWith("/api/scenario-libraries") ? { practice: [], exam: [], libraryRevisions: { practice: 0, exam: 0 } }
+          : [scenario({ moduleId })],
+    ))));
+    vi.stubGlobal("fetch", fetcher);
+    render(<ScenarioManagementWorkspace moduleId={moduleId} />);
+    const scenarioButton = await screen.findByRole("button", { name: /QA DVOR 220 - Carrier/ });
+    const create = screen.getByRole("region", { name: "Tạo kịch bản AI" });
+    expect(within(create).getAllByRole("button")).toHaveLength(1);
+    expect(within(create).getByRole("button", { name: "Tạo kịch bản bằng AI" })).toBeInTheDocument();
+    const cell = scenarioButton.closest("tr")!.lastElementChild as HTMLElement;
+    const actions = cell.querySelectorAll("a, button");
+    expect(actions).toHaveLength(2);
+    const open = within(cell).getByRole("link", { name: "Mở simulator" });
+    expect(open).toHaveAttribute("href", expect.stringContaining("?scenarioId=scenario-row"));
+    expect(open).toHaveAttribute("title", "Mở simulator");
+    const remove = within(cell).getByRole("button", { name: "Xóa" });
+    for (const action of [open, remove]) {
+      expect(action.textContent?.trim()).toBe("");
+      expect(action.querySelector("svg")).not.toBeNull();
+      expect(action.children).toHaveLength(1);
+    }
+    fireEvent.click(scenarioButton);
+    const edit = await screen.findByRole("button", { name: "Sửa nhanh" });
+    expect(screen.getByRole("button", { name: "Tải JSON" })).toBeInTheDocument();
+    fireEvent.click(edit);
+    expect(screen.getByRole("textbox", { name: "Tên kịch bản" })).toHaveValue("QA DVOR 220 - Carrier");
+    fireEvent.click(screen.getByRole("button", { name: "Hủy" }));
+    expect(cell.querySelectorAll("a, button")).toHaveLength(2);
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    fireEvent.click(remove);
+    expect(confirm).toHaveBeenCalledOnce();
+    expect(fetcher.mock.calls.every(([, init]) => !init?.method || init.method === "GET")).toBe(true);
+    confirm.mockRestore();
   });
 
   it("shows only the selected device scenarios and restores navigation to the catalog", async () => {

@@ -7,7 +7,6 @@ import { DownloadSimple } from "@phosphor-icons/react/dist/csr/DownloadSimple";
 import { PencilSimple } from "@phosphor-icons/react/dist/csr/PencilSimple";
 import { CaretDown } from "@phosphor-icons/react/dist/csr/CaretDown";
 import { CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
-import { Plus } from "@phosphor-icons/react/dist/csr/Plus";
 import { Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
 import Link from "next/link";
@@ -370,17 +369,12 @@ export function ScenarioManagementWorkspace({
         </div>
       ) : null}
 
-      <AiScenarioDialog key={moduleId} moduleId={moduleId} onCompleted={() => loadScenarios()}
-        actions={<Button variant="primary" disabled={isLoading || busyModuleId !== null} onClick={() => importInputRefs.current[moduleId]?.click()} className="!bg-[#ea580c] hover:!bg-[#c2410c]">
-          <Plus aria-hidden size={16} weight="bold" />
-          <span>{busyModuleId === moduleId ? "Đang xử lý…" : "Thêm"}</span>
-        </Button>}
-      />
+      <AiScenarioDialog key={moduleId} moduleId={moduleId} onCompleted={() => loadScenarios()} />
       <ScenarioLibraryControls key={`libraries-${moduleId}`} moduleId={moduleId} scenarios={scenarios} disabled={isLoading || busyModuleId !== null}>
 
       <div className="mt-6 overflow-hidden rounded-[12px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] shadow-sm">
         <div className="overflow-x-auto" role="region" aria-label="Danh sách kịch bản" tabIndex={0}>
-          <table className="w-full min-w-[1120px] border-collapse text-left text-[13px]">
+          <table className="w-full min-w-[960px] border-collapse text-left text-[13px]">
             <caption className="sr-only">
               Danh sách Scenario Parameters {simulatorModule.shortName}
             </caption>
@@ -389,17 +383,17 @@ export function ScenarioManagementWorkspace({
                 <th scope="col" className="px-6 py-3">
                   Kịch bản
                 </th>
-                <th scope="col" className="w-36 px-4 py-3">
+                <th scope="col" className="w-28 px-4 py-3">
                   Độ khó
                 </th>
                 <th scope="col" className="w-36 px-4 py-3">
                   Cập nhật
                 </th>
-                <th scope="col" className="w-32 px-4 py-3">
+                <th scope="col" className="w-28 px-4 py-3">
                   Trạng thái
                 </th>
                 <ScenarioLibraryColumnHeaders />
-                <th scope="col" className="w-64 px-6 py-3 text-right">
+                <th scope="col" className="w-28 px-4 py-3 text-right">
                   Thao tác
                 </th>
               </tr>
@@ -482,7 +476,6 @@ function LoadingRows() {
             <div className="flex items-center justify-end gap-1.5">
               <div className="size-8 rounded bg-slate-300" />
               <div className="size-8 rounded bg-slate-300" />
-              <div className="h-8 w-24 rounded-full bg-slate-300" />
             </div>
           </td>
         </tr>
@@ -677,38 +670,17 @@ function ScenarioRow({
           <StatusSavedBadge />
         </td>
         <ScenarioLibraryCells scenario={scenario} disabled={busy} />
-        <td className={`whitespace-nowrap px-6 py-3.5 align-middle text-right ${rowIndex % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}>
+        <td className={`whitespace-nowrap px-4 py-3.5 align-middle text-right ${rowIndex % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}>
           <div className="flex items-center justify-end gap-1.5">
-            <Button
-              variant="secondary"
-              size="sm"
-              aria-label="Sửa nhanh"
-              title="Sửa nhanh"
-              className="size-8 !px-0 !bg-slate-200 !text-slate-700 !border-slate-300 hover:!bg-slate-300"
-              disabled={busy}
-              onClick={() => onStartEdit(moduleId, scenario)}
-            >
-              <PencilSimple aria-hidden size={15} />
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              aria-label="Tải JSON"
-              title="Tải JSON"
-              className="size-8 !px-0 !bg-slate-200 !text-slate-700 !border-slate-300 hover:!bg-slate-300"
-              disabled={busy}
-              onClick={() => onDownload(scenario)}
-            >
-              <DownloadSimple aria-hidden size={15} />
-            </Button>
             <ButtonLink
               href={simulatorHref}
               variant="primary"
               size="sm"
-              className="h-8 px-3 text-[13px] font-medium"
+              aria-label="Mở simulator"
+              title="Mở simulator"
+              className="size-8 !px-0"
             >
-              <ArrowSquareOut aria-hidden size={14} />
-              <span>Mở simulator</span>
+              <ArrowSquareOut aria-hidden size={16} />
             </ButtonLink>
             <Button
               variant="danger"
@@ -730,6 +702,8 @@ function ScenarioRow({
           scenario={scenario}
           busy={busy}
           quickEditDraft={quickEditDraft}
+          onStartEdit={() => onStartEdit(moduleId, scenario)}
+          onDownload={() => onDownload(scenario)}
           onCancelEdit={onCancelEdit}
           onSaveEdit={onSaveEdit}
           onEditChange={onEditChange}
@@ -744,6 +718,8 @@ function ScenarioDetailRow({
   scenario,
   busy,
   quickEditDraft,
+  onStartEdit,
+  onDownload,
   onCancelEdit,
   onSaveEdit,
   onEditChange,
@@ -752,6 +728,8 @@ function ScenarioDetailRow({
   scenario: StoredScenarioParameters;
   busy: boolean;
   quickEditDraft: QuickEditDraft | null;
+  onStartEdit: () => void;
+  onDownload: () => void;
   onCancelEdit: () => void;
   onSaveEdit: () => void;
   onEditChange: (
@@ -893,6 +871,10 @@ function ScenarioDetailRow({
             <pre className="cns-scrollbar mt-2 max-h-64 overflow-auto rounded-[8px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card-subtle)] p-3 font-mono text-[11px] leading-relaxed text-[var(--cns-text-secondary)]">
               {JSON.stringify(scenario.definition, null, 2)}
             </pre>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button size="sm" disabled={busy} onClick={onStartEdit}><PencilSimple aria-hidden size={15} />Sửa nhanh</Button>
+              <Button size="sm" disabled={busy} onClick={onDownload}><DownloadSimple aria-hidden size={15} />Tải JSON</Button>
+            </div>
           </div>
         </div>
       </td>

@@ -55,17 +55,16 @@ afterEach(() => {
 });
 
 describe("AdminDashboard", () => {
-  it("keeps ADS-B scenario actions in the authoring namespace", async () => {
+  it("offers AI creation and opens the selected ADS-B scenario in the native simulation", async () => {
     await act(async () => { render(<AdminDashboard activeModule="ads-b" />); });
 
+    expect(screen.queryByRole("link", { name: /Tạo kịch bản/ })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" })).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: "Tạo kịch bản ADS-B" }),
-    ).toHaveAttribute("href", "/authoring/ads-b/create");
-    expect(
-      screen.getByRole("link", { name: "Sửa kịch bản: Kiểm tra Sensor A" }),
+      screen.getByRole("link", { name: "Mở simulator: Kiểm tra Sensor A" }),
     ).toHaveAttribute(
       "href",
-      "/authoring/ads-b/edit?id=scenario-admin-test",
+      "/student/simulation?id=scenario-admin-test",
     );
   });
 
@@ -118,5 +117,7 @@ describe("AdminDashboard", () => {
       expect(screen.queryByText("Kiểm tra Sensor A")).not.toBeInTheDocument(),
     );
     expect(screen.getByText("Chưa có kịch bản")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: /Tạo kịch bản/ })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Tạo kịch bản bằng AI" })).toHaveLength(1);
   });
 });

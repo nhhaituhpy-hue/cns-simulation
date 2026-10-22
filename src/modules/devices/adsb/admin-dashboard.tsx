@@ -2,8 +2,7 @@
 
 import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { FilePlus } from "@phosphor-icons/react/dist/csr/FilePlus";
-import { PencilSimple } from "@phosphor-icons/react/dist/csr/PencilSimple";
-import { Plus } from "@phosphor-icons/react/dist/csr/Plus";
+import { ArrowSquareOut } from "@phosphor-icons/react/dist/csr/ArrowSquareOut";
 import { Terminal } from "@phosphor-icons/react/dist/csr/Terminal";
 import { Trash } from "@phosphor-icons/react/dist/csr/Trash";
 import { WarningCircle } from "@phosphor-icons/react/dist/csr/WarningCircle";
@@ -30,8 +29,8 @@ const scenarioColumns = [
   { id: "title", label: "Tiêu đề" },
   { id: "difficulty", label: "Mức độ", className: "w-28" },
   { id: "configuration", label: "Quy mô", className: "w-48" },
-  { id: "practice", label: <ScenarioLibraryColumnHeading kind="practice" />, className: "w-32 min-w-28 text-center" },
-  { id: "exam", label: <ScenarioLibraryColumnHeading kind="exam" />, className: "w-32 min-w-28 text-center" },
+  { id: "practice", label: <ScenarioLibraryColumnHeading kind="practice" />, className: "w-24 min-w-24 !px-2 text-center" },
+  { id: "exam", label: <ScenarioLibraryColumnHeading kind="exam" />, className: "w-24 min-w-24 !px-2 text-center" },
   { id: "actions", label: "Thao tác", className: "w-28 text-right" },
 ];
 
@@ -137,17 +136,7 @@ export function AdsbAdminDashboard() {
       ) : null}
 
       {/* Scenario Library Distribution Controls */}
-      <AiScenarioDialog moduleId="ads-b" onCompleted={refreshAiScenarioSources}
-        actions={<ButtonLink
-              href="/authoring/ads-b/create"
-              variant="primary"
-              size="md"
-              className="inline-flex items-center gap-1.5"
-            >
-              <Plus aria-hidden size={16} weight="bold" />
-              <span>Tạo kịch bản ADS-B</span>
-            </ButtonLink>}
-      />
+      <AiScenarioDialog moduleId="ads-b" onCompleted={refreshAiScenarioSources} />
       <AdsbScenarioLibraryPanel refreshKey={sourceRefreshKey} legacyScenarioIds={scenarios.map(s => s.id)}>
 
       {/* Scenarios Table Section */}
@@ -182,17 +171,6 @@ export function AdsbAdminDashboard() {
               <p className="mt-1 max-w-[420px] text-[13px] text-[var(--cns-text-secondary)]">
                 Tạo kịch bản đầu tiên để cấu hình trạng thái cảm biến và đáp án thao tác.
               </p>
-              <div className="mt-5">
-                <ButtonLink
-                  href="/authoring/ads-b/create"
-                  variant="primary"
-                  size="md"
-                  className="inline-flex items-center gap-1.5"
-                >
-                  <Plus aria-hidden size={16} weight="bold" />
-                  <span>Tạo kịch bản</span>
-                </ButtonLink>
-              </div>
             </div>
           ) : null}
 
@@ -253,14 +231,14 @@ export function AdsbAdminDashboard() {
                     <td className="w-28 px-4 py-3.5 align-middle">
                       <div className="flex justify-end gap-1.5">
                         <ButtonLink
-                          href={`/authoring/ads-b/edit?id=${scenario.id}`}
-                          variant="secondary"
+                          href={`/student/simulation?id=${encodeURIComponent(scenario.id)}`}
+                          variant="primary"
                           size="sm"
-                          aria-label={`Sửa kịch bản: ${scenario.title}`}
-                          title="Sửa kịch bản"
+                          aria-label={`Mở simulator: ${scenario.title}`}
+                          title="Mở simulator"
                           className="size-8 !px-0"
                         >
-                          <PencilSimple aria-hidden size={15} weight="bold" />
+                          <ArrowSquareOut aria-hidden size={16} weight="bold" />
                         </ButtonLink>
                         <Button
                           type="button"

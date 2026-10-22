@@ -30,6 +30,19 @@ it("puts ADS-B library auto-save in the same row and writes the canonical ID, no
   expect(screen.getAllByRole("table")).toHaveLength(1);
   expect(screen.queryByText("Cài đặt thư viện")).not.toBeInTheDocument();
   expect(screen.getAllByRole("columnheader")).toHaveLength(7);
+  expect(screen.getByRole("columnheader", { name: /^Ôn tập/ })).toBeInTheDocument();
+  expect(screen.getByRole("columnheader", { name: /^Kiểm tra/ })).toBeInTheDocument();
+  expect(screen.queryByRole("link", { name: /Tạo kịch bản/ })).not.toBeInTheDocument();
+  expect(screen.getByRole("region", { name: "Tạo kịch bản AI" }).querySelectorAll("button")).toHaveLength(1);
+  const actions = row.lastElementChild as HTMLElement;
+  expect(actions.querySelectorAll("a, button")).toHaveLength(2);
+  const open = within(actions).getByRole("link", { name: `Mở simulator: ${scenario.title}` });
+  expect(open).toHaveAttribute("href", `/student/simulation?id=${encodeURIComponent(scenario.id)}`);
+  for (const action of actions.querySelectorAll("a, button")) {
+    expect(action.textContent?.trim()).toBe("");
+    expect(action.querySelector("svg")).not.toBeNull();
+    expect(action.children).toHaveLength(1);
+  }
   await userEvent.setup().click(examCheckbox);
   await waitFor(() => expect(examCheckbox).toBeEnabled());
   expect(examCheckbox).toBeChecked();

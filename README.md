@@ -19,9 +19,9 @@
 
 ## Phân loại thư viện ngay trong bảng kịch bản
 
-- Bỏ bảng “Cài đặt thư viện” riêng; từng dòng bảng Kịch bản có hai checkbox **Thư viện Ôn tập** và **Thư viện Kiểm tra**, có thể chọn một hoặc cả hai. ADS-B ánh xạ ID legacy sang UUID nguồn canonical, không gửi nhầm ID hiển thị.
+- Bỏ bảng “Cài đặt thư viện” riêng; từng dòng bảng Kịch bản có hai cột gọn **Ôn tập** và **Kiểm tra**, checkbox tiêu đề chọn tất cả có tooltip/nhãn hỗ trợ truy cập. Có thể chọn một hoặc cả hai. ADS-B ánh xạ ID legacy sang UUID nguồn canonical, không gửi nhầm ID hiển thị.
 - Tích/bỏ tích hoặc chọn tất cả tự lưu ngay bằng delta `PATCH`, không nút Apply. Chỉ thêm/gỡ các ID vừa chọn; giữ nguyên membership, định nghĩa, rubric và assignment của bài đã xuất bản khác, kể cả nguồn đã lưu trữ. Khóa thao tác khi đang tải/lưu, gửi revision thư viện, đọc lại server sau lưu và phục hồi trạng thái thực khi lỗi/xung đột; không tự retry ghi khi kết quả mạng chưa rõ.
-- Giữ các chức năng xem chi tiết, sửa nhanh, tải JSON, mở simulator và xóa; bảng cuộn ngang trong khung trên mobile.
+- Chỉ giữ **Tạo kịch bản bằng AI** ở vùng tạo bài, bỏ nút Thêm/tạo thủ công bên cạnh và nút tạo lặp ở ADS-B trống. Cột **Thao tác** chỉ có hai icon SVG **mở simulator** và **xóa**, không chữ; giữ tooltip, aria-label và xác nhận xóa. Bấm tên bài ở bảng native để mở chi tiết, sửa nhanh hoặc tải JSON; ADS-B mở đúng QCMS của bài đã chọn thay vì lab độc lập. Bảng cuộn ngang trong khung trên mobile.
 
 ## Sửa tương phản ô đăng nhập
 
@@ -30,7 +30,7 @@
 
 ## Tạo kịch bản bằng AI — trình hướng dẫn từng bước
 
-- Từ trang **Kịch bản** của sáu thiết bị, chọn **Tạo kịch bản bằng AI** rồi chọn **Tải tài liệu** hoặc **Mô tả tình huống** trước khi mở modal. Mặc định native chỉ làm nền nội bộ; Import JSON và tạo thủ công vẫn giữ nguyên.
+- Từ trang **Kịch bản** của sáu thiết bị, chọn **Tạo kịch bản bằng AI** rồi chọn **Tải tài liệu** hoặc **Mô tả tình huống** trước khi mở modal. Mặc định native chỉ làm nền nội bộ; các editor/đường dẫn tạo thủ công chuyên biệt vẫn giữ nguyên, không đặt nút tạo thứ hai tại danh sách.
 - AI đối chiếu tài liệu đúng thiết bị, dựng **tình huống, triệu chứng, nguyên nhân, đáp án xử lý và rubric có phiên bản**. Các giá trị huấn luyện chưa có trong manual được ghi rõ là giả định mô phỏng, không phải giới hạn của hãng. Nguồn `reference-only` không được trình bày như tài liệu hãng.
 - Native compiler kiểm tra schema, guard, thao tác và kết quả khôi phục; không chấp nhận chỉ đổi tên preset hoặc tắt/bypass cảnh báo thay cho sửa cấu hình. ADS-B/MOPIENS kiểm chứng theo phạm vi native action/config replay; không suy ra đã sửa phần cứng hay GPS khi engine chưa mô phỏng được.
 - **Xem thử** hiển thị triệu chứng, đáp án từng bước, tiêu chí đạt và quote nguyên văn kèm trang/mục, SHA-256. **Chỉnh sửa nâng cao** mở form native khi cần; đổi cấu hình hoặc mục tiêu làm mất hiệu lực bản kiểm chứng cũ, phải yêu cầu soạn lại trước khi lưu.
