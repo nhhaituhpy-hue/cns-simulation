@@ -10,6 +10,7 @@ import type { ScenarioHardwareFault } from "@/lib/types";
 
 type HardwareDiagnosisWorkspaceProps = {
   hardwareFault: ScenarioHardwareFault;
+  submitLabel?: string;
   onClose: () => void;
   onSubmit: (diagnosis: {
     componentIds: string[];
@@ -19,6 +20,7 @@ type HardwareDiagnosisWorkspaceProps = {
 
 export function HardwareDiagnosisWorkspace({
   hardwareFault,
+  submitLabel = "NỘP BÀI",
   onClose,
   onSubmit,
 }: HardwareDiagnosisWorkspaceProps) {
@@ -134,7 +136,7 @@ export function HardwareDiagnosisWorkspace({
               className="inline-flex min-h-10 items-center gap-2 rounded bg-[#2563eb] px-4 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-45"
             >
               <PaperPlaneTilt aria-hidden size={17} />
-              NỘP BÀI
+              {submitLabel}
             </button>
           </div>
         </footer>

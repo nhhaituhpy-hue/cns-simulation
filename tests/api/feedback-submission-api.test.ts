@@ -13,6 +13,15 @@ function request(value: unknown = body, headers: Record<string,string> = {}) {
   return new Request("https://labs.cnsvn.com/api/ai/practice-submissions", { method: "POST", headers: { origin: "https://labs.cnsvn.com", "content-type": "application/json", "Idempotency-Key": "test-1", ...headers }, body: JSON.stringify(value) });
 }
 describe("durable after-submit HTTP boundaries", () => {
+  it("passes a published membership pin and reports a republish conflict instead of grading a different barem", async () => {
+    const { POST } = await import("@/app/api/ai/practice-submissions/route");
+    const { FeedbackJobError } = await import("@/lib/ai/feedback/jobs");
+    mocks.create.mockRejectedValueOnce(new FeedbackJobError("PUBLICATION_CHANGED"));
+    const response = await POST(request({ ...body, libraryMembershipId: id }));
+    expect(response.status).toBe(409);
+    expect(mocks.create).toHaveBeenCalledWith(mocks.pool, id, "test-1", expect.objectContaining({ libraryMembershipId: id }));
+    expect((await response.json()).error).toContain("Barem đã được công bố lại");
+  });
   beforeEach(() => { vi.clearAllMocks(); mocks.profile.mockResolvedValue({ id, role: "student" }); process.env.CNS_PUBLIC_ORIGIN = "https://labs.cnsvn.com"; });
   it("rejects unauthenticated, forged rubric, cross-origin, missing key and oversized requests before writes", async () => {
     const { POST } = await import("@/app/api/ai/practice-submissions/route");

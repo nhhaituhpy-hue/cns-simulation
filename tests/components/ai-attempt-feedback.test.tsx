@@ -16,12 +16,12 @@ describe("Practice & examiner AI feedback UI", () => {
     vi.restoreAllMocks();
   });
 
-  it("opens practice AI feedback on click and displays what to achieve, correct actions, and redundant/wrong adjustments", async () => {
+  it("submits once then automatically displays the saved rubric assessment inline", async () => {
     const { PracticeAiFeedbackButton } = await import("@/components/scenario/practice-ai-feedback-button");
-    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(new Response(JSON.stringify({ submissionId: "practice-test" }))).mockResolvedValueOnce(
       new Response(
         JSON.stringify({
-          feedback: {
+          status: "completed", feedback: {
             moduleId: "dvor-1150a",
             scenarioId: "s-dvor-1",
             scenarioName: "Suy giảm công suất TX1",
@@ -57,14 +57,15 @@ describe("Practice & examiner AI feedback UI", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /AI nhận xét bài làm/i }));
+    expect(screen.queryByRole("button", { name: /AI nhận xét bài làm/i })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Nộp bài ôn tập" }));
 
     await waitFor(() => {
-      expect(screen.getByRole("dialog", { name: /AI nhận xét bài làm/i })).toBeInTheDocument();
+      expect(screen.getByText(/Bạn đã kiểm tra đúng màn hình giám sát/i)).toBeInTheDocument();
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/ai/practice-feedback",
+      "/api/ai/practice-submissions",
       expect.objectContaining({ method: "POST" }),
     );
     expect(screen.getByText(/Bạn đã kiểm tra đúng màn hình giám sát/i)).toBeInTheDocument();

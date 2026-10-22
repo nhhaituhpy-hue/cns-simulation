@@ -5,16 +5,42 @@ import { createDefaultDvor1150aScenarioDefinition } from "@/lib/dvor1150a/scenar
 import { StrictMode } from "react";
 import { ScenarioExamSnapshotProvider } from "@/components/scenario-exams/scenario-exam-snapshot-context";
 
+const routeState = vi.hoisted(() => ({ query: "scenarioId=source-1&review=1" }));
 vi.mock("next/navigation", () => ({
-  useSearchParams: () => new URLSearchParams("scenarioId=source-1&review=1"),
+  useSearchParams: () => new URLSearchParams(routeState.query),
 }));
 
 afterEach(() => {
+  routeState.query = "scenarioId=source-1&review=1";
   cleanup();
   vi.unstubAllGlobals();
 });
 
 describe("ScenarioParametersRouteLoader", () => {
+  it("re-resolves the same source ID when switching from authoring preview to published practice", async () => {
+    const source = createDefaultDvor1150aScenarioDefinition(), published = { ...source, name: "Published original" };
+    routeState.query = "scenarioId=source-1";
+    const fetcher = vi.fn().mockResolvedValueOnce(new Response(JSON.stringify([{ moduleId: "dvor-1150a", revision: 9, definition: source }])))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ moduleId: "dvor-1150a", revision: 2, definition: published })));
+    vi.stubGlobal("fetch", fetcher);
+    const loaded = vi.fn(), view = render(<ScenarioParametersRouteLoader moduleId="dvor-1150a" enabled onLoaded={loaded} />);
+    await waitFor(() => expect(loaded).toHaveBeenCalledTimes(1));
+    routeState.query = "scenarioId=source-1&review=1";
+    view.rerender(<ScenarioParametersRouteLoader moduleId="dvor-1150a" enabled onLoaded={loaded} />);
+    await waitFor(() => expect(loaded).toHaveBeenCalledTimes(2));
+    expect(loaded).toHaveBeenLastCalledWith(published, expect.objectContaining({ review: true, revisionKey: "published:2" }));
+  });
+  it("loads an explicitly published practice snapshot rather than an admin's mutable source", async () => {
+    const definition = createDefaultDvor1150aScenarioDefinition();
+    const fetcher = vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      id: "source-1", moduleId: "dvor-1150a", revision: 7, definition,
+    })));
+    vi.stubGlobal("fetch", fetcher);
+    const onLoaded = vi.fn();
+    render(<ScenarioParametersRouteLoader moduleId="dvor-1150a" enabled onLoaded={onLoaded} />);
+    await waitFor(() => expect(onLoaded).toHaveBeenCalled());
+    expect(fetcher).toHaveBeenCalledWith("/api/practice-scenarios?moduleId=dvor-1150a&id=source-1", { cache: "no-store" });
+  });
   it("shows a visible error when the assigned runtime rejects initialization", () => {
     const definition = createDefaultDvor1150aScenarioDefinition();
     vi.stubGlobal("fetch", vi.fn());
@@ -52,12 +78,12 @@ describe("ScenarioParametersRouteLoader", () => {
 
   it("passes the immutable published revision to the review session", async () => {
     const definition = createDefaultDvor1150aScenarioDefinition();
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify([{
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
       id: "source-1",
       moduleId: "dvor-1150a",
       revision: 7,
       definition,
-    }]), { status: 200 })));
+    }), { status: 200 })));
     const onLoaded = vi.fn();
 
     render(<ScenarioParametersRouteLoader moduleId="dvor-1150a" enabled onLoaded={onLoaded} />);
@@ -71,13 +97,13 @@ describe("ScenarioParametersRouteLoader", () => {
 
 it("does not lose a source fetch when StrictMode cleans up the first effect",async()=>{
  const definition=createDefaultDvor1150aScenarioDefinition();definition.name="Wizard source";const onLoaded=vi.fn();
- vi.stubGlobal("fetch",vi.fn(async()=>new Response(JSON.stringify([{moduleId:"dvor-1150a",definition,revision:1}]))));
+ vi.stubGlobal("fetch",vi.fn(async()=>new Response(JSON.stringify({moduleId:"dvor-1150a",definition,revision:1}))));
  render(<StrictMode><ScenarioParametersRouteLoader moduleId="dvor-1150a" enabled onLoaded={onLoaded}/></StrictMode>);
  await waitFor(()=>expect(onLoaded).toHaveBeenCalledTimes(1));
 });
 it("finishes a pending source load even when parent recreates the onLoaded closure",async()=>{
  const definition=createDefaultDvor1150aScenarioDefinition();let resolve!: (r:Response)=>void;vi.stubGlobal("fetch",vi.fn(()=>new Promise<Response>(r=>{resolve=r;})));const first=vi.fn(),latest=vi.fn();
  const v=render(<ScenarioParametersRouteLoader moduleId="dvor-1150a" enabled onLoaded={first}/>);v.rerender(<ScenarioParametersRouteLoader moduleId="dvor-1150a" enabled onLoaded={latest}/>);
- await act(async()=>resolve(new Response(JSON.stringify([{moduleId:"dvor-1150a",definition,revision:1}]))));
+ await act(async()=>resolve(new Response(JSON.stringify({moduleId:"dvor-1150a",definition,revision:1}))));
  await waitFor(()=>expect(latest).toHaveBeenCalledTimes(1));expect(first).not.toHaveBeenCalled();
 });

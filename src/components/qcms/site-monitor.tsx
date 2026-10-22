@@ -20,6 +20,7 @@ type SiteMonitorProps = {
   groundStationsOpen?: boolean;
   onCloseGroundStations?: () => void;
   onMonitoringOpened?: () => void;
+  onMaintenance?: (sensor: SensorState) => void;
 };
 
 type ContextWindow = {
@@ -34,6 +35,7 @@ export function SiteMonitor({
   groundStationsOpen = true,
   onCloseGroundStations,
   onMonitoringOpened,
+  onMaintenance,
 }: SiteMonitorProps) {
   const [visualizedSensorIds, setVisualizedSensorIds] = useState<Set<string>>(
     () => new Set(),
@@ -228,6 +230,8 @@ export function SiteMonitor({
           }
           now={selectedSensor.openedAt}
           onClose={closeSensor}
+          onMaintenance={onMaintenance}
+          maintenanceDisabledReason={onMaintenance && selectedSensor.sensor.id !== scenario.targetSensorId ? "Bài ôn tập chỉ cho phép bảo trì cảm biến mục tiêu." : undefined}
         />
       ) : null}
 
@@ -237,6 +241,8 @@ export function SiteMonitor({
           sensor={contextWindow.sensor}
           onClose={closeContextWindow}
           now={contextWindow.openedAt}
+          onMaintenance={onMaintenance}
+          maintenanceDisabledReason={onMaintenance && contextWindow.sensor.id !== scenario.targetSensorId ? "Bài ôn tập chỉ cho phép bảo trì cảm biến mục tiêu." : undefined}
         />
       ) : null}
 

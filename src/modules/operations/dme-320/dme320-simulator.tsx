@@ -1,12 +1,12 @@
 "use client";
 
 import { Suspense, useCallback, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { useStore } from "zustand";
 import { Dme320ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
-import { PracticeAiFeedbackButton } from "@/components/scenario/practice-ai-feedback-button";
+import { PracticeWorkspace } from "@/components/scenario/practice-workspace";
 import { useScenarioExamResultReader, useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
 import { evaluateDme320Scenario } from "./domain/scenario";
 import {
@@ -171,6 +171,14 @@ export function Dme320Simulator({
   initialView = "pmdt",
 }: Dme320SimulatorProps = {}) {
   const examSnapshot = useScenarioExamSnapshot();
+  const searchParams = useSearchParams();
+  const requestedPracticeId = searchParams?.get("scenarioId")?.trim() ?? "";
+  const review = searchParams?.get("review") === "1";
+  const requestedSessionKey = searchParams?.get("sessionKey")?.trim() || undefined;
+  const practiceRequestKey = JSON.stringify(["dme-320", requestedPracticeId, review, requestedSessionKey]);
+  const practiceRequested = !examSnapshot && review && Boolean(requestedPracticeId);
+  const [loadedPracticeKey, setLoadedPracticeKey] = useState<string | null>(null);
+  const [practiceMembershipId, setPracticeMembershipId] = useState<string | undefined>(undefined);
   const [store] = useState<Dme320StoreApi>(
     () => providedStore ?? createDme320Store({
       initialNowMs: trainingStartMs,
@@ -459,20 +467,35 @@ export function Dme320Simulator({
     },
   ];
 
+  const practiceDefinition = practiceRequested && loadedPracticeKey === practiceRequestKey && simulation.scenario.active ? simulation.scenario.definition : null;
   return (
+    <PracticeWorkspace enabled={practiceRequested} moduleId="dme-320"
+      scenario={practiceDefinition ? { ...practiceDefinition, id: requestedPracticeId, membershipId: practiceMembershipId } : null}
+      attemptKey={simulation.scenario.startedAtMs}
+      getPayload={() => ({ simulation: store.getState().simulation })}
+      onRestart={() => {
+        const result = dispatch({ type: "apply-scenario", scenario: store.getState().simulation.scenario.definition! });
+        if (!result.accepted) return false;
+        store.setState(({ simulation: restarted }) => ({ simulation: { ...restarted, logs: [], parameterChangeLogs: [] } }));
+        return true;
+      }} hardware={{ available: false, reason: "Kịch bản DME 320 hiện xử lý trong PMDT/LMI; chưa có bước chọn phần cứng native." }}>
     <div className={styles.simulatorRoot} data-view-mode={viewMode}>
       <Suspense fallback={null}>
         <ScenarioParametersRouteLoader
           moduleId="dme-320"
           enabled
           onLoaded={(definition, context) => {
-            if (context.review) return dispatch({ type: "apply-scenario", scenario: definition }).accepted;
+            if (context.review) {
+              const accepted = dispatch({ type: "apply-scenario", scenario: definition }).accepted;
+              if (accepted && practiceRequested && context.sessionKey === requestedSessionKey) { setLoadedPracticeKey(practiceRequestKey); setPracticeMembershipId(context.membershipId); }
+              return accepted;
+            }
             else loadScenario(definition);
           }}
         />
       </Suspense>
-      {!examSnapshot ? <Dme320ConfigPersistenceBoundary store={store} /> : null}
-      {!examSnapshot ? <section className={styles.simulatorTools} aria-label="Simulator Tools">
+      {!examSnapshot && !practiceRequested ? <Dme320ConfigPersistenceBoundary store={store} /> : null}
+      {!examSnapshot && !practiceRequested ? <section className={styles.simulatorTools} aria-label="Simulator Tools">
         <button
           type="button"
           className={styles.simulatorBackButton}
@@ -504,22 +527,7 @@ export function Dme320Simulator({
             Scenario Active · {simulation.scenario.definition?.name} · {scenarioEvaluation.solved ? "SOLVED" : "IN PROGRESS"} · Profile Save disabled
           </span>
         ) : null}
-        {simulation.scenario.active && simulation.scenario.definition ? (
-          <PracticeAiFeedbackButton
-            moduleId="dme-320"
-            scenarioId={simulation.scenario.definition.id}
-            scenarioName={simulation.scenario.definition.name}
-            attemptKey={simulation.scenario.startedAtMs}
-            onRestart={() => {
-              const result = dispatch({ type: "apply-scenario", scenario: store.getState().simulation.scenario.definition! });
-              if (!result.accepted) return false;
-              // Native apply preserves the operator's flash/return configuration.
-              store.setState(({ simulation: restarted }) => ({ simulation: { ...restarted, logs: [], parameterChangeLogs: [] } }));
-              return true;
-            }}
-            getPayload={() => ({ simulation: store.getState().simulation })}
-          />
-        ) : null}
+
       </section> : null}
       {viewMode === "pmdt" ? (
         <MopiensPmdtShell
@@ -641,5 +649,6 @@ export function Dme320Simulator({
         onClose={() => setActiveDialog(null)}
       />
     </div>
+    </PracticeWorkspace>
   );
 }

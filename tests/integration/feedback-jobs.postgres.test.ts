@@ -33,6 +33,18 @@ describe.skipIf(!testUrl)("frozen automatic feedback in isolated PostgreSQL", ()
     const membership = (await pool.query(`insert into public.simulator_scenario_library_memberships(module_id,scenario_parameters_id,library_kind,revision_number,scenario_id,name,description,difficulty,schema_version,definition_json,published_by,sort_order) values('dvor-1150a',$1,$2,1,$3,$4,'','basic',1,$5,$6,(select coalesce(max(sort_order),0)+1 from public.simulator_scenario_library_memberships where library_kind=$2)) returning *`, [source.id, kind, definition.id, definition.name, definition, actorId])).rows[0];
     return { definition, source, membership };
   }
+  it("rejects a submission from an older published membership rather than grading against a newer answer", async () => {
+    const { createPracticeSubmission } = await import("@/lib/ai/feedback/jobs");
+    const fixture = await published();
+    await expect(createPracticeSubmission(pool, actorId, randomUUID(), {
+      moduleId: "dvor-1150a", scenarioId: fixture.source.id, payload: {}, libraryMembershipId: randomUUID(),
+    } as never)).rejects.toMatchObject({ code: "PUBLICATION_CHANGED" });
+    const result = await createPracticeSubmission(pool, actorId, randomUUID(), {
+      moduleId: "dvor-1150a", scenarioId: fixture.source.id, payload: {}, libraryMembershipId: fixture.membership.id,
+    } as never);
+    const row = (await pool.query("select library_membership_id from public.practice_submissions where id=$1", [result.submissionId])).rows[0];
+    expect(row.library_membership_id).toBe(fixture.membership.id);
+  });
   async function examFixture(assessmentRubric: unknown = rubric) {
     const { membership, definition } = await published("exam", assessmentRubric);
     const exam = (await pool.query("insert into public.scenario_exams(name,duration_minutes,created_by) values('Test exam',60,$1) returning id", [actorId])).rows[0];

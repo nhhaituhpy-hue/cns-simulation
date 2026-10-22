@@ -25,6 +25,8 @@ type SensorMonitoringModalProps = {
   sensor: SensorState;
   qcmsSymptoms?: readonly string[];
   onClose: () => void;
+  onMaintenance?: (sensor: SensorState) => void;
+  maintenanceDisabledReason?: string;
   now: number;
 };
 
@@ -77,10 +79,13 @@ export function SensorMonitoringModal({
   sensor,
   qcmsSymptoms = [],
   onClose,
+  onMaintenance,
+  maintenanceDisabledReason,
   now,
 }: SensorMonitoringModalProps) {
   const titleId = useId();
   const descriptionId = useId();
+  const maintenanceReasonId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const monitoring = sensor.monitoring;
@@ -261,6 +266,7 @@ export function SensorMonitoringModal({
             </Metric>
           </dl>
 
+          {onMaintenance && maintenanceDisabledReason ? <p id={maintenanceReasonId} className="mt-4 text-sm text-[var(--text-secondary)]">{maintenanceDisabledReason}</p> : null}
           <div className="mt-5 flex flex-col-reverse gap-2 border-t border-[var(--border)] pt-5 sm:flex-row sm:justify-end">
             <button
               type="button"
@@ -269,13 +275,22 @@ export function SensorMonitoringModal({
             >
               Đóng
             </button>
-            <Link
+            {onMaintenance ? <button
+              type="button"
+              disabled={Boolean(maintenanceDisabledReason)}
+              aria-describedby={maintenanceDisabledReason ? maintenanceReasonId : undefined}
+              onClick={() => { if (maintenanceDisabledReason) return; onMaintenance(sensor); onClose(); }}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded bg-[var(--accent)] px-4 text-center text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
+            >
+              <Broadcast aria-hidden size={18} weight="regular" />
+              Mở ứng dụng bảo trì
+            </button> : <Link
               href={terminalHref}
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded bg-[var(--accent)] px-4 text-center text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2"
             >
               <Broadcast aria-hidden size={18} weight="regular" />
               Mở ứng dụng bảo trì
-            </Link>
+            </Link>}
           </div>
         </div>
       </div>

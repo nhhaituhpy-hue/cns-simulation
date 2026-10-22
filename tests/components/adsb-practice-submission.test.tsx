@@ -1,0 +1,33 @@
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, expect, it, vi } from "vitest";
+import { AdsbPracticeWorkspace } from "@/components/scenario/adsb-practice-workspace";
+import { DEFAULT_SCENARIOS, useScenarioStore } from "@/stores/scenario-store";
+import { useRecordingStore } from "@/stores/recording-store";
+const canonicalId = "b817bdb7-d9f2-4a1a-89d4-51059633f480";
+const json = (data: unknown) => new Response(JSON.stringify(data));
+afterEach(() => { cleanup(); vi.restoreAllMocks(); });
+it("registers native payload with the real shared shell's sole submit and freezes its center after ACK", async () => {
+  useScenarioStore.setState({ sessionIdentity: "shared-shell-owner", sessionScope: "practice", isHydrated: false, scenarios: [] });
+  useRecordingStore.getState().resetAttempt();
+  Element.prototype.scrollIntoView = vi.fn();
+  const scenario = structuredClone(DEFAULT_SCENARIOS[0]);
+  delete scenario.hardwareFault;
+  const fetcher = vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
+    if (String(url).includes("practice-scenarios")) return json({ id: canonicalId, moduleId: "ads-b", membershipId: "published-member", revision: 1, name: scenario.title, description: scenario.description, difficulty: "basic", definition: { ...scenario, schemaVersion: 1, name: scenario.title, difficulty: "basic" } });
+    if (String(url).includes("practice-submissions")) return json({ submissionId: "submitted-adsb" });
+    return json({ status: "completed", feedback: { moduleId: "ads-b", scenarioId: canonicalId, scenarioName: scenario.title, status: "UNVERIFIED", solved: false, sourceMode: "deterministic-only", summary: "Nhận xét snapshot ADS-B", whatToAchieve: [], correctActions: [], redundantOrWrongAdjustments: [], nextSteps: [], suggestedExaminerComment: "", references: [], notice: "Tư vấn." } });
+  });
+  render(<AdsbPracticeWorkspace scenarioId={canonicalId} />);
+  await screen.findByRole("region", { name: "Simulator thao tác" });
+  expect(screen.getAllByRole("button", { name: /Nộp bài/ })).toHaveLength(1);
+  act(() => { useRecordingStore.getState().addAction({ kind: "menu-selection", menuId: "sa.root", menuTitle: "Root", input: "1", resultLabel: "Settings" }); useRecordingStore.getState().selectAll(); });
+  fireEvent.click(screen.getByRole("button", { name: /Nộp bài/ }));
+  await screen.findByText("Nhận xét snapshot ADS-B");
+  const writes = fetcher.mock.calls.filter(([, options]) => options?.method === "POST");
+  expect(writes).toHaveLength(1);
+  expect(JSON.parse(String(writes[0][1]?.body))).toMatchObject({ moduleId: "ads-b", scenarioId: canonicalId, payload: { allActions: useRecordingStore.getState().allActions, selectedActions: useRecordingStore.getState().selectedActions } });
+  expect(screen.getByRole("region", { name: "Simulator thao tác" })).toHaveAttribute("inert");
+  fireEvent.click(screen.getByRole("button", { name: "Bắt đầu lượt ôn tập mới" }));
+  expect(useRecordingStore.getState().allActions).toHaveLength(0);
+  expect(screen.getByRole("region", { name: "Simulator thao tác" })).not.toHaveAttribute("inert");
+});

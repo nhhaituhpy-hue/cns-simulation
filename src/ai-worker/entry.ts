@@ -7,6 +7,7 @@ import { claimGenerationJob, heartbeatGenerationJob, completeGenerationJob, fail
 import { processNextGeneration } from "../lib/ai/scenario-generation/worker";
 import { processNextAuthoring } from "../lib/ai/scenario-authoring/worker";
 import { runNextFeedback } from "../lib/ai/feedback/worker";
+import { runNextPracticeHint } from "../lib/ai/feedback/practice-hints-worker";
 import { runAiWorkerCycle } from "../lib/ai/scenario-authoring/worker-dispatch";
 import { generateScenario } from "../lib/ai/scenario-generation/generator";
 import { extractIsolatedDocuments } from "../lib/ai/documents/isolated";
@@ -60,6 +61,7 @@ async function main() {
         signal: controller.signal,
       }) : "idle",
       () => runNextFeedback(pool!, workerId, controller.signal),
+      () => runNextPracticeHint(pool!, workerId, controller.signal),
     );
     await health(outcome === "stopped" ? "stopping" : "ready");
     if (once) break;

@@ -16,7 +16,7 @@ interface ScenarioParametersRouteLoaderProps<
   enabled: boolean;
   onLoaded: (
     definition: ScenarioParametersDefinitionFor<TModuleId>,
-    context: { review: boolean; revisionKey: string; sessionKey?: string },
+    context: { review: boolean; revisionKey: string; sessionKey?: string; membershipId?: string },
   ) => boolean | void;
 }
 
@@ -29,6 +29,7 @@ export function ScenarioParametersRouteLoader<
   const scenarioId = searchParams?.get("scenarioId")?.trim() ?? "";
   const review = searchParams?.get("review") === "1";
   const requestedSessionKey = searchParams?.get("sessionKey")?.trim() || undefined;
+  const sourceRequestKey = JSON.stringify([moduleId, scenarioId, review, requestedSessionKey]);
   const [message, setMessage] = useState<string | null>(null);
   const loadedRef = useRef<string | null>(null);
   const onLoadedRef = useRef(onLoaded);
@@ -52,18 +53,20 @@ export function ScenarioParametersRouteLoader<
       }
       return;
     }
-    if (!enabled || !scenarioId || loadedRef.current === `${moduleId}:${scenarioId}`) return;
+    if (!enabled || !scenarioId || loadedRef.current === sourceRequestKey) return;
     let cancelled = false;
-    const requestKey = `${moduleId}:${scenarioId}`;
+    const requestKey = sourceRequestKey;
     // Mark complete only after the fetch is consumed. StrictMode cleanup must
     // not turn an abandoned request into an already-loaded source.
 
     async function load() {
       try {
-        const response = await fetch(`/api/scenario-parameters?id=${encodeURIComponent(scenarioId)}`, { cache: "no-store" });
-        if (!response.ok) throw new Error("Không thể tải Scenario Parameters từ kho kịch bản.");
+        const response = await fetch(review
+          ? `/api/practice-scenarios?moduleId=${encodeURIComponent(moduleId)}&id=${encodeURIComponent(scenarioId)}`
+          : `/api/scenario-parameters?id=${encodeURIComponent(scenarioId)}`, { cache: "no-store" });
+        if (!response.ok) throw new Error("Không thể tải kịch bản đã cấp từ kho.");
         const payload = await response.json() as unknown;
-        const row = Array.isArray(payload) ? payload[0] : null;
+        const row = review ? payload : Array.isArray(payload) ? payload[0] : null;
         const storedModuleId = row && typeof row === "object" && "moduleId" in row && typeof row.moduleId === "string"
           ? row.moduleId
           : null;
@@ -76,11 +79,13 @@ export function ScenarioParametersRouteLoader<
           : 1;
         if (cancelled) return;
         loadedRef.current = requestKey;
-        onLoadedRef.current(definition, {
+        const accepted = onLoadedRef.current(definition, {
           review,
           revisionKey: `${review ? "published" : "source"}:${storedRevision}`,
+          ...(review && row && typeof row === "object" && "membershipId" in row && typeof row.membershipId === "string" ? { membershipId: row.membershipId } : {}),
           ...(requestedSessionKey ? { sessionKey: requestedSessionKey } : {}),
         });
+        if (accepted === false) { loadedRef.current = null; throw new Error("Không thể khởi tạo kịch bản đã cấp. Hãy mở lại bài ôn tập."); }
         setMessage(review
           ? "Đã nạp kịch bản ôn tập vào simulator."
           : "Đã nạp Scenario Parameters từ kho quản lý. Hãy mở panel và Apply để chạy tình huống.");
@@ -95,7 +100,7 @@ export function ScenarioParametersRouteLoader<
     return () => {
       cancelled = true;
     };
-  }, [enabled, examSnapshot, moduleId, requestedSessionKey, review, scenarioId]);
+  }, [enabled, examSnapshot, moduleId, requestedSessionKey, review, scenarioId, sourceRequestKey]);
 
   return message ? examSnapshot
     ? <p role="alert" className="m-4 rounded border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-sm text-[#991b1b]">{message}</p>

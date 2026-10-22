@@ -1,13 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import type { AttemptFeedbackReport } from "@/lib/ai/feedback/attempt-feedback";
 import type { AttemptStepAssessment } from "@/lib/ai/feedback/step-assessment";
 import type { ManualCitation } from "@/lib/ai/scenario-blueprint/types";
 import type { ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 import { usePracticeSubmission, type PracticeSubmissionController } from "./attempt-feedback-client";
 import { AttemptFeedbackResult } from "./attempt-feedback-result";
-import { sanitizeScenarioExamPayload } from "@/lib/scenario-exams/results";
 import { useScenarioStore } from "@/stores/scenario-store";
 
 export interface PracticeAiFeedbackButtonProps {
@@ -78,7 +76,7 @@ export function AttemptFeedbackCard({
         <p className="mt-3 text-xs text-[var(--text-muted)]">{report.stepAssessment.notice}</p>
       </section> : <p className="text-xs text-[var(--text-secondary)]">Chưa có rubric quy trình; không suy ra số bước đúng từ nhật ký hay trạng thái alarm.</p>}
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(min(100%,12rem),1fr))]">
         <section className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3.5">
           <h4 className="text-xs font-bold text-[var(--text-primary)]">Những gì cần đạt để solve</h4>
           {report.whatToAchieve.length ? (
@@ -165,130 +163,22 @@ function StandalonePracticeFeedback(props: PracticeAiFeedbackButtonProps) {
 }
 
 function PracticeFeedbackControls({
-  moduleId,
-  scenarioId,
-  scenarioName,
-  getPayload,
   buttonClassName,
   onRestart,
   submission,
   hideSubmit = false,
 }: PracticeAiFeedbackButtonProps & { submission: PracticeSubmissionController }) {
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [report, setReport] = useState<AttemptFeedbackReport | null>(null);
-
-  async function requestFeedback() {
-    setOpen(true);
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch("/api/ai/practice-feedback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          moduleId,
-          scenarioId,
-          payload: sanitizeScenarioExamPayload(getPayload()),
-        }),
-      });
-      const data = (await response.json().catch(() => null)) as {
-        feedback?: AttemptFeedbackReport;
-        error?: string;
-      } | null;
-      if (!response.ok || !data?.feedback) {
-        throw new Error(data?.error ?? "Không thể phân tích bài làm lúc này.");
-      }
-      setReport(data.feedback);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Không thể phân tích bài làm lúc này.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
     <>
       {submission.submissionId ? <>
         <AttemptFeedbackResult target={{ practiceSubmissionId: submission.submissionId }} />
         {onRestart ? <button type="button" onClick={() => { if (onRestart() !== false) submission.reset(); }} className={buttonClassName}>Bắt đầu lượt ôn tập mới</button> : null}
       </> : !hideSubmit ? (
-        <button type="button" disabled={submission.pending} onClick={() => void submission.submit()} className={buttonClassName ?? "inline-flex min-h-8 items-center justify-center rounded-md border border-[#0284c7] bg-[#e0f2fe] px-2.5 py-1 text-xs font-semibold text-[#0369a1] hover:bg-[#bae6fd] disabled:opacity-60"}>
+        <button type="button" disabled={submission.pending} onClick={() => void submission.submit()} className={buttonClassName ?? "inline-flex min-h-10 items-center justify-center rounded-full border border-[#0284c7] bg-[#e0f2fe] px-4 py-2 text-xs font-semibold text-[#0369a1] hover:bg-[#bae6fd] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] disabled:opacity-60"}>
           {submission.pending ? "Đang nộp bài…" : "Nộp bài ôn tập"}
         </button>
       ) : null}
       {submission.error ? <p role="alert">{submission.error}</p> : null}
-      {!submission.submissionId ? <button
-        type="button"
-        onClick={() => void requestFeedback()}
-        disabled={loading}
-        className={
-          buttonClassName ??
-          "inline-flex min-h-8 items-center justify-center rounded-md border border-[#0284c7] bg-[#e0f2fe] px-2.5 py-1 text-xs font-semibold text-[#0369a1] hover:bg-[#bae6fd] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] disabled:opacity-60"
-        }
-      >
-        {loading ? "AI đang nhận xét…" : "AI nhận xét bài làm"}
-      </button> : null}
-
-      {open && !submission.submissionId ? (
-        <div
-          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/55 p-4"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.currentTarget === event.target) setOpen(false);
-          }}
-        >
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-label="AI nhận xét bài làm"
-            className="max-h-[88dvh] w-full max-w-4xl overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text-primary)] shadow-2xl"
-          >
-            <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-3">
-              <div>
-                <h3 className="text-base font-bold text-[var(--text-primary)]">
-                  AI nhận xét bài làm · {scenarioName ?? report?.scenarioName ?? scenarioId}
-                </h3>
-                <p className="mt-0.5 text-xs text-[var(--text-secondary)]">
-                  Phân tích điều kiện cần đạt để solve, thao tác làm đúng và các thao tác thừa hoặc điều chỉnh sai.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => void requestFeedback()}
-                  disabled={loading}
-                  className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-muted)] disabled:opacity-60"
-                >
-                  {loading ? "Đang phân tích…" : "Cập nhật nhận xét"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  className="inline-flex min-h-9 items-center justify-center rounded-lg bg-[var(--accent)] px-3 text-xs font-semibold text-white hover:bg-[var(--accent-hover)]"
-                >
-                  Đóng
-                </button>
-              </div>
-            </header>
-
-            <div className="mt-4">
-              {loading && !report ? (
-                <p role="status" className="py-6 text-center text-sm text-[var(--text-secondary)]">
-                  AI đang đối chiếu trạng thái thiết bị và lịch sử thao tác của bạn…
-                </p>
-              ) : null}
-              {error ? (
-                <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-                  {error}
-                </p>
-              ) : null}
-              {report ? <AttemptFeedbackCard report={report} /> : null}
-            </div>
-          </section>
-        </div>
-      ) : null}
     </>
   );
 }

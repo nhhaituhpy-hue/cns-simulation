@@ -11,21 +11,22 @@ export interface PracticeSubmissionInput {
   attemptKey?: string | number | null;
   enabled?: boolean;
   getPayload: () => Record<string, unknown> | null;
+  libraryMembershipId?: string;
 }
 
 function readPointer(key: string | null) {
   try { return key ? sessionStorage.getItem(key) : null; } catch { return null; }
 }
 
-export function usePracticeSubmission({ moduleId, scenarioId, getPayload, attemptKey, enabled = true }: PracticeSubmissionInput) {
+export function usePracticeSubmission({ moduleId, scenarioId, getPayload, attemptKey, libraryMembershipId, enabled = true }: PracticeSubmissionInput) {
   // AppShell's ScenarioSessionBoundary binds this to the server AuthProfile for
   // every module, and gates children synchronously on logout / identity changes.
   const owner = useScenarioStore((state) => state.sessionIdentity);
   // Only persist an opaque server ID, never feedback or a simulator checkpoint.
   // Native start timestamps may be regenerated on reload; the latest submitted
   // result remains available until the learner explicitly restarts the simulator.
-  const storageKey = enabled && owner ? `cns:practice-feedback:${JSON.stringify([owner, moduleId, scenarioId])}` : null;
-  const scope = JSON.stringify([owner, moduleId, scenarioId, enabled]);
+  const storageKey = enabled && owner ? `cns:practice-feedback:${JSON.stringify([owner, moduleId, scenarioId, ...(libraryMembershipId ? [libraryMembershipId] : [])])}` : null;
+  const scope = JSON.stringify([owner, moduleId, scenarioId, libraryMembershipId, enabled]);
   const [state, setState] = useState(() => ({ scope, attemptKey, submissionId: readPointer(storageKey), pending: false, error: null as string | null }));
   const flight = useRef<{ controller: AbortController; scope: string } | null>(null);
   const frozen = useRef<{ key: string; body: string } | null>(null);
@@ -52,7 +53,7 @@ export function usePracticeSubmission({ moduleId, scenarioId, getPayload, attemp
     flight.current = request;
     setState((value) => ({ ...value, pending: true, error: null }));
     try {
-      if (!frozen.current) frozen.current = { key: crypto.randomUUID(), body: JSON.stringify({ moduleId, scenarioId, payload: sanitizeScenarioExamPayload(getPayload()) }) };
+      if (!frozen.current) frozen.current = { key: crypto.randomUUID(), body: JSON.stringify({ moduleId, scenarioId, payload: sanitizeScenarioExamPayload(getPayload()), ...(libraryMembershipId ? { libraryMembershipId } : {}) }) };
       const response = await fetch("/api/ai/practice-submissions", {
         method: "POST",
         headers: { "Content-Type": "application/json", "Idempotency-Key": frozen.current.key },

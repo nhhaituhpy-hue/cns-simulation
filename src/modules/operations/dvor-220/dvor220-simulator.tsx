@@ -1,12 +1,12 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { useStore } from "zustand";
 import { Dvor220ConfigPersistenceBoundary } from "@/components/simulator/simulator-config-persistence";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
-import { PracticeAiFeedbackButton } from "@/components/scenario/practice-ai-feedback-button";
+import { PracticeWorkspace } from "@/components/scenario/practice-workspace";
 import { useScenarioExamResultReader, useScenarioExamSnapshot } from "@/components/scenario-exams/scenario-exam-snapshot-context";
 import {
   MopiensBeveledButton,
@@ -121,6 +121,14 @@ type Dvor220SimulatorToolScreen =
 
 export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }: Dvor220SimulatorProps = {}) {
   const examSnapshot = useScenarioExamSnapshot();
+  const searchParams = useSearchParams();
+  const requestedPracticeId = searchParams?.get("scenarioId")?.trim() ?? "";
+  const review = searchParams?.get("review") === "1";
+  const requestedSessionKey = searchParams?.get("sessionKey")?.trim() || undefined;
+  const practiceRequestKey = JSON.stringify(["dvor-220", requestedPracticeId, review, requestedSessionKey]);
+  const practiceRequested = !examSnapshot && review && Boolean(requestedPracticeId);
+  const [loadedPracticeKey, setLoadedPracticeKey] = useState<string | null>(null);
+  const [practiceMembershipId, setPracticeMembershipId] = useState<string | undefined>(undefined);
   const [store] = useState<Dvor220StoreApi>(() => providedStore ?? createDvor220Store({ initialNowMs: trainingStartMs }));
   const storeState = useStore(store);
   const { device, snapshot } = storeState;
@@ -362,14 +370,34 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
     />
   ) : null;
 
+  const practiceDefinition = practiceRequested && loadedPracticeKey === practiceRequestKey && device.scenario.active ? device.scenario.definition : null;
   return (
+    <PracticeWorkspace enabled={practiceRequested} moduleId="dvor-220"
+      scenario={practiceDefinition ? { ...practiceDefinition, id: requestedPracticeId, membershipId: practiceMembershipId } : null}
+      attemptKey={device.scenario.startedAtMs}
+      getPayload={() => ({ device: store.getState().device })}
+      onRestart={() => {
+        const current = store.getState().device;
+        const result = dispatch({ type: "apply-scenario", scenario: current.scenario.definition! });
+        if (!result.ok) return false;
+        store.setState(({ device: restarted }) => ({ device: { ...restarted,
+          history: { ...restarted.history, pmdt: [], lmi: [], parameterChanges: [] },
+          configuration: { ...restarted.configuration, flash: current.configuration.flash,
+            flashDirty: JSON.stringify(restarted.configuration.running) !== JSON.stringify(current.configuration.flash) },
+        } }));
+        return true;
+      }} hardware={{ available: false, reason: "Kịch bản DVOR 220 hiện xử lý trong PMDT/LMI; chưa có bước chọn phần cứng native." }}>
     <div className={styles.simulatorRoot} data-view-mode={viewMode}>
       <Suspense fallback={null}>
         <ScenarioParametersRouteLoader
           moduleId="dvor-220"
           enabled
           onLoaded={(definition, context) => {
-            if (context.review) return dispatch({ type: "apply-scenario", scenario: definition }).ok;
+            if (context.review) {
+              const ok = dispatch({ type: "apply-scenario", scenario: definition }).ok;
+              if (ok && practiceRequested && context.sessionKey === requestedSessionKey) { setLoadedPracticeKey(practiceRequestKey); setPracticeMembershipId(context.membershipId); }
+              return ok;
+            }
             else {
               setPreloadedScenario(definition);
               setActiveDialog("simulation-parameters");
@@ -377,8 +405,8 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
           }}
         />
       </Suspense>
-      {!examSnapshot ? <Dvor220ConfigPersistenceBoundary store={store} /> : null}
-      {!examSnapshot ? <section className={styles.simulatorTools} aria-label="Simulator Tools">
+      {!examSnapshot && !practiceRequested ? <Dvor220ConfigPersistenceBoundary store={store} /> : null}
+      {!examSnapshot && !practiceRequested ? <section className={styles.simulatorTools} aria-label="Simulator Tools">
         <button
           type="button"
           className={styles.simulatorBackButton}
@@ -415,27 +443,7 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
             Scenario Active · {device.scenario.definition?.name}
           </span>
         ) : null}
-        {device.scenario.active && device.scenario.definition ? (
-          <PracticeAiFeedbackButton
-            moduleId="dvor-220"
-            scenarioId={device.scenario.definition.id}
-            scenarioName={device.scenario.definition.name}
-            attemptKey={device.scenario.startedAtMs}
-            onRestart={() => {
-              const current = store.getState().device;
-              const result = dispatch({ type: "apply-scenario", scenario: current.scenario.definition! });
-              if (!result.ok) return false;
-              // A new training attempt clears learner evidence, not saved profiles.
-              store.setState(({ device: restarted }) => ({ device: { ...restarted,
-                history: { ...restarted.history, pmdt: [], lmi: [], parameterChanges: [] },
-                configuration: { ...restarted.configuration, flash: current.configuration.flash,
-                  flashDirty: JSON.stringify(restarted.configuration.running) !== JSON.stringify(current.configuration.flash) },
-              } }));
-              return true;
-            }}
-            getPayload={() => ({ device: store.getState().device })}
-          />
-        ) : null}
+
       </section> : null}
       {simulatorToolScreen ? (
         <aside className={styles.simulatorToolPanel} aria-label={`${DVOR220_SCREEN_LABELS[activeSimulatorTool!]} simulator tool`}>
@@ -517,5 +525,6 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
       />
       <Dvor220ControlDialogs activeDialog={activeDialog} device={device} snapshot={snapshot} dispatch={dispatch} scenarioDefinition={preloadedScenario} onClose={() => setActiveDialog(null)} />
     </div>
+    </PracticeWorkspace>
   );
 }

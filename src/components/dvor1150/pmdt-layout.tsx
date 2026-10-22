@@ -1,6 +1,8 @@
 "use client";
 
-import { Suspense, useEffect, type ReactNode } from "react";
+import { Suspense, useEffect, useState, type ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
+import { PracticeWorkspace } from "@/components/scenario/practice-workspace";
 import { Dvor1150MenuBar } from "./pmdt-menu-bar";
 import { Dvor1150LoginDialog } from "./pmdt-login-dialog";
 import { Dvor1150ScreenRouter } from "./pmdt-screens";
@@ -34,6 +36,13 @@ export function Dvor1150PmdtLayout({
   sidePanel,
 }: Dvor1150PmdtLayoutProps) {
   const examSnapshot = useScenarioExamSnapshot();
+  const searchParams = useSearchParams();
+  const requestedScenarioId = searchParams?.get("scenarioId")?.trim() ?? "";
+  const requestedSessionKey = searchParams?.get("sessionKey")?.trim() ?? "";
+  const practiceRequested = !examSnapshot && searchParams?.get("review") === "1" && Boolean(requestedScenarioId);
+  const practiceRequestKey = `${requestedScenarioId}:${requestedSessionKey}`;
+  const [loadedPractice, setLoadedPractice] = useState<{ requestKey: string; definitionId: string; membershipId?: string } | null>(null);
+  const canAuthorScenario = scenarioAuthoringEnabled && !practiceRequested;
   useScenarioExamResultReader(() => {
     const state = useDvor1150PmdtStore.getState();
     if (!examSnapshot || !state.scenario.active || state.scenario.definition?.id !== examSnapshot.definition.id) return null;
@@ -63,14 +72,38 @@ export function Dvor1150PmdtLayout({
   const replaceScenarioDraft = useDvor1150PmdtStore((state) => state.replaceScenarioDraft);
   const initializeStudentScenario = useDvor1150PmdtStore((state) => state.initializeStudentScenario);
   const scenario = useDvor1150PmdtStore((state) => state.scenario);
+  const practiceReady = practiceRequested && scenario.active && loadedPractice?.requestKey === practiceRequestKey && loadedPractice.definitionId === scenario.definition?.id;
+  const getPracticePayload = () => {
+    const state = useDvor1150PmdtStore.getState();
+    return {
+      visitedViewIds: state.scenarioVisitedViewIds,
+      acceptedActionControlIds: state.scenarioAcceptedActionControlIds,
+      scenarioHardwareSelection: state.scenarioHardwareSelection,
+      scenarioHardwareInspected: state.scenarioHardwareInspected,
+      scenarioHardwareReasoning: state.scenarioHardwareReasoning,
+      scenarioHardwareDispositionConfirmed: state.scenarioHardwareDispositionConfirmed,
+      parameterChangeLogs: state.parameterChangeLogs,
+      parameterEvidence: state.parameterEvidence,
+      checkpoint: {
+        config: state.config,
+        configDraft: state.configDraft,
+        configurationBackup: state.configurationBackup,
+        configDirty: state.configDirty,
+        needBackup: state.needBackup,
+        scenarioStage: state.scenarioStage,
+        diagnosticState: state.diagnosticState,
+      },
+    };
+  };
+
   const runtime = useDvor1150PmdtStore();
-  const examEvaluation = examSnapshot && scenario.active ? evaluateDvor1150Scenario(scenario, runtime.derived, runtime.config, {
+  const examEvaluation = (examSnapshot || practiceReady) && scenario.active ? evaluateDvor1150Scenario(scenario, runtime.derived, runtime.config, {
     visitedViewIds: runtime.scenarioVisitedViewIds, acceptedActionControlIds: runtime.scenarioAcceptedActionControlIds,
     selectedHardwareOccurrenceKeys: runtime.scenarioHardwareSelection, hardwareDispositionConfirmed: runtime.scenarioHardwareDispositionConfirmed,
   }) : null;
 
   useEffect(() => { setMode(mode); }, [mode, setMode]);
-  useEffect(() => { setScenarioAuthoringEnabled(scenarioAuthoringEnabled); }, [scenarioAuthoringEnabled, setScenarioAuthoringEnabled]);
+  useEffect(() => { setScenarioAuthoringEnabled(canAuthorScenario); }, [canAuthorScenario, setScenarioAuthoringEnabled]);
   useEffect(() => {
     refreshClock();
     const timer = window.setInterval(refreshClock, 1000);
@@ -87,13 +120,29 @@ export function Dvor1150PmdtLayout({
     return () => document.removeEventListener("keydown", onKey);
   }, [apply, close, next, reset]);
 
-  return <div className={`pmdt-classic-viewport ${hasExternalPanels ? "pmdt-classic-viewport--with-external-inspector" : ""} ${mode === "student" ? "pmdt-classic-viewport--legacy-dvor1150" : ""}`}>
+  return <PracticeWorkspace
+      enabled={practiceRequested}
+      moduleId="dvor-1150"
+      scenario={practiceReady && scenario.definition ? { id: scenario.definition.id, name: scenario.definition.name, description: scenario.definition.description, difficulty: scenario.definition.difficulty, membershipId: loadedPractice?.membershipId } : null}
+      attemptKey={scenario.startedAt}
+      getPayload={getPracticePayload}
+      onRestart={() => scenario.definition ? initializeStudentScenario(scenario.definition) : false}
+      hardware={{
+        available: Boolean(scenario.definition?.diagnosis && examEvaluation?.pmdtComplete),
+        reason: !scenario.definition?.diagnosis ? "Kịch bản này chưa hỗ trợ bước xác định phần cứng." : !examEvaluation?.pmdtComplete ? "Hoàn thành các checkpoint PMDT ở Bước 1 trước." : undefined,
+        onOpen: () => runtime.setScenarioStage("hardware"),
+      }}
+    ><div className={`pmdt-classic-viewport ${hasExternalPanels ? "pmdt-classic-viewport--with-external-inspector" : ""} ${mode === "student" ? "pmdt-classic-viewport--legacy-dvor1150" : ""}`}>
     <Suspense fallback={null}>
       <ScenarioParametersRouteLoader
         moduleId="dvor-1150"
         enabled
         onLoaded={(definition, context) => {
-          if (context.review) return initializeStudentScenario(definition);
+          if (context.review) {
+            const started = initializeStudentScenario(definition);
+            if (started && !examSnapshot) setLoadedPractice({ requestKey: practiceRequestKey, definitionId: definition.id, membershipId: context.membershipId });
+            return started;
+          }
           else {
             replaceScenarioDraft(definition);
             setScenarioParametersOpen(true);
@@ -103,43 +152,22 @@ export function Dvor1150PmdtLayout({
     </Suspense>
     <div className="dvor1150-simulator-frame">
       {mode === "preview" || scenarioAuthoringEnabled || scenario.active ? <nav className="dvor1150-simulator-tools" aria-label="DVOR 1150 simulator tools">
-        {mode === "preview" ? <SimulatorToolbarBackButton /> : null}
-        {scenarioAuthoringEnabled ? <button type="button" onClick={() => setScenarioParametersOpen(true)}>Scenario Parameters</button> : null}
-        {scenarioAuthoringEnabled ? <span className="dvor1150-scenario-role-badge">EXAMINER</span> : null}
-        <Dvor1150TrainingHud examinerView={scenarioAuthoringEnabled} />
-        {!examSnapshot && scenario.active && scenario.definition ? (
+        {mode === "preview" && !practiceRequested ? <SimulatorToolbarBackButton /> : null}
+        {canAuthorScenario ? <button type="button" onClick={() => setScenarioParametersOpen(true)}>Scenario Parameters</button> : null}
+        {canAuthorScenario ? <span className="dvor1150-scenario-role-badge">EXAMINER</span> : null}
+        {!practiceRequested ? <Dvor1150TrainingHud examinerView={canAuthorScenario} /> : null}
+        {!examSnapshot && !practiceRequested && scenario.active && scenario.definition ? (
           <PracticeAiFeedbackButton
             moduleId="dvor-1150"
             scenarioId={scenario.definition.id}
             scenarioName={scenario.definition.name}
             attemptKey={scenario.startedAt}
             onRestart={() => initializeStudentScenario(scenario.definition!)}
-            getPayload={() => {
-              const state = useDvor1150PmdtStore.getState();
-              return {
-                visitedViewIds: state.scenarioVisitedViewIds,
-                acceptedActionControlIds: state.scenarioAcceptedActionControlIds,
-                scenarioHardwareSelection: state.scenarioHardwareSelection,
-                scenarioHardwareInspected: state.scenarioHardwareInspected,
-                scenarioHardwareReasoning: state.scenarioHardwareReasoning,
-                scenarioHardwareDispositionConfirmed: state.scenarioHardwareDispositionConfirmed,
-                parameterChangeLogs: state.parameterChangeLogs,
-                parameterEvidence: state.parameterEvidence,
-                checkpoint: {
-                  config: state.config,
-                  configDraft: state.configDraft,
-                  configurationBackup: state.configurationBackup,
-                  configDirty: state.configDirty,
-                  needBackup: state.needBackup,
-                  scenarioStage: state.scenarioStage,
-                  diagnosticState: state.diagnosticState,
-                },
-              };
-            }}
+            getPayload={getPracticePayload}
           />
         ) : null}
         {examSnapshot && scenario.definition?.diagnosis ? <button type="button" disabled={!examEvaluation?.pmdtComplete} onClick={() => runtime.setScenarioStage("hardware")}>Tiếp tục: Xác định phần cứng</button> : null}
-        {scenarioAuthoringEnabled && scenario.active ? <span className="dvor1150-scenario-active-badge">Scenario active: {scenario.definition?.name}</span> : null}
+        {canAuthorScenario && scenario.active ? <span className="dvor1150-scenario-active-badge">Scenario active: {scenario.definition?.name}</span> : null}
       </nav> : null}
       <section className={`pmdt-classic-window dvor1150-pmdt-window ${inlineSidePanel ? "pmdt-classic-window--with-inspector" : "pmdt-classic-window--standard"}`} aria-label="DVOR 1150 PMDT Simulator">
         <div className="pmdt-titlebar-row"><Dvor1150TitleBar /></div>
@@ -149,13 +177,13 @@ export function Dvor1150PmdtLayout({
         {inlineSidePanel ? <aside aria-label="Bảng thông tin simulator" className="pmdt-classic-inspector">{inlineSidePanel}</aside> : null}
         <div className="pmdt-statusbar-row"><Dvor1150StatusBar /></div>
         {simulationParametersOpen ? <Dvor1150SimulationParametersPanel /> : null}
-        {scenarioAuthoringEnabled && scenarioParametersOpen ? <Dvor1150ScenarioParametersPanel /> : null}
+        {canAuthorScenario && scenarioParametersOpen ? <Dvor1150ScenarioParametersPanel /> : null}
         {loginOpen ? <Dvor1150LoginDialog /> : null}
-        {mode === "preview" ? <Dvor1150ConfigPersistenceBoundary /> : null}
+        {mode === "preview" && !practiceRequested ? <Dvor1150ConfigPersistenceBoundary /> : null}
       </section>
     </div>
     {externalLeadingPanel ? <aside aria-label="Nhật ký học viên" className="pmdt-classic-inspector pmdt-classic-inspector--external pmdt-classic-inspector--external-leading">{externalLeadingPanel}</aside> : null}
     {externalSidePanel ? <aside aria-label="Màn hình và thao tác đã ghi nhận" className="pmdt-classic-inspector pmdt-classic-inspector--external">{externalSidePanel}</aside> : null}
-    {examSnapshot && runtime.scenarioStage === "hardware" ? <Dvor1150HardwareStage /> : null}
-  </div>;
+    {(examSnapshot || practiceReady) && runtime.scenarioStage === "hardware" ? <Dvor1150HardwareStage /> : null}
+  </div></PracticeWorkspace>;
 }

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArrowClockwise } from "@phosphor-icons/react/dist/csr/ArrowClockwise";
 import { Broadcast } from "@phosphor-icons/react/dist/csr/Broadcast";
 import { X } from "@phosphor-icons/react/dist/csr/X";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import type { SensorDataProfile, SensorState } from "@/lib/types";
 
 type SensorConfigWindowProps = {
@@ -12,6 +12,8 @@ type SensorConfigWindowProps = {
   sensor: SensorState;
   now: number;
   onClose: () => void;
+  onMaintenance?: (sensor: SensorState) => void;
+  maintenanceDisabledReason?: string;
 };
 
 function Panel({
@@ -68,7 +70,10 @@ export function SensorConfigWindow({
   sensor,
   now,
   onClose,
+  onMaintenance,
+  maintenanceDisabledReason,
 }: SensorConfigWindowProps) {
+  const maintenanceReasonId = useId();
   const initialUpdate = sensor.monitoring?.lastSnmpResponseAt
     ? Date.parse(sensor.monitoring.lastSnmpResponseAt)
     : now;
@@ -215,14 +220,18 @@ export function SensorConfigWindow({
             </div>
           </Panel>
 
+          {onMaintenance && maintenanceDisabledReason ? <p id={maintenanceReasonId} className="mt-4 text-sm text-[#64748b]">{maintenanceDisabledReason}</p> : null}
           <footer className="mt-4 flex flex-col-reverse gap-2 border-t border-[#b8c4ce] pt-4 sm:flex-row sm:justify-end">
             <button type="button" onClick={onClose} className="min-h-11 rounded border border-[#64748b] bg-white px-4 text-sm font-bold text-[#263746] hover:bg-[#f8fafc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563eb]">
               CLOSE
             </button>
-            <Link href={terminalHref} className="inline-flex min-h-11 items-center justify-center gap-2 rounded bg-[#2563eb] px-4 text-sm font-bold text-white hover:bg-[#1d4ed8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563eb] focus-visible:ring-offset-2">
+            {onMaintenance ? <button type="button" disabled={Boolean(maintenanceDisabledReason)} aria-describedby={maintenanceDisabledReason ? maintenanceReasonId : undefined} onClick={() => { if (maintenanceDisabledReason) return; onMaintenance(sensor); onClose(); }} className="inline-flex min-h-11 items-center justify-center gap-2 rounded bg-[#2563eb] px-4 text-sm font-bold text-white hover:bg-[#1d4ed8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563eb] focus-visible:ring-offset-2">
               <Broadcast aria-hidden size={18} />
               OPEN MAINTENANCE APPLICATION
-            </Link>
+            </button> : <Link href={terminalHref} className="inline-flex min-h-11 items-center justify-center gap-2 rounded bg-[#2563eb] px-4 text-sm font-bold text-white hover:bg-[#1d4ed8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563eb] focus-visible:ring-offset-2">
+              <Broadcast aria-hidden size={18} />
+              OPEN MAINTENANCE APPLICATION
+            </Link>}
           </footer>
         </div>
       </div>

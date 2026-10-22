@@ -16,6 +16,14 @@ beforeEach(() => { useScenarioStore.setState({ sessionIdentity: "student-one", s
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.useRealTimers(); });
 
 describe("durable practice submission feedback", () => {
+  it("provides one submit-and-evaluate action, not an independent pre-submit grading action", () => {
+    const fetcher = vi.spyOn(globalThis, "fetch");
+    render(<PracticeAiFeedbackButton {...props} />);
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Nộp bài ôn tập" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: "AI nhận xét bài làm" })).not.toBeInTheDocument();
+    expect(fetcher).not.toHaveBeenCalled();
+  });
   it("reports an invalid completed response instead of waiting forever or inventing a report", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(json({ status: "completed" }));
     render(<AttemptFeedbackResult target={{ practiceSubmissionId: "invalid-result" }} />);

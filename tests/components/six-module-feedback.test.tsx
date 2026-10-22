@@ -23,9 +23,10 @@ import { TerminalSession } from "@/components/terminal/terminal-session";
 import { ScenarioExamSnapshotProvider } from "@/components/scenario-exams/scenario-exam-snapshot-context";
 import type { ScenarioParametersDefinition, ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 
+const routeState = vi.hoisted(() => ({ query: "" }));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn(), forward: vi.fn(), refresh: vi.fn(), prefetch: vi.fn() }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => new URLSearchParams(routeState.query),
 }));
 vi.mock("@/lib/exams/actions", () => ({ completeExamAttemptItemAction: vi.fn() }));
 // Profile persistence is unrelated to submission and would reach a live API.
@@ -58,7 +59,7 @@ function prepare(moduleId: typeof modules[number]) {
       const store = createDvor220Store();
       expect(store.getState().dispatch({ type: "apply-scenario", scenario: definition }).ok).toBe(true);
       store.setState(({ device }) => ({ device: { ...device, configuration: { ...device.configuration, flash: { ...device.configuration.flash, station: { ...device.configuration.flash.station, stationName: "Saved operator profile" } } } } }));
-      return { definition, ui: <Dvor220Simulator store={store} />, mutate: () => store.setState(({ device }) => ({ device: { ...device, history: { ...device.history, parameterChanges: [{ id: "dirty" } as never] } } })), isReset: () => store.getState().device.history.parameterChanges.length === 0 && store.getState().device.configuration.flash.station.stationName === "Saved operator profile" };
+      return { definition, ui: <Dvor220Simulator store={store} />, mutate: () => store.setState(({ device }) => ({ device: { ...device, configuration: { ...device.configuration, flash: { ...device.configuration.flash, station: { ...device.configuration.flash.station, stationName: "Saved operator profile" } } }, history: { ...device.history, parameterChanges: [{ id: "dirty" } as never] } } })), isReset: () => store.getState().device.history.parameterChanges.length === 0 && store.getState().device.configuration.flash.station.stationName === "Saved operator profile" };
     }
     case "dme-320": {
       const definition = createDefaultDme320ScenarioDefinition();
@@ -70,6 +71,7 @@ function prepare(moduleId: typeof modules[number]) {
   }
 }
 beforeEach(() => {
+  routeState.query = "";
   useDvor1150PmdtStore.getState().reset(); useVorPmdtStore.getState().reset(); useDmePmdtStore.getState().reset();
   useRecordingStore.getState().resetAttempt();
   useScenarioStore.setState({ sessionIdentity: "verified-student", sessionScope: "practice", isHydrated: true, scenarios: structuredClone([...DEFAULT_SCENARIOS]) });
@@ -106,17 +108,22 @@ describe("real simulator submission integration", () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
   it.each(modules)("%s submits once, reads automatically, and restarts actual simulator state", async (moduleId) => {
-    const fetcher = vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => String(url).includes("practice-submissions") ? json({ submissionId: "submitted-one" }) : json({ status: "completed", feedback: report }));
     const runtime = prepare(moduleId);
+    routeState.query = "review=1&scenarioId=11111111-1111-4111-8111-111111111111";
+    const fetcher = vi.spyOn(globalThis, "fetch").mockImplementation(async url => String(url).includes("practice-scenarios")
+      ? json({ id: "11111111-1111-4111-8111-111111111111", moduleId, revision: 1, membershipId: "22222222-2222-4222-8222-222222222222", definition: runtime.definition })
+      : String(url).includes("practice-submissions") ? json({ submissionId: "submitted-one" }) : json({ status: "completed", feedback: report }));
     render(runtime.ui);
-    expect(fetcher).not.toHaveBeenCalled();
+    await screen.findByRole("region", { name: "Mô tả tình huống" });
+    expect(fetcher).toHaveBeenCalledOnce();
     act(runtime.mutate);
     expect(runtime.isReset()).toBe(false);
     fireEvent.click(screen.getByRole("button", { name: "Nộp bài ôn tập" }));
     await screen.findByText(report.summary);
-    expect(fetcher).toHaveBeenCalledTimes(2);
-    expect(JSON.parse(String(fetcher.mock.calls[0][1]?.body))).toMatchObject({ moduleId, scenarioId: runtime.definition.id });
-    expect(fetcher.mock.calls[1][0]).toBe("/api/ai/attempt-feedback?practiceSubmissionId=submitted-one");
+    expect(fetcher).toHaveBeenCalledTimes(3);
+    const write = fetcher.mock.calls.find(([, init]) => init?.method === "POST")!;
+    expect(JSON.parse(String(write[1]?.body))).toMatchObject({ moduleId, libraryMembershipId: "22222222-2222-4222-8222-222222222222" });
+    expect(fetcher.mock.calls[2][0]).toBe("/api/ai/attempt-feedback?practiceSubmissionId=submitted-one");
     fireEvent.click(screen.getByRole("button", { name: "Bắt đầu lượt ôn tập mới" }));
     expect(runtime.isReset()).toBe(true);
     expect(screen.queryByText(report.summary)).not.toBeInTheDocument();

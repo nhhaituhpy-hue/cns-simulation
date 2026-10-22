@@ -1,6 +1,8 @@
 "use client";
 
-import { Suspense, useEffect, type ReactNode } from "react";
+import { Suspense, useEffect, useState, type ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
+import { PracticeWorkspace } from "@/components/scenario/practice-workspace";
 import { SimulatorConfigPersistence } from "@/components/simulator/simulator-config-persistence";
 import { SimulatorToolbarBackButton } from "@/components/simulator/simulator-toolbar-back-button";
 import { ScenarioParametersRouteLoader } from "@/components/scenario/scenario-parameters-route-loader";
@@ -76,6 +78,13 @@ export function PmdtLayout({
   sidePanel,
 }: PmdtLayoutProps) {
   const examSnapshot = useScenarioExamSnapshot();
+  const searchParams = useSearchParams();
+  const requestedScenarioId = searchParams?.get("scenarioId")?.trim() ?? "";
+  const requestedSessionKey = searchParams?.get("sessionKey")?.trim() ?? "";
+  const practiceRequested = !examSnapshot && searchParams?.get("review") === "1" && Boolean(requestedScenarioId);
+  const practiceRequestKey = `${requestedScenarioId}:${requestedSessionKey}`;
+  const [loadedPractice, setLoadedPractice] = useState<{ requestKey: string; definitionId: string; membershipId?: string } | null>(null);
+  const canAuthorScenario = scenarioAuthoringEnabled && !practiceRequested;
   const examAnswer = useScenarioExamAnswer();
   useEffect(() => { if (examAnswer) useVorPmdtStore.getState().updateAnswer(examAnswer); }, [examAnswer]);
   useScenarioExamResultReader(() => {
@@ -95,6 +104,30 @@ export function PmdtLayout({
   const configPanelOpen = useVorPmdtStore((state) => state.configPanelOpen);
   const scenarioParametersOpen = useVorPmdtStore((state) => state.scenarioParametersOpen);
   const scenario = useVorPmdtStore((state) => state.scenario);
+  const practiceReady = practiceRequested && scenario.active && loadedPractice?.requestKey === practiceRequestKey && loadedPractice.definitionId === scenario.definition?.id;
+  const getPracticePayload = () => {
+    const state = useVorPmdtStore.getState();
+    return {
+      actionHistory: state.actionHistory,
+      evidenceStats: state.evidenceStats,
+      attemptEvents: state.attemptEvents,
+      answer: state.answer,
+      scenarioHardwareSelection: state.scenarioHardwareSelection,
+      scenarioHardwareInspected: state.scenarioHardwareInspected,
+      scenarioHardwareReasoning: state.scenarioHardwareReasoning,
+      scenarioHardwareDispositionConfirmed: state.scenarioHardwareDispositionConfirmed,
+      checkpoint: {
+        config: state.config,
+        configDraft: state.configDraft,
+        configurationBackup: state.configurationBackup,
+        configDirty: state.configDirty,
+        needBackup: state.needBackup,
+        scenarioStage: state.scenarioStage,
+        diagnosticState: state.diagnosticState,
+      },
+    };
+  };
+
   const config = useVorPmdtStore((state) => state.config);
   const derived = useVorPmdtStore((state) => state.derived);
   const storeMode = useVorPmdtStore((state) => state.mode);
@@ -135,8 +168,8 @@ export function PmdtLayout({
   }, [mode, setMode]);
 
   useEffect(() => {
-    setScenarioAuthoringEnabled(scenarioAuthoringEnabled);
-  }, [scenarioAuthoringEnabled, setScenarioAuthoringEnabled]);
+    setScenarioAuthoringEnabled(canAuthorScenario);
+  }, [canAuthorScenario, setScenarioAuthoringEnabled]);
 
   useEffect(() => {
     function handleFunctionKey(event: KeyboardEvent) {
@@ -154,7 +187,19 @@ export function PmdtLayout({
   }, [applyConfigChanges, restoreDefaultConfig]);
 
   return (
-    <div className={`pmdt-classic-viewport ${hasExternalPanels ? "pmdt-classic-viewport--with-external-inspector" : ""}`}>
+    <PracticeWorkspace
+      enabled={practiceRequested}
+      moduleId="dvor-1150a"
+      scenario={practiceReady && scenario.definition ? { id: scenario.definition.id, name: scenario.definition.name, description: scenario.definition.description, difficulty: scenario.definition.difficulty, membershipId: loadedPractice?.membershipId } : null}
+      attemptKey={scenario.startedAt}
+      getPayload={getPracticePayload}
+      onRestart={() => scenario.definition ? startReviewScenario(scenario.definition) : false}
+      hardware={{
+        available: Boolean(scenario.definition?.diagnosis && scenarioEvaluation?.pmdtComplete),
+        reason: !scenario.definition?.diagnosis ? "Kịch bản này chưa hỗ trợ bước xác định phần cứng." : !scenarioEvaluation?.pmdtComplete ? "Hoàn thành các checkpoint PMDT ở Bước 1 trước." : undefined,
+        onOpen: () => setScenarioStage("hardware"),
+      }}
+    ><div className={`pmdt-classic-viewport ${hasExternalPanels ? "pmdt-classic-viewport--with-external-inspector" : ""}`}>
       <Suspense fallback={null}>
         <ScenarioParametersRouteLoader
           moduleId="dvor-1150a"
@@ -164,11 +209,13 @@ export function PmdtLayout({
               if (examSnapshot && useVorPmdtStore.getState().sessionKey !== context.sessionKey) {
                 useVorPmdtStore.getState().initializeSession({ mode: "student", scenarioId: definition.id, sessionKey: context.sessionKey, revisionKey: context.revisionKey, userId: sessionUserId });
               }
-              return startReviewScenario(definition, {
+              const started = startReviewScenario(definition, {
                 userId: sessionUserId,
                 sessionKey: context.sessionKey ?? `practice:${sessionUserId || "anonymous"}:${definition.id}`,
                 revisionKey: context.revisionKey,
               });
+              if (started && !examSnapshot) setLoadedPractice({ requestKey: practiceRequestKey, definitionId: definition.id, membershipId: context.membershipId });
+              return started;
             }
             else {
               replaceScenarioDraft(definition);
@@ -179,43 +226,22 @@ export function PmdtLayout({
       </Suspense>
       <div className="dvor1150a-simulator-frame">
         {mode === "preview" || examSnapshot ? <nav className="dvor1150a-simulator-tools" aria-label="DVOR 1150A simulator tools">
-          {mode === "preview" ? <SimulatorToolbarBackButton /> : null}
-          {scenarioAuthoringEnabled ? <button type="button" onClick={() => setScenarioParametersOpen(true)}>Scenario Parameters</button> : null}
-          {scenarioAuthoringEnabled ? <span className="dvor1150a-scenario-role-badge">EXAMINER</span> : null}
-          <Dvor1150aTrainingHud examinerView={scenarioAuthoringEnabled} />
-          {!examSnapshot && scenario.active && scenario.definition ? (
+          {mode === "preview" && !practiceRequested ? <SimulatorToolbarBackButton /> : null}
+          {canAuthorScenario ? <button type="button" onClick={() => setScenarioParametersOpen(true)}>Scenario Parameters</button> : null}
+          {canAuthorScenario ? <span className="dvor1150a-scenario-role-badge">EXAMINER</span> : null}
+          {!practiceRequested ? <Dvor1150aTrainingHud examinerView={canAuthorScenario} /> : null}
+          {!examSnapshot && !practiceRequested && scenario.active && scenario.definition ? (
             <PracticeAiFeedbackButton
               moduleId="dvor-1150a"
               scenarioId={scenario.definition.id}
               scenarioName={scenario.definition.name}
               attemptKey={scenario.startedAt}
               onRestart={() => startReviewScenario(scenario.definition!)}
-              getPayload={() => {
-                const state = useVorPmdtStore.getState();
-                return {
-                  actionHistory: state.actionHistory,
-                  evidenceStats: state.evidenceStats,
-                  attemptEvents: state.attemptEvents,
-                  answer: state.answer,
-                  scenarioHardwareSelection: state.scenarioHardwareSelection,
-                  scenarioHardwareInspected: state.scenarioHardwareInspected,
-                  scenarioHardwareReasoning: state.scenarioHardwareReasoning,
-                  scenarioHardwareDispositionConfirmed: state.scenarioHardwareDispositionConfirmed,
-                  checkpoint: {
-                    config: state.config,
-                    configDraft: state.configDraft,
-                    configurationBackup: state.configurationBackup,
-                    configDirty: state.configDirty,
-                    needBackup: state.needBackup,
-                    scenarioStage: state.scenarioStage,
-                    diagnosticState: state.diagnosticState,
-                  },
-                };
-              }}
+              getPayload={getPracticePayload}
             />
           ) : null}
-          {scenarioAuthoringEnabled && scenario.active ? <span className="dvor1150a-scenario-active-badge">Scenario active: {scenario.definition?.name}</span> : null}
-          {twoStageScenario && scenarioEvaluation ? (
+          {canAuthorScenario && scenario.active ? <span className="dvor1150a-scenario-active-badge">Scenario active: {scenario.definition?.name}</span> : null}
+          {!practiceRequested && twoStageScenario && scenarioEvaluation ? (
             <div className="dvor1150a-scenario-stagebar" role="status">
               <span><strong>{scenarioStage === "pmdt" ? "Bước 1/2" : scenarioStage === "hardware" ? "Bước 2/2" : "Hoàn thành"}</strong> · {scenario.definition?.diagnosis?.disposition === "software-adjustment" ? "PMDT configuration" : "PMDT → hardware"}</span>
               {scenarioStage === "pmdt" ? (
@@ -253,15 +279,15 @@ export function PmdtLayout({
           <PmdtStatusBar />
         </div>
         {configPanelOpen ? <DvorConfigPanel /> : null}
-        {scenarioAuthoringEnabled && scenarioParametersOpen ? <Dvor1150aScenarioParametersPanel /> : null}
+        {canAuthorScenario && scenarioParametersOpen ? <Dvor1150aScenarioParametersPanel /> : null}
         {aboutDialogOpen ? <AboutPmdtDialog /> : null}
         {loginDialogOpen ? <PmdtLoginDialog /> : null}
-        {mode === "preview" && simulatorId ? <SimulatorConfigPersistence simulatorId={simulatorId} /> : null}
+        {mode === "preview" && !practiceRequested && simulatorId ? <SimulatorConfigPersistence simulatorId={simulatorId} /> : null}
         <VorScenarioSessionPersistence />
       </section>
       </div>
-      {twoStageScenario && scenarioStage === "hardware" ? <Dvor1150aHardwareStage /> : null}
-      {twoStageScenario && scenarioStage === "complete" ? (
+      {(!practiceRequested || practiceReady) && twoStageScenario && scenarioStage === "hardware" ? <Dvor1150aHardwareStage /> : null}
+      {(!practiceRequested || practiceReady) && twoStageScenario && scenarioStage === "complete" ? (
         <div className="fixed inset-0 z-[90] grid place-items-center bg-black/55 p-4" role="presentation">
           <section role="dialog" aria-modal="true" aria-labelledby="dvor-scenario-complete-title" className="w-full max-w-lg rounded border border-[#9aa8b3] bg-[#f7f9fa] p-6 text-[#17202a] shadow-2xl">
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#1d5f91]">Scenario completed</p>
@@ -284,6 +310,6 @@ export function PmdtLayout({
           {externalSidePanel}
         </aside>
       ) : null}
-    </div>
+    </div></PracticeWorkspace>
   );
 }

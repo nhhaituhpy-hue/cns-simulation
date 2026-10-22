@@ -126,7 +126,7 @@ export class FeedbackJobError extends Error {
   constructor(public readonly code: string) { super(code); this.name = "FeedbackJobError"; }
 }
 export const isFeedbackId = (id: string) => /^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(id);
-export interface PracticeSubmissionInput { moduleId: ScenarioParametersModuleId; scenarioId: string; payload: Record<string, unknown> | null }
+export interface PracticeSubmissionInput { moduleId: ScenarioParametersModuleId; scenarioId: string; payload: Record<string, unknown> | null; libraryMembershipId?: string }
 export type FeedbackStatus = "queued" | "running" | "completed" | "failed";
 async function transaction<T>(pool: Pool, work: (client: PoolClient) => Promise<T>): Promise<T> {
   const client = await pool.connect();
@@ -146,7 +146,8 @@ function canonical(value: unknown): unknown {
 }
 export async function createPracticeSubmission(pool: Pool, actorId: string, idempotencyKey: string, input: PracticeSubmissionInput) {
   if (!isFeedbackId(actorId) || !/^[A-Za-z0-9._:-]{1,128}$/.test(idempotencyKey) || !isScenarioParametersModuleId(input.moduleId)
-    || !input.scenarioId || input.scenarioId.length > 200 || (input.payload !== null && !isRecord(input.payload))) throw new FeedbackJobError("INVALID_INPUT");
+    || !input.scenarioId || input.scenarioId.length > 200 || (input.payload !== null && !isRecord(input.payload))
+    || (input.libraryMembershipId !== undefined && (typeof input.libraryMembershipId !== "string" || !isFeedbackId(input.libraryMembershipId)))) throw new FeedbackJobError("INVALID_INPUT");
   try { assertSafeJson(input); } catch { throw new FeedbackJobError("INVALID_INPUT"); }
   const payload = sanitizeScenarioExamPayload(input.payload);
   const serialized = JSON.stringify(canonical({ ...input, payload }));
@@ -171,6 +172,7 @@ export async function createPracticeSubmission(pool: Pool, actorId: string, idem
       where module_id=$1 and library_kind='practice' and archived_at is null and (scenario_id=$2 or scenario_parameters_id::text=$2)
       order by published_at desc,id limit 1 for share`, [input.moduleId, input.scenarioId])).rows[0];
     if (!membership) throw new FeedbackJobError("NOT_FOUND");
+    if (input.libraryMembershipId && membership.id !== input.libraryMembershipId) throw new FeedbackJobError("PUBLICATION_CHANGED");
     const submission = (await client.query(`insert into public.practice_submissions(actor_id,module_id,scenario_id,library_membership_id,library_revision_number,definition_json,assessment_rubric_json,payload_json,input_hash,idempotency_key)
       values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) returning id`, [actorId, input.moduleId, membership.scenario_id, membership.id, membership.revision_number, membership.definition_json, membership.assessment_rubric_json, payload, hash, idempotencyKey])).rows[0];
     const job = (await client.query("select id,status from public.ai_attempt_feedback_jobs where practice_submission_id=$1", [submission.id])).rows[0];
