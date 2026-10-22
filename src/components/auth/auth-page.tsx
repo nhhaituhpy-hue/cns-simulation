@@ -13,7 +13,7 @@ import { useScenarioStore } from "@/stores/scenario-store";
 
 export type AuthView = "login";
 
-const AUTH_INPUT_CLASS = "h-12 w-full rounded-xl border border-white/15 bg-[var(--cns-surface-card)]/80 pl-11 font-normal text-white placeholder:text-slate-500 outline-none transition-[border-color,box-shadow,background-color] focus:border-cyan-100/70 focus:bg-[var(--cns-surface-card)] focus:ring-2 focus:ring-cyan-100/15";
+const AUTH_INPUT_CLASS = "h-12 w-full rounded-xl border border-slate-300 bg-white pl-11 font-normal text-slate-900 caret-slate-900 [-webkit-text-fill-color:#0f172a] placeholder:text-slate-500 outline-none transition-[border-color,box-shadow,background-color] focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-500/25";
 const AUTH_PRIMARY_BUTTON_CLASS = "inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-cyan-100 px-5 text-[15px] font-semibold text-[var(--cns-text-primary)] shadow-[0_0.8rem_2.5rem_rgba(79,209,225,0.12)] transition-[background-color,transform] hover:bg-white active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-100 focus-visible:ring-offset-2 focus-visible:ring-offset-[#061b25] disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:active:scale-100";
 
 function Brand() {
@@ -109,7 +109,7 @@ export function AuthPage({ nextPath }: { nextPath?: string; initialView?: AuthVi
                 <label htmlFor="username" className="block">
                   <span className="sr-only">Tên đăng nhập</span>
                   <span className="relative block">
-                    <User aria-hidden size={20} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-100/60" />
+                    <User aria-hidden size={20} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
                     <input
                       id="username"
                       aria-label="Tên đăng nhập"
@@ -128,7 +128,7 @@ export function AuthPage({ nextPath }: { nextPath?: string; initialView?: AuthVi
                 <label htmlFor="password" className="block">
                   <span className="sr-only">Mật khẩu</span>
                   <span className="relative block">
-                    <LockKey aria-hidden size={20} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-cyan-100/60" />
+                    <LockKey aria-hidden size={20} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
                     <input
                       id="password"
                       aria-label="Mật khẩu"
@@ -146,7 +146,7 @@ export function AuthPage({ nextPath }: { nextPath?: string; initialView?: AuthVi
                       onClick={() => setShowPassword((value) => !value)}
                       aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                       aria-pressed={showPassword}
-                      className="absolute right-2 top-1/2 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-100/70"
+                      className="absolute right-2 top-1/2 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
                     >
                       {showPassword ? <EyeSlash aria-hidden size={20} /> : <Eye aria-hidden size={20} />}
                     </button>

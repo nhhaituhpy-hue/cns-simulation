@@ -62,6 +62,20 @@ describe("AuthPage redirect", () => {
     await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith("/"));
   });
 
+  it("keeps login values and password bullets dark on opaque light inputs", async () => {
+    render(<AuthPage />);
+    const username = screen.getByLabelText("Tên đăng nhập");
+    const password = screen.getByLabelText("Mật khẩu");
+    for (const input of [username, password]) {
+      expect(input).toHaveClass("bg-white", "text-slate-900", "caret-slate-900", "focus:bg-white", "[-webkit-text-fill-color:#0f172a]");
+      expect(input).not.toHaveClass("text-white");
+    }
+    await userEvent.setup().click(screen.getByRole("button", { name: "Hiện mật khẩu" }));
+    expect(password).toHaveAttribute("type", "text");
+    expect(password).toHaveClass("text-slate-900");
+    expect(mocks.loginAction).not.toHaveBeenCalled();
+  });
+
   it("keeps an explicit internal next path", async () => {
     render(<AuthPage nextPath="/simulator" />);
     await submitLogin();

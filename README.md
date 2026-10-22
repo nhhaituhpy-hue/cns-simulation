@@ -9,6 +9,11 @@
 - Theo yêu cầu chủ repository, workflow **CI** chỉ chạy thủ công qua **Actions → CI → Run workflow**; không tự chạy khi push hoặc mở pull request.
 - Việc này không tắt webhook triển khai Dokploy và không thay đổi các lệnh lint, typecheck, test, build cục bộ.
 
+## Sửa tương phản ô đăng nhập
+
+- Hai ô tài khoản/mật khẩu dùng nền trắng đục, chữ và con trỏ màu xanh đen; màu ký tự, dấu che mật khẩu và WebKit text fill không còn phụ thuộc theme của trang. Icon và nút hiện/ẩn mật khẩu dùng màu tối, focus viền xanh rõ.
+- Chỉ đổi giao diện input; giữ nguyên autocomplete, che/hiện mật khẩu và luồng xác thực.
+
 ## Tạo kịch bản bằng AI — trình hướng dẫn từng bước
 
 - Từ trang **Kịch bản** của sáu thiết bị, chọn **Tạo kịch bản bằng AI** rồi chọn **Tải tài liệu** hoặc **Mô tả tình huống** trước khi mở modal. Mặc định native chỉ làm nền nội bộ; Import JSON và tạo thủ công vẫn giữ nguyên.
