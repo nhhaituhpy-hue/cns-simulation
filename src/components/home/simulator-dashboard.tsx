@@ -27,7 +27,7 @@ export function SimulatorDashboard() {
 
         <div className="relative mx-auto w-full max-w-[1320px]">
           <div className="max-w-3xl">
-            <p className="text-[15px] font-bold uppercase tracking-[0.22em] text-[#e3212d]">
+            <p className="text-[15px] font-bold uppercase tracking-[0.22em] text-[#fb7185]">
               TRUNG TÂM BẢO ĐẢM KỸ THUẬT
             </p>
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-cyan-100/80">

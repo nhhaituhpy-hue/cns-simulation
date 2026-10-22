@@ -105,6 +105,8 @@ describe("AppShell", () => {
     expect(screen.getByRole("button", { name: /^Tài khoản:/ })).toHaveAccessibleName(
       "Tài khoản: Quản trị viên Trung tâm Bảo đảm kỹ thuật",
     );
+    const accountButton = screen.getByRole("button", { name: /^Tài khoản:/ });
+    expect(accountButton.getAttribute("aria-label")).toContain(accountButton.textContent?.replace(/\s+/g, " ").trim());
   });
 
   it("clears the private singleton before awaiting logout and keeps consumers gated", () => {

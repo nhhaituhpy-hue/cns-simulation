@@ -4,6 +4,21 @@ import { describe, expect, it } from "vitest";
 import Home from "@/app/page";
 
 describe("Home page layout", () => {
+  it("keeps the red hero heading readable on its dark overlay", () => {
+    render(<Home />);
+    const label = screen.getByText("TRUNG TÂM BẢO ĐẢM KỸ THUẬT");
+    const color = label.className.match(/text-\[(#[0-9a-f]{6})\]/i)?.[1];
+    expect(color).toBeDefined();
+    function luminance(hex: string) {
+      const rgb = [1, 3, 5].map(offset => parseInt(hex.slice(offset, offset + 2), 16) / 255)
+        .map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
+      return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
+    }
+    const foreground = luminance(color!);
+    const background = luminance("#15222e");
+    expect((Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05)).toBeGreaterThanOrEqual(4.5);
+  });
+
   it("renders carousel CTAs for available simulators", () => {
     render(<Home />);
 

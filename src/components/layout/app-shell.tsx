@@ -526,7 +526,7 @@ function AppShellContent({ children, currentUser }: AppShellProps) {
                 >
                   <UserCircle aria-hidden size={25} weight="regular" className="shrink-0" />
                   <span className="hidden max-w-48 min-w-0 lg:block">
-                    <span className="block truncate text-xs font-semibold">{currentUser.fullName}</span>
+                    <span className="block truncate text-xs font-semibold">{currentUser.fullName}</span>{" "}
                     <span className={[
                       "block truncate text-[10px]",
                       isLanding ? "text-white/60" : "text-[var(--text-muted)]",
