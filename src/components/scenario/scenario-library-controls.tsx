@@ -1,54 +1,60 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 import type { ScenarioLibraryKind } from "@/lib/scenario-libraries";
 import type { StoredScenarioParameters } from "@/lib/scenario-parameters-storage";
-import { Button, CountBadgePill } from "@/components/ui/button";
+import { CountBadgePill } from "@/components/ui/button";
 
 const LIBRARY_KINDS = ["practice", "exam"] as const satisfies readonly ScenarioLibraryKind[];
-
-type LibraryResponse = {
-  practice?: Array<{ id: string }>;
-  exam?: Array<{ id: string }>;
-  libraryRevisions?: { practice?: number; exam?: number };
-};
-
-type LibraryWriteResponse = {
-  libraryRevision?: number;
-  error?: string;
-};
-
-type LibrarySelection = Record<ScenarioLibraryKind, string[]>;
-
 const LIBRARY_LABELS: Record<ScenarioLibraryKind, string> = {
   practice: "Thư viện Ôn tập",
   exam: "Thư viện Kiểm tra",
 };
+type LibrarySelection = Record<ScenarioLibraryKind, string[]>;
+type LibrarySnapshot = { selected: LibrarySelection; revisions: Record<ScenarioLibraryKind, number> };
+const EMPTY_SNAPSHOT: LibrarySnapshot = { selected: { practice: [], exam: [] }, revisions: { practice: 0, exam: 0 } };
 
-const EMPTY_SELECTION: LibrarySelection = { practice: [], exam: [] };
+type LibraryControlsState = {
+  selected: LibrarySelection;
+  selectedCounts: Record<ScenarioLibraryKind, number>;
+  availableCount: number;
+  disabled: boolean;
+  loading: boolean;
+  busy: boolean;
+  error: string | null;
+  notice: string | null;
+  toggle: (kind: ScenarioLibraryKind, id: string, checked: boolean) => void;
+  toggleAll: (kind: ScenarioLibraryKind, checked: boolean) => void;
+};
+const LibraryControlsContext = createContext<LibraryControlsState | null>(null);
+function useLibraryControls() {
+  const value = useContext(LibraryControlsContext);
+  if (!value) throw new Error("Library controls require ScenarioLibraryControls.");
+  return value;
+}
 
 function checkboxClass() {
-  return "relative size-4 shrink-0 cursor-pointer appearance-none rounded-full border border-slate-400 bg-slate-200 transition-colors checked:border-[#0284c7] checked:bg-[#0284c7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-1 focus-visible:ring-offset-[#e5e7eb] after:absolute after:inset-0 after:flex after:items-center after:justify-center after:text-[10px] after:font-bold after:text-[#22c55e] after:content-['✓'] after:opacity-0 checked:after:opacity-100";
+  return "relative size-4 shrink-0 cursor-pointer appearance-none rounded-full border border-slate-400 bg-slate-200 transition-colors checked:border-[#0284c7] checked:bg-[#0284c7] disabled:cursor-wait disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0284c7] focus-visible:ring-offset-1 focus-visible:ring-offset-[#e5e7eb] after:absolute after:inset-0 after:flex after:items-center after:justify-center after:text-[10px] after:font-bold after:text-white after:content-['✓'] after:opacity-0 checked:after:opacity-100";
 }
 
-function sameIds(left: readonly string[], right: readonly string[]) {
-  if (left.length !== right.length) return false;
-  const rightSet = new Set(right);
-  return left.every((id) => rightSet.has(id));
+async function readLibraries(moduleId: ScenarioParametersModuleId): Promise<LibrarySnapshot> {
+  const response = await fetch(`/api/scenario-libraries?moduleId=${encodeURIComponent(moduleId)}`, { cache: "no-store" });
+  if (!response.ok) throw new Error("Không thể tải trạng thái thư viện. Hãy tải lại trang.");
+  const payload = await response.json();
+  const selected = {} as LibrarySelection;
+  const revisions = {} as LibrarySnapshot["revisions"];
+  for (const kind of LIBRARY_KINDS) {
+    if (!Array.isArray(payload?.[kind]) || payload[kind].some((item: { id?: unknown } | null) => !item || typeof item.id !== "string") || !Number.isInteger(payload?.libraryRevisions?.[kind]) || payload.libraryRevisions[kind] < 0) {
+      throw new Error("Trạng thái thư viện không hợp lệ. Hãy tải lại trang.");
+    }
+    selected[kind] = payload[kind].map((item: { id: string }) => item.id);
+    revisions[kind] = payload.libraryRevisions[kind];
+  }
+  return { selected, revisions };
 }
 
-function libraryNames(kinds: readonly ScenarioLibraryKind[]) {
-  return kinds.map((kind) => LIBRARY_LABELS[kind]).join(" và ");
-}
-
-function SelectAllCheckbox({
-  kind,
-  checked,
-  indeterminate,
-  disabled,
-  onChange,
-}: {
+function SelectAllCheckbox({ kind, checked, indeterminate, disabled, onChange }: {
   kind: ScenarioLibraryKind;
   checked: boolean;
   indeterminate: boolean;
@@ -56,383 +62,165 @@ function SelectAllCheckbox({
   onChange: (checked: boolean) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
     if (inputRef.current) inputRef.current.indeterminate = indeterminate;
   }, [indeterminate]);
-
-  return (
-    <label className="flex flex-col items-center justify-center gap-1 cursor-pointer select-none">
-      <input
-        ref={inputRef}
-        type="checkbox"
-        checked={checked}
-        disabled={disabled}
-        aria-label={`Chọn tất cả ${LIBRARY_LABELS[kind]}`}
-        onChange={(event) => onChange(event.currentTarget.checked)}
-        className={checkboxClass()}
-      />
-      <span className="text-[10px] sm:text-[11px] font-medium normal-case tracking-normal text-[var(--cns-text-secondary)]">
-        Chọn tất cả
-      </span>
-    </label>
-  );
+  return <label className="flex cursor-pointer select-none flex-col items-center justify-center gap-1">
+    <input ref={inputRef} type="checkbox" checked={checked} disabled={disabled}
+      aria-label={`Chọn tất cả ${LIBRARY_LABELS[kind]}`}
+      onChange={event => onChange(event.currentTarget.checked)} className={checkboxClass()} />
+    <span className="text-[10px] font-medium normal-case tracking-normal text-[var(--cns-text-secondary)] sm:text-[11px]">Chọn tất cả</span>
+  </label>;
 }
 
-export function ScenarioLibraryControls({
-  moduleId,
-  scenarios,
-}: {
+export function ScenarioLibraryControls({ moduleId, scenarios, disabled = false, children }: {
   moduleId: ScenarioParametersModuleId;
   scenarios: readonly StoredScenarioParameters[];
+  disabled?: boolean;
+  children: ReactNode;
 }) {
-  const [selected, setSelected] = useState<LibrarySelection>(EMPTY_SELECTION);
-  const [savedSelection, setSavedSelection] =
-    useState<LibrarySelection>(EMPTY_SELECTION);
+  const [snapshot, setSnapshot] = useState<LibrarySnapshot>(EMPTY_SNAPSHOT);
+  const [selected, setSelected] = useState<LibrarySelection>(EMPTY_SNAPSHOT.selected);
   const [loading, setLoading] = useState(true);
+  const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [libraryRevisions, setLibraryRevisions] = useState<
-    Record<ScenarioLibraryKind, number>
-  >({ practice: 0, exam: 0 });
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const available = useMemo(
-    () => scenarios.filter((scenario) => scenario.moduleId === moduleId),
-    [moduleId, scenarios],
-  );
-  const availableIds = useMemo(
-    () => available.map((scenario) => scenario.id),
-    [available],
-  );
-  const availableIdSet = useMemo(() => new Set(availableIds), [availableIds]);
-  const selectedCounts = useMemo(
-    () =>
-      Object.fromEntries(
-        LIBRARY_KINDS.map((kind) => [
-          kind,
-          availableIds.filter((id) => selected[kind].includes(id)).length,
-        ]),
-      ) as Record<ScenarioLibraryKind, number>,
-    [availableIds, selected],
-  );
-  const changedKinds = useMemo(
-    () =>
-      LIBRARY_KINDS.filter(
-        (kind) => !sameIds(selected[kind], savedSelection[kind]),
-      ),
-    [savedSelection, selected],
-  );
+  const epoch = useRef(0);
+  const saveLock = useRef(false);
+  const availableIds = useMemo(() => scenarios.filter(s => s.moduleId === moduleId).map(s => s.id), [scenarios, moduleId]);
+  const idsKey = JSON.stringify(availableIds);
+  const selectedCounts = {
+    practice: availableIds.filter(id => selected.practice.includes(id)).length,
+    exam: availableIds.filter(id => selected.exam.includes(id)).length,
+  };
 
   useEffect(() => {
-    let cancelled = false;
-    if (scenarios.length === 0) {
-      setSelected(EMPTY_SELECTION);
-      setSavedSelection(EMPTY_SELECTION);
-      setLibraryRevisions({ practice: 0, exam: 0 });
-      setLoading(false);
-      return () => {
-        cancelled = true;
-      };
-    }
-
+    const currentEpoch = ++epoch.current;
     setLoading(true);
+    setReady(false);
     setError(null);
-    fetch(
-      `/api/scenario-libraries?moduleId=${encodeURIComponent(moduleId)}`,
-      { cache: "no-store" },
-    )
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Không thể tải trạng thái thư viện.");
-        return response.json() as Promise<LibraryResponse>;
-      })
-      .then((payload) => {
-        if (cancelled) return;
-        const nextSelection: LibrarySelection = {
-          practice: (payload.practice ?? []).map((item) => item.id),
-          exam: (payload.exam ?? []).map((item) => item.id),
-        };
-        setSelected(nextSelection);
-        setSavedSelection(nextSelection);
-        setLibraryRevisions({
-          practice: payload.libraryRevisions?.practice ?? 0,
-          exam: payload.libraryRevisions?.exam ?? 0,
-        });
-      })
-      .catch((loadError: unknown) => {
-        if (!cancelled) {
-          setError(
-            loadError instanceof Error
-              ? loadError.message
-              : "Không thể tải trạng thái thư viện.",
-          );
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [moduleId, scenarios.length]);
-
-  function toggle(kind: ScenarioLibraryKind, id: string, checked: boolean) {
-    setSelected((current) => {
-      const ids = new Set(current[kind]);
-      if (checked) ids.add(id);
-      else ids.delete(id);
-      return { ...current, [kind]: [...ids] };
+    setNotice(null);
+    setBusy(false);
+    saveLock.current = false;
+    readLibraries(moduleId).then(next => {
+      if (currentEpoch !== epoch.current) return;
+      setSnapshot(next);
+      setSelected(next.selected);
+      setReady(true);
+    }).catch((reason: unknown) => {
+      if (currentEpoch === epoch.current) setError(reason instanceof Error ? reason.message : "Không thể tải trạng thái thư viện.");
+    }).finally(() => {
+      if (currentEpoch === epoch.current) setLoading(false);
     });
-  }
+    return () => { epoch.current = currentEpoch + 1; };
+  }, [moduleId, idsKey]);
 
-  function toggleAll(kind: ScenarioLibraryKind, checked: boolean) {
-    setSelected((current) => ({
-      ...current,
-      [kind]: checked
-        ? [...availableIds]
-        : current[kind].filter((id) => !availableIdSet.has(id)),
-    }));
-  }
-
-  async function saveAll() {
-    if (changedKinds.length === 0) return;
-
+  async function save(kind: ScenarioLibraryKind, changedIds: string[], checked: boolean) {
+    if (!ready || loading || disabled || saveLock.current) return;
+    const currentEpoch = epoch.current;
+    saveLock.current = true;
     setBusy(true);
     setError(null);
     setNotice(null);
-
-    const successfulKinds: ScenarioLibraryKind[] = [];
-    const nextSavedSelection = { ...savedSelection };
-    const nextRevisions = { ...libraryRevisions };
-    let failureReason = "";
-
+    const optimistic = new Set(snapshot.selected[kind]);
+    for (const id of changedIds) {
+      if (checked) optimistic.add(id); else optimistic.delete(id);
+    }
+    setSelected({ ...snapshot.selected, [kind]: [...optimistic] });
     try {
-      for (const kind of changedKinds) {
-        const response = await fetch("/api/scenario-libraries", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            moduleId,
-            libraryKind: kind,
-            scenarioIds: selected[kind],
-            expectedRevision: libraryRevisions[kind],
-          }),
-        });
-
-        const payload = (await response.json().catch(() => null)) as
-          | LibraryWriteResponse
-          | null;
-
-        if (!response.ok) {
-          failureReason =
-            payload?.error ??
-            `Không thể lưu ${LIBRARY_LABELS[kind]} (${response.status}).`;
-          break;
-        }
-
-        successfulKinds.push(kind);
-        nextSavedSelection[kind] = [...selected[kind]];
-        if (typeof payload?.libraryRevision === "number") {
-          nextRevisions[kind] = payload.libraryRevision;
-        }
+      const response = await fetch("/api/scenario-libraries", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ moduleId, libraryKind: kind, scenarioIds: changedIds, selected: checked, expectedRevision: snapshot.revisions[kind] }),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(typeof payload?.error === "string" ? payload.error : `Không thể lưu ${LIBRARY_LABELS[kind]} (${response.status}).`);
       }
-
-      setSavedSelection(nextSavedSelection);
-      setLibraryRevisions(nextRevisions);
-
-      if (successfulKinds.length === changedKinds.length) {
-        setNotice(`Đã lưu ${libraryNames(successfulKinds)}.`);
-        return;
+      const next = await readLibraries(moduleId);
+      if (currentEpoch !== epoch.current) return;
+      setSnapshot(next);
+      setSelected(next.selected);
+      setNotice(`Đã tự lưu ${LIBRARY_LABELS[kind]}.`);
+    } catch (reason: unknown) {
+      if (currentEpoch !== epoch.current) return;
+      // A lost response can follow a committed write. Refresh rather than retrying or pretending rollback.
+      try {
+        const next = await readLibraries(moduleId);
+        if (currentEpoch !== epoch.current) return;
+        setSnapshot(next);
+        setSelected(next.selected);
+      } catch {
+        if (currentEpoch !== epoch.current) return;
+        setSelected(snapshot.selected);
+        setReady(false);
       }
-
-      const partialMessage =
-        successfulKinds.length > 0
-          ? `Đã lưu ${libraryNames(successfulKinds)}, nhưng phần còn lại thất bại: `
-          : "";
-      const reason = failureReason || "Không thể lưu thay đổi thư viện.";
-      setError(`${partialMessage}${reason}`);
+      setError(`${reason instanceof Error ? reason.message : "Không thể lưu thư viện."} Trạng thái đã được đối chiếu lại; nếu chưa tải được, hãy tải lại trang.`);
     } finally {
-      setBusy(false);
+      if (currentEpoch === epoch.current) {
+        saveLock.current = false;
+        setBusy(false);
+      }
     }
   }
 
-  return (
-    <section
-      className="mt-6 overflow-hidden rounded-[12px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] shadow-sm"
-      aria-label="Phân chia thư viện kịch bản"
-    >
-      {/* Card Header: left block (title + subtitle), right block (3 chips) centered vertically together */}
-      <header className="flex flex-col gap-3 border-b border-[var(--cns-divider)] bg-[var(--cns-surface-card)] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-[16px] sm:text-[17px] font-semibold text-[var(--cns-text-primary)]">
-            Cài đặt thư viện
-          </h2>
-          <p className="mt-0.5 text-[13px] leading-relaxed text-[var(--cns-text-secondary)]">
-            Phân loại kịch bản (scenario) cho thí sinh ôn tập hoặc kho dữ liệu kiểm tra
-          </p>
-        </div>
-        <div
-          aria-live="polite"
-          className="flex flex-wrap items-center gap-2"
-        >
-          <CountBadgePill>
-            <span className="font-semibold text-[var(--cns-text-primary)]">{available.length}</span> kịch bản
-          </CountBadgePill>
-          <CountBadgePill>
-            Ôn tập <span className="font-semibold text-[var(--cns-text-primary)]">{selectedCounts.practice}</span>
-          </CountBadgePill>
-          <CountBadgePill>
-            Kiểm tra <span className="font-semibold text-[var(--cns-text-primary)]">{selectedCounts.exam}</span>
-          </CountBadgePill>
-        </div>
-      </header>
+  function toggle(kind: ScenarioLibraryKind, id: string, checked: boolean) {
+    if (!availableIds.includes(id)) return;
+    void save(kind, [id], checked);
+  }
+  function toggleAll(kind: ScenarioLibraryKind, checked: boolean) {
+    if (availableIds.length > 0) void save(kind, availableIds, checked);
+  }
 
-      {/* Table Region: CSS Grid based layout with unified columns */}
-      <div
-        role="region"
-        aria-busy={loading}
-        aria-label="Danh sách kịch bản để phân chia thư viện"
-        tabIndex={0}
-        className="cns-scrollbar max-h-[26rem] overflow-auto [scrollbar-gutter:stable]"
-      >
-        <table className="w-full border-collapse text-left text-sm table-fixed">
-          <caption className="sr-only">
-            Phân chia kịch bản vào thư viện Ôn tập và thư viện Kiểm tra
-          </caption>
-          <thead className="sticky top-0 z-10 block border-b border-[var(--cns-divider)] bg-[var(--cns-surface-table-header)] text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--cns-text-secondary)]">
-            <tr className="grid grid-cols-[minmax(0,1fr)_150px_150px] items-center px-6 py-2.5">
-              <th
-                scope="col"
-                className="text-left font-semibold text-[11px] uppercase tracking-[0.06em] text-[var(--cns-text-secondary)] min-w-0 pr-4"
-              >
-                Tên kịch bản
-              </th>
-              {LIBRARY_KINDS.map((kind) => {
-                const selectedCount = selectedCounts[kind];
-                const allSelected =
-                  available.length > 0 && selectedCount === available.length;
-                const indeterminate = selectedCount > 0 && !allSelected;
-                return (
-                  <th
-                    key={kind}
-                    scope="col"
-                    className="flex flex-col items-center justify-center gap-1.5 text-center w-[150px] justify-self-center font-normal"
-                  >
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--cns-text-secondary)] leading-none">
-                      {LIBRARY_LABELS[kind]}
-                    </span>
-                    <SelectAllCheckbox
-                      kind={kind}
-                      checked={allSelected}
-                      indeterminate={indeterminate}
-                      disabled={loading || available.length === 0 || busy}
-                      onChange={(checked) => toggleAll(kind, checked)}
-                    />
-                  </th>
-                );
-              })}
-            </tr>
-          </thead>
-          <tbody className="block divide-y divide-[var(--cns-divider)]">
-            {loading ? (
-              Array.from({ length: 4 }, (_, index) => (
-                <tr
-                  key={`loading-${index}`}
-                  className={`grid min-h-[60px] grid-cols-[minmax(0,1fr)_150px_150px] items-center px-6 ${index % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}
-                >
-                  <td className="min-w-0 py-3 pr-4">
-                    {index === 0 && <span className="sr-only" role="status">Đang tải trạng thái thư viện…</span>}
-                    <div aria-hidden="true" className="h-4 w-2/3 animate-pulse rounded bg-slate-400/30 motion-reduce:animate-none" />
-                    <div aria-hidden="true" className="mt-2 h-3 w-1/3 animate-pulse rounded bg-slate-400/30 motion-reduce:animate-none" />
-                  </td>
-                  {LIBRARY_KINDS.map((kind) => (
-                    <td key={kind} className="flex justify-center py-3">
-                      <div aria-hidden="true" className="size-4 animate-pulse rounded-full bg-slate-400/30 motion-reduce:animate-none" />
-                    </td>
-                  ))}
-                </tr>
-              ))
-            ) : available.length === 0 ? (
-              <tr className="block px-6 py-8 text-center text-[13px] text-[var(--cns-text-muted)] bg-[#e5e7eb]">
-                <td colSpan={3} className="block w-full">
-                  Chưa có kịch bản để phân chia thư viện.
-                </td>
-              </tr>
-            ) : (
-              available.map((scenario, index) => (
-                <tr
-                  key={scenario.id}
-                  className={`grid grid-cols-[minmax(0,1fr)_150px_150px] items-center px-6 min-h-[60px] transition-colors duration-150 ${index % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}
-                >
-                  <th
-                    scope="row"
-                    className={`text-left font-normal min-w-0 pr-4 py-3 ${index % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}
-                  >
-                    <span
-                      className="block text-[14px] font-medium text-slate-900 truncate"
-                      title={scenario.name}
-                    >
-                      {scenario.name}
-                    </span>
-                    <span className="mt-0.5 block font-mono text-[12px] text-slate-600">
-                      {scenario.scenarioId}
-                    </span>
-                  </th>
-                  {LIBRARY_KINDS.map((kind) => (
-                    <td
-                      key={kind}
-                      className={`flex items-center justify-center text-center w-[150px] justify-self-center py-3 ${index % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}
-                    >
-                      <label className="inline-flex size-8 cursor-pointer items-center justify-center rounded-[6px] border border-transparent transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={selected[kind].includes(scenario.id)}
-                          disabled={busy}
-                          aria-label={`Nạp “${scenario.name}” vào ${LIBRARY_LABELS[kind]}`}
-                          onChange={(event) =>
-                            toggle(kind, scenario.id, event.currentTarget.checked)
-                          }
-                          className={checkboxClass()}
-                        />
-                      </label>
-                    </td>
-                  ))}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+  return <LibraryControlsContext.Provider value={{ selected, selectedCounts, availableCount: availableIds.length,
+    disabled: disabled || !ready || loading || busy, loading, busy, error, notice, toggle, toggleAll }}>
+    {children}
+  </LibraryControlsContext.Provider>;
+}
 
-      {/* Sticky Bottom Actions Bar */}
-      <footer className="sticky bottom-0 z-10 flex flex-col gap-3 border-t border-[var(--cns-border-subtle)] bg-[var(--cns-surface-table-header)] px-6 py-3.5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-h-5 text-[13px] leading-5">
-          {error ? (
-            <p role="alert" className="text-[#f87171]">
-              {error}
-            </p>
-          ) : notice ? (
-            <p role="status" className="text-[#4ade80]">
-              {notice}
-            </p>
-          ) : (
-            <p className="text-[var(--cns-text-muted)]">
-              {changedKinds.length > 0
-                ? "Có thay đổi chưa lưu."
-                : "Các thay đổi sẽ áp dụng sau khi nhấn lưu."}
-            </p>
-          )}
-        </div>
-        <Button
-          variant="primary"
-          size="md"
-          disabled={loading || busy || available.length === 0 || changedKinds.length === 0}
-          onClick={() => void saveAll()}
-          className="!bg-[#ea580c] hover:!bg-[#c2410c]"
-        >
-          {busy ? "Đang lưu…" : "Apply"}
-        </Button>
-      </footer>
-    </section>
-  );
+export function useScenarioLibraryBusy() {
+  return useLibraryControls().busy;
+}
+
+export function ScenarioLibraryColumnHeading({ kind }: { kind: ScenarioLibraryKind }) {
+  const controls = useLibraryControls();
+  const count = controls.selectedCounts[kind];
+  const all = controls.availableCount > 0 && count === controls.availableCount;
+  return <>
+    <span className="mb-2 block text-[11px] font-semibold normal-case leading-4">{LIBRARY_LABELS[kind]}</span>
+    <SelectAllCheckbox kind={kind} checked={all} indeterminate={count > 0 && !all}
+      disabled={controls.disabled || controls.availableCount === 0} onChange={checked => controls.toggleAll(kind, checked)} />
+  </>;
+}
+
+export function ScenarioLibraryColumnHeaders() {
+  return LIBRARY_KINDS.map(kind => <th key={kind} scope="col" className="w-32 min-w-28 px-2 py-3 text-center">
+    <ScenarioLibraryColumnHeading kind={kind} />
+  </th>);
+}
+
+export function ScenarioLibraryCells({ scenario, disabled = false }: { scenario: Pick<StoredScenarioParameters, "id" | "name">; disabled?: boolean }) {
+  const controls = useLibraryControls();
+  return LIBRARY_KINDS.map(kind => <td key={kind} className="px-2 py-3.5 text-center align-middle">
+    <label className="inline-flex size-9 cursor-pointer items-center justify-center rounded-md">
+      <input type="checkbox" checked={controls.selected[kind].includes(scenario.id)} disabled={disabled || controls.disabled}
+        aria-label={`Nạp “${scenario.name}” vào ${LIBRARY_LABELS[kind]}`}
+        onChange={event => controls.toggle(kind, scenario.id, event.currentTarget.checked)} className={checkboxClass()} />
+    </label>
+  </td>);
+}
+
+export function ScenarioLibraryStatus() {
+  const controls = useLibraryControls();
+  return <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--cns-border-subtle)] bg-[var(--cns-surface-table-header)] px-4 py-3 text-[13px] sm:px-6">
+    <div className="flex gap-2">
+      <CountBadgePill>Ôn tập {controls.selectedCounts.practice}</CountBadgePill>
+      <CountBadgePill>Kiểm tra {controls.selectedCounts.exam}</CountBadgePill>
+    </div>
+    {controls.error ? <p role="alert" className="text-[var(--color-danger)]">{controls.error}</p>
+      : <p role="status" className={controls.notice ? "text-[var(--color-success)]" : "text-[var(--cns-text-muted)]"}>
+        {controls.loading ? "Đang tải trạng thái thư viện…" : controls.busy ? "Đang lưu…" : controls.notice ?? "Tích hoặc bỏ tích để tự lưu vào thư viện."}
+      </p>}
+  </footer>;
 }

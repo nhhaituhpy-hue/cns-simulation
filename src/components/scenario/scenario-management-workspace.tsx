@@ -22,7 +22,13 @@ import {
 } from "@/lib/scenario-parameters";
 import type { StoredScenarioParameters } from "@/lib/scenario-parameters-storage";
 import { AiScenarioDialog } from "@/components/scenario/ai-scenario-dialog";
-import { ScenarioLibraryControls } from "@/components/scenario/scenario-library-controls";
+import {
+  ScenarioLibraryControls,
+  ScenarioLibraryColumnHeaders,
+  ScenarioLibraryCells,
+  ScenarioLibraryStatus,
+  useScenarioLibraryBusy,
+} from "@/components/scenario/scenario-library-controls";
 import {
   Button,
   ButtonLink,
@@ -340,7 +346,7 @@ export function ScenarioManagementWorkspace({
         <h1 className="mt-2 text-[28px] sm:text-[30px] font-semibold tracking-[-0.01em] text-[var(--cns-text-primary)] leading-[1.3]">
           {simulatorModule.shortName}
         </h1>
-        <p className="mt-2 text-[14px] leading-relaxed text-[var(--cns-text-secondary)] whitespace-nowrap">
+        <p className="mt-2 text-[14px] leading-relaxed text-[var(--cns-text-secondary)]">
           Quản lý các kịch bản (scenario) giả lập sự cố của {simulatorModule.shortName}. Bấm vào từng tình huống để xem đầy đủ chi tiết.
         </p>
       </header>
@@ -370,11 +376,11 @@ export function ScenarioManagementWorkspace({
           <span>{busyModuleId === moduleId ? "Đang xử lý…" : "Thêm"}</span>
         </Button>}
       />
-      <ScenarioLibraryControls moduleId={moduleId} scenarios={scenarios} />
+      <ScenarioLibraryControls key={`libraries-${moduleId}`} moduleId={moduleId} scenarios={scenarios} disabled={isLoading || busyModuleId !== null}>
 
       <div className="mt-6 overflow-hidden rounded-[12px] border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[880px] border-collapse text-left text-[13px]">
+        <div className="overflow-x-auto" role="region" aria-label="Danh sách kịch bản" tabIndex={0}>
+          <table className="w-full min-w-[1120px] border-collapse text-left text-[13px]">
             <caption className="sr-only">
               Danh sách Scenario Parameters {simulatorModule.shortName}
             </caption>
@@ -392,6 +398,7 @@ export function ScenarioManagementWorkspace({
                 <th scope="col" className="w-32 px-4 py-3">
                   Trạng thái
                 </th>
+                <ScenarioLibraryColumnHeaders />
                 <th scope="col" className="w-64 px-6 py-3 text-right">
                   Thao tác
                 </th>
@@ -428,7 +435,9 @@ export function ScenarioManagementWorkspace({
             </tbody>
           </table>
         </div>
+        <ScenarioLibraryStatus />
       </div>
+      </ScenarioLibraryControls>
 
       <p className="mt-3 text-[13px] leading-relaxed text-[var(--cns-text-muted)]">
         Có {moduleScenarios.length} kịch bản {simulatorModule.shortName} đã lưu. Chỉ
@@ -466,6 +475,9 @@ function LoadingRows() {
           <td className="whitespace-nowrap px-4 py-3.5 align-middle bg-[#e5e7eb]">
             <div className="h-5 w-12 rounded bg-slate-300" />
           </td>
+          {["practice", "exam"].map((kind) => (
+            <td key={kind} className="px-2 py-3.5 bg-[#e5e7eb]"><div className="mx-auto size-4 rounded-full bg-slate-300" /></td>
+          ))}
           <td className="whitespace-nowrap px-6 py-3.5 align-middle text-right bg-[#e5e7eb]">
             <div className="flex items-center justify-end gap-1.5">
               <div className="size-8 rounded bg-slate-300" />
@@ -483,7 +495,7 @@ function DeviceGroup({
   module,
   moduleId,
   scenarios,
-  busy,
+  busy: sourceBusy,
   importInputRef,
   onImport,
   expandedScenarioIds,
@@ -517,12 +529,14 @@ function DeviceGroup({
     changes: Partial<Omit<QuickEditDraft, "moduleId" | "scenarioId">>,
   ) => void;
 }) {
+  const libraryBusy = useScenarioLibraryBusy();
+  const busy = sourceBusy || libraryBusy;
   return (
     <>
       <tr className="border-b border-[var(--cns-divider)] bg-[var(--cns-surface-card)]">
         <th
           scope="rowgroup"
-          colSpan={5}
+          colSpan={7}
           className="px-6 py-4 font-normal"
         >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -555,7 +569,7 @@ function DeviceGroup({
       {scenarios.length === 0 ? (
         <tr>
           <td
-            colSpan={5}
+            colSpan={7}
             className="px-6 py-6 text-center text-[13px] text-[var(--cns-text-muted)] bg-[#e5e7eb]"
           >
             Chưa có kịch bản
@@ -662,6 +676,7 @@ function ScenarioRow({
         <td className={`whitespace-nowrap px-4 py-3.5 align-middle ${rowIndex % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}>
           <StatusSavedBadge />
         </td>
+        <ScenarioLibraryCells scenario={scenario} disabled={busy} />
         <td className={`whitespace-nowrap px-6 py-3.5 align-middle text-right ${rowIndex % 2 === 0 ? "bg-[#f9fafb]" : "bg-[#d1d5db]"}`}>
           <div className="flex items-center justify-end gap-1.5">
             <Button
@@ -747,7 +762,7 @@ function ScenarioDetailRow({
     return (
       <tr id={`scenario-detail-${scenario.id}`}>
         <td
-          colSpan={5}
+          colSpan={7}
           className="border-l-[3px] border-[#0369a1] bg-[var(--cns-surface-card-subtle)] px-6 py-5 sm:px-10"
         >
           <div className="max-w-3xl">
@@ -833,7 +848,7 @@ function ScenarioDetailRow({
   return (
     <tr id={`scenario-detail-${scenario.id}`}>
       <td
-        colSpan={5}
+        colSpan={7}
         className="border-l-[3px] border-[#0369a1] bg-[var(--cns-surface-card-subtle)] px-6 py-5 sm:px-10"
       >
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.7fr)]">

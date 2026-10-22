@@ -9,6 +9,12 @@
 - Theo yêu cầu chủ repository, workflow **CI** chỉ chạy thủ công qua **Actions → CI → Run workflow**; không tự chạy khi push hoặc mở pull request.
 - Việc này không tắt webhook triển khai Dokploy và không thay đổi các lệnh lint, typecheck, test, build cục bộ.
 
+## Phân loại thư viện ngay trong bảng kịch bản
+
+- Bỏ bảng “Cài đặt thư viện” riêng; từng dòng bảng Kịch bản có hai checkbox **Thư viện Ôn tập** và **Thư viện Kiểm tra**, có thể chọn một hoặc cả hai. ADS-B ánh xạ ID legacy sang UUID nguồn canonical, không gửi nhầm ID hiển thị.
+- Tích/bỏ tích hoặc chọn tất cả tự lưu ngay bằng delta `PATCH`, không nút Apply. Chỉ thêm/gỡ các ID vừa chọn; giữ nguyên membership, định nghĩa, rubric và assignment của bài đã xuất bản khác, kể cả nguồn đã lưu trữ. Khóa thao tác khi đang tải/lưu, gửi revision thư viện, đọc lại server sau lưu và phục hồi trạng thái thực khi lỗi/xung đột; không tự retry ghi khi kết quả mạng chưa rõ.
+- Giữ các chức năng xem chi tiết, sửa nhanh, tải JSON, mở simulator và xóa; bảng cuộn ngang trong khung trên mobile.
+
 ## Sửa tương phản ô đăng nhập
 
 - Hai ô tài khoản/mật khẩu dùng nền trắng đục, chữ và con trỏ màu xanh đen; màu ký tự, dấu che mật khẩu và WebKit text fill không còn phụ thuộc theme của trang. Icon và nút hiện/ẩn mật khẩu dùng màu tối, focus viền xanh rõ.

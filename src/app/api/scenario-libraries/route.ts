@@ -233,6 +233,79 @@ export async function GET(request: Request) {
   }
 }
 
+// Inline selection changes are deltas: retained published snapshots are never
+// rebuilt from their mutable sources, including archived sources not in the UI.
+export async function PATCH(request: Request) {
+  const profile = await getCurrentProfile();
+  if (!profile) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
+  if (!canAuthorScenario(profile)) return NextResponse.json({ error: "Không có quyền quản lý thư viện kịch bản." }, { status: 403 });
+  const body = await request.json().catch(() => null) as Record<string, unknown> | null;
+  const moduleId = body?.moduleId;
+  const kind = readKind(body?.libraryKind);
+  const ids = body?.scenarioIds;
+  if (typeof moduleId !== "string" || !isScenarioParametersModuleId(moduleId) || !kind || typeof body?.selected !== "boolean"
+    || !isExpectedLibraryRevision(body.expectedRevision) || !Array.isArray(ids) || ids.length < 1 || ids.length > MAX_LIBRARY_ITEMS
+    || ids.some(id => typeof id !== "string" || !UUID_PATTERN.test(id)) || new Set(ids).size !== ids.length) {
+    return NextResponse.json({ error: "Thay đổi lựa chọn thư viện không hợp lệ." }, { status: 400 });
+  }
+  const selected = body.selected;
+  const revision = body.expectedRevision;
+  if (isE2eTestMode()) return NextResponse.json({ success: true, libraryRevision: revision + 1 });
+  try {
+    await withDatabaseTransaction(async client => {
+      const locked = await client.query<{ revision: number }>(
+        "select revision from public.simulator_scenario_library_revisions where module_id=$1 and library_kind=$2 for update", [moduleId, kind]);
+      if (locked.rows[0]?.revision !== revision) throw new Error("LIBRARY_REVISION_CONFLICT");
+      const ownership = scenarioOwnerPredicate({ profile, sourceAlias: "sp", parameterStart: 3 });
+      const sources = await client.query<{
+        id: string; scenario_id: string; name: string; description: string; difficulty: string;
+        schema_version: number; definition_json: unknown; source_filename: string; archived_at: string | null;
+      }>(`select sp.* from public.simulator_scenario_parameters sp
+          where sp.id=any($1::uuid[]) and sp.module_id=$2 and ${ownership.sql} for share`,
+      [ids, moduleId, ...ownership.values]);
+      if (sources.rows.length !== ids.length) throw new Error(profile.role === "admin" ? "INVALID_SOURCE" : "SCENARIO_PERMISSION_DENIED");
+      const active = await client.query<{ scenario_parameters_id: string }>(
+        "select scenario_parameters_id from public.simulator_scenario_library_memberships where module_id=$1 and library_kind=$2 and archived_at is null for update", [moduleId, kind]);
+      const activeIds = new Set(active.rows.map(row => row.scenario_parameters_id));
+      const additions = selected ? sources.rows.filter(source => !activeIds.has(source.id)) : [];
+      if (additions.some(source => source.archived_at)) throw new Error("INVALID_SOURCE");
+      if (selected && active.rows.length + additions.length > MAX_LIBRARY_ITEMS) throw new Error("LIBRARY_LIMIT");
+      if (!selected) {
+        await client.query(`update public.simulator_scenario_library_memberships set archived_at=now()
+          where module_id=$1 and library_kind=$2 and scenario_parameters_id=any($3::uuid[]) and archived_at is null`, [moduleId, kind, ids]);
+        if (kind === "practice") await client.query(
+          "delete from public.simulator_review_scenario_assignments where module_id=$1 and scenario_parameters_id=any($2::uuid[])", [moduleId, ids]);
+      }
+      let order = Number((await client.query<{ max: number }>(
+        "select coalesce(max(sort_order),0) as max from public.simulator_scenario_library_memberships where module_id=$1 and library_kind=$2 and archived_at is null", [moduleId, kind])).rows[0].max);
+      let assignmentOrder = kind === "practice" ? Number((await client.query<{ max: number }>(
+        "select coalesce(max(sort_order),0) as max from public.simulator_review_scenario_assignments where module_id=$1", [moduleId])).rows[0].max) : 0;
+      for (const source of additions) {
+        const next = Number((await client.query<{ next: number }>(
+          "select coalesce(max(revision_number),0)+1 as next from public.simulator_scenario_library_memberships where scenario_parameters_id=$1 and library_kind=$2", [source.id, kind])).rows[0].next);
+        await client.query(`insert into public.simulator_scenario_library_memberships
+          (module_id,scenario_parameters_id,library_kind,revision_number,scenario_id,name,description,difficulty,schema_version,definition_json,source_filename,published_by,sort_order)
+          values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+        [moduleId, source.id, kind, next, source.scenario_id, source.name, source.description, source.difficulty, source.schema_version,
+          JSON.stringify(source.definition_json), source.source_filename, profile.id, ++order]);
+        if (kind === "practice") await client.query(`insert into public.simulator_review_scenario_assignments
+          (module_id,scenario_parameters_id,sort_order,assigned_by) values($1,$2,$3,$4)`, [moduleId, source.id, ++assignmentOrder, profile.id]);
+      }
+      await client.query(`update public.simulator_scenario_library_revisions set revision=revision+1,updated_by=$3,updated_at=now()
+        where module_id=$1 and library_kind=$2`, [moduleId, kind, profile.id]);
+    });
+    return NextResponse.json({ success: true, libraryRevision: revision + 1 });
+  } catch (error) {
+    const code = errorMessage(error);
+    if (code === "LIBRARY_REVISION_CONFLICT") return NextResponse.json({ error: "Thư viện đã thay đổi ở phiên khác." }, { status: 409 });
+    if (code === "SCENARIO_PERMISSION_DENIED") return NextResponse.json({ error: "Không có quyền công bố một hoặc nhiều kịch bản." }, { status: 403 });
+    if (code === "INVALID_SOURCE") return NextResponse.json({ error: "Kịch bản không thuộc thiết bị hoặc đã được lưu trữ." }, { status: 400 });
+    if (code === "LIBRARY_LIMIT") return NextResponse.json({ error: "Thư viện không được vượt quá 100 kịch bản." }, { status: 400 });
+    console.error("Scenario library delta failed:", error);
+    return NextResponse.json({ error: "Không thể cập nhật thư viện kịch bản." }, { status: 500 });
+  }
+}
+
 export async function PUT(request: Request) {
   const profile = await getCurrentProfile();
   if (!profile) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });

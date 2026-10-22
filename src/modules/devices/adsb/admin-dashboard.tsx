@@ -11,7 +11,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AiScenarioDialog } from "@/components/scenario/ai-scenario-dialog";
 import { DeleteScenarioDialog } from "@/components/admin/delete-scenario-dialog";
-import { AdsbScenarioLibraryPanel } from "@/components/scenario/adsb-scenario-library-panel";
+import { AdsbScenarioLibraryPanel, AdsbScenarioLibraryCells } from "@/components/scenario/adsb-scenario-library-panel";
+import { ScenarioLibraryColumnHeading, ScenarioLibraryStatus } from "@/components/scenario/scenario-library-controls";
 import {
   Button,
   ButtonLink,
@@ -29,6 +30,8 @@ const scenarioColumns = [
   { id: "title", label: "Tiêu đề" },
   { id: "difficulty", label: "Mức độ", className: "w-28" },
   { id: "configuration", label: "Quy mô", className: "w-48" },
+  { id: "practice", label: <ScenarioLibraryColumnHeading kind="practice" />, className: "w-32 min-w-28 text-center" },
+  { id: "exam", label: <ScenarioLibraryColumnHeading kind="exam" />, className: "w-32 min-w-28 text-center" },
   { id: "actions", label: "Thao tác", className: "w-28 text-right" },
 ];
 
@@ -145,7 +148,7 @@ export function AdsbAdminDashboard() {
               <span>Tạo kịch bản ADS-B</span>
             </ButtonLink>}
       />
-      <AdsbScenarioLibraryPanel refreshKey={sourceRefreshKey} />
+      <AdsbScenarioLibraryPanel refreshKey={sourceRefreshKey} legacyScenarioIds={scenarios.map(s => s.id)}>
 
       {/* Scenarios Table Section */}
       <section aria-labelledby="scenario-list-title" className="space-y-4 pt-2">
@@ -246,6 +249,7 @@ export function AdsbAdminDashboard() {
                         </span>
                       </div>
                     </td>
+                    <AdsbScenarioLibraryCells scenarioId={scenario.id} title={scenario.title} />
                     <td className="w-28 px-4 py-3.5 align-middle">
                       <div className="flex justify-end gap-1.5">
                         <ButtonLink
@@ -277,7 +281,9 @@ export function AdsbAdminDashboard() {
             />
           ) : null}
         </ScenarioListFrame>
+        <ScenarioLibraryStatus />
       </section>
+      </AdsbScenarioLibraryPanel>
 
       {/* Delete Confirmation Modal Dialog */}
       {scenarioToDelete ? (

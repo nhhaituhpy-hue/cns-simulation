@@ -9,7 +9,7 @@ export const SCENARIOS_PER_PAGE = 10;
 
 export type ScenarioTableColumn = {
   id: string;
-  label: string;
+  label: ReactNode;
   className?: string;
 };
 

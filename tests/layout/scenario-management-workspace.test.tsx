@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ScenarioManagementWorkspace } from "@/components/scenario/scenario-management-workspace";
 
@@ -21,6 +21,28 @@ function scenario(overrides: Record<string, unknown>) {
 
 describe("ScenarioManagementWorkspace", () => {
   afterEach(() => vi.unstubAllGlobals());
+
+  it("places independent library checkboxes in the scenario table without a separate settings panel", async () => {
+    vi.stubGlobal("fetch", vi.fn((url: string) => Promise.resolve(new Response(JSON.stringify(
+      url.startsWith("/api/ai/") ? { jobs: [] }
+        : url.startsWith("/api/scenario-libraries") ? { practice: [{ id: "scenario-row" }], exam: [], libraryRevisions: { practice: 1, exam: 2 } }
+          : [scenario({})],
+    )))));
+    render(<ScenarioManagementWorkspace moduleId="dvor-220" />);
+    const scenarioButton = await screen.findByRole("button", { name: /QA DVOR 220 - Carrier/ });
+    expect(screen.getAllByRole("table")).toHaveLength(1);
+    expect(screen.queryByText("Cài đặt thư viện")).not.toBeInTheDocument();
+    const table = screen.getByRole("table");
+    expect(within(table).getAllByRole("columnheader")).toHaveLength(7);
+    expect(within(table).getByRole("columnheader", { name: /Thư viện Ôn tập/ })).toBeInTheDocument();
+    expect(within(table).getByRole("columnheader", { name: /Thư viện Kiểm tra/ })).toBeInTheDocument();
+    const row = scenarioButton.closest("tr")!;
+    const practice = within(row).getByRole("checkbox", { name: /Thư viện Ôn tập/ });
+    const exam = within(row).getByRole("checkbox", { name: /Thư viện Kiểm tra/ });
+    await waitFor(() => expect(practice).toBeChecked());
+    expect(exam).not.toBeChecked();
+    expect(within(row).getByRole("button", { name: "Sửa nhanh" })).toBeInTheDocument();
+  });
 
   it("shows only the selected device scenarios and restores navigation to the catalog", async () => {
     vi.stubGlobal(
