@@ -38,6 +38,9 @@ describe("self-explanatory workspace UI", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "Mở simulator" })[0]);
     expect(screen.getByRole("status", { name: "Đang mở simulator" })).toBeVisible();
     expect(screen.getAllByRole("button").every(button => (button as HTMLButtonElement).disabled)).toBe(true);
+    // Navigation must start in the click handler, not after a cosmetic timer.
+    expect(router.push).toHaveBeenCalledExactlyOnceWith(first.routes.simulator);
+    fireEvent.click(screen.getByRole("button", { name: "Đang mở…" }));
     await act(() => vi.advanceTimersByTimeAsync(1000));
     expect(router.push).toHaveBeenCalledExactlyOnceWith(first.routes.simulator);
   });

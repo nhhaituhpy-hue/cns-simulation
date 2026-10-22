@@ -9,6 +9,13 @@
 - Theo yêu cầu chủ repository, workflow **CI** chỉ chạy thủ công qua **Actions → CI → Run workflow**; không tự chạy khi push hoặc mở pull request.
 - Việc này không tắt webhook triển khai Dokploy và không thay đổi các lệnh lint, typecheck, test, build cục bộ.
 
+## Hiệu năng ảnh và mở simulator
+
+- Bản standalone phải chứa native binary/libvips của Sharp (`outputFileTracingIncludes` chỉ thêm `node_modules/@img/sharp-*`). Docker runner chạy `scripts/verify-image-runtime.mjs` với quyền `nextjs` ngay khi build: phải resize thật và xuất WebP, không chỉ `require` hoặc health HTTP200.
+- Ảnh catalog dùng cùng tài sản/metadata cũ nhưng URL có `imageRuntime=1` để tránh bản PNG gốc đã bị optimizer lỗi lưu cache immutable. Không thay ảnh, crop, màu sắc hay dữ liệu thiết bị. Kiểm tra ảnh qua `/_next/image` bằng MIME, kích thước sau decode, số byte và `naturalWidth` trên trình duyệt; HTTP200 đơn lẻ không chứng minh tối ưu thành công.
+- Nút **Mở simulator** bắt đầu điều hướng ngay trong click handler, bỏ timer trang trí 1 giây; giữ trạng thái đang mở và khóa click trùng. Không sửa engine/store/chấm điểm hoặc khởi tạo dữ liệu.
+- Kiểm tra local: `npm run build` rồi `node scripts/verify-image-runtime.mjs .next/standalone`; release vẫn cần ảnh thực trên web live và kiểm tra điều hướng desktop/mobile. Không restart AI worker cho bản vá web này.
+
 ## Giao diện gọn và cấu hình endpoint AI
 
 - Áp dụng nguyên tắc **“Tránh các nhãn phụ và mô tả không cần thiết. Hãy để bố cục tự giải thích.”** ở trang chủ, catalog Simulator/Kịch bản/Ôn tập và trình tạo kịch bản. Bỏ nhãn `ready`, phân loại lặp, mô tả catalog và hướng dẫn hiển nhiên; dùng hành động **Mở simulator**, **Mở kịch bản**, **Vào ôn tập**. VHF/VSAT vẫn báo **Đang hoàn thiện**, không trở thành tính năng đã triển khai.

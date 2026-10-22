@@ -36,8 +36,11 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=builder /app/public                        ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static     ./.next/static
+COPY --from=builder /app/scripts/verify-image-runtime.mjs ./scripts/verify-image-runtime.mjs
 
 USER nextjs
+# Fail the image build if standalone tracing omitted native image libraries.
+RUN node scripts/verify-image-runtime.mjs /app
 
 EXPOSE 3000
 

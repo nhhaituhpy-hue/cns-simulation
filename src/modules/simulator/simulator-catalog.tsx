@@ -13,10 +13,7 @@ export function SimulatorCatalog() {
   const handleRun = (moduleId: string, route: string) => {
     if (loadingId) return;
     setLoadingId(moduleId);
-    // 1s loading overlay (mờ) before navigating to simulator
-    window.setTimeout(() => {
-      router.push(route);
-    }, 1000);
+    router.push(route);
   };
 
   const loadingModule = SIMULATOR_MODULES.find((m) => m.id === loadingId);

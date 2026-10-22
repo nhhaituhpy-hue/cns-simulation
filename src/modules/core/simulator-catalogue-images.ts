@@ -13,18 +13,26 @@ export type SimulatorCatalogueImage = string | StaticImageData;
  * Keep the catalogue visuals shared between the landing page and the simulator
  * catalogue so the same module never drifts to a different image.
  */
+// A broken optimizer previously cached full-size originals as immutable images.
+// Version the rendered URL while preserving the original asset and metadata.
+function optimizedCatalogueImage(image: SimulatorCatalogueImage): SimulatorCatalogueImage {
+  return typeof image === "string"
+    ? `${image}?imageRuntime=1`
+    : { ...image, src: `${image.src}?imageRuntime=1` };
+}
+
 export const SIMULATOR_CATALOGUE_IMAGES: Record<
   SimulatorModuleId,
   SimulatorCatalogueImage
 > = {
-  "dvor-1150": dvor1150CatalogueImage,
-  "dvor-1150a": dvor1150aCatalogueImage,
-  "dme-1119a": dme1119aCatalogueImage,
-  "dvor-220": dvor220CatalogueImage,
-  "dme-320": dme320CatalogueImage,
-  "ads-b": adsBCatalogueImage,
-  vhf: "/images/simulator-icons/vhf.png",
-  vsat: "/images/simulator-icons/vsat.png",
+  "dvor-1150": optimizedCatalogueImage(dvor1150CatalogueImage),
+  "dvor-1150a": optimizedCatalogueImage(dvor1150aCatalogueImage),
+  "dme-1119a": optimizedCatalogueImage(dme1119aCatalogueImage),
+  "dvor-220": optimizedCatalogueImage(dvor220CatalogueImage),
+  "dme-320": optimizedCatalogueImage(dme320CatalogueImage),
+  "ads-b": optimizedCatalogueImage(adsBCatalogueImage),
+  vhf: optimizedCatalogueImage("/images/simulator-icons/vhf.png"),
+  vsat: optimizedCatalogueImage("/images/simulator-icons/vsat.png"),
 };
 
 export function getSimulatorCatalogueImage(
