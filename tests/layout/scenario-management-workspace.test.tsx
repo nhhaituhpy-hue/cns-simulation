@@ -54,6 +54,9 @@ describe("ScenarioManagementWorkspace", () => {
     ))));
     vi.stubGlobal("fetch", fetcher);
     render(<ScenarioManagementWorkspace moduleId={moduleId} />);
+    expect(screen.queryByText(/Quản lý các kịch bản \(scenario\)/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/JSON đúng schema/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Import cùng mã sẽ cập nhật kịch bản hiện có/)).toBeVisible();
     const scenarioButton = await screen.findByRole("button", { name: /QA DVOR 220 - Carrier/ });
     const create = screen.getByRole("region", { name: "Tạo kịch bản AI" });
     expect(within(create).getAllByRole("button")).toHaveLength(1);

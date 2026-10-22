@@ -337,9 +337,6 @@ export function AiAuthoringWizard({
       >
         <aside role="region" aria-label="Menu tính năng tạo kịch bản" className="grid min-w-0 gap-3 lg:sticky lg:top-2">
           <div className={`${authoringCardClass} grid gap-2`}>
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--cns-text-secondary)]">
-              Menu tính năng
-            </p>
             {session && advanced ? (
               <nav aria-label="Các bước tạo kịch bản" className="grid gap-1.5">
                 {steps.map((id) => {
@@ -385,9 +382,6 @@ export function AiAuthoringWizard({
                 <div className="rounded-lg border border-[#0369a1] bg-[#0369a1] px-2.5 py-2 text-xs font-semibold text-white">
                   Tình huống → Xem thử → Lưu
                 </div>
-                <p className="text-[11px] leading-relaxed text-[var(--cns-text-secondary)]">
-                  AI dựng tình huống, nguyên nhân, quy trình xử lý và tiêu chí đạt. Chi tiết native nằm trong Chỉnh sửa nâng cao.
-                </p>
               </div>
             )}
           </div>
@@ -485,7 +479,7 @@ export function AiAuthoringWizard({
 
                 </div>
               </div>
-              <p className="text-[11px] text-[var(--cns-text-secondary)]">Mặc định simulator chỉ làm nền nội bộ. Bản nháp và tài liệu chưa được xuất bản.</p>
+              <p className="text-[11px] text-[var(--cns-text-secondary)]">Bản nháp và tài liệu chưa được xuất bản.</p>
             </div>
           ) : null}
 

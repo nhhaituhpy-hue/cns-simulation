@@ -9,6 +9,13 @@
 - Theo yêu cầu chủ repository, workflow **CI** chỉ chạy thủ công qua **Actions → CI → Run workflow**; không tự chạy khi push hoặc mở pull request.
 - Việc này không tắt webhook triển khai Dokploy và không thay đổi các lệnh lint, typecheck, test, build cục bộ.
 
+## Giao diện gọn và cấu hình endpoint AI
+
+- Áp dụng nguyên tắc **“Tránh các nhãn phụ và mô tả không cần thiết. Hãy để bố cục tự giải thích.”** ở trang chủ, catalog Simulator/Kịch bản/Ôn tập và trình tạo kịch bản. Bỏ nhãn `ready`, phân loại lặp, mô tả catalog và hướng dẫn hiển nhiên; dùng hành động **Mở simulator**, **Mở kịch bản**, **Vào ôn tập**. VHF/VSAT vẫn báo **Đang hoàn thiện**, không trở thành tính năng đã triển khai.
+- Giữ nhãn biểu mẫu, điều khiển/keyboard, cảnh báo/lỗi, giới hạn upload, thông báo tài liệu gửi dịch vụ AI bên ngoài, quyền truy cập và ranh giới **chưa xuất bản**. Không thay engine, store, barem, snapshot, dữ liệu hay logic chấm thi.
+- `CNS_AI_BASE_URL` chấp nhận chính xác `https://cliproxy.cnsvn.com/v1` và endpoint VN cũ; giữ mặc định cũ khi không cấu hình. Chuẩn hóa một dấu `/` cuối, dùng đúng endpoint đã chọn ở cả loader và transport. Vẫn từ chối host/port/path tùy ý, credentials/query/fragment, HTTP và redirect; không đổi API key/model. Chỉ worker gọi provider; web không cần redeploy env AI để thay endpoint worker.
+- Regression kiểm tra endpoint mới/cũ, URL không an toàn, hành vi chọn module, điều hướng/carousel, mở modal không tự tạo job, nhãn/cảnh báo bảo mật và các thao tác kịch bản. Kiểm tra phát hành dùng Node 24, toàn bộ suite với PostgreSQL 17 cô lập, lint/typecheck, build web và worker; kết quả live được xác minh riêng sau deploy.
+
 ## Màn hình Ôn tập ba cột
 
 - Bài đang làm của sáu thiết bị dùng bố cục desktop **1 : 2,5 : 1**: trái mô tả đầy đủ tình huống; giữa simulator native; phải vùng gợi ý lớn, nút **Bước 2 · Xác định phần cứng** và một nút **Nộp bài ôn tập**. Mobile xếp dọc, simulator cuộn trong khung; không thu nhỏ chữ/điều khiển native.

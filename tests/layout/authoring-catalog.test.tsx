@@ -23,15 +23,12 @@ describe("AuthoringPage", () => {
 
     for (const [name, href] of availableModules) {
       const card = cardForHeading(name);
-      expect(card.getByText("ready")).toBeInTheDocument();
-      expect(
-        card.getByRole("link", { name: "Scenario Builder" }),
-      ).toHaveAttribute("href", href);
+      expect(card.getByRole("link", { name: "Mở kịch bản" })).toHaveAttribute("href", href);
     }
 
     for (const name of ["VHF", "VSAT"]) {
       const card = cardForHeading(name);
-      expect(card.getByText("pending")).toBeInTheDocument();
+      expect(card.getByText("Đang hoàn thiện")).toHaveAttribute("aria-disabled", "true");
     }
   });
 });

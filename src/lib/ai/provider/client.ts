@@ -1,11 +1,11 @@
-import { APPROVED_AI_BASE_URL, type AiProviderConfig } from "./config";
+import { approvedAiBaseUrl, type AiProviderConfig } from "./config";
 import type { AiMessage } from "../scenario-generation/prompt";
 import { AiScenarioError } from "../scenario-generation/types";
 
 const MAX_RESPONSE_BYTES = 128 * 1024;
 export async function requestScenarioJson(config: AiProviderConfig, messages: AiMessage[], signal?: AbortSignal): Promise<unknown> {
   if (signal?.aborted) throw new AiScenarioError("CANCELLED", "AI generation was cancelled.");
-  if (config.baseUrl !== APPROVED_AI_BASE_URL || config.timeoutMs < 1000 || config.timeoutMs > 120_000 || config.maxTokens > 2400) {
+  if (approvedAiBaseUrl(config.baseUrl) !== config.baseUrl || config.timeoutMs < 1000 || config.timeoutMs > 120_000 || config.maxTokens > 2400) {
     throw new AiScenarioError("PROVIDER_CONFIGURATION", "AI provider configuration is invalid.");
   }
   const controller = new AbortController();

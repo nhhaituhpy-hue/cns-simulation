@@ -120,28 +120,18 @@ export function AiScenarioDialog({moduleId,onCompleted,actions}:{moduleId:Scenar
 
    {chooserOpen&&!open?(
     <div role="region" aria-label="Chọn phương thức khởi tạo kịch bản AI" className={`${authoringCardClass} mt-3 max-w-2xl`}>
-     <div className="flex items-start justify-between gap-3">
-      <div>
-       <p className="text-xs font-semibold text-[var(--cns-text-primary)]">Chọn phương thức khởi tạo kịch bản AI</p>
-       <p className="mt-0.5 text-[11.5px] text-[var(--cns-text-secondary)]">Chọn tài liệu hoặc mô tả bài tập. AI chỉ bắt đầu khi bạn yêu cầu soạn kịch bản.</p>
-      </div>
+     <div className="flex justify-end">
       <Button size="sm" className={authoringBtnGrayClass} onClick={()=>setChooserOpen(false)} aria-label="Đóng">Đóng</Button>
      </div>
      <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
       <div className="flex flex-col justify-between gap-2.5 rounded-lg border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card-subtle)] p-3">
-       <div>
-        <p className="text-xs font-semibold text-[var(--cns-text-primary)]">Từ manual hoặc tình huống trong tài liệu</p>
-        <p className="mt-1 text-[11px] leading-relaxed text-[var(--cns-text-secondary)]">Tải PDF, DOCX, TXT hoặc MD. Có thể bổ sung mục tiêu huấn luyện.</p>
-       </div>
+       <p className="text-[11px] leading-relaxed text-[var(--cns-text-secondary)]">PDF, DOCX, TXT hoặc MD.</p>
        <Button size="sm" variant="primary" className={authoringBtnOrangeClass} onClick={()=>pickMode("documents")}>
         Tải tài liệu
        </Button>
       </div>
       <div className="flex flex-col justify-between gap-2.5 rounded-lg border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card-subtle)] p-3">
-       <div>
-        <p className="text-xs font-semibold text-[var(--cns-text-primary)]">Từ mô tả của bạn</p>
-        <p className="mt-1 text-[11px] leading-relaxed text-[var(--cns-text-secondary)]">Mô tả sự cố và mục tiêu; AI đối chiếu manual đúng thiết bị để dựng bài.</p>
-       </div>
+       <p className="text-[11px] leading-relaxed text-[var(--cns-text-secondary)]">Sự cố và mục tiêu huấn luyện.</p>
        <Button size="sm" className={authoringBtnBlueClass} onClick={()=>pickMode("description")}>
         Mô tả tình huống
        </Button>
@@ -151,7 +141,7 @@ export function AiScenarioDialog({moduleId,onCompleted,actions}:{moduleId:Scenar
     </div>
    ):null}
 
-   {open?<dialog ref={dialog} aria-labelledby={titleId} aria-describedby={descriptionId} onCancel={event=>{if(event.target!==event.currentTarget||dialog.current?.dataset.filePickerActive==="true"){event.preventDefault();return;}event.preventDefault();void close();}} onClose={event=>{if(event.target===event.currentTarget)setOpen(false);}} className="m-auto max-h-[calc(100dvh-1.5rem)] w-[min(92rem,calc(100%-1.5rem))] overflow-y-auto rounded-2xl border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] p-0 text-[var(--cns-text-primary)] shadow-2xl backdrop:bg-black/40 backdrop:backdrop-blur-sm"><div className="p-4 sm:p-5"><header className="mb-3 flex items-start justify-between gap-3 border-b border-[var(--cns-border-subtle)] pb-3"><div><h2 id={titleId} className="text-lg font-semibold">Tạo kịch bản bằng AI</h2><p id={descriptionId} className="mt-0.5 text-xs text-[var(--cns-text-secondary)]">Mô tả → AI soạn → xem thử → lưu nguồn chưa xuất bản. Không tự đưa vào Ôn tập hoặc Kỳ thi.</p></div><Button size="sm" className={authoringBtnGrayClass} disabled={closing} onClick={()=>void close()} aria-label="Đóng">Đóng</Button></header><AiAuthoringWizard key={`${moduleId}-${initialMode}`} moduleId={moduleId} initialMode={initialMode} onCompleted={completed} registerClose={handler=>{closeHandler.current=handler;}}/><LegacyHistory moduleId={moduleId} onCompleted={onCompleted} notified={notified}/></div></dialog>:null}
+   {open?<dialog ref={dialog} aria-labelledby={titleId} aria-describedby={descriptionId} onCancel={event=>{if(event.target!==event.currentTarget||dialog.current?.dataset.filePickerActive==="true"){event.preventDefault();return;}event.preventDefault();void close();}} onClose={event=>{if(event.target===event.currentTarget)setOpen(false);}} className="m-auto max-h-[calc(100dvh-1.5rem)] w-[min(92rem,calc(100%-1.5rem))] overflow-y-auto rounded-2xl border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] p-0 text-[var(--cns-text-primary)] shadow-2xl backdrop:bg-black/40 backdrop:backdrop-blur-sm"><div className="p-4 sm:p-5"><header className="mb-3 flex items-start justify-between gap-3 border-b border-[var(--cns-border-subtle)] pb-3"><div><h2 id={titleId} className="text-lg font-semibold">Tạo kịch bản bằng AI</h2><p id={descriptionId} className="mt-0.5 text-xs text-[var(--cns-text-secondary)]">Không tự đưa vào Ôn tập hoặc Kỳ thi.</p></div><Button size="sm" className={authoringBtnGrayClass} disabled={closing} onClick={()=>void close()} aria-label="Đóng">Đóng</Button></header><AiAuthoringWizard key={`${moduleId}-${initialMode}`} moduleId={moduleId} initialMode={initialMode} onCompleted={completed} registerClose={handler=>{closeHandler.current=handler;}}/><LegacyHistory moduleId={moduleId} onCompleted={onCompleted} notified={notified}/></div></dialog>:null}
   </section>
  );
 }

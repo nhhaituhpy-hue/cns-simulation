@@ -112,7 +112,6 @@ export function SimulatorShowcase({ simulators }: SimulatorShowcaseProps) {
     <div className="cns-showcase">
       <div className="mb-6 flex flex-col gap-4 px-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="cns-showcase__eyebrow">Hệ thống thiết bị CNS</p>
           <h2
             id="simulator-showcase-heading"
             className="mt-2 text-3xl font-semibold tracking-[-0.045em] text-white sm:text-4xl"
@@ -193,19 +192,8 @@ export function SimulatorShowcase({ simulators }: SimulatorShowcaseProps) {
                   </div>
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,12,18,0.1)_24%,rgba(2,12,18,0.2)_45%,rgba(2,12,18,0.94)_100%)]" />
                   <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
-                    <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-100/80">
-                      {simulator.categoryLabel}
-                    </span>
                     <span className="mt-2 block text-xl font-semibold tracking-[-0.04em] text-white sm:text-2xl">
                       {simulator.shortName}
-                    </span>
-                    <span
-                      className={[
-                        "mt-2 block text-[10px] font-bold uppercase tracking-[0.14em]",
-                        simulator.status === "available" ? "text-emerald-200" : "text-amber-200",
-                      ].join(" ")}
-                    >
-                      {simulator.status === "available" ? "Sẵn sàng thực hành" : "Đang hoàn thiện"}
                     </span>
                   </div>
                 </button>
@@ -289,8 +277,7 @@ export function SimulatorShowcase({ simulators }: SimulatorShowcaseProps) {
         </figure>
 
         <div className="flex flex-col p-7 sm:p-10">
-          <p className="cns-showcase__eyebrow">Nội dung thực hành</p>
-          <h3 className="mt-3 text-4xl font-semibold tracking-[-0.05em] text-white">
+          <h3 className="text-4xl font-semibold tracking-[-0.05em] text-white">
             {selected.shortName}
           </h3>
           <p className="mt-5 max-w-xl text-base leading-7 text-slate-300">

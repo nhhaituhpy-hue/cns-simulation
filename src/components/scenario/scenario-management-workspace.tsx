@@ -345,9 +345,6 @@ export function ScenarioManagementWorkspace({
         <h1 className="mt-2 text-[28px] sm:text-[30px] font-semibold tracking-[-0.01em] text-[var(--cns-text-primary)] leading-[1.3]">
           {simulatorModule.shortName}
         </h1>
-        <p className="mt-2 text-[14px] leading-relaxed text-[var(--cns-text-secondary)]">
-          Quản lý các kịch bản (scenario) giả lập sự cố của {simulatorModule.shortName}. Bấm vào từng tình huống để xem đầy đủ chi tiết.
-        </p>
       </header>
 
       {error ? (
@@ -434,9 +431,7 @@ export function ScenarioManagementWorkspace({
       </ScenarioLibraryControls>
 
       <p className="mt-3 text-[13px] leading-relaxed text-[var(--cns-text-muted)]">
-        Có {moduleScenarios.length} kịch bản {simulatorModule.shortName} đã lưu. Chỉ
-        JSON đúng schema của thiết bị mới được ghi vào kho; import cùng mã sẽ
-        cập nhật bản ghi cũ.
+        Có {moduleScenarios.length} kịch bản {simulatorModule.shortName} đã lưu. Import cùng mã sẽ cập nhật kịch bản hiện có.
       </p>
     </main>
   );

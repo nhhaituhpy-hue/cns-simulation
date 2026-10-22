@@ -14,7 +14,7 @@ describe("Home page layout", () => {
 
     const simulatorLinks = screen.getAllByRole("link", { name: /^Mở simulator .+/ });
     expect(simulatorLinks).toHaveLength(6);
-    expect(screen.getAllByText("Đang hoàn thiện")).toHaveLength(4);
+    expect(screen.getAllByText("Đang hoàn thiện")).toHaveLength(2);
   });
 
   it("keeps each available home simulator card linked to its module route", () => {

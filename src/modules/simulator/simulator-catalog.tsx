@@ -35,12 +35,8 @@ export function SimulatorCatalog() {
                   <span className={`inline-flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl ${available ? "bg-[var(--accent-muted)]" : "bg-[#d1d5db]"}`}>
                     <Image src={moduleIcon} alt="" width={80} height={80} sizes="80px" className="size-full object-contain p-1" />
                   </span>
-                  <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${available ? "border-[var(--color-success-border)] bg-[var(--color-success-muted)] text-[var(--color-success)]" : "border-[var(--color-warning-border)] bg-[var(--color-warning-muted)] text-[var(--color-warning)]"}`}>
-                    {available ? "ready" : "pending"}
-                  </span>
                 </div>
                 <h3 className="mt-4 text-base font-bold text-slate-900">{module.name}</h3>
-                <p className="mt-2 min-h-12 text-sm leading-5 text-slate-600">{module.description}</p>
                 {available ? (
                   <button
                     type="button"
@@ -57,12 +53,12 @@ export function SimulatorCatalog() {
                         <span>Đang mở…</span>
                       </>
                     ) : (
-                      "Run"
+                      "Mở simulator"
                     )}
                   </button>
                 ) : (
-                  <span className="mt-4 inline-flex min-h-9 items-center justify-center rounded-full bg-[#d1d5db] px-3.5 text-sm font-semibold text-slate-500">
-                    Run
+                  <span aria-disabled="true" className="mt-4 inline-flex min-h-9 items-center justify-center rounded-full bg-[#d1d5db] px-3.5 text-sm font-semibold text-slate-500">
+                    Đang hoàn thiện
                   </span>
                 )}
               </article>

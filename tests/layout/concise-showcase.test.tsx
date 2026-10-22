@@ -1,0 +1,23 @@
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, expect, it } from "vitest";
+import { SimulatorShowcase } from "@/components/home/simulator-showcase";
+import { createSimulatorShowcaseItem } from "@/components/home/simulator-showcase-data";
+import { SIMULATOR_MODULES } from "@/modules/core/registry";
+afterEach(cleanup);
+it("lets equipment and actions explain the showcase without secondary labels or repeated readiness copy", () => {
+  render(<SimulatorShowcase simulators={SIMULATOR_MODULES.map(createSimulatorShowcaseItem)} />);
+  expect(screen.queryByText("Hệ thống thiết bị CNS")).not.toBeInTheDocument();
+  expect(screen.queryAllByText("Sẵn sàng thực hành")).toHaveLength(0);
+  expect(screen.queryAllByText("Dẫn đường vô tuyến")).toHaveLength(0);
+  expect(screen.queryByText("Nội dung thực hành")).not.toBeInTheDocument();
+  expect(screen.getAllByRole("tab")).toHaveLength(SIMULATOR_MODULES.length);
+  expect(within(screen.getByRole("tabpanel")).getByRole("link", { name: "Mở simulator" })).toHaveAttribute("href", "/simulator/dvor-1150");
+  fireEvent.click(screen.getByRole("button", { name: "Chọn simulator tiếp theo" }));
+  expect(screen.getByRole("tab", { name: "Chọn mô phỏng DVOR 1150A" })).toHaveAttribute("aria-selected", "true");
+  const panel = screen.getByRole("tabpanel");
+  expect(within(panel).getByRole("link", { name: "Sơ đồ khối" })).toHaveAttribute("href", "/simulator/dvor-1150a/block-diagram");
+  fireEvent.keyDown(screen.getByRole("tab", { name: "Chọn mô phỏng DVOR 1150A" }), { key: "End" });
+  expect(screen.getByRole("tab", { name: "Chọn mô phỏng VSAT" })).toHaveAttribute("aria-selected", "true");
+  expect(within(screen.getByRole("tabpanel")).queryByRole("link")).not.toBeInTheDocument();
+  expect(within(screen.getByRole("tabpanel")).getByText("Nội dung đang hoàn thiện")).toBeVisible();
+});

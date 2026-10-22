@@ -81,9 +81,6 @@ export function AdsbAdminDashboard() {
       <header className="border-b border-[var(--cns-border-subtle)] pb-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--cns-text-secondary)]">
-              Kịch bản / ADS-B
-            </p>
             <h1 className="mt-1.5 text-[28px] sm:text-[32px] font-semibold tracking-tight text-[var(--cns-text-primary)] leading-tight">
               Kịch bản ADS-B
             </h1>
@@ -146,9 +143,6 @@ export function AdsbAdminDashboard() {
             <h2 id="scenario-list-title" className="text-[16px] font-semibold tracking-tight text-[var(--cns-text-primary)]">
               Danh sách kịch bản ADS-B
             </h2>
-            <p className="mt-0.5 text-[13px] text-[var(--cns-text-secondary)]">
-              Kịch bản mới cập nhật được hiển thị trước.
-            </p>
           </div>
           {isHydrated ? (
             <CountBadgePill>{scenarios.length} kịch bản</CountBadgePill>
