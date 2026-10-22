@@ -18,6 +18,7 @@ export function SimulatorDashboard() {
           alt=""
           fill
           preload
+          fetchPriority="high"
           sizes="100vw"
           className="cns-landing__hero-image -z-30 scale-105 object-cover object-[62%_center]"
         />

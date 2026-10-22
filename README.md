@@ -9,6 +9,13 @@
 - Theo yêu cầu chủ repository, workflow **CI** chỉ chạy thủ công qua **Actions → CI → Run workflow**; không tự chạy khi push hoặc mở pull request.
 - Việc này không tắt webhook triển khai Dokploy và không thay đổi các lệnh lint, typecheck, test, build cục bộ.
 
+## Lighthouse: tải trang chủ và trợ năng
+
+- Preload responsive ảnh hero được phát ra ngay ở AppShell, trước session boundary; dùng `getImageProps` cùng `srcSet`/`sizes` với ảnh hiển thị và `fetchPriority="high"`. Ảnh không còn phải đợi các consumer sau gate hydrate mới được phát hiện. Không đưa nội dung riêng tư ra ngoài gate, không đổi ảnh/crop/kích thước, engine hoặc chấm điểm.
+- Carousel dùng nhóm các nút chọn `aria-pressed` và một vùng chi tiết có ID ổn định, không dùng `tablist` chứa lẫn link hành động. Giữ chuyển thiết bị bằng nút, bàn phím, wheel/drag và các link simulator/sơ đồ khối.
+- Logo đỏ/xanh có màu theo nền tối/sáng với tương phản tối thiểu 4.5:1; tên trợ năng của thương hiệu/tài khoản bao gồm nội dung nhìn thấy. Không đổi bố cục hoặc quyền điều hướng.
+- Regression gồm axe `aria-required-children`/`aria-required-parent`, liên kết `aria-controls`/`aria-labelledby`, tương phản, nhãn và SSR preload khi consumer riêng tư vẫn bị chặn. Release cần Node 24 lint/typecheck/full suite/build, đọc lại deployment/health và Lighthouse trên URL đã đăng nhập; điểm Lighthouse không thay thế kiểm tra nghiệp vụ.
+
 ## Hiệu năng ảnh và mở simulator
 
 - Bản standalone phải chứa native binary/libvips của Sharp (`outputFileTracingIncludes` chỉ thêm `node_modules/@img/sharp-*`). Docker runner chạy `scripts/verify-image-runtime.mjs` với quyền `nextjs` ngay khi build: phải resize thật và xuất WebP, không chỉ `require` hoặc health HTTP200.

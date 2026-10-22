@@ -84,7 +84,7 @@ export function SimulatorShowcase({ simulators }: SimulatorShowcaseProps) {
   if (simulatorCount === 0) return null;
 
   const selected = simulators[selectedIndex];
-  const panelId = "simulator-panel-" + selected.id;
+  const panelId = "simulator-showcase-detail";
 
   function handleKeyboard(event: KeyboardEvent<HTMLDivElement>) {
     if (event.key === "ArrowLeft") {
@@ -128,7 +128,7 @@ export function SimulatorShowcase({ simulators }: SimulatorShowcaseProps) {
         onKeyDown={handleKeyboard}
       >
         <div
-          role="tablist"
+          role="group"
           aria-label="Danh sách simulator CNS"
           className="cns-showcase__track relative mx-auto"
           style={{ perspective: "1000px" }}
@@ -136,7 +136,7 @@ export function SimulatorShowcase({ simulators }: SimulatorShowcaseProps) {
           {simulators.map((simulator, index) => {
             const distance = circularDistance(index, selectedIndex, simulators.length);
             const selectedCard = index === selectedIndex;
-            const cardId = "simulator-tab-" + simulator.id;
+            const cardId = "simulator-card-" + simulator.id;
             const hidden = Math.abs(distance) > 3;
 
             return (
@@ -169,9 +169,8 @@ export function SimulatorShowcase({ simulators }: SimulatorShowcaseProps) {
                 <button
                   id={cardId}
                   type="button"
-                  role="tab"
                   tabIndex={selectedCard ? 0 : -1}
-                  aria-selected={selectedCard}
+                  aria-pressed={selectedCard}
                   aria-controls={panelId}
                   aria-label={"Chọn mô phỏng " + simulator.shortName}
                   onClick={() => setSelectedIndex(index)}
@@ -258,8 +257,8 @@ export function SimulatorShowcase({ simulators }: SimulatorShowcaseProps) {
 
       <section
         id={panelId}
-        role="tabpanel"
-        aria-labelledby={"simulator-tab-" + selected.id}
+        role="region"
+        aria-labelledby={"simulator-card-" + selected.id}
         className="cns-showcase__detail mt-12 grid overflow-hidden rounded-[1.5rem] border border-white/10 bg-slate-950/70 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]"
       >
         <figure className="relative min-h-[21rem] overflow-hidden border-b border-white/10 bg-slate-900/80 lg:min-h-[31rem] lg:border-b-0 lg:border-r">

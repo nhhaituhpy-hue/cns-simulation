@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { getImageProps } from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { ArrowLeft } from "@phosphor-icons/react/dist/csr/ArrowLeft";
 import { BookOpenText } from "@phosphor-icons/react/dist/csr/BookOpenText";
@@ -21,6 +22,7 @@ import { X } from "@phosphor-icons/react/dist/csr/X";
 import type { Icon } from "@phosphor-icons/react/dist/lib/types";
 import { motion } from "motion/react";
 import { useState, type MouseEvent, type ReactNode } from "react";
+import { preload } from "react-dom";
 import { logoutAction } from "@/app/login/actions";
 import { ChangeOwnPasswordDialog } from "@/components/auth/change-own-password-dialog";
 import { ScenarioSessionBoundary } from "@/components/auth/scenario-session-boundary";
@@ -184,9 +186,11 @@ function getWorkspaceSection(href: string): WorkspaceSection | null {
 function ApplicationIdentity({
   mobile = false,
   inverted = false,
+  darkSurface = inverted,
 }: {
   mobile?: boolean;
   inverted?: boolean;
+  darkSurface?: boolean;
 }) {
   return (
     <Link
@@ -195,11 +199,11 @@ function ApplicationIdentity({
         "flex min-w-0 items-center gap-2 rounded-lg py-1 pr-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2",
         mobile ? "max-w-[13rem] sm:max-w-[18rem]" : "max-w-[18rem]",
       ].join(" ")}
-      aria-label="ATTECH CNS Simulation Lab, về trang chủ"
+      title="Về trang chủ"
     >
       <span className="shrink-0 text-[1.05rem] font-black tracking-[-0.07em]">
-        <span className="text-[#e3212d]">A</span>
-        <span className="text-[#1386c9]">TTECH</span>
+        <span className={darkSurface ? "text-[#fb7185]" : "text-[#be123c]"}>A</span>
+        <span className={darkSurface ? "text-[#38bdf8]" : "text-[#0369a1]"}>TTECH</span>
       </span>
       <span
         className={[
@@ -402,6 +406,17 @@ function PageTransition({ children }: { children: ReactNode }) {
 }
 
 export function AppShell({ children, currentUser }: AppShellProps) {
+  const pathname = usePathname();
+  if (pathname === "/") {
+    // The session boundary withholds children during SSR. Discover the public
+    // hero before hydration without rendering any private consumer early.
+    const { props } = getImageProps({
+      src: "/images/cns-image.webp", alt: "", fill: true, sizes: "100vw",
+    });
+    preload(props.src, {
+      as: "image", imageSrcSet: props.srcSet, imageSizes: props.sizes, fetchPriority: "high",
+    });
+  }
   return (
     <ScenarioSessionBoundary currentUser={currentUser}>
       <AppShellContent currentUser={currentUser}>{children}</AppShellContent>
@@ -481,7 +496,7 @@ function AppShellContent({ children, currentUser }: AppShellProps) {
             >
               <List aria-hidden size={21} weight="regular" />
             </button>
-            <ApplicationIdentity mobile inverted={isLanding} />
+            <ApplicationIdentity mobile inverted={isLanding} darkSurface={isLanding || pathname.replace(/\/+$/, "").startsWith("/simulator/")} />
           </div>
 
           <TopNavigation role={currentUser?.role} inverted={isLanding} />
@@ -501,7 +516,7 @@ function AppShellContent({ children, currentUser }: AppShellProps) {
                   onClick={() => setAccountMenuOpen((current) => !current)}
                   aria-haspopup="menu"
                   aria-expanded={accountMenuOpen}
-                  aria-label={`Tài khoản: ${currentUser.fullName}`}
+                  aria-label={`Tài khoản: ${[currentUser.fullName, currentUser.workUnit].filter(Boolean).join(" ")}`}
                   className={[
                     "flex min-h-11 items-center gap-2 rounded-lg px-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
                     isLanding

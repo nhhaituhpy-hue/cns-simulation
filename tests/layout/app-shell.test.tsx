@@ -1,5 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { renderToString } from "react-dom/server";
+import { getImageProps } from "next/image";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { DEFAULT_SCENARIOS, useScenarioStore } from "@/stores/scenario-store";
@@ -41,6 +43,70 @@ function desktopNavigation() {
 }
 
 describe("AppShell", () => {
+  it("preloads the exact responsive hero during SSR while private children remain gated", () => {
+    mockUsePathname.mockReturnValue("/");
+    useScenarioStore.getState().bindSession(null, null);
+    const html = renderToString(<AppShell currentUser={adminUser}><p>Private consumer</p></AppShell>);
+    const document = new DOMParser().parseFromString(html, "text/html");
+    const preload = document.querySelector('link[rel="preload"][as="image"]');
+    const { props } = getImageProps({ src: "/images/cns-image.webp", alt: "", fill: true, sizes: "100vw" });
+    expect(preload).not.toBeNull();
+    expect(preload?.getAttribute("imagesrcset")).toBe(props.srcSet);
+    expect(preload?.getAttribute("imagesizes")).toBe(props.sizes);
+    expect(preload?.getAttribute("fetchpriority")).toBe("high");
+    expect(html).toContain("Đang xác minh phiên đăng nhập");
+    expect(html).not.toContain("Private consumer");
+  });
+
+  it.each(["/simulator", "/login", "/authoring"])("does not preload the landing hero on %s", (pathname) => {
+    mockUsePathname.mockReturnValue(pathname);
+    useScenarioStore.getState().bindSession(null, null);
+    const html = renderToString(<AppShell currentUser={adminUser}><p>Private consumer</p></AppShell>);
+    const document = new DOMParser().parseFromString(html, "text/html");
+    expect(document.querySelector('link[rel="preload"][as="image"]')).toBeNull();
+  });
+
+  it.each(["/", "/simulator", "/simulator/ads-b", "/simulator/dvor-1150"])("keeps the brand text readable against the header on %s", (pathname) => {
+    mockUsePathname.mockReturnValue(pathname);
+    renderShell();
+    const logoText = screen.getByText("TTECH");
+    const color = logoText.className.match(/text-\[(#[0-9a-f]{6})\]/i)?.[1];
+    expect(color, "the logo needs an explicit foreground paired with the route background").toBeDefined();
+    function luminance(hex: string) {
+      const rgb = [1, 3, 5].map(offset => parseInt(hex.slice(offset, offset + 2), 16) / 255)
+        .map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
+      return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
+    }
+    const foreground = luminance(color!);
+    const background = luminance(pathname === "/" ? "#16222e" : pathname.startsWith("/simulator/") ? "#1f2937" : "#f5f7f9");
+    expect((Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it.each(["/", "/simulator", "/simulator/ads-b", "/simulator/dvor-1150"])("keeps the red monogram readable against the header on %s", (pathname) => {
+    mockUsePathname.mockReturnValue(pathname);
+    renderShell();
+    const color = screen.getByText("A").className.match(/text-\[(#[0-9a-f]{6})\]/i)?.[1];
+    expect(color).toBeDefined();
+    function luminance(hex: string) {
+      const rgb = [1, 3, 5].map(offset => parseInt(hex.slice(offset, offset + 2), 16) / 255)
+        .map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
+      return rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
+    }
+    const foreground = luminance(color!);
+    const background = luminance(pathname === "/" ? "#16222e" : pathname.startsWith("/simulator/") ? "#1f2937" : "#f5f7f9");
+    expect((Math.max(foreground, background) + 0.05) / (Math.min(foreground, background) + 0.05)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("uses the visible brand and full account label as their accessible names", () => {
+    renderShell();
+    const brand = screen.getByText("CNS Simulation Lab").closest("a");
+    expect(brand).not.toHaveAttribute("aria-label");
+    expect(brand).toHaveAccessibleName(/ATTECH\s*CNS Simulation Lab/);
+    expect(screen.getByRole("button", { name: /^Tài khoản:/ })).toHaveAccessibleName(
+      "Tài khoản: Quản trị viên Trung tâm Bảo đảm kỹ thuật",
+    );
+  });
+
   it("clears the private singleton before awaiting logout and keeps consumers gated", () => {
     let duringLogout: string[] | undefined;
     mockLogout.mockImplementationOnce(() => {
@@ -51,7 +117,7 @@ describe("AppShell", () => {
     const draft = { ...DEFAULT_SCENARIOS[0], id: "logout-private-draft" };
     act(() => { useScenarioStore.setState({ scenarios: [draft], isHydrated: true }); });
     window.localStorage.setItem(SCENARIO_STORAGE_KEY, serializeScenarioStorage([draft]));
-    fireEvent.click(screen.getByRole("button", { name: "Tài khoản: Quản trị viên" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Tài khoản: Quản trị viên/ }));
     fireEvent.click(screen.getByRole("menuitem", { name: "Đăng xuất" }));
     expect(duringLogout).toEqual([]);
     expect(window.localStorage.getItem(SCENARIO_STORAGE_KEY)).toBeNull();
@@ -65,7 +131,7 @@ describe("AppShell", () => {
       const draft = { ...DEFAULT_SCENARIOS[0], id: "failed-logout-private-draft" };
       act(() => { useScenarioStore.setState({ scenarios: [draft], isHydrated: true }); });
       window.localStorage.setItem(SCENARIO_STORAGE_KEY, serializeScenarioStorage([draft]));
-      fireEvent.click(screen.getByRole("button", { name: "Tài khoản: Quản trị viên" }));
+      fireEvent.click(screen.getByRole("button", { name: /^Tài khoản: Quản trị viên/ }));
       fireEvent.click(screen.getByRole("menuitem", { name: "Đăng xuất" }));
       await waitFor(() => expect(log).toHaveBeenCalled());
       view.rerender(<AppShell currentUser={adminUser}><p>Nội dung kiểm thử</p></AppShell>);
@@ -172,7 +238,7 @@ describe("AppShell", () => {
   it("opens the account menu and change-password dialog from the user name", () => {
     renderShell();
 
-    fireEvent.click(screen.getByRole("button", { name: "Tài khoản: Quản trị viên" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Tài khoản: Quản trị viên/ }));
     const accountMenu = screen.getByRole("menu", { name: "Tài khoản" });
     expect(within(accountMenu).getByRole("menuitem", { name: "Đổi mật khẩu" })).toBeInTheDocument();
 
