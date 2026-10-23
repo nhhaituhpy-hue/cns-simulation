@@ -1,3 +1,4 @@
+import { MOPIENS_DME_TRAINING_ACCOUNTS } from "@/lib/simulator-training-accounts";
 import { getDme320ChannelAllocation } from "./channel-allocation";
 import type {
   Dme320AlarmClassification,
@@ -203,11 +204,7 @@ export function createDefaultDme320Config(): Dme320Config {
   };
 }
 
-export const DEFAULT_DME320_ACCOUNTS: readonly Dme320SecurityAccount[] = [
-  { userId: "observer", password: "observer", level: 1 },
-  { userId: "operator", password: "operator", level: 2 },
-  { userId: "Administrator", password: "1234", level: 3 },
-];
+export const DEFAULT_DME320_ACCOUNTS: readonly Dme320SecurityAccount[] = MOPIENS_DME_TRAINING_ACCOUNTS;
 
 export const DME320_CALIBRATION_STEP_NAMES = [
   "Transmitter Drive Level Optimization",

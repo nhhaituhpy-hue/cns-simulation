@@ -3,7 +3,26 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 import { useScenarioStore } from "@/stores/scenario-store";
 import { sanitizePracticeHintPayload } from "@/lib/ai/feedback/practice-hints-input";
+import { preparePracticeQuestion } from "@/lib/ai/feedback/practice-question";
 import type { PracticeHintResult } from "@/lib/ai/feedback/practice-hints-worker";
+import type { ManualCitation } from "@/lib/ai/scenario-blueprint/types";
+function isManualCitation(value: unknown): value is ManualCitation {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const reference = value as Record<string, unknown>;
+  return ["id", "documentId", "documentName", "sha256", "segmentLabel", "quote"].every(key => typeof reference[key] === "string")
+    && (reference.sourceKind === "reference-only" || reference.sourceKind === "uploaded");
+}
+function isPracticeHintResult(value: unknown): value is PracticeHintResult {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const result = value as Record<string, unknown>;
+  return (result.sourceMode === "ai-assisted" || result.sourceMode === "deterministic-only" || result.sourceMode === "knowledge-only")
+    && typeof result.summary === "string"
+    && typeof result.notice === "string"
+    && Array.isArray(result.nextSteps) && result.nextSteps.every(step => typeof step === "string")
+    && (result.kind === undefined || result.kind === "answer" || result.kind === "next-step")
+    && (result.answer === undefined || typeof result.answer === "string")
+    && (result.references === undefined || (Array.isArray(result.references) && result.references.every(isManualCitation)));
+}
 export interface PracticeAiHintsProps { moduleId: ScenarioParametersModuleId; scenarioId: string; libraryMembershipId?: string; attemptKey?: string | number | null; getPayload: () => Record<string, unknown> | null; disabled?: boolean }
 interface State { scope: string; pending: boolean; jobId: string | null; result: PracticeHintResult | null; error: string | null; readError: boolean; question: string }
 const initial=(scope:string):State=>({scope,pending:false,jobId:null,result:null,error:null,readError:false,question:""});
@@ -34,19 +53,19 @@ export function PracticeAiHints({moduleId,scenarioId,libraryMembershipId,attempt
     update({pending:true,error:null,readError:false,...(!readOnly?{result:null,jobId:null}:{})});
     try{
       if(!jobId){
-        if(!frozen.current)frozen.current={key:crypto.randomUUID(),body:JSON.stringify({moduleId,scenarioId,...(libraryMembershipId?{libraryMembershipId}:{}),runKey:String(attemptKey??"current"),question:state.question,payload:sanitizePracticeHintPayload(getPayload())})};
+        if(!frozen.current)frozen.current={key:crypto.randomUUID(),body:JSON.stringify({moduleId,scenarioId,...(libraryMembershipId?{libraryMembershipId}:{}),runKey:String(attemptKey??"current"),question:preparePracticeQuestion(state.question).question,payload:sanitizePracticeHintPayload(getPayload())})};
         const {response,data}=await requestJson('/api/ai/practice-hints',{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':frozen.current.key},body:frozen.current.body},controller.signal);
         if(!valid())return;
         if(!response.ok||typeof data.jobId!=='string'){if(response.status>=400&&response.status<500&&response.status!==408)frozen.current=null;throw Error("Chưa gửi được yêu cầu gợi ý. Thử lại sẽ giữ nguyên yêu cầu nếu kết quả mạng chưa rõ.");}
         jobId=data.jobId;frozen.current=null;update({jobId});
       }
       for(let count=0;count<30;count++){
-        const {response,data}=await requestJson(`/api/ai/practice-hints?jobId=${encodeURIComponent(jobId!)}`,{},controller.signal);
+        const {response,data}=await requestJson(`/api/ai/practice-hints?jobId=${encodeURIComponent(jobId!)}`,{headers:{'X-CNS-Hint-Version':'2'}},controller.signal);
         if(!valid())return;
         if(!response.ok)throw Error("Không thể đọc gợi ý. Bạn có thể tải lại mà không gửi yêu cầu mới.");
         if(data.status==='completed'){
-          const result=data.result as PracticeHintResult|undefined;
-          if(!result||!['ai-assisted','deterministic-only'].includes(result.sourceMode)||typeof result.summary!=='string'||!Array.isArray(result.nextSteps)||!result.nextSteps.every(s=>typeof s==='string')||typeof result.notice!=='string')throw Error("Kết quả gợi ý không hợp lệ.");
+          const result=data.result;
+          if(!isPracticeHintResult(result))throw Error("Kết quả gợi ý không hợp lệ.");
           update({pending:false,result,error:null});return;
         }
         if(data.status==='failed'){update({pending:false,error:"Chưa tạo được gợi ý. Bạn có thể yêu cầu một bước mới.",readError:false});return;}
@@ -61,11 +80,23 @@ export function PracticeAiHints({moduleId,scenarioId,libraryMembershipId,attempt
     <h2 className="text-base font-semibold">Gợi ý từ AI</h2>
     <p className="text-xs text-[#485b73]">Dữ liệu đã lọc sẽ gửi tới dịch vụ AI được cấu hình.</p>
     <label className="flex flex-col gap-1 text-sm">Câu hỏi (không bắt buộc)<textarea value={view.question} maxLength={1000} disabled={disabled||view.pending} onChange={e=>setState(s=>({...s,question:e.target.value}))} rows={3} className="w-full min-w-0 resize-y rounded-lg border border-[#b5c6db] bg-white p-2 text-sm text-[#142238] caret-[#142238] [-webkit-text-fill-color:#142238]" placeholder="Bạn muốn kiểm tra điều gì tiếp theo?"/></label>
-    <button type="button" disabled={disabled||!owner||view.pending||!current} onClick={()=>void run()} className="rounded-full bg-[#0369a1] px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50">Gợi ý một bước</button>
+    <button type="button" disabled={disabled||!owner||view.pending||!current} onClick={()=>void run()} className="rounded-full bg-[#0369a1] px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50">{view.question.trim()?"Hỏi AI":"Gợi ý một bước"}</button>
     <div aria-live="polite" className="min-w-0 flex-1 space-y-2 break-words text-sm">
       {view.pending&&<p role="status">Đang chuẩn bị gợi ý…</p>}
       {view.error&&<p role="alert">{view.error}</p>}
-      {view.result&&<><ul className="list-disc space-y-2 pl-4">{view.result.nextSteps.map((step,i)=><li key={i}>{step}</li>)}</ul>{view.result.sourceMode==='deterministic-only'&&<p className="text-xs text-[#485b73]">Gợi ý hệ thống · AI chưa khả dụng.</p>}</>}
+      {view.result&&<>
+        {view.result.answer&&<p className="whitespace-pre-wrap">{view.result.answer}</p>}
+        {view.result.nextSteps.length>0&&<ul className="list-disc space-y-2 pl-4">{view.result.nextSteps.map((step,i)=><li key={i}>{step}</li>)}</ul>}
+        {Boolean(view.result.references?.length)&&<details className="text-xs text-[#485b73]">
+          <summary className="cursor-pointer">Nguồn tham khảo</summary>
+          <div className="mt-2 space-y-2">{view.result.references?.map((reference,i)=><div key={i}>
+            <p className="font-medium">{reference.documentName} · {reference.segmentLabel}</p>
+            {reference.sourceKind==='reference-only'&&<p>Nguồn huấn luyện</p>}
+            <blockquote className="whitespace-pre-wrap border-l-2 border-[#b5c6db] pl-2">{reference.quote}</blockquote>
+          </div>)}</div>
+        </details>}
+        {view.result.sourceMode==='deterministic-only'&&<p className="text-xs text-[#485b73]">Gợi ý hệ thống · AI chưa khả dụng.</p>}
+      </>}
       {view.readError&&!view.pending&&<button type="button" disabled={disabled} onClick={()=>void run(true)} className="rounded border border-[#b5c6db] px-3 py-2">Tải lại gợi ý</button>}
       {disabled&&<p className="text-xs">Gợi ý đã khóa sau khi nộp bài.</p>}
     </div>

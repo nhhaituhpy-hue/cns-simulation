@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { mkdtemp, readFile, rm, symlink, truncate, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { retrieveDeviceKnowledge } from "@/lib/ai/knowledge/retrieve";
+import { retrieveDeviceKnowledge, retrieveTrainingLoginCitation } from "@/lib/ai/knowledge/retrieve";
 import { validateEvidenceDocuments } from "@/lib/ai/scenario-generation/validation";
 
 const MODULES = ["dvor-1150", "dvor-1150a", "dme-1119a", "dvor-220", "dme-320", "ads-b"] as const;
@@ -313,6 +313,98 @@ it.each([
     if (kind === "oversize-printed") segment.printedPage = "p".repeat(101);
   });
   await expect(retrieveDeviceKnowledge("dvor-1150", "power", { root })).rejects.toMatchObject({ code: "KNOWLEDGE_INVALID" });
+});
+it("retrieves only an exact native training pair without weakening generic credential quarantine",async()=>{
+ const { trainingLoginFor }=await import("@/lib/simulator-training-accounts");
+ const account=trainingLoginFor("dvor-1150","");if(account.kind!=="fixed-default")throw Error();
+ const pair=`User Name: ${account.userId}\nPassword: ${account.password}`;
+ const text=`DVOR 1150 PMDT default Level 3 account.\n${pair}\nAPI key: synthetic-private-key`;
+ const {root}=await fixture(c=>fixturePages(c,[text]));
+ const citation=await retrieveTrainingLoginCitation("dvor-1150","Tài khoản login PMDT là gì?",{root});
+ expect(Boolean(citation)).toBe(true);expect(citation?.quote===pair).toBe(true);
+ expect(citation).toMatchObject({segmentLabel:"PDF page 1 | 1",sha256:hash("synthetic source dvor-1150")});
+ expect(citation?.quote.includes("synthetic-private-key")).toBe(false);
+ expect((await retrieveDeviceKnowledge("dvor-1150","PMDT",{root})).documents).toEqual([]);
+});
+it.each(["name", "id", "label", "printedPage", "non-PDF label"])("withholds training citations with sensitive %s metadata", async field => {
+  const { trainingLoginFor } = await import("@/lib/simulator-training-accounts");
+  const account = trainingLoginFor("dvor-1150", "");
+  if (account.kind !== "fixed-default") throw Error();
+  const text = `DVOR 1150 PMDT default Level 3 account.\nUser Name: ${account.userId}\nPassword: ${account.password}`;
+  const secret = "Password: synthetic-unrelated-private-value";
+  const { root } = await fixture(c => {
+    fixturePages(c, [text]);
+    const doc = c.documents[0], segment = doc.segments[0];
+    if (field === "name") doc.name = secret;
+    if (field === "id") doc.id = "Password-synthetic-unrelated-private-value";
+    if (field === "label") segment.label = secret;
+    if (field === "printedPage") segment.printedPage = secret;
+    if (field === "non-PDF label") {
+      Object.assign(doc, { mediaType: "text/markdown", pageCount: null });
+      Object.assign(segment, { page: null, printedPage: null, label: secret });
+    }
+  });
+  expect(Boolean(await retrieveTrainingLoginCitation("dvor-1150", "", { root }))).toBe(false);
+});
+it.each(["dvor-1150a", "dvor_1150a", "selex1150a", "model1150a", "Selex Model 1150A"].flatMap(model =>
+  ["name", "label", "printedPage", "text"].map(field => ({ model, field })),
+))("refuses other-model training provenance in $field: $model", async ({ model, field }) => {
+  const { trainingLoginFor } = await import("@/lib/simulator-training-accounts");
+  const account = trainingLoginFor("dvor-1150", "");
+  if (account.kind !== "fixed-default") throw Error();
+  const pair = `User Name: ${account.userId}\nPassword: ${account.password}`;
+  const { root } = await fixture(c => {
+    fixturePages(c, [`${field === "text" ? model : ""} PMDT default Level 3 account.\n${pair}`]);
+    const doc = c.documents[0], segment = doc.segments[0];
+    if (field === "name") doc.name = `Synthetic_${model}_manual.pdf`;
+    if (field === "label") segment.label = `${model} section`;
+    if (field === "printedPage") segment.printedPage = `${model} section`;
+  });
+  expect(Boolean(await retrieveTrainingLoginCitation("dvor-1150", "", { root }))).toBe(false);
+});
+it.each(["dvor-1150", "dvor_1150", "selex1150", "model1150", "Selex Model 1150"])("accepts matching explicit model spelling: %s", async model => {
+  const { trainingLoginFor } = await import("@/lib/simulator-training-accounts");
+  const account = trainingLoginFor("dvor-1150", "");
+  if (account.kind !== "fixed-default") throw Error();
+  const pair = `User Name: ${account.userId}\nPassword: ${account.password}`;
+  const { root } = await fixture(c => fixturePages(c, [`${model} PMDT default Level 3 account.\n${pair}`]));
+  const citation = await retrieveTrainingLoginCitation("dvor-1150", "", { root });
+  expect(citation?.quote === pair).toBe(true);
+});
+it.each([
+  `PMDT training overview.\n\nWeb console.\n${"Synthetic operating note. ".repeat(20)}Default account.`,
+  "PMDT training overview.\n\nUnrelated default account.",
+  `PMDT training overview.\n4.2 Web console\n${"Synthetic operating note. ".repeat(20)}Default account.`,
+  "PMDT default account.\n4.2 Unrelated account",
+  "Unrelated default account.",
+])("requires block-local PMDT context before a training pair %#", async context => {
+  const { trainingLoginFor } = await import("@/lib/simulator-training-accounts");
+  const account = trainingLoginFor("dvor-1150", "");
+  if (account.kind !== "fixed-default") throw Error();
+  const text = `${context}\nUser Name: ${account.userId}\nPassword: ${account.password}\n\nPMDT overview.`;
+  const { root } = await fixture(c => fixturePages(c, [text]));
+  expect(Boolean(await retrieveTrainingLoginCitation("dvor-1150", "", { root }))).toBe(false);
+});
+it("preserves a bounded PMDT Security section with an earlier SEC4 pair", async () => {
+  const { trainingLoginFor } = await import("@/lib/simulator-training-accounts");
+  const account = trainingLoginFor("dvor-1150", "SEC3"), previous = trainingLoginFor("dvor-1150", "SEC4");
+  if (account.kind !== "fixed-default" || previous.kind !== "fixed-default") throw Error();
+  const pair = `User Name: ${account.userId}\nPassword: ${account.password}`;
+  const text = ["Model1150", "3.3.2.1 Security", "PMDT security levels for training.",
+    "Synthetic level description.\n".repeat(45),
+    `The default Level 4 user name and password follow.\nUser Name: ${previous.userId}\nPassword: ${previous.password}`,
+    `The default Level 3 user name and password follow.\n${pair}`].join("\n");
+  const { root } = await fixture(c => fixturePages(c, [text]));
+  const citation = await retrieveTrainingLoginCitation("dvor-1150", "SEC3", { root });
+  expect(citation?.quote === pair).toBe(true);
+});
+it.each(["wrong-pair","wrong-model","wrong-scope","damaged-hash"])("fails closed on invalid training credential provenance: %s",async kind=>{
+ const {trainingLoginFor}=await import("@/lib/simulator-training-accounts");const account=trainingLoginFor("dvor-1150","");if(account.kind!=="fixed-default")throw Error();
+ const text=`DVOR ${kind==='wrong-model'?'1150A':'1150'} ${kind==='wrong-scope'?'web API':'PMDT'} default\nUser Name: ${account.userId}\nPassword: ${kind==='wrong-pair'?'synthetic-wrong':account.password}`;
+ const {root}=await fixture(c=>fixturePages(c,[text]));
+ if(kind==='damaged-hash')await writeFile(join(root,'dvor-1150.json'),'{}');
+ const result=await retrieveTrainingLoginCitation("dvor-1150","",{root}).catch(()=>null);
+ expect(result).toBeNull();
 });
 it("preserves non-PDF paragraph labels without inventing pages", async () => {
   const { root } = await fixture(corpus => {

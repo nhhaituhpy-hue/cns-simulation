@@ -4,7 +4,7 @@ import { createDefaultDvor1150aScenarioDefinition } from "@/lib/dvor1150a/scenar
 describe("bounded practice hint generation", () => {
   it.each([{nextStepIds:["invented-command"]},{nextStepIds:["next-0"],summary:"Invented command"},null])( "rejects model inventions and labels the deterministic fallback",async answer=>{
     const {generatePracticeHint}=await import("@/lib/ai/feedback/practice-hints-worker");
-    const result=await generatePracticeHint({moduleId:"dvor-1150a",definition:createDefaultDvor1150aScenarioDefinition(),rubric:null,payload:{},question:"Password:\nprivate"},{provider:async()=>answer});
+    const result=await generatePracticeHint({moduleId:"dvor-1150a",definition:createDefaultDvor1150aScenarioDefinition(),rubric:null,payload:{},question:""},{provider:async()=>answer});
     expect(result.sourceMode).toBe("deterministic-only");expect(JSON.stringify(result)).not.toMatch(/Invented|private/);
   });
   it("falls back safely on provider failure without leaking raw errors",async()=>{

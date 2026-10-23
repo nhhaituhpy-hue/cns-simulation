@@ -1,3 +1,4 @@
+import { SELEX_DVOR_TRAINING_ACCOUNTS } from "@/lib/simulator-training-accounts";
 import type {
   VorAttemptEvent,
   VorEditableValue,
@@ -858,11 +859,7 @@ export function createVorPmdtStore(
 
       login: (userId, password) => {
         const before = vorEvidenceSnapshot(get());
-        const credentials: Array<{ userId: string; password: string; securityLevel: VorSecurityLevel }> = [
-          { userId: "GUEST", password: "", securityLevel: 1 },
-          { userId: "SEC3", password: "THREE", securityLevel: 3 },
-          { userId: "SEC4", password: "FOUR", securityLevel: 4 },
-        ];
+        const credentials = SELEX_DVOR_TRAINING_ACCOUNTS;
         const identity = credentials.find(
           (item) => item.userId === userId.trim() && item.password === password,
         );

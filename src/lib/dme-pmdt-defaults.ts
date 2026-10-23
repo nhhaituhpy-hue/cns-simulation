@@ -1,3 +1,4 @@
+import { SELEX_DME_TRAINING_ACCOUNTS } from "./simulator-training-accounts";
 import type {
   DmeAlarmLimitRow,
   DmeAlarmLogEntry,
@@ -14,12 +15,7 @@ import type {
 } from "./dme-types";
 
 /** Default accounts documented for a fresh 1118A/1119A RMS installation. */
-export const defaultDmeSecurityAccounts: DmeSecurityAccount[] = [
-  { userId: "GUEST", password: "", securityLevel: 1 },
-  { userId: "SEC2", password: "TWO", securityLevel: 2 },
-  { userId: "SEC3", password: "THREE", securityLevel: 3 },
-  { userId: "SEC4", password: "FOUR", securityLevel: 4 },
-];
+export const defaultDmeSecurityAccounts: DmeSecurityAccount[] = SELEX_DME_TRAINING_ACCOUNTS.map(account => ({ ...account }));
 
 export function createDefaultDme1119aSimulationFaults(): Dme1119aSimulationFaults {
   return {

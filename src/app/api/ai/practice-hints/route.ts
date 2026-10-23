@@ -4,7 +4,7 @@ import { getDatabasePool } from "@/lib/db";
 import { isRecord } from "@/lib/scenario-exams/results";
 import { isScenarioParametersModuleId } from "@/lib/scenario-parameters";
 import { assertSafeJson } from "@/lib/ai/scenario-authoring/forms/helpers";
-import { createPracticeHint, readPracticeHint, PracticeHintError, type PracticeHintInput } from "@/lib/ai/feedback/practice-hints";
+import { createPracticeHint, readPracticeHint, toLegacyPracticeHintResult, PracticeHintError, type PracticeHintInput } from "@/lib/ai/feedback/practice-hints";
 export const runtime = "nodejs";
 const uuid=(v:unknown):v is string=>typeof v==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(v);
 const json=(data:unknown,status=200)=>NextResponse.json(data,{status,headers:{"Cache-Control":"private, no-store"}});
@@ -30,5 +30,8 @@ export async function POST(request:Request){
 export async function GET(request:Request){
   const profile=await getCurrentProfile();if(!profile)return json({code:"UNAUTHORIZED"},401);
   const params=new URL(request.url).searchParams,id=params.get('jobId');if(!uuid(id)||[...params.keys()].some(k=>k!=='jobId')||params.getAll('jobId').length!==1)return json({code:"INVALID_INPUT"},400);
-  try{return json(await readPracticeHint(getDatabasePool(),profile.id,id));}catch(error){return failure(error);}
+  try{
+    const hint=await readPracticeHint(getDatabasePool(),profile.id,id);
+    return json(request.headers.get('X-CNS-Hint-Version')==='2'||!hint.result?hint:{...hint,result:toLegacyPracticeHintResult(hint.result)});
+  }catch(error){return failure(error);}
 }

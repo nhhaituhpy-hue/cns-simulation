@@ -1,10 +1,14 @@
 // @vitest-environment node
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { readFile, readdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { Client, Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDefaultDvor1150aScenarioDefinition } from "@/lib/dvor1150a/scenario";
+import { isRecord } from "@/lib/scenario-exams/results";
+import { sensitiveText } from "@/lib/ai/scenario-blueprint/validation";
+import { sanitizePracticeHintPayload } from "@/lib/ai/feedback/practice-hints-input";
+import type { PracticeHintInput } from "@/lib/ai/feedback/practice-hints";
 const testUrl = process.env.SCENARIO_EXAM_TEST_DATABASE_URL;
 const owner = "11111111-1111-4111-8111-111111111111", other = "22222222-2222-4222-8222-222222222222";
 describe.skipIf(!testUrl)("durable practice hint queue (isolated PostgreSQL)", () => {
@@ -29,6 +33,75 @@ describe.skipIf(!testUrl)("durable practice hint queue (isolated PostgreSQL)", (
     const membership = (await pool.query(`insert into public.simulator_scenario_library_memberships(module_id,scenario_parameters_id,library_kind,revision_number,scenario_id,name,description,difficulty,schema_version,definition_json,published_by,sort_order) values('dvor-1150a',$1,$2,1,$3,$4,'','basic',1,$5,$6,(select coalesce(max(sort_order),0)+1 from public.simulator_scenario_library_memberships where library_kind=$2)) returning id`, [source.id, kind, definition.id, definition.name, definition, owner])).rows[0];
     return { definition, source, membership };
   }
+  // Faithfully reconstructed e229d92 enqueue fixture: the old server hashed and
+  // stored sensitiveText(raw) ? "" : raw, without trimming or classification.
+  // Only the sanitized question/payload and their exact old hash are persisted.
+  async function enqueueLegacyHint(input: PracticeHintInput, key: string, publication: Awaited<ReturnType<typeof published>>) {
+    function canonical(value: unknown): unknown {
+      return Array.isArray(value) ? value.map(canonical) : isRecord(value)
+        ? Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])])) : value;
+    }
+    const payload = sanitizePracticeHintPayload(input.payload);
+    const question = sensitiveText(input.question ?? "") ? "" : input.question ?? "";
+    const hash = createHash("sha256").update(JSON.stringify(canonical({ ...input, payload, question }))).digest("hex");
+    return (await pool.query(`insert into public.ai_practice_hint_jobs(actor_id,module_id,scenario_id,library_membership_id,library_revision_number,run_key,question,definition_json,assessment_rubric_json,payload_json,input_hash,idempotency_key)
+      values($1,$2,$3,$4,1,$5,$6,$7,null,$8,$9,$10) returning id,status`,
+      [owner,input.moduleId,publication.definition.id,publication.membership.id,input.runKey,question,publication.definition,payload,hash,key])).rows[0];
+  }
+  it("reuses a response-lost legacy job after upgrade without rewriting or requeueing its frozen row", async () => {
+    const q = await import("@/lib/ai/feedback/practice-hints");
+    await pool.query("delete from public.ai_practice_hint_jobs");
+    const f = await published(), key = randomUUID();
+    const input: PracticeHintInput = { moduleId: "dvor-1150a", scenarioId: f.definition.id, libraryMembershipId: f.membership.id,
+      runKey: "legacy-response-lost", question: "Tài khoản login PMDT là gì?", payload: { checkpoint: { value: 1 }, password: "fixture-secret" } };
+    const legacy = await enqueueLegacyHint(input, key, f);
+    await pool.query("update public.ai_practice_hint_jobs set status='completed',completed_at=now(),result_json=$2 where id=$1",
+      [legacy.id,{sourceMode:"deterministic-only",summary:"Legacy",nextSteps:["Đối chiếu Monitor"],notice:"Không phải chấm bài"}]);
+    const before = (await pool.query("select * from public.ai_practice_hint_jobs where id=$1", [legacy.id])).rows[0];
+    expect(before.question).toBe("");
+    expect(JSON.stringify(before)).not.toContain("fixture-secret");
+    expect(await q.createPracticeHint(pool, owner, key, input)).toEqual({ jobId: legacy.id, status: "completed" });
+    expect((await pool.query("select * from public.ai_practice_hint_jobs where id=$1", [legacy.id])).rows[0]).toEqual(before);
+    expect((await pool.query("select count(*)::int n from public.ai_practice_hint_jobs")).rows[0].n).toBe(1);
+    for (const changed of [{ runKey: "changed-run" }, { payload: { checkpoint: { value: 2 } } },
+      { question: "Chức năng Monitor là gì?" }, { scenarioId: "changed-scenario" }, { libraryMembershipId: randomUUID() }]) {
+      await expect(q.createPracticeHint(pool, owner, key, { ...input, ...changed })).rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
+    }
+  });
+  it.each(["  Chức năng Monitor là gì?  ", "PMDT Password:\nfixture-credential"])("retries the exact untrimmed or redacted legacy question %j without storing it anew", async question => {
+    const q = await import("@/lib/ai/feedback/practice-hints");
+    await pool.query("delete from public.ai_practice_hint_jobs");
+    const f = await published(), key = randomUUID();
+    const input: PracticeHintInput = { moduleId: "dvor-1150a", scenarioId: f.definition.id,
+      runKey: "legacy-sanitizer", question, payload: {} };
+    const legacy = await enqueueLegacyHint(input, key, f);
+    const before = (await pool.query("select * from public.ai_practice_hint_jobs where id=$1", [legacy.id])).rows[0];
+    expect(JSON.stringify(before)).not.toContain("fixture-credential");
+    expect(await q.createPracticeHint(pool, owner, key, input)).toEqual({ jobId: legacy.id, status: "queued" });
+    expect((await pool.query("select * from public.ai_practice_hint_jobs where id=$1", [legacy.id])).rows[0]).toEqual(before);
+    expect((await pool.query("select count(*)::int n from public.ai_practice_hint_jobs")).rows[0].n).toBe(1);
+  });
+  it("requires both the exact legacy hash and its stored question and preserves publication/actor guards", async () => {
+    const q = await import("@/lib/ai/feedback/practice-hints");
+    await pool.query("delete from public.ai_practice_hint_jobs");
+    const f = await published(), key = randomUUID();
+    const input: PracticeHintInput = { moduleId: "dvor-1150a", scenarioId: f.definition.id,
+      runKey: "legacy-guards", question: "Tài khoản login PMDT là gì?", payload: {} };
+    const legacy = await enqueueLegacyHint(input, key, f);
+    const hash = (await pool.query("select input_hash from public.ai_practice_hint_jobs where id=$1", [legacy.id])).rows[0].input_hash;
+    await pool.query("update public.ai_practice_hint_jobs set question=$2 where id=$1", [legacy.id,input.question]);
+    await expect(q.createPracticeHint(pool, owner, key, input)).rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
+    await pool.query("update public.ai_practice_hint_jobs set question='',input_hash=$2 where id=$1", [legacy.id,"0".repeat(64)]);
+    await expect(q.createPracticeHint(pool, owner, key, input)).rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
+    await pool.query("update public.ai_practice_hint_jobs set input_hash=$2 where id=$1", [legacy.id,hash]);
+    await pool.query("update public.simulator_scenario_library_memberships set archived_at=now() where id=$1", [f.membership.id]);
+    await expect(q.createPracticeHint(pool, owner, key, input)).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await pool.query("update public.simulator_scenario_library_memberships set archived_at=null where id=$1", [f.membership.id]);
+    await pool.query("update public.users set is_active=false where id=$1", [owner]);
+    try { await expect(q.createPracticeHint(pool, owner, key, input)).rejects.toMatchObject({ code: "ACTOR_FORBIDDEN" }); }
+    finally { await pool.query("update public.users set is_active=true where id=$1", [owner]); }
+    expect((await pool.query("select count(*)::int n from public.ai_practice_hint_jobs")).rows[0].n).toBe(1);
+  });
   it("fences concurrent claims/reclaims, retries and current publication/actor revocation", async () => {
     const q = await import("@/lib/ai/feedback/practice-hints");
     await pool.query("update public.ai_practice_hint_jobs set status='failed'");
@@ -68,6 +141,36 @@ describe.skipIf(!testUrl)("durable practice hint queue (isolated PostgreSQL)", (
       expect(read).toMatchObject({status:"completed",result:{sourceMode:failing?"deterministic-only":"ai-assisted"}});
       expect(JSON.stringify(read)).not.toMatch(/raw private|definition_json|assessment_rubric_json/);
     }
+  });
+  it("preserves a simulator login question through enqueue and claim but removes submitted secret values",async()=>{
+    const q=await import("@/lib/ai/feedback/practice-hints");
+    await pool.query("delete from public.ai_practice_hint_jobs");
+    const f=await published();
+    const question="Tài khoản login PMDT là gì?";
+    const input={moduleId:"dvor-1150a" as const,scenarioId:f.definition.id,runKey:"question-boundary",payload:{},question};
+    const job=await q.createPracticeHint(pool,owner,randomUUID(),input);
+    const stored=(await pool.query("select question from public.ai_practice_hint_jobs where id=$1",[job.jobId])).rows[0];
+    expect(stored.question).toBe(question);
+    expect((await q.claimPracticeHint(pool,"question-reader"))?.question).toBe(question);
+    const blocked=await q.createPracticeHint(pool,owner,randomUUID(),{...input,question:"PMDT Password:\nprivate-value"});
+    const redacted=(await pool.query("select question from public.ai_practice_hint_jobs where id=$1",[blocked.jobId])).rows[0];
+    expect(redacted.question).not.toContain("private-value");
+    expect(redacted.question).not.toBe("");
+    expect((await pool.query("select count(*)::int n from public.practice_submissions")).rows[0].n).toBe(0);
+  });
+  it("persists a simulator login answer through the worker and owner read without calling a provider",async()=>{
+    const q=await import("@/lib/ai/feedback/practice-hints"),worker=await import("@/lib/ai/feedback/practice-hints-worker"),native=await import("@/lib/simulator-training-accounts");
+    await pool.query("delete from public.ai_practice_hint_jobs");
+    const f=await published(),question="Tài khoản login PMDT là gì?";
+    const job=await q.createPracticeHint(pool,owner,randomUUID(),{moduleId:"dvor-1150a",scenarioId:f.definition.id,runKey:"training-login",payload:{},question});
+    let calls=0;
+    expect(await worker.runNextPracticeHint(pool,"training-login-worker",undefined,{provider:async()=>{calls++;throw Error("Should not call provider");}})).toBe("completed");
+    const read=await q.readPracticeHint(pool,owner,job.jobId),account=native.trainingLoginFor("dvor-1150a",question);
+    expect(read.result?.kind).toBe("answer");expect(read.result?.sourceMode).toBe("knowledge-only");
+    expect(account.kind==='fixed-default'&&read.result?.answer?.includes(account.userId)&&read.result?.answer?.includes(account.password)).toBe(true);
+    expect(calls).toBe(0);expect(read.result?.nextSteps).toEqual([]);
+    await expect(q.readPracticeHint(pool,other,job.jobId)).rejects.toMatchObject({code:"NOT_FOUND"});
+    expect((await pool.query("select count(*)::int n from public.practice_submissions")).rows[0].n).toBe(0);
   });
   it("bounds infrastructure retries and exhausts crashed claims", async()=>{
     const q=await import("@/lib/ai/feedback/practice-hints");

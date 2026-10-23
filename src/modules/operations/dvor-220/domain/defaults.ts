@@ -1,3 +1,4 @@
+import { MOPIENS_ADMIN_TRAINING_ACCOUNT } from "@/lib/simulator-training-accounts";
 import {
   DVOR220_MONITOR_CHANNEL_IDS,
   DVOR220_MONITOR_IDS,
@@ -302,7 +303,7 @@ export function createInitialDvor220State(
       txActive: false,
       rxActive: false,
     },
-    accounts: [{ username: "Administrator", password: "1234", level: 3 }],
+    accounts: [{ username: MOPIENS_ADMIN_TRAINING_ACCOUNT.userId, password: MOPIENS_ADMIN_TRAINING_ACCOUNT.password, level: MOPIENS_ADMIN_TRAINING_ACCOUNT.level }],
     session: {
       username: null,
       level: 0,

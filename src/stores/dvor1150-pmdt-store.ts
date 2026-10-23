@@ -1,3 +1,4 @@
+import { SELEX_DVOR_TRAINING_ACCOUNTS } from "@/lib/simulator-training-accounts";
 import {
   applyDvor1150ConfigPatches,
   buildDvor1150Snapshot,
@@ -65,11 +66,7 @@ const viewGroups: Record<Dvor1150ScreenId, readonly Dvor1150ViewId[]> = {
   disabled: ["disabled"],
 };
 
-const accounts: readonly { id: string; password: string; level: Dvor1150SecurityLevel }[] = [
-  { id: "GUEST", password: "", level: 1 },
-  { id: "SEC3", password: "THREE", level: 3 },
-  { id: "SEC4", password: "FOUR", level: 4 },
-];
+const accounts = SELEX_DVOR_TRAINING_ACCOUNTS.map(({ userId, password, securityLevel }) => ({ id: userId, password, level: securityLevel }));
 
 export type Dvor1150ScenarioStage = "pmdt" | "hardware" | "complete";
 

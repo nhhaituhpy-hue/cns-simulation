@@ -1,3 +1,7 @@
+import { trainingLoginFor } from "@/lib/simulator-training-accounts";
+import { isScenarioParametersModuleId } from "@/lib/scenario-parameters";
+import type { ManualCitation } from "../scenario-blueprint/types";
+import { sensitiveText } from "../scenario-blueprint/validation";
 import { createHash } from "node:crypto";
 import { constants } from "node:fs";
 import { lstat, open, realpath } from "node:fs/promises";
@@ -238,6 +242,19 @@ function select(corpus: KnowledgeCorpus, query: string, budget: number): Knowled
   };
 }
 
+/** One integrity loader shared by generic and narrowly scoped simulation-login reads. */
+async function loadCorpus(moduleId: string, options: KnowledgeRetrievalOptions): Promise<KnowledgeCorpus | null> {
+  if (!KNOWLEDGE_MODULE_IDS.some(id => id === moduleId)) invalid();
+  const root = options.root ?? process.env.CNS_AI_KNOWLEDGE_DIR;
+  if (root === undefined || root === "") return null;
+  const manifest = manifestValue(parse(await readBounded(root, "manifest.json", 32 * 1024)));
+  const entry = manifest.modules.find(entry => entry.moduleId === moduleId)!;
+  const bytes = await readBounded(root, entry.file, 12 * 1024 * 1024);
+  if (createHash("sha256").update(bytes).digest("hex") !== entry.sha256) invalid();
+  const corpus = corpusValue(parse(bytes), moduleId);
+  if (corpus.documents.length !== entry.documentCount || corpus.documents.reduce((n, d) => n + d.segments.length, 0) !== entry.segmentCount) invalid();
+  return corpus;
+}
 /** Node worker only. The operator must control the root and its ancestors; hashes are not signatures. */
 export async function retrieveDeviceKnowledge(
   moduleId: string, query: string, options: KnowledgeRetrievalOptions = {},
@@ -245,14 +262,47 @@ export async function retrieveDeviceKnowledge(
   try {
     if (!KNOWLEDGE_MODULE_IDS.some(id => id === moduleId) || typeof query !== "string" || query.length > 16000
       || (options.maxCharacters !== undefined && !integer(options.maxCharacters, 0, Number.MAX_SAFE_INTEGER))) invalid();
-    const root = options.root ?? process.env.CNS_AI_KNOWLEDGE_DIR;
-    if (root === undefined || root === "") return { documents: [], available: false, notice: "Private reference-only knowledge is not configured; no technical validation." };
-    const manifest = manifestValue(parse(await readBounded(root, "manifest.json", 32 * 1024)));
-    const entry = manifest.modules.find(entry => entry.moduleId === moduleId)!;
-    const bytes = await readBounded(root, entry.file, 12 * 1024 * 1024);
-    if (createHash("sha256").update(bytes).digest("hex") !== entry.sha256) invalid();
-    const corpus = corpusValue(parse(bytes), moduleId);
-    if (corpus.documents.length !== entry.documentCount || corpus.documents.reduce((n, d) => n + d.segments.length, 0) !== entry.segmentCount) invalid();
+    const corpus = await loadCorpus(moduleId, options);
+    if (!corpus) return { documents: [], available: false, notice: "Private reference-only knowledge is not configured; no technical validation." };
     return select(corpus, query, Math.min(options.maxCharacters ?? 12000, 12000));
   } catch { invalid(); }
+}
+/** Isolated training-login citation. Never return raw pages or send credentials to a model.
+ * Only an exact pair accepted by this simulator, in an unambiguous PMDT default-account block.
+ */
+export async function retrieveTrainingLoginCitation(moduleId: string, question: string, options: KnowledgeRetrievalOptions = {}): Promise<ManualCitation | null> {
+  if (!isScenarioParametersModuleId(moduleId) || typeof question !== "string" || question.length > 1000) invalid();
+  const account = trainingLoginFor(moduleId, question);
+  if (account.kind !== "fixed-default" || !account.password) return null;
+  const corpus = await loadCorpus(moduleId, options);
+  if (!corpus) return null;
+  for (const doc of corpus.documents) {
+    if (sensitiveText(doc.name) || sensitiveText(doc.id)) continue;
+    for (const segment of doc.segments) {
+      const label = segmentLabel(segment);
+      if ([segment.label, segment.printedPage ?? "", label].some(sensitiveText) || opaqueSecret(segment.text)) continue;
+      const scope = `${doc.name}\n${segment.label}\n${label}\n${segment.text}`.toLowerCase().replace(/[_-]+/g, " ");
+      // Match the explicit device spellings used by the generic citation boundary.
+      const models = [...scope.matchAll(/(?:^|[^a-z0-9])(dvor|dme|selex|model)\s*(?:model\s*)?(1150a|1150|1119a|220|320)(?![a-z0-9])/g)];
+      if (models.some(([, family, model]) => model !== moduleId.split("-")[1]
+        || family === (moduleId.startsWith("dvor-") ? "dme" : "dvor"))
+        || /(?:^|[^a-z0-9])ads\s*b(?![a-z0-9])/.test(scope)) continue;
+      const pair = /(?:User[\t ]*(?:Name|ID)|Username)[\t ]*:[\t ]*([^\r\n]+)\r?\nPassword[\t ]*:[\t ]*([^\r\n]+)/g;
+      for (const match of segment.text.matchAll(pair)) {
+        if (match[1] !== account.userId || match[2] !== account.password) continue;
+        // Account scope belongs to the current paragraph/numbered section, not
+        // an unrelated PMDT mention elsewhere on the page. Bound the whole block
+        // rather than truncating away an earlier other-system heading.
+        const before = segment.text.slice(0, match.index).trimEnd();
+        const section = before.split(/(?:^|\r?\n)(?=[\t ]*(?:#{1,6}[\t ]+|\d+(?:\.\d+)+[.)]?[\t ]+))/).at(-1)!;
+        const paragraph = section.split(/\r?\n[\t ]*\r?\n/).at(-1)!;
+        const accountSection = /^(?:[\t ]*#{1,6}[\t ]+|[\t ]*\d+(?:\.\d+)+[.)]?[\t ]+)[^\r\n]*\b(?:PMDT|RMS|Security)\b/i.test(section);
+        const context = !/\b(?:PMDT|RMS)\b/i.test(paragraph) && accountSection && /\bdefault\s+level\b/i.test(paragraph) ? section : paragraph;
+        if (context.length > 2400 || !/\b(?:PMDT|RMS)\b/i.test(context) || !/\bdefault\b/i.test(context.slice(-300))
+          || /\b(?:web|website|api|vps|ssh|database|postgres|provider|token|secret|https?)\b/i.test(context)) continue;
+        return { id: "training-login", documentId: `kb:${moduleId}:${doc.id}`, documentName: doc.name, sha256: doc.sha256, segmentLabel: label, quote: match[0], sourceKind: "reference-only" };
+      }
+    }
+  }
+  return null;
 }

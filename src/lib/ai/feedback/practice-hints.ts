@@ -3,12 +3,21 @@ import type { Pool, PoolClient } from "pg";
 import { isScenarioParametersModuleId, type ScenarioParametersModuleId } from "@/lib/scenario-parameters";
 import { isRecord } from "@/lib/scenario-exams/results";
 import { assertSafeJson } from "../scenario-authoring/forms/helpers";
+import { preparePracticeQuestion } from "./practice-question";
 import { sensitiveText } from "../scenario-blueprint/validation";
 import type { ScenarioRubric } from "../scenario-blueprint/types";
 import { sanitizePracticeHintPayload } from "./practice-hints-input";
 import type { PracticeHintEvidence, PracticeHintResult } from "./practice-hints-worker";
 export class PracticeHintError extends Error { constructor(public readonly code: string) { super(code); } }
 export const isHintId = (value: unknown): value is string => typeof value === "string" && /^[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(value);
+export function toLegacyPracticeHintResult(result: PracticeHintResult) {
+  return {
+    sourceMode: result.sourceMode === "knowledge-only" ? "deterministic-only" as const : result.sourceMode,
+    summary: result.summary,
+    nextSteps: result.answer !== undefined ? [result.answer] : result.nextSteps,
+    notice: result.notice,
+  };
+}
 export interface PracticeHintInput { moduleId: ScenarioParametersModuleId; scenarioId: string; libraryMembershipId?: string; runKey: string; question?: string; payload: Record<string, unknown> | null }
 export type HintStatus = "queued" | "running" | "completed" | "failed";
 export interface ClaimedPracticeHint extends PracticeHintEvidence { id: string; attemptToken: string }
@@ -33,7 +42,7 @@ export async function createPracticeHint(pool: Pool, actorId: string, key: strin
     || typeof input.runKey !== "string" || !input.runKey || input.runKey.length>200 || (input.payload !== null && !isRecord(input.payload))
     || (input.question !== undefined && (typeof input.question !== "string" || input.question.length>1000))) throw new PracticeHintError("INVALID_INPUT");
   try { assertSafeJson(input); if (Buffer.byteLength(JSON.stringify(input))>500_000) throw Error(); } catch { throw new PracticeHintError("INVALID_INPUT"); }
-  const payload = sanitizePracticeHintPayload(input.payload), question = sensitiveText(input.question ?? "") ? "" : input.question ?? "";
+  const payload = sanitizePracticeHintPayload(input.payload), question = preparePracticeQuestion(input.question ?? "").question;
   const hash = createHash("sha256").update(JSON.stringify(canonical({ ...input, payload, question }))).digest("hex");
   return tx(pool, async c => {
     await actor(c, actorId);
@@ -41,7 +50,13 @@ export async function createPracticeHint(pool: Pool, actorId: string, key: strin
     const prior = (await c.query("select * from public.ai_practice_hint_jobs where actor_id=$1 and idempotency_key=$2", [actorId,key])).rows[0];
     if (prior) {
       if (!await allowed(c, prior)) throw new PracticeHintError("NOT_FOUND");
-      if (prior.input_hash!==hash) throw new PracticeHintError("IDEMPOTENCY_CONFLICT");
+      if (prior.input_hash!==hash) {
+        // A response-lost enqueue from the old web must keep its frozen job.
+        // Its question sanitizer predates classification and did not trim.
+        const legacyQuestion = sensitiveText(input.question ?? "") ? "" : input.question ?? "";
+        const legacyHash = createHash("sha256").update(JSON.stringify(canonical({ ...input, payload, question: legacyQuestion }))).digest("hex");
+        if (prior.input_hash!==legacyHash || prior.question!==legacyQuestion) throw new PracticeHintError("IDEMPOTENCY_CONFLICT");
+      }
       return { jobId: prior.id as string, status: prior.status as HintStatus };
     }
     const m = (await c.query(`select * from public.simulator_scenario_library_memberships where module_id=$1 and library_kind='practice'
