@@ -1,3 +1,7 @@
+.trimTrigger { cursor: pointer; outline: none; }
+.trimTrigger:hover rect { fill: rgb(2 132 199 / 14%); }
+.trimTrigger:focus-visible rect { fill: rgb(2 132 199 / 14%); stroke: #0369a1; stroke-width: 4px; }
+
 .faceplate {
   display: block;
   width: auto;

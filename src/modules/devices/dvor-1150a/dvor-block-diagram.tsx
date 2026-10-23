@@ -16,6 +16,7 @@ import {
   type DvorWaveformReference,
 } from "./block-diagram-data";
 import { DvorModuleFaceplate, hasRebuiltModuleFaceplate } from "./dvor-module-faceplates";
+import { turnSidebandTrim, type SidebandAngles, type SidebandAdjustmentControl } from "./sideband-adjustment-model";
 import styles from "./dvor-block-diagram.module.css";
 
 const cabinetImages: Record<CabinetFace, { src: string; alt: string; label: string; horizontalScale?: number }> = {
@@ -356,7 +357,7 @@ function LcuPanel() {
   );
 }
 
-function ModulePanel({ blockId }: { blockId: Exclude<DvorBlockId, "lcu"> }) {
+function ModulePanel({ blockId, sidebandAdjustment }: { blockId: Exclude<DvorBlockId, "lcu">; sidebandAdjustment?: SidebandAdjustmentControl }) {
   const block = DVOR_BLOCK_BY_ID.get(blockId)!;
   const hasRebuiltFaceplate = hasRebuiltModuleFaceplate(blockId);
   const [activeWaveform, setActiveWaveform] = useState<DvorWaveformReference | null>(null);
@@ -386,7 +387,7 @@ function ModulePanel({ blockId }: { blockId: Exclude<DvorBlockId, "lcu"> }) {
     <div className={styles.modulePanel}>
       {hasRebuiltFaceplate ? (
         <figure className={`${styles.moduleFigure} ${styles.moduleFigureRebuilt}`}>
-          <DvorModuleFaceplate blockId={blockId} />
+          <DvorModuleFaceplate blockId={blockId} sidebandAdjustment={sidebandAdjustment} />
           <figcaption>{block.faceImage?.figure}</figcaption>
         </figure>
       ) : block.faceImage ? (
@@ -504,7 +505,7 @@ function ModulePanel({ blockId }: { blockId: Exclude<DvorBlockId, "lcu"> }) {
   );
 }
 
-function DetailPanel({ blockId }: { blockId: DvorBlockId }) {
+function DetailPanel({ blockId, sidebandAdjustment }: { blockId: DvorBlockId; sidebandAdjustment?: SidebandAdjustmentControl }) {
   const block = DVOR_BLOCK_BY_ID.get(blockId)!;
   return (
     <section className={styles.detailPanel} aria-labelledby="selected-block-title">
@@ -516,7 +517,7 @@ function DetailPanel({ blockId }: { blockId: DvorBlockId }) {
         <div className={styles.assemblyList}>{block.assemblyIds.map((id) => <span key={id}>{id}</span>)}</div>
       </div>
       <p className={styles.description}>{block.description}</p>
-      {block.id === "lcu" ? <LcuPanel /> : block.assemblyIds.length > 0 ? <ModulePanel blockId={block.id} /> : null}
+      {block.id === "lcu" ? <LcuPanel /> : block.assemblyIds.length > 0 ? <ModulePanel blockId={block.id} sidebandAdjustment={sidebandAdjustment} /> : null}
       <div className={styles.referenceGrid}>
         <div><strong>Tham chiếu manual</strong><span>{block.manualReference}</span></div>
         {block.testPoints.map((point) => <div key={point.id}><strong>{point.id} · {point.label}</strong><span>{point.nominal}</span></div>)}
@@ -627,6 +628,8 @@ export function DvorHardwareSelector({
 }
 
 export function DvorBlockDiagram() {
+  // Detached, page-lifetime training state; never enters simulator/exam stores.
+  const [sidebandAngles, setSidebandAngles] = useState<Record<string, SidebandAngles>>({});
   const [selectedBlockId, setSelectedBlockId] = useState<DvorBlockId | null>(null);
   const [selectedDiagramHotspotId, setSelectedDiagramHotspotId] = useState<string | null>(null);
   const [selectedCabinetHotspotId, setSelectedCabinetHotspotId] = useState<string | null>(null);
@@ -648,7 +651,9 @@ export function DvorBlockDiagram() {
     if (!block) return;
     setSelectedBlockId(blockId);
     setSelectedDiagramHotspotId(hotspot.id);
-    setSelectedCabinetHotspotId(hotspot.targetCabinetHotspotId ?? block.cabinetHotspots[0]?.id ?? null);
+    setSelectedCabinetHotspotId(hotspot.targetCabinetHotspotId
+      ?? block.cabinetHotspots.find((candidate) => candidate.id === hotspot.id)?.id
+      ?? block.cabinetHotspots[0]?.id ?? null);
     if (block.cabinetHotspots.length > 0) setCabinetFace(block.cabinetFace);
   }
 
@@ -675,7 +680,13 @@ export function DvorBlockDiagram() {
         </section>
       </div>
 
-      {selectedBlockId ? <DetailPanel blockId={selectedBlockId} /> : null}
+      {selectedBlockId ? <DetailPanel blockId={selectedBlockId} sidebandAdjustment={selectedBlockId === "sideband" && selectedCabinetHotspotId ? {
+        occurrenceId: selectedCabinetHotspotId,
+        angles: sidebandAngles[selectedCabinetHotspotId] ?? {},
+        onTurn: (id, delta) => setSidebandAngles((current) => ({
+          ...current, [selectedCabinetHotspotId]: turnSidebandTrim(current[selectedCabinetHotspotId] ?? {}, id, delta),
+        })),
+      } : undefined} /> : null}
     </main>
   );
 }

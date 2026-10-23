@@ -1,4 +1,9 @@
+"use client";
+
+import { useState } from "react";
 import type { DvorBlockId } from "./block-diagram-data";
+import { SidebandAdjustmentDialog } from "./sideband-adjustment";
+import { type SidebandAdjustmentControl, type SidebandTrimId } from "./sideband-adjustment-model";
 import styles from "./dvor-module-faceplates.module.css";
 
 interface FaceplateRow {
@@ -595,12 +600,27 @@ function RfMonitorFaceplate() {
   );
 }
 
-function SidebandFaceplate() {
+function SidebandFaceplate({ adjustment }: { adjustment?: SidebandAdjustmentControl }) {
+  const [active, setActive] = useState<SidebandTrimId | null>(null);
+  const angles = adjustment?.angles ?? {};
+  function renderRow(row: FaceplateRow) {
+    const interactive = row.kind === "trim" && Boolean(adjustment);
+    const id = row.id as SidebandTrimId;
+    return <g key={row.id}>
+      <FaceplateRow row={interactive ? { ...row, trimAngle: angles[id] ?? 0 } : row} />
+      {interactive ? <g className={styles.trimTrigger} role="button" tabIndex={0} aria-label={`Điều chỉnh ${row.id} ${row.label}`}
+        aria-haspopup="dialog" onClick={() => setActive(id)}
+        onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setActive(id); } }}>
+        <rect x="45" y={row.y - 24} width="270" height="48" fill="transparent" />
+      </g> : null}
+    </g>;
+  }
   return (
+    <>
     <svg
       className={styles.faceplate}
       viewBox="0 0 360 1640"
-      role="img"
+      role="group"
       aria-labelledby="sideband-faceplate-title"
       aria-describedby="sideband-faceplate-description"
     >
@@ -624,9 +644,9 @@ function SidebandFaceplate() {
         <path d="M52 886H308M52 1170H308" stroke="#fff" strokeWidth="1" opacity="0.7" />
       </g>
 
-      {sidebandUpperRows.map((row) => <FaceplateRow key={row.id} row={row} />)}
+      {sidebandUpperRows.map(renderRow)}
       <PanelScrew x={229} y={675} size={13} />
-      {sidebandLowerRows.map((row) => <FaceplateRow key={row.id} row={row} />)}
+      {sidebandLowerRows.map(renderRow)}
       <PanelScrew x={229} y={920} size={13} />
 
       <text x="205" y="1440" textAnchor="end" dominantBaseline="middle" className={styles.controlLabel}>DC PWR OK</text>
@@ -636,6 +656,10 @@ function SidebandFaceplate() {
       <rect x="72" y="1574" width="216" height="29" rx="3" fill="#26343a" opacity="0.94" />
       <text x="180" y="1594" textAnchor="middle" className={styles.partNumber}>571150A-0002-052</text>
     </svg>
+    {active && adjustment ? <SidebandAdjustmentDialog trimId={active} angles={angles} occurrenceId={adjustment.occurrenceId}
+      onClose={() => setActive(null)}
+      onTurn={(delta) => adjustment.onTurn(active, delta)} /> : null}
+    </>
   );
 }
 
@@ -643,7 +667,7 @@ export function hasRebuiltModuleFaceplate(blockId: DvorBlockId): boolean {
   return rebuiltModuleIds.has(blockId);
 }
 
-export function DvorModuleFaceplate({ blockId }: { blockId: DvorBlockId }) {
+export function DvorModuleFaceplate({ blockId, sidebandAdjustment }: { blockId: DvorBlockId; sidebandAdjustment?: SidebandAdjustmentControl }) {
   switch (blockId) {
     case "audio-generator":
       return <AudioGeneratorFaceplate />;
@@ -658,7 +682,7 @@ export function DvorModuleFaceplate({ blockId }: { blockId: DvorBlockId }) {
     case "rms":
       return <RmsFaceplate />;
     case "sideband":
-      return <SidebandFaceplate />;
+      return <SidebandFaceplate key={sidebandAdjustment?.occurrenceId} adjustment={sidebandAdjustment} />;
     case "synthesizer":
       return <SynthesizerFaceplate />;
     default:
