@@ -35,6 +35,17 @@ describe("practice tutor question routing", () => {
   expect(result.answer).toBe(`${sentence}\n\n${second}`);
   expect(result.references?.map(reference=>reference.quote)).toEqual([sentence,second]);
  });
+ it.each(["\n","\r\n"])("keeps soft-wrapped technical sentences and their original line endings %j intact",async newline=>{
+  const sentence=`The 10.000 MHz reference signal is also buffered and sent directly to the Direct Digital${newline}Synthesizer (DDS) for processing of the 9960 Hz signal generation.`;
+  const second=`Do not change the 10.5 percent setting${newline}without checking the measurement.`;
+  knowledge.retrieve.mockResolvedValue({available:true,notice:"",documents:[{...doc,segments:[{label:"PDF page 51",text:`${sentence}${newline}${second}`}]}]});
+  const provider=vi.fn<(messages:AiMessage[],signal?:AbortSignal)=>Promise<unknown>>(async()=>({excerptIds:["excerpt-0","excerpt-1"]}));
+  const result=await generatePracticeHint({...input,question:"9960 Hz Mod có ý nghĩa gì?"},{provider});
+  const sent=JSON.parse(provider.mock.calls[0][0][1].content);
+  expect(sent.excerpts.map((excerpt:{text:string})=>excerpt.text)).toEqual([sentence,second]);
+  expect(result.references?.map(reference=>reference.quote)).toEqual([sentence,second]);
+  expect(result.answer).toBe(`${sentence}\n\n${second}`);
+ });
  it.each([
   {excerptIds:["invented"]},
   {excerptIds:["excerpt-0","excerpt-0"]},

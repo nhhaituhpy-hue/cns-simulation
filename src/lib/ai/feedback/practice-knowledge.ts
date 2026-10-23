@@ -10,8 +10,11 @@ const unsafeAnswer = (text: string) => /https?:\/\/|ignore.{0,50}(?:instructions
 export type PracticeKnowledgeReader = (moduleId: ScenarioParametersModuleId, question: string) => Promise<KnowledgeRetrievalResult>;
 /** Every excerpt is an intact source substring; the model selects IDs, never rewrites evidence. */
 function excerpts(text: string): string[] {
-  return [...new Intl.Segmenter("en", { granularity: "sentence" }).segment(text)]
-    .map(({ segment }) => segment.trim()).filter(s => s.length >= 24 && s.length <= 900 && !sensitiveText(s) && !unsafeAnswer(s));
+  // PDF line wraps are not sentence boundaries. Use a same-length boundary
+  // projection, then slice only the untouched source so provenance stays exact.
+  const boundaryText = text.replace(/[\r\n]/g, " ");
+  return [...new Intl.Segmenter("en", { granularity: "sentence" }).segment(boundaryText)]
+    .map(({ index, segment }) => text.slice(index, index + segment.length).trim()).filter(s => s.length >= 24 && s.length <= 900 && !sensitiveText(s) && !unsafeAnswer(s));
 }
 export async function answerPracticeKnowledge(moduleId: ScenarioParametersModuleId, question: string, provider: (messages: AiMessage[], signal?: AbortSignal) => Promise<unknown>, signal?: AbortSignal, retrieve: PracticeKnowledgeReader = retrieveDeviceKnowledge): Promise<PracticeHintResult> {
   const unavailable: PracticeHintResult = { sourceMode: "knowledge-only", kind: "answer", summary: "Tra cứu tài liệu thiết bị", nextSteps: [], answer: "Chưa có nguồn phù hợp trong kho tri thức của thiết bị để trả lời câu hỏi này.", references: [], notice: "Không suy diễn khi thiếu nguồn." };
