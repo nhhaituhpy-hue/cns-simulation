@@ -23,6 +23,7 @@ export interface DvorHotspot {
   height: number;
   label: string;
   targetCabinetHotspotId?: string;
+  sidebandChannels?: { tx: 1 | 2; upper: 1 | 3 };
 }
 
 /**
@@ -193,10 +194,10 @@ export const DVOR_BLOCKS: readonly DvorBlockDefinition[] = [
       { id: "sideband-1a4a7", x: 62.5, y: 42.4, width: 5.8, height: 16.6, label: "1A4A7" },
     ],
     diagramHotspots: [
-      { id: "diagram-sideband-12", x: 0, y: 0, width: 0, height: 0, label: "SIDEBAND 1 / 2", targetCabinetHotspotId: "sideband-1a4a1" },
-      { id: "diagram-sideband-34", x: 0, y: 0, width: 0, height: 0, label: "SIDEBAND 3 / 4", targetCabinetHotspotId: "sideband-1a4a2" },
-      { id: "diagram-sideband-12-tx2", x: 0, y: 0, width: 0, height: 0, label: "SIDEBAND 1 / 2 TX2", targetCabinetHotspotId: "sideband-1a4a6" },
-      { id: "diagram-sideband-34-tx2", x: 0, y: 0, width: 0, height: 0, label: "SIDEBAND 3 / 4 TX2", targetCabinetHotspotId: "sideband-1a4a7" },
+      { id: "diagram-sideband-12", x: 0, y: 0, width: 0, height: 0, label: "SIDEBAND 1 / 2", targetCabinetHotspotId: "sideband-1a4a1", sidebandChannels: { tx: 1, upper: 1 } },
+      { id: "diagram-sideband-34", x: 0, y: 0, width: 0, height: 0, label: "SIDEBAND 3 / 4", targetCabinetHotspotId: "sideband-1a4a2", sidebandChannels: { tx: 1, upper: 3 } },
+      { id: "diagram-sideband-12-tx2", x: 0, y: 0, width: 0, height: 0, label: "SIDEBAND 1 / 2 TX2", targetCabinetHotspotId: "sideband-1a4a6", sidebandChannels: { tx: 2, upper: 1 } },
+      { id: "diagram-sideband-34-tx2", x: 0, y: 0, width: 0, height: 0, label: "SIDEBAND 3 / 4 TX2", targetCabinetHotspotId: "sideband-1a4a7", sidebandChannels: { tx: 2, upper: 3 } },
     ],
     indicators: ["DC POWER OK"],
     testPoints: [

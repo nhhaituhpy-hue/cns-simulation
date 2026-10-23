@@ -43,7 +43,9 @@ describe("scenario-bound ADS-B practice", () => {
     await screen.findByTestId("practice-shell");
     expect(fetcher.mock.calls[0][0]).toBe(`/api/practice-scenarios?moduleId=ads-b&id=${canonicalId}`);
     expect(hydrate).not.toHaveBeenCalled();
-    expect(shell.scenario.id).toBe(canonicalId);
+    // The shell mounts before native initialization completes (scenario=null).
+    // Wait for its actual ready payload, not merely the shell's DOM presence.
+    await waitFor(() => expect(shell.scenario?.id).toBe(canonicalId));
     expect(shell.scenario).toMatchObject({ membershipId: published.membershipId });
     await waitFor(() => expect(useRecordingStore.getState().scenarioId).toBe(published.scenarioId));
     fireEvent.click(screen.getByRole("button", { name: "Terminal" }));

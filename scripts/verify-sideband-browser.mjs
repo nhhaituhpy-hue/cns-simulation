@@ -54,7 +54,7 @@ try {
     }
     await dialog.getByRole("button", { name: "Thuận chiều kim đồng hồ", exact: true }).focus();
     await page.keyboard.press("Space");
-    assert.equal(await dialog.getByLabel("Công suất mô phỏng", { exact: true }).textContent(), "3.17 W");
+    assert.equal(await dialog.getByLabel("Công suất mô phỏng", { exact: true }).textContent(), "2.52 W");
     assert.equal(await dialog.getByTestId("screwdriver-rotation").getAttribute("transform"), "rotate(15 100 100)");
     await dialog.getByRole("heading").click();
     assert.equal(await dialog.isVisible(), true);
@@ -69,20 +69,20 @@ try {
     assert.equal(await trigger.evaluate((element) => document.activeElement === element), true);
     await page.keyboard.press("Space");
     await dialog.waitFor();
-    assert.equal(await dialog.getByLabel("Công suất mô phỏng", { exact: true }).textContent(), "3.17 W");
+    assert.equal(await dialog.getByLabel("Công suất mô phỏng", { exact: true }).textContent(), "2.52 W");
     await page.mouse.click(2, 2);
     await page.locator("dialog").waitFor({ state: "detached" });
     // Same physical module selected through the schematic retains its state.
     await page.getByRole("tab", { name: "Transmitter", exact: true }).click();
     await page.getByRole("button", { name: /Sideband 1 and 2, transmitter 1/ }).click();
     await trigger.click();
-    assert.equal(await dialog.getByLabel("Công suất mô phỏng", { exact: true }).textContent(), "3.17 W");
+    assert.equal(await dialog.getByLabel("Công suất mô phỏng", { exact: true }).textContent(), "2.52 W");
     await page.keyboard.press("Escape");
     await page.locator("dialog").waitFor({ state: "detached" });
     // A different actual cabinet occurrence must remain at its own baseline.
     await page.getByRole("button", { name: "Chọn 1A4A7", exact: true }).click();
     await trigger.click();
-    assert.equal(await dialog.getByLabel("Công suất mô phỏng", { exact: true }).textContent(), "3.00 W");
+    assert.equal(await dialog.getByLabel("Công suất mô phỏng", { exact: true }).textContent(), "2.50 W");
     await page.keyboard.press("Escape");
     await page.locator("dialog").waitFor({ state: "detached" });
     for (const id of ["R1", "R2", "R4", "R5", "R6"]) {
@@ -93,9 +93,88 @@ try {
       await dialog.getByRole("button", { name: "Đóng", exact: true }).click();
       await page.locator("dialog").waitFor({ state: "detached" });
     }
+    // Fresh page; exercise all eight channels without resetting between TXs.
+    await page.reload();
+    const expected = { 1: [2.5, 2.5, 2.5, 2.5], 2: [2.5, 2.5, 2.5, 2.5] };
+    async function closeTrim() {
+      await page.keyboard.press("Escape");
+      await page.locator("dialog").waitFor({ state: "detached" });
+    }
+    async function openTrim(id) {
+      await page.getByRole("button", { name: new RegExp(`^Điều chỉnh ${id} `) }).click();
+      await dialog.waitFor();
+    }
+    async function checkReadings(tx) {
+      assert.equal(await dialog.getByText("Transmitter Data", { exact: true }).count(), 1);
+      assert.equal(await dialog.getByRole("meter").count(), 0);
+      for (let sb = 1; sb <= 4; sb++) {
+        assert.equal(await dialog.getByLabel(`PMDT Tx #${tx} SB${sb}`, { exact: true }).textContent(), `${expected[tx][sb - 1].toFixed(2)} W`);
+      }
+      assert.equal(await dialog.evaluate((element) => element.scrollWidth > element.clientWidth), false);
+    }
+    for (const [cabinet, tx, firstSb] of [["1A4A1", 1, 1], ["1A4A2", 1, 3], ["1A4A6", 2, 1], ["1A4A7", 2, 3]]) {
+      await page.getByRole("button", { name: `Chọn ${cabinet}`, exact: true }).click();
+      for (const [offset, cal, adj] of [[0, "R2", "R3"], [1, "R5", "R6"]]) {
+        const sb = firstSb + offset;
+        await openTrim(cal);
+        await checkReadings(tx);
+        assert.equal(await dialog.getByLabel("Bước xoay").count(), 0);
+        for (let i = 0; i < 6; i++) await dialog.getByRole("button", { name: "Thuận chiều kim đồng hồ", exact: true }).click();
+        expected[tx][sb - 1] = 2.75;
+        await checkReadings(tx);
+        assert.match(await dialog.getByLabel("Công suất tham chiếu").textContent(), /2\.50 W/);
+        await closeTrim();
+        await openTrim(adj);
+        assert.equal(await dialog.getByLabel("Công suất mô phỏng", { exact: true }).textContent(), "2.50 W");
+        await dialog.getByLabel("Bước xoay").selectOption("360");
+        await dialog.getByRole("button", { name: "Thuận chiều kim đồng hồ", exact: true }).click();
+        assert.equal(await dialog.getByLabel("Công suất mô phỏng", { exact: true }).textContent(), "3.00 W");
+        assert.equal(await dialog.getByLabel("Số vòng từ vị trí chuẩn").textContent(), "1.00 vòng");
+        await closeTrim();
+        await openTrim(cal);
+        expected[tx][sb - 1] = 3.3;
+        await checkReadings(tx);
+        assert.equal(await dialog.getByLabel("Góc xoay", { exact: true }).textContent(), "90°");
+        assert.match(await dialog.getByLabel("Công suất tham chiếu").textContent(), /3\.00 W/);
+        assert.equal(await dialog.getByText("Transmitter Data", { exact: true }).evaluate((el) => getComputedStyle(el).backgroundColor), "rgb(0, 0, 128)");
+        if (cabinet === "1A4A7" && cal === "R5") {
+          await page.screenshot({ path: join(output, `sideband-pmdt-${viewport.width}.png`) });
+          const pmdtBounds = await dialog.boundingBox();
+          assert(pmdtBounds.x >= 0 && pmdtBounds.x + pmdtBounds.width <= viewport.width);
+          assert(pmdtBounds.y >= 0 && pmdtBounds.y + pmdtBounds.height <= viewport.height);
+        }
+        await closeTrim();
+      }
+    }
+    // Revisit TX1: all readings retained, unaffected by TX2 adjustments.
+    await page.getByRole("button", { name: "Chọn 1A4A1", exact: true }).click();
+    await openTrim("R2");
+    await checkReadings(1);
+    await closeTrim();
+    await openTrim("R3");
+    await dialog.getByLabel("Bước xoay").selectOption("360");
+    const cw = dialog.getByRole("button", { name: "Thuận chiều kim đồng hồ", exact: true });
+    const ccw = dialog.getByRole("button", { name: "Ngược chiều kim đồng hồ", exact: true });
+    for (let i = 0; i < 4; i++) await cw.click();
+    assert.equal(await cw.isDisabled(), true);
+    assert.equal(await dialog.getByLabel("Góc xoay", { exact: true }).textContent(), "1800°");
+    assert.equal(await dialog.getByRole("meter").getAttribute("min"), "0");
+    assert.equal(await dialog.getByRole("meter").getAttribute("value"), "5");
+    await dialog.getByLabel("Bước xoay").selectOption("15");
+    await ccw.click();
+    assert.equal(await dialog.getByLabel("Công suất mô phỏng", { exact: true }).textContent(), "4.98 W");
+    await dialog.getByLabel("Bước xoay").selectOption("360");
+    for (let i = 0; i < 10; i++) await ccw.click();
+    assert.equal(await ccw.isDisabled(), true);
+    assert.equal(await dialog.getByLabel("Góc xoay", { exact: true }).textContent(), "-1800°");
+    assert.equal(await dialog.getByRole("meter").getAttribute("value"), "0");
+    await dialog.getByLabel("Bước xoay").selectOption("15");
+    await cw.click();
+    assert.equal(await dialog.getByLabel("Công suất mô phỏng", { exact: true }).textContent(), "0.02 W");
+    await closeTrim();
     assert.deepEqual(errors, []);
     assert.deepEqual(writes, []);
-    results.push({ viewport, nativeModal: true, focusTrapAndReturn: true, keyboard: true, outsideAndEscape: true, isolatedOccurrences: true, allSixTrims: true, dialogOverflow: false, pageErrors: errors, nonGetRequests: writes });
+    results.push({ viewport, nativeModal: true, focusTrapAndReturn: true, keyboard: true, outsideAndEscape: true, isolatedOccurrences: true, allSixTrims: true, allEightPmdtChannels: true, adjCalIndependence: true, retainedCalibration: true, tenTurnsAndImmediateReversal: true, dialogOverflow: false, pageErrors: errors, nonGetRequests: writes });
     await page.close();
   }
   await writeFile(join(output, "results.json"), JSON.stringify(results, null, 2));

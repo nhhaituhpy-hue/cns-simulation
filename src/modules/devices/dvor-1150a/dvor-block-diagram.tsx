@@ -16,7 +16,7 @@ import {
   type DvorWaveformReference,
 } from "./block-diagram-data";
 import { DvorModuleFaceplate, hasRebuiltModuleFaceplate } from "./dvor-module-faceplates";
-import { turnSidebandTrim, type SidebandAngles, type SidebandAdjustmentControl } from "./sideband-adjustment-model";
+import { readSidebandTransmitter, turnSidebandTrim, type SidebandAngles, type SidebandAdjustmentControl } from "./sideband-adjustment-model";
 import styles from "./dvor-block-diagram.module.css";
 
 const cabinetImages: Record<CabinetFace, { src: string; alt: string; label: string; horizontalScale?: number }> = {
@@ -683,6 +683,7 @@ export function DvorBlockDiagram() {
       {selectedBlockId ? <DetailPanel blockId={selectedBlockId} sidebandAdjustment={selectedBlockId === "sideband" && selectedCabinetHotspotId ? {
         occurrenceId: selectedCabinetHotspotId,
         angles: sidebandAngles[selectedCabinetHotspotId] ?? {},
+        transmitterData: readSidebandTransmitter(sidebandAngles, selectedCabinetHotspotId),
         onTurn: (id, delta) => setSidebandAngles((current) => ({
           ...current, [selectedCabinetHotspotId]: turnSidebandTrim(current[selectedCabinetHotspotId] ?? {}, id, delta),
         })),

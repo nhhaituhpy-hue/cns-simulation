@@ -657,6 +657,7 @@ function SidebandFaceplate({ adjustment }: { adjustment?: SidebandAdjustmentCont
       <text x="180" y="1594" textAnchor="middle" className={styles.partNumber}>571150A-0002-052</text>
     </svg>
     {active && adjustment ? <SidebandAdjustmentDialog trimId={active} angles={angles} occurrenceId={adjustment.occurrenceId}
+      transmitterData={adjustment.transmitterData}
       onClose={() => setActive(null)}
       onTurn={(delta) => adjustment.onTurn(active, delta)} /> : null}
     </>
