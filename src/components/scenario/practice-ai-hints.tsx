@@ -59,13 +59,13 @@ export function PracticeAiHints({moduleId,scenarioId,libraryMembershipId,attempt
   }
   return <section aria-label="Gợi ý từ AI" className="flex min-h-80 min-w-0 flex-1 flex-col gap-3 rounded-xl border border-[#d6e0ec] bg-white/70 p-3 text-[#142238]">
     <h2 className="text-base font-semibold">Gợi ý từ AI</h2>
-    <p className="text-xs text-[#485b73]">Gợi ý một bước từ bài ôn tập và bằng chứng hiện tại. Không chấm điểm hoặc tự thay đổi thiết bị. Dữ liệu đã lọc sẽ gửi tới dịch vụ AI được cấu hình.</p>
+    <p className="text-xs text-[#485b73]">Dữ liệu đã lọc sẽ gửi tới dịch vụ AI được cấu hình.</p>
     <label className="flex flex-col gap-1 text-sm">Câu hỏi (không bắt buộc)<textarea value={view.question} maxLength={1000} disabled={disabled||view.pending} onChange={e=>setState(s=>({...s,question:e.target.value}))} rows={3} className="w-full min-w-0 resize-y rounded-lg border border-[#b5c6db] bg-white p-2 text-sm text-[#142238] caret-[#142238] [-webkit-text-fill-color:#142238]" placeholder="Bạn muốn kiểm tra điều gì tiếp theo?"/></label>
     <button type="button" disabled={disabled||!owner||view.pending||!current} onClick={()=>void run()} className="rounded-full bg-[#0369a1] px-3 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50">Gợi ý một bước</button>
     <div aria-live="polite" className="min-w-0 flex-1 space-y-2 break-words text-sm">
       {view.pending&&<p role="status">Đang chuẩn bị gợi ý…</p>}
       {view.error&&<p role="alert">{view.error}</p>}
-      {view.result&&<><p className="font-medium">{view.result.summary}</p><ul className="list-disc space-y-2 pl-4">{view.result.nextSteps.map((step,i)=><li key={i}>{step}</li>)}</ul><p className="text-xs text-[#485b73]">{view.result.sourceMode==='ai-assisted'?'AI hỗ trợ lựa chọn bước.':'Phân tích tất định (không có kết quả từ AI).'} {view.result.notice}</p></>}
+      {view.result&&<><ul className="list-disc space-y-2 pl-4">{view.result.nextSteps.map((step,i)=><li key={i}>{step}</li>)}</ul>{view.result.sourceMode==='deterministic-only'&&<p className="text-xs text-[#485b73]">Gợi ý hệ thống · AI chưa khả dụng.</p>}</>}
       {view.readError&&!view.pending&&<button type="button" disabled={disabled} onClick={()=>void run(true)} className="rounded border border-[#b5c6db] px-3 py-2">Tải lại gợi ý</button>}
       {disabled&&<p className="text-xs">Gợi ý đã khóa sau khi nộp bài.</p>}
     </div>

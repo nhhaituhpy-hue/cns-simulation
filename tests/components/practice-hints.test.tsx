@@ -7,6 +7,28 @@ const props={moduleId:"dvor-1150a" as const,scenarioId:"published",attemptKey:"r
 beforeEach(()=>useScenarioStore.setState({sessionIdentity:"owner",sessionScope:"practice"}));
 afterEach(()=>{cleanup();vi.restoreAllMocks();vi.useRealTimers();});
 describe("right-column practice tutoring",()=>{
+ it("shows the suggested step without repeated technical explanations",async()=>{
+  const summary="Gợi ý bước tiếp theo từ bằng chứng mô phỏng.";
+  const notice="AI chọn một bước trong các gợi ý đã đối chiếu bằng engine. Chưa có rubric công bố; chỉ đối chiếu trạng thái native, không suy quy trình hoặc số bước đúng. Không phải chấm bài; không tự áp dụng cấu hình.";
+  vi.spyOn(globalThis,"fetch").mockResolvedValueOnce(json({jobId:"concise",status:"queued"})).mockResolvedValueOnce(json({status:"completed",result:{sourceMode:"ai-assisted",summary,nextSteps:["Đối chiếu Monitor"],notice}}));
+  render(<PracticeAiHints {...props}/>);
+  expect(screen.getByText(/Dữ liệu đã lọc sẽ gửi tới dịch vụ AI được cấu hình\./)).toBeVisible();
+  expect(screen.getByRole("textbox",{name:"Câu hỏi (không bắt buộc)"})).toBeEnabled();
+  fireEvent.click(screen.getByRole("button",{name:"Gợi ý một bước"}));
+  expect(await screen.findByText("Đối chiếu Monitor")).toBeVisible();
+  expect(screen.queryByText(summary)).not.toBeInTheDocument();
+  expect(screen.queryByText(/AI hỗ trợ lựa chọn bước|AI chọn một bước|Chưa có rubric công bố|Không phải chấm bài|Gợi ý một bước từ bài ôn tập/)).not.toBeInTheDocument();
+  expect(screen.queryByText(/Gợi ý hệ thống/)).not.toBeInTheDocument();
+ });
+ it("identifies the system fallback briefly while preserving its actual step",async()=>{
+  vi.spyOn(globalThis,"fetch").mockResolvedValueOnce(json({jobId:"fallback",status:"queued"})).mockResolvedValueOnce(json({status:"completed",result:{sourceMode:"deterministic-only",summary:"Gợi ý bước tiếp theo từ bằng chứng mô phỏng.",nextSteps:["Kiểm tra trạng thái Monitor trước khi đổi cấu hình."],notice:"Gợi ý tất định; AI chưa khả dụng. Chưa có rubric công bố; chỉ đối chiếu trạng thái native, không suy quy trình hoặc số bước đúng."}}));
+  render(<PracticeAiHints {...props}/>);
+  fireEvent.click(screen.getByRole("button",{name:"Gợi ý một bước"}));
+  expect(await screen.findByText("Kiểm tra trạng thái Monitor trước khi đổi cấu hình.")).toBeVisible();
+  expect(screen.getByText("Gợi ý hệ thống · AI chưa khả dụng.")).toBeVisible();
+  expect(screen.queryByText(/Chưa có rubric công bố|Phân tích tất định|Gợi ý bước tiếp theo từ bằng chứng/)).not.toBeInTheDocument();
+  expect(screen.getByRole("button",{name:"Gợi ý một bước"})).toBeEnabled();
+ });
  it("never calls automatically, freezes sanitized request on click and polls the dedicated hint job",async()=>{
   const fetcher=vi.spyOn(globalThis,"fetch").mockResolvedValueOnce(json({jobId:"hint-one",status:"queued"})).mockResolvedValueOnce(json({jobId:"hint-one",status:"completed",result:{sourceMode:"ai-assisted",summary:"Bước tiếp theo",nextSteps:["Đối chiếu Monitor"],notice:"Không chấm điểm"}}));
   render(<PracticeAiHints {...props} libraryMembershipId="44444444-4444-4444-8444-444444444444"/>);
