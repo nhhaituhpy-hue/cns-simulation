@@ -1,6 +1,7 @@
 import {
   cloneDvor1150aConfig,
   createDefaultDvor1150aConfig,
+  withDvor1150aConfigExtensions,
 } from "@/lib/dvor1150a/defaults";
 import type { Dvor1150aConfig } from "@/lib/dvor1150a/config-types";
 import { hasSameJsonShape } from "./shape";
@@ -29,8 +30,17 @@ export function extractDvor1150aConfig(value: Dvor1150aConfig): Dvor1150aPersist
 
 export function parseDvor1150aConfig(value: unknown): Dvor1150aPersistedConfig | null {
   const reference = getDefaultDvor1150aConfig();
-  if (!hasSameJsonShape(value, reference)) return null;
-  return normalizeRuntimeFields(value as Dvor1150aConfig);
+  const compatible = withDvor1150aConfigExtensions(value);
+  if (!hasSameJsonShape(compatible, reference)) return null;
+  const config = compatible as Dvor1150aConfig;
+  // Exact structure alone only checks primitive types, not enum membership.
+  for (const id of ["tx1", "tx2"] as const) {
+    const nominal = config.transmitters[id].nominal;
+    if (!["Active High/Open", "Active Low/Closed"].includes(nominal.keyerInputLevel!) ||
+      !["Disabled", "Enabled", "Windowed"].includes(nominal.externalKeying!)) return null;
+  }
+  if (!["Normal", "No Ident", "Continuous Ident"].includes(config.monitor.testGenerator!.identStatus)) return null;
+  return normalizeRuntimeFields(config);
 }
 
 export const dvor1150aConfigAdapter: SimulatorConfigAdapter<Dvor1150aPersistedConfig> = {

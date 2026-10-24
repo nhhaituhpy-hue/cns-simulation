@@ -1,19 +1,48 @@
 import { NextResponse } from "next/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
-import { queryDatabase } from "@/lib/db";
+import { queryDatabase, withDatabaseTransaction } from "@/lib/db";
 import { getSimulatorConfigAdapter } from "@/lib/simulator-config/registry";
+import { parseDvor1150aConfig } from "@/lib/simulator-config/dvor-1150a";
+import {
+  DVOR1150A_CONFIG_DTO_VERSION,
+  preserveMissingDvor1150aExtensions,
+  projectSimulatorConfigResponse,
+  SIMULATOR_CONFIG_DTO_HEADER,
+} from "@/lib/simulator-config/wire";
 import {
   SIMULATOR_CONFIG_SCHEMA_VERSION,
   type SimulatorConfigAction,
   type SimulatorConfigHistoryAction,
   type SimulatorConfigHistoryRecord,
   type SimulatorConfigRecord,
+  type SimulatorConfigResponse,
   type SupportedSimulatorConfigId,
 } from "@/lib/simulator-config/types";
 
 export const dynamic = "force-dynamic";
 
 type RouteContext = { params: Promise<{ simulatorId: string }> };
+
+function configResponse<T extends SimulatorConfigResponse>(request: Request, body: T, status = 200) {
+  return NextResponse.json(
+    projectSimulatorConfigResponse(body, request.headers.get(SIMULATOR_CONFIG_DTO_HEADER)),
+    {
+      status,
+      headers: body.simulatorId === "dvor-1150a" ? { Vary: SIMULATOR_CONFIG_DTO_HEADER } : undefined,
+    },
+  );
+}
+
+function unsupportedDto(request: Request, simulatorId: string) {
+  const dto = request.headers.get(SIMULATOR_CONFIG_DTO_HEADER);
+  if (simulatorId === "dvor-1150a" && dto !== null && dto !== DVOR1150A_CONFIG_DTO_VERSION) {
+    return NextResponse.json(
+      { error: "Unsupported simulator configuration representation." },
+      { status: 400, headers: { Vary: SIMULATOR_CONFIG_DTO_HEADER } },
+    );
+  }
+  return null;
+}
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Unknown simulator configuration error";
@@ -85,7 +114,7 @@ function isUuid(value: unknown): value is string {
   return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
-export async function GET(_request: Request, context: RouteContext) {
+export async function GET(request: Request, context: RouteContext) {
   const profile = await getCurrentProfile();
   if (!profile) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
 
@@ -95,6 +124,8 @@ export async function GET(_request: Request, context: RouteContext) {
   if (!adapter) {
     return NextResponse.json({ error: "Simulator chưa có persistence adapter." }, { status: 404 });
   }
+  const dtoError = unsupportedDto(request, simulatorId);
+  if (dtoError) return dtoError;
 
   try {
     const configResult = await queryDatabase<SimulatorConfigRecord>(
@@ -107,8 +138,8 @@ export async function GET(_request: Request, context: RouteContext) {
 
     if (!data) {
       const defaultConfig = adapter.getDefaultConfig();
-      return NextResponse.json({
-        simulatorId,
+      return configResponse(request, {
+        simulatorId: simulatorId as SupportedSimulatorConfigId,
         schemaVersion: SIMULATOR_CONFIG_SCHEMA_VERSION,
         initialConfig: defaultConfig,
         appliedConfig: defaultConfig,
@@ -129,7 +160,7 @@ export async function GET(_request: Request, context: RouteContext) {
       [profile.id, simulatorId],
     );
 
-    return NextResponse.json({
+    return configResponse(request, {
       ...responseFromRecord(unwrapRecord(data), simulatorId as SupportedSimulatorConfigId, adapter),
       history: parseHistoryRows(historyResult.rows),
     });
@@ -142,7 +173,7 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 }
 
-export async function POST(_request: Request, context: RouteContext) {
+export async function POST(request: Request, context: RouteContext) {
   const profile = await getCurrentProfile();
   if (!profile) return NextResponse.json({ error: "Chưa đăng nhập." }, { status: 401 });
 
@@ -152,6 +183,8 @@ export async function POST(_request: Request, context: RouteContext) {
   if (!adapter) {
     return NextResponse.json({ error: "Simulator chưa có persistence adapter." }, { status: 404 });
   }
+  const dtoError = unsupportedDto(request, simulatorId);
+  if (dtoError) return dtoError;
 
   try {
     const result = await queryDatabase<SimulatorConfigRecord>(
@@ -159,9 +192,10 @@ export async function POST(_request: Request, context: RouteContext) {
       [profile.id, simulatorId, adapter.schemaVersion, adapter.getDefaultConfig()],
     );
 
-    return NextResponse.json(
+    return configResponse(
+      request,
       responseFromRecord(unwrapRecord(result.rows[0]), simulatorId as SupportedSimulatorConfigId, adapter),
-      { status: 201 },
+      201,
     );
   } catch (error) {
     console.error("Simulator configuration initialization failed:", error);
@@ -182,6 +216,8 @@ export async function PUT(request: Request, context: RouteContext) {
   if (!adapter) {
     return NextResponse.json({ error: "Simulator chưa có persistence adapter." }, { status: 404 });
   }
+  const dtoError = unsupportedDto(request, simulatorId);
+  if (dtoError) return dtoError;
 
   try {
     const payload = (await request.json()) as Record<string, unknown>;
@@ -211,11 +247,46 @@ export async function PUT(request: Request, context: RouteContext) {
 
     let data: SimulatorConfigRecord;
     try {
-      const result = await queryDatabase<SimulatorConfigRecord>(
-        `select (public.save_user_simulator_config($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)).*`,
-        [profile.id, simulatorId, adapter.schemaVersion, config, expectedRevision, action, changedFields ?? [], operatorUserId ?? null, sessionId ?? null, backupConfig],
-      );
-      data = result.rows[0];
+      const save = async (
+        query: (sql: string, values: unknown[]) => Promise<{ rows: SimulatorConfigRecord[] }>,
+        applied: unknown,
+        backup: unknown,
+      ) => {
+        // A function in FROM executes once; expanding (function()).* can repeat
+        // the write per output column. Only changedFields is a JSONB array:
+        // node-pg otherwise encodes JavaScript arrays as PostgreSQL arrays.
+        const result = await query(
+          `select * from public.save_user_simulator_config($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+          [profile.id, simulatorId, adapter.schemaVersion, applied, expectedRevision, action, JSON.stringify(changedFields ?? []), operatorUserId ?? null, sessionId ?? null, backup],
+        );
+        return result.rows[0];
+      };
+      if (simulatorId === "dvor-1150a") {
+        // Read/merge/save under the same owner-scoped row lock. A legacy tab
+        // cannot see extensions, so omission must not reset them to defaults.
+        data = await withDatabaseTransaction(async (client) => {
+          const storedResult = await client.query<SimulatorConfigRecord>(
+            `select * from public.user_simulator_configs
+             where user_id = $1 and simulator_id = $2 for update`,
+            [profile.id, simulatorId],
+          );
+          const stored = storedResult.rows[0];
+          if (!stored) throw new Error("SIMULATOR_CONFIG_NOT_INITIALIZED");
+          if (Number(stored.revision) !== expectedRevision) throw new Error("CONFIG_REVISION_CONFLICT");
+          // Validate the stored schema and all three snapshots before merging.
+          responseFromRecord(stored, simulatorId, adapter);
+          const applied = preserveMissingDvor1150aExtensions(
+            payload.config, parseDvor1150aConfig(config)!, parseDvor1150aConfig(stored.applied_config)!,
+          );
+          const backup = backupConfig === null ? null : preserveMissingDvor1150aExtensions(
+            payload.backupConfig, parseDvor1150aConfig(backupConfig)!,
+            parseDvor1150aConfig(stored.backup_config ?? stored.applied_config)!,
+          );
+          return save((sql, values) => client.query<SimulatorConfigRecord>(sql, values), applied, backup);
+        });
+      } else {
+        data = await save((sql, values) => queryDatabase<SimulatorConfigRecord>(sql, values), config, backupConfig);
+      }
     } catch (error) {
       if (error instanceof Error && error.message.includes("CONFIG_REVISION_CONFLICT")) {
         return NextResponse.json(
@@ -234,7 +305,7 @@ export async function PUT(request: Request, context: RouteContext) {
       simulatorId as SupportedSimulatorConfigId,
       adapter,
     );
-    return NextResponse.json({ ...response, action: action as SimulatorConfigAction });
+    return configResponse(request, { ...response, action: action as SimulatorConfigAction });
   } catch (error) {
     console.error("Simulator configuration write failed:", error);
     return NextResponse.json(

@@ -9,6 +9,8 @@ import { validateScenarioRubric } from "@/lib/ai/scenario-blueprint/validation";
 import { evaluateScenarioExamResult } from "@/lib/scenario-exams/evaluation";
 import { isScenarioActionEvent } from "@/lib/scenario-evidence";
 import { dmeParameterFieldCatalog } from "@/lib/dme1119a/config";
+import { dvor1150aNativeFieldEvidence, parseDvor1150aScenarioDefinition, type Dvor1150aScenarioEvidence } from "@/lib/dvor1150a/scenario";
+import type { Dvor1150aConfig } from "@/lib/dvor1150a/config-types";
 
 export type StepAssessmentStatus = "correct" | "missing" | "incorrect" | "unverified";
 export interface AssessedStep {
@@ -129,6 +131,19 @@ export function assessAttemptSteps(
   const running = terminal ? terminal.running : readPath(payload, moduleId === "dvor-220" ? "device.configuration.running" : moduleId === "dme-320" ? "simulation.config.running"
     : moduleId === "dme-1119a" ? "checkpoint.data" : "checkpoint.config");
   const initial = terminal ? terminal.initial : readPath(definition, "configuration");
+  // Only the additive exact-configuration contract opts in; preserve every other module/publication's scoring semantics.
+  const exactDvorConfiguration = moduleId === "dvor-1150a" && readPath(definition, "successCriteria.configurationValues") !== undefined;
+  const dvorDefinition = exactDvorConfiguration ? parseDvor1150aScenarioDefinition(definition) : null;
+  const dvorFieldProof = (fieldId: string) => dvorDefinition ? dvor1150aNativeFieldEvidence(dvorDefinition, fieldId,
+    running as Dvor1150aConfig | undefined, { actionHistory: payload?.actionHistory as Dvor1150aScenarioEvidence["actionHistory"],
+      evidenceStats: payload?.evidenceStats as Dvor1150aScenarioEvidence["evidenceStats"],
+      runId: typeof readPath(payload, "checkpoint.scenarioRunId") === "string" ? readPath(payload, "checkpoint.scenarioRunId") as string : undefined },
+    typeof readPath(payload, "checkpoint.scenarioStartedAt") === "string" ? readPath(payload, "checkpoint.scenarioStartedAt") as string : null,
+    typeof readPath(payload, "checkpoint.scenarioRunId") === "string" ? readPath(payload, "checkpoint.scenarioRunId") as string : undefined,
+    typeof readPath(payload, "checkpoint.scenarioId") === "string" ? readPath(payload, "checkpoint.scenarioId") as string : undefined) : [];
+  const dvorApplyProof = exactDvorConfiguration ? [...new Map(rubric.steps.flatMap(step => step.alternatives.flat())
+    .flatMap(matcher => matcher.kind === "parameter" ? dvorFieldProof(matcher.fieldId.replace(/^configuration\./, "")) : [])
+    .map(action => [action.id, action])).values()] : [];
   // Accept the compiler's running-relative path and the full authoring path,
   // but never strip arbitrary prefixes or turn unknown paths into known fields.
   const fieldPath = (fieldId: string) => fieldId.startsWith("configuration.")
@@ -236,6 +251,9 @@ export function assessAttemptSteps(
     if (matcher.kind === "parameter") {
       if (!isScalar(readPath(initial, matcher.fieldId))) return [];
       const actual = readPath(running, matcher.fieldId);
+      if (exactDvorConfiguration) return equalValue(actual, matcher.value, matcher.tolerance)
+        ? dvorFieldProof(matcher.fieldId).filter(action => action.parameterChanges?.some(change => change.fieldId === matcher.fieldId
+          && Object.is(change.after, actual))).map(action => action.id) : [];
       if (mopiens || moduleId === "dvor-1150") {
         const proof = equalValue(actual, matcher.value, matcher.tolerance) ? nativeChanges.filter(entry => entry.nativeFieldId === matcher.fieldId
           && Object.is(entry.after, actual)).map(entry => `history:${entry.id}`) : [];
@@ -246,6 +264,11 @@ export function assessAttemptSteps(
       return equalValue(actual, matcher.value, matcher.tolerance) ? actions.filter(action => action.accepted
         && action.parameterChanges?.some(change => change.accepted && change.phase !== "draft" && change.phase !== "backup"
           && change.fieldId === matcher.fieldId && equalValue(change.after, actual, matcher.tolerance))).map(action => action.id) : [];
+    }
+    if (matcher.kind === "action" && exactDvorConfiguration && ["config-apply", "simulation.local", "simulation.integralMonitorBypass"].includes(matcher.controlId)) {
+      const proof = matcher.controlId === "config-apply" ? dvorApplyProof : dvorFieldProof(matcher.controlId);
+      return proof.filter(action => action.accepted && action.controlId === matcher.controlId
+        && (matcher.input === undefined || equalJson(action.input, matcher.input))).map(action => action.id);
     }
     if (matcher.kind === "action") return [...actions.filter(action => action.accepted && action.controlId === matcher.controlId
       && (matcher.input === undefined || equalJson(action.input, matcher.input))).map(action => action.id),
@@ -286,8 +309,9 @@ export function assessAttemptSteps(
     const unknownMatcher = step.alternatives.flat().some(matcher =>
       (matcher.kind === "parameter" && !isScalar(readPath(initial, matcher.fieldId)))
       || (matcher.kind === "technical-check" && !technical.checks.some(check => check.id === matcher.checkId)));
-    const nativeProofUnavailable = (mopiens || moduleId === "dvor-1150") && step.alternatives.flat().some(matcher =>
-      matcher.kind === "parameter" && !nativeChanges.some(entry => entry.nativeFieldId === matcher.fieldId));
+    const nativeProofUnavailable = ((mopiens || moduleId === "dvor-1150") && step.alternatives.flat().some(matcher =>
+      matcher.kind === "parameter" && !nativeChanges.some(entry => entry.nativeFieldId === matcher.fieldId)))
+      || (exactDvorConfiguration && step.alternatives.flat().some(matcher => matcher.kind === "parameter" && !dvorFieldProof(matcher.fieldId).length));
     const uncertain = !complete || nativeProofUnavailable || unknownOrder || unknownMatcher || prerequisites.some(step => step.status === "unverified");
     const resultEvidenceIds = [...new Set(step.alternatives.flat().flatMap(matcher => matcher.kind === "parameter"
       && isScalar(readPath(initial, matcher.fieldId)) && equalValue(readPath(running, matcher.fieldId), matcher.value, matcher.tolerance)

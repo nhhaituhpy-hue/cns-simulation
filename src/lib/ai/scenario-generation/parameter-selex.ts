@@ -3,7 +3,7 @@ import { dvor1150ConfigFieldCatalog } from "@/lib/dvor1150/config-utils";
 import { dvorConfigFieldCatalog } from "@/lib/dvor1150a/config-utils";
 import { dmeParameterFieldCatalog } from "@/lib/dme1119a/config";
 import { evaluateDvor1150Scenario, previewDvor1150Scenario, DVOR1150_BUILT_IN_SCENARIOS, isDvor1150ScenarioStudentEditable, type Dvor1150ScenarioDefinition } from "@/lib/dvor1150/scenario";
-import { evaluateDvor1150aScenario, previewDvor1150aScenario, DVOR1150A_BUILT_IN_SCENARIOS, isDvor1150aScenarioStudentEditable, type Dvor1150aScenarioDefinition } from "@/lib/dvor1150a/scenario";
+import { evaluateDvor1150aScenario, previewDvor1150aScenario, DVOR1150A_BUILT_IN_SCENARIOS, isDvor1150aScenarioStudentEditable, dvor1150aScenarioFieldRole, dvor1150aSharedConfigurationFieldIds, type Dvor1150aScenarioDefinition } from "@/lib/dvor1150a/scenario";
 import { evaluateDme1119aScenario, previewDme1119aScenario, DME1119A_BUILT_IN_SCENARIOS, isDme1119aScenarioStudentEditable, type Dme1119aScenarioDefinition } from "@/lib/dme1119a/scenario";
 import type { ParameterVerification, ParameterAssignment, ParameterValue, ScenarioParameterAdapter, ScenarioParameterField } from "./parameter-types";
 import { AiScenarioError } from "./types";
@@ -57,7 +57,7 @@ function native(moduleId: ScenarioParametersModuleId, definition: ScenarioParame
   if (Object.keys(d.startPolicy).length !== keys.length || keys.some(k => !Object.hasOwn(d.startPolicy, k))) invalid("Startup fields differ from the server contract.");
   if (!Array.isArray(d.successCriteria)) {
     const criteria = successKeys[moduleId as keyof typeof successKeys];
-    if (!criteria || Object.keys(d.successCriteria).length !== criteria.length || criteria.some(k => !Object.hasOwn(d.successCriteria, k))) invalid("Success fields differ from the server contract.");
+    if (!criteria || Object.keys(d.successCriteria).some(k => !criteria.includes(k) && !(moduleId === "dvor-1150a" && k === "configurationValues")) || criteria.some(k => !Object.hasOwn(d.successCriteria, k))) invalid("Success fields differ from the server contract.");
   }
   const bypassed = "startMonitorBypassed" in d.startPolicy ? d.startPolicy.startMonitorBypassed : d.startPolicy.integralMonitorBypassed || d.startPolicy.standbyMonitorBypassed;
   if (bypassed && !d.startPolicy.startLocal) invalid("Monitor Bypass requires Local mode.");
@@ -73,7 +73,15 @@ function valueAt(object: unknown, path: string): ParameterValue | undefined {
   return current === null || ["string", "number", "boolean"].includes(typeof current) ? current as ParameterValue : undefined;
 }
 function allowed(moduleId: ScenarioParametersModuleId, definition: SelexDefinition, id: string): boolean {
-  // Monitor thresholds/routing/calibration are authoring settings, never an AI recovery shortcut.
+  // Explicit configuration exercises may require monitor settings, but a legacy
+  // physical-fault exercise must never gain threshold/calibration escape hatches.
+  if (moduleId === "dvor-1150a") {
+    const d = definition as Dvor1150aScenarioDefinition;
+    const targets = d.successCriteria.configurationValues;
+    if (targets !== undefined && dvor1150aScenarioFieldRole(id) === "student-operable"
+      && (targets.length === 0 || targets.some(target => dvor1150aSharedConfigurationFieldIds(target.fieldId).includes(id)))) return isDvor1150aScenarioStudentEditable(d, id);
+    if(dvorConfigFieldCatalog.find(f=>f.id===id)?.effect==="stored-only")return false;
+  }
   const physical = /^(transmitters\.(tx1|tx2)\.(nominal|offsets)\.|txConfigNominal\.|txOffsets\.)/.test(id)
     && !/(Limit|Threshold|Variance|\.vswr\.|Vswr)/i.test(id);
   if (!physical) return false;
@@ -89,14 +97,21 @@ function fields(moduleId: ScenarioParametersModuleId, input: ScenarioParametersD
     if (field.readOnly || value === undefined || /security|password|credential|smoke|intrusion|entryDelay|exitDelay/i.test(field.id)) return [];
     if (/^simulation\.|^transmitters\.(tx1|tx2)\.(enabled|onAir|load)$|^monitorTransmitterStatus\.(mainSelect|antennaSelect|transmitterOn\.)/.test(field.id)) return [];
     const { label, unit, min, max, step, options } = field;
-    return [{ id: `configuration.${field.id}`, label, group: "configuration", type: field.type === "select" ? "enum" : field.type, value, unit, min, max, step, options, recovery: allowed(moduleId, definition, field.id) }];
+    const nativeEffect=moduleId==="dvor-1150a"?dvorConfigFieldCatalog.find(f=>f.id===field.id):undefined;
+    // Serialization/arithmetic safety envelope for the explicit training form,
+    // NOT an equipment operating range. Do not change legacy catalog metadata.
+    const numericSafety=moduleId==="dvor-1150a"&&(definition as Dvor1150aScenarioDefinition).successCriteria.configurationValues!==undefined
+      && field.type==="number"&&min===undefined&&max===undefined
+      ? {min:-Number.MAX_SAFE_INTEGER,max:Number.MAX_SAFE_INTEGER} : {min,max};
+    return [{ id: `configuration.${field.id}`, label, group: "configuration", type: field.type === "select" ? "enum" : field.type, value, unit, ...numericSafety, step, options, recovery: allowed(moduleId, definition, field.id),
+      ...(nativeEffect?.effect?{effect:nativeEffect.effect,effectNotice:nativeEffect.effectNotice}:{}), }];
   });
   for (const [key, value] of Object.entries(definition.startPolicy)) {
     result.push({ id: `startPolicy.${key}`, label: key, group: "startup", type: typeof value === "boolean" ? "boolean" : "enum", value, options: key === "mainTransmitterId" ? ["tx1", "tx2"] : key === "identMode" ? ["normal", "off", "continuous"] : undefined, recovery: key !== "identMode" });
   }
   if (!Array.isArray(definition.successCriteria)) {
     for (const [key, value] of Object.entries(definition.successCriteria)) {
-      result.push({ id: `successCriteria.${key}`, label: key, group: "success", type: "boolean", value, recovery: false });
+      if(key!=="configurationValues") result.push({ id: `successCriteria.${key}`, label: key, group: "success", type: "boolean", value: value as boolean, recovery: false });
     }
   }
   return result;
@@ -127,12 +142,26 @@ function setKnown(object: object, path: string, value: ParameterValue): void {
 function apply(moduleId: ScenarioParametersModuleId, input: ScenarioParametersDefinition, changes: readonly ParameterAssignment[]): ScenarioParametersDefinition {
   const definition = native(moduleId, input);
   assignments(fields(moduleId, definition), changes);
-  for (const change of changes) setKnown(definition, change.fieldId, change.value);
+  const normalized=moduleId==="dvor-1150a"&&(definition as Dvor1150aScenarioDefinition).successCriteria.configurationValues!==undefined ? sharedNominalAssignments(changes) : changes;
+  assignments(fields(moduleId, definition), normalized);
+  for (const change of normalized) setKnown(definition, change.fieldId, change.value);
   return native(moduleId, definition);
+}
+
+/** Expand only known shared controls and reject contradictory TX copies. */
+export function sharedNominalAssignments(changes: readonly ParameterAssignment[]): ParameterAssignment[] {
+  const result:ParameterAssignment[]=[],seen=new Map<string,ParameterValue>();
+  for(const change of changes)for(const fieldId of change.fieldId.startsWith("configuration.")?(dvor1150aSharedConfigurationFieldIds(change.fieldId.slice(14)).length?dvor1150aSharedConfigurationFieldIds(change.fieldId.slice(14)).map(id=>`configuration.${id}`):[change.fieldId]):[change.fieldId]) {
+    if(seen.has(fieldId)) {if(!Object.is(seen.get(fieldId),change.value))invalid(`Conflicting shared nominal assignment: ${fieldId}`);continue;}
+    seen.set(fieldId,change.value);result.push({fieldId,value:change.value});
+  }
+  return result;
 }
 function recoveryError(message: string): never { throw new AiScenarioError("INVALID_RECOVERY", message); }
 function verify(moduleId: ScenarioParametersModuleId, input: ScenarioParametersDefinition, recovery: readonly ParameterAssignment[]): ParameterVerification {
   const definition = native(moduleId, input);
+  assignments(fields(moduleId, definition), recovery);
+  if(moduleId==="dvor-1150a"&&(definition as Dvor1150aScenarioDefinition).successCriteria.configurationValues!==undefined)recovery=sharedNominalAssignments(recovery);
   const catalog = fields(moduleId, definition);
   assignments(catalog, recovery);
   for (const change of recovery) if (!catalog.find(f => f.id === change.fieldId)?.recovery) recoveryError(`Not a permitted recovery control: ${change.fieldId}`);
@@ -175,10 +204,10 @@ function verify(moduleId: ScenarioParametersModuleId, input: ScenarioParametersD
   }
   if (moduleId === "dvor-1150a") {
     const d = definition as Dvor1150aScenarioDefinition;
-    const preview = previewDvor1150aScenario(d);
     const store = createVorPmdtStore();
-    store.setState({ config: preview.config, configDraft: structuredClone(preview.config), derived: preview.snapshot, data: preview.snapshot.data, scenario: { active: true, definition: d, startedAt: null }, securityLevel: 3, loginDialogOpen: false });
-    const evaluate = () => { const state = store.getState(); return evaluateDvor1150aScenario(state.scenario, state.derived, state.config, evidence); };
+    if (!store.getState().startReviewScenario(d)) recoveryError("Native scenario initialization failed.");
+    store.setState({ securityLevel: 3, loginDialogOpen: false });
+    const evaluate = () => { const state = store.getState(); return evaluateDvor1150aScenario(state.scenario, state.derived, state.config, { ...evidence, runId: state.scenario.runId, actionHistory:state.actionHistory,evidenceStats:state.evidenceStats }); };
     const initial = evaluate();
     const neutral = previewDvor1150aScenario({ ...d, startPolicy: { ...d.startPolicy, startMonitorBypassed: false } });
     const physical = evaluateDvor1150aScenario(store.getState().scenario, neutral.snapshot, neutral.config, evidence);
@@ -192,10 +221,48 @@ function verify(moduleId: ScenarioParametersModuleId, input: ScenarioParametersD
         return valueAt(store.getState().config, field) === value;
       }
       const field = id.slice(14);
-      state.setConfigValue(field, value);
+      // A setter can write fields that the native Keyer Input form disables.
+      // Verify the proposed order as-is; never silently enable/reorder prerequisites.
+      if (d.successCriteria.configurationValues !== undefined && /^transmitters\.tx[12]\.nominal\.(keyerInputLevel|windowedKeyingInput|selfKeyOnLoss|shutdownOnLoss|restartWhenResumed)$/.test(field)
+        && !Object.is(valueAt(state.configDraft, field), value) && state.configDraft.transmitters.tx1.nominal.keyerMode !== "external") {
+        recoveryError(`Native keyer input is not reachable while Keyer Input mode is disabled: ${field}. Include the permitted external-mode prerequisite before editing it.`);
+      }
+      const shared=d.successCriteria.configurationValues!==undefined?dvor1150aSharedConfigurationFieldIds(field):[field];
+      state.setConfigValue(field, value, shared.filter(id=>id!==field));
       return valueAt(store.getState().configDraft, field) === value && (!store.getState().configDirty || store.getState().applyConfigChanges());
     });
-    return result(initial, evaluate(), hardware, notes, physical);
+    const recovered = evaluate();
+    for (const change of recovery.filter(c => c.fieldId.startsWith("configuration."))) {
+      if (!Object.is(valueAt(store.getState().config, change.fieldId.slice(14)), change.value)) recoveryError(`Native effective value differs from requested recovery: ${change.fieldId}.`);
+    }
+    const report=result(initial, recovered, hardware, notes, physical);
+    if(d.successCriteria.configurationValues!==undefined&&!hardware) {
+      report.mode="native-action-replay";
+      report.notes.push("Exact configuration values and native Apply replay only, not physical RF repair or manufacturer calibration accuracy.");
+    }
+    // Old tabs accept at most 32 checks. This is a display projection only:
+    // result() has already required every unabridged native check to pass, and
+    // the definition/rubric retain all exact targets and per-field Apply proof.
+    const compact=(checks:typeof report.initial)=>{
+      if(checks.length<=32)return checks;
+      const tasks=checks.filter(c=>c.id.startsWith("task-target-"));
+      const values=checks.filter(c=>c.id.startsWith("configuration-value-"));
+      const rest=checks.filter(c=>!c.id.startsWith("task-target-")&&!c.id.startsWith("configuration-value-"));
+      const taskSummary={id:"configuration-task-evidence",passed:tasks.every(c=>c.passed),detail:`${tasks.filter(c=>c.passed).length}/${tasks.length} exact native field Apply proofs`};
+      const display=[...rest,...values,taskSummary];
+      if(display.length<=32)return display;
+      // Coalesce only the known shared native Nominal control, with AND over
+      // its TX copies; never discard a failing mirror or change grading.
+      const groups=new Map<string,typeof values>();
+      for(const check of values){
+        const key=check.id.replace(/transmitters\.tx[12]\.nominal\./,"transmitters.commonNominal.");
+        groups.set(key,[...(groups.get(key)??[]),check]);
+      }
+      const shared=[...groups].map(([id,group])=>group.length===1?group[0]:{id,passed:group.every(c=>c.passed),detail:`${group.filter(c=>c.passed).length}/${group.length} exact shared Nominal TX copies verified`});
+      const grouped=[...rest,...shared,taskSummary];
+      return grouped.length<=32?grouped:[...rest,{id:"configuration-exact-values",passed:values.every(c=>c.passed),detail:`${values.filter(c=>c.passed).length}/${values.length} exact configuration values verified`},taskSummary];
+    };
+    return {...report,initial:compact(report.initial),recovered:compact(report.recovered)};
   }
   const d = definition as Dme1119aScenarioDefinition;
   const preview = previewDme1119aScenario(d);

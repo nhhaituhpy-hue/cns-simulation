@@ -41,7 +41,13 @@ function buildResolution(
   startedAt: string,
   submittedAt: string,
 ) {
-  const evaluation = evaluateDvor1150aScenario(state.scenario, state.derived, state.config);
+  const evaluation = evaluateDvor1150aScenario(state.scenario, state.derived, state.config, {
+    runId: state.scenario.runId, actionHistory: state.actionHistory, evidenceStats: state.evidenceStats,
+    visitedViewIds: state.attemptEvents.map(event => event.viewId),
+    acceptedActionControlIds: state.actionHistory.filter(event=>event.accepted&&event.controlId).map(event=>event.controlId!),
+    selectedHardwareOccurrenceKeys: state.scenarioHardwareSelection,
+    hardwareDispositionConfirmed: state.scenarioHardwareDispositionConfirmed,
+  });
   const last = state.actionHistory.at(-1)?.after;
   const checks: ScenarioResolutionCheck[] = state.scenario.active
     ? evaluation.checks

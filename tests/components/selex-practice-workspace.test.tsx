@@ -12,7 +12,7 @@ import { createTemplateDefinition } from "@/lib/ai/scenario-generation/capabilit
 const harness = vi.hoisted(() => ({ query: "review=1&scenarioId=published-row", props: null as PracticeWorkspaceProps | null, snapshot: null as unknown }));
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(harness.query), usePathname: () => "/simulator/test", useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn(), forward: vi.fn(), refresh: vi.fn(), prefetch: vi.fn() }) }));
 vi.mock("@/components/scenario-exams/scenario-exam-snapshot-context", () => ({ useScenarioExamSnapshot: () => harness.snapshot, useScenarioExamAnswer: () => null, useScenarioExamResultReader: () => undefined }));
-vi.mock("@/components/scenario/practice-workspace", () => ({ PracticeWorkspace: (props: PracticeWorkspaceProps) => { harness.props = props; return <div>{props.enabled && props.scenario ? <aside aria-label="Practice shell"><h1>{props.scenario.name}</h1><p>{props.scenario.description}</p><button disabled={!props.hardware?.available} onClick={props.hardware?.onOpen}>Bước 2 · Xác định phần cứng</button><button>Nộp bài và nhận đánh giá</button></aside> : null}{props.children}</div>; } }));
+vi.mock("@/components/scenario/practice-workspace", () => ({ usePracticeLocked: () => false, PracticeWorkspace: (props: PracticeWorkspaceProps) => { harness.props = props; return <div>{props.enabled && props.scenario ? <aside aria-label="Practice shell"><h1>{props.scenario.name}</h1><p>{props.scenario.description}</p><button disabled={!props.hardware?.available} onClick={props.hardware?.onOpen}>Bước 2 · Xác định phần cứng</button><button>Nộp bài và nhận đánh giá</button></aside> : null}{props.children}</div>; } }));
 vi.mock("@/components/scenario/practice-ai-feedback-button", () => ({ PracticeAiFeedbackButton: () => <button>Legacy feedback</button> }));
 vi.mock("@/components/simulator/simulator-config-persistence", () => ({ SimulatorConfigPersistence: () => <span>Free profile persistence</span>, Dvor1150ConfigPersistenceBoundary: () => <span>Free profile persistence</span> }));
 vi.mock("@/components/scenario/scenario-session-persistence", () => ({ VorScenarioSessionPersistence: () => null, DmeScenarioSessionPersistence: () => null }));
@@ -32,7 +32,7 @@ describe("SELEX native practice registration", () => {
     expect(screen.queryByLabelText("Practice shell")).not.toBeInTheDocument();
     expect(await screen.findByLabelText("Practice shell")).toHaveTextContent(definition.description);
     expect(harness.props?.scenario).toMatchObject({ id: definition.id, name: definition.name, description: definition.description });
-    expect(harness.props?.attemptKey).toBe(variant.store.getState().scenario.startedAt);
+    expect(harness.props?.attemptKey).toBe(variant.id === "dvor-1150a" ? useVorPmdtStore.getState().scenario.runId : variant.store.getState().scenario.startedAt);
     expect(view.container.querySelector(".pmdt-classic-window")).toBe(nativeWindow);
     expect(screen.getAllByRole("button", { name: /Nộp bài/ })).toHaveLength(1);
     expect(screen.queryByRole("button", { name: "Legacy feedback" })).not.toBeInTheDocument();

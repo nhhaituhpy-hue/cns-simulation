@@ -1,6 +1,7 @@
 "use client";
 
 import type { VorIndicatorColor } from "@/lib/vor-types";
+import { isDvor1150aScenarioStudentEditable } from "@/lib/dvor1150a";
 import { resolveVorField, resolveVorStatus, useVorPmdtStore } from "@/stores/vor-pmdt-store";
 import { PmdtConfigControl } from "../pmdt-config-control";
 
@@ -28,6 +29,11 @@ const routingParameterKeys: Record<string, string> = {
 export function MonitorConfigGeneral() {
   const data = useVorPmdtStore((state) => state.data);
   const overrides = useVorPmdtStore((state) => state.overrides);
+  const draft = useVorPmdtStore((state) => state.configDraft);
+  const securityLevel = useVorPmdtStore((state) => state.securityLevel);
+  const local = useVorPmdtStore((state) => state.config.simulation.local);
+  const scenario = useVorPmdtStore((state) => state.scenario);
+  const setConfigValue = useVorPmdtStore((state) => state.setConfigValue);
 
   return (
     <section className="pmdt-monitor-routing" aria-label="Monitor configuration general">
@@ -56,11 +62,15 @@ export function MonitorConfigGeneral() {
             {data.monitorConfigGeneral.map((row, index) => {
               const prefix = `monitorConfigGeneral.${index}`;
               const displayParameter = row.parameter === "Ident Modulation" ? "Ident Mod %" : row.parameter;
-              const enabled = row.isCheckbox
-                ? Boolean(resolveVorField(row.checked ?? false, `${prefix}.checked`, overrides))
-                : true;
-              const checkboxStatus = resolveVorStatus(enabled ? "green" : "gray", `${prefix}.checked`, overrides);
               const routingKey = routingParameterKeys[row.parameter];
+              const route = draft.monitor.routing[routingKey as keyof typeof draft.monitor.routing];
+              const enabled = row.isCheckbox
+                ? Boolean(resolveVorField(route.primary || route.secondary, `${prefix}.checked`, overrides))
+                : true;
+              const routeIds = [`monitor.routing.${routingKey}.primary`, `monitor.routing.${routingKey}.secondary`];
+              const canToggle = securityLevel >= 3 && local && (!scenario.active
+                || routeIds.every(id => isDvor1150aScenarioStudentEditable(scenario.definition, id)));
+              const checkboxStatus = resolveVorStatus(enabled ? "green" : "gray", `${prefix}.checked`, overrides);
 
               return (
                 <tr key={row.parameter}>
@@ -72,7 +82,12 @@ export function MonitorConfigGeneral() {
                           aria-label={`${row.parameter} enabled`}
                           data-vor-field-id={`${prefix}.checked`}
                           checked={enabled}
-                          readOnly
+                          disabled={!canToggle}
+                          onChange={(event) => {
+                            // Enabling starts in Primary; disabling clears both
+                            // classes atomically through the normal draft guard.
+                            setConfigValue(routeIds[0], event.currentTarget.checked, event.currentTarget.checked ? [] : [routeIds[1]]);
+                          }}
                           className={accentClasses[checkboxStatus]}
                         />
                         <span>{displayParameter}</span>
@@ -84,6 +99,7 @@ export function MonitorConfigGeneral() {
                       displayFieldId={`${prefix}.primary`}
                       configFieldId={routingKey ? `monitor.routing.${routingKey}.primary` : "monitor.routing.azimuth.primary"}
                       type="boolean"
+                      booleanControl="radio"
                       disabled={!enabled}
                       className="accent-[#22c55e]"
                     />
@@ -93,6 +109,7 @@ export function MonitorConfigGeneral() {
                       displayFieldId={`${prefix}.secondary`}
                       configFieldId={routingKey ? `monitor.routing.${routingKey}.secondary` : "monitor.routing.azimuth.secondary"}
                       type="boolean"
+                      booleanControl="radio"
                       disabled={!enabled}
                       className="accent-[#22c55e]"
                     />

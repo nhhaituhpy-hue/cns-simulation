@@ -173,7 +173,7 @@ describe("SELEX guided authoring", () => {
   it("keeps a native-valid diagnosis-only scenario with all operational criteria unchecked", () => {
     for (const a of selexAuthoringAdapters.slice(0,2)) {
       const d=a.createDefault();
-      const changes=a.form(d).fields.filter(f=>f.id.startsWith("successCriteria.")).map(f=>({fieldId:f.id,value:false}));
+      const changes=a.form(d).fields.filter(f=>f.id.startsWith("successCriteria.")&&f.schema.type==="boolean").map(f=>({fieldId:f.id,value:false}));
       const nativeValid=structuredClone(d);
       Object.assign((nativeValid as {successCriteria:object}).successCriteria,Object.fromEntries(changes.map(c=>[c.fieldId.split(".")[1],false])));
       expect(parseScenarioParameters(a.moduleId,nativeValid)).not.toBeNull();

@@ -12,6 +12,9 @@ import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
 
 function buildEvidence(state: ReturnType<typeof useVorPmdtStore.getState>) {
   return {
+    runId: state.scenario.runId,
+    actionHistory: state.actionHistory,
+    evidenceStats: state.evidenceStats,
     visitedViewIds: state.attemptEvents.map((event) => event.viewId),
     acceptedActionControlIds: state.actionHistory
       .filter((event) => event.accepted && event.controlId)

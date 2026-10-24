@@ -23,7 +23,7 @@ it("materializes a non-preset DVOR 1150 setting without changing the baseline co
 
 describe.each([
   ["dvor-1150", "carrier-9960", "transmitters.tx1.nominal.outputPower", 37.4, 125],
-  ["dvor-1150a", "carrier-9960", "transmitters.tx1.nominal.outputPower", 13.7, 125],
+  ["dvor-1150a", "carrier-9960", "transmitters.tx1.nominal.outputPower", 13.7, 70],
   ["dme-1119a", "tx1-delay-drift", "txConfigNominal.rtcParameters.replyDelayOffset", 0.17, -0.6],
 ] as const)("%s concrete engine recovery", (moduleId, template, field, stimulus, correction) => {
   it("verifies initial native fault and recovery without modifying source configuration", () => {

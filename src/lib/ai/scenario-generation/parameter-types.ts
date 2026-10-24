@@ -14,6 +14,8 @@ export interface ScenarioParameterField {
   step?: number;
   options?: readonly string[];
   recovery: boolean;
+  effect?: "stored-only";
+  effectNotice?: string;
 }
 export interface ParameterAssignment { fieldId: string; value: ParameterValue }
 export interface ParameterCheck { id: string; passed: boolean; detail: string }

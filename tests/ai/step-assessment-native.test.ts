@@ -18,7 +18,7 @@ it("reads full configuration field IDs against real native Apply evidence withou
   const store = createVorPmdtStore();
   store.setState({ mode: "student", config: preview.config, configDraft: structuredClone(preview.config), derived: preview.snapshot, data: preview.snapshot.data,
     scenario: { active: true, definition, startedAt: null }, securityLevel: 3, loginDialogOpen: false });
-  store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 125);
+  store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 70);
   expect(store.getState().applyConfigChanges()).toBe(true);
   const state = store.getState();
   const result = assessAttemptSteps("dvor-1150a", definition, { checkpoint: { config: state.config }, actionHistory: state.actionHistory, evidenceStats: state.evidenceStats }, blueprint.rubric);
@@ -35,7 +35,7 @@ function compiledSelex(moduleId: "dvor-1150" | "dvor-1150a") {
   ], { status: "supported", moduleId, templateId: "carrier-9960", title: "Training output recovery", situation: "Simulated low output", cause: "Training setting",
     citations: [{ documentId: "synthetic", segmentLabel: "Test section", quote }],
     initial: [{ fieldId: "configuration.transmitters.tx1.nominal.outputPower", value: 37.4, citationIndexes: [0] }],
-    recovery: [{ fieldId: "configuration.transmitters.tx1.nominal.outputPower", value: 125, citationIndexes: [0] }, { fieldId: "startPolicy.startMonitorBypassed", value: false, citationIndexes: [0] }],
+    recovery: [{ fieldId: "configuration.transmitters.tx1.nominal.outputPower", value: moduleId === "dvor-1150a" ? 70 : 125, citationIndexes: [0] }, { fieldId: "startPolicy.startMonitorBypassed", value: false, citationIndexes: [0] }],
     diagnosisCitationIndexes: [0],
   });
 }
@@ -52,7 +52,7 @@ it("does not call distinct native Apply operations redundant in a compiled DVOR1
   }
   store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 100);
   expect(store.getState().applyConfigChanges()).toBe(true);
-  store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 125);
+  store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 70);
   expect(store.getState().applyConfigChanges()).toBe(true);
   store.getState().setConfigValue("simulation.integralMonitorBypass", false);
   const state = store.getState();

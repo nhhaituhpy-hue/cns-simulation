@@ -20,6 +20,7 @@ import { DvorConfigPanel } from "./dvor-config-panel";
 import { AboutPmdtDialog } from "./about-pmdt-dialog";
 import { PmdtLoginDialog } from "./pmdt-login-dialog";
 import { Dvor1150aScenarioParametersPanel } from "./dvor1150a-scenario-parameters";
+import { Dvor1150aMonitorClock } from "./dvor1150a-monitor-clock";
 import { Dvor1150aTrainingHud } from "./dvor1150a-training-hud";
 import { Dvor1150aHardwareStage } from "./dvor1150a-hardware-stage";
 import { evaluateDvor1150aScenario } from "@/lib/dvor1150a";
@@ -94,7 +95,7 @@ export function PmdtLayout({
       answer: state.answer, scenarioHardwareSelection: state.scenarioHardwareSelection, scenarioHardwareInspected: state.scenarioHardwareInspected,
       scenarioHardwareReasoning: state.scenarioHardwareReasoning, scenarioHardwareDispositionConfirmed: state.scenarioHardwareDispositionConfirmed,
       checkpoint: { config: state.config, configDraft: state.configDraft, configurationBackup: state.configurationBackup,
-        configDirty: state.configDirty, needBackup: state.needBackup, scenarioStage: state.scenarioStage, diagnosticState: state.diagnosticState } };
+        configDirty: state.configDirty, needBackup: state.needBackup, scenarioStage: state.scenarioStage, diagnosticState: state.diagnosticState, scenarioId:state.scenario.scenarioId, scenarioRunId:state.scenario.runId, scenarioStartedAt:state.scenario.startedAt } };
   });
   const externalLeadingPanel = mode === "student" ? leadingPanel : null;
   const externalSidePanel = mode === "student" ? sidePanel : null;
@@ -124,6 +125,9 @@ export function PmdtLayout({
         needBackup: state.needBackup,
         scenarioStage: state.scenarioStage,
         diagnosticState: state.diagnosticState,
+        scenarioId: state.scenario.scenarioId,
+        scenarioRunId: state.scenario.runId,
+        scenarioStartedAt: state.scenario.startedAt,
       },
     };
   };
@@ -137,6 +141,9 @@ export function PmdtLayout({
   const attemptEvents = useVorPmdtStore((state) => state.attemptEvents);
   const actionHistory = useVorPmdtStore((state) => state.actionHistory);
   const scenarioEvidence = {
+    runId: scenario.runId,
+    actionHistory,
+    evidenceStats: useVorPmdtStore.getState().evidenceStats,
     visitedViewIds: attemptEvents.map((event) => event.viewId),
     acceptedActionControlIds: actionHistory
       .filter((event) => event.accepted && event.controlId)
@@ -191,7 +198,7 @@ export function PmdtLayout({
       enabled={practiceRequested}
       moduleId="dvor-1150a"
       scenario={practiceReady && scenario.definition ? { id: scenario.definition.id, name: scenario.definition.name, description: scenario.definition.description, difficulty: scenario.definition.difficulty, membershipId: loadedPractice?.membershipId } : null}
-      attemptKey={scenario.startedAt}
+      attemptKey={scenario.runId ?? scenario.startedAt}
       getPayload={getPracticePayload}
       onRestart={() => scenario.definition ? startReviewScenario(scenario.definition) : false}
       hardware={{
@@ -200,6 +207,7 @@ export function PmdtLayout({
         onOpen: () => setScenarioStage("hardware"),
       }}
     ><div className={`pmdt-classic-viewport ${hasExternalPanels ? "pmdt-classic-viewport--with-external-inspector" : ""}`}>
+      <Dvor1150aMonitorClock />
       <Suspense fallback={null}>
         <ScenarioParametersRouteLoader
           moduleId="dvor-1150a"
@@ -235,7 +243,7 @@ export function PmdtLayout({
               moduleId="dvor-1150a"
               scenarioId={scenario.definition.id}
               scenarioName={scenario.definition.name}
-              attemptKey={scenario.startedAt}
+              attemptKey={scenario.runId ?? scenario.startedAt}
               onRestart={() => startReviewScenario(scenario.definition!)}
               getPayload={getPracticePayload}
             />

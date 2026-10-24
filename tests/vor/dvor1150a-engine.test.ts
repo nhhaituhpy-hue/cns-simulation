@@ -91,7 +91,8 @@ describe("DVOR 1150A configuration engine", () => {
     expect(single.data.rmsMonitorTransmitterStatus.enabledMonitors.monitor2).toBe(false);
     expect(restoredDual.monitors.mon2.enabled).toBe(true);
     expect(restoredDual.voting.secondaryHealthy).toBe(false);
-    expect(restoredDual.voting.systemHealthy).toBe(false);
+    // AND alarm voting needs the same alarm source from both CCAs (PDF90).
+    expect(restoredDual.voting.systemHealthy).toBe(true);
   });
 
   it("propagates transmitter output power changes into power data and monitor data", () => {
@@ -248,7 +249,8 @@ describe("DVOR 1150A configuration engine", () => {
 
     expect(snapshot.monitors.mon1.parameters.rfLevel.status).toBe("alarm");
     expect(snapshot.monitors.mon2.healthy).toBe(true);
-    expect(snapshot.voting.systemHealthy).toBe(true);
+    // OR alarm voting trips when either CCA reports the primary source.
+    expect(snapshot.voting.systemHealthy).toBe(false);
   });
 
   it("propagates monitor input attenuation into RF level", () => {
@@ -292,7 +294,7 @@ describe("DVOR 1150A configuration engine", () => {
     const baseline = buildDvor1150aSnapshot(config);
     const next = buildDvor1150aSnapshot(changed);
 
-    expect(next.data.vswrData[0]).toBeCloseTo(baseline.data.vswrData[0] + 0.5, 5);
+    expect(next.data.vswrData[0]).toBe(baseline.data.vswrData[0]);
     expect(next.groundChecks.tx1.stationErrors.some((value) => value !== 0)).toBe(true);
     expect(buildDvorGroundCheck(changed, "tx1").errorSpread).toBeGreaterThan(0);
   });

@@ -13,7 +13,7 @@ const proposal = {
   title: "Low transmitter output", situation: "TX1 output is low; restore the training setpoint.", cause: "Incorrect transmitter output setting (simulation hypothesis).",
   citations: [{ documentId: "manual", segmentLabel: "Section 4", quote: "Inspect monitor readings. Apply transmitter output settings and clear monitor bypass after adjustment." }],
   initial: [{ fieldId: "configuration.transmitters.tx1.nominal.outputPower", value: 13.7, citationIndexes: [0] }],
-  recovery: [{ fieldId: "configuration.transmitters.tx1.nominal.outputPower", value: 125, citationIndexes: [0] }, { fieldId: "startPolicy.startMonitorBypassed", value: false, citationIndexes: [0] }],
+  recovery: [{ fieldId: "configuration.transmitters.tx1.nominal.outputPower", value: 70, citationIndexes: [0] }, { fieldId: "startPolicy.startMonitorBypassed", value: false, citationIndexes: [0] }],
   diagnosisCitationIndexes: [0],
 };
 
@@ -32,7 +32,7 @@ it("compiles prose-derived assumptions into changed native parameters, an eviden
   expect(blueprint.assumptions.join(" ")).toMatch(/mô phỏng|simulation/i);
   expect(blueprint.assumptions.join(" ")).toContain("13.7");
   expect(blueprint.rubric.steps.some((step: { alternatives: { kind: string }[][] }) => step.alternatives.flat().some(m => m.kind === "technical-check"))).toBe(false);
-  expect(blueprint.rubric.steps.flatMap((step: { alternatives: unknown[][] }) => step.alternatives.flat())).toContainEqual({ kind: "parameter", fieldId: "transmitters.tx1.nominal.outputPower", value: 125 });
+  expect(blueprint.rubric.steps.flatMap((step: { alternatives: unknown[][] }) => step.alternatives.flat())).toContainEqual({ kind: "parameter", fieldId: "transmitters.tx1.nominal.outputPower", value: 70 });
   expect(blueprint.citations[0]).toMatchObject({ documentId: "manual", sha256: documents[0].sha256, sourceKind: "uploaded" });
   const repeated = api!.compileScenarioBlueprint({ moduleId: "dvor-1150a", description: "Train low transmitter output recovery", mode: "documents" }, documents, proposal);
   expect(repeated.rubric).toEqual(blueprint.rubric);

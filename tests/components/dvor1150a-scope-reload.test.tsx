@@ -1,0 +1,52 @@
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, expect, it } from "vitest";
+import { VorScenarioSessionPersistence, storageKey } from "@/components/scenario/scenario-session-persistence";
+import { Dvor1150aTrainingHud } from "@/components/vor/dvor1150a-training-hud";
+import { MonitorAlarmLimits } from "@/components/vor/screens/monitor-alarm-limits";
+import { TxConfigNominal } from "@/components/vor/screens/tx-config-nominal";
+import { createDefaultDvor1150aScenarioDefinition, evaluateDvor1150aScenario } from "@/lib/dvor1150a/scenario";
+import { useVorPmdtStore as store } from "@/stores/vor-pmdt-store";
+
+const context = { userId: "scope-user", sessionKey: "scope-session", revisionKey: "scope-revision" };
+beforeEach(() => { store.getState().reset(); localStorage.clear(); });
+afterEach(cleanup);
+it("reload preserves the original persisted run boundary and valid Apply without first-effect overwrite", () => {
+  const d = createDefaultDvor1150aScenarioDefinition();
+  d.startPolicy.startLocal = true;
+  d.successCriteria.configurationValues = [{ fieldId: "monitor.timers.shutdown", value: 2 }];
+  d.taskTargets = [{ fieldId: "monitor.timers.shutdown", requirement: "change-applied" }];
+  expect(store.getState().startReviewScenario(d, context)).toBe(true);
+  expect(store.getState().login("SEC3", "THREE")).toBe(true);
+  store.getState().setConfigValue("monitor.timers.shutdown", 2);
+  expect(store.getState().applyConfigChanges()).toBe(true);
+  const original = store.getState().scenario;
+  const view = render(<VorScenarioSessionPersistence />);
+  view.unmount();
+  act(() => { store.getState().reset(); expect(store.getState().startReviewScenario(d, context)).toBe(true); });
+  expect(store.getState().scenario.runId).not.toBe(original.runId);
+  render(<VorScenarioSessionPersistence />);
+  const state = store.getState();
+  expect(state.scenario.runId).toBe(original.runId);
+  expect(state.scenario.startedAt).toBe(original.startedAt);
+  expect(evaluateDvor1150aScenario(state.scenario, state.derived, state.config, { runId: state.scenario.runId, actionHistory: state.actionHistory, evidenceStats: state.evidenceStats }).solved).toBe(true);
+  const saved = JSON.parse(localStorage.getItem(storageKey("vor", context.userId, context.sessionKey, d.id, context.revisionKey))!);
+  expect(saved.checkpoint.scenarioRunId).toBe(original.runId);
+  render(<Dvor1150aTrainingHud />);
+  expect(screen.getByRole("status")).toHaveTextContent("SOLVED");
+});
+it.each(["nominal", "antenna"])("actual shared %s input stays locked when only the changed path is permitted", kind => {
+  const d = createDefaultDvor1150aScenarioDefinition();
+  d.startPolicy.startLocal = true;
+  d.startPolicy.startMonitorBypassed = true;
+  const field = kind === "nominal" ? "transmitters.tx1.nominal.outputPower" : "monitor.antennas.mon1.secondAntennaEnabled";
+  d.editPolicy = { mode: "restricted", allowedFieldIds: [field] };
+  if (kind === "nominal") { d.configuration.transmitters.tx1.nominal.outputPower = 60; d.configuration.transmitters.tx2.nominal.outputPower = 70; }
+  else d.configuration.monitor.antennas.mon2.secondAntennaEnabled = true;
+  expect(store.getState().startReviewScenario(d)).toBe(true);
+  expect(store.getState().login("SEC3", "THREE")).toBe(true);
+  render(kind === "nominal" ? <TxConfigNominal /> : <MonitorAlarmLimits />);
+  const input = kind === "nominal" ? document.querySelector<HTMLInputElement>('[data-vor-config-field-id="transmitters.tx1.nominal.outputPower"]')! : screen.getByLabelText("monitorAntennas.0.secondAntennaEnabled");
+  expect(input).toBeDisabled();
+  if (kind === "antenna") fireEvent.click(input);
+  expect(store.getState().configDirty).toBe(false);
+});

@@ -5,6 +5,7 @@ import type {
   DvorTransmitterId,
 } from "./config-types";
 import { DVOR_MONITOR_PARAMETERS as dvorMonitorParameters } from "./config-types";
+import { testGeneratorDvor1150aCalibration, defaultDvor1150aConfig } from "./defaults";
 
 export type DvorConfigFieldType = "number" | "text" | "boolean" | "select";
 
@@ -19,6 +20,8 @@ export interface DvorConfigFieldDefinition {
   max?: number;
   step?: number;
   options?: readonly string[];
+  effect?: "stored-only";
+  effectNotice?: string;
 }
 
 const txFields = (transmitter: DvorTransmitterId): DvorConfigFieldDefinition[] => [
@@ -143,6 +146,21 @@ const txFields = (transmitter: DvorTransmitterId): DvorConfigFieldDefinition[] =
     options: ["disabled", "external"],
     description: "Nguồn keyer input của transmitter.",
   },
+  ...([
+    ["keyerInputLevel", "Keyer Input Level", ["Active High/Open", "Active Low/Closed"]],
+    ["externalKeying", "External Keying output", ["Disabled", "Enabled", "Windowed"]],
+  ] as const).map(([key, label, options]) => ({
+    id: `transmitters.${transmitter}.nominal.${key}`, label,
+    section: transmitter === "tx1" ? "Transmitter 1" as const : "Transmitter 2" as const,
+    type: "select" as const, options,
+    description: "Thiết lập keyer theo Figure 3-50 / §9.7.13.1; chỉ trạng thái số, không dựng waveform/timing ngoài.",
+  })),
+  ...(["windowedKeyingInput", "selfKeyOnLoss", "shutdownOnLoss", "restartWhenResumed", "suppressOnShutdown"] as const).map(key => ({
+    id: `transmitters.${transmitter}.nominal.${key}`, label: key,
+    section: transmitter === "tx1" ? "Transmitter 1" as const : "Transmitter 2" as const,
+    type: "boolean" as const,
+    description: "Tùy chọn keyer có điều kiện theo Figure 3-50; không giả định mất/tái lập tín hiệu ngoài khi chưa có stimulus.",
+  })),
   {
     id: `transmitters.${transmitter}.offsets.azimuthAngleOffset`,
     label: "Azimuth angle offset",
@@ -363,10 +381,10 @@ const calibrationFields: DvorConfigFieldDefinition[] = (["mon1", "mon2"] as Dvor
   { id: `monitor.calibration.${monitor}.identModulationScale`, label: `${monitor.toUpperCase()} ident scale`, section: "Monitor calibration" as const, type: "number" as const, unit: "%", min: 0, max: 200, step: 0.1, description: "Scale hiệu chỉnh ident." },
   { id: `monitor.calibration.${monitor}.txPowerScale`, label: `${monitor.toUpperCase()} Tx power scale`, section: "Monitor calibration" as const, type: "number" as const, unit: "%", min: 0, max: 200, step: 0.1, description: "Scale hiệu chỉnh Tx power." },
   { id: `monitor.calibration.${monitor}.txFrequencyErrorOffset`, label: `${monitor.toUpperCase()} Tx frequency offset`, section: "Monitor calibration" as const, type: "number" as const, unit: "ppm", min: -100, max: 100, step: 0.1, description: "Offset hiệu chỉnh sai số tần số." },
-  { id: `monitor.calibration.${monitor}.txPowerOffset`, label: `${monitor.toUpperCase()} Tx power offset`, section: "Monitor calibration" as const, type: "number" as const, unit: "W", min: -200, max: 200, step: 0.1, description: "Offset hiệu chỉnh công suất Tx." },
+  { id: `monitor.calibration.${monitor}.txPowerOffset`, label: `${monitor.toUpperCase()} Tx power offset`, section: "Monitor calibration" as const, type: "number" as const, unit: "%", min: -200, max: 200, step: 0.1, effect: "stored-only" as const, effectNotice: "Chỉ lưu cấu hình: chưa xác minh cơ sở phần trăm hiệu chỉnh công suất trong manual.", description: "Figure 3-44 ghi %. Chưa mô phỏng hàm hiệu chỉnh vì chưa có cơ sở phần trăm được xác minh." },
   { id: `monitor.calibration.${monitor}.notchScale`, label: `${monitor.toUpperCase()} notch scale`, section: "Monitor calibration" as const, type: "number" as const, unit: "%", min: 0, max: 200, step: 0.1, description: "Scale hiệu chỉnh notch monitor." },
-  { id: `monitor.calibration.${monitor}.oddAntennaReturnLossOffset`, label: `${monitor.toUpperCase()} odd return loss offset`, section: "Monitor calibration" as const, type: "number" as const, unit: "dB", min: -100, max: 100, step: 0.1, description: "Offset anten odd trong calibration." },
-  { id: `monitor.calibration.${monitor}.evenAntennaReturnLossOffset`, label: `${monitor.toUpperCase()} even return loss offset`, section: "Monitor calibration" as const, type: "number" as const, unit: "dB", min: -100, max: 100, step: 0.1, description: "Offset anten even trong calibration." },
+  { id: `monitor.calibration.${monitor}.oddAntennaReturnLossOffset`, label: `${monitor.toUpperCase()} odd return loss offset`, section: "Monitor calibration" as const, type: "number" as const, unit: "dB", min: -100, max: 100, step: 0.1, effect: "stored-only" as const, effectNotice: "Chỉ lưu cấu hình: chưa xác minh dấu/hàm hiệu chuẩn return loss; không cộng dB vào VSWR.", description: "Figure 3-44 ghi dB. Không mô phỏng transfer/dấu PMDT chưa được xác minh." },
+  { id: `monitor.calibration.${monitor}.evenAntennaReturnLossOffset`, label: `${monitor.toUpperCase()} even return loss offset`, section: "Monitor calibration" as const, type: "number" as const, unit: "dB", min: -100, max: 100, step: 0.1, effect: "stored-only" as const, effectNotice: "Chỉ lưu cấu hình: chưa xác minh dấu/hàm hiệu chuẩn return loss; không cộng dB vào VSWR.", description: "Figure 3-44 ghi dB. Không mô phỏng transfer/dấu PMDT chưa được xác minh." },
 ]);
 
 const rawMeasurementFields: DvorConfigFieldDefinition[] = (["mon1", "mon2"] as DvorMonitorId[]).flatMap((monitor) => [
@@ -394,8 +412,8 @@ const rawMeasurementFields: DvorConfigFieldDefinition[] = (["mon1", "mon2"] as D
 ]);
 
 const routingFields: DvorConfigFieldDefinition[] = dvorMonitorParameters.flatMap((parameter) => [
-  { id: `monitor.routing.${parameter}.primary`, label: `${parameter} primary`, section: "Monitor routing" as const, type: "boolean" as const, description: "Định tuyến parameter vào primary monitor." },
-  { id: `monitor.routing.${parameter}.secondary`, label: `${parameter} secondary`, section: "Monitor routing" as const, type: "boolean" as const, description: "Định tuyến parameter vào secondary monitor." },
+  { id: `monitor.routing.${parameter}.primary`, label: `${parameter} primary`, section: "Monitor routing" as const, type: "boolean" as const, description: "Phân loại Executive Alarm là Primary (đỏ), không phải chọn Monitor 1." },
+  { id: `monitor.routing.${parameter}.secondary`, label: `${parameter} secondary`, section: "Monitor routing" as const, type: "boolean" as const, description: "Phân loại Executive Alarm là Secondary (vàng), không phải chọn Monitor 2." },
 ]);
 
 export const dvorConfigFieldCatalog: readonly DvorConfigFieldDefinition[] = [
@@ -409,7 +427,37 @@ export const dvorConfigFieldCatalog: readonly DvorConfigFieldDefinition[] = [
   ...alarmLimitFields,
   ...monitorControlFields,
   ...antennaFields,
+  ...([
+    ["azimuth", "Azimuth Angle", "°", 0, 360],
+    ["hz30Modulation", "30 Hz Modulation", "%", 0, 100],
+    ["hz9960Modulation", "9960 Hz Modulation", "%", 0, 100],
+    ["deviation", "Deviation", "Ratio", 0, 100],
+    ["identModulation", "Ident Modulation", "%", 0, 100],
+    ["audioModulation", "Audio Modulation", "%", 0, 100],
+    ["audioFrequency", "Audio Frequency", "Hz", 300, 3000],
+  ] as const).map(([key, label, unit, min, max]) => ({
+    id: `monitor.testGenerator.${key}`, label: `Test Generator ${label}`, section: "Monitor control" as const,
+    type: "number" as const, unit, min, max, step: 0.01,
+    ...((key === "audioModulation" || key === "audioFrequency") ? {
+      effect: "stored-only" as const,
+      effectNotice: "Chỉ lưu cấu hình: Audio Modulation và Audio Frequency chưa có kết quả detector/certification được xác minh; giá trị đã áp dụng không phải số đo hoặc bằng chứng khôi phục RF.",
+    } : {}),
+    description: "Paramètre du Test Generator indépendant de la transmission; §3.6.8.2.2.3. Bornes de saisie du simulateur, pas spécifications constructeur.",
+  })),
+  { id: "monitor.testGenerator.identStatus", label: "Test Generator Ident Control", section: "Monitor control", type: "select", options: ["Normal", "No Ident", "Continuous Ident"], effect: "stored-only", effectNotice: "Chỉ lưu cấu hình: Ident Control chưa có kết quả detector/certification được xác minh; giá trị đã áp dụng không phải số đo hoặc bằng chứng khôi phục RF.", description: "Thiết lập Ident Control của Test Generator trong §3.6.8.2.2.3 / Figure 3-41; chưa mô phỏng kết quả đo ident. Không suy từ lệnh setup ra trạng thái detector." },
   ...calibrationFields,
+  ...(["mon1", "mon2"] as const).flatMap(monitor =>
+    ["txPowerScale", "txPowerOffset", "txFrequencyErrorOffset"].map(key => {
+      const reference = calibrationFields.find(field => field.id === `monitor.calibration.${monitor}.${key}`)!;
+      return { ...reference, id: `monitor.standbyCalibration.${monitor}.${key}`, label: `${reference.label} Standby`, description: "Hiệu chỉnh đường đo máy phát trên tải; không đổi Integral/TX. Figure 3-44." };
+    }),
+  ),
+  ...(["mon1", "mon2"] as const).flatMap(monitor =>
+    Object.keys(testGeneratorDvor1150aCalibration).map(key => {
+      const reference = calibrationFields.find(field => field.id === `monitor.calibration.${monitor}.${key}`)!;
+      return { ...reference, id: `monitor.testGeneratorCalibration.${monitor}.${key}`, label: `${reference.label} Test Generator / Certification`, description: "Hiệu chỉnh riêng đường Test Generator/Certification; không đổi Integral. 571150A-0002E §3.6.8.2.4." };
+    }),
+  ),
   ...rawMeasurementFields,
   ...routingFields,
   { id: "simulation.connected", label: "RMS connected", section: "Simulation", type: "boolean", description: "Trạng thái liên kết RMS." },
@@ -422,7 +470,12 @@ export const dvorConfigFieldCatalog: readonly DvorConfigFieldDefinition[] = [
 export function getDvorConfigValue(config: Dvor1150aConfig, fieldId: string): DvorConfigValue {
   let current: unknown = config;
   for (const part of fieldId.split(".")) {
-    if (!current || typeof current !== "object" || !(part in current)) return null;
+    if (!current || typeof current !== "object" || !(part in current)) {
+      return (fieldId.startsWith("monitor.testGeneratorCalibration.") || fieldId.startsWith("monitor.testGenerator.") || fieldId.startsWith("monitor.standbyCalibration.")
+        || /^transmitters\.tx[12]\.nominal\.(keyerInputLevel|windowedKeyingInput|selfKeyOnLoss|shutdownOnLoss|restartWhenResumed|externalKeying|suppressOnShutdown)$/.test(fieldId)) && config !== defaultDvor1150aConfig
+        ? getDvorConfigValue(defaultDvor1150aConfig, fieldId)
+        : null;
+    }
     current = (current as Record<string, unknown>)[part];
   }
   return typeof current === "string" || typeof current === "number" || typeof current === "boolean" || current === null

@@ -78,6 +78,7 @@ function formatLimit(parameter: string, value: number): string {
 
 function MonitorIntegralSingle({ monitorNumber }: { monitorNumber: 1 | 2 }) {
   const data = useVorPmdtStore((state) => state.data);
+  const standby = useVorPmdtStore((state) => state.derived.standbyMonitors[monitorNumber === 1 ? "mon1" : "mon2"]);
   const overrides = useVorPmdtStore((state) => state.overrides);
   const monitorIndex = monitorNumber - 1;
   const antenna = data.monitorAntennas[monitorIndex];
@@ -211,6 +212,13 @@ function MonitorIntegralSingle({ monitorNumber }: { monitorNumber: 1 | 2 }) {
           ) : null}
         </tbody>
       </table>
+      <fieldset aria-label={`Monitor ${monitorNumber} standby data`}>
+        <legend>Standby{standby.transmitter ? ` · ${standby.transmitter.toUpperCase()} Load` : ""}</legend>
+        <table><tbody>
+          <tr><th scope="row">Tx Power</th><td data-vor-field-id={`standbyData.mon${monitorNumber}.txPower`}>{standby.transmitter ? standby.txPower.toFixed(1) : "---"}</td><td>Watts</td></tr>
+          <tr><th scope="row">Tx Frequency Error</th><td data-vor-field-id={`standbyData.mon${monitorNumber}.txFrequencyError`}>{standby.transmitter ? standby.txFrequencyError.toFixed(1) : "---"}</td><td>ppm</td></tr>
+        </tbody></table>
+      </fieldset>
     </section>
   );
 }

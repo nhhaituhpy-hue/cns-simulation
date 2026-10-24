@@ -4,6 +4,13 @@ import type {
   SimulatorConfigResponse,
   SupportedSimulatorConfigId,
 } from "./types";
+import { DVOR1150A_CONFIG_DTO_VERSION, SIMULATOR_CONFIG_DTO_HEADER } from "./wire";
+
+function consumerHeaders(simulatorId: SupportedSimulatorConfigId): Record<string, string> {
+  return simulatorId === "dvor-1150a"
+    ? { [SIMULATOR_CONFIG_DTO_HEADER]: DVOR1150A_CONFIG_DTO_VERSION }
+    : {};
+}
 
 async function readResponse<T>(response: Response): Promise<T> {
   const payload = (await response.json()) as T & { error?: string };
@@ -19,6 +26,7 @@ export function loadSimulatorConfig(
   return fetch(`/api/simulator-config/${encodeURIComponent(simulatorId)}`, {
     method: "GET",
     cache: "no-store",
+    headers: consumerHeaders(simulatorId),
   }).then((response) => readResponse<SimulatorConfigResponse>(response));
 }
 
@@ -27,7 +35,7 @@ export function initializeSimulatorConfig(
 ): Promise<SimulatorConfigResponse> {
   return fetch(`/api/simulator-config/${encodeURIComponent(simulatorId)}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...consumerHeaders(simulatorId) },
     body: JSON.stringify({}),
   }).then((response) => readResponse<SimulatorConfigResponse>(response));
 }
@@ -53,7 +61,7 @@ export function applySimulatorConfig({
 }): Promise<SimulatorConfigApplyResponse> {
   return fetch(`/api/simulator-config/${encodeURIComponent(simulatorId)}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...consumerHeaders(simulatorId) },
     body: JSON.stringify({
       action,
       config,

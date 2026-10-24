@@ -89,7 +89,21 @@ export function isScenarioEvidenceStats(value: unknown): value is ScenarioEviden
  * A compact, serializable audit event. Inputs are intentionally typed as JSON
  * values so passwords and DOM objects cannot accidentally enter an exam result.
  */
+export interface ScenarioEvidenceScope {
+  moduleId: string;
+  scenarioId: string;
+  runId: string;
+  startedAt: string;
+}
+
+export function isScenarioEvidenceScope(value: unknown): value is ScenarioEvidenceScope {
+  return isRecord(value) && ["moduleId", "scenarioId", "runId", "startedAt"].every(key => typeof value[key] === "string" && !!(value[key] as string).trim())
+    && Number.isFinite(Date.parse(value.startedAt as string));
+}
+
 export interface ScenarioActionEvent {
+  /** Optional for legacy histories; native producers stamp this at occurrence. */
+  scope?: ScenarioEvidenceScope;
   id: string;
   sequence: number;
   occurredAt: string;
@@ -149,6 +163,7 @@ export function isScenarioActionEvent(value: unknown): value is ScenarioActionEv
     || typeof value.label !== "string" || !value.label.trim()
     || typeof value.accepted !== "boolean"
   ) return false;
+  if (value.scope !== undefined && !isScenarioEvidenceScope(value.scope)) return false;
   if (value.controlId !== undefined && typeof value.controlId !== "string") return false;
   if (value.input !== undefined && !isScenarioEvidenceValue(value.input)) return false;
   if (value.reason !== undefined && typeof value.reason !== "string") return false;

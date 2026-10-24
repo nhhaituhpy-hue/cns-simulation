@@ -49,14 +49,15 @@ function AlertGroup({
 
 export function TxStatus({ txNumber = 1 }: { txNumber?: 1 | 2 }) {
   const data = useVorPmdtStore((state) => state.data);
+  const status = useVorPmdtStore((state) => state.derived.transmitterStatus[txNumber === 1 ? "tx1" : "tx2"]);
   return (
     <section className="pmdt-tx-status" aria-label={`Transmitter ${txNumber} status`}>
       <time className="pmdt-monitor-date">{data.timestamp}</time>
       <div className="pmdt-tx-status-grid">
-        <AlertGroup title="System Alerts" prefix="txSystemAlerts" alerts={data.txSystemAlerts} txNumber={txNumber} className="pmdt-tx-system-alerts" cpuShutdown />
-        <AlertGroup title="Carrier PA Alerts" prefix="txCarrierPaAlerts" alerts={data.txCarrierPaAlerts} txNumber={txNumber} className="pmdt-tx-carrier-alerts" />
-        <AlertGroup title="Synthesizer Alerts" prefix="txSynthesizerAlerts" alerts={data.txSynthesizerAlerts} txNumber={txNumber} className="pmdt-tx-synth-alerts" />
-        <AlertGroup title="Sideband PA Alerts" prefix="txSidebandPaAlerts" alerts={data.txSidebandPaAlerts} txNumber={txNumber} className="pmdt-tx-sideband-alerts" />
+        <AlertGroup title="System Alerts" prefix="txSystemAlerts" alerts={status.txSystemAlerts} txNumber={txNumber} className="pmdt-tx-system-alerts" cpuShutdown />
+        <AlertGroup title="Carrier PA Alerts" prefix="txCarrierPaAlerts" alerts={status.txCarrierPaAlerts} txNumber={txNumber} className="pmdt-tx-carrier-alerts" />
+        <AlertGroup title="Synthesizer Alerts" prefix="txSynthesizerAlerts" alerts={status.txSynthesizerAlerts} txNumber={txNumber} className="pmdt-tx-synth-alerts" />
+        <AlertGroup title="Sideband PA Alerts" prefix="txSidebandPaAlerts" alerts={status.txSidebandPaAlerts} txNumber={txNumber} className="pmdt-tx-sideband-alerts" />
       </div>
     </section>
   );

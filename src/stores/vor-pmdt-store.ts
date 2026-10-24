@@ -19,11 +19,14 @@ import {
   cloneDvor1150aConfig,
   createDefaultDvor1150aConfig,
   DVOR_MONITOR_IDS,
+  DVOR_TRANSMITTER_IDS,
   dvorConfigFieldCatalog,
   getDvorConfigValue,
   type Dvor1150aConfig,
   type Dvor1150aSnapshot,
   type DvorConfigValue,
+  projectDvor1150aKeyers,
+  type DvorKeyerObservations,
   type DvorTransmitterMode,
   type DvorTransmitterId,
 } from "@/lib/dvor1150a";
@@ -44,6 +47,7 @@ import {
 } from "@/lib/simulator-config/parameter-change";
 import { extractDvor1150aConfig } from "@/lib/simulator-config/dvor-1150a";
 import type {
+  ScenarioEvidenceScope,
   ScenarioParameterChange,
   ScenarioActionEvent,
   ScenarioEvidenceStats,
@@ -121,12 +125,15 @@ export interface VorPmdtStoreState {
   needBackup: boolean;
   parameterChangeLogs: SimulatorParameterChangeLogEntry[];
   lastCommand: string | null;
+  monitorElapsed: number;
   loginDialogOpen: boolean;
   authenticatedUserId: string | null;
   securityLevel: VorSecurityLevel;
   loginError: string | null;
   data: VorPmdtData;
   derived: Dvor1150aSnapshot;
+  /** Instructor stimulus; never persisted as a station setting/profile. */
+  keyerObservations?: DvorKeyerObservations;
   activeScreen: VorScreenId;
   activeView: VorViewId;
   activeMenuPath: string[];
@@ -159,6 +166,7 @@ export interface VorPmdtStoreActions {
   setConfigPanelOpen: (open: boolean) => void;
   setScenarioParametersOpen: (open: boolean) => void;
   setScenarioAuthoringEnabled: (enabled: boolean) => void;
+  setKeyerObservation: (transmitterId: DvorTransmitterId, observation?: DvorKeyerObservations[DvorTransmitterId]) => boolean;
   replaceScenarioDraft: (definition: Dvor1150aScenarioDefinition) => void;
   applyScenario: () => boolean;
   startReviewScenario: (definition: Dvor1150aScenarioDefinition, context?: VorReviewSessionContext) => boolean;
@@ -177,6 +185,8 @@ export interface VorPmdtStoreActions {
   logout: () => void;
   setConfigValue: (fieldId: string, value: DvorConfigValue, mirrorFieldIds?: readonly string[]) => void;
   applyConfigChanges: () => boolean;
+  /** Explicit deterministic clock used by the native PMDT ticker and tests. */
+  advanceMonitorTime: (seconds: number) => void;
   discardConfigChanges: () => void;
   resetConfigDraft: () => boolean;
   restoreDefaultConfig: () => boolean;
@@ -225,6 +235,9 @@ export interface VorPmdtStoreActions {
       needBackup: boolean;
       scenarioStage: DvorScenarioStage;
       diagnosticState: VorDiagnosticState;
+      scenarioId?: string;
+      scenarioRunId?: string;
+      scenarioStartedAt?: string | null;
     };
   }) => void;
   updateAnswer: (changes: Partial<VorStudentAnswer>) => void;
@@ -268,12 +281,14 @@ function initialState(): VorPmdtStoreState {
       state: "normal",
     })),
     lastCommand: null,
+    monitorElapsed: 0,
     loginDialogOpen: true,
     authenticatedUserId: null,
     securityLevel: 0,
     loginError: null,
     data: derived.data,
     derived,
+    keyerObservations: undefined,
     activeScreen: "home",
     activeView: "home",
     activeMenuPath: ["Home"],
@@ -335,25 +350,41 @@ function allEnabledMonitorsReportAlarm(snapshot: Dvor1150aSnapshot): boolean {
 function applyAutomaticMonitorTransfer(
   config: Dvor1150aConfig,
   mainTransmitter?: DvorTransmitterId | null,
+  qualified = true,
 ): AutomaticMonitorTransfer {
   const snapshot = buildDvor1150aSnapshot(config, undefined, mainTransmitter ?? undefined);
   const active = snapshot.voting.activeTransmitter;
   const noAction = { config, snapshot, target: null, action: null } as const;
 
   if (
-    !snapshot.voting.transferRequested
+    !qualified
+    || !snapshot.voting.transferRequested
     || !active
-    || config.station.transmitterConfig !== "Dual Transmitters"
-    || (mainTransmitter && active !== mainTransmitter)
   ) {
     return noAction;
   }
 
+  const shutdownStation = (): AutomaticMonitorTransfer => {
+    const shutdown = applyDvorConfigPatches(config, DVOR_TRANSMITTER_IDS.flatMap(id => [
+      { fieldId: `transmitters.${id}.enabled`, value: false },
+      { fieldId: `transmitters.${id}.onAir`, value: false },
+      { fieldId: `transmitters.${id}.load`, value: false },
+    ]));
+    return shutdown.ok ? {
+      config: shutdown.config,
+      snapshot: buildDvor1150aSnapshot(shutdown.config, undefined, mainTransmitter ?? active),
+      target: null,
+      action: "shutdown",
+    } : noAction;
+  };
+  // §3.6.8.1.2.1: no redundant equipment means station shutdown,
+  // not silently leaving an alarming transmitter on the antenna.
+  if (config.station.transmitterConfig !== "Dual Transmitters"
+    || (mainTransmitter && active !== mainTransmitter)) return shutdownStation();
+
   const target: DvorTransmitterId = active === "tx1" ? "tx2" : "tx1";
   const standby = config.transmitters[target];
-  if (!standby.enabled || standby.faults.disabled) {
-    return noAction;
-  }
+  if (!standby.enabled || standby.faults.disabled) return shutdownStation();
 
   const result = applyDvorConfigPatches(config, [
     { fieldId: `transmitters.${target}.onAir`, value: true },
@@ -365,7 +396,9 @@ function applyAutomaticMonitorTransfer(
     mainTransmitter ?? active,
   );
 
-  if (allEnabledMonitorsReportAlarm(transferredSnapshot)) {
+  // A pair of unrelated CCA alarms cannot override the engine's same-source
+  // voting after changeover. Preserve the existing both-CCA shutdown guard.
+  if (transferredSnapshot.voting.transferRequested && allEnabledMonitorsReportAlarm(transferredSnapshot)) {
     const shutdown = applyDvorConfigPatches(result.config, [
       { fieldId: "transmitters.tx1.enabled", value: false },
       { fieldId: "transmitters.tx1.onAir", value: false },
@@ -385,6 +418,35 @@ function applyAutomaticMonitorTransfer(
   }
 
   return { config: result.config, snapshot: transferredSnapshot, target, action: "transfer" };
+}
+
+function monitorProtectionDelay(config: Dvor1150aConfig, snapshot: Dvor1150aSnapshot): number {
+  const installed = config.station.monitorConfig === "Dual Monitors" ? DVOR_MONITOR_IDS : ["mon1"] as const;
+  let earliest = Number.POSITIVE_INFINITY;
+  for (const [parameter, route] of Object.entries(config.monitor.routing)) {
+    const selected = route.primary || (config.monitor.transfer === "on Any Alarm" && route.secondary);
+    if (!selected) continue;
+    const votes = installed.map(id => {
+      const monitor = snapshot.monitors[id];
+      const result = monitor.parameters[parameter as keyof typeof monitor.parameters];
+      const alarm = !monitor.enabled || result.executiveAlarm === true;
+      const delay = parameter === "identStatus" && monitor.enabled
+        ? result.value === "No Ident" ? config.monitor.timers.noIdent
+          : result.value === "Continuous Ident" ? config.monitor.timers.continuousIdent : 0
+        : 0;
+      return { alarm, delay };
+    });
+    // Qualification belongs to the voted source, never a different CCA's
+    // unrelated short-delay alarm. Secondary yellow retains its detector bit.
+    const qualified = config.monitor.votingLogic === "AND"
+      ? votes.every(vote => vote.alarm)
+      : votes.some(vote => vote.alarm);
+    if (!qualified) continue;
+    const delays = votes.filter(vote => vote.alarm).map(vote => vote.delay);
+    const delay = config.monitor.votingLogic === "AND" ? Math.max(...delays) : Math.min(...delays);
+    earliest = Math.min(earliest, delay);
+  }
+  return earliest + config.monitor.timers.shutdown;
 }
 
 export function resolveVorField<T extends VorEditableValue>(
@@ -470,7 +532,22 @@ export function createVorPmdtStore(
   const now = options.now ?? (() => new Date());
   const generateId = options.generateId ?? defaultId;
 
-  return create<VorPmdtStore>()((set, get) => {
+  return create<VorPmdtStore>()((setState, get) => {
+    // Decorate only digital keyer results on every native snapshot update.
+    // RF measurements, monitor protection and its clock remain untouched.
+    const set = (update: Partial<VorPmdtStore> | ((state: VorPmdtStore) => Partial<VorPmdtStore>)) => {
+      setState(state => {
+        const next = typeof update === "function" ? update(state) : update;
+        if (!next.derived && !("keyerObservations" in next)) return next;
+        const derived = next.derived ?? state.derived;
+        const observations = "keyerObservations" in next ? next.keyerObservations : state.keyerObservations;
+        return { ...next, derived: { ...derived, keyers: projectDvor1150aKeyers(
+          next.config ?? state.config, derived.mainTransmitter, observations,
+        ) } };
+      });
+    };
+    // Only lifecycle entrypoints mint proof scope, never a generic setState payload.
+    let nativeEvidenceScope: ScenarioEvidenceScope | undefined;
     const recordAction = (input: {
       actor?: ScenarioActionEvent["actor"];
       kind: ScenarioActionEvent["kind"];
@@ -494,6 +571,7 @@ export function createVorPmdtStore(
       if (draftOnly) return;
       const sequence = state.evidenceStats.totalEventCount + 1;
       const event: ScenarioActionEvent = {
+        ...(nativeEvidenceScope ? { scope: { ...nativeEvidenceScope } } : {}),
         id: generateId(),
         sequence,
         occurredAt: now().toISOString(),
@@ -545,18 +623,26 @@ export function createVorPmdtStore(
       const state = get();
       const config = configurationForDvor1150aScenario(definition, state.config);
       const derived = buildDvor1150aSnapshot(config);
+      nativeEvidenceScope = { moduleId: "dvor-1150a", scenarioId: definition.id, runId: defaultId(), startedAt: startedAt ?? now().toISOString() };
       set({
         config,
         configDraft: cloneDvor1150aConfig(config),
         configurationBackup: cloneDvor1150aConfig(config),
         configDirty: false,
         needBackup: false,
+        monitorElapsed: 0,
+        keyerObservations: undefined,
+        actionHistory: [],
+        attemptEvents: [],
+        evidenceStats: createScenarioEvidenceStats(),
         data: derived.data,
         derived,
         scenario: {
           active: true,
           definition: structuredClone(definition),
-          startedAt: startedAt ?? now().toISOString(),
+          scenarioId: nativeEvidenceScope.scenarioId,
+          runId: nativeEvidenceScope.runId,
+          startedAt: nativeEvidenceScope.startedAt,
         },
         scenarioDraft: structuredClone(definition),
         scenarioStage: "pmdt",
@@ -579,6 +665,7 @@ export function createVorPmdtStore(
       ...initialState(),
 
       initializeSession: (initialization) => {
+        nativeEvidenceScope = undefined;
         const config = createDefaultDvor1150aConfig();
         const derived = buildDvor1150aSnapshot(config);
         set({
@@ -624,6 +711,29 @@ export function createVorPmdtStore(
         scenarioAuthoringEnabled: enabled,
         scenarioParametersOpen: enabled ? state.scenarioParametersOpen : false,
       })),
+
+      setKeyerObservation: (transmitterId, observation) => {
+        const state = get();
+        if (!state.scenarioAuthoringEnabled || state.mode === "student"
+          || !["tx1", "tx2"].includes(transmitterId)) return false;
+        if (observation !== undefined) {
+          if (!observation || typeof observation !== "object" || Array.isArray(observation)
+            || Object.keys(observation).some(key => !["externalSignal", "shutdownCause"].includes(key))) return false;
+          const { externalSignal: signal, shutdownCause } = observation;
+          if (shutdownCause !== undefined && shutdownCause !== "keying-loss" && shutdownCause !== "other") return false;
+          if (signal !== undefined && (!signal || typeof signal !== "object" || Array.isArray(signal)
+            || (signal.state === "lost" ? Object.keys(signal).some(key => key !== "state")
+              : !["present", "resumed"].includes(signal.state)
+                || !["high/open", "low/closed"].includes(signal.level)
+                || Object.keys(signal).some(key => !["state", "level", "decodedIdentCode"].includes(key))
+                || (signal.decodedIdentCode !== undefined && (typeof signal.decodedIdentCode !== "string" || !/^[A-Za-z0-9]{2,4}$/.test(signal.decodedIdentCode)))))) return false;
+        }
+        const keyerObservations = { ...state.keyerObservations };
+        if (observation === undefined) delete keyerObservations[transmitterId];
+        else keyerObservations[transmitterId] = structuredClone(observation);
+        set({ keyerObservations });
+        return true;
+      },
 
       replaceScenarioDraft: (definition) => {
         if (!get().scenarioAuthoringEnabled) {
@@ -803,7 +913,7 @@ export function createVorPmdtStore(
         return applyScenarioBaseline(
           state.scenario.definition,
           `Scenario restored: ${state.scenario.definition.name}`,
-          state.scenario.startedAt,
+          null,
         );
       },
 
@@ -930,7 +1040,8 @@ export function createVorPmdtStore(
             return;
           }
           const automaticTransfer = shouldEvaluateAutomaticTransfer
-            ? applyAutomaticMonitorTransfer(result.config, state.derived.mainTransmitter)
+            ? applyAutomaticMonitorTransfer(result.config, state.derived.mainTransmitter,
+              0 >= monitorProtectionDelay(result.config, buildDvor1150aSnapshot(result.config)))
             : null;
           const nextConfig = automaticTransfer?.config ?? result.config;
           const nextSnapshot = automaticTransfer?.snapshot
@@ -963,6 +1074,7 @@ export function createVorPmdtStore(
             config: nextConfig,
             configDraft: nextDraft,
             configDirty: state.configDirty,
+            monitorElapsed: 0,
             data: nextSnapshot.data,
             derived: nextSnapshot,
             ...(automaticTransfer?.action === "transfer" && automaticTransfer.target
@@ -1045,7 +1157,8 @@ export function createVorPmdtStore(
         }
         const automaticTransfer = result.config.simulation.integralMonitorBypass
           ? null
-          : applyAutomaticMonitorTransfer(result.config, state.derived.mainTransmitter);
+          : applyAutomaticMonitorTransfer(result.config, state.derived.mainTransmitter,
+            monitorProtectionDelay(result.config, result.snapshot) === 0);
         const nextConfig = automaticTransfer?.config ?? result.config;
         const nextSnapshot = automaticTransfer?.snapshot
           ?? buildDvor1150aSnapshot(result.config, undefined, state.derived.mainTransmitter ?? undefined);
@@ -1053,6 +1166,7 @@ export function createVorPmdtStore(
           config: nextConfig,
           configDraft: cloneDvor1150aConfig(nextConfig),
           configDirty: false,
+          monitorElapsed: 0,
           // A scenario is session-only and must never create a profile backup.
           needBackup: state.scenario.active ? false : true,
           data: nextSnapshot.data,
@@ -1079,6 +1193,28 @@ export function createVorPmdtStore(
           recordAction({ actor: "system", kind: "system", controlId: "automatic-monitor-transfer", label: automaticTransfer.action === "transfer" && automaticTransfer.target ? `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}` : "Automatic monitor shutdown", accepted: true, reason: "PMDT automatic protection response.", before: vorEvidenceSnapshot(get()) });
         }
         return true;
+      },
+
+      advanceMonitorTime: (seconds) => {
+        if (!Number.isFinite(seconds) || seconds <= 0) return;
+        const state = get();
+        if (state.config.simulation.integralMonitorBypass || !state.derived.voting.transferRequested) {
+          if (state.monitorElapsed !== 0) set({ monitorElapsed: 0 });
+          return;
+        }
+        const monitorElapsed = state.monitorElapsed + seconds;
+        const qualified = monitorElapsed + 1e-9 >= monitorProtectionDelay(state.config, state.derived);
+        const automatic = applyAutomaticMonitorTransfer(state.config, state.derived.mainTransmitter, qualified);
+        if (!automatic.action) {
+          set({ monitorElapsed });
+          return;
+        }
+        const routePatches = (["tx1", "tx2"] as const).flatMap(id => (["enabled", "onAir", "load"] as const).map(key => ({ fieldId: `transmitters.${id}.${key}`, value: automatic.config.transmitters[id][key] })));
+        const draft = applyDvorConfigPatches(state.configDraft, routePatches);
+        const before = vorEvidenceSnapshot(state);
+        set({ config: automatic.config, configDraft: draft.ok ? draft.config : cloneDvor1150aConfig(automatic.config), derived: automatic.snapshot, data: automatic.snapshot.data,
+          monitorElapsed: 0, lastCommand: automatic.action === "transfer" ? `Automatic monitor transfer to ${automatic.target?.toUpperCase()}` : "Automatic monitor shutdown: both transmitters off" });
+        recordAction({ actor: "system", kind: "system", controlId: "automatic-monitor-transfer", label: automatic.action === "transfer" ? "Automatic monitor transfer" : "Automatic monitor shutdown", accepted: true, before });
       },
 
       discardConfigChanges: () => {
@@ -1167,6 +1303,7 @@ export function createVorPmdtStore(
           configDraft: cloneDvor1150aConfig(nextConfig),
           configurationBackup: nextBackupConfig,
           configDirty: false,
+          monitorElapsed: 0,
           needBackup: JSON.stringify(extractDvor1150aConfig(nextConfig)) !== JSON.stringify(extractDvor1150aConfig(nextBackupConfig)),
           parameterChangeLogs: parameterChangeLogs ? [...parameterChangeLogs] : get().parameterChangeLogs,
           data: derived.data,
@@ -1351,10 +1488,18 @@ export function createVorPmdtStore(
       restoreScenarioEvidence: (evidence) => {
         const state = get();
         if (!state.scenario.active) return;
+        const checkpoint = evidence.checkpoint;
+        const savedScope = checkpoint && typeof checkpoint.scenarioId === "string" && checkpoint.scenarioId === state.scenario.scenarioId
+          && typeof checkpoint.scenarioRunId === "string" && !!checkpoint.scenarioRunId.trim()
+          && typeof checkpoint.scenarioStartedAt === "string" && Number.isFinite(Date.parse(checkpoint.scenarioStartedAt))
+          ? { moduleId: "dvor-1150a", scenarioId: checkpoint.scenarioId, runId: checkpoint.scenarioRunId, startedAt: checkpoint.scenarioStartedAt } : undefined;
+        if (checkpoint?.scenarioId !== undefined && checkpoint.scenarioId !== state.scenario.scenarioId) return;
+        nativeEvidenceScope = savedScope;
         const checkpointSnapshot = evidence.checkpoint
           ? buildDvor1150aSnapshot(evidence.checkpoint.config)
           : null;
         set({
+          scenario: { ...state.scenario, scenarioId: state.scenario.scenarioId, runId: savedScope?.runId, startedAt: savedScope?.startedAt ?? null },
           actionHistory: [...evidence.actionHistory].slice(0, 500),
           evidenceStats: evidence.evidenceStats ?? createScenarioEvidenceStats(evidence.actionHistory),
           attemptEvents: [...evidence.attemptEvents],
@@ -1382,7 +1527,7 @@ export function createVorPmdtStore(
       updateAnswer: (changes) =>
         set((state) => ({ answer: { ...state.answer, ...changes } })),
 
-      reset: () => set(initialState()),
+      reset: () => { nativeEvidenceScope = undefined; set(initialState()); },
     };
   });
 }

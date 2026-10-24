@@ -90,7 +90,9 @@ function SessionStorageStatus({ message }: { message: string | null }) {
 
 export function VorScenarioSessionPersistence() {
   const active = useVorPmdtStore((state) => state.scenario.active && state.mode === "student");
-  const scenarioId = useVorPmdtStore((state) => state.scenario.definition?.id ?? state.scenarioId ?? "");
+  const scenarioRunId = useVorPmdtStore((state) => state.scenario.runId);
+  const scenarioStartedAt = useVorPmdtStore((state) => state.scenario.startedAt);
+  const scenarioId = useVorPmdtStore((state) => state.scenario.scenarioId ?? state.scenario.definition?.id ?? state.scenarioId ?? "");
   const sessionKey = useVorPmdtStore((state) => state.sessionKey ?? state.scenarioId ?? scenarioId);
   const scenarioRevisionKey = useVorPmdtStore((state) => state.scenarioRevisionKey);
   const userId = useVorPmdtStore((state) => state.userId);
@@ -130,18 +132,22 @@ export function VorScenarioSessionPersistence() {
       needBackup: boolean;
       scenarioStage: DvorScenarioStage;
       diagnosticState: VorDiagnosticState;
+      scenarioId?: string;
+      scenarioRunId?: string;
+      scenarioStartedAt?: string | null;
     }>(raw);
     if (raw && !stored) {
       setStorageError("Phiên lưu cục bộ không hợp lệ hoặc khác phiên; hệ thống không khôi phục để tránh lẫn dữ liệu.");
       return;
     }
-    if (!stored || stored.userId !== userId || stored.sessionKey !== sessionKey || stored.revisionKey !== revisionKey) return;
+    if (!stored || stored.scenarioId !== scenarioId || stored.userId !== userId || stored.sessionKey !== sessionKey || stored.revisionKey !== revisionKey) return;
     setStorageError(null);
     restoreScenarioEvidence(stored);
-  }, [key, restoreScenarioEvidence, revisionKey, sessionKey, userId]);
+  }, [key, restoreScenarioEvidence, revisionKey, scenarioId, sessionKey, userId]);
 
   useEffect(() => {
     if (!key || restoredKey.current !== key) return;
+    if (useVorPmdtStore.getState().scenario.runId !== scenarioRunId) return;
     const storage = browserStorage();
     if (!storage) {
       setStorageError("Không thể lưu phiên làm bài: trình duyệt không cho phép local storage.");
@@ -155,6 +161,9 @@ export function VorScenarioSessionPersistence() {
       needBackup: boolean;
       scenarioStage: DvorScenarioStage;
       diagnosticState: VorDiagnosticState;
+      scenarioId?: string;
+      scenarioRunId?: string;
+      scenarioStartedAt?: string | null;
     }> = {
       version: STORAGE_VERSION,
       scenarioId,
@@ -177,6 +186,9 @@ export function VorScenarioSessionPersistence() {
         needBackup,
         scenarioStage,
         diagnosticState: structuredClone(diagnosticState),
+        scenarioId,
+        scenarioRunId,
+        scenarioStartedAt,
       },
       savedAt: new Date().toISOString(),
     };
@@ -186,7 +198,7 @@ export function VorScenarioSessionPersistence() {
     } catch {
       setStorageError("Không thể lưu phiên làm bài: bộ nhớ trình duyệt đã đầy hoặc bị chặn. Bài vẫn chạy nhưng reload có thể mất tiến độ.");
     }
-  }, [actionHistory, answer, config, configDirty, configDraft, configurationBackup, diagnosticState, evidenceStats, key, needBackup, revisionKey, scenarioHardwareDispositionConfirmed, scenarioHardwareInspected, scenarioHardwareReasoning, scenarioHardwareSelection, scenarioId, scenarioStage, sessionKey, userId, attemptEvents]);
+  }, [actionHistory, answer, config, configDirty, configDraft, configurationBackup, diagnosticState, evidenceStats, key, needBackup, revisionKey, scenarioHardwareDispositionConfirmed, scenarioHardwareInspected, scenarioHardwareReasoning, scenarioHardwareSelection, scenarioId, scenarioRunId, scenarioStartedAt, scenarioStage, sessionKey, userId, attemptEvents]);
 
   return <SessionStorageStatus message={storageError} />;
 }

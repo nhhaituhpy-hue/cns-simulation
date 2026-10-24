@@ -30,7 +30,8 @@ import {
   type DvorMonitorResult,
   type DvorTransmitterId,
 } from "./config-types";
-import { createDefaultDvor1150aConfig, testGeneratorDvor1150aCalibration } from "./defaults";
+import { createDefaultDvor1150aConfig, testGeneratorDvor1150aCalibration, defaultDvorTestGenerator } from "./defaults";
+import { projectDvorKeyer } from "./keyer";
 
 const monitorParameterLabels: Record<DvorMonitorParameter, string> = {
   azimuth: "Azimuth",
@@ -306,7 +307,6 @@ function sourceMeasurement(
 ): Record<DvorMonitorParameter, number | string | number[]> {
   const raw = config.monitor.rawMeasurements[monitorId];
   const antenna = config.monitor.antennas[monitorId];
-  const calibration = config.monitor.calibration[monitorId];
   const txAzimuthDelta = transmitter ? transmitter.effectiveAzimuthIndex - 5 : 0;
   const referenceDelta = transmitter ? transmitter.effectiveReferenceModulation - 27.72 : 0;
   const identDelta = transmitter ? transmitter.effectiveIdentModulation - 8 : 0;
@@ -365,12 +365,10 @@ function sourceMeasurement(
       : 0,
     txFrequencyError: transmitter?.id ? config.transmitters[transmitter.id].frequencyErrorPpm : raw.txFrequencyError,
     notchMonitor: raw.notchMonitor,
-    sidebandVswr: raw.sidebandVswr.map((value, index) => {
-      const returnLossOffset = index % 2 === 0
-        ? calibration.oddAntennaReturnLossOffset
-        : calibration.evenAntennaReturnLossOffset;
-      return clamp(value + sidebandVswrDelta + returnLossOffset, 1, 10);
-    }),
+    // Figure 3-44 supplies dB units but no PMDT calibration sign/transfer.
+    // Keep odd/even return-loss settings stored, not an invented ratio or RF
+    // correction. Native UI explicitly marks this unsupported effect.
+    sidebandVswr: raw.sidebandVswr.map(value => clamp(value + sidebandVswrDelta, 1, 10)),
   };
 }
 
@@ -389,7 +387,9 @@ function calibratedMeasurement(
     identModulation: Number(source.identModulation) * calibration.identModulationScale / 100,
     identStatus: source.identStatus,
     identCode: source.identCode,
-    txPower: Number(source.txPower) * calibration.txPowerScale / 100 + calibration.txPowerOffset,
+    // Tx Power Offset is labelled %, not W (Figure 3-44). Its percentage
+    // basis is not documented here, so it is stored-only until validated.
+    txPower: Number(source.txPower) * calibration.txPowerScale / 100,
     txFrequencyError: Number(source.txFrequencyError) + calibration.txFrequencyErrorOffset,
     notchMonitor: Number(source.notchMonitor) * calibration.notchScale / 100,
     sidebandVswr: [...(source.sidebandVswr as number[])],
@@ -474,14 +474,25 @@ function monitorResult(
     indicator: dvorAlarmToIndicator(sidebandState),
   };
 
-  const routedParameters = DVOR_MONITOR_PARAMETERS.filter(
-    (parameter) => monitorId === "mon1"
-      ? config.monitor.routing[parameter].primary
-      : config.monitor.routing[parameter].secondary,
-  );
-  const healthy = enabled && routedParameters.every((parameter) => statuses[parameter].status !== "alarm");
+  // Figure 3-34 Primary/Secondary classifies alarm severity, not MON1/MON2.
+  // A stored legacy both=true keeps Primary precedence; neither disables the
+  // optional executive route while preserving the measured number.
+  const primaryAlarm = enabled && DVOR_MONITOR_PARAMETERS.some(parameter =>
+    config.monitor.routing[parameter].primary && statuses[parameter].status === "alarm");
+  const secondaryAlarm = enabled && DVOR_MONITOR_PARAMETERS.some(parameter =>
+    !config.monitor.routing[parameter].primary && config.monitor.routing[parameter].secondary
+    && (statuses[parameter].status === "alarm" || (parameter === "notchMonitor" && notchAlarmState === "alarm")));
+  for (const parameter of DVOR_MONITOR_PARAMETERS) {
+    const route = config.monitor.routing[parameter];
+    const executiveAlarm = parameter === "notchMonitor" ? notchAlarmState === "alarm" : statuses[parameter].status === "alarm";
+    statuses[parameter] = { ...statuses[parameter], executiveAlarm };
+    if (!route.primary && route.secondary && statuses[parameter].status === "alarm") {
+      statuses[parameter] = { ...statuses[parameter], status: "warning", indicator: "yellow" };
+    }
+  }
+  const healthy = enabled && !primaryAlarm;
 
-  return { id: monitorId, enabled, healthy, parameters: statuses, sidebandVswr: sidebandValues };
+  return { id: monitorId, enabled, healthy, primaryAlarm, secondaryAlarm, parameters: statuses, sidebandVswr: sidebandValues };
 }
 
 function toParameterStatus(indicator: VorIndicatorColor): VorParameterStatus {
@@ -546,7 +557,8 @@ function buildAlarmLimits(config: Dvor1150aConfig): VorAlarmLimitRow[] {
 
 function buildMonitorOffsets(config: Dvor1150aConfig, monitorId: DvorMonitorId): VorMonitorOffsetRow[] {
   const calibration = config.monitor.calibration[monitorId];
-  const testGen = testGeneratorDvor1150aCalibration;
+  const testGen = config.monitor.testGeneratorCalibration?.[monitorId] ?? testGeneratorDvor1150aCalibration;
+  const standby = config.monitor.standbyCalibration?.[monitorId] ?? { txPowerScale: 100, txPowerOffset: 0, txFrequencyErrorOffset: 0 };
   return [
     { parameter: "Azimuth Angle Offset", integral: calibration.azimuthOffset, standby: null, testGen: testGen.azimuthOffset, unit: "°" },
     { parameter: "30 Hz Modulation Scale", integral: calibration.hz30ModulationScale, standby: null, testGen: testGen.hz30ModulationScale, unit: "%" },
@@ -554,9 +566,9 @@ function buildMonitorOffsets(config: Dvor1150aConfig, monitorId: DvorMonitorId):
     { parameter: "9960 Hz Deviation Scale", integral: calibration.deviationScale, standby: null, testGen: testGen.deviationScale, unit: "%" },
     { parameter: "RF Level Offset", integral: calibration.rfLevelOffset, standby: null, testGen: null, unit: "dB" },
     { parameter: "Ident Modulation Scale", integral: calibration.identModulationScale, standby: null, testGen: testGen.identModulationScale, unit: "%" },
-    { parameter: "Tx Power Scale", integral: calibration.txPowerScale, standby: 100, testGen: testGen.txPowerScale, unit: "%" },
-    { parameter: "Tx Power Offset", integral: calibration.txPowerOffset, standby: 0, testGen: testGen.txPowerOffset, unit: "%" },
-    { parameter: "Tx Frequency Error Offset", integral: calibration.txFrequencyErrorOffset, standby: 0, testGen: testGen.txFrequencyErrorOffset, unit: "ppm" },
+    { parameter: "Tx Power Scale", integral: calibration.txPowerScale, standby: standby.txPowerScale, testGen: null, unit: "%" },
+    { parameter: "Tx Power Offset", integral: calibration.txPowerOffset, standby: standby.txPowerOffset, testGen: null, unit: "%" },
+    { parameter: "Tx Frequency Error Offset", integral: calibration.txFrequencyErrorOffset, standby: standby.txFrequencyErrorOffset, testGen: null, unit: "ppm" },
     { parameter: "Notch Monitor Scale", integral: calibration.notchScale, standby: null, testGen: null, unit: "" },
     { parameter: "Odd Antenna Sideband Return Loss Offset", integral: calibration.oddAntennaReturnLossOffset, standby: null, testGen: null, unit: "dB" },
     { parameter: "Even Antenna Sideband Return Loss Offset", integral: calibration.evenAntennaReturnLossOffset, standby: null, testGen: null, unit: "dB" },
@@ -565,6 +577,7 @@ function buildMonitorOffsets(config: Dvor1150aConfig, monitorId: DvorMonitorId):
 
 function buildTxNominal(config: Dvor1150aConfig, txId: DvorTransmitterId): VorTxConfigNominal {
   const tx = config.transmitters[txId];
+  const keyer = projectDvorKeyer(tx.nominal, { role: "main" }).configuration;
   return {
     audioGenParams: {
       azimuthIndex: tx.nominal.azimuthIndex,
@@ -577,13 +590,13 @@ function buildTxNominal(config: Dvor1150aConfig, txId: DvorTransmitterId): VorTx
     ident: { mainIdentCode: tx.nominal.mainIdentCode, standbyIdentCode: tx.nominal.standbyIdentCode },
     keyerInput: {
       mode: tx.nominal.keyerMode,
-      keyerInputLevel: "Active Low/Closed",
-      windowedKeyingInput: false,
-      selfKeyOnLoss: false,
-      shutdownOnLoss: false,
-      restartWhenResumed: false,
+      keyerInputLevel: keyer.keyerInputLevel,
+      windowedKeyingInput: keyer.windowedKeyingInput,
+      selfKeyOnLoss: keyer.selfKeyOnLoss,
+      shutdownOnLoss: keyer.shutdownOnLoss,
+      restartWhenResumed: keyer.restartWhenResumed,
     },
-    keyerOutput: { externalKeying: "Disabled", suppressOnShutdown: false },
+    keyerOutput: { externalKeying: keyer.externalKeying, suppressOnShutdown: keyer.suppressOnShutdown },
   };
 }
 
@@ -621,12 +634,14 @@ function buildTxOffsets(config: Dvor1150aConfig): VorTxDualValueRow[] {
 
 function buildTxPower(
   transmitters: Record<DvorTransmitterId, DvorEffectiveTransmitter>,
-  monitors: Record<DvorMonitorId, DvorMonitorResult>,
 ): VorTxDualValueRow[] {
-  const monitorTxPower = monitors.mon1.parameters.txPower.value;
-  const measuredCarrier = typeof monitorTxPower === "number" ? monitorTxPower : 0;
+  // RF Monitor assembly calibration (§9.7.12.2g) is separate from either
+  // monitor CCA's Integral calibration. Retain the existing TX reference.
+  const measuredCarrier = (tx: DvorTransmitterId) => transmitters[tx].onAir
+    ? 70.8 * transmitters[tx].effectiveOutputPower / (70 * 84 / 100)
+    : 0;
   return [
-    { parameter: "Carrier", tx1: transmitters.tx1.onAir ? measuredCarrier : 0, tx2: transmitters.tx2.onAir ? measuredCarrier : 0, unit: "Watts" },
+    { parameter: "Carrier", tx1: measuredCarrier("tx1"), tx2: measuredCarrier("tx2"), unit: "Watts" },
     ...[0, 1, 2, 3].map((index) => ({
       parameter: `Sideband #${index + 1}`,
       tx1: transmitters.tx1.sidebandPower[index],
@@ -724,8 +739,9 @@ function applyActiveTransmitterAlerts(
   config: Dvor1150aConfig,
   transmitters: Record<DvorTransmitterId, DvorEffectiveTransmitter>,
   groundChecks: Record<DvorTransmitterId, DvorGroundCheckResult>,
+  transmitterId?: DvorTransmitterId,
 ): void {
-  const activeId = chooseActiveTransmitter(transmitters) ?? "tx1";
+  const activeId = transmitterId ?? chooseActiveTransmitter(transmitters) ?? "tx1";
   const tx = config.transmitters[activeId];
   const transmitter = transmitters[activeId];
   const groundCheck = groundChecks[activeId];
@@ -901,10 +917,26 @@ export function buildDvorGroundCheck(
   return { stationErrors, errorSpread, quadrantal, octantal, bias };
 }
 
+export function projectDvor1150aKeyers(
+  config: Dvor1150aConfig,
+  mainId: DvorTransmitterId | null,
+  observations?: import("./config-types").DvorKeyerObservations,
+): Dvor1150aSnapshot["keyers"] {
+  return Object.fromEntries(DVOR_TRANSMITTER_IDS.map(id => [id,
+    projectDvorKeyer(config.transmitters[id].nominal, {
+      ...observations?.[id],
+      role: id === mainId ? "main" : "standby",
+      shutdownCause: observations?.[id]?.shutdownCause
+        ?? (!effectiveTransmitter(config, id).enabled ? "other" : undefined),
+    }),
+  ])) as Dvor1150aSnapshot["keyers"];
+}
+
 export function buildDvor1150aSnapshot(
   config: Dvor1150aConfig,
   baseline = cloneDefaultVorPmdtData(),
   mainTransmitter?: DvorTransmitterId,
+  keyerObservations?: import("./config-types").DvorKeyerObservations,
 ): Dvor1150aSnapshot {
   const data = structuredClone(baseline);
   const effectiveTransmitters = {
@@ -935,19 +967,35 @@ export function buildDvor1150aSnapshot(
     tx1: buildDvorGroundCheck(config, "tx1"),
     tx2: buildDvorGroundCheck(config, "tx2"),
   };
+  const transmitterStatus = Object.fromEntries(DVOR_TRANSMITTER_IDS.map((id) => {
+    const statusData = structuredClone(baseline);
+    applyActiveTransmitterAlerts(statusData, config, effectiveTransmitters, groundChecks, id);
+    return [id, {
+      txSystemAlerts: statusData.txSystemAlerts,
+      txCarrierPaAlerts: statusData.txCarrierPaAlerts,
+      txSynthesizerAlerts: statusData.txSynthesizerAlerts,
+      txSidebandPaAlerts: statusData.txSidebandPaAlerts,
+    }];
+  })) as Dvor1150aSnapshot["transmitterStatus"];
   const primaryHealthy = monitors.mon1.healthy;
   const hasSecondaryMonitor = config.station.monitorConfig === "Dual Monitors";
   // An absent second monitor is excluded from voting; represent it as healthy
   // in the aggregate result while preserving `monitors.mon2.enabled = false`.
   const secondaryHealthy = hasSecondaryMonitor ? monitors.mon2.healthy : true;
-  const systemHealthy = !hasSecondaryMonitor
-    ? primaryHealthy
-    : config.monitor.votingLogic === "AND"
-    ? primaryHealthy && secondaryHealthy
-    : primaryHealthy || secondaryHealthy;
+  const votingMonitors = hasSecondaryMonitor ? [monitors.mon1, monitors.mon2] : [monitors.mon1];
+  const votedSourceAlarm = (severity: "primary" | "secondary") => DVOR_MONITOR_PARAMETERS.some(parameter => {
+    const route = config.monitor.routing[parameter];
+    if (!route[severity] || (severity === "secondary" && route.primary)) return false;
+    // PDF90: the same-source AND/OR condition applies to both severities.
+    // Disabled installed CCAs assert every source; pre-alarm is never executive.
+    const votes = votingMonitors.map(monitor => !monitor.enabled || monitor.parameters[parameter].executiveAlarm === true);
+    return config.monitor.votingLogic === "AND" ? votes.every(Boolean) : votes.some(Boolean);
+  });
+  const primarySourceAlarm = votedSourceAlarm("primary");
+  const systemHealthy = !primarySourceAlarm;
   const alarmRequestsTransfer = config.monitor.transfer === "on Any Alarm"
-    ? !primaryHealthy || (hasSecondaryMonitor && !monitors.mon2.healthy)
-    : config.monitor.transfer === "on Primary Alarm" && !primaryHealthy;
+    ? primarySourceAlarm || votedSourceAlarm("secondary")
+    : config.monitor.transfer === "on Primary Alarm" && primarySourceAlarm;
   // Bypass is a maintenance interlock: alarms remain visible, but they must
   // not request an automatic transmitter transfer until the bypass is released.
   const transferRequested = !config.simulation.integralMonitorBypass && alarmRequestsTransfer;
@@ -996,7 +1044,7 @@ export function buildDvor1150aSnapshot(
   data.systemPowerStatus = buildSystemPowerRows(data.systemPowerStatus, config, effectiveTransmitters);
   data.txAlerts = buildTransmitterAlertRows(data.txAlerts, config, effectiveTransmitters);
   applyActiveTransmitterAlerts(data, config, effectiveTransmitters, groundChecks);
-  data.txPower = buildTxPower(effectiveTransmitters, monitors);
+  data.txPower = buildTxPower(effectiveTransmitters);
   data.txFrequency = buildTxFrequency(effectiveTransmitters);
   data.txVswr = buildTxVswr(effectiveTransmitters);
   data.txConfigNominal = buildTxNominal(config, "tx1");
@@ -1029,10 +1077,10 @@ export function buildDvor1150aSnapshot(
       monitor1: monitors.mon1.enabled,
       monitor2: monitors.mon2.enabled,
     },
-    monitors: data.rmsMonitorTransmitterStatus.monitors.map((row) => ({
+    monitors: data.rmsMonitorTransmitterStatus.monitors.map((row, index) => ({
       ...row,
-      primaryAlarm: !primaryHealthy,
-      secondaryAlarm: !secondaryHealthy,
+      primaryAlarm: monitors[index === 0 ? "mon1" : "mon2"].primaryAlarm,
+      secondaryAlarm: monitors[index === 0 ? "mon1" : "mon2"].secondaryAlarm,
     })),
     antennaSelect: activeId === "tx2" ? 2 : 1,
     mainSelect: mainId === "tx2" ? 2 : 1,
@@ -1055,8 +1103,8 @@ export function buildDvor1150aSnapshot(
 
   data.monitorIntegral = {
     normal: systemHealthy,
-    priAlarm: !primaryHealthy,
-    secAlarm: !secondaryHealthy,
+    priAlarm: votingMonitors.some(monitor => monitor.primaryAlarm),
+    secAlarm: votingMonitors.some(monitor => monitor.secondaryAlarm),
     bypass: config.simulation.integralMonitorBypass,
   };
   data.transmitters = {
@@ -1068,9 +1116,33 @@ export function buildDvor1150aSnapshot(
     data,
     mainTransmitter: mainId,
     effectiveTransmitters,
+    transmitterStatus,
+    keyers: projectDvor1150aKeyers(config, mainId, keyerObservations),
     monitors,
     monitorAnnunciation,
     monitorOffsets,
+    standbyMonitors: Object.fromEntries(DVOR_MONITOR_IDS.map(id => {
+      const standbyId = DVOR_TRANSMITTER_IDS.find(tx => effectiveTransmitters[tx].load) ?? null;
+      const calibration = config.monitor.standbyCalibration?.[id] ?? { txPowerScale: 100, txPowerOffset: 0, txFrequencyErrorOffset: 0 };
+      return [id, {
+        transmitter: standbyId,
+        txPower: standbyId ? effectiveTransmitters[standbyId].effectiveOutputPower * calibration.txPowerScale / 100 : 0,
+        txFrequencyError: standbyId ? config.transmitters[standbyId].frequencyErrorPpm + calibration.txFrequencyErrorOffset : 0,
+      }];
+    })) as Dvor1150aSnapshot["standbyMonitors"],
+    testGeneratorResults: Object.fromEntries(DVOR_MONITOR_IDS.map(id => {
+      const calibration = config.monitor.testGeneratorCalibration?.[id] ?? testGeneratorDvor1150aCalibration;
+      const generator = config.monitor.testGenerator ?? defaultDvorTestGenerator;
+      // Retain the supplied reference detector readings; calibration applies
+      // offset/scale to this readout, never transmitter or signal-in-space RF.
+      return [id, {
+        azimuth: ((generator.azimuth - 0.03 + calibration.azimuthOffset) % 360 + 360) % 360,
+        hz30Modulation: generator.hz30Modulation * calibration.hz30ModulationScale / 100,
+        hz9960Modulation: (generator.hz9960Modulation + 0.1) * calibration.hz9960ModulationScale / testGeneratorDvor1150aCalibration.hz9960ModulationScale,
+        deviation: (generator.deviation - 0.03) * calibration.deviationScale / 100,
+        identModulation: generator.identModulation * 0.94 * calibration.identModulationScale / 100,
+      }];
+    })) as Dvor1150aSnapshot["testGeneratorResults"],
     groundChecks,
     voting: {
       logic: config.monitor.votingLogic,

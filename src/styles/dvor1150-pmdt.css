@@ -5,7 +5,12 @@
 
 .dvor1150a-pmdt-page .pmdt-classic-viewport {
   align-items: flex-start;
-  justify-content: center;
+  /* Keep the native 900px controls readable without centering an overflowing
+   * window at a negative, unreachable left offset on narrow screens. */
+  justify-content: safe center;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .dvor1150-pmdt-window {

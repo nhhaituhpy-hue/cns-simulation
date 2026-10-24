@@ -1,6 +1,7 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
+import type { DvorKeyerObservations, DvorTransmitterId } from "@/lib/dvor1150a/config-types";
 import type { VorIndicatorColor } from "@/lib/vor-types";
 import {
   resolveVorField,
@@ -35,9 +36,51 @@ function Readout({ children }: { children: React.ReactNode }) {
   return <span className="pmdt-tx-readout">{children}</span>;
 }
 
+function KeyerObservationControls({ id }: { id: DvorTransmitterId }) {
+  const observation = useVorPmdtStore(state => state.keyerObservations?.[id]);
+  const observe = useVorPmdtStore(state => state.setKeyerObservation);
+  const signal = observation?.externalSignal;
+  const received = signal && signal.state !== "lost" ? signal : undefined;
+  const [code, setCode] = useState(received?.decodedIdentCode ?? "");
+  const [invalid, setInvalid] = useState(false);
+  const label = id.toUpperCase();
+  const update = (next: DvorKeyerObservations[DvorTransmitterId]) => observe(id, next);
+  return <fieldset className="p-2"><legend>{label} instructor observation (digital only)</legend>
+    <label>External signal <select aria-label={`${label} observed external signal`} value={signal?.state ?? "unspecified"}
+      onChange={event => {
+        const state = event.currentTarget.value;
+        update({ ...observation, externalSignal: state === "unspecified" ? undefined
+          : state === "lost" ? { state: "lost" }
+            : { state: state as "present" | "resumed", level: received?.level ?? "high/open",
+              ...(received?.decodedIdentCode ? { decodedIdentCode: received.decodedIdentCode } : {}) } });
+      }}>
+      {["unspecified", "present", "lost", "resumed"].map(value => <option key={value}>{value}</option>)}
+    </select></label>
+    <label>Contact <select aria-label={`${label} observed contact`} value={received?.level ?? "high/open"} disabled={!received}
+      onChange={event => received && update({ ...observation, externalSignal: { ...received, level: event.currentTarget.value as "high/open" | "low/closed" } })}>
+      <option>high/open</option><option>low/closed</option>
+    </select></label>
+    <label>Decoded ident <input aria-label={`${label} observed decoded ident`} value={code} maxLength={4} disabled={!received}
+      aria-invalid={invalid} onChange={event => {
+        const value = event.currentTarget.value;
+        setCode(value);
+        const valid = value === "" || /^[A-Za-z0-9]{2,4}$/.test(value);
+        setInvalid(!valid);
+        if (valid && received) update({ ...observation, externalSignal: { ...received, decodedIdentCode: value || undefined } });
+      }} /></label>
+    <label>Shutdown cause <select aria-label={`${label} observed shutdown cause`} value={observation?.shutdownCause ?? "unspecified"}
+      onChange={event => update({ ...observation, shutdownCause: event.currentTarget.value === "unspecified" ? undefined : event.currentTarget.value as "keying-loss" | "other" })}>
+      <option>unspecified</option><option>keying-loss</option><option>other</option>
+    </select></label>
+  </fieldset>;
+}
+
 export function TxDataMain() {
   const data = useVorPmdtStore((state) => state.data);
+  const keyers = useVorPmdtStore((state) => state.derived.keyers);
+  const scenarioRunId = useVorPmdtStore((state) => state.scenario.runId);
   const overrides = useVorPmdtStore((state) => state.overrides);
+  const instructor = useVorPmdtStore(state => state.scenarioAuthoringEnabled && state.mode !== "student");
 
   return (
     <div className="pmdt-tx-data">
@@ -122,6 +165,29 @@ export function TxDataMain() {
             <td className="pmdt-tx-unit-cell">: 1</td>
           </tr>)}</tbody>
         </table>
+      </Panel>
+      <Panel title="Identification / Keyer">
+        <table className="w-full text-left text-[11px]">
+          <thead><tr><th>Digital state / request</th><th>TX1</th><th>TX2</th></tr></thead>
+          <tbody>{([
+            ["selectedIdentCode", "Selected self ident"], ["effectiveIdentCode", "Effective ident"],
+            ["identStatus", "Ident status"], ["identSource", "Ident source"],
+            ["externalSignalStatus", "Observed external signal"], ["inputAsserted", "Input asserted"],
+            ["inputInterpretation", "Input interpretation"], ["selfKeyRequested", "Self-key requested"],
+            ["shutdownRequested", "Shutdown requested"], ["restartRequested", "Restart requested (not RF restart)"],
+            ["lossActionConflict", "Conflicting loss actions"],
+          ] as const).map(([field, label]) => <tr key={field}>
+            <th scope="row">{label}</th>{(["tx1", "tx2"] as const).map(id => <td key={id}
+              data-vor-field-id={`keyerData.${id}.${field}`}>{String(keyers[id][field] ?? "unspecified")}</td>)}
+          </tr>)}{(["mode", "available", "suppressed"] as const).map(field => <tr key={field}>
+            <th scope="row">External output {field === "available" ? "permitted (not measured contact)" : field}</th>
+            {(["tx1", "tx2"] as const).map(id => <td key={id} data-vor-field-id={`keyerData.${id}.externalOutput.${field}`}>
+              {String(keyers[id].externalOutput[field])}</td>)}
+          </tr>)}</tbody>
+        </table>
+        {instructor ? <details><summary>Instructor keyer stimulus</summary>
+          {(["tx1", "tx2"] as const).map(id => <KeyerObservationControls key={`${scenarioRunId ?? "free"}:${id}`} id={id} />)}
+        </details> : null}
       </Panel>
     </div>
   );

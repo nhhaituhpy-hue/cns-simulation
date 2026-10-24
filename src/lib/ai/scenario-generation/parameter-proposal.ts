@@ -4,6 +4,9 @@ import { selectDocumentExcerpts } from "./prompt";
 import { parameterAdapterFor } from "./parameters";
 import { AiScenarioError, type EvidenceCitation, type EvidenceDocument, type GenerationInput, type GenerationResult } from "./types";
 import type { ParameterAssignment, ParameterValue, ScenarioParameterField } from "./parameter-types";
+import type { Dvor1150aScenarioDefinition } from "@/lib/dvor1150a/scenario";
+import { getDvorConfigValue } from "@/lib/dvor1150a/config-utils";
+import { sharedNominalAssignments } from "./parameter-selex";
 
 export interface EvidencedParameter extends ParameterAssignment { unit?: string; citation: number }
 function record(value: unknown): value is Record<string, unknown> { return typeof value === "object" && value !== null && !Array.isArray(value); }
@@ -141,6 +144,12 @@ export function validateParameterProposal(input: GenerationInput, documents: Evi
     if (![expected + unit, JSON.stringify(assignment.value) + unit].includes(row.rawValue)) reject("UNHANDLED_PARAMETER");
   }
   const configured = adapter.apply(input.moduleId, base, initial.map(({fieldId,value})=>({fieldId,value})));
+  if(input.moduleId==="dvor-1150a"&&templateId==="configuration-values") {
+    const d=configured as Dvor1150aScenarioDefinition;
+    d.successCriteria.configurationValues=sharedNominalAssignments(recovery).filter(c=>c.fieldId.startsWith("configuration.")).map(c=>({fieldId:c.fieldId.slice(14),value:c.value as string|number|boolean}));
+    if(!d.successCriteria.configurationValues.length)reject("INVALID_RECOVERY");
+    d.taskTargets=d.successCriteria.configurationValues.filter(target=>!Object.is(getDvorConfigValue(d.configuration,target.fieldId),target.value)).map(target=>({fieldId:target.fieldId,requirement:"change-applied"}));
+  }
   const definition = parseScenarioParameters(input.moduleId, { ...configured, id: `ai-${randomUUID()}`, name: input.name, description: input.description, difficulty: input.difficulty });
   if (!definition) reject("INVALID_DEFINITION");
   const verification = adapter.verify(input.moduleId, definition, recovery.map(({fieldId,value})=>({fieldId,value})));

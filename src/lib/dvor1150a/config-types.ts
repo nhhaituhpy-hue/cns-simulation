@@ -1,4 +1,8 @@
 import type { VorIndicatorColor, VorMonitorAntennaConfig, VorMonitorOffsetRow, VorParameterStatus } from "@/lib/vor-types";
+import type { DvorKeyerConfiguration, DvorKeyerContext, DvorKeyerProjection } from "./keyer";
+
+/** Session-only instructor observations, separate from station settings and RF. */
+export type DvorKeyerObservations = Partial<Record<DvorTransmitterId, Omit<DvorKeyerContext, "role">>>;
 
 export const DVOR_TRANSMITTER_IDS = ["tx1", "tx2"] as const;
 export type DvorTransmitterId = (typeof DVOR_TRANSMITTER_IDS)[number];
@@ -69,6 +73,21 @@ export interface DvorMonitorRouting {
   secondary: boolean;
 }
 
+export type DvorTestGeneratorCalibration = Pick<DvorMonitorCalibration,
+  "azimuthOffset" | "hz30ModulationScale" | "hz9960ModulationScale" | "deviationScale"
+  | "identModulationScale">;
+
+export interface DvorTestGeneratorConfig {
+  azimuth: number;
+  hz30Modulation: number;
+  hz9960Modulation: number;
+  deviation: number;
+  identModulation: number;
+  identStatus: DvorRawMonitorMeasurement["identStatus"];
+  audioModulation: number;
+  audioFrequency: number;
+}
+
 export interface DvorMonitorConfig {
   rawMeasurements: Record<DvorMonitorId, DvorRawMonitorMeasurement>;
   alarmLimits: Record<Exclude<DvorMonitorParameter, "azimuth" | "identStatus" | "identCode" | "notchMonitor" | "sidebandVswr">, DvorAlarmBand>;
@@ -81,6 +100,10 @@ export interface DvorMonitorConfig {
   }>;
   calibration: Record<DvorMonitorId, DvorMonitorCalibration>;
   routing: Record<DvorMonitorParameter, DvorMonitorRouting>;
+  /** Additive v1 extension; absent in profiles saved before certification editing. */
+  testGeneratorCalibration?: Record<DvorMonitorId, DvorTestGeneratorCalibration>;
+  testGenerator?: DvorTestGeneratorConfig;
+  standbyCalibration?: Record<DvorMonitorId, Pick<DvorMonitorCalibration, "txPowerScale" | "txPowerOffset" | "txFrequencyErrorOffset">>;
   votingLogic: "AND" | "OR";
   transfer: "on Primary Alarm" | "on Any Alarm" | "disabled";
   sidebandVswr: {
@@ -95,7 +118,7 @@ export interface DvorMonitorConfig {
   };
 }
 
-export interface DvorTransmitterNominal {
+export interface DvorTransmitterNominal extends DvorKeyerConfiguration {
   azimuthIndex: number;
   outputPower: number;
   voiceModulation: number;
@@ -188,6 +211,8 @@ export interface DvorEffectiveTransmitter {
 export interface DvorMonitorParameterResult {
   value: number | string;
   unit: string;
+  /** Detector limit violation before Primary/Secondary colour projection. */
+  executiveAlarm?: boolean;
   status: DvorAlarmState;
   indicator: VorIndicatorColor;
 }
@@ -196,6 +221,8 @@ export interface DvorMonitorResult {
   id: DvorMonitorId;
   enabled: boolean;
   healthy: boolean;
+  primaryAlarm: boolean;
+  secondaryAlarm: boolean;
   parameters: Record<DvorMonitorParameter, DvorMonitorParameterResult>;
   sidebandVswr: number[];
 }
@@ -229,11 +256,15 @@ export interface Dvor1150aSnapshot {
   /** Logical Main selection; it can remain TX1 while the antenna is on TX2 after an automatic transfer. */
   mainTransmitter: DvorTransmitterId | null;
   effectiveTransmitters: Record<DvorTransmitterId, DvorEffectiveTransmitter>;
+  transmitterStatus: Record<DvorTransmitterId, Pick<import("@/lib/vor-types").VorPmdtData, "txSystemAlerts" | "txCarrierPaAlerts" | "txSynthesizerAlerts" | "txSidebandPaAlerts">>;
+  keyers: Record<DvorTransmitterId, DvorKeyerProjection>;
   monitors: Record<DvorMonitorId, DvorMonitorResult>;
   /** Measurement annunciation, independent of relay voting and Bypass. */
   monitorAnnunciation: { preAlarm: boolean; alarm: boolean };
   monitorOffsets: Record<DvorMonitorId, VorMonitorOffsetRow[]>;
   groundChecks: Record<DvorTransmitterId, DvorGroundCheckResult>;
+  testGeneratorResults: Record<DvorMonitorId, { azimuth: number; hz30Modulation: number; hz9960Modulation: number; deviation: number; identModulation: number }>;
+  standbyMonitors: Record<DvorMonitorId, { transmitter: DvorTransmitterId | null; txPower: number; txFrequencyError: number }>;
   voting: DvorVotingResult;
   integrity: Record<"30HzModulation" | "9960HzModulation" | "9960HzDeviation" | "RFLevel" | "TxPower" | "TxFrequencyError" | "IdentModulation", DvorIntegrityTestResult>;
   validation: DvorConfigValidationIssue[];

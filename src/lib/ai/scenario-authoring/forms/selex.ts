@@ -13,6 +13,7 @@ import { selexStartupSchema, selexCriterionSchema } from "./selex-labels";
 import { diagnosisSchema } from "./selex-diagnosis";
 import { select, list, object } from "./selex-schemas";
 import { dmeFaultSchema, dmeCriterionSchema } from "./selex-schemas";
+import { dvor1150aConfigurationValuesSchema } from "./dvor1150a-criteria";
 
 const specs = [
  { moduleId: "dvor-1150", label: "DVOR 1150", create: createDefaultDvor1150ScenarioDefinition, catalog: dvor1150ConfigFieldCatalog, role: dvor1150ScenarioFieldRole },
@@ -43,14 +44,18 @@ function form(spec: Spec, d: ScenarioParametersDefinition): AuthoringForm {
   if (value === undefined) { omitted.push(`${f.id}: bộ lưu kịch bản native không lưu trường này; wizard không giả vờ lưu thay đổi chỉ tồn tại trong phiên PMDT.`); continue; }
   const fault = spec.moduleId === "dvor-1150" ? stimulus1150.has(f.id) : f.id.includes(".faults.");
   fields.push({ id: `configuration.${f.id}`, sectionId: fault ? "faults" : "initial", group: f.section,
-   schema: { type: f.type, label: f.label, help: f.description || `${f.label} — thông số native ${f.section}; giữ mặc định nếu không có căn cứ thay đổi.`, unit: f.unit, min: f.min, max: f.max, step: undefined, options: f.options?.map(value => ({value,label:value})), required:true },
+   schema: { type: f.type, label: f.label, help: (f.description || `${f.label} — thông số native ${f.section}; giữ mặc định nếu không có căn cứ thay đổi.`)+("effectNotice"in f&&f.effectNotice?` ${f.effectNotice}`:""), unit: f.unit, min: f.min, max: f.max, step: undefined, options: f.options?.map(value => ({value,label:value})), required:true },
    value: structuredClone(value), baselineEligible: !fault && !stimulus1150.has(f.id) && spec.role(f.id) !== "instructor-only" });
  }
  const add=(id:string,sectionId:string,schema:ValueSchema,value:JsonValue)=>fields.push({id,sectionId,group:sectionId,schema,value:structuredClone(value),baselineEligible:false});
  for (const [key,value] of Object.entries((d as ReturnType<Spec["create"]>).startPolicy)) add(`startPolicy.${key}`, "initial", selexStartupSchema(key),value);
  const native = d as ReturnType<Spec["create"]>;
  if (Array.isArray(native.successCriteria)) add("successCriteria","criteria",dmeCriterionSchema(),native.successCriteria as unknown as JsonValue);
- else for (const [key,value] of Object.entries(native.successCriteria)) add(`successCriteria.${key}`,"criteria",selexCriterionSchema(key),value);
+ else for (const [key,value] of Object.entries(native.successCriteria)) if(key!=="configurationValues") add(`successCriteria.${key}`,"criteria",selexCriterionSchema(key),value as JsonValue);
+ if(spec.moduleId==="dvor-1150a") {
+  const definition=d as Dvor1150aScenarioDefinition;
+  add("successCriteria.configurationValues","criteria",dvor1150aConfigurationValuesSchema(definition.configuration),(definition.successCriteria.configurationValues??[]) as unknown as JsonValue);
+ }
  if ("faultInjections" in native) add("faultInjections","faults",dmeFaultSchema(),native.faultInjections as unknown as JsonValue);
  const operable=spec.catalog.filter(f=>(!("readOnly" in f)||!f.readOnly)&&spec.role(f.id)==="student-operable"&&!privateField(f.id)&&readPath(d,`configuration.${f.id}`)!==undefined).map(f=>f.id);
  add("diagnosis","diagnosis",diagnosisSchema(spec.moduleId,operable),(native.diagnosis ?? null) as unknown as JsonValue);
@@ -86,7 +91,7 @@ function strictShape(spec:Spec,d:ScenarioParametersDefinition):void {
  const reference=spec.create(), n=d as ReturnType<Spec["create"]>;
  exactKeys(d,Object.keys(reference).filter(k=>!["editPolicy","taskTargets"].includes(k)),["editPolicy","diagnosis",...(spec.moduleId!=="dvor-1150"?["taskTargets"]:[])]);
  exactKeys(n.startPolicy,Object.keys(reference.startPolicy));
- if(!Array.isArray(reference.successCriteria))exactKeys(n.successCriteria,Object.keys(reference.successCriteria));
+ if(!Array.isArray(reference.successCriteria))exactKeys(n.successCriteria,Object.keys(reference.successCriteria),spec.moduleId==="dvor-1150a"?["configurationValues"]:[]);
  if(n.editPolicy){
   exactKeys(n.editPolicy,n.editPolicy.mode==="open"?["mode"]:["mode","allowedFieldIds"]);
   const allowed=n.editPolicy.mode==="restricted"?n.editPolicy.allowedFieldIds:[];
@@ -135,7 +140,11 @@ export const selexAuthoringAdapters: NativeAuthoringAdapter[] = specs.map(spec =
  assertSafeJson(changes);if(!Array.isArray(changes))throw new AuthoringError("INVALID_INPUT","Changes must be an array");
  const fields=form(spec,d).fields,next=structuredClone(d),seen=new Set<string>();
  for(const c of changes){const f=fields.find(f=>f.id===c.fieldId);if(!f||f.schema.readOnly||seen.has(c.fieldId)||Object.keys(c).some(k=>!["fieldId","value"].includes(k)))throw new AuthoringError("INVALID_FIELD","Unknown or duplicate field");seen.add(c.fieldId);const errors=validateFieldValue({...f.schema,step:undefined},c.value);if(errors.length)throw new AuthoringError("INVALID_FIELD",errors[0],errors.map(message=>({code:"INVALID_FIELD",sectionId:f.sectionId,fieldId:f.id,message,severity:"error"})));if(c.fieldId==="diagnosis"){if(c.value===null)delete (next as ReturnType<Spec["create"]>).diagnosis;else (next as unknown as Record<string,JsonValue>).diagnosis=structuredClone(c.value);}
- else if(c.fieldId!=="editPolicy.mode") {if(c.fieldId==="taskTargets"&&!Object.hasOwn(next,"taskTargets"))(next as unknown as Record<string,JsonValue>).taskTargets=[];writePath(next,c.fieldId,c.value);}
+ else if(c.fieldId!=="editPolicy.mode") {
+  if(c.fieldId==="taskTargets"&&!Object.hasOwn(next,"taskTargets"))(next as unknown as Record<string,JsonValue>).taskTargets=[];
+  if(c.fieldId==="successCriteria.configurationValues") (next as Dvor1150aScenarioDefinition).successCriteria.configurationValues=structuredClone(c.value) as unknown as NonNullable<Dvor1150aScenarioDefinition["successCriteria"]["configurationValues"]>;
+  else writePath(next,c.fieldId,c.value);
+ }
  }
  const n=next as ReturnType<Spec["create"]>;
  const mode=(changes.find(c=>c.fieldId==="editPolicy.mode")?.value??n.editPolicy?.mode??"restricted") as "open"|"restricted";

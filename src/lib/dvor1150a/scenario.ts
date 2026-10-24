@@ -1,13 +1,17 @@
-import { cloneDvor1150aConfig, createDefaultDvor1150aConfig } from "./defaults";
+import { cloneDvor1150aConfig, createDefaultDvor1150aConfig, defaultDvorKeyerConfiguration } from "./defaults";
 import { buildDvor1150aSnapshot } from "./engine";
+import { applyDvorConfigPatches } from "./config-service";
 import {
   dvorConfigFieldCatalog,
   getDvorConfigValue,
+  setDvorConfigValue,
   validateDvorConfig,
+  validateDvorConfigField,
 } from "./config-utils";
 import type {
   Dvor1150aConfig,
   Dvor1150aSnapshot,
+  DvorConfigValue,
   DvorTransmitterId,
 } from "./config-types";
 import {
@@ -17,6 +21,7 @@ import {
   type DvorHardwareOccurrence,
 } from "@/modules/devices/dvor-1150a/block-diagram-data";
 import type { VorViewId } from "@/lib/vor-types";
+import { isScenarioActionEvent, MAX_SCENARIO_ACTION_HISTORY_EVENTS, type ScenarioActionEvent, type ScenarioEvidenceStats } from "@/lib/scenario-evidence";
 import {
   isScenarioFieldAllowed,
   scenarioAllowedFieldIds,
@@ -32,6 +37,12 @@ export const DVOR1150A_SCENARIO_SCHEMA_VERSION = 1 as const;
 export type Dvor1150aScenarioDifficulty = "basic" | "intermediate" | "advanced";
 export type Dvor1150aScenarioDisposition = "replace-module" | "software-adjustment";
 export type Dvor1150aDiagnosticRun = "full" | "on-air" | "not-required";
+
+/** Exact persisted configuration, not a derived RF reading or proof of a procedure. */
+export interface Dvor1150aConfigurationValueCriterion {
+  fieldId: string;
+  value: Exclude<DvorConfigValue, null>;
+}
 
 export interface Dvor1150aScenarioPmdtCheckpoint {
   id: string;
@@ -60,6 +71,11 @@ export interface Dvor1150aScenarioEvidence {
   acceptedActionControlIds?: readonly string[];
   selectedHardwareOccurrenceKeys?: readonly string[];
   hardwareDispositionConfirmed?: boolean;
+  /** Full native events, never a generic accepted-control label as Apply proof. */
+  actionHistory?: readonly ScenarioActionEvent[];
+  evidenceStats?: ScenarioEvidenceStats;
+  /** Expected native run, never derived from the first event. */
+  runId?: string;
 }
 
 /**
@@ -84,6 +100,8 @@ export interface Dvor1150aScenarioDefinition {
     requireActiveTransmitter: boolean;
     requireNoSidebandVswrAlarm: boolean;
     requireMonitorBypassCleared: boolean;
+    /** Additive/optional: old publications retain their original criteria. */
+    configurationValues?: Dvor1150aConfigurationValueCriterion[];
   };
   /** New scenarios default to open; omitted means legacy whitelist semantics. */
   editPolicy?: ScenarioEditPolicy;
@@ -102,6 +120,9 @@ export interface Dvor1150aScenarioRuntime {
   active: boolean;
   definition: Dvor1150aScenarioDefinition | null;
   startedAt: string | null;
+  /** Frozen independently of the mutable definition object; absent on old runtimes. */
+  scenarioId?: string;
+  runId?: string;
 }
 
 export interface Dvor1150aScenarioEvaluation {
@@ -208,6 +229,18 @@ export function createDefaultDvor1150aScenarioDefinition(): Dvor1150aScenarioDef
     taskTargets: [],
     studentEditableFieldIds: [],
   };
+}
+
+/** Configuration training does not imply an RF fault or an OEM nominal value. */
+export function createDvor1150aConfigurationExercise(): Dvor1150aScenarioDefinition {
+  const definition = createDefaultDvor1150aScenarioDefinition();
+  definition.id = "dvor1150a-configuration-values";
+  definition.name = "DVOR1150A exact configuration training";
+  definition.description = "Inspect and apply the examiner's explicit configuration targets; no physical fault or manufacturer limit is inferred.";
+  definition.startPolicy.startLocal = true;
+  definition.startPolicy.startMonitorBypassed = true;
+  definition.successCriteria.configurationValues = [];
+  return definition;
 }
 
 function createPresetDvor1150aScenarioDefinition(): Dvor1150aScenarioDefinition {
@@ -529,6 +562,7 @@ export function createMonitor1CalibrationScenario(): Dvor1150aScenarioDefinition
 
 export const DVOR1150A_BUILT_IN_SCENARIOS = [
   { id: "default", label: "New from Đài TEST/TST", create: createDefaultDvor1150aScenarioDefinition },
+  { id: "configuration-values", label: "Exact monitor / transmitter configuration", create: createDvor1150aConfigurationExercise },
   { id: "carrier-9960", label: "TX1 low carrier + 9960 Hz", create: createLowCarrierAnd9960Scenario },
   { id: "reference-modulation", label: "TX1 low 30 Hz reference modulation", create: createReferenceModulationScenario },
   { id: "sideband-vswr", label: "TX1 sideband VSWR alarm", create: createSidebandVswrScenario },
@@ -596,6 +630,121 @@ export function dvor1150aScenarioFieldRole(fieldId: string): ScenarioFieldRole {
   return "student-operable";
 }
 
+/** The only configuration identifiers accepted as exact-value requirements. */
+export function dvor1150aConfigurationTargetFields() {
+  return dvorConfigFieldCatalog.filter(field => dvor1150aScenarioFieldRole(field.id) === "student-operable");
+}
+
+/** The PMDT Nominal form is shared; offsets/scales remain independent per TX. */
+export function dvor1150aSharedNominalFieldIds(fieldId: string): string[] {
+  const match=/^transmitters\.tx[12]\.nominal\.(.+)$/.exec(fieldId);
+  return match ? ["tx1","tx2"].map(tx=>`transmitters.${tx}.nominal.${match[1]}`).filter(id=>dvorConfigFieldCatalog.some(f=>f.id===id)) : [fieldId];
+}
+
+/** Native controls that write multiple persisted paths in one interaction. */
+export function dvor1150aSharedConfigurationFieldIds(fieldId: string): string[] {
+  if (/^monitor\.antennas\.mon[12]\.secondAntennaEnabled$/.test(fieldId)) return ["monitor.antennas.mon1.secondAntennaEnabled", "monitor.antennas.mon2.secondAntennaEnabled"];
+  return dvor1150aSharedNominalFieldIds(fieldId);
+}
+
+/** Native configuration screens; raw/instructor/session paths have no task mapping. */
+export function dvor1150aConfigurationViewId(fieldId: string): VorViewId | null {
+  const field = dvor1150aConfigurationTargetFields().find(f => f.id === fieldId);
+  if (!field) return null;
+  if (/^monitor\.(calibration|standbyCalibration|testGeneratorCalibration)\.mon1\./.test(fieldId)) return "monitor-1-offsets";
+  if (/^monitor\.(calibration|standbyCalibration|testGeneratorCalibration)\.mon2\./.test(fieldId)) return "monitor-2-offsets";
+  if (fieldId.startsWith("monitor.testGenerator.")) return "monitor-test-results";
+  if (fieldId.startsWith("monitor.routing.")) return "monitor-config-general";
+  if (/^monitor\.(votingLogic|transfer|integrity\.)/.test(fieldId)) return "rms-config-general";
+  if (fieldId.startsWith("monitor.")) return "monitor-alarm-limits";
+  if (fieldId.startsWith("transmitters.")) return fieldId.includes(".nominal.") ? "tx-config-nominal" : "tx-config-offsets";
+  return "rms-config-station";
+}
+
+/** Shared procedure proof for grading and feedback; a final state is not a learner action. */
+export function dvor1150aNativeFieldEvidence(definition: Dvor1150aScenarioDefinition, fieldId: string, current: Dvor1150aConfig | undefined, evidence: Dvor1150aScenarioEvidence, startedAt: string | null, runId?: string, scenarioId?: string): ScenarioActionEvent[] {
+  const history = evidence.actionHistory;
+  const stats = evidence.evidenceStats;
+  const start = startedAt ? Date.parse(startedAt) : NaN;
+  if (!runId?.trim() || scenarioId !== definition.id || evidence.runId !== runId
+    || !Number.isFinite(start) || !current || !history?.length || history.length >= MAX_SCENARIO_ACTION_HISTORY_EVENTS || !history.every(isScenarioActionEvent)
+    || new Set(history.map(a => a.id)).size !== history.length
+    || stats && (stats.evidenceTruncated || stats.droppedCount > 0 || stats.totalEventCount !== history.length || stats.storedEventCount !== history.length || stats.lastSequence !== history.length)) return [];
+  let timestamp = -Infinity;
+  for (const [index, action] of history.entries()) {
+    const time = Date.parse(action.occurredAt);
+    if (action.scope?.moduleId !== "dvor-1150a" || action.scope.scenarioId !== scenarioId
+      || action.scope.runId !== runId || action.scope.startedAt !== startedAt
+      || action.sequence !== index + 1 || !Number.isFinite(time) || time < timestamp || time < start) return [];
+    timestamp = time;
+  }
+  const runtimeField = fieldId === "simulation.local" || fieldId === "simulation.integralMonitorBypass";
+  let previous = runtimeField ? fieldId === "simulation.local" ? definition.startPolicy.startLocal : definition.startPolicy.startMonitorBypassed
+    : getDvorConfigValue(definition.configuration, fieldId);
+  const applied: ScenarioActionEvent[] = [];
+  if (runtimeField) {
+    const key = fieldId === "simulation.local" ? "local" : "monitorBypass";
+    for (const action of history.filter(action => action.controlId === fieldId && action.accepted)) {
+      if (action.actor !== "student" || action.kind !== "control" || !Object.is(action.before?.[key], previous)
+        || typeof action.after?.[key] !== "boolean" || Object.is(action.before?.[key], action.after[key])) return [];
+      previous = action.after[key];
+      applied.push(action);
+    }
+    return Object.is(previous, getDvorConfigValue(current, fieldId)) ? applied : [];
+  }
+  for (const action of history) for (const change of action.parameterChanges ?? []) {
+    if (change.fieldId !== fieldId || change.phase === "draft" || change.phase === "backup" || !action.accepted || !change.accepted) continue;
+    if (action.actor !== "student" || action.controlId !== "config-apply" || change.phase !== "apply"
+      || !Object.is(change.before, previous) || Object.is(change.before, change.after)
+      || !(typeof change.after === "string" || typeof change.after === "boolean" || typeof change.after === "number" && Number.isFinite(change.after))) return [];
+    previous = change.after;
+    applied.push(action);
+  }
+  return Object.is(previous, getDvorConfigValue(current, fieldId)) ? applied : [];
+}
+
+function validateConfigurationValues(definition: Dvor1150aScenarioDefinition): string[] {
+  const targets = definition.successCriteria.configurationValues;
+  if (targets === undefined) return [];
+  const fields = dvor1150aConfigurationTargetFields();
+  if (!Array.isArray(targets) || targets.length > fields.length) return ["Configuration value criteria must be a bounded array."];
+  const seen = new Set<string>(), issues: string[] = [];
+  let recovered = cloneDvor1150aConfig(definition.configuration);
+  const baseline = applyDvorConfigPatches(definition.configuration);
+  if (!baseline.ok) issues.push(`Configuration exercise baseline: ${baseline.error}`);
+  for (const target of targets) {
+    if (!target || typeof target !== "object" || Array.isArray(target)
+      || Object.keys(target).length !== 2 || !Object.hasOwn(target, "fieldId") || !Object.hasOwn(target, "value")) {
+      issues.push("Configuration value criterion must contain only fieldId and value."); continue;
+    }
+    const field = fields.find(f => f.id === target.fieldId);
+    if (!field || seen.has(target.fieldId)) {
+      issues.push(`Configuration value criterion field is unknown, protected or duplicated: ${String(target.fieldId)}.`); continue;
+    }
+    seen.add(target.fieldId);
+    if(typeof target.value==="number"&&Math.abs(target.value)>Number.MAX_SAFE_INTEGER) {
+      issues.push(`Configuration value criterion exceeds software numeric safety envelope: ${field.id}.`);continue;
+    }
+    const error = validateDvorConfigField(field, target.value);
+    if (error) { issues.push(`Configuration value criterion ${field.id}: ${error}`); continue; }
+    const sharedIds = dvor1150aSharedConfigurationFieldIds(field.id);
+    const needsEdit = sharedIds.some(id => !Object.is(getDvorConfigValue(definition.configuration, id), target.value));
+    for(const sharedId of sharedIds) {
+      const sharedTarget=targets.find(t=>t?.fieldId===sharedId);
+      if(sharedTarget&&!Object.is(sharedTarget.value,target.value))issues.push(`Configuration value criteria conflict for shared nominal control: ${field.id}.`);
+      if(needsEdit&&!isDvor1150aScenarioStudentEditable(definition,sharedId))issues.push(`Shared nominal recovery control is not editable: ${sharedId}.`);
+      recovered = setDvorConfigValue(recovered, sharedId, target.value);
+    }
+    if (!Object.is(getDvorConfigValue(definition.configuration, field.id), target.value)
+      && !isDvor1150aScenarioStudentEditable(definition, field.id)) issues.push(`Configuration value criterion is not editable: ${field.id}.`);
+  }
+  // Use exactly the native Apply boundary, including strict endpoint ordering;
+  // shared Nominal is mirrored before validation, never just a setter-only copy.
+  const candidate = applyDvorConfigPatches(recovered);
+  if (!candidate.ok) issues.push(`Configuration value criteria: ${candidate.error}`);
+  return issues;
+}
+
 /** Returns non-recovery configuration changes made while a scenario is active. */
 export function getDvor1150aScenarioProtectedFieldChanges(
   definition: Dvor1150aScenarioDefinition,
@@ -637,6 +786,29 @@ export function evaluateDvor1150aScenario(
   const sidebandVswrAlarm = Object.values(snapshot.monitors).some(
     (monitor) => monitor.enabled && monitor.parameters.sidebandVswr.status === "alarm",
   );
+  const configurationChecks = (definition.successCriteria.configurationValues ?? []).map(target => {
+    const field = dvor1150aConfigurationTargetFields().find(f => f.id === target.fieldId);
+    const actual = currentConfiguration && field ? getDvorConfigValue(currentConfiguration, field.id) : undefined;
+    return {
+      id: `configuration-value-${target.fieldId}`,
+      label: field ? `${field.section} · ${field.label}` : target.fieldId,
+      passed: actual !== undefined && Object.is(actual, target.value),
+      detail: `Applied: ${actual === undefined ? "unavailable" : String(actual)}; target: ${String(target.value)}${field?.unit ? ` ${field.unit}` : ""}`,
+    };
+  });
+  const configurationComplete = configurationChecks.every(check => check.passed);
+  // Existing publications stored taskTargets as descriptive metadata. Opt in
+  // only with the new exact-value contract; never regrade old frozen snapshots.
+  const taskChecks = (definition.successCriteria.configurationValues===undefined?[]:definition.taskTargets ?? []).map(target => {
+    const field = dvor1150aConfigurationTargetFields().find(f => f.id === target.fieldId);
+    const viewId = dvor1150aConfigurationViewId(target.fieldId);
+    const passed = !!field && (target.requirement === "change-applied"
+      ? dvor1150aNativeFieldEvidence(definition, target.fieldId, currentConfiguration, evidence, runtime.startedAt, runtime.runId, runtime.scenarioId).length > 0
+      : !!viewId && (evidence.visitedViewIds ?? []).includes(viewId));
+    return { id: `task-target-${target.fieldId}`, label: `${field?.label ?? target.fieldId} · ${target.requirement}`, passed,
+      detail: passed ? "Native field evidence verified" : "Missing exact native field evidence" };
+  });
+  const taskComplete = taskChecks.every(check => check.passed);
   const baselineChecks = [
     ...(definition.successCriteria.requireIntegralMonitorNormal ? [{
       id: "integral-monitor",
@@ -704,10 +876,12 @@ export function evaluateDvor1150aScenario(
   const pmdtComplete = diagnosis
     ? pmdtChecks.every((check) => check.passed)
       && actionChecks.every((check) => check.passed)
-      && (diagnosis.disposition === "replace-module" || baselineComplete)
-    : baselineComplete;
+      && (diagnosis.disposition === "replace-module" || baselineComplete) && configurationComplete && taskComplete
+    : (baselineChecks.length > 0 || configurationChecks.length > 0) && baselineChecks.every(check => check.passed) && configurationComplete && taskComplete;
   const checks = [
     ...baselineChecks,
+    ...configurationChecks,
+    ...taskChecks,
     ...pmdtChecks,
     ...actionChecks,
     ...(diagnosis ? [{
@@ -725,11 +899,13 @@ export function evaluateDvor1150aScenario(
   const blockers = protectedChanges.map(
     (change) => `Protected configuration changed: ${change.label}.`,
   );
+  if (definition.successCriteria.configurationValues !== undefined && (runtime.scenarioId !== definition.id
+    || !runtime.runId?.trim() || evidence.runId !== runtime.runId || !runtime.startedAt || !Number.isFinite(Date.parse(runtime.startedAt)))) blockers.push("Missing or mismatched native scenario run scope.");
 
   return {
     solved: diagnosis
       ? pmdtComplete && hardwareComplete && blockers.length === 0
-      : baselineComplete && blockers.length === 0,
+      : pmdtComplete && blockers.length === 0,
     correctable: true,
     pmdtComplete,
     hardwareComplete,
@@ -739,23 +915,27 @@ export function evaluateDvor1150aScenario(
   };
 }
 
-function hasSameJsonShape(value: unknown, reference: unknown): boolean {
+function hasSameJsonShape(value: unknown, reference: unknown, path = ""): boolean {
   if (reference === null || value === null) return reference === value;
   if (typeof reference === "number") return typeof value === "number" && Number.isFinite(value);
   if (typeof reference === "string" || typeof reference === "boolean") return typeof value === typeof reference;
   if (Array.isArray(reference)) {
     return Array.isArray(value)
       && value.length === reference.length
-      && value.every((entry, index) => hasSameJsonShape(entry, reference[index]));
+      && value.every((entry, index) => hasSameJsonShape(entry, reference[index], `${path}.${index}`));
   }
   if (typeof reference !== "object" || typeof value !== "object" || Array.isArray(value)) return false;
   const source = value as Record<string, unknown>;
   const target = reference as Record<string, unknown>;
   const sourceKeys = Object.keys(source).sort();
   const targetKeys = Object.keys(target).sort();
-  return sourceKeys.length === targetKeys.length
-    && sourceKeys.every((key, index) => key === targetKeys[index]
-      && hasSameJsonShape(source[key], target[key]));
+  // Only named additive native branches may be absent in an old publication.
+  // Validate present branches normally and preserve the saved JSON unchanged.
+  const optional = path === "monitor" ? ["testGenerator", "testGeneratorCalibration", "standbyCalibration"]
+    : /^transmitters\.tx[12]\.nominal$/.test(path) ? Object.keys(defaultDvorKeyerConfiguration) : [];
+  return targetKeys.every(key => Object.hasOwn(source, key) || optional.includes(key))
+    && sourceKeys.every(key => Object.hasOwn(target, key)
+      && hasSameJsonShape(source[key], target[key], path ? `${path}.${key}` : key));
 }
 
 function validateScenarioDiagnosis(
@@ -853,9 +1033,10 @@ export function validateDvor1150aScenarioDefinition(
   if (definition.configuration.transmitters[definition.startPolicy.mainTransmitterId].faults.disabled) {
     issues.push("Starting main transmitter must not be forced disabled.");
   }
-  for (const [key, value] of Object.entries(definition.successCriteria)) {
-    if (typeof value !== "boolean") issues.push(`Success criterion ${key} must be boolean.`);
-  }
+  const successKeys = ["requireIntegralMonitorNormal", "requireActiveTransmitter", "requireNoSidebandVswrAlarm", "requireMonitorBypassCleared"];
+  for (const key of successKeys) if (typeof definition.successCriteria[key as keyof typeof definition.successCriteria] !== "boolean") issues.push(`Success criterion ${key} must be boolean.`);
+  for (const key of Object.keys(definition.successCriteria)) if (!successKeys.includes(key) && key !== "configurationValues") issues.push(`Unknown success criterion: ${key}.`);
+  issues.push(...validateConfigurationValues(definition));
   if (!Array.isArray(definition.studentEditableFieldIds)) {
     issues.push("Student editable fields must be an array.");
   } else {

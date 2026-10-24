@@ -5,6 +5,9 @@ import type { ParameterAssignment } from "../scenario-generation/parameter-types
 import type { BlueprintGenerationInput, ManualCitation, ScenarioBlueprint } from "./types";
 import { fail, exact, plain, safeJson, publicText, safeBlueprintDocuments, validateBlueprintInput } from "./validation";
 import { compileRubric, stableId } from "./rubric";
+import { dvor1150aSharedConfigurationFieldIds, parseDvor1150aScenarioDefinition, type Dvor1150aScenarioDefinition } from "@/lib/dvor1150a/scenario";
+import { getDvorConfigValue } from "@/lib/dvor1150a/config-utils";
+import { sharedNominalAssignments } from "../scenario-generation/parameter-selex";
 
 export interface CitedAssignment extends ParameterAssignment { citationIndexes: number[] }
 export interface BlueprintProposal {
@@ -62,6 +65,7 @@ export function compileScenarioBlueprint(input: BlueprintGenerationInput, docume
   const adapter = parameterAdapterFor(input.moduleId);
   const scaffold = createTemplateDefinition(input.moduleId, proposal.templateId);
   const initialFields = adapter.fields(input.moduleId, scaffold);
+  const configExercise = input.moduleId === "dvor-1150a" && proposal.templateId === "configuration-values";
   const permitted = (entries: CitedAssignment[]) => entries.every(change => {
     const field = initialFields.find(f => f.id === change.fieldId);
     return field?.recovery && field.group !== "success" && (field.type !== "number" || (Number.isFinite(field.min) && Number.isFinite(field.max)));
@@ -69,7 +73,16 @@ export function compileScenarioBlueprint(input: BlueprintGenerationInput, docume
   if (!permitted(proposal.initial) || !permitted(proposal.recovery)) fail("UNSUPPORTED_REQUEST", "Trường không có recovery native hoặc giới hạn số hữu hạn.");
   if (!proposal.initial.some(change => !Object.is(initialFields.find(f => f.id === change.fieldId)!.value, change.value))) fail("INVALID_RECOVERY", "Không tạo bài chỉ bằng cách đổi tên preset.");
   const assignments = (entries: CitedAssignment[]) => entries.map(({ fieldId, value }) => ({ fieldId, value }));
-  const definition = adapter.apply(input.moduleId, scaffold, assignments(proposal.initial));
+  let definition = adapter.apply(input.moduleId, scaffold, assignments(proposal.initial));
+  if(configExercise) {
+    const d=definition as Dvor1150aScenarioDefinition;
+    d.successCriteria.configurationValues=sharedNominalAssignments(proposal.recovery).filter(c=>c.fieldId.startsWith("configuration.")).map(c=>({fieldId:c.fieldId.slice(14),value:c.value as string|number|boolean}));
+    if(!d.successCriteria.configurationValues.length)fail("INVALID_RECOVERY","Configuration exercises require exact configuration targets.");
+    d.taskTargets=d.successCriteria.configurationValues.filter(target=>!Object.is(getDvorConfigValue(d.configuration,target.fieldId),target.value)).map(target=>({fieldId:target.fieldId,requirement:"change-applied"}));
+    const parsed=parseDvor1150aScenarioDefinition(d);
+    if(!parsed)fail("INVALID_RECOVERY","Invalid or unreachable native configuration targets.");
+    definition=parsed;
+  }
   const configuredFields=adapter.fields(input.moduleId,definition);
   if(!proposal.recovery.some(change=>/^(configuration\.|targetSensor\.)/.test(change.fieldId)&&!Object.is(configuredFields.find(f=>f.id===change.fieldId)?.value,change.value)))fail("INVALID_RECOVERY","Recovery must change a physical configuration target, not only release bypass.");
   const verification = adapter.verify(input.moduleId, definition, assignments(proposal.recovery));
@@ -77,11 +90,16 @@ export function compileScenarioBlueprint(input: BlueprintGenerationInput, docume
   definition.name = proposal.title;
   definition.description = proposal.situation;
   const fields = adapter.fields(input.moduleId, definition);
-  const rubric = compileRubric(input.moduleId, definition, proposal, fields, citations);
+  const expandCited=(entries:CitedAssignment[]):CitedAssignment[]=>sharedNominalAssignments(entries).map(assignment=>{
+    const source=entries.find(c=>c.fieldId===assignment.fieldId)??entries.find(c=>c.fieldId.startsWith("configuration.") && dvor1150aSharedConfigurationFieldIds(c.fieldId.slice(14)).includes(assignment.fieldId.slice(14)))!;
+    return {...assignment,citationIndexes:[...source.citationIndexes]};
+  });
+  const rubric = compileRubric(input.moduleId, definition, configExercise?{...proposal,initial:expandCited(proposal.initial),recovery:expandCited(proposal.recovery)}:proposal, fields, citations);
   return { version: 1, moduleId: input.moduleId, title: proposal.title, situation: proposal.situation,
     cause: `Giả thuyết mô phỏng: ${proposal.cause}`,
     symptoms: verification.initial.map(check => `${check.id}: ${check.detail}`),
     assumptions: ["Bài tập mô phỏng trên scaffold native; trích dẫn là tài liệu tham khảo, không xác nhận số liệu mô phỏng là thông số hãng.",
+      ...(configExercise?["Giới hạn số ±Number.MAX_SAFE_INTEGER của trường không có dải native chỉ là hàng rào biểu diễn/tính toán phần mềm, không phải giới hạn hãng."]:[]),
       ...(input.moduleId === "ads-b" ? ["ADS-B chỉ kiểm chứng cấu hình và chuỗi terminal; không chứng minh sửa chữa vật lý, GPS đồng bộ hay trạng thái vận hành normal."] : []),
       ...proposal.initial.map(change => `Giả định khởi đầu: ${change.fieldId} = ${String(change.value)}.`),
       ...proposal.recovery.map(change => `Đích mô phỏng: ${change.fieldId} = ${String(change.value)}.`)],

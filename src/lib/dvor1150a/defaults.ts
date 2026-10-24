@@ -3,6 +3,7 @@ import type {
   Dvor1150aConfig,
   DvorMonitorCalibration,
   DvorMonitorId,
+  DvorTestGeneratorCalibration,
   DvorMonitorParameter,
   DvorRawMonitorMeasurement,
   DvorTransmitterConfig,
@@ -11,6 +12,11 @@ import type {
 } from "./config-types";
 
 const screenshotVswr = cloneDefaultVorPmdtData().vswrData;
+export const defaultDvorKeyerConfiguration = {
+  keyerInputLevel: "Active Low/Closed" as const, windowedKeyingInput: false,
+  selfKeyOnLoss: false, shutdownOnLoss: false, restartWhenResumed: false,
+  externalKeying: "Disabled" as const, suppressOnShutdown: false,
+};
 
 const monitorCalibration: DvorMonitorCalibration = {
   azimuthOffset: 0,
@@ -29,19 +35,18 @@ const monitorCalibration: DvorMonitorCalibration = {
   evenAntennaReturnLossOffset: 0,
 };
 
-const testGeneratorCalibration: DvorMonitorCalibration = {
+const testGeneratorCalibration: DvorTestGeneratorCalibration = {
   azimuthOffset: 0,
   hz30ModulationScale: 100,
   hz9960ModulationScale: 96.1,
   deviationScale: 100,
-  rfLevelOffset: 0,
   identModulationScale: 100,
-  txPowerScale: 100,
-  txPowerOffset: 0,
-  txFrequencyErrorOffset: 0,
-  notchScale: 100,
-  oddAntennaReturnLossOffset: 0,
-  evenAntennaReturnLossOffset: 0,
+};
+
+export const defaultDvorTestGenerator = {
+  azimuth: 0, hz30Modulation: 30, hz9960Modulation: 30,
+  deviation: 16, identModulation: 10, identStatus: "Normal" as const,
+  audioModulation: 10, audioFrequency: 300,
 };
 
 function makeMonitorMeasurement(): DvorRawMonitorMeasurement {
@@ -106,6 +111,7 @@ function makeTxConfig(id: DvorTransmitterId): DvorTransmitterConfig {
       mainIdentCode: "TST",
       standbyIdentCode: "Same as Main Ident",
       keyerMode: "disabled",
+      ...defaultDvorKeyerConfiguration,
     },
     offsets: makeTxOffsets(
       secondary
@@ -212,7 +218,7 @@ export function createDefaultDvor1150aConfig(): Dvor1150aConfig {
         mon1: makeMonitorMeasurement(),
         mon2: makeMonitorMeasurement(),
       },
-      alarmLimits,
+      alarmLimits: structuredClone(alarmLimits),
       azimuthLimits: { preAlarm: 0.5, alarm: 2 },
       timers: { shutdown: 5, continuousIdent: 17, noIdent: 17 },
       antennas: {
@@ -220,6 +226,15 @@ export function createDefaultDvor1150aConfig(): Dvor1150aConfig {
         mon2: makeAntenna("mon2"),
       },
       calibration: makeCalibration(),
+      testGeneratorCalibration: {
+        mon1: { ...testGeneratorCalibration },
+        mon2: { ...testGeneratorCalibration },
+      },
+      testGenerator: { ...defaultDvorTestGenerator },
+      standbyCalibration: {
+        mon1: { txPowerScale: 100, txPowerOffset: 0, txFrequencyErrorOffset: 0 },
+        mon2: { txPowerScale: 100, txPowerOffset: 0, txFrequencyErrorOffset: 0 },
+      },
       routing: makeRouting(),
       votingLogic: "AND",
       transfer: "on Primary Alarm",
@@ -238,7 +253,40 @@ export function createDefaultDvor1150aConfig(): Dvor1150aConfig {
 }
 
 export function cloneDvor1150aConfig(config: Dvor1150aConfig): Dvor1150aConfig {
-  return structuredClone(config);
+  return withDvor1150aConfigExtensions(config) as Dvor1150aConfig;
+}
+
+/** Only backfill known additive v1 fields, never repair required/malformed data. */
+export function withDvor1150aConfigExtensions(value: unknown): unknown {
+  const next = structuredClone(value);
+  if (!next || typeof next !== "object" || Array.isArray(next)) return next;
+  const record = next as Record<string, unknown>;
+  const transmitters = record.transmitters;
+  if (transmitters && typeof transmitters === "object" && !Array.isArray(transmitters)) {
+    for (const id of ["tx1", "tx2"]) {
+      const tx = (transmitters as Record<string, unknown>)[id];
+      if (!tx || typeof tx !== "object" || Array.isArray(tx)) continue;
+      const nominal = (tx as Record<string, unknown>).nominal;
+      if (!nominal || typeof nominal !== "object" || Array.isArray(nominal)) continue;
+      const fields = nominal as Record<string, unknown>;
+      for (const [key, value] of Object.entries(defaultDvorKeyerConfiguration)) {
+        if (!Object.hasOwn(fields, key)) fields[key] = value;
+      }
+    }
+  }
+  const monitor = record.monitor;
+  if (monitor && typeof monitor === "object" && !Array.isArray(monitor)) {
+    const fields = monitor as Record<string, unknown>;
+    if (!Object.hasOwn(fields, "testGeneratorCalibration")) {
+      fields.testGeneratorCalibration = { mon1: { ...testGeneratorCalibration }, mon2: { ...testGeneratorCalibration } };
+    }
+    if (!Object.hasOwn(fields, "testGenerator")) fields.testGenerator = { ...defaultDvorTestGenerator };
+    if (!Object.hasOwn(fields, "standbyCalibration")) fields.standbyCalibration = {
+      mon1: { txPowerScale: 100, txPowerOffset: 0, txFrequencyErrorOffset: 0 },
+      mon2: { txPowerScale: 100, txPowerOffset: 0, txFrequencyErrorOffset: 0 },
+    };
+  }
+  return next;
 }
 
 export const defaultDvor1150aConfig = createDefaultDvor1150aConfig();

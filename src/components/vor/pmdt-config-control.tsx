@@ -18,6 +18,10 @@ interface PmdtConfigControlProps {
   digits?: number;
   className?: string;
   disabled?: boolean;
+  ariaLabel?: string;
+  booleanControl?: "checkbox" | "radio";
+  optionValue?: string;
+  radioName?: string;
 }
 
 function formatValue(value: string | number | boolean | null, digits?: number): string {
@@ -34,6 +38,10 @@ export function PmdtConfigControl({
   digits,
   className = "",
   disabled = false,
+  ariaLabel,
+  booleanControl = "checkbox",
+  optionValue,
+  radioName,
 }: PmdtConfigControlProps) {
   const config = useVorPmdtStore((state) => state.configDraft);
   const securityLevel = useVorPmdtStore((state) => state.securityLevel);
@@ -61,21 +69,28 @@ export function PmdtConfigControl({
   }
 
   const metadata = {
-    "aria-label": displayFieldId,
+    "aria-label": ariaLabel ?? displayFieldId,
     "data-vor-field-id": displayFieldId,
     "data-vor-config-field-id": configFieldId,
     "data-vor-field-value": String(value ?? ""),
     "data-vor-field-type": controlType,
+    "data-vor-effect": field?.effect,
   };
+
+  if (optionValue !== undefined) {
+    return <input {...metadata} type="radio" name={radioName ?? configFieldId} value={optionValue}
+      checked={value === optionValue} disabled={!canEdit} onChange={() => update(optionValue)} className={className} />;
+  }
 
   if (controlType === "boolean") {
     return (
       <input
         {...metadata}
-        type="checkbox"
+        type={booleanControl}
+        name={booleanControl === "radio" ? configFieldId.replace(/\.(primary|secondary)$/, "") : undefined}
         checked={Boolean(value)}
         disabled={!canEdit}
-        title={lockedByScenario ? "Scenario lock: examiner recovery controls only" : undefined}
+        title={lockedByScenario ? "Scenario lock: examiner recovery controls only" : field?.effectNotice}
         onChange={(event) => update(event.currentTarget.checked)}
         className={className}
       />
@@ -88,7 +103,7 @@ export function PmdtConfigControl({
         {...metadata}
         value={String(value ?? "")}
         disabled={!canEdit}
-        title={lockedByScenario ? "Scenario lock: examiner recovery controls only" : undefined}
+        title={lockedByScenario ? "Scenario lock: examiner recovery controls only" : field?.effectNotice}
         onChange={(event) => update(event.currentTarget.value)}
         className={className}
       >
@@ -116,7 +131,7 @@ export function PmdtConfigControl({
       } : undefined}
       value={displayedValue}
       disabled={!canEdit}
-      title={lockedByScenario ? "Scenario lock: examiner recovery controls only" : undefined}
+      title={lockedByScenario ? "Scenario lock: examiner recovery controls only" : field?.effectNotice}
       onChange={(event) => update(event.currentTarget.value)}
       onFocus={isTextEntry ? () => {
         setDraftValue(committedValue);

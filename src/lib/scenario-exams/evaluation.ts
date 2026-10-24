@@ -13,6 +13,7 @@ import { gradeActions, gradeHardwareSelection } from "@/lib/grading";
 import type { RecordedAction } from "@/lib/types";
 import { isRecord } from "./results";
 import type { ScenarioExamTechnicalSummary } from "./types";
+import type { Dvor1150aScenarioEvidence } from "@/lib/dvor1150a/scenario";
 
 function strings(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === "string") : [];
@@ -40,9 +41,16 @@ export function evaluateScenarioExamResult(moduleId: ScenarioParametersModuleId,
     if (moduleId === "dvor-1150a") {
       const definition = parseScenarioParameters(moduleId, definitionValue);
       if (!definition || !isRecord(checkpoint.config)) return unverified;
+      if (definition.successCriteria.configurationValues !== undefined && (checkpoint.scenarioId !== definition.id
+        || typeof checkpoint.scenarioRunId !== "string" || !checkpoint.scenarioRunId.trim()
+        || typeof checkpoint.scenarioStartedAt !== "string" || !Number.isFinite(Date.parse(checkpoint.scenarioStartedAt)))) return { ...unverified, solved: false };
       const config = checkpoint.config as unknown as Dvor1150aConfig;
       if (validateDvorConfig(config).length) return unverified;
-      return summary(evaluateDvor1150aScenario({ active: true, definition, startedAt: null }, buildDvor1150aSnapshot(config), config, observed));
+      const nativeEvidence: Dvor1150aScenarioEvidence = { ...observed,
+        runId: typeof checkpoint.scenarioRunId === "string" ? checkpoint.scenarioRunId : undefined,
+        actionHistory: payload.actionHistory as Dvor1150aScenarioEvidence["actionHistory"],
+        evidenceStats: payload.evidenceStats as Dvor1150aScenarioEvidence["evidenceStats"] };
+      return summary(evaluateDvor1150aScenario({ active: true, definition, scenarioId: typeof checkpoint.scenarioId === "string" ? checkpoint.scenarioId : undefined, runId: nativeEvidence.runId, startedAt: typeof checkpoint.scenarioStartedAt === "string" ? checkpoint.scenarioStartedAt : null }, buildDvor1150aSnapshot(config), config, nativeEvidence));
     }
     if (moduleId === "dvor-1150") {
       const definition = parseScenarioParameters(moduleId, definitionValue);

@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { PmdtToolbar } from "../pmdt-toolbar";
-import { calculateIntegrityTestValues } from "@/lib/dvor1150a";
+import { calculateIntegrityTestValues, dvorConfigFieldCatalog, getDvorConfigValue } from "@/lib/dvor1150a";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
+import { PmdtConfigControl } from "../pmdt-config-control";
 
 type TestTab = "completed" | "in-process" | "test-generator";
 
@@ -157,7 +158,11 @@ function TestTable({
 }
 
 function TestGenerator({ monitorNumber }: { monitorNumber: 1 | 2 }) {
-  const data = useVorPmdtStore((state) => state.data);
+  const results = useVorPmdtStore((state) => state.derived.testGeneratorResults[monitorNumber === 1 ? "mon1" : "mon2"]);
+  const config = useVorPmdtStore((state) => state.config);
+  const resultKeys = ["azimuth", "hz30Modulation", "hz9960Modulation", "deviation", "identModulation"] as const;
+  const setupKeys = [...resultKeys, "identStatus", "audioModulation", "audioFrequency"] as const;
+  const storedOnlyKeys = setupKeys.filter((key) => dvorConfigFieldCatalog.find((field) => field.id === `monitor.testGenerator.${key}`)?.effect === "stored-only");
   const rows = [
     ["Azimuth Angle", "0.00", "°", "359.97", "°"],
     ["30 Hz Modulation", "30.0", "%", "30.0", "%"],
@@ -176,17 +181,11 @@ function TestGenerator({ monitorNumber }: { monitorNumber: 1 | 2 }) {
         <time className="pmdt-monitor-date">04/26/24 21:09:59</time>
         <table>
           <tbody>
-            {rows.map(([label, setup, setupUnit]) => (
+            {rows.map(([label, , setupUnit], index) => (
               <tr key={label}>
                 <th scope="row">{label}</th>
                 <td>
-                  {label === "Ident Control" ? (
-                    <select aria-label={`${label} setup`} disabled value={setup} onChange={() => undefined}>
-                      <option value="Normal">Normal</option>
-                    </select>
-                  ) : (
-                    <input aria-label={`${label} setup`} type="number" readOnly value={setup} />
-                  )}
+                  <PmdtConfigControl displayFieldId={`testGeneratorSetup.${setupKeys[index]}`} ariaLabel={`${label} setup`} configFieldId={`monitor.testGenerator.${setupKeys[index]}`} digits={index === 0 || index === 3 ? 2 : 1} />
                 </td>
                 <td>{setupUnit}</td>
               </tr>
@@ -199,16 +198,32 @@ function TestGenerator({ monitorNumber }: { monitorNumber: 1 | 2 }) {
         <output className="pmdt-monitor-test-updated">Updated</output>
         <table>
           <tbody>
-            {rows.slice(0, 5).map(([label, , , result, unit]) => (
+            {rows.slice(0, 5).map(([label, , , , unit], index) => (
               <tr key={label}>
                 <th scope="row">{label}</th>
-                <td>{result || format(data.monitorAntennas[monitorNumber - 1]?.azimuthAngle ?? 0, 2)}</td>
+                <td data-vor-field-id={`testGeneratorResults.mon${monitorNumber}.${resultKeys[index]}`}>{format(results[resultKeys[index]], index === 0 || index === 3 ? 2 : 1)}</td>
                 <td>{unit}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </fieldset>
+      <div role="note" aria-label="Unsupported Test Generator measurements" className="text-[10px]" style={{ gridColumn: "1 / -1" }}>
+        <p>Chỉ lưu cấu hình: Ident Control, Audio Modulation và Audio Frequency chưa có kết quả detector/certification được xác minh. Giá trị đã áp dụng dưới đây không phải số đo; không đổi số đo hoặc cảnh báo.</p>
+        <dl>
+          {storedOnlyKeys.map((key) => {
+            const field = dvorConfigFieldCatalog.find((item) => item.id === `monitor.testGenerator.${key}`)!;
+            return (
+              <div key={key}>
+                <dt>{field.label.replace("Test Generator ", "")} — đã áp dụng</dt>
+                <dd data-vor-field-id={`testGeneratorApplied.mon${monitorNumber}.${key}`} data-vor-effect="stored-only">
+                  {String(getDvorConfigValue(config, field.id))}{field.unit ? ` ${field.unit}` : ""}
+                </dd>
+              </div>
+            );
+          })}
+        </dl>
+      </div>
     </div>
   );
 }

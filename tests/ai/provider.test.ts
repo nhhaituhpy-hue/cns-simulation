@@ -104,7 +104,9 @@ it.each(["dvor-1150", "dvor-1150a", "dme-1119a", "dvor-220", "dme-320", "ads-b"]
   const { getScenarioCapabilities } = await import("@/lib/ai/scenario-generation/capabilities");
   const { parseScenarioParameters } = await import("@/lib/scenario-parameters");
   vi.stubEnv("CNS_AI_API_KEY", "test");
-  const template = getScenarioCapabilities(moduleId)[0];
+  // Exercise a fault scaffold, not the additive exact-configuration scaffold
+  // which correctly requires explicit configuration recovery targets.
+  const template = getScenarioCapabilities(moduleId).find(item => item.templateId !== "configuration-values")!;
   const input = { moduleId, name: "Native fault exercise", description: template.description+" Fixture setting true.", difficulty: "intermediate" as const };
   let calls=0;
   vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ choices: [{ finish_reason: "stop", message: { content: JSON.stringify(++calls===1?{ status: "supported", moduleId, templateId: template.templateId, explanation: "Approved native fault matches this request exactly.", citations: [{ documentId: "request", segmentLabel: "request", quote: input.description }] }:proposalOutput(input,template.templateId)) } }] }))));

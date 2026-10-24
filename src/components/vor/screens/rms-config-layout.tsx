@@ -181,10 +181,10 @@ function RmsConfigGeneralTab() {
             <div className="flex items-center gap-4">
               <span>Voting Logic:</span>
               <label className="flex items-center gap-1.5">
-                <input type="radio" disabled checked={data.votingLogic === "OR"} className="accent-[#22c55e]" /> OR
+                <PmdtConfigControl configFieldId="monitor.votingLogic" displayFieldId="rmsConfigGeneral.votingLogic.or" optionValue="OR" ariaLabel="OR voting" className="accent-[#22c55e]" /> OR
               </label>
               <label className="flex items-center gap-1.5">
-                <input type="radio" disabled checked={data.votingLogic === "AND"} className="accent-[#22c55e]" /> AND
+                <PmdtConfigControl configFieldId="monitor.votingLogic" displayFieldId="rmsConfigGeneral.votingLogic.and" optionValue="AND" ariaLabel="AND voting" className="accent-[#22c55e]" /> AND
               </label>
             </div>
             <div className="flex items-center gap-2 mt-1">

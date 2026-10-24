@@ -24,8 +24,11 @@ import { scenarioEditPolicyChange, scenarioEditableFieldChange } from "@/lib/sce
 import { ScenarioParametersSection, ScenarioCriteriaHelp } from "@/components/scenario/parameters/scenario-parameters-section";
 import { ScenarioDiagnosisSection } from "@/components/scenario/parameters/scenario-diagnosis-section";
 import { ScenarioEditPolicySection } from "@/components/scenario/parameters/scenario-edit-policy-section";
+import { AiAuthoringField } from "@/components/scenario/ai-authoring-field";
+import { dvor1150aConfigurationValuesSchema } from "@/lib/ai/scenario-authoring/forms/dvor1150a-criteria";
+import type { JsonValue } from "@/lib/ai/scenario-authoring/types";
 
-const criterionLabels: Record<keyof Dvor1150aScenarioDefinition["successCriteria"], string> = {
+const criterionLabels = {
   requireIntegralMonitorNormal: "Integral Monitor trở về Normal",
   requireActiveTransmitter: "Có máy phát hoạt động trên antenna",
   requireNoSidebandVswrAlarm: "Không còn cảnh báo Sideband VSWR",
@@ -170,6 +173,9 @@ export function Dvor1150aScenarioParametersPanel() {
     }
   }, [scenarioDraft, validationIssues.length]);
   const evaluation = evaluateDvor1150aScenario(scenario, derived, config, {
+    runId: scenario.runId,
+    actionHistory,
+    evidenceStats: useVorPmdtStore.getState().evidenceStats,
     visitedViewIds: attemptEvents.map((event) => event.viewId),
     acceptedActionControlIds: actionHistory.filter((event) => event.accepted && event.controlId).map((event) => event.controlId as string),
     selectedHardwareOccurrenceKeys: hardwareSelection,
@@ -276,7 +282,9 @@ export function Dvor1150aScenarioParametersPanel() {
       <ScenarioParametersSection number={3} title="Điều kiện đạt" englishTitle="Success criteria" ariaLabel="Success criteria editor" className="dvor1150a-scenario-policy"
         help="Kết quả vận hành cần đạt; không tự xác định trường được phép sửa hoặc thao tác bắt buộc.">
         <ScenarioCriteriaHelp disposition={scenarioDraft.diagnosis?.disposition} />
-        {Object.entries(scenarioDraft.successCriteria).map(([key, value]) => <label key={key}><input type="checkbox" checked={value} onChange={(event) => update((next) => { next.successCriteria[key as keyof Dvor1150aScenarioDefinition["successCriteria"]] = event.target.checked; })} /> {criterionLabels[key as keyof typeof criterionLabels]}</label>)}
+        {(Object.keys(criterionLabels) as Array<keyof typeof criterionLabels>).map(key => <label key={key}><input type="checkbox" checked={scenarioDraft.successCriteria[key]} onChange={(event) => update((next) => { next.successCriteria[key] = event.target.checked; })} /> {criterionLabels[key]}</label>)}
+        <AiAuthoringField schema={dvor1150aConfigurationValuesSchema(scenarioDraft.configuration)} value={(scenarioDraft.successCriteria.configurationValues??[]) as unknown as JsonValue}
+          onChange={value => update(next => { next.successCriteria.configurationValues=value as unknown as NonNullable<Dvor1150aScenarioDefinition["successCriteria"]["configurationValues"]>; })} />
       </ScenarioParametersSection>
 
       <ScenarioDiagnosisSection className="dvor1150a-scenario-policy" diagnosis={scenarioDraft.diagnosis} fields={fields} taskTargets={scenarioDraft.taskTargets}

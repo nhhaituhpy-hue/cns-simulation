@@ -121,7 +121,7 @@ function MonitorTransmitterStatus() {
                         fieldId={`rmsMonitorTransmitterStatus.monitors.${index}.${column.key}`}
                         label={`${row.name} ${column.label}`}
                         value={row[column.key]}
-                        activeColor="red"
+                        activeColor={column.key === "secondaryAlarm" ? "yellow" : "red"}
                       />
                     </td>
                   ))}

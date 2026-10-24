@@ -7,6 +7,7 @@ import {
   dvorConfigFieldCatalog,
   setDvorConfigValue,
   validateDvorConfigField,
+  getDvorConfigValue,
 } from "./config-utils";
 import { cloneDvor1150aConfig, createDefaultDvor1150aConfig } from "./defaults";
 import { buildDvor1150aSnapshot } from "./engine";
@@ -91,6 +92,11 @@ export function applyDvorConfigPatches(
 
     config = setDvorConfigValue(config, patch.fieldId, patch.value);
     config = normalizeTransmitterRoute(config, patch.fieldId, patch.value);
+    const routing = /^monitor\.routing\.[^.]+\.(primary|secondary)$/.exec(patch.fieldId);
+    if (routing && patch.value === true) {
+      const other = routing[1] === "primary" ? "secondary" : "primary";
+      config = setDvorConfigValue(config, patch.fieldId.replace(/\.(primary|secondary)$/, `.${other}`), false);
+    }
   }
 
   if (config.simulation.integralMonitorBypass && !config.simulation.local) {
@@ -122,10 +128,22 @@ export function applyDvorConfigPatches(
     }
   }
 
+  const snapshot = buildDvor1150aSnapshot(config);
+  if (patches.length === 0) {
+    for (const field of dvorConfigFieldCatalog) {
+      const error = validateDvorConfigField(field, getDvorConfigValue(config, field.id));
+      if (error) return { ok: false, error: `${field.label}: ${error}`, fieldId: field.id };
+    }
+    const issue = snapshot.validation.find(issue => issue.severity === "error");
+    if (issue) return { ok: false, error: issue.message, fieldId: issue.fieldId };
+    if (config.monitor.sidebandVswr.preAlarm >= config.monitor.sidebandVswr.alarm) {
+      return { ok: false, error: "VSWR pre-alarm must be lower than alarm.", fieldId: "monitor.sidebandVswr" };
+    }
+  }
   return {
     ok: true,
     config,
-    snapshot: buildDvor1150aSnapshot(config),
+    snapshot,
   };
 }
 

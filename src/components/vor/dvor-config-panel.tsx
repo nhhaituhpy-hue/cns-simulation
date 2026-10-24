@@ -4,6 +4,7 @@ import { X } from "@phosphor-icons/react/dist/csr/X";
 import { useState } from "react";
 import {
   dvorConfigFieldCatalog,
+  dvor1150aSharedNominalFieldIds,
   getDvorConfigValue,
   isDvor1150aScenarioStudentEditable,
   parseDvorConfigInput,
@@ -18,8 +19,9 @@ function ConfigField({ field }: { field: DvorConfigFieldDefinition }) {
   const local = useVorPmdtStore((state) => state.config.simulation.local);
   const scenario = useVorPmdtStore((state) => state.scenario);
   const setConfigValue = useVorPmdtStore((state) => state.setConfigValue);
+  const sharedIds = dvor1150aSharedNominalFieldIds(field.id);
   const scenarioAllowsField = !scenario.active
-    || isDvor1150aScenarioStudentEditable(scenario.definition, field.id);
+    || sharedIds.every(id => isDvor1150aScenarioStudentEditable(scenario.definition, id));
   const canEdit = securityLevel >= 3 && local && scenarioAllowsField;
   const value = getDvorConfigValue(config, field.id);
   const validationMessage = validateDvorConfigField(field, value);
@@ -34,7 +36,7 @@ function ConfigField({ field }: { field: DvorConfigFieldDefinition }) {
     if (typeof rawValue === "string") setDraftValue(rawValue);
     const nextValue = parseDvorConfigInput(field, rawValue);
     if (nextValue === null && field.type === "number") return;
-    setConfigValue(field.id, nextValue);
+    setConfigValue(field.id, nextValue, sharedIds.filter(id => id !== field.id));
   }
 
   return (
@@ -47,23 +49,31 @@ function ConfigField({ field }: { field: DvorConfigFieldDefinition }) {
           <input
             id={controlId}
             name={field.id}
+            data-vor-config-field-id={field.id}
+            data-vor-field-id={field.id}
+            data-vor-field-value={String(value ?? "")}
+            data-vor-effect={field.effect}
             type="checkbox"
             disabled={!canEdit}
-            title={!scenarioAllowsField ? "Scenario lock: examiner recovery controls only" : undefined}
+            title={!scenarioAllowsField ? "Scenario lock: examiner recovery controls only" : field.effectNotice}
             checked={Boolean(value)}
             onChange={(event) => update(event.currentTarget.checked)}
           />
         ) : field.type === "select" ? (
-          <select id={controlId} name={field.id} value={committedValue} disabled={!canEdit} title={!scenarioAllowsField ? "Scenario lock: examiner recovery controls only" : undefined} onChange={(event) => update(event.currentTarget.value)}>
+          <select id={controlId} name={field.id} data-vor-config-field-id={field.id} data-vor-field-id={field.id} data-vor-field-value={String(value ?? "")} data-vor-effect={field.effect} value={committedValue} disabled={!canEdit} title={!scenarioAllowsField ? "Scenario lock: examiner recovery controls only" : field.effectNotice} onChange={(event) => update(event.currentTarget.value)}>
             {field.options?.map((option) => <option key={option} value={option}>{option}</option>)}
           </select>
         ) : (
           <input
             id={controlId}
             name={field.id}
+            data-vor-config-field-id={field.id}
+            data-vor-field-id={field.id}
+            data-vor-field-value={String(value ?? "")}
+            data-vor-effect={field.effect}
             type={field.type === "number" ? "number" : "text"}
             disabled={!canEdit}
-            title={!scenarioAllowsField ? "Scenario lock: examiner recovery controls only" : undefined}
+            title={!scenarioAllowsField ? "Scenario lock: examiner recovery controls only" : field.effectNotice}
             value={displayedValue}
             min={field.min}
             max={field.max}
@@ -78,6 +88,7 @@ function ConfigField({ field }: { field: DvorConfigFieldDefinition }) {
         )}
         {field.unit ? <small>{field.unit}</small> : null}
       </span>
+      {field.effectNotice ? <small className="pmdt-config-field-error" role="note">{field.effectNotice}</small> : null}
       {validationMessage ? <small className="pmdt-config-field-error">{validationMessage}</small> : null}
     </label>
   );

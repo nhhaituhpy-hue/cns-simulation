@@ -208,6 +208,7 @@ describe("VOR PMDT store", () => {
 
     store.getState().setConfigValue("simulation.integralMonitorBypass", false);
 
+    store.getState().advanceMonitorTime(store.getState().config.monitor.timers.shutdown);
     expect(store.getState().config.transmitters.tx1.onAir).toBe(false);
     expect(store.getState().config.transmitters.tx2.onAir).toBe(true);
     expect(store.getState().configDraft.transmitters.tx2.onAir).toBe(true);
@@ -224,10 +225,12 @@ describe("VOR PMDT store", () => {
     const store = createVorPmdtStore();
     enterMaintenanceMode(store);
     store.getState().setConfigValue("monitor.calibration.mon1.deviationScale", 70);
+    store.getState().setConfigValue("monitor.votingLogic", "OR");
 
     expect(store.getState().applyConfigChanges()).toBe(true);
     store.getState().setConfigValue("simulation.integralMonitorBypass", false);
 
+    store.getState().advanceMonitorTime(store.getState().config.monitor.timers.shutdown);
     expect(store.getState().derived.monitors.mon1.parameters.deviation.status).toBe("alarm");
     expect(store.getState().config.transmitters.tx1.onAir).toBe(false);
     expect(store.getState().config.transmitters.tx2.onAir).toBe(true);
@@ -244,6 +247,7 @@ describe("VOR PMDT store", () => {
     expect(store.getState().applyConfigChanges()).toBe(true);
     store.getState().setConfigValue("simulation.integralMonitorBypass", false);
 
+    store.getState().advanceMonitorTime(store.getState().config.monitor.timers.shutdown);
     expect(store.getState().derived.voting.activeTransmitter).toBe(null);
     expect(store.getState().config.transmitters.tx1.enabled).toBe(false);
     expect(store.getState().config.transmitters.tx2.enabled).toBe(false);

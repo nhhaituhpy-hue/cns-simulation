@@ -42,7 +42,9 @@ function ReadOnlyCheck({ fieldId, checked, configFieldId }: { fieldId: string; c
   const overrides = useVorPmdtStore((state) => state.overrides);
 
   if (configFieldId) {
-    return <PmdtConfigControl displayFieldId={fieldId} configFieldId={configFieldId} type="boolean" className="pmdt-alarm-checkbox" />;
+    return <PmdtConfigControl displayFieldId={fieldId} configFieldId={configFieldId}
+      mirrorFieldIds={configFieldId === "monitor.antennas.mon1.secondAntennaEnabled" ? ["monitor.antennas.mon2.secondAntennaEnabled"] : []}
+      type="boolean" className="pmdt-alarm-checkbox" />;
   }
   return <input aria-label={fieldId} type="checkbox" disabled checked={resolveVorField(checked, fieldId, overrides)} />;
 }

@@ -15,6 +15,9 @@ export function Dvor1150aTrainingHud({ examinerView = false }: { examinerView?: 
   if (!scenario.active || !scenario.definition) return null;
 
   const evaluation = evaluateDvor1150aScenario(scenario, derived, config, {
+    runId: scenario.runId,
+    actionHistory,
+    evidenceStats: useVorPmdtStore.getState().evidenceStats,
     visitedViewIds: attemptEvents.map((event) => event.viewId),
     acceptedActionControlIds: actionHistory
       .filter((event) => event.accepted && event.controlId)

@@ -13,7 +13,9 @@ export function nativeBlueprintFixture(moduleId:ScenarioParametersModuleId):Scen
  const base=mopiens?authoringAdapterFor(moduleId).createDefault():createTemplateDefinition(moduleId,moduleId==="ads-b"?"adsb-08-configure-sac-sic":moduleId==="dme-1119a"?"tx1-delay-drift":"carrier-9960");
  const fieldId=moduleId==="ads-b"?"targetSensor.dataProfile.asterix.sac":moduleId==="dvor-220"?"configuration.transmitters.tx1.carrierScalePercent":moduleId==="dme-320"?"configuration.transmitters.tx1.outputPowerPercent":moduleId==="dme-1119a"?"configuration.txConfigNominal.rtcParameters.replyDelayOffset":"configuration.transmitters.tx1.nominal.outputPower";
  const initialValue=moduleId==="ads-b"?44:moduleId==="dme-1119a"?0.17:37.4;
- const targetValue=moduleId==="ads-b"?95:moduleId==="dme-1119a"?-0.6:mopiens?100:125;
+ // DVOR1150A's existing training reference is 70 W, not DVOR1150's 125 W.
+ // At 125 W both CCAs alarm; old immediate TX2 transfer hid that bad target.
+ const targetValue=moduleId==="ads-b"?95:moduleId==="dme-1119a"?-0.6:mopiens?100:moduleId==="dvor-1150a"?70:125;
  const definition=adapter.apply(moduleId,base,[{fieldId,value:initialValue}]);
  definition.name=`Bài tập kiểm chứng ${moduleId}`;definition.description="Test fixture only: inspect and correct the specified native configuration.";
  const recovery:ParameterAssignment[]=[{fieldId,value:targetValue}];

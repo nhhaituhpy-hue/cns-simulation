@@ -26,12 +26,14 @@ function OffsetCell({
   value,
   digits,
   overrides,
+  configFieldId,
 }: {
   fieldId: string;
   label: string;
   value: number | null;
   digits: number;
   overrides: ReturnType<typeof useVorPmdtStore.getState>["overrides"];
+  configFieldId?: string;
 }) {
   const resolved = resolveVorField(value, fieldId, overrides);
   const status = resolveVorStatus("green", fieldId, overrides);
@@ -44,6 +46,8 @@ function OffsetCell({
     >
       {displayValue === null ? (
         <span className="pmdt-offset-empty">&nbsp;</span>
+      ) : configFieldId ? (
+        <PmdtConfigControl displayFieldId={fieldId} configFieldId={configFieldId} type="number" digits={digits} />
       ) : (
         <input
           aria-label={label}
@@ -124,6 +128,7 @@ export function MonitorOffsets({ monitorNumber }: { monitorNumber: 1 | 2 }) {
                   <td className="pmdt-offset-gap" aria-hidden="true" />
                   <OffsetCell
                     fieldId={`monitorOffsets.${monitorNumber}.${index}.standby`}
+                    configFieldId={row.standby !== null ? `monitor.standbyCalibration.mon${monitorNumber}.${calibrationFieldByParameter[row.parameter]}` : undefined}
                     label={`${row.parameter} Standby`}
                     value={row.standby}
                     digits={digitsFor(row.parameter)}
@@ -131,6 +136,7 @@ export function MonitorOffsets({ monitorNumber }: { monitorNumber: 1 | 2 }) {
                   />
                   <OffsetCell
                     fieldId={`monitorOffsets.${monitorNumber}.${index}.testGen`}
+                    configFieldId={row.testGen !== null ? `monitor.testGeneratorCalibration.mon${monitorNumber}.${calibrationFieldByParameter[row.parameter]}` : undefined}
                     label={`${row.parameter} Test Generator / Certification`}
                     value={row.testGen}
                     digits={digitsFor(row.parameter)}
@@ -142,6 +148,7 @@ export function MonitorOffsets({ monitorNumber }: { monitorNumber: 1 | 2 }) {
             ))}
           </tbody>
         </table>
+        <p className="text-[10px] px-3 py-2" role="note">Chỉ lưu cấu hình: Tx Power Offset (%) và Return Loss Offset (dB) chưa có hàm hiệu chuẩn được xác minh; không đổi số đo hoặc cảnh báo.</p>
       </div>
     </section>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { resolveVorField, useVorPmdtStore } from "@/stores/vor-pmdt-store";
+import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
 import { PmdtConfigControl } from "../pmdt-config-control";
 
 function NumberRow({
@@ -25,11 +25,11 @@ function NumberRow({
   );
 }
 
-function CheckLine({ fieldId, label, checked }: { fieldId: string; label: string; checked: boolean }) {
-  const overrides = useVorPmdtStore((state) => state.overrides);
+function CheckLine({ fieldId, label, disabled = false }: { fieldId: string; label: string; checked: boolean; disabled?: boolean }) {
+  const key = fieldId.split(".").at(-1)!;
   return (
     <label className="pmdt-tx-check-line" data-vor-field-id={fieldId}>
-      <input type="checkbox" aria-label={fieldId} disabled checked={Boolean(resolveVorField(checked, fieldId, overrides))} />
+      <PmdtConfigControl displayFieldId={fieldId} ariaLabel={label} configFieldId={`transmitters.tx1.nominal.${key}`} mirrorFieldIds={[`transmitters.tx2.nominal.${key}`]} type="boolean" disabled={disabled} />
       <span>{label}</span>
     </label>
   );
@@ -38,8 +38,7 @@ function CheckLine({ fieldId, label, checked }: { fieldId: string; label: string
 export function TxConfigNominal() {
   const data = useVorPmdtStore((state) => state.data);
   const config = data.txConfigNominal;
-  const overrides = useVorPmdtStore((state) => state.overrides);
-  const keyerMode = resolveVorField(config.keyerInput.mode, "txConfigNominal.keyerInput.mode", overrides);
+  const keyerMode = useVorPmdtStore((state) => state.configDraft.transmitters.tx1.nominal.keyerMode);
 
   const audioFields = [
     ["azimuthIndex", "Azimuth Index", "°", 2],
@@ -92,21 +91,18 @@ export function TxConfigNominal() {
           <div className="pmdt-tx-keyer-section">
             <h3>Keyer Input:</h3>
             <div className="pmdt-tx-radio-lines">
-              <label><input type="radio" disabled checked={keyerMode === "disabled"} /> Disabled (Self-Keyed)</label>
-              <label><input type="radio" disabled checked={keyerMode === "external"} /> External Keying</label>
+              <label><PmdtConfigControl displayFieldId="txConfigNominal.keyerInput.mode.disabled" ariaLabel="Disabled (Self-Keyed)" configFieldId="transmitters.tx1.nominal.keyerMode" mirrorFieldIds={["transmitters.tx2.nominal.keyerMode"]} optionValue="disabled" /> Disabled (Self-Keyed)</label>
+              <label><PmdtConfigControl displayFieldId="txConfigNominal.keyerInput.mode.external" ariaLabel="External Keying" configFieldId="transmitters.tx1.nominal.keyerMode" mirrorFieldIds={["transmitters.tx2.nominal.keyerMode"]} optionValue="external" /> External Keying</label>
             </div>
             <div className="pmdt-tx-disabled-row">
               <span>Keyer Input Level</span>
-              <select disabled value={String(config.keyerInput.keyerInputLevel)} onChange={() => {}}>
-                <option>Active High/Open</option>
-                <option>Active Low/Closed</option>
-              </select>
+              <PmdtConfigControl displayFieldId="txConfigNominal.keyerInput.keyerInputLevel" ariaLabel="Keyer Input Level" configFieldId="transmitters.tx1.nominal.keyerInputLevel" mirrorFieldIds={["transmitters.tx2.nominal.keyerInputLevel"]} disabled={keyerMode !== "external"} />
             </div>
             <div className="pmdt-tx-check-grid">
-              <CheckLine fieldId="txConfigNominal.keyerInput.windowedKeyingInput" label="Windowed Keying Input" checked={config.keyerInput.windowedKeyingInput} />
-              <CheckLine fieldId="txConfigNominal.keyerInput.selfKeyOnLoss" label="Self-Key on Loss of Keying Signal" checked={config.keyerInput.selfKeyOnLoss} />
-              <CheckLine fieldId="txConfigNominal.keyerInput.shutdownOnLoss" label="Shutdown on Loss of Keyed Signal" checked={config.keyerInput.shutdownOnLoss} />
-              <CheckLine fieldId="txConfigNominal.keyerInput.restartWhenResumed" label="Restart when Keying Signal Resumes" checked={config.keyerInput.restartWhenResumed} />
+              <CheckLine fieldId="txConfigNominal.keyerInput.windowedKeyingInput" label="Windowed Keying Input" disabled={keyerMode !== "external"} checked={config.keyerInput.windowedKeyingInput} />
+              <CheckLine fieldId="txConfigNominal.keyerInput.selfKeyOnLoss" label="Self-Key on Loss of Keying Signal" disabled={keyerMode !== "external"} checked={config.keyerInput.selfKeyOnLoss} />
+              <CheckLine fieldId="txConfigNominal.keyerInput.shutdownOnLoss" label="Shutdown on Loss of Keyed Signal" disabled={keyerMode !== "external"} checked={config.keyerInput.shutdownOnLoss} />
+              <CheckLine fieldId="txConfigNominal.keyerInput.restartWhenResumed" label="Restart when Keying Signal Resumes" disabled={keyerMode !== "external"} checked={config.keyerInput.restartWhenResumed} />
             </div>
           </div>
 
@@ -114,10 +110,7 @@ export function TxConfigNominal() {
             <h3>Keyer Output:</h3>
             <div className="pmdt-tx-disabled-row">
               <span>External Keying</span>
-              <select disabled value={String(config.keyerOutput.externalKeying)} onChange={() => {}}>
-                <option>Disabled</option>
-                <option>Enabled</option>
-              </select>
+              <PmdtConfigControl displayFieldId="txConfigNominal.keyerOutput.externalKeying" ariaLabel="External Keying output" configFieldId="transmitters.tx1.nominal.externalKeying" mirrorFieldIds={["transmitters.tx2.nominal.externalKeying"]} />
             </div>
             <CheckLine fieldId="txConfigNominal.keyerOutput.suppressOnShutdown" label="Suppress External Keyer on Shutdown" checked={config.keyerOutput.suppressOnShutdown} />
           </div>
