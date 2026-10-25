@@ -65,6 +65,7 @@ export function TxConfigOffsets() {
                         configFieldId={`transmitters.${tx}.offsets.${configKey}`}
                         type="number"
                         digits={offsetDigits(row.parameter)}
+                        numericSpinner
                       />
                     </span>
                   </td>

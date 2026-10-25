@@ -22,6 +22,7 @@ interface PmdtConfigControlProps {
   booleanControl?: "checkbox" | "radio";
   optionValue?: string;
   radioName?: string;
+  numericSpinner?: boolean;
 }
 
 function formatValue(value: string | number | boolean | null, digits?: number): string {
@@ -42,6 +43,7 @@ export function PmdtConfigControl({
   booleanControl = "checkbox",
   optionValue,
   radioName,
+  numericSpinner = false,
 }: PmdtConfigControlProps) {
   const config = useVorPmdtStore((state) => state.configDraft);
   const securityLevel = useVorPmdtStore((state) => state.securityLevel);
@@ -115,12 +117,37 @@ export function PmdtConfigControl({
     );
   }
 
-  return (
+  function steppedValue(direction: 1 | -1): number | null {
+    if (!field || controlType !== "number" || typeof value !== "number" || !Number.isFinite(value)) return null;
+    if (field.options) {
+      const options = field.options.map(Number).filter(Number.isFinite).sort((a, b) => a - b);
+      return direction === 1
+        ? options.find((option) => option > value) ?? null
+        : options.findLast((option) => option < value) ?? null;
+    }
+    const step = field.step ?? 10 ** -(digits ?? 0);
+    const next = Number((value + direction * step).toFixed(10));
+    const bounded = Math.min(field.max ?? Infinity, Math.max(field.min ?? -Infinity, next));
+    return bounded === value ? null : bounded;
+  }
+
+  function stepValue(direction: 1 | -1) {
+    if (!canEdit) return;
+    const next = steppedValue(direction);
+    if (next === null) return;
+    update(formatValue(next, digits));
+  }
+
+  const input = (
     <input
       {...metadata}
       type={controlType === "number" ? "text" : "text"}
       inputMode={controlType === "number" ? "decimal" : undefined}
-      onKeyDown={configFieldId.endsWith(".carrierSidebandPhaseOffsetFine") ? (event) => {
+      onKeyDown={numericSpinner ? (event) => {
+        if (!canEdit || (event.key !== "ArrowUp" && event.key !== "ArrowDown")) return;
+        event.preventDefault();
+        stepValue(event.key === "ArrowUp" ? 1 : -1);
+      } : configFieldId.endsWith(".carrierSidebandPhaseOffsetFine") ? (event) => {
         if (!canEdit || (event.key !== "ArrowUp" && event.key !== "ArrowDown")) return;
         event.preventDefault();
         const current = Number(displayedValue);
@@ -141,4 +168,17 @@ export function PmdtConfigControl({
       className={className}
     />
   );
+
+  if (!numericSpinner || controlType !== "number") return input;
+  return <>{input}<span className="pmdt-tx-offset-stepper">
+    {([1, -1] as const).map((direction) => <button
+      key={direction}
+      type="button"
+      className="pmdt-tx-offset-step"
+      aria-label={`${direction === 1 ? "Increase" : "Decrease"} ${ariaLabel ?? displayFieldId}`}
+      title={`${direction === 1 ? "Increase" : "Decrease"} ${field?.label ?? displayFieldId}`}
+      disabled={!canEdit || steppedValue(direction) === null}
+      onClick={() => stepValue(direction)}
+    ><svg width="5" height="4" viewBox="0 0 5 4" aria-hidden="true"><path fill="currentColor" d={direction === 1 ? "M0 4 2.5 0 5 4Z" : "M0 0 5 0 2.5 4Z"} /></svg></button>)}
+  </span></>;
 }

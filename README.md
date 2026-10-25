@@ -9,6 +9,11 @@
 - Theo yêu cầu chủ repository, workflow **CI** chỉ chạy thủ công qua **Actions → CI → Run workflow**; không tự chạy khi push hoặc mở pull request.
 - Việc này không tắt webhook triển khai Dokploy và không thay đổi các lệnh lint, typecheck, test, build cục bộ.
 
+## DVOR 1150A — thanh tab và nút tăng/giảm offsets
+
+- Nền hàng **Nominal / Offsets and Scale Factors / Integral Monitor Data** dùng `#EDEDED`, không bị màu trạng thái xanh lá ghi đè; giữ nguyên trạng thái/tab chưa khả dụng.
+- Mỗi ô offset của cả hai TX có hai nút mũi tên **tăng/giảm thật** tại mép phải, dùng bước/min/max và các lựa chọn của catalog. Hỗ trợ click, Enter/Space và phím lên/xuống; Coarse giữ `0/90/180/270`, Fine giữ bước `0.1°` trong `±45°`. Khóa nút khi thiếu quyền, Remote hoặc kịch bản không cho sửa; chạm biên không vượt dải. Chỉ cập nhật draft, số đo chạy không đổi cho tới **Apply (F7)**.
+
 ## DVOR 1150A — ô nhập pha thô đồng nhất bảng offsets
 
 - Carrier / Sideband Phase Offset **Coarse** của cả hai TX dùng ô nhập số với cùng khung spinner và định dạng một chữ số thập phân như **Fine**, thay cho dropdown. Giữ nguyên bốn vị trí hợp lệ `0/90/180/270`, khóa quyền/scenario và draft → Apply; không đổi công thức hoặc phạm vi hiệu chỉnh.

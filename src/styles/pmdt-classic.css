@@ -4835,7 +4835,8 @@
   padding: 7px 12px 0 16px !important;
 }
 
-.pmdt-classic-window .pmdt-monitor-tabbar[aria-label="Monitor Configuration tabs"] {
+.pmdt-classic-window .pmdt-monitor-tabbar[aria-label="Monitor Configuration tabs"],
+.pmdt-classic-window .pmdt-tx-tabbar[aria-label="Transmitter Configuration tabs"] {
   background: #EDEDED !important;
 }
 
@@ -6429,20 +6430,46 @@
   appearance: none;
 }
 
-.pmdt-classic-window .pmdt-tx-offset-spinner::after {
+.pmdt-classic-window .pmdt-tx-offset-stepper {
   position: absolute;
   top: 1px;
   right: 1px;
+  display: grid;
   width: 12px;
   height: 18px;
-  box-sizing: border-box;
+  grid-template-rows: 1fr 1fr;
+}
+
+.pmdt-classic-window .pmdt-tx-offset-stepper .pmdt-tx-offset-step {
+  display: flex;
+  width: 12px;
+  height: 9px;
+  min-width: 0;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
   border-left: 1px solid #a0a0a0;
-  background:
-    linear-gradient(135deg, transparent 50%, #333 50%) 3px 3px / 5px 4px no-repeat,
-    linear-gradient(315deg, transparent 50%, #333 50%) 3px 11px / 5px 4px no-repeat,
-    #e0e0e0;
-  content: "";
-  pointer-events: none;
+  background: #e0e0e0;
+  color: #333;
+  box-shadow: none;
+  line-height: 1;
+}
+
+.pmdt-classic-window .pmdt-tx-offset-stepper .pmdt-tx-offset-step:active:not(:disabled) {
+  background: #c6c6c6;
+  box-shadow: inset 1px 1px #808080;
+}
+
+.pmdt-classic-window .pmdt-tx-offset-stepper .pmdt-tx-offset-step:focus-visible {
+  outline: 1px dotted #000;
+  outline-offset: -1px;
+}
+
+.pmdt-classic-window .pmdt-tx-offset-stepper .pmdt-tx-offset-step:disabled {
+  color: #999;
+  cursor: default;
 }
 
 .pmdt-classic-window .pmdt-tx-offset-table {
