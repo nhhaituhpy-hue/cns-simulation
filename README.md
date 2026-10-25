@@ -9,6 +9,10 @@
 - Theo yêu cầu chủ repository, workflow **CI** chỉ chạy thủ công qua **Actions → CI → Run workflow**; không tự chạy khi push hoặc mở pull request.
 - Việc này không tắt webhook triển khai Dokploy và không thay đổi các lệnh lint, typecheck, test, build cục bộ.
 
+## DVOR 1150A và DME 1119A — nền mục cấu hình bắt buộc
+
+- Các mục đã thêm trong **Giá trị cấu hình bắt buộc** dùng nền sáng đồng màu phần xung quanh, không còn nền xám đen từ editor dùng chung. Chỉ sửa CSS trong khối này của DVOR 1150A và DME 1119A; giữ ô nhập trắng, nút, layout, quyền và logic chấm.
+
 ## DME 1119A — sửa toàn bộ luồng soạn tình huống
 
 - Cấu hình ban đầu giữ đủ các giá trị Monitor offsets và cờ bật giới hạn RMS qua edit/blur → export/import → Apply/Restore; không lưu số đo RMS dẫn xuất. Profile cũ thiếu các nhánh bổ sung vẫn đọc được, không sửa snapshot đã công bố. API profile có DTO DME riêng; tab cũ đọc hình dạng cũ và ghi thiếu extension không ghi đè giá trị mới của cùng chủ sở hữu/revision.

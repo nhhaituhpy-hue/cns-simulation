@@ -99,6 +99,10 @@
   background: transparent !important;
   color: #171717 !important;
 }
+/* Array-item wrappers must not retain the shared editor's dark surface. */
+.pmdt-classic-window :is(.dvor1150a-required-config-values, .dme1119a-required-config-values) div {
+  background: transparent !important;
+}
 .pmdt-classic-window :is(.dvor1150a-required-config-values, .dme1119a-required-config-values) label {
   color: #171717 !important;
 }
