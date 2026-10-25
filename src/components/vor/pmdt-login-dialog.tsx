@@ -10,10 +10,9 @@ export function PmdtLoginDialog() {
   const [password, setPassword] = useState("");
 
   function submit() {
-    if (login(userId, password)) {
-      setUserId("");
-      setPassword("");
-    }
+    login(userId, password);
+    setUserId("");
+    setPassword("");
   }
 
   function cancel() {
@@ -26,6 +25,7 @@ export function PmdtLoginDialog() {
       <form
         className="pmdt-login-dialog"
         aria-label="Login"
+        autoComplete="off"
         onSubmit={(event) => {
           event.preventDefault();
           submit();
@@ -43,7 +43,7 @@ export function PmdtLoginDialog() {
               type="text"
               value={userId}
               onChange={(event) => setUserId(event.currentTarget.value)}
-              autoComplete="username"
+              autoComplete="off"
             />
           </label>
           <label>
@@ -52,7 +52,7 @@ export function PmdtLoginDialog() {
               type="password"
               value={password}
               onChange={(event) => setPassword(event.currentTarget.value)}
-              autoComplete="current-password"
+              autoComplete="new-password"
             />
           </label>
           {loginError ? <p className="pmdt-login-error" role="alert">{loginError}</p> : null}

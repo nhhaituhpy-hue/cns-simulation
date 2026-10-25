@@ -9,6 +9,11 @@
 - Theo yêu cầu chủ repository, workflow **CI** chỉ chạy thủ công qua **Actions → CI → Run workflow**; không tự chạy khi push hoặc mở pull request.
 - Việc này không tắt webhook triển khai Dokploy và không thay đổi các lệnh lint, typecheck, test, build cục bộ.
 
+## DVOR 1150A — Login PMDT không ghi nhớ tài khoản
+
+- Hộp thoại Login PMDT luôn khởi tạo **User ID / Password trống**, không yêu cầu trình duyệt tự điền tài khoản web. Form/User ID đặt `autocomplete="off"`, Password dùng `autocomplete="new-password"` để tránh lấy mật khẩu đã lưu của website.
+- Xóa cả hai ô sau mỗi lần nhấn OK (kể cả sai), Cancel hoặc nút đóng; mở lại sau Logoff hay tải lại trang không phục hồi nội dung đã nhập. Không thay đổi tài khoản/quyền PMDT hoặc đăng nhập website; ứng dụng không lưu bản nháp credential vào storage. Tiện ích quản lý mật khẩu do người dùng điều khiển có thể bỏ qua gợi ý autocomplete của trang.
+
 ## DVOR 1150A — thanh tab và nút tăng/giảm offsets
 
 - Nền hàng **Nominal / Offsets and Scale Factors / Integral Monitor Data** dùng `#EDEDED`, không bị màu trạng thái xanh lá ghi đè; giữ nguyên trạng thái/tab chưa khả dụng.
