@@ -9,6 +9,10 @@
 - Theo yêu cầu chủ repository, workflow **CI** chỉ chạy thủ công qua **Actions → CI → Run workflow**; không tự chạy khi push hoặc mở pull request.
 - Việc này không tắt webhook triển khai Dokploy và không thay đổi các lệnh lint, typecheck, test, build cục bộ.
 
+## DVOR 1150A — nền thanh tab Monitor Configuration
+
+- Nền thanh tab **General / Alarm Limits** dùng cố định `#EDEDED`, không bị quy tắc màu ô trạng thái ghi đè; giữ nguyên màu active/inactive và thao tác của hai tab. Chỉ áp dụng thanh tab Monitor Configuration của DVOR, không đổi tab dữ liệu/offset hoặc DME.
+
 ## DVOR 1150A — cấu hình hiệu lực và mục tiêu kịch bản
 
 - Transmitter **Nominal dùng chung hai TX**; đủ **21 offset/scale factor mỗi TX** vẫn tách riêng. Các ô native thao tác qua draft → **Apply (F7)** → số đọc/trạng thái tương ứng; chưa Apply không đổi giám sát. Parameters editor cũng giữ mirror và policy của cả hai TX, không dùng đường setter để vượt khóa.

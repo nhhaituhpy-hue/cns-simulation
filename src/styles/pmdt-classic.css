@@ -4835,6 +4835,10 @@
   padding: 7px 12px 0 16px !important;
 }
 
+.pmdt-classic-window .pmdt-monitor-tabbar[aria-label="Monitor Configuration tabs"] {
+  background: #EDEDED !important;
+}
+
 .pmdt-classic-window .pmdt-monitor-offsets-tabbar[role="tablist"] {
   padding-top: 8px !important;
 }
