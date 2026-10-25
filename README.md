@@ -9,6 +9,10 @@
 - Theo yêu cầu chủ repository, workflow **CI** chỉ chạy thủ công qua **Actions → CI → Run workflow**; không tự chạy khi push hoặc mở pull request.
 - Việc này không tắt webhook triển khai Dokploy và không thay đổi các lệnh lint, typecheck, test, build cục bộ.
 
+## DVOR 1150A — ô nhập pha thô đồng nhất bảng offsets
+
+- Carrier / Sideband Phase Offset **Coarse** của cả hai TX dùng ô nhập số với cùng khung spinner và định dạng một chữ số thập phân như **Fine**, thay cho dropdown. Giữ nguyên bốn vị trí hợp lệ `0/90/180/270`, khóa quyền/scenario và draft → Apply; không đổi công thức hoặc phạm vi hiệu chỉnh.
+
 ## DVOR 1150A — nền thanh tab Monitor Configuration
 
 - Nền thanh tab **General / Alarm Limits** dùng cố định `#EDEDED`, không bị quy tắc màu ô trạng thái ghi đè; giữ nguyên màu active/inactive và thao tác của hai tab. Chỉ áp dụng thanh tab Monitor Configuration của DVOR, không đổi tab dữ liệu/offset hoặc DME.

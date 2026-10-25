@@ -97,7 +97,7 @@ export function PmdtConfigControl({
     );
   }
 
-  if (controlType === "select" || (controlType === "number" && field?.options)) {
+  if (controlType === "select") {
     return (
       <select
         {...metadata}
