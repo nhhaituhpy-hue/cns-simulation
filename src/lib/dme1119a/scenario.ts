@@ -95,6 +95,7 @@ export type Dme1119aScenarioFault =
   | { id: string; kind: "ac-power"; failed: boolean };
 
 export type Dme1119aScenarioCriterion =
+  | { id: string; kind: "configuration-values"; targets: Dme1119aConfigurationTarget[] }
   | { id: string; kind: "monitor-normal"; monitor: "integral" | "standby" }
   | { id: string; kind: "monitor-alarm-clear"; severity: "primary" | "secondary" | "both" }
   | { id: string; kind: "active-transmitter"; expected: "any" | DmeTransmitterId }
@@ -105,6 +106,36 @@ export type Dme1119aScenarioCriterion =
   | { id: string; kind: "ident-normal" }
   | { id: string; kind: "fan-control"; expected: "Automatic" | "On" | "Off" }
   | { id: string; kind: "ac-power-normal" };
+
+export interface Dme1119aConfigurationTarget {
+  fieldId: string;
+  value: string | number | boolean;
+}
+
+/** Native editable scalar settings, not readings or instructor-only stimuli. */
+export function dme1119aConfigurationTargetFields() {
+  return dmeParameterFieldCatalog.filter(field => !field.readOnly
+    && dme1119aScenarioFieldRole(field.id) === "student-operable"
+    && !/^rmsConfigGeneral\.(spiFilterType|remoteResetEnabledSmoke|remoteResetEnabledIntrusion)$/.test(field.id)
+    && !/^rmsTemperatureData\.(3|5)\./.test(field.id)
+    && !/^monitorConfigGeneral\.0\./.test(field.id)
+    && !/^alarmLimits\.[01]\.(alarmLow|preAlarmLow)$/.test(field.id)
+    && !/^txConfigNominal\.ident\.(selfKeyOnLoss|shutdownOnLoss|restartWhenSignalResumes)$/.test(field.id)
+    && !field.id.startsWith("monitorTransmitterStatus."));
+}
+
+function validConfigurationTargets(value: unknown): value is Dme1119aConfigurationTarget[] {
+  const fields = dme1119aConfigurationTargetFields();
+  if (!Array.isArray(value) || value.length === 0 || value.length > fields.length) return false;
+  const ids = new Set<string>();
+  return value.every(target => {
+    if (!isRecord(target) || Object.keys(target).length !== 2 || typeof target.fieldId !== "string" || !Object.hasOwn(target, "value") || ids.has(target.fieldId)) return false;
+    ids.add(target.fieldId);
+    const field = fields.find(field => field.id === target.fieldId);
+    return Boolean(field && ["number", "string", "boolean"].includes(typeof target.value)
+      && !validateDmeParameterField(field, target.value as string | number | boolean));
+  });
+}
 
 export interface Dme1119aScenarioDefinition {
   schemaVersion: 1;
@@ -316,6 +347,7 @@ function isFault(value: unknown): value is Dme1119aScenarioFault {
 
 function isCriterion(value: unknown): value is Dme1119aScenarioCriterion {
   if (!isRecord(value) || typeof value.id !== "string" || !value.id.trim() || typeof value.kind !== "string") return false;
+  if (value.kind === "configuration-values") return Object.keys(value).length === 3 && validConfigurationTargets(value.targets);
   if (value.kind === "monitor-normal") return value.monitor === "integral" || value.monitor === "standby";
   if (value.kind === "monitor-alarm-clear") return value.severity === "primary" || value.severity === "secondary" || value.severity === "both";
   if (value.kind === "active-transmitter") return value.expected === "any" || isTransmitter(value.expected);
@@ -452,6 +484,8 @@ export function validateDme1119aScenarioDefinition(
     if (definition.successCriteria.length === 0) issues.push("Scenario must define at least one success criterion.");
     if (hasDuplicateIds(definition.successCriteria)) issues.push("Criterion IDs must be unique.");
     for (const criterion of definition.successCriteria) issues.push(...validateCriterionValues(criterion));
+    const exactIds = definition.successCriteria.flatMap(criterion => criterion.kind === "configuration-values" ? criterion.targets.map(target => target.fieldId) : []);
+    if (new Set(exactIds).size !== exactIds.length) issues.push("Configuration targets must not contain duplicate fields.");
   }
 
   if (!Array.isArray(definition.studentEditableFieldIds)) {
@@ -486,6 +520,43 @@ export function validateDme1119aScenarioDefinition(
 
   if (parseDme1119aConfig(definition.configuration)) {
     const runtime = hydrateDme1119aData(definition.configuration);
+    const routingTargets = new Map<string, Partial<Record<"primary" | "secondary", boolean>>>();
+    for (const criterion of Array.isArray(definition.successCriteria) ? definition.successCriteria : []) {
+      if (!isCriterion(criterion) || criterion.kind !== "configuration-values") continue;
+      for (const target of criterion.targets) {
+        if (!Object.is(getDmeParameterValue(runtime, target.fieldId), target.value) && !isDme1119aScenarioStudentEditable(definition, target.fieldId)) {
+          issues.push(`Configuration target requires an allowed student field: ${target.fieldId}.`);
+        }
+        const routing = target.fieldId.match(/^(monitorConfigGeneral\.\d+)\.(primary|secondary)$/);
+        if (routing) {
+          const targets = routingTargets.get(routing[1]) ?? {};
+          targets[routing[2] as "primary" | "secondary"] = target.value as boolean;
+          routingTargets.set(routing[1], targets);
+        }
+      }
+    }
+    for (const [rowId, targets] of routingTargets) {
+      const baseline = {
+        primary: getDmeParameterValue(runtime, `${rowId}.primary`),
+        secondary: getDmeParameterValue(runtime, `${rowId}.secondary`),
+      };
+      const matches = (pair: typeof baseline) => (targets.primary === undefined || targets.primary === pair.primary)
+        && (targets.secondary === undefined || targets.secondary === pair.secondary);
+      // No action is required for satisfied targets, including locked legacy baselines.
+      if (matches(baseline)) continue;
+      // Native radios only select true; selecting one clears the other in the
+      // store. False targets therefore require selecting the companion radio.
+      const selections = (["primary", "secondary"] as const).filter(selected => matches({
+        primary: selected === "primary", secondary: selected === "secondary",
+      }));
+      if (selections.length === 0) {
+        issues.push(`Configuration targets require incompatible native monitor routing: ${rowId}.`);
+      } else if (!selections.some(selected => isDme1119aScenarioStudentEditable(definition, `${rowId}.${selected}`)
+        && (["primary", "secondary"] as const).every(field => baseline[field] === (field === selected)
+          || isDme1119aScenarioStudentEditable(definition, `${rowId}.${field}`)))) {
+        issues.push(`Configuration target requires allowed native routing and companion fields: ${rowId}.`);
+      }
+    }
     for (const field of dmeParameterFieldCatalog) {
       if (field.readOnly) continue;
       const value = getDmeParameterValue(runtime, field.id);
@@ -643,6 +714,13 @@ function criterionResult(
   data: DmePmdtData,
 ): Dme1119aScenarioCheck {
   const base = { id: criterion.id, label: criterion.kind, passed: false, detail: "Not evaluated" };
+  if (criterion.kind === "configuration-values") {
+    if (!validConfigurationTargets(criterion.targets)) return { ...base, label: "Giá trị cấu hình bắt buộc", detail: "Invalid configuration targets" };
+    const mismatches = criterion.targets.filter(target => !Object.is(getDmeParameterValue(data, target.fieldId), target.value));
+    const first = mismatches[0];
+    return { ...base, label: "Giá trị cấu hình bắt buộc", passed: mismatches.length === 0,
+      detail: first ? `${dmeParameterFieldCatalog.find(field => field.id === first.fieldId)?.label}: cần ${String(first.value)}, hiện tại ${String(getDmeParameterValue(data, first.fieldId))}` : `Đủ ${criterion.targets.length} giá trị cấu hình đã Apply` };
+  }
   if (criterion.kind === "monitor-normal") {
     const monitor = data.monitors[criterion.monitor];
     return { ...base, label: `${criterion.monitor} monitor normal`, passed: monitor.normal, detail: monitor.normal ? "Normal" : "Alarm or bypass active" };
@@ -767,10 +845,11 @@ export function evaluateDme1119aScenario(
       : hardware.exactMatch
     : true;
   const baselineComplete = baselineChecks.length > 0 && baselineChecks.every((check) => check.passed);
+  const exactComplete = runtime.definition.successCriteria.every((criterion, index) => criterion.kind !== "configuration-values" || baselineChecks[index].passed);
   const pmdtComplete = !twoStageEnabled
     ? baselineComplete
     : diagnosis
-    ? pmdtChecks.every((check) => check.passed)
+    ? exactComplete && pmdtChecks.every((check) => check.passed)
       && actionChecks.every((check) => check.passed)
       && (diagnosis.disposition === "replace-module" || baselineComplete)
     : baselineComplete;

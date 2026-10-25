@@ -179,8 +179,10 @@ export function PmdtLayout({
   }, [mode, setMode]);
 
   useEffect(() => {
-    setScenarioAuthoringEnabled(canAuthorScenario);
-  }, [canAuthorScenario, setScenarioAuthoringEnabled]);
+    // Native Logoff clears authoring independently of the website permission.
+    // Reconcile on Login too, without restoring it while native login is open.
+    setScenarioAuthoringEnabled(canAuthorScenario && !loginDialogOpen);
+  }, [canAuthorScenario, loginDialogOpen, setScenarioAuthoringEnabled]);
 
   useEffect(() => {
     refreshClock();

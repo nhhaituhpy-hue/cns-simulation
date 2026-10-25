@@ -90,22 +90,22 @@
 }
 
 /* Typed criteria are authoring controls, not green equipment status cells. */
-.pmdt-classic-window .dvor1150a-required-config-values {
+.pmdt-classic-window :is(.dvor1150a-required-config-values, .dme1119a-required-config-values) {
   min-width: 0;
   color: #171717;
 }
-.pmdt-classic-window .dvor1150a-required-config-values :is(fieldset, legend) {
+.pmdt-classic-window :is(.dvor1150a-required-config-values, .dme1119a-required-config-values) :is(fieldset, legend) {
   min-inline-size: 0;
   background: transparent !important;
   color: #171717 !important;
 }
-.pmdt-classic-window .dvor1150a-required-config-values label {
+.pmdt-classic-window :is(.dvor1150a-required-config-values, .dme1119a-required-config-values) label {
   color: #171717 !important;
 }
-.pmdt-classic-window .dvor1150a-required-config-values p {
+.pmdt-classic-window :is(.dvor1150a-required-config-values, .dme1119a-required-config-values) p {
   color: #404040 !important;
 }
-.pmdt-classic-window .dvor1150a-required-config-values :is(input, select) {
+.pmdt-classic-window :is(.dvor1150a-required-config-values, .dme1119a-required-config-values) :is(input, select) {
   background: #fff !important;
   color: #000 !important;
 }

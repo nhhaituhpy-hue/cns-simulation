@@ -1,8 +1,24 @@
-import type { Dvor1150aPersistedConfig, SimulatorConfigResponse } from "./types";
+import type { Dme1119aPersistedConfig, Dvor1150aPersistedConfig, SimulatorConfigResponse } from "./types";
+import { DME1119A_CONFIG_EXTENSIONS } from "./dme-1119a";
 
 // A consumer representation, not a persisted schema revision.
 export const SIMULATOR_CONFIG_DTO_HEADER = "X-CNS-Simulator-Config-DTO";
 export const DVOR1150A_CONFIG_DTO_VERSION = "dvor-1150a-extensions-v1";
+export const DME1119A_CONFIG_DTO_VERSION = "dme-1119a-extensions-v1";
+
+export function preserveMissingDme1119aExtensions(source: unknown, parsed: Dme1119aPersistedConfig, stored: Dme1119aPersistedConfig): Dme1119aPersistedConfig {
+  const next = structuredClone(parsed);
+  for (const key of DME1119A_CONFIG_EXTENSIONS) {
+    if (!Object.hasOwn(source as object, key)) Object.assign(next, { [key]: structuredClone(stored[key]) });
+  }
+  return next;
+}
+
+export function legacyDme1119aConfig(value: unknown): unknown {
+  const next = structuredClone(value) as Dme1119aPersistedConfig;
+  for (const key of DME1119A_CONFIG_EXTENSIONS) delete next[key];
+  return next;
+}
 
 const monitorExtensions = ["testGeneratorCalibration", "testGenerator", "standbyCalibration"] as const;
 const keyerExtensions = [
@@ -48,6 +64,12 @@ export function projectSimulatorConfigResponse<T extends SimulatorConfigResponse
   response: T,
   dto: string | null,
 ): T {
+  if (response.simulatorId === "dme-1119a" && dto !== DME1119A_CONFIG_DTO_VERSION) return {
+    ...response,
+    initialConfig: legacyDme1119aConfig(response.initialConfig),
+    appliedConfig: legacyDme1119aConfig(response.appliedConfig),
+    backupConfig: legacyDme1119aConfig(response.backupConfig),
+  };
   if (response.simulatorId !== "dvor-1150a" || dto === DVOR1150A_CONFIG_DTO_VERSION) return response;
   return {
     ...response,

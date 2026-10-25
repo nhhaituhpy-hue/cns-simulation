@@ -60,13 +60,14 @@ describe("SELEX guided authoring", () => {
     const faults = f.fields.find(f => f.id === "faultInjections")!.schema;
     const criteria = f.fields.find(f => f.id === "successCriteria")!.schema;
     expect(faults.variants).toHaveLength(11);
-    expect(criteria.variants).toHaveLength(10);
+    expect(criteria.variants).toHaveLength(11);
     for (const schema of [faults, criteria]) for (const v of schema.variants!) {
       expect(v.schema.type).toBe("object");
       expect(v.schema.properties?.kind.options?.map(o=>o.value)).toEqual([v.value]);
       const fieldId = schema === faults ? "faultInjections" : "successCriteria";
-      const next = a.apply(d, [{fieldId,value:[{...(v.initial as object),id:"test-entry"}] as JsonValue}]);
-      expect(readPath(next,fieldId)).toEqual([{...(v.initial as object),id:"test-entry"}]);
+      const entry = { ...(v.initial as object), id: "test-entry", ...(v.value === "configuration-values" ? { targets: [{ fieldId: "txConfigNominal.rtcParameters.powerOutput", value: -1.25 }] } : {}) };
+      const next = a.apply(d, [{fieldId,value:[entry] as JsonValue}]);
+      expect(readPath(next,fieldId)).toEqual([entry]);
       expect(a.validate(next,"final").filter(i=>i.severity === "error")).toEqual([]);
       expect(()=>a.apply(d,[{fieldId,value:[{...(v.initial as object),id:"test-entry",unknown:1}] as JsonValue}])).toThrow();
     }

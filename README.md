@@ -9,6 +9,14 @@
 - Theo yêu cầu chủ repository, workflow **CI** chỉ chạy thủ công qua **Actions → CI → Run workflow**; không tự chạy khi push hoặc mở pull request.
 - Việc này không tắt webhook triển khai Dokploy và không thay đổi các lệnh lint, typecheck, test, build cục bộ.
 
+## DME 1119A — sửa toàn bộ luồng soạn tình huống
+
+- Cấu hình ban đầu giữ đủ các giá trị Monitor offsets và cờ bật giới hạn RMS qua edit/blur → export/import → Apply/Restore; không lưu số đo RMS dẫn xuất. Profile cũ thiếu các nhánh bổ sung vẫn đọc được, không sửa snapshot đã công bố. API profile có DTO DME riêng; tab cũ đọc hình dạng cũ và ghi thiếu extension không ghi đè giá trị mới của cùng chủ sở hữu/revision.
+- Scenario Parameters mở lại sau native Logoff/Login mà không cần tải lại; giữ quyền website, practice/exam và khóa Local/security của Apply. Viewport hẹp căn trái khung PMDT 900px để toolbar và mép panel tới được bằng cuộn thông thường, desktop vẫn căn giữa.
+- Điều kiện đạt bổ sung **Giá trị cấu hình bắt buộc** có editor chọn trường/giá trị kiểu số, boolean, enum hoặc text; evaluator đối chiếu dữ liệu chạy đã Apply, không lấy draft hay trạng thái Normal thay cho đáp án. Tiêu chí vẫn bắt buộc trong bài thay module; từ chối target trùng/sai kiểu/vượt dải/readonly/runtime/không có control native hoặc đòi sửa trường bị khóa.
+- Dùng criterion native `configuration-values` để trình đọc cũ từ chối thay vì âm thầm bỏ qua yêu cầu chấm mới; người dùng cần tải lại tab trước mở bài mới. Không nâng semantics bài cũ, không tự publish hoặc đổi điểm đã chấm. Exact value là điều kiện trạng thái, không tự chứng minh quy trình thao tác hoặc độ chính xác RF của hãng.
+- Mẫu Word DME được sinh lại từ catalog biểu mẫu hiện tại; không bỏ kiểm tra đầy đủ trường để giữ template cũ.
+
 ## DME 1119A — Login trống và Scenario Parameters theo menu
 
 - Login PMDT khởi tạo **User ID / Password trống**; form/User ID `autocomplete="off"`, Password `autocomplete="new-password"`. Xóa cả hai sau OK kể cả sai, Cancel/X; Logoff hoặc tải lại không phục hồi bản nháp. Giữ tài khoản native, khóa ba lần nhập sai, timeout và đăng nhập website độc lập; tiện ích quản lý mật khẩu bên ngoài vẫn có thể bỏ qua gợi ý của trang.

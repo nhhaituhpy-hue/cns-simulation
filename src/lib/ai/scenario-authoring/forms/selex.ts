@@ -14,6 +14,15 @@ import { diagnosisSchema } from "./selex-diagnosis";
 import { select, list, object } from "./selex-schemas";
 import { dmeFaultSchema, dmeCriterionSchema } from "./selex-schemas";
 import { dvor1150aConfigurationValuesSchema } from "./dvor1150a-criteria";
+import { parseDme1119aConfig } from "@/lib/simulator-config/dme-1119a";
+
+function withDmeSettings(spec: Spec, definition: ScenarioParametersDefinition): ScenarioParametersDefinition {
+ if(spec.moduleId!=="dme-1119a")return definition;
+ assertSafeJson(definition);
+ const d=definition as Dme1119aScenarioDefinition, configuration=parseDme1119aConfig(d.configuration);
+ if(!configuration)throw new AuthoringError("INVALID_DEFINITION","Invalid DME configuration.");
+ return {...structuredClone(d),configuration};
+}
 
 const specs = [
  { moduleId: "dvor-1150", label: "DVOR 1150", create: createDefaultDvor1150ScenarioDefinition, catalog: dvor1150ConfigFieldCatalog, role: dvor1150ScenarioFieldRole },
@@ -25,6 +34,7 @@ type Spec = (typeof specs)[number];
 const stimulus1150 = new Set(["tx1", "tx2"].flatMap(tx => ["offsets.outputPowerScale", "offsets.cabinetTemperatureOffset", ...[1,2,3,4].map(n => `offsets.sideband${n}RfLevelScale`)].map(p => `transmitters.${tx}.${p}`)));
 const privateField = (id: string) => /(^|\.)(security|securityAccounts|password|credentials?)(\.|$)/i.test(id);
 function form(spec: Spec, d: ScenarioParametersDefinition): AuthoringForm {
+ d=withDmeSettings(spec,d);
  strictShape(spec,d);
  const fields: AuthoringField[] = metadataFields(d);
  const omitted: string[] = [];
@@ -136,6 +146,7 @@ function preview(spec:Spec,d:ScenarioParametersDefinition):import("../types").Au
  }catch{return {status:"invalid",checks:[{id:"engine",label:"Native preview",passed:false,detail:"Engine could not construct the initial state."}],notes,recoveryVerified:false};}
 }
 export const selexAuthoringAdapters: NativeAuthoringAdapter[] = specs.map(spec => ({moduleId:spec.moduleId,createDefault:()=>structuredClone(spec.create()),form:d=>form(spec,d),apply:(d,changes)=>{
+ d=withDmeSettings(spec,d);
  const sourceIssues=validate(spec,d);if(sourceIssues.some(i=>i.severity==="error"))throw new AuthoringError("INVALID_DEFINITION",sourceIssues[0].message,sourceIssues);
  assertSafeJson(changes);if(!Array.isArray(changes))throw new AuthoringError("INVALID_INPUT","Changes must be an array");
  const fields=form(spec,d).fields,next=structuredClone(d),seen=new Set<string>();

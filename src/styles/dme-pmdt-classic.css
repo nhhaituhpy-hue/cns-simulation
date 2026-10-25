@@ -3545,7 +3545,9 @@
 }
 
 @media (max-width: 899px) {
-  .dme-pmdt-viewport {
+  /* Match the page-scoped desktop rule: negative centered overflow cannot
+   * be reached by scrolling. Preserve the native 900px frame instead. */
+  .dme-pmdt-page .pmdt-classic-viewport.dme-pmdt-viewport {
     justify-content: flex-start;
   }
 }

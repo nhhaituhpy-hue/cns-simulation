@@ -1,0 +1,53 @@
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { beforeEach, expect, it } from "vitest";
+import { Dme1119aScenarioParametersPanel } from "@/components/dme/dme-scenario-parameters";
+import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
+
+beforeEach(() => useDmePmdtStore.getState().reset());
+it("creates a typed exact-value target without changing running equipment", () => {
+  useDmePmdtStore.getState().setScenarioAuthoringEnabled(true);
+  const running = useDmePmdtStore.getState().data;
+  render(<Dme1119aScenarioParametersPanel />);
+  const panel = screen.getByRole("region", { name: "Success criteria editor" });
+  fireEvent.click(within(panel).getByRole("button", { name: "Thêm giá trị cấu hình bắt buộc" }));
+  expect(within(panel).getByText("Giá trị cấu hình bắt buộc", { selector: "legend" })).toBeInTheDocument();
+  expect(useDmePmdtStore.getState().scenarioDraft.successCriteria).toEqual(expect.arrayContaining([expect.objectContaining({ kind: "configuration-values" })]));
+  const values = panel.querySelector('.dme1119a-required-config-values') as HTMLElement;
+  fireEvent.click(within(values).getByRole("button", { name: "Thêm Giá trị cấu hình bắt buộc" }));
+  fireEvent.change(within(values).getByRole("combobox", { name: /^Loại Giá trị cấu hình bắt buộc/ }), { target: { value: "txConfigNominal.rtcParameters.powerOutput" } });
+  fireEvent.change(within(values).getByRole("spinbutton", { name: "Giá trị đích" }), { target: { value: "-1.25" } });
+  expect(useDmePmdtStore.getState().scenarioDraft.successCriteria).toEqual(expect.arrayContaining([expect.objectContaining({ kind: "configuration-values", targets: [{ fieldId: "txConfigNominal.rtcParameters.powerOutput", value: -1.25 }] })]));
+  fireEvent.click(within(values).getByRole("button", { name: "Xóa Giá trị cấu hình bắt buộc 1" }));
+  expect(useDmePmdtStore.getState().scenarioDraft.successCriteria.find(criterion => criterion.kind === "configuration-values")).toMatchObject({ targets: [] });
+  fireEvent.click(within(values).getByRole("button", { name: "Remove criterion configuration-values" }));
+  expect(useDmePmdtStore.getState().scenarioDraft.successCriteria.some(criterion => criterion.kind === "configuration-values")).toBe(false);
+  expect(useDmePmdtStore.getState().data).toBe(running);
+});
+
+it("switches exact target controls between boolean, enum, text and number without stale values", () => {
+  useDmePmdtStore.getState().setScenarioAuthoringEnabled(true);
+  const running = useDmePmdtStore.getState().data;
+  render(<Dme1119aScenarioParametersPanel />);
+  const criteria = screen.getByRole("region", { name: "Success criteria editor" });
+  fireEvent.click(within(criteria).getByRole("button", { name: "Thêm giá trị cấu hình bắt buộc" }));
+  const values = criteria.querySelector(".dme1119a-required-config-values") as HTMLElement;
+  fireEvent.click(within(values).getByRole("button", { name: "Thêm Giá trị cấu hình bắt buộc" }));
+  const selectField = (fieldId: string) => fireEvent.change(within(values).getByRole("combobox", { name: /^Loại Giá trị cấu hình bắt buộc/ }), { target: { value: fieldId } });
+  const expectTarget = (fieldId: string, value: string | number | boolean) => expect(useDmePmdtStore.getState().scenarioDraft.successCriteria.find(criterion => criterion.kind === "configuration-values")).toMatchObject({ targets: [{ fieldId, value }] });
+  selectField("rmsVoltageData.0.enabled");
+  expectTarget("rmsVoltageData.0.enabled", false);
+  fireEvent.click(within(values).getByRole("checkbox", { name: "Giá trị đích" }));
+  expectTarget("rmsVoltageData.0.enabled", true);
+  selectField("rmsConfigGeneral.votingLogic");
+  expect(within(values).queryByRole("checkbox", { name: "Giá trị đích" })).not.toBeInTheDocument();
+  fireEvent.change(within(values).getByRole("combobox", { name: "Giá trị đích" }), { target: { value: "OR" } });
+  expectTarget("rmsConfigGeneral.votingLogic", "OR");
+  selectField("rmsConfigStation.stationDescription");
+  fireEvent.change(within(values).getByRole("textbox", { name: "Giá trị đích" }), { target: { value: "Trạm kiểm thử" } });
+  expectTarget("rmsConfigStation.stationDescription", "Trạm kiểm thử");
+  selectField("txConfigNominal.rtcParameters.powerOutput");
+  expect(within(values).queryByRole("textbox", { name: "Giá trị đích" })).not.toBeInTheDocument();
+  fireEvent.change(within(values).getByRole("spinbutton", { name: "Giá trị đích" }), { target: { value: "-1.25" } });
+  expectTarget("txConfigNominal.rtcParameters.powerOutput", -1.25);
+  expect(useDmePmdtStore.getState().data).toBe(running);
+});

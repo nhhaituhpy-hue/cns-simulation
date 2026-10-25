@@ -3,8 +3,11 @@ import { getCurrentProfile } from "@/lib/auth/profile";
 import { queryDatabase, withDatabaseTransaction } from "@/lib/db";
 import { getSimulatorConfigAdapter } from "@/lib/simulator-config/registry";
 import { parseDvor1150aConfig } from "@/lib/simulator-config/dvor-1150a";
+import { parseDme1119aConfig } from "@/lib/simulator-config/dme-1119a";
 import {
   DVOR1150A_CONFIG_DTO_VERSION,
+  DME1119A_CONFIG_DTO_VERSION,
+  preserveMissingDme1119aExtensions,
   preserveMissingDvor1150aExtensions,
   projectSimulatorConfigResponse,
   SIMULATOR_CONFIG_DTO_HEADER,
@@ -28,14 +31,15 @@ function configResponse<T extends SimulatorConfigResponse>(request: Request, bod
     projectSimulatorConfigResponse(body, request.headers.get(SIMULATOR_CONFIG_DTO_HEADER)),
     {
       status,
-      headers: body.simulatorId === "dvor-1150a" ? { Vary: SIMULATOR_CONFIG_DTO_HEADER } : undefined,
+      headers: ["dvor-1150a", "dme-1119a"].includes(body.simulatorId) ? { Vary: SIMULATOR_CONFIG_DTO_HEADER } : undefined,
     },
   );
 }
 
 function unsupportedDto(request: Request, simulatorId: string) {
   const dto = request.headers.get(SIMULATOR_CONFIG_DTO_HEADER);
-  if (simulatorId === "dvor-1150a" && dto !== null && dto !== DVOR1150A_CONFIG_DTO_VERSION) {
+  const version = simulatorId === "dvor-1150a" ? DVOR1150A_CONFIG_DTO_VERSION : simulatorId === "dme-1119a" ? DME1119A_CONFIG_DTO_VERSION : null;
+  if (version && dto !== null && dto !== version) {
     return NextResponse.json(
       { error: "Unsupported simulator configuration representation." },
       { status: 400, headers: { Vary: SIMULATOR_CONFIG_DTO_HEADER } },
@@ -261,7 +265,7 @@ export async function PUT(request: Request, context: RouteContext) {
         );
         return result.rows[0];
       };
-      if (simulatorId === "dvor-1150a") {
+      if (simulatorId === "dvor-1150a" || simulatorId === "dme-1119a") {
         // Read/merge/save under the same owner-scoped row lock. A legacy tab
         // cannot see extensions, so omission must not reset them to defaults.
         data = await withDatabaseTransaction(async (client) => {
@@ -275,13 +279,11 @@ export async function PUT(request: Request, context: RouteContext) {
           if (Number(stored.revision) !== expectedRevision) throw new Error("CONFIG_REVISION_CONFLICT");
           // Validate the stored schema and all three snapshots before merging.
           responseFromRecord(stored, simulatorId, adapter);
-          const applied = preserveMissingDvor1150aExtensions(
-            payload.config, parseDvor1150aConfig(config)!, parseDvor1150aConfig(stored.applied_config)!,
-          );
-          const backup = backupConfig === null ? null : preserveMissingDvor1150aExtensions(
-            payload.backupConfig, parseDvor1150aConfig(backupConfig)!,
-            parseDvor1150aConfig(stored.backup_config ?? stored.applied_config)!,
-          );
+          const merge = simulatorId === "dvor-1150a"
+            ? (raw: unknown, incoming: unknown, previous: unknown) => preserveMissingDvor1150aExtensions(raw, parseDvor1150aConfig(incoming)!, parseDvor1150aConfig(previous)!)
+            : (raw: unknown, incoming: unknown, previous: unknown) => preserveMissingDme1119aExtensions(raw, parseDme1119aConfig(incoming)!, parseDme1119aConfig(previous)!);
+          const applied = merge(payload.config, config, stored.applied_config);
+          const backup = backupConfig === null ? null : merge(payload.backupConfig, backupConfig, stored.backup_config ?? stored.applied_config);
           return save((sql, values) => client.query<SimulatorConfigRecord>(sql, values), applied, backup);
         });
       } else {

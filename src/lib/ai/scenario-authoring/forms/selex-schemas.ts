@@ -1,5 +1,6 @@
 import type { JsonValue, ValueSchema } from "../types";
 import { DME1119A_TEMPERATURE_SENSORS } from "@/lib/dme1119a/scenario";
+import { dme1119aConfigurationValuesSchema } from "./dme1119a-criteria";
 export const text = (label:string,required=true):ValueSchema=>({type:"text",label,help:`${label}: nhập nội dung của giám khảo, không tự suy ra từ preset.`,required,maxLength:2000});
 export const select = (label:string,values:readonly string[]):ValueSchema=>({type:"select",label,help:`Chọn ${label} từ danh mục native của thiết bị.`,required:true,options:values.map(value=>({value,label:value}))});
 export const number = (label:string,min:number,max:number,unit?:string):ValueSchema=>({type:"number",label,help:`${label}: đầu vào engine native${unit ? ` (${unit})`:""}.`,required:true,min,max,unit});
@@ -36,5 +37,6 @@ export function dmeCriterionSchema():ValueSchema {
  variant("ident-normal",{},{}),
  variant("fan-control",{expected:select("Quạt",["Automatic","On","Off"])},{expected:"Automatic"}),
  variant("ac-power-normal",{},{}),
+ variant("configuration-values",{targets:dme1119aConfigurationValuesSchema()},{targets:[]}),
  ]};
 }

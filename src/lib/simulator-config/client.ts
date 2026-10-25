@@ -4,9 +4,10 @@ import type {
   SimulatorConfigResponse,
   SupportedSimulatorConfigId,
 } from "./types";
-import { DVOR1150A_CONFIG_DTO_VERSION, SIMULATOR_CONFIG_DTO_HEADER } from "./wire";
+import { DME1119A_CONFIG_DTO_VERSION, DVOR1150A_CONFIG_DTO_VERSION, SIMULATOR_CONFIG_DTO_HEADER } from "./wire";
 
 function consumerHeaders(simulatorId: SupportedSimulatorConfigId): Record<string, string> {
+  if (simulatorId === "dme-1119a") return { [SIMULATOR_CONFIG_DTO_HEADER]: DME1119A_CONFIG_DTO_VERSION };
   return simulatorId === "dvor-1150a"
     ? { [SIMULATOR_CONFIG_DTO_HEADER]: DVOR1150A_CONFIG_DTO_VERSION }
     : {};

@@ -29,6 +29,9 @@ import { ScenarioParametersSection, ScenarioCriteriaHelp } from "@/components/sc
 import { ScenarioDiagnosisSection } from "@/components/scenario/parameters/scenario-diagnosis-section";
 import { ScenarioEditPolicySection } from "@/components/scenario/parameters/scenario-edit-policy-section";
 import { DmeScenarioFieldGroups, dme1119aScenarioGroupPath } from "./dme-scenario-field-groups";
+import { AiAuthoringField } from "@/components/scenario/ai-authoring-field";
+import { dme1119aConfigurationValuesSchema } from "@/lib/ai/scenario-authoring/forms/dme1119a-criteria";
+import type { JsonValue } from "@/lib/ai/scenario-authoring/types";
 
 const faultKinds = [
   ["tx-power-loss", "TX power loss"],
@@ -218,13 +221,21 @@ function FaultEditor({
 
 function CriterionEditor({
   criterion,
+  configuration,
   onChange,
   onRemove,
 }: {
   criterion: Dme1119aScenarioCriterion;
+  configuration: Dme1119aScenarioDefinition["configuration"];
   onChange: (mutate: (next: Dme1119aScenarioCriterion) => void) => void;
   onRemove: () => void;
 }) {
+  if (criterion.kind === "configuration-values") return <div className="dme1119a-required-config-values">
+    <label><span>ID</span><input value={criterion.id} onChange={event => onChange(next => { next.id = event.target.value; })} /></label>
+    <AiAuthoringField schema={dme1119aConfigurationValuesSchema(configuration)} value={criterion.targets as unknown as JsonValue}
+      onChange={value => onChange(next => { if (next.kind === "configuration-values") next.targets = value as unknown as typeof criterion.targets; })} />
+    <button type="button" onClick={onRemove} aria-label={`Remove criterion ${criterion.id}`}>Remove</button>
+  </div>;
   return <div className="dme1119a-scenario-row">
     <label><span>ID</span><input value={criterion.id} onChange={(event) => onChange((next) => { next.id = event.target.value; })} /></label>
     <label><span>Criterion</span><select value={criterion.kind} onChange={(event) => onChange((next) => Object.assign(next, createCriterion(event.target.value as Dme1119aScenarioCriterion["kind"], criterion.id)))}>
@@ -372,9 +383,14 @@ export function Dme1119aScenarioParametersPanel() {
 
       <ScenarioParametersSection number={3} title="Điều kiện đạt" englishTitle="Success criteria" ariaLabel="Success criteria editor" className="dme1119a-scenario-section"
         help="Kết quả vận hành cần đạt; không tự xác định trường được phép sửa hoặc thao tác bắt buộc."
-        actions={<button type="button" onClick={() => update((next) => { next.successCriteria.push(createCriterion("monitor-normal", "criterion-" + (next.successCriteria.length + 1))); })}>Add criterion</button>}>
+        actions={<><button type="button" onClick={() => update((next) => { next.successCriteria.push(createCriterion("monitor-normal", "criterion-" + (next.successCriteria.length + 1))); })}>Add criterion</button>
+          <button type="button" onClick={() => update(next => {
+            let id = "configuration-values";
+            for (let suffix = 2; next.successCriteria.some(criterion => criterion.id === id); suffix += 1) id = `configuration-values-${suffix}`;
+            next.successCriteria.push({ id, kind: "configuration-values", targets: [] });
+          })}>Thêm giá trị cấu hình bắt buộc</button></>}>
         <ScenarioCriteriaHelp disposition={scenarioDraft.diagnosis?.disposition} />
-        {scenarioDraft.successCriteria.map((criterion, index) => <CriterionEditor key={criterion.id || index} criterion={criterion} onChange={(mutate) => update((next) => { mutate(next.successCriteria[index]); })} onRemove={() => update((next) => { next.successCriteria.splice(index, 1); })} />)}
+        {scenarioDraft.successCriteria.map((criterion, index) => <CriterionEditor key={criterion.id || index} criterion={criterion} configuration={scenarioDraft.configuration} onChange={(mutate) => update((next) => { mutate(next.successCriteria[index]); })} onRemove={() => update((next) => { next.successCriteria.splice(index, 1); })} />)}
       </ScenarioParametersSection>
 
       <ScenarioDiagnosisSection className="dme1119a-scenario-section" diagnosis={scenarioDraft.diagnosis} fields={fields} taskTargets={scenarioDraft.taskTargets}
