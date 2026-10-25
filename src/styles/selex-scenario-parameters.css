@@ -70,15 +70,23 @@
 .selex-scenario-parameters-panel .selex-scenario-preview-values { display: flex; flex-wrap: wrap; gap: 5px 12px; }
 
 /* Nested permission groups follow the PMDT menu tree without stacked boxes. */
-.dvor1150a-scenario-parameters-panel [aria-label="Student recovery controls"] .pmdt-config-section {
+.dvor1150a-scenario-parameters-panel [aria-label="Student recovery controls"] .pmdt-config-section,
+.dme1119a-scenario-parameters-panel :is(.dme1119a-scenario-menu-groups, [aria-label="Student recovery controls"]) .pmdt-config-section {
   min-width: 0;
   margin-bottom: 0;
   overflow-wrap: anywhere;
 }
-.dvor1150a-scenario-parameters-panel [aria-label="Student recovery controls"] .pmdt-config-section .pmdt-config-section {
+.dvor1150a-scenario-parameters-panel [aria-label="Student recovery controls"] .pmdt-config-section .pmdt-config-section,
+.dme1119a-scenario-parameters-panel :is(.dme1119a-scenario-menu-groups, [aria-label="Student recovery controls"]) .pmdt-config-section .pmdt-config-section {
   margin-left: 8px;
   border: 0;
   border-left: 1px solid #b0b0b0;
+}
+
+/* Only the panel scrolls; nested menus must not inherit the legacy 240px cap. */
+.dme-pmdt-page .dme1119a-scenario-parameters-panel .pmdt-config-section-body {
+  max-height: none;
+  overflow: visible;
 }
 
 /* Typed criteria are authoring controls, not green equipment status cells. */

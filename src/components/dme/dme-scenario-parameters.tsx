@@ -28,6 +28,7 @@ import { scenarioEditPolicyChange, scenarioEditableFieldChange } from "@/lib/sce
 import { ScenarioParametersSection, ScenarioCriteriaHelp } from "@/components/scenario/parameters/scenario-parameters-section";
 import { ScenarioDiagnosisSection } from "@/components/scenario/parameters/scenario-diagnosis-section";
 import { ScenarioEditPolicySection } from "@/components/scenario/parameters/scenario-edit-policy-section";
+import { DmeScenarioFieldGroups, dme1119aScenarioGroupPath } from "./dme-scenario-field-groups";
 
 const faultKinds = [
   ["tx-power-loss", "TX power loss"],
@@ -261,7 +262,7 @@ export function Dme1119aScenarioParametersPanel() {
     && !field.id.startsWith("securityAccounts.")
     && !["connected", "local", "alert", "timestamp"].includes(field.id)
   ));
-  const sections = Array.from(new Set(fields.map((field) => field.section)));
+  const policyFields = fields.map((field) => ({ ...field, groupPath: dme1119aScenarioGroupPath(field) }));
   const validationIssues = useMemo(() => validateDme1119aScenarioDefinition(scenarioDraft), [scenarioDraft]);
   const preview = useMemo(() => {
     if (validationIssues.length > 0) return null;
@@ -359,7 +360,7 @@ export function Dme1119aScenarioParametersPanel() {
         <label><input type="checkbox" checked={scenarioDraft.startPolicy.standbyMonitorBypassed} onChange={(event) => update((next) => { next.startPolicy.standbyMonitorBypassed = event.target.checked; })} /> Standby monitor bypass</label>
         <label><span>Ident mode</span><select value={scenarioDraft.startPolicy.identMode} onChange={(event) => update((next) => { next.startPolicy.identMode = event.target.value as "normal" | "off" | "continuous"; })}><option value="normal">Normal</option><option value="off">Off</option><option value="continuous">Continuous</option></select></label>
         <details className="selex-scenario-baseline"><summary>Cấu hình ban đầu / Scenario configuration</summary>
-          {sections.map((section) => <details key={section} className="pmdt-config-section"><summary>{section}</summary><div className="pmdt-config-section-body">{fields.filter((field) => field.section === section).map((field) => <ScenarioConfigField key={field.id} field={field} scenario={scenarioDraft} onScenarioChange={replaceScenarioDraft} onError={setMessage} />)}</div></details>)}
+          <DmeScenarioFieldGroups fields={fields} renderField={(field) => <ScenarioConfigField key={field.id} field={field} scenario={scenarioDraft} onScenarioChange={replaceScenarioDraft} onError={setMessage} />} />
         </details>
       </ScenarioParametersSection>
 
@@ -379,7 +380,7 @@ export function Dme1119aScenarioParametersPanel() {
       <ScenarioDiagnosisSection className="dme1119a-scenario-section" diagnosis={scenarioDraft.diagnosis} fields={fields} taskTargets={scenarioDraft.taskTargets}
         hardwareAnswers={scenarioDraft.diagnosis?.expectedHardware.map((target) => [target.assemblyId ?? target.diagramOccurrenceId, target.blockId, target.diagramOccurrenceId].join(" · "))} />
 
-      <ScenarioEditPolicySection className="dme1119a-scenario-section" mode={scenarioDraft.editPolicy?.mode ?? "restricted"} fields={fields}
+      <ScenarioEditPolicySection className="dme1119a-scenario-section" mode={scenarioDraft.editPolicy?.mode ?? "restricted"} fields={policyFields}
         isAllowed={(id) => isDme1119aScenarioStudentEditable(scenarioDraft, id)} isOperable={(id) => dme1119aScenarioFieldRole(id) === "student-operable"}
         onModeChange={(mode) => update((next) => { Object.assign(next, scenarioEditPolicyChange(next, mode)); })}
         onFieldChange={(id, checked) => update((next) => { Object.assign(next, scenarioEditableFieldChange(next, id, checked)); })} />

@@ -11,10 +11,14 @@ export function DmePmdtLoginDialog() {
   const [password, setPassword] = useState("");
 
   function submit() {
-    if (login(userId, password)) {
-      setUserId("");
-      setPassword("");
-    }
+    login(userId, password);
+    setUserId("");
+    setPassword("");
+  }
+
+  function cancel() {
+    setUserId("");
+    setPassword("");
   }
 
   return (
@@ -22,6 +26,7 @@ export function DmePmdtLoginDialog() {
       <form
         className="pmdt-login-dialog"
         aria-label="Login"
+        autoComplete="off"
         onSubmit={(event) => {
           event.preventDefault();
           submit();
@@ -29,7 +34,7 @@ export function DmePmdtLoginDialog() {
       >
         <header className="pmdt-login-dialog-titlebar">
           <span>Login</span>
-          <button type="button" aria-label="Cancel login" onClick={() => undefined}>×</button>
+          <button type="button" aria-label="Cancel login" onClick={cancel}>×</button>
         </header>
         <div className="pmdt-login-dialog-body">
           <label>
@@ -41,7 +46,7 @@ export function DmePmdtLoginDialog() {
               type="text"
               value={userId}
               onChange={(event) => setUserId(event.currentTarget.value)}
-              autoComplete="username"
+              autoComplete="off"
             />
           </label>
           <label>
@@ -52,14 +57,14 @@ export function DmePmdtLoginDialog() {
               type="password"
               value={password}
               onChange={(event) => setPassword(event.currentTarget.value)}
-              autoComplete="current-password"
+              autoComplete="new-password"
             />
           </label>
           {loginError ? <p className="pmdt-login-error" role="alert">{loginError}</p> : null}
         </div>
         <footer className="pmdt-login-dialog-actions">
           <button type="submit" className="pmdt-login-primary">OK</button>
-          <button type="button" onClick={() => undefined}>Cancel</button>
+          <button type="button" onClick={cancel}>Cancel</button>
         </footer>
       </form>
     </div>

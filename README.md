@@ -9,6 +9,12 @@
 - Theo yêu cầu chủ repository, workflow **CI** chỉ chạy thủ công qua **Actions → CI → Run workflow**; không tự chạy khi push hoặc mở pull request.
 - Việc này không tắt webhook triển khai Dokploy và không thay đổi các lệnh lint, typecheck, test, build cục bộ.
 
+## DME 1119A — Login trống và Scenario Parameters theo menu
+
+- Login PMDT khởi tạo **User ID / Password trống**; form/User ID `autocomplete="off"`, Password `autocomplete="new-password"`. Xóa cả hai sau OK kể cả sai, Cancel/X; Logoff hoặc tải lại không phục hồi bản nháp. Giữ tài khoản native, khóa ba lần nhập sai, timeout và đăng nhập website độc lập; tiện ích quản lý mật khẩu bên ngoài vẫn có thể bỏ qua gợi ý của trang.
+- Giữ bố cục năm phần như DVOR 1150A: **Trạng thái khởi đầu → Lỗi đưa vào → Điều kiện đạt → Chẩn đoán hai bước → Quyền chỉnh sửa của thí sinh**, cùng xem trước và Apply/Restore. Cấu hình ban đầu và quyền sửa dùng chung cây menu DME: RMS Configuration; Transmitters Configuration → Nominal (RTC Parameters/Operation/Power Amplifiers/Ident) và Offsets and Scale Factors → TX1/TX2; Monitors Configuration; Monitor 1/2 Offsets → Integral/Standby.
+- Nominal DME vẫn là cấu hình chung, không nhân đôi theo TX; field ID, lựa chọn Open/Restricted, khóa bảo vệ, điều kiện đạt, fault/metadata/import/export và schema giữ nguyên. Các tham số không có control native được tách riêng; không mở thêm quyền native hoặc đổi mô hình RF. Nhóm nền trung tính, thụt cấp rõ; thay đổi baseline chỉ vào bản nháp cho tới Apply Scenario.
+
 ## DVOR 1150A — Scenario Parameters theo menu PMDT
 
 - Khối **Giá trị cấu hình bắt buộc** bỏ nền xanh trạng thái, dùng nền trung tính kế thừa panel và chữ tối dễ đọc; giữ nguyên thêm/xóa, chọn tham số, giá trị đích và validation. Chỉ đổi vùng này, không đổi màu trạng thái thiết bị hoặc trình soạn của simulator khác.
