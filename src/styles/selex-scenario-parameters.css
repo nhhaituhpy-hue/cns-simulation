@@ -69,6 +69,39 @@
 .selex-scenario-parameters-panel .selex-scenario-baseline > summary { font-weight: 700; cursor: pointer; }
 .selex-scenario-parameters-panel .selex-scenario-preview-values { display: flex; flex-wrap: wrap; gap: 5px 12px; }
 
+/* Nested permission groups follow the PMDT menu tree without stacked boxes. */
+.dvor1150a-scenario-parameters-panel [aria-label="Student recovery controls"] .pmdt-config-section {
+  min-width: 0;
+  margin-bottom: 0;
+  overflow-wrap: anywhere;
+}
+.dvor1150a-scenario-parameters-panel [aria-label="Student recovery controls"] .pmdt-config-section .pmdt-config-section {
+  margin-left: 8px;
+  border: 0;
+  border-left: 1px solid #b0b0b0;
+}
+
+/* Typed criteria are authoring controls, not green equipment status cells. */
+.pmdt-classic-window .dvor1150a-required-config-values {
+  min-width: 0;
+  color: #171717;
+}
+.pmdt-classic-window .dvor1150a-required-config-values :is(fieldset, legend) {
+  min-inline-size: 0;
+  background: transparent !important;
+  color: #171717 !important;
+}
+.pmdt-classic-window .dvor1150a-required-config-values label {
+  color: #171717 !important;
+}
+.pmdt-classic-window .dvor1150a-required-config-values p {
+  color: #404040 !important;
+}
+.pmdt-classic-window .dvor1150a-required-config-values :is(input, select) {
+  background: #fff !important;
+  color: #000 !important;
+}
+
 @media (max-height: 800px) {
   .pmdt-config-panel.selex-scenario-parameters-panel { max-height: calc(100dvh - 64px); }
 }

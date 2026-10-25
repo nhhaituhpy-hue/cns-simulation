@@ -9,6 +9,12 @@
 - Theo yêu cầu chủ repository, workflow **CI** chỉ chạy thủ công qua **Actions → CI → Run workflow**; không tự chạy khi push hoặc mở pull request.
 - Việc này không tắt webhook triển khai Dokploy và không thay đổi các lệnh lint, typecheck, test, build cục bộ.
 
+## DVOR 1150A — Scenario Parameters theo menu PMDT
+
+- Khối **Giá trị cấu hình bắt buộc** bỏ nền xanh trạng thái, dùng nền trung tính kế thừa panel và chữ tối dễ đọc; giữ nguyên thêm/xóa, chọn tham số, giá trị đích và validation. Chỉ đổi vùng này, không đổi màu trạng thái thiết bị hoặc trình soạn của simulator khác.
+- **Quyền chỉnh sửa của thí sinh** nhóm theo đường menu: RMS → Configuration → General/Station; Transmitters → Configuration → Nominal/Offsets and Scale Factors → Transmitter 1/2; Monitors → Configuration → General/Alarm Limits; Monitor 1/2 → Offsets & Scale Factors → Integral/Standby/Test Generator. Tham số kích thích mô phỏng không có control native được tách riêng, không gắn nhầm vào menu cấu hình.
+- Nhóm chỉ để tìm kiếm/hiển thị; giữ nguyên từng field ID, checkbox đã chọn, khóa bảo vệ và Open/Restricted, không đổi schema, quyền hiệu lực, cấu hình ban đầu hay điều kiện đạt. DVOR 1150/DME 1119A tiếp tục dùng nhóm cũ khi không truyền đường menu.
+
 ## DVOR 1150A — Login PMDT không ghi nhớ tài khoản
 
 - Hộp thoại Login PMDT luôn khởi tạo **User ID / Password trống**, không yêu cầu trình duyệt tự điền tài khoản web. Form/User ID đặt `autocomplete="off"`, Password dùng `autocomplete="new-password"` để tránh lấy mật khẩu đã lưu của website.

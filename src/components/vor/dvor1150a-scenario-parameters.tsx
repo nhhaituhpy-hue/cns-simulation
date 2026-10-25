@@ -24,6 +24,7 @@ import { scenarioEditPolicyChange, scenarioEditableFieldChange } from "@/lib/sce
 import { ScenarioParametersSection, ScenarioCriteriaHelp } from "@/components/scenario/parameters/scenario-parameters-section";
 import { ScenarioDiagnosisSection } from "@/components/scenario/parameters/scenario-diagnosis-section";
 import { ScenarioEditPolicySection } from "@/components/scenario/parameters/scenario-edit-policy-section";
+import { dvor1150aScenarioPolicyGroupPath } from "./dvor1150a-scenario-policy-groups";
 import { AiAuthoringField } from "@/components/scenario/ai-authoring-field";
 import { dvor1150aConfigurationValuesSchema } from "@/lib/ai/scenario-authoring/forms/dvor1150a-criteria";
 import type { JsonValue } from "@/lib/ai/scenario-authoring/types";
@@ -158,6 +159,7 @@ export function Dvor1150aScenarioParametersPanel() {
   const [message, setMessage] = useState<string | null>(null);
 
   const fields = dvorConfigFieldCatalog.filter((field) => !field.id.startsWith("simulation."));
+  const policyFields = fields.map((field) => ({ ...field, groupPath: dvor1150aScenarioPolicyGroupPath(field) }));
   const sections = Array.from(new Set(fields.map((field) => field.section)));
   const faultFields = fields.filter((field) => field.id.includes(".faults."));
   const baselineFields = fields.filter((field) => !field.id.includes(".faults."));
@@ -283,14 +285,16 @@ export function Dvor1150aScenarioParametersPanel() {
         help="Kết quả vận hành cần đạt; không tự xác định trường được phép sửa hoặc thao tác bắt buộc.">
         <ScenarioCriteriaHelp disposition={scenarioDraft.diagnosis?.disposition} />
         {(Object.keys(criterionLabels) as Array<keyof typeof criterionLabels>).map(key => <label key={key}><input type="checkbox" checked={scenarioDraft.successCriteria[key]} onChange={(event) => update((next) => { next.successCriteria[key] = event.target.checked; })} /> {criterionLabels[key]}</label>)}
-        <AiAuthoringField schema={dvor1150aConfigurationValuesSchema(scenarioDraft.configuration)} value={(scenarioDraft.successCriteria.configurationValues??[]) as unknown as JsonValue}
-          onChange={value => update(next => { next.successCriteria.configurationValues=value as unknown as NonNullable<Dvor1150aScenarioDefinition["successCriteria"]["configurationValues"]>; })} />
+        <div className="dvor1150a-required-config-values">
+          <AiAuthoringField schema={dvor1150aConfigurationValuesSchema(scenarioDraft.configuration)} value={(scenarioDraft.successCriteria.configurationValues??[]) as unknown as JsonValue}
+            onChange={value => update(next => { next.successCriteria.configurationValues=value as unknown as NonNullable<Dvor1150aScenarioDefinition["successCriteria"]["configurationValues"]>; })} />
+        </div>
       </ScenarioParametersSection>
 
       <ScenarioDiagnosisSection className="dvor1150a-scenario-policy" diagnosis={scenarioDraft.diagnosis} fields={fields} taskTargets={scenarioDraft.taskTargets}
         hardwareAnswers={scenarioDraft.diagnosis?.expectedHardware.map((target) => `${target.assemblyId ?? target.diagramHotspotId} · ${target.blockId} · ${target.diagramHotspotId}`)} />
 
-      <ScenarioEditPolicySection className="dvor1150a-scenario-policy" mode={scenarioDraft.editPolicy?.mode ?? "restricted"} fields={fields}
+      <ScenarioEditPolicySection className="dvor1150a-scenario-policy" mode={scenarioDraft.editPolicy?.mode ?? "restricted"} fields={policyFields}
         isAllowed={(id) => isDvor1150aScenarioStudentEditable(scenarioDraft, id)} isOperable={(id) => dvor1150aScenarioFieldRole(id) === "student-operable"}
         onModeChange={(mode) => update((next) => { Object.assign(next, scenarioEditPolicyChange(next, mode)); })}
         onFieldChange={(id, checked) => update((next) => { Object.assign(next, scenarioEditableFieldChange(next, id, checked)); })} />
