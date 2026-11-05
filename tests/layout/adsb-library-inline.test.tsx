@@ -33,7 +33,10 @@ it("puts ADS-B library auto-save in the same row and writes the canonical ID, no
   expect(screen.getByRole("columnheader", { name: /^Ôn tập/ })).toBeInTheDocument();
   expect(screen.getByRole("columnheader", { name: /^Kiểm tra/ })).toBeInTheDocument();
   expect(screen.queryByRole("link", { name: /Tạo kịch bản/ })).not.toBeInTheDocument();
-  expect(screen.getByRole("region", { name: "Tạo kịch bản AI" }).querySelectorAll("button")).toHaveLength(1);
+  const createRegion = screen.getByRole("region", { name: "Tạo kịch bản AI" });
+  expect(within(createRegion).getByRole("button", { name: "Tạo kịch bản bằng AI" })).toBeInTheDocument();
+  expect(within(createRegion).getByRole("button", { name: "Tạo kịch bản thủ công" })).toBeInTheDocument();
+  expect(createRegion.querySelectorAll("button")).toHaveLength(2);
   const actions = row.lastElementChild as HTMLElement;
   expect(actions.querySelectorAll("a, button")).toHaveLength(2);
   const open = within(actions).getByRole("link", { name: `Mở simulator: ${scenario.title}` });

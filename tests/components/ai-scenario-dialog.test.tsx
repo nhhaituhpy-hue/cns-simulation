@@ -40,8 +40,31 @@ it("offers the two brief entry paths without creating a draft or exposing native
   await user.click(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" }));
   expect(screen.getByRole("button", { name: "Tải tài liệu" })).toBeEnabled();
   expect(screen.getByRole("button", { name: "Mô tả tình huống" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Tạo kịch bản thủ công" })).toBeEnabled();
   expect(screen.queryByRole("button", { name: "Dùng mặc định simulator" })).not.toBeInTheDocument();
   expect(vi.mocked(fetch).mock.calls.every(([, init]) => !init?.method || init.method === "GET")).toBe(true);
+});
+
+it("opens manual scenario creation beside the AI trigger and starts a native step-by-step draft on demand", async () => {
+  const saved: AuthoringSession = { id: "manual-draft", actorId: "test-admin", moduleId: "dvor-220", revision: 1, status: "editing", state: createAuthoringState("dvor-220", "manual-source"), documents: [], scenarioRowId: null, scenarioId: null, createdAt: "now", updatedAt: "now" };
+  const fetcher = vi.fn(async (url: string, init?: RequestInit) => {
+    if (url.includes("scenario-jobs")) return reply({ jobs: [] });
+    if (url.includes("?moduleId=")) return reply({ sessions: [] });
+    return reply({ session: authoringStateDto(saved, null) }, init?.method === "POST" ? 201 : 200);
+  });
+  vi.stubGlobal("fetch", fetcher);
+  const user = userEvent.setup();
+  render(<AiScenarioDialog moduleId="dvor-220" />);
+  await user.click(screen.getByRole("button", { name: "Tạo kịch bản thủ công" }));
+  const modal = within(screen.getByRole("dialog", { name: "Tạo kịch bản thủ công" }));
+  expect(fetcher.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(0);
+  await user.click(modal.getByRole("button", { name: "Bắt đầu tạo thủ công" }));
+  const posts = fetcher.mock.calls.filter(([, init]) => init?.method === "POST");
+  expect(posts).toHaveLength(1);
+  const body = posts[0][1]!.body as FormData;
+  expect(body.get("mode")).toBeNull();
+  expect(body.get("moduleId")).toBe("dvor-220");
+  expect(await modal.findByLabelText("Tên kịch bản")).toBeVisible();
 });
 
 it.each(["documents", "description"] as const)("resumes, resets and explicitly creates through the real %s dialog path", async mode => {

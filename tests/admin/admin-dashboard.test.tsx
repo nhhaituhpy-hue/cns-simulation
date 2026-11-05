@@ -60,6 +60,7 @@ describe("AdminDashboard", () => {
 
     expect(screen.queryByRole("link", { name: /Tạo kịch bản/ })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Tạo kịch bản bằng AI" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Tạo kịch bản thủ công" })).toBeInTheDocument();
     expect(
       screen.getByRole("link", { name: "Mở simulator: Kiểm tra Sensor A" }),
     ).toHaveAttribute(

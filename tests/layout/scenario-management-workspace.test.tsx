@@ -59,8 +59,9 @@ describe("ScenarioManagementWorkspace", () => {
     expect(screen.getByText(/Import cùng mã sẽ cập nhật kịch bản hiện có/)).toBeVisible();
     const scenarioButton = await screen.findByRole("button", { name: /QA DVOR 220 - Carrier/ });
     const create = screen.getByRole("region", { name: "Tạo kịch bản AI" });
-    expect(within(create).getAllByRole("button")).toHaveLength(1);
+    expect(within(create).getAllByRole("button")).toHaveLength(2);
     expect(within(create).getByRole("button", { name: "Tạo kịch bản bằng AI" })).toBeInTheDocument();
+    expect(within(create).getByRole("button", { name: "Tạo kịch bản thủ công" })).toBeInTheDocument();
     const cell = scenarioButton.closest("tr")!.lastElementChild as HTMLElement;
     const actions = cell.querySelectorAll("a, button");
     expect(actions).toHaveLength(2);

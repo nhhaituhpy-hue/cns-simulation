@@ -41,7 +41,7 @@ export function AiAuthoringWizard({
   const uploadAttempt = useRef<{ key: string; body: FormData; url: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const [advanced, setAdvanced] = useState(false);
+  const [advanced, setAdvanced] = useState(initialMode === "native");
   const [uploadUncertain, setUploadUncertain] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
   const finalizeAttempt = useRef<{ key: string; body: string } | null>(null);
@@ -261,7 +261,7 @@ export function AiAuthoringWizard({
     setPaused(false);
     setError(null);
     setStep("documents");
-    setAdvanced(false);
+    setAdvanced(initialMode === "native");
   }
   async function deleteSession(targetId: string) {
     const response = await fetch(`${api}/${encodeURIComponent(targetId)}`, { method: "DELETE" });
@@ -301,13 +301,13 @@ export function AiAuthoringWizard({
     <section aria-label="Trình tạo kịch bản từng bước" className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 text-[var(--cns-text-primary)]">
       <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--cns-border-subtle)] pb-2.5">
         <div>
-          <h3 className="text-base font-semibold">{session ? session.form.label : mode === "description" ? "Mô tả tình huống" : "Tải tài liệu"}</h3>
-          <p className="mt-0.5 text-xs text-[var(--cns-text-secondary)]">
-            {contextDirty || Object.keys(dirty).length ? "Có thay đổi chưa lưu" : session ? saved ? "Đã lưu nháp trên máy chủ" : "Bản nháp trên máy chủ · Chưa tạo kịch bản" : getSimulatorModule(moduleId)?.name ?? moduleId}
-          </p>
+        <h3 className="text-base font-semibold">{session ? session.form.label : initialMode === "native" ? "Khởi tạo kịch bản thủ công" : mode === "description" ? "Mô tả tình huống" : "Tải tài liệu"}</h3>
+        <p className="mt-0.5 text-xs text-[var(--cns-text-secondary)]">
+          {contextDirty || Object.keys(dirty).length ? "Có thay đổi chưa lưu" : session ? saved ? "Đã lưu nháp trên máy chủ" : "Bản nháp trên máy chủ · Chưa tạo kịch bản" : getSimulatorModule(moduleId)?.name ?? moduleId}
+        </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {session ? <Button size="sm" className={authoringBtnBlueClass} disabled={busy || uploadUncertain || finalUncertain} onClick={() => { if (advanced) void run(showReview); else { setAdvanced(true); setStep(sections[0]?.id ?? "documents"); } }}>{advanced ? "Quay lại bản xem thử" : "Chỉnh sửa nâng cao"}</Button> : null}
+        {session && (session.mode || session.blueprint) ? <Button size="sm" className={authoringBtnBlueClass} disabled={busy || uploadUncertain || finalUncertain} onClick={() => { if (advanced) void run(showReview); else { setAdvanced(true); setStep(sections[0]?.id ?? "documents"); } }}>{advanced ? "Quay lại bản xem thử" : "Chỉnh sửa nâng cao"}</Button> : null}
           {session ? (
             <Button size="sm" className={authoringBtnGrayClass} disabled={busy || uploadUncertain || finalUncertain} onClick={() => void run(() => deleteSession(session.id))}>
               Xóa & tạo lại từ đầu
@@ -380,7 +380,7 @@ export function AiAuthoringWizard({
             ) : (
               <div className="grid gap-1.5">
                 <div className="rounded-lg border border-[#0369a1] bg-[#0369a1] px-2.5 py-2 text-xs font-semibold text-white">
-                  Tình huống → Xem thử → Lưu
+                  {initialMode === "native" ? "Khởi tạo → Chỉnh sửa từng bước → Lưu" : "Tình huống → Xem thử → Lưu"}
                 </div>
               </div>
             )}
@@ -419,8 +419,8 @@ export function AiAuthoringWizard({
 
           {(!advanced || step === "documents") ? (
             <div className={`${authoringCardClass} grid gap-3.5`}>
-              <p className="text-xs leading-relaxed">{mode === "description" && !advanced ? "Mô tả sự cố, triệu chứng và mục tiêu huấn luyện bằng lời của bạn. AI tra manual đúng thiết bị; nếu thiếu nguồn hoặc mục tiêu, AI sẽ yêu cầu bổ sung, không tự chọn lỗi." : "Dùng manual hoặc tài liệu của đúng thiết bị. Mục tiêu bài tập có thể bổ sung bên dưới; không thay mặc định toàn hệ thống."}</p>
-              {mode === "documents" || advanced || session ? <div className="grid gap-1.5">
+              <p className="text-xs leading-relaxed">{initialMode === "native" && !session ? "Khởi tạo bản nháp từ cấu hình mặc định chuẩn của thiết bị, sau đó điền thông tin, trạng thái ban đầu, lỗi đưa vào và điều kiện đạt theo từng bước." : mode === "description" && !advanced ? "Mô tả sự cố, triệu chứng và mục tiêu huấn luyện bằng lời của bạn. AI tra manual đúng thiết bị; nếu thiếu nguồn hoặc mục tiêu, AI sẽ yêu cầu bổ sung, không tự chọn lỗi." : "Dùng manual hoặc tài liệu của đúng thiết bị. Mục tiêu bài tập có thể bổ sung bên dưới; không thay mặc định toàn hệ thống."}</p>
+              {initialMode === "native" && !session ? null : mode === "documents" || advanced || session ? <div className="grid gap-1.5">
                 <label htmlFor={fileInputId} className="text-xs font-semibold text-[var(--cns-text-primary)]">
                   Tài liệu thông số nền
                 </label>
@@ -473,9 +473,15 @@ export function AiAuthoringWizard({
               <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-[var(--cns-border-subtle)]/70 pt-3">
                 <a className="text-xs font-medium text-[#0369a1] underline" href={`/templates/ai-scenario-${moduleId}.docx`} download>Tải mẫu thông số nền (.docx)</a>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Button size="sm" variant="primary" className={authoringBtnOrangeClass} disabled={busy || uploadUncertain || pending || conflict || !!session?.proposal || !!fileError || (mode === "description" && !advanced ? !context.trim() : !files.length && !session?.documents.length)} onClick={() => void run(() => session ? analyze(advanced ? "baseline" : "blueprint") : create())}>
-                    {advanced ? "Phân tích lại tài liệu" : "AI soạn kịch bản"}
-                  </Button>
+                  {initialMode === "native" && !session ? (
+                    <Button size="sm" variant="primary" className={authoringBtnOrangeClass} disabled={busy || uploadUncertain} onClick={() => void run(() => create(true))}>
+                      Bắt đầu tạo thủ công
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="primary" className={authoringBtnOrangeClass} disabled={busy || uploadUncertain || pending || conflict || !!session?.proposal || !!fileError || (mode === "description" && !advanced ? !context.trim() : !files.length && !session?.documents.length)} onClick={() => void run(() => session ? analyze(advanced ? "baseline" : "blueprint") : create())}>
+                      {advanced ? "Phân tích lại tài liệu" : "AI soạn kịch bản"}
+                    </Button>
+                  )}
 
                 </div>
               </div>

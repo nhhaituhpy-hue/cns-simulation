@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { PencilSimple } from "@phosphor-icons/react/dist/csr/PencilSimple";
 import { Sparkle } from "@phosphor-icons/react/dist/csr/Sparkle";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { ParameterReviewPanel } from "./parameter-review-panel";
@@ -102,18 +103,22 @@ function LegacyHistory({moduleId,onCompleted,notified}:{moduleId:ScenarioParamet
 }
 
 export function AiScenarioDialog({moduleId,onCompleted,actions}:{moduleId:ScenarioParametersModuleId;onCompleted?:(job:AiScenarioJob)=>void|Promise<void>;actions?:ReactNode}){
- const[chooserOpen,setChooserOpen]=useState(false),[open,setOpen]=useState(false),[initialMode,setInitialMode]=useState<"documents"|"description">("documents"),[closing,setClosing]=useState(false);
- const dialog=useRef<HTMLDialogElement>(null),trigger=useRef<HTMLButtonElement>(null),closeHandler=useRef<(()=>Promise<boolean>)|null>(null),notified=useRef(new Set<string>());const titleId=useId(),descriptionId=useId();
- useEffect(()=>{if(!open)return;const node=dialog.current!,previous=trigger.current;node.showModal();return()=>{if(node.open)node.close();previous?.focus();};},[open]);
+ const[chooserOpen,setChooserOpen]=useState(false),[open,setOpen]=useState(false),[initialMode,setInitialMode]=useState<"documents"|"description"|"native">("documents"),[closing,setClosing]=useState(false);
+ const dialog=useRef<HTMLDialogElement>(null),trigger=useRef<HTMLButtonElement>(null),manualTrigger=useRef<HTMLButtonElement>(null),activeTrigger=useRef<HTMLButtonElement|null>(null),closeHandler=useRef<(()=>Promise<boolean>)|null>(null),notified=useRef(new Set<string>());const titleId=useId(),descriptionId=useId();
+ useEffect(()=>{if(!open)return;const node=dialog.current!,previous=activeTrigger.current??trigger.current;node.showModal();return()=>{if(node.open)node.close();previous?.focus();};},[open]);
  async function close(){if(closing)return;setClosing(true);try{if(!closeHandler.current||await closeHandler.current()){setOpen(false);setChooserOpen(false);}}finally{setClosing(false);}}
  async function completed(session:AuthoringSessionDto){const name=session.form.fields.find(f=>f.id==="name")?.value;await onCompleted?.({id:session.id,moduleId,name:typeof name==="string"?name:"Kịch bản mới",status:"completed",phase:"completed",scenarioId:session.scenarioId,scenarioRowId:session.scenarioRowId,createdAt:session.createdAt,updatedAt:session.updatedAt});}
- function pickMode(mode:"documents"|"description"){setInitialMode(mode);setChooserOpen(false);setOpen(true);}
+ function pickMode(mode:"documents"|"description"|"native"){activeTrigger.current=mode==="native"?manualTrigger.current:trigger.current;setInitialMode(mode);setChooserOpen(false);setOpen(true);}
  return (
   <section aria-label="Tạo kịch bản AI" className="mt-5">
    <div className="flex flex-wrap items-center gap-2">
     <Button ref={trigger} variant="primary" size="md" aria-expanded={chooserOpen} onClick={()=>setChooserOpen(prev=>!prev)}>
      <Sparkle aria-hidden size={15}/>
      <span>Tạo kịch bản bằng AI</span>
+    </Button>
+    <Button ref={manualTrigger} variant="secondary" size="md" onClick={()=>pickMode("native")}>
+     <PencilSimple aria-hidden size={15}/>
+     <span>Tạo kịch bản thủ công</span>
     </Button>
     {actions}
    </div>
@@ -141,7 +146,7 @@ export function AiScenarioDialog({moduleId,onCompleted,actions}:{moduleId:Scenar
     </div>
    ):null}
 
-   {open?<dialog ref={dialog} aria-labelledby={titleId} aria-describedby={descriptionId} onCancel={event=>{if(event.target!==event.currentTarget||dialog.current?.dataset.filePickerActive==="true"){event.preventDefault();return;}event.preventDefault();void close();}} onClose={event=>{if(event.target===event.currentTarget)setOpen(false);}} className="m-auto max-h-[calc(100dvh-1.5rem)] w-[min(92rem,calc(100%-1.5rem))] overflow-y-auto rounded-2xl border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] p-0 text-[var(--cns-text-primary)] shadow-2xl backdrop:bg-black/40 backdrop:backdrop-blur-sm"><div className="p-4 sm:p-5"><header className="mb-3 flex items-start justify-between gap-3 border-b border-[var(--cns-border-subtle)] pb-3"><div><h2 id={titleId} className="text-lg font-semibold">Tạo kịch bản bằng AI</h2><p id={descriptionId} className="mt-0.5 text-xs text-[var(--cns-text-secondary)]">Không tự đưa vào Ôn tập hoặc Kỳ thi.</p></div><Button size="sm" className={authoringBtnGrayClass} disabled={closing} onClick={()=>void close()} aria-label="Đóng">Đóng</Button></header><AiAuthoringWizard key={`${moduleId}-${initialMode}`} moduleId={moduleId} initialMode={initialMode} onCompleted={completed} registerClose={handler=>{closeHandler.current=handler;}}/><LegacyHistory moduleId={moduleId} onCompleted={onCompleted} notified={notified}/></div></dialog>:null}
+   {open?<dialog ref={dialog} aria-labelledby={titleId} aria-describedby={descriptionId} onCancel={event=>{if(event.target!==event.currentTarget||dialog.current?.dataset.filePickerActive==="true"){event.preventDefault();return;}event.preventDefault();void close();}} onClose={event=>{if(event.target===event.currentTarget)setOpen(false);}} className="m-auto max-h-[calc(100dvh-1.5rem)] w-[min(92rem,calc(100%-1.5rem))] overflow-y-auto rounded-2xl border border-[var(--cns-border-subtle)] bg-[var(--cns-surface-card)] p-0 text-[var(--cns-text-primary)] shadow-2xl backdrop:bg-black/40 backdrop:backdrop-blur-sm"><div className="p-4 sm:p-5"><header className="mb-3 flex items-start justify-between gap-3 border-b border-[var(--cns-border-subtle)] pb-3"><div><h2 id={titleId} className="text-lg font-semibold">{initialMode==="native"?"Tạo kịch bản thủ công":"Tạo kịch bản bằng AI"}</h2><p id={descriptionId} className="mt-0.5 text-xs text-[var(--cns-text-secondary)]">Không tự đưa vào Ôn tập hoặc Kỳ thi.</p></div><Button size="sm" className={authoringBtnGrayClass} disabled={closing} onClick={()=>void close()} aria-label="Đóng">Đóng</Button></header><AiAuthoringWizard key={`${moduleId}-${initialMode}`} moduleId={moduleId} initialMode={initialMode} onCompleted={completed} registerClose={handler=>{closeHandler.current=handler;}}/><LegacyHistory moduleId={moduleId} onCompleted={onCompleted} notified={notified}/></div></dialog>:null}
   </section>
  );
 }

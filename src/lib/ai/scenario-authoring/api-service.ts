@@ -68,11 +68,12 @@ export async function listAuthoringResponse(request:Request){const a=await auth(
  try{const moduleId=new URL(request.url).searchParams.get("moduleId")??"";if(!isScenarioParametersModuleId(moduleId))input();const sessions=await listAuthoringSessions(getDatabasePool(),a.profile!.id,moduleId);return json({sessions:sessions.map(s=>({id:s.id,moduleId:s.moduleId,status:s.status,revision:s.revision,name:s.state.definition.name,updatedAt:s.updatedAt,scenarioRowId:s.scenarioRowId,scenarioId:s.scenarioId}))});}catch(e){return errorResponse(e);}
 }
 export async function createAuthoringResponse(request:Request){const a=await auth(request);if(a.response)return a.response;const directory=randomUUID();let retained=false,saved=false,cleanupSafe=false;
- try{available();const idempotencyKey=key(request);const{form,files}=await multipart(request,["moduleId","context","files","mode"]);const moduleId=form.get("moduleId");if(typeof moduleId!=="string"||!isScenarioParametersModuleId(moduleId))input();const context=String(form.get("context")??"");if(context.length>4000)input();
+ try{const idempotencyKey=key(request);const{form,files}=await multipart(request,["moduleId","context","files","mode"]);const moduleId=form.get("moduleId");if(typeof moduleId!=="string"||!isScenarioParametersModuleId(moduleId))input();const context=String(form.get("context")??"");if(context.length>4000)input();
   const mode=form.get("mode");if(mode!==null&&mode!=="documents"&&mode!=="description")input();
   if(mode&&context.length>2000)input("Mô tả tình huống tối đa 2000 ký tự.");
   if(mode==="description"&&!context.trim())input("Hãy mô tả tình huống cần tạo.");
   if(mode==="documents"&&!files.length)input("Hãy chọn tài liệu trước khi tạo bài.");
+  if(mode||files.length)available();
   const documents=await saveDocuments(directory,files);saved=documents.length>0;
   let session=await createAuthoringSession(getDatabasePool(),moduleId,{actorId:a.profile!.id,idempotencyKey,id:directory,documents,context,...(mode?{mode}:{})});retained=session.id===directory;cleanupSafe=!retained;
   if((mode||session.documents?.length)&&!(await latestAuthoringAnalysis(getDatabasePool(),session.id,a.profile!.id))){const kind=mode?"blueprint":"baseline";await enqueueAuthoringAnalysis(getDatabasePool(),session.id,a.profile!.id,session.revision,{kind,question:context},{idempotencyKey:createHash("sha256").update(idempotencyKey+":"+kind).digest("hex")});session=(await getAuthoringSession(getDatabasePool(),session.id,a.profile!.id))!;}
