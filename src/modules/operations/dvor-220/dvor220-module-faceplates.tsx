@@ -1,10 +1,42 @@
-import type { Dvor220BlockId, Dvor220FaceplateKind } from "./block-diagram-data";
+import { createContext, useContext, useId } from "react";
+import type { Dvor220BlockId, Dvor220FaceplateKind, Dvor220TestPoint } from "./block-diagram-data";
 import { DVOR_220_BLOCK_BY_ID } from "./block-diagram-data";
 import styles from "./dvor220-block-diagram.module.css";
 
 interface Dvor220ModuleFaceplateProps {
   kind: Dvor220FaceplateKind;
   blockId: Dvor220BlockId;
+  onSelectPoint?: (point: Dvor220TestPoint) => void;
+}
+
+const MeasurementContext = createContext<{ points: readonly Dvor220TestPoint[]; onSelect?: (point: Dvor220TestPoint) => void }>({ points: [] });
+
+function MeasurementConnector({ pointId, label, kind, x, y, children }: { pointId?: string; label?: string; kind: "test-pin" | "test-jack" | "bnc"; x: number; y: number; children: React.ReactNode }) {
+  const { points, onSelect } = useContext(MeasurementContext);
+  const compact = (value: string) => value.replaceAll(/\s/g, "").toLowerCase();
+  const point = points.find((item) => pointId
+    ? item.id === pointId || item.id.split(/\s*\/\s*/).includes(pointId)
+    : label && (compact(item.label) === compact(label) || compact(item.label).startsWith(compact(label))));
+  const interactive = !!point && !!onSelect;
+  return <g className={styles.measurementConnector} data-connector-kind={kind} data-point-id={point?.id} role={interactive ? "button" : undefined} tabIndex={interactive ? 0 : undefined}
+    aria-label={interactive ? `Xem tín hiệu ${point.id} ${point.label} trên panel` : undefined}
+    onClick={interactive ? () => onSelect(point) : undefined}
+    onKeyDown={interactive ? (event) => {
+      if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onSelect(point); }
+    } : undefined}>
+    {interactive ? <rect className={styles.measurementHitTarget} x={x - 23} y={y - 15} width="46" height="30" rx="4" /> : null}
+    {children}
+  </g>;
+}
+
+function TestPin({ x, y, id, label }: { x: number; y: number; id: string; label: string }) {
+  return <MeasurementConnector pointId={id} label={label} kind="test-pin" x={x} y={y}>
+    <g className={styles.faceplateTestPin} aria-hidden>
+      <rect x={x - 5} y={y - 5} width="10" height="10" rx="1" />
+      <path d={`M${x} ${y - 9}v18`} />
+      <text x={x + 14} y={y + 4}>{id} · {label}</text>
+    </g>
+  </MeasurementConnector>;
 }
 
 function Screw({ x, y, radius = 8 }: { x: number; y: number; radius?: number }) {
@@ -37,24 +69,28 @@ function PushButton({ x, y, label, size = 28 }: { x: number; y: number; label?: 
   );
 }
 
-function TestJack({ x, y, label, color = "red" }: { x: number; y: number; label?: string; color?: "red" | "black" }) {
+function TestJack({ x, y, pointId, label, color = "red" }: { x: number; y: number; pointId: string; label?: string; color?: "red" | "black" }) {
   return (
+    <MeasurementConnector pointId={pointId} label={label} kind="test-jack" x={x} y={y}>
     <g className={styles.faceplateTestJack} data-color={color} aria-hidden>
       <circle cx={x} cy={y} r="8" />
       <circle cx={x} cy={y} r="3" />
       {label ? <text x={x + 14} y={y + 4}>{label}</text> : null}
     </g>
+    </MeasurementConnector>
   );
 }
 
-function Coax({ x, y, label, radius = 18 }: { x: number; y: number; label?: string; radius?: number }) {
+function Coax({ x, y, pointId, label, radius = 18 }: { x: number; y: number; pointId?: string; label?: string; radius?: number }) {
   return (
+    <MeasurementConnector pointId={pointId ?? label?.match(/^J\d+/)?.[0] ?? (label === "VOR RF SIGNAL" ? "BNC" : undefined)} label={label} kind="bnc" x={x} y={y}>
     <g className={styles.faceplateCoax} aria-hidden>
       <circle cx={x} cy={y} r={radius + 5} />
       <circle cx={x} cy={y} r={radius} />
       <circle cx={x} cy={y} r={radius * 0.36} />
       {label ? <text x={x} y={y - radius - 12} textAnchor="middle">{label}</text> : null}
     </g>
+    </MeasurementConnector>
   );
 }
 
@@ -86,9 +122,10 @@ function PullHandle({ x, y, height }: { x: number; y: number; height: number }) 
 }
 
 function PanelFrame({ width, height, title, partNumber, children }: { width: number; height: number; title: string; partNumber?: string; children: React.ReactNode }) {
-  const gradientId = `dvor220-faceplate-${title.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-")}`;
+  const gradientId = useId();
+  const { onSelect } = useContext(MeasurementContext);
   return (
-    <svg className={styles.moduleFaceplate} width={width} height={height} style={{ aspectRatio: `${width} / ${height}` }} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Mặt panel ${title}`}>
+    <svg className={styles.moduleFaceplate} width={width} height={height} style={{ aspectRatio: `${width} / ${height}` }} viewBox={`0 0 ${width} ${height}`} role={onSelect ? "group" : "img"} aria-label={`Mặt panel ${title}`}>
       <defs>
         <linearGradient id={gradientId} x1="0" x2="1" y1="0" y2="1">
           <stop offset="0" stopColor="#f2f3ef" />
@@ -213,8 +250,8 @@ function GenericCard({ blockId }: { blockId: Dvor220BlockId }) {
       {isTsg ? <Coax x={95} y={530} label="VOR RF SIGNAL" radius={16} /> : null}
       {isScu ? (
         <>
-          <TestJack x={70} y={520} label="CAN TxD" />
-          <TestJack x={70} y={556} label="CAN RxD" />
+          <TestJack x={70} y={520} pointId="CAN TxD" label="CAN TxD" />
+          <TestJack x={70} y={556} pointId="CAN RxD" label="CAN RxD" />
         </>
       ) : null}
       {!isTsg && !isScu ? (
@@ -229,7 +266,7 @@ function GenericCard({ blockId }: { blockId: Dvor220BlockId }) {
 }
 
 function DcdcFaceplate({ auxiliary }: { auxiliary: boolean }) {
-  const values = auxiliary ? ["+5V", "+15V", "-15V", "GND"] : ["+5V", "+8V", "+15V", "-15V", "+28V", "+50V", "GND"];
+  const values = auxiliary ? ["+5 V", "+15 V", "-15 V", "GND"] : ["+5 V", "+8 V", "+15 V", "-15 V", "+28 V", "+50 V", "GND"];
   return (
     <PanelFrame width={auxiliary ? 230 : 260} height={720} title={auxiliary ? "DC/DC-A" : "DC/DC"} partNumber={auxiliary ? "0130-7720" : "0230-7710"}>
       <PullHandle x={54} y={170} height={330} />
@@ -237,7 +274,7 @@ function DcdcFaceplate({ auxiliary }: { auxiliary: boolean }) {
       <Led x={auxiliary ? 132 : 145} y={136} label="INPUT FAULT" color="off" />
       <Led x={auxiliary ? 132 : 145} y={172} label="OUTPUT FAULT" color="off" />
       {values.map((label, index) => (
-        <TestJack key={label} x={auxiliary ? 116 : 132} y={250 + index * (auxiliary ? 58 : 48)} label={label} color={label === "GND" ? "black" : "red"} />
+        <TestJack key={label} pointId={label} x={auxiliary ? 116 : 132} y={250 + index * (auxiliary ? 58 : 48)} label={label} color={label === "GND" ? "black" : "red"} />
       ))}
       <text className={styles.faceplateVerticalBrand} x={auxiliary ? 202 : 230} y="400" transform={`rotate(-90 ${auxiliary ? 202 : 230} 400)`} textAnchor="middle">INPUT +28 VDC · HOT SWAP</text>
     </PanelFrame>
@@ -285,10 +322,10 @@ function MsgFaceplate() {
       <BoxHeader x={105} y={205} pins={14} label="MCU JTAG" />
       <BoxHeader x={105} y={312} pins={10} label="CPLD JTAG" />
       <PushButton x={105} y={386} label="RESET" size={24} />
-      <Coax x={105} y={456} label="30 Hz SYNC" radius={15} />
+      <Coax x={105} y={456} pointId="sync-30hz" label="30 Hz SYNC" radius={15} />
       {[
         ["TP49", "CARRIER MOD"], ["TP61", "USB COS"], ["TP62", "LSB COS"], ["TP63", "USB SIN"], ["TP64", "LSB SIN"],
-      ].map(([id, label], index) => <TestJack key={id} x={70} y={520 + index * 30} label={`${id} · ${label}`} />)}
+      ].map(([id, label], index) => <TestPin key={id} id={id} x={70} y={520 + index * 30} label={label} />)}
     </PanelFrame>
   );
 }
@@ -300,9 +337,17 @@ function SynFaceplate() {
       <Led x={76} y={155} label="POWER" color="green" />
       <Led x={76} y={188} label="PLL FAIL" color="off" />
       <Led x={76} y={221} label="ERROR" color="off" />
-      <BoxHeader x={105} y={300} pins={14} label="SERVICE" />
-      <PushButton x={105} y={375} label="RESET" size={24} />
-      {["TP33 USB COS", "TP34 USB SIN", "TP35 LSB COS", "TP36 LSB SIN"].map((label, index) => <TestJack key={label} x={70} y={445 + index * 35} label={label} />)}
+      <BoxHeader x={105} y={285} pins={14} label="SERVICE" />
+      <PushButton x={105} y={355} label="RESET" size={24} />
+      <g className={styles.rotarySwitches}>
+        <title>SW2–SW6 · Chọn tần số · hình minh họa cố định, không mô phỏng hiệu chỉnh</title>
+        {["SW2", "SW3", "SW4", "SW5", "SW6"].map((id, index) => <g key={id} data-control-kind="rotary-switch" aria-hidden>
+          <circle cx={42 + index * 30} cy="410" r="10" />
+          <path d={`M${37 + index * 30} 413l10-6`} />
+          <text x={42 + index * 30} y="435" textAnchor="middle">{id}</text>
+        </g>)}
+      </g>
+      {[["TP33", "USB COS"], ["TP34", "USB SIN"], ["TP35", "LSB COS"], ["TP36", "LSB SIN"]].map(([id, label], index) => <TestPin key={id} id={id} x={70} y={465 + index * 33} label={label} />)}
       <Coax x={105} y={625} label="J6 · 40 MHz MON" radius={17} />
     </PanelFrame>
   );
@@ -311,17 +356,17 @@ function SynFaceplate() {
 function MonFaceplate() {
   const indicators: readonly [string, "green" | "red" | "amber" | "off"][] = [
     ["POWER", "green"], ["FAULT", "off"], ["INTEGRAL ALARM", "off"], ["INTEGRAL WARNING", "off"],
-    ["SECONDARY ALARM", "off"], ["STANDBY ALARM", "off"], ["STANDBY WARNING", "off"], ["IDENTITY CODE", "green"],
+    ["SECONDARY ALARM", "off"], ["SECONDARY ALARM", "off"], ["STANDBY ALARM", "off"], ["STANDBY WARNING", "off"], ["IDENTITY CODE", "green"],
   ];
   return (
     <PanelFrame width={220} height={720} title="MON" partNumber="0230-7550">
-      {indicators.map(([label, color], index) => <Led key={label} x={70} y={82 + index * 31} label={label} color={color} />)}
+      {indicators.map(([label, color], index) => <Led key={`${label}-${index}`} x={70} y={82 + index * 31} label={label} color={color} />)}
       <BoxHeader x={110} y={380} pins={14} label="MCU JTAG" />
       <BoxHeader x={110} y={470} pins={10} label="ZYNQ JTAG" />
       <PushButton x={110} y={535} label="RESET" size={23} />
       {[
         ["TP47", "IDENT"], ["TP48", "FM 30 Hz"], ["TP49", "BASEBAND"], ["TP51", "AM 30 Hz"],
-      ].map(([id, label], index) => <TestJack key={id} x={70} y={590 + index * 29} label={`${id} · ${label}`} />)}
+      ].map(([id, label], index) => <TestPin key={id} id={id} x={70} y={590 + index * 29} label={label} />)}
     </PanelFrame>
   );
 }
@@ -352,7 +397,7 @@ function PdcFaceplate() {
         <Coax key={label} x={108 + index * 162} y={164} label={label} radius={22} />
       ))}
       <PullHandle x={450} y={198} height={50} />
-      <text className={styles.faceplateSmallLabel} x="450" y="270" textAnchor="middle">ACTIVE PATH RF MONITOR PORTS · -30 dB COUPLED SAMPLE</text>
+      <text className={styles.faceplateSmallLabel} x="450" y="270" textAnchor="middle">COUPLED RF SAMPLE · APPLY PORT-SPECIFIC LOSS</text>
     </PanelFrame>
   );
 }
@@ -380,11 +425,11 @@ function PmuFaceplate() {
   return (
     <PanelFrame width={720} height={360} title="PMU · POWER MANAGEMENT UNIT" partNumber="0130-7730">
       <BoxHeader x={92} y={112} pins={14} label="MCU JTAG" />
-      <TestJack x={170} y={102} label="GND" color="black" />
-      <TestJack x={170} y={136} label="BAT VOLT" />
-      <TestJack x={170} y={170} label="ACDC VOLT" />
+      <TestJack x={170} y={102} pointId="GND" label="GND" color="black" />
+      <TestJack x={170} y={136} pointId="Battery Voltage" label="BAT VOLT" />
+      <TestJack x={170} y={170} pointId="AC/DC Voltage" label="ACDC VOLT" />
       <rect className={styles.pmuDisplay} x="250" y="86" width="164" height="84" rx="5" />
-      <text className={styles.pmuDigits} x="332" y="140" textAnchor="middle">28.0</text>
+      <text className={styles.pmuDigits} x="332" y="140" textAnchor="middle">----</text>
       <Led x={470} y={102} label="ON BATT" color="off" />
       <Led x={470} y={136} label="AC FAIL" color="off" />
       <Led x={470} y={170} label="BAT CHARGE" color="amber" />
@@ -442,7 +487,7 @@ function AsuFaceplate() {
   );
 }
 
-export function Dvor220ModuleFaceplate({ kind, blockId }: Dvor220ModuleFaceplateProps) {
+function ModuleVisual({ kind, blockId }: Dvor220ModuleFaceplateProps) {
   switch (kind) {
     case "lmi": return <LmiFaceplate />;
     case "csp": return <CspFaceplate />;
@@ -461,4 +506,10 @@ export function Dvor220ModuleFaceplate({ kind, blockId }: Dvor220ModuleFaceplate
     case "acdc": return <AcdcFaceplate />;
     case "asu": return <AsuFaceplate />;
   }
+}
+
+export function Dvor220ModuleFaceplate({ kind, blockId, onSelectPoint }: Dvor220ModuleFaceplateProps) {
+  return <MeasurementContext.Provider value={{ points: DVOR_220_BLOCK_BY_ID.get(blockId)?.testPoints ?? [], onSelect: onSelectPoint }}>
+    <ModuleVisual kind={kind} blockId={blockId} />
+  </MeasurementContext.Provider>;
 }

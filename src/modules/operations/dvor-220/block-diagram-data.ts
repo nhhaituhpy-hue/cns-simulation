@@ -92,13 +92,33 @@ export interface Dvor220WaveformReference {
   alt: string;
   caption: string;
   source: string;
+  /** Captured scope setup, not a manufacturer signal limit. */
+  scopeSettings?: readonly string[];
+  /** Readouts observed on this manual screenshot, never live telemetry. */
+  observedReadings?: readonly string[];
 }
 
 export interface Dvor220TestPoint {
   id: string;
   label: string;
   description: string;
+  signalType?: string;
+  nominal?: string;
+  tolerance?: string;
+  instrument?: string;
+  conditions?: readonly string[];
+  source?: string;
   waveforms?: readonly Dvor220WaveformReference[];
+}
+
+export interface Dvor220AdjustmentReference {
+  id: string;
+  label: string;
+  control: string;
+  instrument: string;
+  target: string;
+  conditions: readonly string[];
+  source: string;
 }
 
 export interface Dvor220BlockDefinition {
@@ -114,6 +134,7 @@ export interface Dvor220BlockDefinition {
   indicators: readonly string[];
   controls: readonly string[];
   testPoints: readonly Dvor220TestPoint[];
+  adjustments?: readonly Dvor220AdjustmentReference[];
   faceplate?: Dvor220FaceplateKind;
   notes?: readonly string[];
 }
@@ -214,6 +235,8 @@ const waveforms = {
     alt: "Dạng sóng tại J5 COS ENV của SMA",
     caption: "J5 COS ENV",
     source: "Manual Figure 7-5, PDF page 471",
+    scopeSettings: ["CH1 2.00 V/div; 500 µs/div; probe 1X"],
+    observedReadings: ["Ảnh chụp: Freq 719 Hz; Max 10.0 V. Max không phải Vpp; biên độ phụ thuộc công suất."],
   },
   smaSin: {
     src: "/equipment/dvor-220/waveforms/figure-7-6-sma-j6-sin-env.webp",
@@ -222,6 +245,8 @@ const waveforms = {
     alt: "Dạng sóng tại J6 SIN ENV của SMA",
     caption: "J6 SIN ENV",
     source: "Manual Figure 7-6, PDF page 472",
+    scopeSettings: ["CH1 2.00 V/div; 500 µs/div; probe 1X"],
+    observedReadings: ["Ảnh chụp: Freq 719 Hz; Max 10.0 V. Max không phải Vpp; biên độ phụ thuộc công suất."],
   },
   cmaEnv: {
     src: "/equipment/dvor-220/waveforms/figure-7-8-cma-j2-env.webp",
@@ -230,6 +255,8 @@ const waveforms = {
     alt: "Dạng sóng thông thường tại J2 ENV của CMA",
     caption: "J2 ENV - trạng thái thông thường",
     source: "Manual Figure 7-8, PDF page 474",
+    scopeSettings: ["CH1 1.00 V/div; 5.00 ms/div; probe 1X"],
+    observedReadings: ["Ảnh chụp: Freq 30.0 Hz; Max 6.48 V. Không có trường Ampl/Vpp."],
   },
   cmaIdent: {
     src: "/equipment/dvor-220/waveforms/figure-7-9-cma-j2-env-ident.webp",
@@ -238,6 +265,8 @@ const waveforms = {
     alt: "Dạng sóng tại J2 ENV của CMA khi phát Ident",
     caption: "J2 ENV - Ident key down",
     source: "Manual Figure 7-9, PDF page 475",
+    scopeSettings: ["CH1 1.00 V/div; 5.00 ms/div; probe 1X"],
+    observedReadings: ["Ảnh chụp Ident key down: Freq 29.9 Hz; Max 6.88 V. Không có trường Ampl/Vpp."],
   },
   msgCarrier: {
     src: "/equipment/dvor-220/waveforms/figure-7-12-msg-tp49-carrier.webp",
@@ -246,6 +275,8 @@ const waveforms = {
     alt: "Dạng sóng Carrier tại TP49 của MSG",
     caption: "TP49 Carrier",
     source: "Manual Figure 7-12, PDF page 478",
+    scopeSettings: ["CH2 1.00 V/div; 10.0 ms/div; probe 10X"],
+    observedReadings: ["Ảnh chụp: Ampl 2.73 V; Freq 29.9 Hz (Cur). Không phải Vpp hoặc dung sai."],
   },
   msgCarrierIdent: {
     src: "/equipment/dvor-220/waveforms/figure-7-13-msg-tp49-carrier-ident.webp",
@@ -254,6 +285,8 @@ const waveforms = {
     alt: "Dạng sóng Carrier tại TP49 của MSG khi phát Ident",
     caption: "TP49 Carrier - Ident key down",
     source: "Manual Figure 7-13, PDF page 478",
+    scopeSettings: ["CH2 1.00 V/div; 10.0 ms/div; probe 10X"],
+    observedReadings: ["Ảnh chụp Ident key down: Ampl 2.96 V; Freq 29.9 Hz (Cur). Không phải Vpp hoặc dung sai."],
   },
   msgUsb: {
     src: "/equipment/dvor-220/waveforms/figure-7-14-msg-usb-cos-sin.webp",
@@ -262,6 +295,8 @@ const waveforms = {
     alt: "Dạng sóng USB COS và USB SIN của MSG",
     caption: "TP61 USB COS / TP63 USB SIN",
     source: "Manual Figure 7-14, PDF page 479",
+    scopeSettings: ["CH1/CH2 1.00 V/div; 1.00 ms/div"],
+    observedReadings: ["Ảnh chụp: CH2 Ampl 3.73 V; CH1/CH2 Freq 725 Hz (Cur). Không áp probe CH4 cho CH1/CH2."],
   },
   msgLsb: {
     src: "/equipment/dvor-220/waveforms/figure-7-15-msg-lsb-cos-sin.webp",
@@ -270,6 +305,8 @@ const waveforms = {
     alt: "Dạng sóng LSB COS và LSB SIN của MSG",
     caption: "TP62 LSB COS / TP64 LSB SIN",
     source: "Manual Figure 7-15, PDF page 479",
+    scopeSettings: ["CH1/CH2 1.00 V/div; 1.00 ms/div"],
+    observedReadings: ["Ảnh chụp: CH2 Ampl 3.93 V; CH2 Freq 725 Hz; CH1 Freq 714 Hz (Cur). Không phải Vpp/dung sai."],
   },
   monAm: {
     src: "/equipment/dvor-220/waveforms/figure-7-18-mon-tp51-am-30hz.webp",
@@ -278,6 +315,8 @@ const waveforms = {
     alt: "Dạng sóng AM 30 Hz tại TP51 của MON",
     caption: "TP51 AM 30 Hz",
     source: "Manual Figure 7-18, PDF page 483",
+    scopeSettings: ["CH2 5.00 V/div; 10.0 ms/div; probe 10X"],
+    observedReadings: ["Ảnh chụp: Ampl 5.95 V; Freq 30.1 Hz (Cur). Không phải Vpp hoặc dung sai."],
   },
   monBaseband: {
     src: "/equipment/dvor-220/waveforms/figure-7-19-mon-tp49-baseband.webp",
@@ -286,6 +325,8 @@ const waveforms = {
     alt: "Dạng sóng baseband tại TP49 của MON",
     caption: "TP49 Baseband",
     source: "Manual Figure 7-19, PDF page 483",
+    scopeSettings: ["CH2 5.00 V/div; 20.0 ms/div; probe 10X"],
+    observedReadings: ["Ảnh chụp composite: Ampl 14.0 V; Freq auto 167 Hz (Cur). Số tự động không xác định tần số từng thành phần."],
   },
   monFm: {
     src: "/equipment/dvor-220/waveforms/figure-7-20-mon-tp48-fm-30hz.webp",
@@ -294,6 +335,8 @@ const waveforms = {
     alt: "Dạng sóng FM 30 Hz tại TP48 của MON",
     caption: "TP48 FM 30 Hz",
     source: "Manual Figure 7-20, PDF page 484",
+    scopeSettings: ["CH2 5.00 V/div; 20.0 ms/div; probe 10X"],
+    observedReadings: ["Ảnh chụp: Ampl 2.80 V; Freq 30.1 Hz (Cur). Không phải Vpp hoặc dung sai."],
   },
   monIdent: {
     src: "/equipment/dvor-220/waveforms/figure-7-21-mon-tp47-identification.webp",
@@ -302,8 +345,44 @@ const waveforms = {
     alt: "Dạng sóng Identification tại TP47 của MON",
     caption: "TP47 Identification",
     source: "Manual Figure 7-21, PDF page 484",
+    scopeSettings: ["CH2 5.00 V/div; 1.00 ms/div; probe 10X"],
+    observedReadings: ["Ảnh chụp: Ampl 6.85 V; Freq 1.06 kHz (Cur). Không thay tone danh định 1020 Hz bằng số đọc ảnh; keying có thể ngoài khung chụp."],
   },
 } as const satisfies Record<string, Dvor220WaveformReference>;
+
+// Table 5-3 electrical limits apply to populated rails, not to the GND reference.
+const dcRailTolerances: Readonly<Record<string, string>> = {
+  "+5 V": "4.75–5.25 VDC (±5%)",
+  "+8 V": "7.6–8.4 VDC (±5%)",
+  "+15 V": "14.25–15.75 VDC (±5%)",
+  "-15 V": "−15.75…−14.25 VDC (±5%)",
+  "+28 V": "26.6–29.4 VDC (±5%)",
+  "+50 V": "47.5–52.5 VDC (±5%)",
+};
+
+const txCalibrationConditions = [
+  "PMDT yêu cầu quyền mức 2 hoặc 3; hiệu chuẩn riêng từng TX và đúng kênh/tham số đang đo.",
+  "Các mục tiêu dưới đây thuộc quy trình lắp đặt §9.5.3, không phải giới hạn vận hành hoặc hành trình núm chỉnh.",
+  "TX Setpoint Cal. giữ nguyên RF thực ngay tại bước hiệu chuẩn bằng cách tự động bù giá trị setpoint hiển thị theo hệ số mới.",
+  "Sau hiệu chuẩn, kiểm tra và đặt lại thủ công giá trị trong Transmitter Setup về setpoint mong muốn; đây là bước riêng, không phải RF tự nhảy khi hiệu chuẩn.",
+  "Phân biệt: TX Reading Cal. chỉ đổi số đọc công suất, không đổi tín hiệu RF thực; không dùng nó thay hiệu chuẩn setpoint hoặc điều chế.",
+] as const;
+const txCalibrationSource = "§4.4.6.1.1, PDF 307 (4-121); §4.4.6.1.2, PDF 310 (4-124)";
+
+const sidebandAdjustment: readonly Dvor220AdjustmentReference[] = [{
+  id: "sideband-setpoint",
+  label: "Hiệu chuẩn công suất từng ngõ sideband",
+  control: "PMDT → Maintenance → TX Setpoint Cal.",
+  instrument: "RF power sensor + attenuator/cable đã bù suy hao",
+  target: "1 ±0.05 W",
+  conditions: [
+    "Đặt Transmitter Setup của ngõ tương ứng 1 W, bật RF cho bước kiểm tra.",
+    "Dùng đúng ngõ trên nóc cabinet: 1J5 USB SIN, 1J6 USB COS, 1J7 LSB SIN, 1J8 LSB COS; không nhầm với J20–J24 lấy mẫu trên PDC.",
+    "Lặp độc lập TX1/TX2; đây là quy trình PMDT, không có quy luật W/vòng hoặc vít PWR ADJ được suy từ DVOR 1150A.",
+    ...txCalibrationConditions,
+  ],
+  source: `Manual §9.5.3, PDF 541–542 (9-15–9-16); ${txCalibrationSource}.`,
+}];
 
 export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
   {
@@ -348,7 +427,7 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     diagramOccurrences: [occurrence("overview-tsg", [front.tsg.id]), occurrence("monitor-tsg", [front.tsg.id]), occurrence("control-tsg", [front.tsg.id])],
     indicators: ["POWER - xanh", "FAULT - đỏ", "PLL FAULT - đỏ"],
     controls: ["RESET", "MCU JTAG/Download", "CPLD JTAG/Download"],
-    testPoints: [{ id: "BNC", label: "VOR RF Signal", description: "Ngõ ra RF thử cấp đến quint 3-way divider." }],
+    testPoints: [{ id: "BNC", label: "VOR RF Signal", description: "Ngõ ra RF thử cấp đến quint 3-way divider.", signalType: "RF test signal", instrument: "Theo quy trình kiểm tra TSG", conditions: ["Không áp một mức RF cố định: TSG sinh tuần tự tín hiệu bình thường và tín hiệu lỗi cho monitor."], source: "Manual §7.2.7, Figure 7-1, PDF 465 (7-5)." }],
     faceplate: "card",
   },
   {
@@ -371,8 +450,8 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     indicators: ["POWER - xanh", "FAULT - đỏ", "MASTER/SLAVE - xanh"],
     controls: ["RESET", "MCU/CPLD JTAG", "CAN, UART và Ethernet nội bộ"],
     testPoints: [
-      { id: "TP", label: "CAN TxD TTL", description: "Theo dõi dữ liệu phát trên CAN transceiver." },
-      { id: "TP", label: "CAN RxD TTL", description: "Theo dõi dữ liệu thu trên CAN transceiver." },
+      { id: "CAN TxD", label: "CAN TxD TTL", description: "Chân tín hiệu phát TTL của CAN transceiver, không phải CAN_H/CAN_L.", signalType: "Digital TTL", instrument: "Oscilloscope / logic probe", conditions: ["Figure không ghi điện áp TTL, bit rate hay số hiệu TP; không gán 5 V mặc định."], source: "Manual §7.2.8, Figure 7-2, PDF 466 (7-6)." },
+      { id: "CAN RxD", label: "CAN RxD TTL", description: "Chân tín hiệu thu TTL của CAN transceiver, không phải CAN_H/CAN_L.", signalType: "Digital TTL", instrument: "Oscilloscope / logic probe", conditions: ["Figure không ghi điện áp TTL, bit rate hay số hiệu TP; không gán 5 V mặc định."], source: "Manual §7.2.8, Figure 7-2, PDF 466 (7-6)." },
     ],
     faceplate: "card",
   },
@@ -419,10 +498,7 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     indicators: ["POWER ON - xanh", "INPUT VOLTAGE FAULT - đỏ", "OUTPUT VOLTAGE FAULT"],
     controls: ["Nguồn vào +28 VDC", "Cấp nguồn redundant cho AUX"],
     testPoints: [
-      { id: "TP", label: "+5 V", description: "Test jack đỏ." },
-      { id: "TP", label: "+15 V", description: "Test jack đỏ." },
-      { id: "TP", label: "-15 V", description: "Test jack đỏ." },
-      { id: "TP", label: "GND", description: "Test jack đen." },
+      ...["+5 V", "+15 V", "-15 V", "GND"].map((label) => ({ id: label, label, description: label === "GND" ? "Điểm tham chiếu mass, jack đen." : "Điện áp DC tại jack đỏ so với GND.", signalType: "DC voltage", nominal: label === "GND" ? "Tham chiếu GND" : label, tolerance: label === "GND" ? undefined : dcRailTolerances[label], instrument: "Digital multimeter", conditions: ["Hệ thống hoạt động bình thường; đo từng nguồn AUX độc lập."], source: `Manual §6.5.11, Figure 6-3, PDF 442 (6-20); Figure 7-3, PDF 468 (7-8).${label === "GND" ? "" : " Giới hạn: Table 5-3, PDF 416 (5-2)."}` })),
     ],
     faceplate: "dcdc-aux",
   },
@@ -497,9 +573,10 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     indicators: ["POWER - xanh", "COS RF ON / SIN RF ON - xanh", "COS FAULT / SIN FAULT - đỏ"],
     controls: ["Handle tháo LRU", "Hai ngõ monitor envelope BNC"],
     testPoints: [
-      { id: "J5", label: "COS ENV", description: "Envelope COS; biên độ phụ thuộc power setting.", waveforms: [waveforms.smaCos] },
-      { id: "J6", label: "SIN ENV", description: "Envelope SIN; biên độ phụ thuộc power setting.", waveforms: [waveforms.smaSin] },
+      { id: "J5", label: "COS ENV", description: "Envelope COS tại BNC kiểm tra.", signalType: "Analog sideband envelope", instrument: "Oscilloscope", conditions: ["Biên độ phụ thuộc cài đặt công suất; không có một điện áp chuẩn cố định.", "MAINT; transmitter ON; kiểm tra cài đặt power; so với Figure 7-5."], source: "Manual §7.2.12, Figure 7-5, PDF 471 (7-11).", waveforms: [waveforms.smaCos] },
+      { id: "J6", label: "SIN ENV", description: "Envelope SIN tại BNC kiểm tra.", signalType: "Analog sideband envelope", instrument: "Oscilloscope", conditions: ["Biên độ phụ thuộc cài đặt công suất; không có một điện áp chuẩn cố định.", "MAINT; transmitter ON; kiểm tra cài đặt power; so với Figure 7-6."], source: "Manual §7.2.12, Figure 7-6, PDF 471–472 (7-11–7-12).", waveforms: [waveforms.smaSin] },
     ],
+    adjustments: sidebandAdjustment,
     faceplate: "sma",
   },
   {
@@ -514,7 +591,12 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     diagramOccurrences: [occurrence("overview-tx1-cma", [front.tx1Cma.id]), occurrence("overview-tx2-cma", [front.tx2Cma.id]), occurrence("txrf-tx1-cma", [front.tx1Cma.id]), occurrence("txrf-tx2-cma", [front.tx2Cma.id])],
     indicators: ["POWER - xanh", "RF ON - xanh", "FAULT - đỏ"],
     controls: ["Handle tháo LRU", "ENV monitor BNC"],
-    testPoints: [{ id: "J2", label: "ENV", description: "Carrier envelope; manual cung cấp dạng thường và khi Ident key down.", waveforms: [waveforms.cmaEnv, waveforms.cmaIdent] }],
+    testPoints: [{ id: "J2", label: "ENV", description: "Carrier envelope; phân biệt trạng thái thường và Ident key down.", signalType: "Analog carrier envelope", instrument: "Oscilloscope", nominal: "Thành phần điều chế 30 Hz; Ident theo trạng thái phát", conditions: ["Biên độ phụ thuộc cài đặt công suất; không có một điện áp chuẩn cố định.", "MAINT; transmitter ON; so sánh đúng trạng thái Ident với Figure 7-8/7-9."], source: "Manual §7.2.13, Figures 7-8/7-9, PDF 474–475 (7-14–7-15).", waveforms: [waveforms.cmaEnv, waveforms.cmaIdent] }],
+    adjustments: [
+      { id: "carrier-am30", label: "Điều chế AM 30 Hz", control: "PMDT → Maintenance → TX Setpoint Cal.", instrument: "VOR signal analyzer + attenuator/cable đã bù suy hao", target: "30 ±0.3%", conditions: ["Đo tại ngõ 1J4 CARRIER trên nóc cabinet.", "Theo §9.5.3: carrier 100 W, Transmitter Setup 100%; áp dụng riêng TX1/TX2.", "Manual dùng câu ‘less than 30 ± 0.3%’; giữ giới hạn biểu diễn như nguồn, không suy hàm truyền vít.", ...txCalibrationConditions], source: `Manual §9.5.3, PDF 541 (9-15); ${txCalibrationSource}.` },
+      { id: "carrier-ident", label: "Điều chế Ident 1020 Hz", control: "PMDT → Maintenance → TX Setpoint Cal.", instrument: "VOR signal analyzer + attenuator/cable đã bù suy hao", target: "8 ±0.3%", conditions: ["Đo tại 1J4 CARRIER với cấu hình carrier theo §9.5.3.", "Không lấy biên độ ảnh oscilloscope làm phần trăm điều chế.", ...txCalibrationConditions], source: `Manual §9.5.3, PDF 541 (9-15); ${txCalibrationSource}.` },
+      { id: "carrier-power", label: "Công suất sóng mang", control: "PMDT → Maintenance → TX Setpoint Cal.", instrument: "RF power sensor + attenuator/cable đã bù suy hao", target: "100 ±3 W", conditions: ["Đo tại ngõ 1J4 CARRIER, không phải cổng monitor J24 của PDC.", "Tạm đặt 30 Hz modulation 0% và Ident modulation 0% trong bước đo công suất.", "Sau hiệu chuẩn đặt lại AM 30 Hz = 30%, Ident = 8%; lặp TX2.", ...txCalibrationConditions], source: `Manual §9.5.3, PDF 541 (9-15); ${txCalibrationSource}.` },
+    ],
     faceplate: "cma",
   },
   {
@@ -530,9 +612,10 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     indicators: ["POWER - xanh", "COS RF ON / SIN RF ON - xanh", "COS FAULT / SIN FAULT - đỏ"],
     controls: ["Handle tháo LRU", "Hai ngõ monitor envelope BNC"],
     testPoints: [
-      { id: "J5", label: "COS ENV", description: "Envelope COS; biên độ phụ thuộc power setting.", waveforms: [waveforms.smaCos] },
-      { id: "J6", label: "SIN ENV", description: "Envelope SIN; biên độ phụ thuộc power setting.", waveforms: [waveforms.smaSin] },
+      { id: "J5", label: "COS ENV", description: "Envelope COS tại BNC kiểm tra.", signalType: "Analog sideband envelope", instrument: "Oscilloscope", conditions: ["Biên độ phụ thuộc cài đặt công suất; không có một điện áp chuẩn cố định.", "MAINT; transmitter ON; kiểm tra cài đặt power; so với Figure 7-5."], source: "Manual §7.2.12, Figure 7-5, PDF 471 (7-11).", waveforms: [waveforms.smaCos] },
+      { id: "J6", label: "SIN ENV", description: "Envelope SIN tại BNC kiểm tra.", signalType: "Analog sideband envelope", instrument: "Oscilloscope", conditions: ["Biên độ phụ thuộc cài đặt công suất; không có một điện áp chuẩn cố định.", "MAINT; transmitter ON; kiểm tra cài đặt power; so với Figure 7-6."], source: "Manual §7.2.12, Figure 7-6, PDF 471–472 (7-11–7-12).", waveforms: [waveforms.smaSin] },
     ],
+    adjustments: sidebandAdjustment,
     faceplate: "sma",
   },
   {
@@ -548,13 +631,7 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     indicators: ["POWER ON - xanh", "INPUT VOLTAGE FAULT - đỏ", "OUTPUT VOLTAGE FAULT"],
     controls: ["Nguồn vào +28 VDC", "Hot-swap controller"],
     testPoints: [
-      { id: "TP", label: "+5 V", description: "Test jack đỏ." },
-      { id: "TP", label: "+8 V", description: "Test jack đỏ." },
-      { id: "TP", label: "+15 V", description: "Test jack đỏ." },
-      { id: "TP", label: "-15 V", description: "Test jack đỏ." },
-      { id: "TP", label: "+28 V", description: "Test jack đỏ." },
-      { id: "TP", label: "+50 V", description: "Test jack đỏ." },
-      { id: "TP", label: "GND", description: "Test jack đen." },
+      ...["+5 V", "+8 V", "+15 V", "-15 V", "+28 V", "+50 V", "GND"].map((label) => ({ id: label, label, description: label === "GND" ? "Điểm tham chiếu mass, jack đen." : "Điện áp DC tại jack đỏ so với GND.", signalType: "DC voltage", nominal: label === "GND" ? "Tham chiếu GND" : label, tolerance: label === "GND" ? undefined : dcRailTolerances[label], instrument: "Digital multimeter", conditions: ["Hệ thống hoạt động bình thường; đo riêng DC/DC của TX1 và TX2."], source: `Manual §6.5.11, Figure 6-4, PDF 443 (6-21); Figure 7-10, PDF 476 (7-16).${label === "GND" ? "" : " Giới hạn: Table 5-3, PDF 416 (5-2)."}` })),
     ],
     faceplate: "dcdc-tx",
   },
@@ -571,9 +648,9 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     indicators: ["POWER - xanh", "FAULT - đỏ"],
     controls: ["RESET", "MCU JTAG", "CPLD JTAG", "30 Hz Sync BNC"],
     testPoints: [
-      { id: "TP49", label: "Carrier Modulation Signal", description: "Carrier modulation thường và khi Ident key down.", waveforms: [waveforms.msgCarrier, waveforms.msgCarrierIdent] },
-      { id: "TP61 / TP63", label: "USB COS / USB SIN", description: "Hai tín hiệu điều chế USB trực giao.", waveforms: [waveforms.msgUsb] },
-      { id: "TP62 / TP64", label: "LSB COS / LSB SIN", description: "Hai tín hiệu điều chế LSB trực giao.", waveforms: [waveforms.msgLsb] },
+      { id: "TP49", label: "Carrier Modulation Signal", description: "Carrier modulation thường và khi Ident key down.", signalType: "Analog modulation", nominal: "30 Hz; trạng thái Ident theo waveform đã chọn", instrument: "Oscilloscope", conditions: ["POWER và RF của TX tương ứng ON; kiểm tra Station Setup và Transmitter Setup.", "Số đo trên ảnh chỉ là một lần chụp, không phải dải dung sai."], source: "Manual §7.2.15, Figures 7-11–7-13, PDF 477–478 (7-17–7-18).", waveforms: [waveforms.msgCarrier, waveforms.msgCarrierIdent] },
+      ...([ ["TP61", "USB COS", waveforms.msgUsb], ["TP63", "USB SIN", waveforms.msgUsb], ["TP62", "LSB COS", waveforms.msgLsb], ["TP64", "LSB SIN", waveforms.msgLsb] ] as const).map(([id, label, waveform]) => ({ id, label, description: "Chân test pin điều chế sideband; ảnh tham chiếu hiển thị đồng thời COS/SIN.", signalType: "Analog modulation envelope", instrument: "Oscilloscope", conditions: ["POWER và RF của TX tương ứng ON; kiểm tra Station Setup và Transmitter Setup.", "Không dùng giá trị tự động của một ảnh làm tần số/dung sai cố định của hãng."], source: "Manual §7.2.15, Figures 7-14/7-15, PDF 479 (7-19).", waveforms: [waveform] })),
+      { id: "sync-30hz", label: "30 Hz Sync", description: "Ngõ BNC đồng bộ 30 Hz trên mặt MSG.", signalType: "Synchronization signal", nominal: "30 Hz", instrument: "Oscilloscope / frequency counter", conditions: ["Figure không ghi số hiệu J/TP; sync-30hz là ID phần mềm, không phải số connector của hãng.", "Chưa có điện áp, duty cycle hoặc dung sai được xác minh cho ngõ này."], source: "Manual §3.2.17, PDF 138 (3-46); §7.2.15, Figure 7-11, PDF 477 (7-17)." },
     ],
     faceplate: "msg",
   },
@@ -590,9 +667,9 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     indicators: ["POWER LED6 - xanh", "PLL FAIL LED7 - đỏ", "ERROR LED8 - đỏ"],
     controls: ["RESET", "Frequency coded switches", "MCU/CPLD service connectors"],
     testPoints: [
-      { id: "J1", label: "CSB MON / Carrier Frequency", description: "Station carrier; mức tham khảo -5 dBm ±4 dB khi đo bằng power sensor." },
-      { id: "J6", label: "40 MHz MON", description: "Reference 40 MHz từ TCXO." },
-      { id: "TP33-TP36", label: "USB/LSB COS/SIN Frequency", description: "Các tần số sideband dùng khi kiểm tra định kỳ." },
+      { id: "J1", label: "CSB MON / Carrier Frequency", description: "Tần số sóng mang theo Station Setup và rotary coded switches.", signalType: "RF carrier", nominal: "Theo tần số đài đã cấu hình", tolerance: "Mức RF tham khảo −5 dBm ±4 dB; không phải dung sai tần số.", instrument: "Frequency counter / RF power sensor", conditions: ["Transmitter ON; LED SYN bình thường.", "SW2–SW6 phải khớp PMDT → Station Setup → Carrier Frequency."], source: "Manual §7.2.16, PDF 481 (7-21)." },
+      { id: "J6", label: "40 MHz MON", description: "Reference 40 MHz từ TCXO.", signalType: "RF reference clock", nominal: "40 MHz", tolerance: "Mức RF tham khảo −5 dBm ±4 dB; manual không nêu dung sai Hz tại bước này.", instrument: "Frequency counter / RF power sensor", conditions: ["Transmitter ON; LED SYN bình thường."], source: "Manual §7.2.16, PDF 481 (7-21)." },
+      ...([ ["TP33", "USB COS FREQ"], ["TP34", "USB SIN FREQ"], ["TP35", "LSB COS FREQ"], ["TP36", "LSB SIN FREQ"] ] as const).map(([id, label]) => ({ id, label, description: "Chân đo tần số nhánh sideband; đo bằng cáp BNC-to-hook, không phải ổ cắm BNC.", signalType: "Frequency test signal · format unresolved", instrument: "Frequency counter", conditions: ["MAINT; hệ thống ở điều kiện bình thường.", "Dùng frequency counter, ghi số đo riêng cho TX1 và TX2.", "§6.5.7 gọi đây là điểm kiểm tra RF; §3.2.18 mô tả phép đo tần số hiệu sideband–carrier nội bộ. Dạng tín hiệu tại TP33–TP36 chưa xác minh: không khẳng định RF thô hoặc gán tần số danh định.", "Mức −5 dBm ±4 dB chỉ được nêu cho J1/J6, không áp cho các TP33–TP36."], source: "Manual §6.5.7, Figure 6-2, PDF 436–437 (6-14–6-15); §3.2.18, PDF 145 (3-53)." })),
     ],
     faceplate: "syn",
   },
@@ -609,10 +686,7 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     indicators: ["POWER - xanh", "FAULT / INTEGRAL ALARM - đỏ", "INTEGRAL WARNING - hổ phách", "SECONDARY ALARM / STANDBY ALARM", "IDENTITY CODE - xanh"],
     controls: ["RESET", "MCU JTAG", "Zynq JTAG"],
     testPoints: [
-      { id: "TP51", label: "AM 30 Hz", description: "Tín hiệu AM 30 Hz sau xử lý.", waveforms: [waveforms.monAm] },
-      { id: "TP49", label: "Baseband", description: "Composite baseband monitor.", waveforms: [waveforms.monBaseband] },
-      { id: "TP48", label: "FM 30 Hz", description: "Tín hiệu FM 30 Hz phục hồi.", waveforms: [waveforms.monFm] },
-      { id: "TP47", label: "Identification", description: "Tín hiệu nhận dạng 1020 Hz/keying.", waveforms: [waveforms.monIdent] },
+      ...([ ["TP51", "AM 30 Hz", "30 Hz", waveforms.monAm], ["TP49", "Baseband", "Tín hiệu tổng hợp", waveforms.monBaseband], ["TP48", "FM 30 Hz", "30 Hz", waveforms.monFm], ["TP47", "Identification", "Tone Ident danh định 1020 Hz", waveforms.monIdent] ] as const).map(([id, label, nominal, waveform]) => ({ id, label, nominal, description: "Tín hiệu tại test pin của monitor; đối chiếu đúng waveform tham chiếu.", signalType: "Analog recovered signal", instrument: "Oscilloscope", conditions: ["MAINT; LED và tham số MON bình thường theo PMDT/LMI.", "Ảnh chụp số đọc và cài đặt scope không phải giới hạn nhà sản xuất; tần số tự động của baseband không mô tả từng thành phần."], source: `Manual §7.2.17, ${waveform.source}.`, waveforms: [waveform] })),
     ],
     faceplate: "mon",
   },
@@ -644,12 +718,25 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     indicators: ["POWER LED trên PDC-IF"],
     controls: ["Coaxial relay carrier", "SCM sideband changeover", "CDM carrier detector", "Hai SDM USB/LSB", "PDC Interface Board"],
     testPoints: [
-      { id: "J20", label: "LSB COS", description: "Coupled RF monitor port." },
-      { id: "J21", label: "LSB SIN", description: "Coupled RF monitor port." },
-      { id: "J22", label: "USB COS", description: "Coupled RF monitor port." },
-      { id: "J23", label: "USB SIN", description: "Coupled RF monitor port." },
-      { id: "J24", label: "CARRIER", description: "Coupled carrier monitor port." },
+      ...([ ["J20", "LSB COS"], ["J21", "LSB SIN"], ["J22", "USB COS"], ["J23", "USB SIN"], ["J24", "CARRIER"] ] as const).map(([id, label]) => ({ id, label, description: "Cổng lấy mẫu RF của đường phát đang được chọn; không phải ngõ công suất toàn phần.", signalType: "Coupled RF sample", instrument: "RF power sensor / VOR signal analyzer", conditions: ["MAINT; hệ thống hoạt động bình thường; ghi riêng TX chính và TX dự phòng.", "Bù đúng coupling ratio đã xác định cho từng cổng cộng suy hao cable/adapter; không áp một hệ số cố định cho mọi cổng.", "J24 còn dùng đo 30 Hz AM, 9960 Hz AM/FM deviation ratio và Ident bằng VOR signal analyzer."], source: "Manual §6.5.5–6.5.6, Figure 6-1, PDF 434–435 (6-12–6-13)." })),
     ],
+    adjustments: [{
+      id: "standby-am9960",
+      label: "Điều chế AM 9960 Hz đường standby",
+      control: "1A8A1A1VR1",
+      instrument: "PMDT → Standby MON của MON1",
+      target: "TX1: 30%; kiểm tra TX2: 30 ±0.5%",
+      conditions: [
+        "Chuyển TX1 sang On Dummy Load bằng CSP hoặc PMDT.",
+        "Bật USB SIN, USB COS và CARRIER của TX1; LSB SIN/COS tắt. Tìm USB Phasing COS to SIN trong STB RF Phasing cho AM 9960 Hz trên Standby MON của MON1 cực đại.",
+        "Bật LSB SIN, LSB COS và CARRIER của TX1; USB SIN/COS tắt. Tìm LSB Phasing COS to SIN trong STB RF Phasing cho AM 9960 Hz trên Standby MON của MON1 cực đại.",
+        "Tất cả RF ON: USB SIN/COS, LSB SIN/COS và CARRIER. Tìm TX1 carrier to sideband trong STB RF Phasing cho AM 9960 Hz trên Standby MON của MON1 cực đại.",
+        "Tham chiếu thao tác vật lý 1A8A1A1VR1: đưa AM 9960 Hz trên Standby MON của MON1 về 30%.",
+        "Chuyển TX2 sang On Dummy Load bằng CSP hoặc PMDT; kiểm tra AM 9960 Hz trên Standby MON của MON1 trong 30 ±0.5%.",
+        "Chỉ là tham chiếu đọc; chưa xác minh chiều xoay, hành trình hoặc độ nhạy góc của VR1. Không mô phỏng vít hay ghi vào engine.",
+      ],
+      source: "Manual §9.6.4, Figure 9-8, PDF 548 (9-22).",
+    }],
     faceplate: "pdc",
   },
   {
@@ -679,9 +766,7 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     indicators: ["7-segment information display", "ON BATT - hổ phách", "AC FAIL - đỏ", "BAT CHARGE - hổ phách", "PMU temperature/status LEDs"],
     controls: ["Nút chọn ACDC output current/voltage", "Battery output current/voltage", "RESET", "MCU JTAG"],
     testPoints: [
-      { id: "TP", label: "GND", description: "Ground reference." },
-      { id: "TP", label: "Battery Voltage", description: "Điện áp battery tại PMU." },
-      { id: "TP", label: "AC/DC Voltage", description: "Điện áp đầu ra AC/DC." },
+      ...["GND", "Battery Voltage", "AC/DC Voltage"].map((label) => ({ id: label, label, description: label === "GND" ? "Điểm tham chiếu GND." : "Điện áp DC tại chân đo PMU so với GND; không lấy số minh họa trên mặt panel làm giá trị hiện tại.", signalType: "DC voltage", instrument: "Digital multimeter", tolerance: "Figure xác định vị trí/chức năng, không nêu dung sai điện áp.", conditions: ["Đo riêng PMU1/PMU2; không suy điện áp pin đang sạc từ điện áp danh định 24 V."], source: "Manual §6.5.11–6.5.12, Figure 6-5, PDF 442–444 (6-20–6-22); Figure 7-24, PDF 487 (7-27)." })),
     ],
     faceplate: "pmu",
   },

@@ -9,6 +9,14 @@
 - Theo yêu cầu chủ repository, workflow **CI** chỉ chạy thủ công qua **Actions → CI → Run workflow**; không tự chạy khi push hoặc mở pull request.
 - Việc này không tắt webhook triển khai Dokploy và không thay đổi các lệnh lint, typecheck, test, build cục bộ.
 
+## DVOR 220 — điểm đo và tham chiếu manual
+
+- Từ cabinet/sơ đồ, chọn đúng LRU rồi bấm điểm đo trên danh sách hoặc connector tương ứng trên mặt panel để mở hộp thoại tham chiếu. Có thiết bị đo, loại tín hiệu, giá trị đã xác minh, điều kiện và nguồn trang/mục; điểm không có waveform không sinh đồ thị hoặc số đo giả.
+- Giữ 12 ảnh scope có sẵn, tách cài đặt và số đọc của ảnh khỏi nominal/dung sai. SYN J1/J6, từng TP33–36 và từng test pin MSG/MON được định danh riêng; pin/jack/BNC giữ đúng loại. Không áp một hệ số coupling chung cho PDC hoặc hiển thị số PMU tĩnh như telemetry.
+- CMA/SMA/PDC hiển thị quy trình hiệu chỉnh chỉ đọc theo manual, không sao chép vít DVOR 1150A hay tự tạo hàm truyền góc–số đo. TX Reading Cal./TX Setpoint Cal. được phân biệt; không ghi engine, store vận hành, cấu hình kịch bản hoặc điểm thi từ trang sơ đồ.
+- Manual đầy đủ và corpus tra cứu HTML/JSONL lưu riêng ngoài repository/public assets; nội dung thiếu căn cứ hoặc mâu thuẫn vẫn được ghi rõ, không mặc định thành giới hạn hãng. Tham chiếu tài liệu không thay thế quy trình bảo trì thiết bị thật.
+- Kiểm thử liên quan: `tests/dvor220/` và `node scripts/verify-dvor220-measurements-browser.mjs` trên Node 24. Browser harness dùng component/CSS/assets thật ở loopback, kiểm native dialog, keyboard/focus, mọi điểm đo/waveform và desktop/mobile; không thay thế QA route xác thực production. Source/Git và triển khai được báo riêng, không suy deploy từ build hoặc push.
+
 ## DVOR 1150A và DME 1119A — nền mục cấu hình bắt buộc
 
 - Các mục đã thêm trong **Giá trị cấu hình bắt buộc** dùng nền sáng đồng màu phần xung quanh, không còn nền xám đen từ editor dùng chung. Chỉ sửa CSS trong khối này của DVOR 1150A và DME 1119A; giữ ô nhập trắng, nút, layout, quyền và logic chấm.
