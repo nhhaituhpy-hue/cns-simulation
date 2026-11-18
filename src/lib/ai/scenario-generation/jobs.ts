@@ -93,7 +93,7 @@ export async function deleteGenerationJob(pool: Pool, id: string, actorId: strin
     return Boolean(result.rowCount);
   });
 }
-export async function claimGenerationJob(pool: Pool, workerId: string): Promise<(GenerationJob & { attemptToken: string }) | null> {
+export async function claimGenerationJob(pool: Pool, workerId: string, modelVersion?: string): Promise<(GenerationJob & { attemptToken: string }) | null> {
   if (!workerId || workerId.length > 200) throw new GenerationJobError("INVALID_WORKER", "Invalid worker identity.");
   return transaction(pool, async client => {
     await client.query(`with forbidden as (
@@ -109,8 +109,8 @@ export async function claimGenerationJob(pool: Pool, workerId: string): Promise<
       select id from public.ai_scenario_generation_jobs where attempts < max_attempts and (status='queued' or (status in ('extracting','generating','validating') and lease_expires_at <= now())) order by created_at,id for update skip locked limit 1)
       update public.ai_scenario_generation_jobs j set status=case when jsonb_array_length(documents_json)>0 then 'extracting' else 'generating' end,
         phase=case when jsonb_array_length(documents_json)>0 then 'extracting' else 'generating' end,
-        attempts=attempts+1,attempt_token=$1,worker_id=$2,lease_expires_at=now()+interval '10 minutes',error_code=null,error_message=null
-      from candidate where j.id=candidate.id returning j.*`, [randomUUID(),workerId]);
+        attempts=attempts+1,attempt_token=$1,worker_id=$2,model_version=coalesce($3,j.model_version),lease_expires_at=now()+interval '10 minutes',error_code=null,error_message=null
+      from candidate where j.id=candidate.id returning j.*`, [randomUUID(),workerId,modelVersion ?? null]);
     return result.rows[0] ? mapJob(result.rows[0]) as GenerationJob & { attemptToken: string } : null;
   });
 }

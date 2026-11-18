@@ -9,6 +9,12 @@
 - Theo yêu cầu chủ repository, workflow **CI** chỉ chạy thủ công qua **Actions → CI → Run workflow**; không tự chạy khi push hoặc mở pull request.
 - Việc này không tắt webhook triển khai Dokploy và không thay đổi các lệnh lint, typecheck, test, build cục bộ.
 
+## AI worker — gateway cho GPT-6.2 Sol
+
+- Cho phép đúng `https://api.hainh.io.vn/v1` trong danh sách endpoint. Đặt `CNS_AI_BASE_URL` và `CNS_AI_MODEL=gpt-6.2-sol` ở worker khi chuyển gateway; `CNS_AI_API_KEY` là key riêng của worker, không đặt ở web/Git. Giá trị mặc định và khả năng đọc cấu hình cũ không đổi.
+- Giữ kiểm tra URL chính xác, không theo redirect, yêu cầu JSON và `reasoning_effort: low`. Test bao phủ gửi đúng model/URL, chuẩn hóa một dấu `/` cuối và chặn URL giả mạo trước khi gọi mạng.
+- Ghi đúng tên gateway trong kết quả tạo kịch bản. Khi nhận job, worker ghi model đã cấu hình cho lượt xử lý thay cho giá trị dự kiến từ web. Có model trong lượt lỗi không đồng nghĩa provider đã nhận request.
+
 ## Sơ đồ khối — đường tín hiệu và hiển thị trên màn hình nhỏ
 
 - Nới khoảng trống cho đường nối và nhãn, làm mảnh nét và cố định kích thước mũi tên bằng `markerUnits="userSpaceOnUse"` trên **DME 320**, **DVOR 220**, **ADS-B**, **DME 1119A** và **DVOR 1150**. Giữ nguyên loại tín hiệu, hướng nối, ID và ánh xạ cabinet.

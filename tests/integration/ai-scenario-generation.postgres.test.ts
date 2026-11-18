@@ -88,6 +88,14 @@ describe.skipIf(!testUrl)("durable AI queue in isolated PostgreSQL", () => {
     expect((await pool.query("select * from public.simulator_scenario_library_memberships where scenario_parameters_id=$1",[result.scenarioRowId])).rows).toEqual([]);
     expect((await pool.query("select * from public.simulator_review_scenario_assignments where scenario_parameters_id=$1",[result.scenarioRowId])).rows).toEqual([]);
   });
+  it("records the worker model before a provider failure and fences stale writers", async () => {
+    const job = await createGenerationJob(pool, input, {actorId, idempotencyKey: randomUUID(), modelVersion: "gpt-5.6-luna"});
+    const claim = (await claimGenerationJob(pool, "worker", "gpt-6.2-sol"))!;
+    expect(claim).toMatchObject({id:job.id, modelVersion:"gpt-6.2-sol"});
+    expect(await claimGenerationJob(pool, "competing-worker", "different-model")).toBeNull();
+    await failGenerationJob(pool, job.id, claim.attemptToken, {code:"PROVIDER_ERROR",message:"redacted"});
+    expect(await getGenerationJob(pool, job.id, actorId)).toMatchObject({status:"failed", modelVersion:"gpt-6.2-sol", errorCode:"PROVIDER_ERROR"});
+  });
   it("returns only bounded persisted parameter review to its authenticated owner", async () => {
     const job=await createGenerationJob(pool,input,{actorId,idempotencyKey:randomUUID()});const claim=(await claimGenerationJob(pool,"parameter-review-worker"))!;
     const parameters={version:2,initial:[{fieldId:"configuration.transmitters.tx1.nominal.outputPower",label:"TX1 output power",value:12,unit:"W",citation:0}],recovery:[{fieldId:"configuration.transmitters.tx1.nominal.outputPower",value:70,unit:"W",citation:1}],verification:{mode:"engine-recovery",initial:[{id:"fault",passed:true,detail:"Initial fault"}],recovered:[{id:"normal",passed:true,detail:"Recovered"}],recoveryVerified:true,notes:[]},configuredFieldCount:15};

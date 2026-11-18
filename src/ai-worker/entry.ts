@@ -10,6 +10,7 @@ import { runNextFeedback } from "../lib/ai/feedback/worker";
 import { runNextPracticeHint } from "../lib/ai/feedback/practice-hints-worker";
 import { runAiWorkerCycle } from "../lib/ai/scenario-authoring/worker-dispatch";
 import { generateScenario } from "../lib/ai/scenario-generation/generator";
+import { configuredAiModel } from "../lib/ai/provider/config";
 import { extractIsolatedDocuments } from "../lib/ai/documents/isolated";
 
 const { Pool, types } = pg;
@@ -52,7 +53,7 @@ async function main() {
     const outcome = await runAiWorkerCycle(
       async () => providerConfigured ? processNextAuthoring(pool!, workerId, controller.signal) : "idle",
       async () => providerConfigured ? processNextGeneration({
-        claim: () => claimGenerationJob(pool!, workerId),
+        claim: () => claimGenerationJob(pool!, workerId, configuredAiModel() ?? "pending"),
         heartbeat: async (job, phase) => Boolean(await heartbeatGenerationJob(pool!, job.id, job.attemptToken, phase)),
         loadDocuments: (documents, signal) => extractIsolatedDocuments(documents, signal),
         generate: (input, documents, signal) => generateScenario(input, documents, signal),

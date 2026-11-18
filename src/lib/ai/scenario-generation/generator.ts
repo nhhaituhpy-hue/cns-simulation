@@ -1,4 +1,4 @@
-import { loadAiProviderConfig } from "../provider/config";
+import { approvedAiProviderName, loadAiProviderConfig } from "../provider/config";
 import { requestScenarioJson } from "../provider/client";
 import { buildScenarioPrompt } from "./prompt";
 import { validateGenerationInput, validateEvidenceDocuments, validateSelection } from "./validation";
@@ -14,5 +14,5 @@ export async function generateScenario(input: GenerationInput, documents: Eviden
   const templateId = scaffold.provenance.templateId as string;
   const proposal = await requestScenarioJson(config, buildParameterPrompt(input, documents, scaffold.definition, templateId), signal);
   const result = validateParameterProposal(input, documents, scaffold.definition, templateId, proposal);
-  return { ...result, provenance: { ...result.provenance, model: config.model, provider: "cliproxy-vn", promptVersion: "scenario-parameters-v2", schemaVersion: "native-parameters-v2" } };
+  return { ...result, provenance: { ...result.provenance, model: config.model, provider: approvedAiProviderName(config.baseUrl), promptVersion: "scenario-parameters-v2", schemaVersion: "native-parameters-v2" } };
 }
