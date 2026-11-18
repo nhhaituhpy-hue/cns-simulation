@@ -54,6 +54,16 @@
   color: #fff;
 }
 
+.diagramViewport {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid #36545e;
+  border-radius: 5px;
+  background: #0b222b;
+}
+
 .cabinetDrawing,
 .systemDiagram {
   display: block;
@@ -62,6 +72,12 @@
   border: 1px solid #36545e;
   border-radius: 5px;
   background: #0b222b;
+}
+
+.systemDiagram {
+  min-width: 1040px;
+  border: 0;
+  border-radius: 0;
 }
 
 .cabinetBackdrop { fill: #0b222b; }
@@ -167,7 +183,7 @@
 .commutatorGroup { fill: #f8f9f7; stroke: #334146; stroke-width: 2; }
 .diagramGroupLabel { fill: #263237; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 12px; font-weight: 850; }
 
-.signalPaths path { fill: none; stroke-linecap: square; stroke-linejoin: miter; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.signalPaths path { fill: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-width: 1.35; vector-effect: non-scaling-stroke; }
 .rfPath { stroke: #1b596e; marker-end: url("#dvor1150-arrow-rf"); }
 .audioPath { stroke: #8a4d0c; marker-end: url("#dvor1150-arrow-audio"); }
 .samplePath { stroke: #6b488a; stroke-dasharray: 7 4; marker-end: url("#dvor1150-arrow-sample"); }

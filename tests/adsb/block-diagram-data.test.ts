@@ -93,6 +93,42 @@ describe("ADS-B outdoor block diagram catalog", () => {
     expect(sensor?.notes.join(" ")).toContain("không suy diễn cơ chế redundancy hoặc OR-ing");
   });
 
+  it("keeps the 24 VDC path visible past surveillance users and on its own Sensor port", () => {
+    const dc = ADSB_TOPOLOGY_EDGES.find((edge) => edge.id === "power-psu-sensor")!;
+    const ac = ADSB_TOPOLOGY_EDGES.find((edge) => edge.id === "power-ac-sensor")!;
+    const users = ADSB_TOPOLOGY_NODE_BY_ID.get("surveillance-users")!;
+    const sensor = ADSB_TOPOLOGY_NODE_BY_ID.get("quadrant-sensor")!;
+    const points = (path: string) => {
+      const start = path.match(/^M(\d+) (\d+)/)!;
+      const legs = path.slice(start[0].length);
+      expect(legs).toMatch(/^(?:[HV]\d+)+$/);
+      let [x, y] = start.slice(1).map(Number);
+      return [[x, y], ...Array.from(legs.matchAll(/([HV])(\d+)/g), ([, axis, value]) => {
+        if (axis === "H") x = Number(value);
+        else y = Number(value);
+        return [x, y];
+      })];
+    };
+    const dcPoints = points(dc.path);
+    const hiddenLength = dcPoints.slice(1).reduce((length, [x, y], i) => {
+      const [px, py] = dcPoints[i];
+      if (x === px && x > users.x && x < users.x + users.width) {
+        return length + Math.max(0, Math.min(Math.max(y, py), users.y + users.height) - Math.max(Math.min(y, py), users.y));
+      }
+      if (y === py && y > users.y && y < users.y + users.height) {
+        return length + Math.max(0, Math.min(Math.max(x, px), users.x + users.width) - Math.max(Math.min(x, px), users.x));
+      }
+      return length;
+    }, 0);
+    expect(hiddenLength, "24 VDC path length inside the surveillance users block").toBe(0);
+
+    const [portX, portY] = dcPoints.at(-1)!;
+    expect(portY).toBe(sensor.y + sensor.height);
+    expect(portX).toBeGreaterThan(sensor.x);
+    expect(portX).toBeLessThan(sensor.x + sensor.width);
+    expect(portX).not.toBe(points(ac.path).at(-1)![0]);
+  });
+
   it("separates core, conditional, recommended and site-provided equipment", () => {
     expect(ADSB_BLOCK_BY_ID.get("quadrant-sensor")?.status).toBe("required");
     expect(ADSB_BLOCK_BY_ID.get("gps-receiver")?.status).toBe("conditional");

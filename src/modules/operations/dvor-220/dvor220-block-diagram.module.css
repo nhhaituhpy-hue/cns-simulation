@@ -176,15 +176,15 @@
 .diagramPaper { fill: #eef0ed; }
 .diagramZones rect { fill: rgb(248 249 247 / 72%); stroke: #8f9b9e; stroke-width: 1.2; stroke-dasharray: 6 4; }
 .diagramZones text { fill: #536065; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 11px; font-weight: 850; }
-.diagramLinks polyline { fill: none; stroke-width: 2; stroke-linecap: square; stroke-linejoin: miter; vector-effect: non-scaling-stroke; transition: opacity 120ms ease, stroke-width 120ms ease; }
+.diagramLinks polyline { fill: none; stroke-width: 1.35; stroke-linecap: butt; stroke-linejoin: miter; vector-effect: non-scaling-stroke; transition: opacity 120ms ease, stroke-width 120ms ease; }
 .diagramLinks polyline[data-kind="rf"] { stroke: #8d2588; }
 .diagramLinks polyline[data-kind="modulation"] { stroke: #d57228; }
 .diagramLinks polyline[data-kind="control"] { stroke: #235fd1; stroke-dasharray: 5 3; }
 .diagramLinks polyline[data-kind="monitor"] { stroke: #6b36c8; stroke-dasharray: 8 4; }
 .diagramLinks polyline[data-kind="power"] { stroke: #e11d2e; }
 .diagramLinks polyline[data-kind="data"] { stroke: #008a62; stroke-dasharray: 3 3; }
-.diagramLinks polyline[data-active] { stroke-width: 4; opacity: 1; }
-.diagramLinks polyline[data-muted] { opacity: 0.13; }
+.diagramLinks polyline[data-active] { stroke-width: 2.2; opacity: 1; }
+.diagramLinks polyline[data-muted] { opacity: 0.16; }
 .markerRf { fill: #8d2588; }
 .markerModulation { fill: #d57228; }
 .markerControl { fill: #235fd1; }
@@ -204,7 +204,7 @@
 .diagramBlock:hover > rect:first-child { fill: #dff6fb; stroke: #1b809c; }
 .diagramBlock:focus-visible > rect:first-child { fill: #dff6fb; stroke: #096b87; stroke-width: 4; }
 .diagramBlock[data-selected] > rect:first-child { fill: #bdffd3; stroke: #168d47; stroke-width: 4; filter: drop-shadow(0 0 6px rgb(40 210 105 / 70%)); }
-.diagramLegend path { fill: none; stroke-width: 3; }
+.diagramLegend path { fill: none; stroke-width: 1.8; }
 .diagramLegend path[data-kind="rf"] { stroke: #8d2588; }
 .diagramLegend path[data-kind="modulation"] { stroke: #d57228; }
 .diagramLegend path[data-kind="control"] { stroke: #235fd1; stroke-dasharray: 5 3; }

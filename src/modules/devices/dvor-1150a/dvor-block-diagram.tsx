@@ -190,28 +190,30 @@ function DvorReferenceDiagrams({
           </button>
         ))}
       </div>
-      <svg
-        className={styles.referenceDiagram}
-        viewBox={`0 0 ${diagram.width} ${diagram.height}`}
-        role="img"
-        aria-label={`${diagram.label}, DVOR 1150A`}
-      >
-        <image href={diagram.src} x="0" y="0" width={diagram.width} height={diagram.height} />
-        {diagram.overlays.map((overlay) => (
-          <foreignObject key={`${diagramId}-${overlay.hotspotId}-${overlay.x}-${overlay.y}`} x={overlay.x} y={overlay.y} width={overlay.width} height={overlay.height}>
-            <button
-              type="button"
-              title={overlay.label}
-              aria-label={`Chọn ${overlay.label}`}
-              aria-pressed={isSelected(overlay.hotspotId)}
-              className={styles.referenceHotspot}
-              onClick={() => onSelect(overlay.blockId, resolveHotspot(overlay))}
-            >
-              <span className="sr-only">{overlay.label}</span>
-            </button>
-          </foreignObject>
-        ))}
-      </svg>
+      <div className={styles.referenceDiagramViewport}>
+        <svg
+          className={styles.referenceDiagram}
+          viewBox={`0 0 ${diagram.width} ${diagram.height}`}
+          role="group"
+          aria-label={`${diagram.label}, DVOR 1150A`}
+        >
+          <image href={diagram.src} x="0" y="0" width={diagram.width} height={diagram.height} />
+          {diagram.overlays.map((overlay) => (
+            <foreignObject key={`${diagramId}-${overlay.hotspotId}-${overlay.x}-${overlay.y}`} x={overlay.x} y={overlay.y} width={overlay.width} height={overlay.height}>
+              <button
+                type="button"
+                title={overlay.label}
+                aria-label={`Chọn ${overlay.label}`}
+                aria-pressed={isSelected(overlay.hotspotId)}
+                className={styles.referenceHotspot}
+                onClick={() => onSelect(overlay.blockId, resolveHotspot(overlay))}
+              >
+                <span className="sr-only">{overlay.label}</span>
+              </button>
+            </foreignObject>
+          ))}
+        </svg>
+      </div>
     </div>
   );
 }

@@ -43,7 +43,7 @@ function FunctionalDiagram({ blockId }: { blockId: Dvor1150BlockId }) {
   if (blockId === "csb-power-amplifier") {
     return (
       <svg className={styles.functionalDiagram} viewBox="0 0 760 430" role="img" aria-label="Sơ đồ chức năng CSB Power Amplifier theo Figure 2-13">
-        <defs><marker id="detail-arrow-csb" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 8 4 0 8z" /></marker></defs>
+        <defs><marker id="detail-arrow-csb" viewBox="0 0 8 8" refX="7.6" refY="4" markerWidth="6.5" markerHeight="5.5" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0.8L8 4L0 7.2Z" /></marker></defs>
         <rect className={styles.functionalPaper} width="760" height="430" rx="7" />
         <g className={styles.functionalPaths} markerEnd="url(#detail-arrow-csb)">
           <path d="M54 118H168" />
@@ -76,7 +76,7 @@ function FunctionalDiagram({ blockId }: { blockId: Dvor1150BlockId }) {
   if (blockId === "audio-generator") {
     return (
       <svg className={styles.functionalDiagram} viewBox="0 0 760 430" role="img" aria-label="Sơ đồ chức năng Audio Generator theo Figure 2-7">
-        <defs><marker id="detail-arrow-audio" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 8 4 0 8z" /></marker></defs>
+        <defs><marker id="detail-arrow-audio" viewBox="0 0 8 8" refX="7.6" refY="4" markerWidth="6.5" markerHeight="5.5" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0.8L8 4L0 7.2Z" /></marker></defs>
         <rect className={styles.functionalPaper} width="760" height="430" rx="7" />
         <g className={styles.functionalPaths} markerEnd="url(#detail-arrow-audio)">
           <path d="M188 100H278" />
@@ -101,7 +101,7 @@ function FunctionalDiagram({ blockId }: { blockId: Dvor1150BlockId }) {
   if (blockId === "rf-monitor") {
     return (
       <svg className={styles.functionalDiagram} viewBox="0 0 760 430" role="img" aria-label="Sơ đồ chức năng RF Monitor theo Figure 2-25">
-        <defs><marker id="detail-arrow-rf-monitor" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 8 4 0 8z" /></marker></defs>
+        <defs><marker id="detail-arrow-rf-monitor" viewBox="0 0 8 8" refX="7.6" refY="4" markerWidth="6.5" markerHeight="5.5" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0.8L8 4L0 7.2Z" /></marker></defs>
         <rect className={styles.functionalPaper} width="760" height="430" rx="7" />
         <g className={styles.functionalPaths} markerEnd="url(#detail-arrow-rf-monitor)">
           <path d="M52 96H210" /><path d="M52 152H210" /><path d="M52 208H210" /><path d="M52 264H210" />
@@ -124,7 +124,7 @@ function FunctionalDiagram({ blockId }: { blockId: Dvor1150BlockId }) {
   if (blockId === "monitor-cca") {
     return (
       <svg className={styles.functionalDiagram} viewBox="0 0 760 430" role="img" aria-label="Luồng xử lý Monitor CCA DVOR 1150">
-        <defs><marker id="detail-arrow-monitor" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 8 4 0 8z" /></marker></defs>
+        <defs><marker id="detail-arrow-monitor" viewBox="0 0 8 8" refX="7.6" refY="4" markerWidth="6.5" markerHeight="5.5" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 0.8L8 4L0 7.2Z" /></marker></defs>
         <rect className={styles.functionalPaper} width="760" height="430" rx="7" />
         <g className={styles.functionalPaths} markerEnd="url(#detail-arrow-monitor)"><path d="M164 115H254" /><path d="M390 115H482" /><path d="M618 115H706" /><path d="M322 154V244" /><path d="M390 282H520" /></g>
         <g className={styles.functionalBlocks}>
@@ -407,7 +407,9 @@ export function Dvor1150BlockDiagram({
         </section>
 
         <section className={styles.viewerPanel} aria-label="Sơ đồ khối DVOR 1150">
-          <Dvor1150SystemDiagram selectedOccurrenceId={selectedOccurrenceId} onSelect={selectDiagramBlock} />
+          <div className={styles.diagramViewport}>
+            <Dvor1150SystemDiagram selectedOccurrenceId={selectedOccurrenceId} onSelect={selectDiagramBlock} />
+          </div>
         </section>
       </div>
 

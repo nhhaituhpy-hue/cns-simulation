@@ -9,6 +9,15 @@
 - Theo yêu cầu chủ repository, workflow **CI** chỉ chạy thủ công qua **Actions → CI → Run workflow**; không tự chạy khi push hoặc mở pull request.
 - Việc này không tắt webhook triển khai Dokploy và không thay đổi các lệnh lint, typecheck, test, build cục bộ.
 
+## Sơ đồ khối — đường tín hiệu và hiển thị trên màn hình nhỏ
+
+- Nới khoảng trống cho đường nối và nhãn, làm mảnh nét và cố định kích thước mũi tên bằng `markerUnits="userSpaceOnUse"` trên **DME 320**, **DVOR 220**, **ADS-B**, **DME 1119A** và **DVOR 1150**. Giữ nguyên loại tín hiệu, hướng nối, ID và ánh xạ cabinet.
+- **DME 320**: tách cổng theo trục y và hành lang giữa `RX VIDEO / ON CH` (`data`) và `TIMING / MOD` / `GAUSSIAN / RECT` (`pulse`) tại `overview` và `tx-rf`; nâng `min-width: 980px` cho `.systemDiagram` và tăng `opacity: 0.38` cho trạng thái `[data-muted]` để giữ độ đọc nhãn/mũi tên ở bố cục hai cột.
+- **DVOR 220**: tách các đoạn trùng giữa loại tín hiệu khác nhau tại `overview`, `tx-rf` và `power-control`. Không phát hiện đoạn chồng mới hoặc nặng hơn giữa các loại tín hiệu khác nhau ở DME 320 và DVOR 220; vẫn còn một số đoạn dùng chung đường giữa các tuyến cùng loại.
+- **DVOR 1150**: tách một số tuyến RF và giám sát, giữ kích thước chữ khi cuộn ngang trong khung trên mobile. **DME 1119A**: tách chú giải và chú thích hình khỏi các khối, dời nhãn bộ ghép khỏi đường tín hiệu.
+- **DVOR 1150A**: giữ nguyên hai ảnh manual và tọa độ các vùng chọn khối; cải thiện khung hiển thị và cuộn ngang cho cả hai tab **Transmitter** và **Control & Monitoring**.
+- Kiểm tra với Node `v24.22.3`: 80/80 test liên quan, 12/12 lượt kiểm tra Chromium cho ba thiết bị Selex ở 1680/390/320 px và 24 ánh xạ chọn khối → cabinet khớp bản trước. Lượt rà bố cục DME 320, DVOR 220 và ADS-B đạt 18/18 chế độ xem.
+
 ## DME 320 — điểm đo và tham chiếu manual
 
 - Trong sơ đồ khối/cabinet, chọn module rồi mở điểm đo từ danh sách hoặc đúng connector trên mặt panel. Hộp thoại native hỗ trợ bàn phím, Escape, trả focus và cuộn trên mobile; hiển thị thiết bị đo, loại tín hiệu, giá trị/dung sai đã xác minh, điều kiện và nguồn trang/mục. Không có ảnh waveform thì không tạo đồ thị hay số đo giả.

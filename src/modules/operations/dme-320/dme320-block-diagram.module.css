@@ -39,7 +39,7 @@
 .cabinetDrawing,
 .systemDiagram { display: block; width: 100%; height: auto; border: 1px solid #36545e; border-radius: 5px; background: #0b222b; }
 .diagramViewport { width: 100%; overflow-x: auto; border-radius: 5px; }
-.systemDiagram { min-width: 780px; }
+.systemDiagram { min-width: 980px; }
 
 .cabinetBackdrop { fill: #0b222b; }
 .cabinetShadow { fill: #02080b; opacity: 0.6; filter: drop-shadow(0 15px 20px rgb(0 0 0 / 48%)); }
@@ -160,15 +160,15 @@
 .diagramPaper { fill: #eef0ed; }
 .diagramZones rect { fill: rgb(248 249 247 / 72%); stroke: #8f9b9e; stroke-width: 1.2; stroke-dasharray: 6 4; }
 .diagramZones text { fill: #536065; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 11px; font-weight: 850; }
-.diagramLinks polyline { fill: none; stroke-width: 2; stroke-linecap: square; stroke-linejoin: miter; vector-effect: non-scaling-stroke; transition: opacity 120ms ease, stroke-width 120ms ease; }
+.diagramLinks polyline { fill: none; stroke-width: 1.35; stroke-linecap: butt; stroke-linejoin: miter; vector-effect: non-scaling-stroke; transition: opacity 120ms ease, stroke-width 120ms ease; }
 .diagramLinks polyline[data-kind="rf"] { stroke: #8d2588; }
 .diagramLinks polyline[data-kind="pulse"] { stroke: #d57228; }
 .diagramLinks polyline[data-kind="control"] { stroke: #235fd1; stroke-dasharray: 5 3; }
 .diagramLinks polyline[data-kind="monitor"] { stroke: #6b36c8; stroke-dasharray: 8 4; }
 .diagramLinks polyline[data-kind="power"] { stroke: #e11d2e; }
 .diagramLinks polyline[data-kind="data"] { stroke: #008a62; stroke-dasharray: 3 3; }
-.diagramLinks polyline[data-active] { stroke-width: 4; opacity: 1; }
-.diagramLinks polyline[data-muted] { opacity: 0.13; }
+.diagramLinks polyline[data-active] { stroke-width: 2.2; opacity: 1; }
+.diagramLinks polyline[data-muted] { opacity: 0.38; }
 .markerRf { fill: #8d2588; }
 .markerPulse { fill: #d57228; }
 .markerControl { fill: #235fd1; }
@@ -176,7 +176,7 @@
 .markerPower { fill: #e11d2e; }
 .markerData { fill: #008a62; }
 .diagramPathLabels text { fill: #344246; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 8px; font-weight: 760; paint-order: stroke fill; stroke: #eef0ed; stroke-width: 4px; stroke-linejoin: round; text-anchor: middle; }
-.diagramPathLabels text[data-muted] { opacity: 0.16; }
+.diagramPathLabels text[data-muted] { opacity: 0.38; }
 .diagramBlock { cursor: pointer; outline: none; }
 .diagramBlock > rect:first-child { fill: #fff; stroke: #536166; stroke-width: 1.5; vector-effect: non-scaling-stroke; transition: fill 120ms ease, stroke 120ms ease; }
 .diagramBlock[data-variant="amplifier"] > rect:first-child { fill: #edf6e8; }
@@ -189,7 +189,7 @@
 .diagramBlock:hover > rect:first-child { fill: #dff6fb; stroke: #1b809c; }
 .diagramBlock:focus-visible > rect:first-child { fill: #dff6fb; stroke: #096b87; stroke-width: 4; }
 .diagramBlock[data-selected] > rect:first-child { fill: #bdffd3; stroke: #168d47; stroke-width: 4; filter: drop-shadow(0 0 6px rgb(40 210 105 / 70%)); }
-.diagramLegend path { fill: none; stroke-width: 3; }
+.diagramLegend path { fill: none; stroke-width: 1.8; }
 .diagramLegend path[data-kind="rf"] { stroke: #8d2588; }
 .diagramLegend path[data-kind="pulse"] { stroke: #d57228; }
 .diagramLegend path[data-kind="control"] { stroke: #235fd1; stroke-dasharray: 5 3; }

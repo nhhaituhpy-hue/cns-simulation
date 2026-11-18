@@ -186,15 +186,15 @@
 .diagramPaper { fill: #eef1ef; }
 .diagramZone { fill: #f8faf8; stroke: #9aa5a5; stroke-width: 1.3; stroke-dasharray: 6 4; }
 .diagramZoneTitle { fill: #607074; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 10px; font-weight: 900; letter-spacing: 0.1em; }
-.topologyEdge { fill: none; stroke-width: 2.3; stroke-linecap: square; stroke-linejoin: round; vector-effect: non-scaling-stroke; transition: opacity 120ms ease, stroke-width 120ms ease; }
+.topologyEdge { fill: none; stroke-width: 1.4; stroke-linecap: butt; stroke-linejoin: round; vector-effect: non-scaling-stroke; transition: opacity 120ms ease, stroke-width 120ms ease; }
 .topologyEdge[data-category="rf"] { stroke: #a52894; }
 .topologyEdge[data-category="timing"] { stroke: #2575bc; stroke-dasharray: 7 3; }
 .topologyEdge[data-category="data"] { stroke: #008861; }
 .topologyEdge[data-category="power"] { stroke: #d72b3d; }
 .topologyEdge[data-category="ground"] { stroke: #819315; stroke-dasharray: 8 3; }
 .topologyEdge[data-optional] { stroke-dasharray: 7 4; opacity: 0.72; }
-.topologyEdge[data-muted] { opacity: 0.14; }
-.topologyEdge[data-active] { stroke-width: 4; opacity: 1; }
+.topologyEdge[data-muted] { opacity: 0.16; }
+.topologyEdge[data-active] { stroke-width: 2.2; opacity: 1; }
 .topologyNode { cursor: pointer; outline: none; }
 .topologyNode rect { fill: #fff; stroke: #566568; stroke-width: 1.6; vector-effect: non-scaling-stroke; transition: fill 120ms ease, stroke 120ms ease; }
 .topologyNode[data-kind="rf"] rect { fill: #f7edf6; }
@@ -211,7 +211,7 @@
 .contextNode text { fill: #4c5a5e; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 9px; font-weight: 800; text-anchor: middle; }
 .edgeLabel { fill: #3e4d51; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 7px; font-weight: 800; paint-order: stroke fill; stroke: #eef1ef; stroke-width: 4; stroke-linejoin: round; text-anchor: middle; }
 .edgeLabel[data-muted] { opacity: 0.18; }
-.diagramLegend path { fill: none; stroke-width: 3; }
+.diagramLegend path { fill: none; stroke-width: 1.8; }
 .diagramLegend path[data-category="rf"] { stroke: #a52894; }
 .diagramLegend path[data-category="timing"] { stroke: #2575bc; stroke-dasharray: 7 3; }
 .diagramLegend path[data-category="data"] { stroke: #008861; }

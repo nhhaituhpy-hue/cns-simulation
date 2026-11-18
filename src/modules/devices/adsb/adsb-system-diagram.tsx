@@ -102,7 +102,7 @@ export function AdsbSystemDiagram({ selectedOccurrenceId, onSelect }: AdsbSystem
     <div className={styles.diagramViewport}>
       <svg
         className={styles.systemDiagram}
-        viewBox="0 0 1000 620"
+        viewBox="0 0 1120 630"
         role="group"
         aria-labelledby="adsb-topology-title adsb-topology-description"
       >
@@ -115,26 +115,27 @@ export function AdsbSystemDiagram({ selectedOccurrenceId, onSelect }: AdsbSystem
             <marker
               key={category}
               id={`${markerPrefix}-${category}-arrow`}
-              viewBox="0 0 10 10"
-              refX="8"
-              refY="5"
-              markerWidth="7"
-              markerHeight="7"
+              viewBox="0 0 8 8"
+              refX="7.6"
+              refY="4"
+              markerWidth="6.5"
+              markerHeight="5.5"
+              markerUnits="userSpaceOnUse"
               orient="auto-start-reverse"
             >
-              <path d="M0 0l10 5-10 5z" fill={categoryColors[category]} />
+              <path d="M0 0.8L8 4L0 7.2Z" fill={categoryColors[category]} />
             </marker>
           ))}
         </defs>
 
-        <rect className={styles.diagramPaper} width="1000" height="620" />
+        <rect className={styles.diagramPaper} width="1120" height="630" />
         <g>
-          <rect className={styles.diagramZone} x="10" y="18" width="960" height="135" rx="7" />
-          <text className={styles.diagramZoneTitle} x="22" y="33">RF RECEIVE PATH</text>
-          <rect className={styles.diagramZone} x="18" y="165" width="940" height="230" rx="7" />
+          <rect className={styles.diagramZone} x="14" y="18" width="1084" height="135" rx="7" />
+          <text className={styles.diagramZoneTitle} x="26" y="33">RF RECEIVE PATH</text>
+          <rect className={styles.diagramZone} x="18" y="165" width="1080" height="240" rx="7" />
           <text className={styles.diagramZoneTitle} x="30" y="181">TIMING / LAN / SURVEILLANCE</text>
-          <rect className={styles.diagramZone} x="18" y="412" width="940" height="170" rx="7" />
-          <text className={styles.diagramZoneTitle} x="30" y="429">POWER / PROTECTIVE GROUND</text>
+          <rect className={styles.diagramZone} x="18" y="422" width="1080" height="170" rx="7" />
+          <text className={styles.diagramZoneTitle} x="30" y="439">POWER / PROTECTIVE GROUND</text>
         </g>
 
         <g>
@@ -183,16 +184,16 @@ export function AdsbSystemDiagram({ selectedOccurrenceId, onSelect }: AdsbSystem
           )}
         </g>
 
-        <g className={styles.diagramLegend} transform="translate(26 598)">
+        <g className={styles.diagramLegend} transform="translate(26 610)">
           {legend.map(([category, label], index) => (
-            <g key={category} transform={`translate(${index * 184} 0)`}>
+            <g key={category} transform={`translate(${index * 190} 0)`}>
               <path data-category={category} d="M0 0h28" />
               <text x="36" y="3">{label}</text>
             </g>
           ))}
         </g>
-        <text className={styles.diagramReference} x="970" y="582">Dashed path = optional / alternative configuration</text>
-        <text className={styles.diagramReference} x="970" y="611">Derived functional direction · Figures 2 &amp; 20 + installation sections</text>
+        <text className={styles.diagramReference} x="1090" y="586">Dashed path = optional / alternative configuration</text>
+        <text className={styles.diagramReference} x="1090" y="618">Derived functional direction · Figures 2 &amp; 20 + installation sections</text>
       </svg>
     </div>
   );

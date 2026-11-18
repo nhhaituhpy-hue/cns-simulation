@@ -138,7 +138,7 @@ function ComponentNode({
         <rect className={styles.symbolHitbox} x={box.x} y={box.y} width={box.width} height={box.height} rx="3" />
         <rect className={styles.symbolBody} x="474" y="78" width="52" height="44" />
         <path className={styles.couplerSymbolPath} d="M500 78v44M500 92h-20M500 108h20M480 92l7-4v8zM520 108l-7-4v8z" />
-        <text className={styles.symbolLabel} x="500" y="139">30 dB COUPLER</text>
+        <text className={`${styles.symbolLabel} ${styles.couplerLabel}`} x="466" y="94">30 dB COUPLER</text>
       </g>
     );
   }
@@ -190,20 +190,20 @@ export function Dme1119aSystemDiagram({ selectedOccurrenceId, onSelect }: Dme111
       <div className={styles.diagramViewport}>
         <svg
           className={styles.systemDiagram}
-          viewBox="0 0 1000 1000"
+          viewBox="0 0 1000 1120"
           role="img"
           aria-label="Figure 1-10 Dual High Power DME Block Diagram, với tuyến thu Preselector trước Low-noise Amplifier theo Figure 2-2"
         >
           <defs>
             {(Object.keys(signalColors) as EquipmentLinkKind[]).map((kind) => (
-              <marker key={kind} id={`${markerPrefix}-${kind}`} viewBox="0 0 8 8" refX="7" refY="4" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
-                <path d="M0 0 8 4 0 8z" fill={signalColors[kind]} />
+              <marker key={kind} id={`${markerPrefix}-${kind}`} viewBox="0 0 8 8" refX="7.6" refY="4" markerWidth="6.5" markerHeight="5.5" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+                <path d="M0 0.8L8 4L0 7.2Z" fill={signalColors[kind]} />
               </marker>
             ))}
             <filter id={`${markerPrefix}-selected-glow`} x="-35%" y="-35%" width="170%" height="170%"><feGaussianBlur stdDeviation="6" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
           </defs>
 
-          <rect className={styles.diagramPaper} width="1000" height="1000" />
+          <rect className={styles.diagramPaper} width="1000" height="1120" />
           <g className={styles.diagramZones} aria-hidden>
             <rect x="8" y="205" width="350" height="470" rx="4" />
             <rect x="642" y="205" width="350" height="470" rx="4" />
@@ -211,7 +211,7 @@ export function Dme1119aSystemDiagram({ selectedOccurrenceId, onSelect }: Dme111
             <rect x="8" y="690" width="984" height="302" rx="4" />
             <text x="20" y="224">TRANSMITTER / MONITOR 1</text>
             <text x="980" y="224" textAnchor="end">TRANSMITTER / MONITOR 2</text>
-            <text x="500" y="26" textAnchor="middle">COMMON RF / ANTENNA</text>
+            <text x="600" y="24" textAnchor="start">COMMON RF / ANTENNA</text>
             <text x="20" y="710">CONTROL · POWER · INTERFACE</text>
           </g>
           <g className={styles.diagramLinks} aria-hidden>
@@ -252,7 +252,7 @@ export function Dme1119aSystemDiagram({ selectedOccurrenceId, onSelect }: Dme111
                 x: (route[Math.floor((route.length - 1) / 2)].x + route[Math.ceil((route.length - 1) / 2)].x) / 2,
                 y: (route[Math.floor((route.length - 1) / 2)].y + route[Math.ceil((route.length - 1) / 2)].y) / 2,
               } : null);
-              return position ? <text key={link.id} x={position.x * 10} y={position.y * 10 - 6}>{link.label}</text> : null;
+              return position ? <text key={link.id} x={position.x * 10 + (link.label === "Antenna RF" ? 64 : 0)} y={position.y * 10 - 6}>{link.label}</text> : null;
             })}
           </g>
 
@@ -260,13 +260,13 @@ export function Dme1119aSystemDiagram({ selectedOccurrenceId, onSelect }: Dme111
 
           <g className={styles.diagramLegend} aria-hidden>
             {Object.entries(signalLabels).map(([kind, label], index) => (
-              <g key={kind} transform={`translate(${690 + (index % 2) * 145} ${724 + Math.floor(index / 2) * 22})`}>
+              <g key={kind} transform={`translate(${120 + (index % 3) * 260} ${1024 + Math.floor(index / 3) * 24})`}>
                 <path d="M0 0h30" style={{ stroke: signalColors[kind as EquipmentLinkKind] }} />
                 <text x="38" y="4">{label}</text>
               </g>
             ))}
           </g>
-          <text className={styles.diagramReference} x="980" y="980">FIGURE 1-10 · DUAL HIGH POWER DME BLOCK DIAGRAM · RECEIVE PATH VERIFIED WITH FIGURE 2-2</text>
+          <text className={styles.diagramReference} x="980" y="1100">FIGURE 1-10 · DUAL HIGH POWER DME BLOCK DIAGRAM · RECEIVE PATH VERIFIED WITH FIGURE 2-2</text>
         </svg>
       </div>
     </div>
