@@ -9,6 +9,15 @@
 - Theo yêu cầu chủ repository, workflow **CI** chỉ chạy thủ công qua **Actions → CI → Run workflow**; không tự chạy khi push hoặc mở pull request.
 - Việc này không tắt webhook triển khai Dokploy và không thay đổi các lệnh lint, typecheck, test, build cục bộ.
 
+## DME 320 — điểm đo và tham chiếu manual
+
+- Trong sơ đồ khối/cabinet, chọn module rồi mở điểm đo từ danh sách hoặc đúng connector trên mặt panel. Hộp thoại native hỗ trợ bàn phím, Escape, trả focus và cuộn trên mobile; hiển thị thiết bị đo, loại tín hiệu, giá trị/dung sai đã xác minh, điều kiện và nguồn trang/mục. Không có ảnh waveform thì không tạo đồ thị hay số đo giả.
+- PMU dùng ba điểm `GND`, `BATT VOLT`, `ACDC VOLT` theo Figure 6-16/thủ tục đo nguồn, không sao chép rail +5/±15 V từ Table 3-13 đang mâu thuẫn. Năm nút chọn display vẫn chỉ là hình tham chiếu và display để `----`. SCU TP9 giữ rõ mâu thuẫn CAN TxD TTL với bảng +5 V; TCU bổ sung các test pin thiếu trong catalog.
+- Ảnh Figure 6-4 gắn với **RXU LOG VIDEO / CH1** khi RF loopback, không gán thành waveform của MON Interrogation Trigger / CH2. Tách setup và số cursor của ảnh khỏi setup thủ tục, nominal/dung sai; phân biệt DME 320 high-power dùng HPA với nhánh DME 310 low-power.
+- Quy trình calibration PMDT, ADJ1/ADJ2 và các kiểm tra bảo dưỡng hiển thị **chỉ đọc**. Không tạo hàm góc–điện áp/công suất, không thực thi Run/Apply hoặc ghi engine/store/kịch bản/điểm thi từ trang tham chiếu. Giữ khác biệt transmitter-output calibration với monitor-reading calibration và loss riêng của từng setup.
+- Tận dụng manual/corpus đã trích có hash và trang nguồn; bản đầy đủ vẫn nằm ngoài Git/public/image. Kho Discovery Engine và thay đổi simulator là hai sản phẩm riêng. Tham chiếu đào tạo không thay thế tài liệu/quy trình an toàn khi bảo trì thiết bị thật.
+- Kiểm thử: `tests/dme320/` và `node scripts/verify-dme320-measurements-browser.mjs` trên Node 24. Harness dùng component/CSS/assets thật ở loopback với production/development StrictMode, desktop/mobile, mọi điểm đo/connector và không có request ghi; không thay thế kiểm thử đăng nhập/route production. Git push không đồng nghĩa đã deploy.
+
 ## DVOR 220 — điểm đo và tham chiếu manual
 
 - Từ cabinet/sơ đồ, chọn đúng LRU rồi bấm điểm đo trên danh sách hoặc connector tương ứng trên mặt panel để mở hộp thoại tham chiếu. Có thiết bị đo, loại tín hiệu, giá trị đã xác minh, điều kiện và nguồn trang/mục; điểm không có waveform không sinh đồ thị hoặc số đo giả.

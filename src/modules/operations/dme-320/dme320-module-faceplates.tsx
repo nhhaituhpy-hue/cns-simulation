@@ -1,11 +1,41 @@
-import type { ReactNode } from "react";
-import type { Dme320BlockId, Dme320FaceplateKind } from "./block-diagram-data";
+import { createContext, useContext, useId, type ReactNode } from "react";
+import type { Dme320BlockId, Dme320FaceplateKind, Dme320TestPoint } from "./block-diagram-data";
 import { DME_320_BLOCK_BY_ID } from "./block-diagram-data";
 import styles from "./dme320-block-diagram.module.css";
 
 interface Dme320ModuleFaceplateProps {
   kind: Dme320FaceplateKind;
   blockId: Dme320BlockId;
+  onSelectPoint?: (point: Dme320TestPoint) => void;
+}
+
+const MeasurementContext = createContext<{ points: readonly Dme320TestPoint[]; onSelect?: (point: Dme320TestPoint) => void }>({ points: [] });
+
+// Physical mappings are explicit catalog IDs. Never infer a point from panel text.
+function MeasurementConnector({ pointId, kind, x, y, children }: { pointId?: string; kind: "test-pin" | "test-jack" | "bnc"; x: number; y: number; children: ReactNode }) {
+  const { points, onSelect } = useContext(MeasurementContext);
+  const point = points.find((item) => item.id === pointId);
+  const interactive = !!point && !!onSelect;
+  return <g className={styles.measurementConnector} data-connector-kind={kind} data-point-id={point?.id}
+    role={interactive ? "button" : undefined} tabIndex={interactive ? 0 : undefined}
+    aria-label={interactive ? `Xem tín hiệu ${point.id} ${point.label} trên panel` : undefined}
+    onClick={interactive ? () => onSelect(point) : undefined}
+    onKeyDown={interactive ? (event) => {
+      if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onSelect(point); }
+    } : undefined}>
+    {interactive ? <rect className={styles.measurementHitTarget} x={x - 22} y={y - 15} width="44" height="30" rx="4" /> : null}
+    {children}
+  </g>;
+}
+
+function TestPin({ x, y, pointId, label }: { x: number; y: number; pointId: string; label: string }) {
+  return <MeasurementConnector pointId={pointId} kind="test-pin" x={x} y={y}>
+    <g className={styles.faceplateTestPin} aria-hidden>
+      <rect x={x - 5} y={y - 5} width="10" height="10" rx="1" />
+      <path d={`M${x} ${y - 9}v18`} />
+      <text x={x + 14} y={y + 4}>{label}</text>
+    </g>
+  </MeasurementConnector>;
 }
 
 type LedColor = "green" | "red" | "amber" | "blue" | "off";
@@ -69,19 +99,23 @@ function TestJack({
   x,
   y,
   label,
+  pointId,
   color = "red",
 }: {
   x: number;
   y: number;
   label?: string;
+  pointId?: string;
   color?: "red" | "black";
 }) {
   return (
+    <MeasurementConnector pointId={pointId} kind="test-jack" x={x} y={y}>
     <g className={styles.faceplateTestJack} data-color={color} aria-hidden>
       <circle cx={x} cy={y} r="8" />
       <circle cx={x} cy={y} r="3" />
       {label ? <text x={x + 14} y={y + 4}>{label}</text> : null}
     </g>
+    </MeasurementConnector>
   );
 }
 
@@ -89,16 +123,19 @@ function Coax({
   x,
   y,
   label,
+  pointId,
   radius = 17,
   labelBelow = false,
 }: {
   x: number;
   y: number;
   label?: string;
+  pointId?: string;
   radius?: number;
   labelBelow?: boolean;
 }) {
   return (
+    <MeasurementConnector pointId={pointId} kind="bnc" x={x} y={y}>
     <g className={styles.faceplateCoax} aria-hidden>
       <circle cx={x} cy={y} r={radius + 5} />
       <circle cx={x} cy={y} r={radius} />
@@ -107,6 +144,7 @@ function Coax({
         <text x={x} y={labelBelow ? y + radius + 22 : y - radius - 12} textAnchor="middle">{label}</text>
       ) : null}
     </g>
+    </MeasurementConnector>
   );
 }
 
@@ -171,8 +209,8 @@ function PanelFrame({
   partNumber?: string;
   children: ReactNode;
 }) {
-  const safeName = `${title}-${partNumber ?? "module"}`.toLowerCase().replaceAll(/[^a-z0-9]+/g, "-");
-  const gradientId = `dme320-faceplate-${safeName}`;
+  const gradientId = useId();
+  const { onSelect } = useContext(MeasurementContext);
   return (
     <svg
       className={styles.moduleFaceplate}
@@ -180,8 +218,8 @@ function PanelFrame({
       height={height}
       style={{ aspectRatio: `${width} / ${height}` }}
       viewBox={`0 0 ${width} ${height}`}
-      role="img"
-      aria-label={`DME 320 ${title} module faceplate`}
+      role={onSelect ? "group" : "img"}
+      aria-label={`Mặt panel ${title}`}
     >
       <defs>
         <linearGradient id={gradientId} x1="0" x2="1" y1="0" y2="1">
@@ -312,8 +350,8 @@ function ScuFaceplate({ partNumber }: { partNumber?: string }) {
       <Led x={62} y={126} label="FAULT" color="off" />
       <Led x={62} y={160} label="MASTER" color="green" />
       <path className={styles.faceplateDivider} d="M28 194h164" />
-      <TestJack x={62} y={230} label="TP9 · CAN TxD, TTL" />
-      <TestJack x={62} y={268} label="TP16 · CAN RxD, TTL" />
+      <TestPin x={62} y={230} pointId="TP9" label="TP9 · CAN TxD, TTL" />
+      <TestPin x={62} y={268} pointId="TP16" label="TP16 · CAN RxD, TTL" />
       <BoxHeader x={110} y={380} pins={14} label="J2 · MCU ISP / DOWNLOAD" />
       <PushButton x={110} y={486} label="SW1 · RESET" size={25} />
       <BoxHeader x={110} y={600} pins={10} label="J3 · CPLD JTAG / DOWNLOAD" />
@@ -347,9 +385,9 @@ function RxuFaceplate({ partNumber }: { partNumber?: string }) {
     <PanelFrame width={220} height={780} title="RXU" partNumber={partNumber}>
       <Led x={64} y={94} label="POWER" color="green" />
       <Led x={64} y={132} label="PULSES" color="green" />
-      <Coax x={110} y={250} label="LOG VIDEO WIDE" radius={20} />
-      <Coax x={110} y={405} label="ON CH DET" radius={20} />
-      <Coax x={110} y={560} label="LOG VIDEO" radius={20} />
+      <Coax x={110} y={250} pointId="LOG VIDEO WIDE" label="LOG VIDEO WIDE" radius={20} />
+      <Coax x={110} y={405} pointId="ON CH DET" label="ON CH DET" radius={20} />
+      <Coax x={110} y={560} pointId="LOG VIDEO" label="LOG VIDEO" radius={20} />
       <text className={styles.faceplateSmallLabel} x="110" y="645" textAnchor="middle">RECEIVER TEST OUTPUTS</text>
       <PullHandle x={33} y={225} height={360} />
     </PanelFrame>
@@ -367,7 +405,7 @@ function HpaFaceplate({ partNumber }: { partNumber?: string }) {
       {Array.from({ length: 9 }, (_, index) => (
         <path key={index} className={styles.faceplateVentLine} d={`M128 ${250 + index * 21}h122`} />
       ))}
-      <Coax x={190} y={560} label="REPLY ENV" radius={24} />
+      <Coax x={190} y={560} pointId="REPLY ENV" label="REPLY ENV" radius={24} />
       <text className={styles.faceplateSmallLabel} x="190" y="602" textAnchor="middle">DETECTED VIDEO</text>
       <text className={styles.faceplateSmallLabel} x="190" y="676" textAnchor="middle">HIGH-POWER RF AMPLIFIER</text>
     </PanelFrame>
@@ -382,15 +420,15 @@ function TxuFaceplate({ partNumber }: { partNumber?: string }) {
       <Led x={115} y={128} label="RF ON" color="green" />
       <Led x={115} y={164} label="PLL FAIL" color="off" />
       <Led x={115} y={200} label="FAULT" color="off" />
-      <Coax x={145} y={385} label="DETECTED VIDEO" radius={21} />
-      <Coax x={145} y={570} label="FREQ." radius={21} />
+      <Coax x={145} y={385} pointId="DETECTED VIDEO" label="DETECTED VIDEO" radius={21} />
+      <Coax x={145} y={570} pointId="FREQ." label="FREQ." radius={21} />
       <text className={styles.faceplateSmallLabel} x="145" y="650" textAnchor="middle">960–1215 MHz · 0.1 MHz STEP</text>
     </PanelFrame>
   );
 }
 
 function DcdcFaceplate({ partNumber, auxiliary }: { partNumber?: string; auxiliary: boolean }) {
-  const rails = auxiliary ? ["+5V", "+15V", "-15V", "GND"] : ["+5V", "+8V", "+15V", "-15V", "+28V", "+50V", "GND"];
+  const rails = auxiliary ? (["+5V", "+15V", "-15V", "GND"] as const) : (["+5V", "+8V", "+15V", "-15V", "+28V", "+50V", "GND"] as const);
   const width = auxiliary ? 220 : 300;
   const startY = auxiliary ? 300 : 330;
   const step = auxiliary ? 66 : 48;
@@ -416,6 +454,7 @@ function DcdcFaceplate({ partNumber, auxiliary }: { partNumber?: string; auxilia
           x={auxiliary ? 80 : 140}
           y={startY + index * step}
           label={label}
+          pointId={{ "+5V": "+5V_TP", "+8V": "+8V_TP", "+15V": "+15V_TP", "-15V": "-15V_TP", "+28V": "+28V_TP", "+50V": "+50V_TP", GND: "GND" }[label]}
           color={label === "GND" ? "black" : "red"}
         />
       ))}
@@ -433,12 +472,12 @@ function TcuFaceplate({ partNumber }: { partNumber?: string }) {
       <Led x={65} y={121} label="TCU FAULT" color="off" />
       <Led x={65} y={154} label="CW ALERT" color="amber" />
       {upperPoints.map((label, index) => (
-        <TestJack key={label} x={58} y={208 + index * 34} label={label} color={label === "GND" ? "black" : "red"} />
+        <TestPin key={label} x={58} y={208 + index * 34} pointId={label} label={label} />
       ))}
       <PushButton x={178} y={270} label="RESET" size={24} />
       <BoxHeader x={128} y={485} pins={14} label="MCU ISP" />
       <BoxHeader x={128} y={620} pins={10} label="FPGA ISP" />
-      {lowerPoints.map((label, index) => <TestJack key={label} x={58} y={725 + index * 38} label={label} />)}
+      {lowerPoints.map((label, index) => <TestPin key={label} x={58} y={725 + index * 38} pointId={label} label={label} />)}
     </PanelFrame>
   );
 }
@@ -449,9 +488,9 @@ function MonFaceplate({ partNumber }: { partNumber?: string }) {
     <PanelFrame width={265} height={950} title="MON · REV. D+" partNumber={partNumber}>
       <Led x={62} y={88} label="POWER ON" color="green" />
       <Led x={62} y={121} label="MON FAULT" color="off" />
-      <TestJack x={62} y={173} label="FPGA STATUS" />
-      <TestJack x={62} y={207} label="MCU STATUS" />
-      <TestJack x={62} y={241} label="INTG PULSE" />
+      <TestPin x={62} y={173} pointId="FPGA STATUS" label="FPGA STATUS" />
+      <TestPin x={62} y={207} pointId="MCU STATUS" label="MCU STATUS" />
+      <TestPin x={62} y={241} pointId="INTG PULSE" label="INTG PULSE" />
       <Led x={62} y={299} label="ALARM" color="off" />
       <Led x={62} y={333} label="WARNING" color="amber" />
       <Led x={62} y={367} label="INTEGRITY" color="off" />
@@ -459,7 +498,7 @@ function MonFaceplate({ partNumber }: { partNumber?: string }) {
       <PushButton x={188} y={350} label="RESET" size={24} />
       <BoxHeader x={132} y={525} pins={14} label="MCU ISP" />
       <BoxHeader x={132} y={660} pins={10} label="FPGA ISP" />
-      {lowerPoints.map((label, index) => <TestJack key={label} x={58} y={765 + index * 48} label={label} />)}
+      {lowerPoints.map((label, index) => <TestPin key={label} x={58} y={765 + index * 48} pointId={label} label={label} />)}
     </PanelFrame>
   );
 }
@@ -467,12 +506,12 @@ function MonFaceplate({ partNumber }: { partNumber?: string }) {
 function RfgFaceplate({ partNumber }: { partNumber?: string }) {
   return (
     <PanelFrame width={235} height={790} title="RFG" partNumber={partNumber}>
-      <Coax x={118} y={125} label="68 MHz OSC FREQUENCY" radius={18} labelBelow />
-      <TestJack x={68} y={220} label="PULSE DETECT" />
+      <Coax x={118} y={125} pointId="68 MHz OSC" label="68 MHz OSC FREQUENCY" radius={18} labelBelow />
+      <TestPin x={68} y={220} pointId="PULSE DETECT" label="PULSE DETECT" />
       <Led x={68} y={282} label="POWER ON" color="green" />
       <Led x={68} y={319} label="RF ON" color="green" />
       <Led x={68} y={356} label="PLL FAIL" color="off" />
-      <Coax x={118} y={560} label="RFG FREQUENCY" radius={22} />
+      <Coax x={118} y={560} pointId="RFG FREQ." label="RFG FREQUENCY" radius={22} />
     </PanelFrame>
   );
 }
@@ -503,12 +542,14 @@ function PmuFaceplate({ partNumber }: { partNumber?: string }) {
     <PanelFrame width={820} height={350} title="PMU · POWER MONITORING UNIT" partNumber={partNumber}>
       <PullHandle x={410} y={66} height={45} />
       <rect className={styles.faceplateDisplay} x="72" y="91" width="180" height="76" rx="5" />
-      <text className={styles.faceplateDigits} x="162" y="143" textAnchor="middle">28.0</text>
+      <text className={styles.faceplateDigits} x="162" y="143" textAnchor="middle">----</text>
       <Led x={300} y={94} label="AC FAIL" color="off" />
       <Led x={300} y={130} label="ON BATT" color="amber" />
       <Led x={300} y={166} label="CHARGING" color="amber" />
-      {["+5V", "+15V", "-15V", "GND"].map((label, index) => (
-        <TestJack key={label} x={470} y={92 + index * 35} label={label} color={label === "GND" ? "black" : "red"} />
+      {/* Figure 6-16: three upper jacks, not the inconsistent Table 3-13 rails.
+          The five lower display-selection buttons remain non-operable. */}
+      {(["GND", "BATT VOLT", "ACDC VOLT"] as const).map((pointId, index) => (
+        <TestJack key={pointId} x={470 + index * 105} y={91} pointId={pointId} label={pointId} color={pointId === "GND" ? "black" : "red"} />
       ))}
       {[[115, "TEMP"], [245, "DC V"], [375, "DC I"], [505, "BATT V"], [635, "BATT I"]].map(([x, label]) => (
         <g key={label as string}>
@@ -724,7 +765,7 @@ function RearRfFaceplate({ blockId, partNumber }: { blockId: Dme320BlockId; part
   }
 }
 
-export function Dme320ModuleFaceplate({ kind, blockId }: Dme320ModuleFaceplateProps) {
+function ModuleFaceplate({ kind, blockId }: Dme320ModuleFaceplateProps) {
   const partNumber = DME_320_BLOCK_BY_ID.get(blockId)?.partNumber;
   switch (kind) {
     case "lmi": return <LmiFaceplate partNumber={partNumber} />;
@@ -745,4 +786,11 @@ export function Dme320ModuleFaceplate({ kind, blockId }: Dme320ModuleFaceplatePr
     case "ifb": return <IfbFaceplate partNumber={partNumber} />;
     case "rear-rf": return <RearRfFaceplate blockId={blockId} partNumber={partNumber} />;
   }
+}
+
+export function Dme320ModuleFaceplate({ kind, blockId, onSelectPoint }: Dme320ModuleFaceplateProps) {
+  const block = DME_320_BLOCK_BY_ID.get(blockId);
+  return <MeasurementContext.Provider value={{ points: block?.testPoints ?? [], onSelect: onSelectPoint }}>
+    <ModuleFaceplate kind={kind} blockId={blockId} />
+  </MeasurementContext.Provider>;
 }

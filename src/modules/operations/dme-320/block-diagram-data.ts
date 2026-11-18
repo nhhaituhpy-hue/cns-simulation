@@ -85,13 +85,33 @@ export interface Dme320WaveformReference {
   alt: string;
   caption: string;
   source: string;
+  /** Setup observed in this capture, not the procedure or a signal limit. */
+  scopeSettings?: readonly string[];
+  /** Static screenshot readouts, never live telemetry or tolerances. */
+  observedReadings?: readonly string[];
 }
 
 export interface Dme320TestPoint {
   id: string;
   label: string;
   description: string;
+  signalType?: string;
+  nominal?: string;
+  tolerance?: string;
+  instrument?: string;
+  conditions?: readonly string[];
+  source?: string;
   waveforms?: readonly Dme320WaveformReference[];
+}
+
+export interface Dme320AdjustmentReference {
+  id: string;
+  label: string;
+  control: string;
+  instrument: string;
+  target: string;
+  conditions: readonly string[];
+  source: string;
 }
 
 export interface Dme320BlockDefinition {
@@ -107,6 +127,7 @@ export interface Dme320BlockDefinition {
   indicators: readonly string[];
   controls: readonly string[];
   testPoints: readonly Dme320TestPoint[];
+  adjustments?: readonly Dme320AdjustmentReference[];
   faceplate?: Dme320FaceplateKind;
   notes?: readonly string[];
 }
@@ -198,14 +219,133 @@ const systemDelayWaveform: Dme320WaveformReference = {
   src: "/equipment/dme-320/waveforms/figure-6-4-interrogation-reply.webp",
   width: 880,
   height: 500,
-  alt: "Dạng sóng interrogation và reply dùng đo system delay DME 320",
-  caption: "Interrogation / Reply - System delay",
-  source: "MOPIENS 300 DME Technical Manual, Figure 6-4, PDF page 294",
+  alt: "Ảnh manual: LOG VIDEO tại RXU trên CH1, hai cặp interrogation/reply khi RF loopback On; CH2 là trigger từ MON",
+  caption: "RXU LOG VIDEO — CH1, interrogation/reply khi loopback; ảnh tham chiếu một phép đo, không phải waveform của pin trigger MON",
+  source: "MOPIENS 310/320 DME Technical Manual, Figure 6-4, trang 6-8 (PDF 294), Rev. B/2019-08-19; đấu đo tại PDF 291–293.",
+  scopeSettings: ["Ảnh: Diagram2: Ch1 / Ch1Wfm1; 10 µs/div; 1 V/div; DC 1 MΩ.", "Ảnh: Trigger Auto / Edge, source Ch2. Thủ tục PDF 293 yêu cầu Single, 2 V/div: không đồng nhất setup ảnh với thủ tục."],
+  observedReadings: ["Cursor t1 = 4.32 µs; t2 = 54.32 µs; Δt = 50 µs; 1/Δt = 20 kHz (nghịch đảo khoảng cursor, không phải PRF).", "V1 = 4.8435 V; V2 = 7.6453 V; ΔV = 2.8018 V. Chỉ là số đọc trên ảnh, không phải nominal/dung sai hoặc số đo live."],
 };
 
 const noIndicators: readonly string[] = [];
 const noControls: readonly string[] = [];
 const noTestPoints: readonly Dme320TestPoint[] = [];
+
+const powerRail = (id: string, label: string, tolerance: string, source: string): Dme320TestPoint => ({
+  id, label,
+  description: "2 mm tip jack đỏ; đo điện áp rail so với GND của chính module.",
+  signalType: "Điện áp DC", nominal: `${label}DC`, tolerance,
+  instrument: "DMM/DVM và test leads (§6.5.9)",
+  conditions: ["Đầu đen vào GND, đầu đỏ vào tip jack rail; đo riêng từng module/TX.",
+    ...(id === "+28V_TP" ? ["Bảng DC/DC tại PDF 310 không có hàng +28 V; ±1.4 V thuộc AC/DC VOLT trên PMU, không chuyển sang rail này."] : [])],
+  source,
+});
+
+const commonPoint = (source: string): Dme320TestPoint => ({
+  id: "GND", label: "Common (GND)", description: "Điểm common của module; không phải một rail cấp nguồn độc lập.",
+  signalType: "Mass tham chiếu", nominal: "Tham chiếu cho phép đo, không phải số đọc live",
+  tolerance: "Không áp dụng; không có dung sai GND riêng trong nguồn",
+  instrument: "DMM/DVM: đầu đo âm; không có phép đo GND độc lập được chỉ định",
+  conditions: ["Dùng GND của chính module theo thủ tục đo nguồn; không suy ra điện áp earth/chassis."], source,
+});
+
+const auxiliaryPowerSource = "MOPIENS 310/320 DME Technical Manual, Table 3-10 / Figure 3-45, trang 3-40 (PDF 120), Rev. B/2022-05-10; §6.5.9, trang 6-24–6-26 (PDF 310–312), Rev. B/2019-08-19.";
+const transponderPowerSource = "MOPIENS 310/320 DME Technical Manual, Tables 3-2/3-3 / Figure 3-18, trang 3-19 (PDF 99), Rev. B/2022-05-10; §6.5.9, trang 6-24–6-27 (PDF 310–313), Rev. B/2019-08-19.";
+const pmuPowerSource = "MOPIENS 310/320 DME Technical Manual, §6.5.9 / Figure 6-16, trang 6-24–6-26 (PDF 310–312), Rev. B/2019-08-19; mâu thuẫn Table 3-13, trang 3-46 (PDF 126), Rev. B/2022-05-10.";
+
+const undocumentedPoint = (id: string, label: string, description: string, signalType: string, source: string): Dme320TestPoint => ({
+  id, label, description, signalType,
+  nominal: "Chưa có nominal được xác minh tại điểm này",
+  tolerance: "Chưa có dung sai được xác minh tại điểm này",
+  instrument: "Oscilloscope và probe phù hợp tín hiệu; manual không chỉ định máy đo/setup riêng tại điểm này",
+  conditions: ["Chỉ xác minh định danh/chức năng theo nguồn; không suy từ tên tín hiệu ra mức điện áp, thời gian hoặc dạng sóng chuẩn."], source,
+});
+
+const tcuPointSource = "MOPIENS 310/320 DME Technical Manual, Figure 3-21, trang 3-22 (PDF 102), Rev. B/2022-05-10.";
+const monitorPointSource = "MOPIENS 310/320 DME Technical Manual, Figure 3-29 (MON Rev. D or later), trang 3-26 (PDF 106), Rev. B/2022-05-10.";
+const rfgPointSource = "MOPIENS 310/320 DME Technical Manual, Figure 3-32, trang 3-29 (PDF 109), Rev. B/2022-05-10; mô tả §3.3.3, trang 3-27–3-28 (PDF 107–108).";
+
+const readonlyReference = "Chỉ đọc: mô tả manual phục vụ đào tạo; không chạy Run/Apply, thay cấu hình, nối thiết bị thật hoặc ghi engine/store từ sơ đồ.";
+const calibrationSource = "MOPIENS 310/320 DME Technical Manual, §4.4.7.1 Calibration, trang 4-80–4-88 (PDF 222–230), Rev. B/2019-08-19.";
+const calibrationContext = [readonlyReference, "Theo wizard Maintenance → Calibration → Start. Setup Figure 4-98/PDF 223 liệt kê peak sensor R&S ERP-Z81 hoặc tương đương, attenuator 50 dB/50 Ω/250 W, coupler 30 dB và cáp N 50 Ω có loss đã biết; không coi đây là hệ số coupling chung cho mọi tuyến.", "Kết thúc một transponder: Changeover rồi lặp đủ quy trình cho transponder còn lại (PDF 230). Không suy giới hạn từ các số mẫu trong screenshot hoặc tự dựng hàm calibration."] as const;
+const calibrationReferences: readonly Dme320AdjustmentReference[] = [
+  {
+    id: "calibration-step-1", label: "Step 1 — Transmitter Drive Level Optimization",
+    control: "PMDT Maintenance → Calibration → Start → Step 1 → Run",
+    instrument: "PMDT; setup calibration Figure 4-98, không nêu máy đo/giới hạn riêng cho Step 1",
+    target: "Hoàn tất drive-level optimization, xác nhận green tick; chưa có giới hạn drive-level số được xác minh",
+    conditions: calibrationContext, source: `${calibrationSource} Figures 4-99/4-100, trang 4-82–4-83 (PDF 224–225).`,
+  },
+  {
+    id: "calibration-step-2", label: "Step 2 — Transmitter Power Output Calibration",
+    control: "PMDT Calibration → Step 2 → Calibration (W) → Run; Initialize nếu cần",
+    instrument: "Precision peak power meter; setup Figure 4-98/PDF 223",
+    target: "Nhập công suất peak đo thực (W) để tính internal scale factor; không nhập nominal thay measurement",
+    conditions: [...calibrationContext, "So với setting Station Setup → Basic → Power Output: thường 1000 W cho DME 320, 100 W cho DME 310; không mặc định 100 W của ảnh cho DME 320.", "Trong ±5% của setting có thể Skip Step 2. ±5% là điều kiện skip calibration, khác ±1 dB của RF power maintenance check."],
+    source: `${calibrationSource} Figure 4-101 / Table 4-25, trang 4-83 (PDF 225).`,
+  },
+  {
+    id: "calibration-step-3", label: "Step 3 — Transponder Processing Delay Compensation",
+    control: "PMDT Calibration → Step 3 → Calibration (µs) → Run; Initialize nếu cần",
+    instrument: "Accurate oscilloscope; RXU LOG VIDEO với MON trigger theo §6.5.2",
+    target: "Nhập sai lệch so Current Setpoint, không phải toàn bộ delay đo. Ví dụ manual: setpoint 50.5 µs, đo 50.6 µs → error 0.1 µs",
+    conditions: [...calibrationContext, "Chỉ thực hiện Step 3 khi Step 1 hoặc Step 2 đã thực hiện; Step 3 dành cho manual compensation, thường có thể bỏ để dùng auto.", "Current Setpoint gồm nominal X 50 µs / Y 56 µs và Delay Offset tại Station Setup. Đo chính xác trước khi tính compensation; không phát minh hàm truyền hoặc phạm vi của factor."],
+    source: `${calibrationSource} Figures 4-102/4-103 / Table 4-26, trang 4-83–4-85 (PDF 225–227); §6.5.2, PDF 291–294.`,
+  },
+  {
+    id: "calibration-step-4", label: "Step 4 — Auto Time Delay Calibration",
+    control: "PMDT Calibration → Step 4 → Run",
+    instrument: "PMDT / mạch calibration nội bộ; không nêu máy đo ngoài riêng cho bước này",
+    target: "Tự bù internal delay; chờ green tick trước khi tiếp tục, không có giới hạn factor được công bố ở bước này",
+    conditions: [...calibrationContext, "Bắt buộc chạy Step 4 nếu Step 3 đã Skip; không coi nút Skip trên ảnh là cho phép bỏ cả hai bước."],
+    source: `${calibrationSource} Figure 4-104, trang 4-85 (PDF 227).`,
+  },
+  {
+    id: "calibration-step-5", label: "Step 5 — Monitor Interrogation Level Calibration",
+    control: "PMDT Calibration → Step 5 → MON1 Run, MON2 Run",
+    instrument: "PMDT / internal calibration; không nêu máy đo ngoài riêng cho bước này",
+    target: "Run lần lượt MON1 và MON2, xác nhận green ticks; chưa có nominal/dung sai factor được xác minh",
+    conditions: calibrationContext, source: `${calibrationSource} Figure 4-105, trang 4-85 (PDF 227).`,
+  },
+  {
+    id: "calibration-step-6", label: "Step 6 — Time Delay Monitor Reading Calibration",
+    control: "PMDT Calibration → Step 6 → MON1 Run, MON2 Run",
+    instrument: "PMDT / internal calibration; không nêu máy đo ngoài riêng cho bước này",
+    target: "Hiệu chuẩn số đọc MON1/MON2, chờ green ticks; không đồng nhất với processing-delay compensation Step 3/4",
+    conditions: calibrationContext, source: `${calibrationSource} Figure 4-106, trang 4-86 (PDF 228).`,
+  },
+  {
+    id: "calibration-step-7", label: "Step 7 — ERP Monitor Reading Calibration",
+    control: "PMDT Calibration → Step 7 → MON1 Run, MON2 Run",
+    instrument: "PMDT và antenna phù hợp có hai monitor ports",
+    target: "Hiệu chuẩn số đọc ERP của MON1/MON2, xác nhận green ticks; không có target W cố định trong bước này",
+    conditions: [...calibrationContext, "Phải có antenna phù hợp với hai monitor port nối tới thiết bị trước khi Run lần lượt hai MON."],
+    source: `${calibrationSource} Figure 4-107, trang 4-86 (PDF 228).`,
+  },
+  {
+    id: "calibration-step-8", label: "Step 8 — VSWR Monitor Reading Calibration",
+    control: "PMDT Calibration → Step 8 → Load/Open → MON1 Run, MON2 Run",
+    instrument: "PMDT; tải 50 Ω phù hợp; setup theo manual đầy đủ",
+    target: "Hiệu chuẩn MON1/MON2 ở Load rồi Open, xác nhận green ticks; không gán VSWR giả cho số đọc",
+    conditions: [...calibrationContext, "Manual dùng 50 Ω Load và Open; không thực hiện Short trong quy trình này.", "Làm từng MON ở mỗi điều kiện; sau Open nối lại antenna feeder trước bước tiếp theo.", "Checkbox RF off được mô tả là có thể thử nhưng không bảo đảm luôn hoạt động. Đây không phải hướng dẫn thao tác RF công suất cao thực tế qua simulator."],
+    source: `${calibrationSource} Figure 4-108, trang 4-86–4-87 (PDF 228–229).`,
+  },
+  {
+    id: "calibration-step-9", label: "Step 9 — Power Output Monitor Reading Calibration",
+    control: "PMDT Calibration → Step 9 → MON1/MON2 Peak Power (W) → Run",
+    instrument: "Accurate peak power meter; setup Figure 4-98/PDF 223",
+    target: "So số đọc MON1/MON2 với peak power đo thực; nhập giá trị thực (W) để hiệu chuẩn internal scale factor của số đọc monitor",
+    conditions: [...calibrationContext, "Thực hiện cả MON1 và MON2 nếu số đọc không chính xác; không nhầm Step 9 reading calibration với Step 2 transmitter output calibration.", "Table 4-27 không nêu dung sai số đọc, không lấy factor 0.48/0.51 trên ảnh làm giới hạn hoặc hàm truyền."],
+    source: `${calibrationSource} Figure 4-109 / Table 4-27, trang 4-87–4-88 (PDF 229–230).`,
+  },
+  {
+    id: "calibration-step-10", label: "Step 10 — Receiver Threshold Calibration",
+    control: "PMDT Calibration → Step 10 → Monitor MON1/Run, MON2/Run → Next",
+    instrument: "PMDT / internal receiver-threshold calibration; không nêu máy đo ngoài riêng cho bước này",
+    target: "Current Setpoint là Receiver Sensitivity Level cấu hình tại Station Setup; Run hai MON, chờ green ticks rồi Next",
+    conditions: [...calibrationContext, "Ảnh Figure 4-110 nói calibration chỉ khả dụng ở Standby TXP và thực hiện Changeover; không hiểu screenshot TXP2/-81 dBm là mặc định DME 320.", "DME 320 sensitivity tham chiếu -91 dBm; giá trị -81 dBm trên ảnh là low-power, không phải chuẩn high-power."],
+    source: `${calibrationSource} Figure 4-110 / Table 4-28, trang 4-88 (PDF 230); startup §9.6, trang 9-8 (PDF 402).`,
+  },
+];
 
 export const DME_320_BLOCKS: readonly Dme320BlockDefinition[] = [
   {
@@ -220,6 +360,7 @@ export const DME_320_BLOCKS: readonly Dme320BlockDefinition[] = [
     indicators: noIndicators,
     controls: ["USB-B tới IFB", "Ethernet RJ-45 tới IFB", "RS-232 qua DSUB-9"],
     testPoints: noTestPoints,
+    adjustments: calibrationReferences,
   },
   {
     id: "remote-control",
@@ -277,8 +418,25 @@ export const DME_320_BLOCKS: readonly Dme320BlockDefinition[] = [
     indicators: ["POWER - xanh", "FAULT - đỏ", "MASTER - xanh khi SCU được chọn master"],
     controls: ["RESET - khởi động lại và khởi tạo SCU", "MCU ISP 10-pin", "CPLD ISP 14-pin"],
     testPoints: [
-      { id: "TP9", label: "CAN TxD / +5 V rail", description: "Turret terminal trên mặt panel; bảng manual xác định kiểm tra rail +5 V." },
-      { id: "TP16", label: "CAN RxD", description: "Turret terminal cho đường nhận CAN TTL." },
+      {
+        id: "TP9", label: "CAN TxD (TTL)",
+        description: "Test pin/turret terminal: CAN TxD theo Figure 3-41, không xác nhận là rail nguồn.",
+        signalType: "CAN TxD, TTL theo hình; chức năng mâu thuẫn với bảng",
+        instrument: "Oscilloscope và probe phù hợp tín hiệu logic; manual không chỉ định model cho pin này",
+        nominal: "Chưa xác minh mức điện áp logic",
+        tolerance: "Chưa có dung sai được xác minh",
+        conditions: ["Figure 3-41 ghi CAN TxD, TTL; Table 3-7 lại ghi DC +5 V rail tại TP9. Không dùng nhãn +5 V làm chuẩn đo cho pin CAN.", "Xác nhận revision/schematic của SCU trước khi nối máy đo; không đồng nhất TxD TTL với CAN-H/CAN-L."],
+        source: "MOPIENS 310/320 DME Technical Manual, Figure 3-41 và Table 3-7, trang 3-37 (PDF 117), Rev. B/2022-05-10.",
+      },
+      {
+        id: "TP16", label: "CAN RxD (TTL)",
+        description: "Test pin/turret terminal cho CAN RxD TTL theo Figure 3-41; ô mô tả Table 3-7 để trống.",
+        signalType: "CAN RxD, TTL theo hình",
+        instrument: "Oscilloscope và probe phù hợp tín hiệu logic; manual không chỉ định model cho pin này",
+        nominal: "Chưa xác minh mức điện áp logic", tolerance: "Chưa có dung sai được xác minh",
+        conditions: ["Table 3-7 không mô tả chức năng TP16; dùng định danh hình nhưng giữ giới hạn chưa biết.", "Không phải phép đo differential CAN-H/CAN-L."],
+        source: "MOPIENS 310/320 DME Technical Manual, Figure 3-41 và Table 3-7, trang 3-37 (PDF 117), Rev. B/2022-05-10.",
+      },
     ],
     faceplate: "scu",
     notes: ["Assembly ID vật lý lấy theo Figure 1-6. Phần mô tả Figure 3-1 dùng cách đánh số revision cũ hơn."],
@@ -311,10 +469,10 @@ export const DME_320_BLOCKS: readonly Dme320BlockDefinition[] = [
     indicators: ["POWER - xanh", "FAULT - đỏ", "BITE OK - xanh theo nhãn vật lý Figure 3-45"],
     controls: noControls,
     testPoints: [
-      { id: "+5V_TP", label: "+5 V", description: "Tip jack đỏ kiểm tra rail +5 V." },
-      { id: "+15V_TP", label: "+15 V", description: "Tip jack đỏ kiểm tra rail +15 V." },
-      { id: "-15V_TP", label: "-15 V", description: "Tip jack đỏ kiểm tra rail -15 V." },
-      { id: "GND", label: "Common", description: "Tip jack đen cho mass chung." },
+      powerRail("+5V_TP", "+5 V", "±0.25 V", auxiliaryPowerSource),
+      powerRail("+15V_TP", "+15 V", "±0.75 V", auxiliaryPowerSource),
+      powerRail("-15V_TP", "-15 V", "±0.75 V", auxiliaryPowerSource),
+      { ...commonPoint(auxiliaryPowerSource), description: "2 mm tip jack đen cho common (GND)." },
     ],
     faceplate: "dcdc-a",
     notes: ["Table 3-9 gọi LED thứ ba là OUTPUT, nhưng nhãn trực tiếp trên mặt panel Figure 3-45 là BITE OK; explorer ưu tiên nhãn vật lý."],
@@ -382,11 +540,27 @@ export const DME_320_BLOCKS: readonly Dme320BlockDefinition[] = [
     indicators: ["POWER - xanh", "PULSES - xanh khi có pulse"],
     controls: noControls,
     testPoints: [
-      { id: "LOG VIDEO WIDE", label: "Log Video Wide", description: "BNC test connector." },
-      { id: "ON CH DET", label: "On Channel Detected", description: "BNC test connector." },
-      { id: "LOG VIDEO", label: "Log Video (Normal)", description: "BNC test connector." },
+      undocumentedPoint("LOG VIDEO WIDE", "Log Video Wide", "BNC test connector của nhánh video băng rộng; không áp giới hạn system delay của LOG VIDEO normal.", "Log-video envelope băng rộng", "MOPIENS 310/320 DME Technical Manual, §3.2.3 / Figure 3-8, trang 3-7–3-9 (PDF 87–89), Rev. B/2022-05-10."),
+      undocumentedPoint("ON CH DET", "On Channel Detected", "BNC test connector chỉ thị on-channel; mức điện áp/timing riêng chưa xác minh.", "Tín hiệu phát hiện on-channel", "MOPIENS 310/320 DME Technical Manual, §3.2.3 / Figure 3-8, trang 3-8–3-9 (PDF 88–89), Rev. B/2022-05-10."),
+      {
+        id: "LOG VIDEO", label: "Log Video (Normal)", description: "BNC test connector RXU: đo system delay trên video chứa interrogation và reply khi bật RF loopback.",
+        signalType: "Log-video envelope; phép đo khoảng thời gian system delay",
+        nominal: "System delay: X 50 µs; Y 56 µs", tolerance: "System delay: ±0.5 µs",
+        instrument: "Oscilloscope Tektronix TDS 3012 hoặc tương đương; probe 10X/100 MHz; cáp BNC 50 Ω",
+        conditions: ["RXU LOG VIDEO → CH1; MON INTERROGATION TRIGGER → CH2 (Rev. C/prior: Sync Random Trigger; Rev. D/later: Interrogation Trigger).", "PMDT RF Loopback (TX to RX) On/Apply trong phép đo, Off/Apply sau khi đo.", "Thủ tục: 10 µs/div, 2 V/div, trigger CH2/Single; thu đồng thời hai cặp xung.", "Đo giữa điểm trên cạnh lên thấp hơn peak 0.7 V của xung đầu mỗi cặp; không đo peak-to-peak hoặc từ pin trigger đến reply.", "Dung sai chỉ cho khoảng thời gian theo thủ tục; ảnh Figure 6-4 không quy định mức điện áp nominal, không đại diện mọi trạng thái."],
+        source: "MOPIENS 310/320 DME Technical Manual, Figure 3-8, trang 3-9 (PDF 89), Rev. B/2022-05-10; §6.5.2 / Figures 6-1–6-4, trang 6-5–6-8 (PDF 291–294), Rev. B/2019-08-19.",
+        waveforms: [systemDelayWaveform],
+      },
     ],
     faceplate: "rxu",
+    adjustments: [{
+      id: "receiver-sensitivity-check", label: "Receiver Sensitivity Check — DME 320",
+      control: "PMDT Advanced Control → Monitor Interrogation; Transponder Status",
+      instrument: "PMDT / internal interrogation generator; không yêu cầu máy đo ngoài trong thủ tục này",
+      target: "Baseline DME 320 -91 dBm; cột tolerance: < -91 dBm. DME 310 dùng -81 dBm, không tráo hai cấu hình",
+      conditions: [readonlyReference, "Bypass monitors, tắt Squitter và IDENT Keying. PDF 306/307 đều ghi MON2: Manual, đầu tiên 0 pp/s rồi 100 pp/s, mức -91 dBm cho 320; không tự sửa MON2 thành MON1.", "Kiểm Transmission Rate ≥70 pp/s trên Transponder Status; Changeover và lặp lại cho standby transponder.", "Tiêu đề thủ tục in Low Power nhưng bước tiếp có chỉ dẫn 320 rõ ràng; giữ khác biệt và không biến số mẫu screenshot thành giới hạn."],
+      source: "MOPIENS 310/320 DME Technical Manual, §6.5.7 / Figures 6-9–6-11, trang 6-20–6-21 (PDF 306–307), Rev. B/2019-08-19.",
+    }],
   },
   {
     id: "hpa",
@@ -403,7 +577,15 @@ export const DME_320_BLOCKS: readonly Dme320BlockDefinition[] = [
     ],
     indicators: ["POWER - xanh", "RF ON - xanh", "RVS FAULT - đỏ"],
     controls: ["RF input từ TXU", "RF output tới circulator/DPX-MSC", "Temperature và reverse-power protection"],
-    testPoints: [{ id: "REPLY ENV", label: "Detected Video", description: "BNC connector cho envelope reply đã detect." }],
+    testPoints: [{
+      id: "REPLY ENV", label: "Reply Envelope / Detected Video", description: "BNC REPLY ENV của HPA; J7 theo mô tả PDF 91 và bảng bảo dưỡng, tín hiệu detect không phải cổng RF công suất.",
+      signalType: "Detected reply envelope của DME 320 high-power",
+      nominal: "Rise 2.0 µs; duration 3.5 µs; decay 2.5 µs; spacing X 12 µs / Y 30 µs",
+      tolerance: "Rise <3.0 µs; duration ±0.5 µs; decay <3.5 µs; spacing <0.10 µs (ký hiệu gốc)",
+      instrument: "Oscilloscope Tektronix TDS 3012 hoặc tương đương; cáp BNC 50 Ω; probe 10X/100 MHz trong danh mục",
+      conditions: ["DME 320 high-power dùng HPA J7; TXU J2 cho phép đo pulse shape/spacing là nhánh low-power DME 310, không tráo điểm đo.", "Shape: CH1, 1 µs/div; chỉnh vertical để vừa lưới. Rise 10%→90%, duration 50% cạnh lên→50% cạnh xuống, decay 90%→10%.", "Spacing: CH1, 2 µs/div; giữa hai điểm 50% trên cạnh lên của hai xung trong cặp.", "Bảng spacing in <0.10 µs ở cột tolerance; giữ nguyên, không tự đổi sang ±0.10 µs. PDF 300 gọi nhầm dòng duration là rise time; giữ định nghĩa 50%→50% đúng ngữ cảnh.", "Không có nominal điện áp envelope hoặc hệ số V→W được xác minh."],
+      source: "MOPIENS 310/320 DME Technical Manual, §3.2.4 / Figure 3-11, trang 3-11–3-12 (PDF 91–92), Rev. B/2022-05-10; §§6.5.4–6.5.5, trang 6-12–6-17 (PDF 298–303), Rev. B/2019-08-19.",
+    }],
     faceplate: "hpa",
     notes: ["Trang này cố định cấu hình DME 320 high-power; không dùng tuyến TXU/J2 trực tiếp của DME 310.", "Figure 1-6 ghi P/N 0330-7150; Figure 3-1/3-2 của revision kỹ thuật mới hơn ghi 0332-7150. Faceplate giữ nhãn cabinet để khớp vị trí vật lý."],
   },
@@ -423,8 +605,21 @@ export const DME_320_BLOCKS: readonly Dme320BlockDefinition[] = [
     indicators: ["POWER - xanh", "RF ON - xanh", "PLL FAIL - đỏ", "TXU FAULT - đỏ"],
     controls: ["PLL 960-1215 MHz, bước 0,1 MHz", "AGC output", "Reverse-power và over-temperature shutdown"],
     testPoints: [
-      { id: "DETECTED VIDEO", label: "Detected Video", description: "BNC connector đo envelope output." },
-      { id: "FREQ.", label: "Transmit Frequency", description: "BNC connector đo tần số phát." },
+      {
+        id: "DETECTED VIDEO", label: "Detected Video", description: "BNC envelope TXU; §6.5.6 dùng TXU J2 đo pulse count, không thay HPA khi đo shape high-power.",
+        signalType: "Detected envelope; đếm pulse pairs qua frequency counter",
+        nominal: "Reply pulse-pair rate: 700 pp/s (bảng §6.5.6)", tolerance: ">700 pp/s",
+        instrument: "Frequency counter ≥1.5 GHz, Keysight 53131A option 015 hoặc tương đương; cáp BNC 50 Ω",
+        conditions: ["Nối DETECTED VIDEO tới counter; lấy số đếm xung chia 2 để ra pulse-pair rate theo PDF 305.", "§6.5.6 chỉ định TXU J2; không tự chuyển pulse-count sang HPA J7. Riêng shape/spacing high-power đo HPA, TXU J2 trong các mục đó là DME 310 low-power.", "700 pp/s là standard của check; >700 pp/s là tolerance in nguyên văn, không đổi thành ≥. 800 pp/s ở startup PDF 402 chỉ là khuyến nghị, không thay giới hạn này.", "Không có nominal điện áp hoặc hàm V→W được xác minh tại BNC."],
+        source: "MOPIENS 310/320 DME Technical Manual, Figure 3-15, trang 3-17 (PDF 97), Rev. B/2022-05-10; §6.5.6, trang 6-18–6-19 (PDF 304–305), Rev. B/2019-08-19.",
+      },
+      {
+        id: "FREQ.", label: "Transmit Frequency", description: "BNC FREQ. trên Figure 3-15; §6.5.10 gọi TX FREQ.",
+        signalType: "RF frequency sample", nominal: "Tần số được ấn định cho trạm", tolerance: "±0.001%",
+        instrument: "Frequency counter ≥1.5 GHz, Keysight 53131A option 015 hoặc tương đương; cáp BNC 50 Ω",
+        conditions: ["Nối TX FREQ trên TXU tới đầu vào counter phù hợp; đọc riêng TX1/TX2.", "Dải PLL 960–1215 MHz, bước 0.1 MHz ở PDF 96 là khả năng synthesizer, không phải nominal cố định của mọi trạm hoặc mức RF tại BNC."],
+        source: "MOPIENS 310/320 DME Technical Manual, §3.2.5 / Figure 3-15, trang 3-16–3-17 (PDF 96–97), Rev. B/2022-05-10; §6.5.10 / Figure 6-20, trang 6-28–6-29 (PDF 314–315), Rev. B/2019-08-19.",
+      },
     ],
     faceplate: "txu",
   },
@@ -444,15 +639,31 @@ export const DME_320_BLOCKS: readonly Dme320BlockDefinition[] = [
     indicators: ["POWER - xanh", "FAULT - đỏ", "BITE OK - xanh"],
     controls: ["ADJ1 - chỉnh +28 V", "ADJ2 - chỉnh +50 V"],
     testPoints: [
-      { id: "+5V_TP", label: "+5 V", description: "Tip jack đỏ." },
-      { id: "+8V_TP", label: "+8 V", description: "Tip jack đỏ." },
-      { id: "+15V_TP", label: "+15 V", description: "Tip jack đỏ." },
-      { id: "-15V_TP", label: "-15 V", description: "Tip jack đỏ." },
-      { id: "+28V_TP", label: "+28 V", description: "Tip jack đỏ." },
-      { id: "+50V_TP", label: "+50 V", description: "Tip jack đỏ." },
-      { id: "GND", label: "Common", description: "Tip jack đen." },
+      powerRail("+5V_TP", "+5 V", "±0.25 V", transponderPowerSource),
+      powerRail("+8V_TP", "+8 V", "±0.4 V", transponderPowerSource),
+      powerRail("+15V_TP", "+15 V", "±0.75 V", transponderPowerSource),
+      powerRail("-15V_TP", "-15 V", "±0.75 V", transponderPowerSource),
+      powerRail("+28V_TP", "+28 V", "Chưa có dung sai trong bảng bảo dưỡng §6.5.9", transponderPowerSource),
+      powerRail("+50V_TP", "+50 V", "±2.5 V", transponderPowerSource),
+      { ...commonPoint(transponderPowerSource), description: "2 mm tip jack đen cho common (GND)." },
     ],
     faceplate: "dcdc",
+    adjustments: [
+      {
+        id: "ADJ1", label: "ADJ1 — +28 V output", control: "ADJ1 / VR101",
+        instrument: "DMM/DVM tại +28V_TP so GND",
+        target: "+28 V nominal; chưa có dung sai +28 V DC/DC trong bảng §6.5.9",
+        conditions: [readonlyReference, "Table 3-2 chỉ xác minh chức năng chỉnh +28 V. Không xác minh chiều xoay, số vòng, dải hoặc quan hệ góc–điện áp; không áp dung sai PMU AC/DC VOLT."],
+        source: transponderPowerSource,
+      },
+      {
+        id: "ADJ2", label: "ADJ2 — +50 V output", control: "ADJ2 / VR121",
+        instrument: "DMM/DVM tại +50V_TP so GND",
+        target: "+50 V nominal; ±2.5 V theo bảng kiểm tra nguồn §6.5.9",
+        conditions: [readonlyReference, "Table 3-2 ghi VOR/DME only. Không xác minh chiều xoay, số vòng, dải hoặc quan hệ góc–điện áp; ±2.5 V là dung sai check, không phải dải hành trình vít."],
+        source: transponderPowerSource,
+      },
+    ],
   },
   {
     id: "tcu",
@@ -471,12 +682,17 @@ export const DME_320_BLOCKS: readonly Dme320BlockDefinition[] = [
     indicators: ["POWER - xanh", "TCU FAULT - đỏ", "CW ALERT - vàng"],
     controls: ["RESET", "MCU ISP 14-pin", "FPGA ISP 10-pin"],
     testPoints: [
-      { id: "TOA PULSE", label: "TOA Pulse", description: "Test point timing time-of-arrival." },
-      { id: "DECODED", label: "Decoded", description: "Test point pulse đã decode." },
-      { id: "DEAD TIME", label: "Dead Time", description: "Test point khoảng dead time." },
-      { id: "GAUSSIAN PULSE", label: "Gaussian Pulse", description: "Test point waveform điều chế Gaussian." },
-      { id: "RECTANGULAR PULSE", label: "Rectangular Pulse", description: "Test point pulse chữ nhật." },
-      { id: "ID PULSE", label: "Identity Pulse", description: "Test point pulse nhận dạng." },
+      undocumentedPoint("TOA PULSE", "TOA Pulse", "Test point timing time-of-arrival.", "Timing pulse", tcuPointSource),
+      undocumentedPoint("DECODED", "Decoded", "Test point pulse đã decode.", "Decoded pulse", tcuPointSource),
+      undocumentedPoint("DEAD TIME", "Dead Time", "Test point dead-time; không lấy setting 60 µs làm nominal tại pin.", "Dead-time signal", tcuPointSource),
+      undocumentedPoint("GAUSSIAN PULSE", "Gaussian Pulse", "Test point waveform điều chế Gaussian; không phải đầu ra RF envelope HPA.", "Gaussian modulation", tcuPointSource),
+      undocumentedPoint("RECTANGULAR PULSE", "Rectangular Pulse", "Test point điều chế chữ nhật.", "Rectangular modulation", tcuPointSource),
+      { ...commonPoint(tcuPointSource), description: "Test point GND theo Figure 3-21; hình không chỉ định kích thước jack.", nominal: "Mass tham chiếu, không phải nominal tín hiệu", instrument: "Probe reference phù hợp khi đo TCU; manual không nêu phép đo GND riêng", conditions: ["Figure 3-21 chỉ xác minh điểm GND; không có quy trình hoặc dung sai điện áp riêng tại điểm này."] },
+      undocumentedPoint("RX INHIBIT", "RX Inhibit", "Test point RX Inhibit phía dưới FPGA ISP.", "Receiver-inhibit signal", tcuPointSource),
+      undocumentedPoint("LDES", "LDES", "Test point LDES; setting echo suppression không chứng minh timing/điện áp pin.", "Long-distance echo-suppression signal", tcuPointSource),
+      undocumentedPoint("ID CODE", "ID Code", "Test point ID Code; khác ID Pulse.", "Identity code signal", tcuPointSource),
+      undocumentedPoint("ID PULSE", "Identity Pulse", "Test point ID Pulse; không tự áp tần số hoặc duty cycle của ID Code.", "Identity pulse", tcuPointSource),
+      undocumentedPoint("SQUITTER", "Squitter", "Test point Squitter; không lấy minimum pulse-rate setting làm nominal tại pin.", "Squitter timing signal", tcuPointSource),
     ],
     faceplate: "tcu",
     notes: ["Figure 1-6 ghi P/N 0130-7570 trong khi Figure 3-1/3-2 ghi 0330-7570; explorer giữ nhãn cabinet vật lý."],
@@ -512,14 +728,36 @@ export const DME_320_BLOCKS: readonly Dme320BlockDefinition[] = [
     indicators: ["POWER - xanh", "MON FAULT - đỏ", "ALARM - đỏ, nhấp nháy khi standby monitor alarm", "WARNING - vàng", "INTEGRITY - đỏ", "ANTENNA FAULT - đỏ"],
     controls: ["RESET", "MCU ISP 14-pin", "FPGA ISP 10-pin"],
     testPoints: [
-      { id: "FPGA STATUS", label: "FPGA Status", description: "Test point trên panel Rev. D+." },
-      { id: "MCU STATUS", label: "MCU Status", description: "Test point trên panel Rev. D+." },
-      { id: "INTG PULSE", label: "Integrity Pulse", description: "Test point integrity." },
-      { id: "INPUT ENVELOPE", label: "Input Envelope", description: "Test point envelope từ RF detector/RFG." },
-      { id: "INTERROGATION TRIGGER", label: "Interrogation Trigger", description: "Trigger dùng cùng reply trigger khi đo system delay.", waveforms: [systemDelayWaveform] },
-      { id: "IDENT", label: "Identification", description: "Test point identification pulse." },
+      undocumentedPoint("FPGA STATUS", "FPGA Status", "Test point FPGA_STATUS trên MON Rev. D+.", "Status signal, chưa xác minh timing", monitorPointSource),
+      undocumentedPoint("MCU STATUS", "MCU Status", "Test point MCU_STATUS trên MON Rev. D+.", "Status signal, chưa xác minh timing", monitorPointSource),
+      undocumentedPoint("INTG PULSE", "INTG Pulse", "Điểm đo mang nhãn INTG PULSE trên panel MON; khác INTERROGATION TRIGGER. Manual không giải nghĩa INTG.", "Nhãn INTG PULSE; chưa xác minh chức năng", monitorPointSource),
+      undocumentedPoint("INPUT ENVELOPE", "Input Envelope", "Test point INPUT ENVELOPE; nguồn hình không quy định mức chuẩn hoặc V→W.", "Envelope signal", monitorPointSource),
+      {
+        ...undocumentedPoint("INTERROGATION TRIGGER", "Interrogation Trigger", "Test point MON cung cấp timing reference cho scope CH2; video hai cặp xung được đo riêng trên RXU CH1.", "Interrogation timing reference", monitorPointSource),
+        conditions: ["Nối probe từ MON sang CH2, RXU LOG VIDEO sang CH1; chọn trigger source CH2 theo §6.5.2.", "MON Rev. C/prior dùng Sync (Random Trigger); panel Rev. D/later dùng INTERROGATION TRIGGER, không phải INTG PULSE.", "Figure 6-4 là trace RXU CH1, không phải waveform pin này. Không có nominal/dung sai độ trễ pin→reply được xác minh."],
+        source: `${monitorPointSource} §6.5.2 / Figure 6-2, trang 6-6–6-7 (PDF 292–293), Rev. B/2019-08-19.`,
+      },
+      undocumentedPoint("IDENT", "Identification", "Test point IDENT trên MON Rev. D+.", "Identification signal", monitorPointSource),
     ],
     faceplate: "mon",
+    adjustments: [
+      {
+        id: "monitor-alarm-delay-check", label: "Monitor Alarm Delay Check",
+        control: "PMDT Executive Monitor Setup → MON Action Delay; Monitor Certification → Time Delay → Test",
+        instrument: "PMDT / Monitor Certification Result",
+        target: "Alarm Delay time: 4.0 s ±0.4 s khi MON Action Delay đã đặt 4.0 s",
+        conditions: [readonlyReference, "Bypass monitors; đặt Executive MON Action Delay 4.0 s, Time Delay stimulus 49.4 µs rồi Test, kiểm Result.", "49.4 µs là stimulus của ví dụ quanh 50 µs, không phải system delay nominal hoặc giới hạn chung; manual không ghi phạm vi kênh, không tự áp cho Y 56 µs hoặc cấu hình Delay Offset khác."],
+        source: "MOPIENS 310/320 DME Technical Manual, §6.5.11 / Figure 6-21, trang 6-30–6-31 (PDF 316–317), Rev. B/2019-08-19.",
+      },
+      {
+        id: "bite-certification-check", label: "BITE Certification Check",
+        control: "PMDT Monitor Self-Test Readings",
+        instrument: "PMDT / trạng thái MON1 và MON2",
+        target: "MON status indicated correctly: kết quả NORMAL và ERRONEOUS test interrogations đều all green cho MON1/MON2; không có tolerance số",
+        conditions: [readonlyReference, "Bypass monitors và xem cả NORMAL lẫn ERRONEOUS interrogations. All green là đánh giá đúng test BITE, không phải mọi tín hiệu erroneous đều ở giới hạn vận hành.", "Không dùng các số đọc trên screenshot làm nominal/dung sai pin MON hoặc phép đo live."],
+        source: "MOPIENS 310/320 DME Technical Manual, §6.5.12 / Figures 6-22/6-23, trang 6-32–6-33 (PDF 318–319), Rev. B/2019-08-19.",
+      },
+    ],
     notes: ["Figure 3-24 ghi nhầm MON1 là 1A2A6; Figure 1-6 và các phần cabinet xác nhận MON1 = 1A2A8. Figure 1-6 ghi P/N 0130-7550, còn Figure 3-1/3-24 ghi 0330-7550."],
   },
   {
@@ -538,9 +776,17 @@ export const DME_320_BLOCKS: readonly Dme320BlockDefinition[] = [
     indicators: ["POWER - xanh", "RF ON - xanh", "PLL FAIL - đỏ"],
     controls: ["RF switching do MON điều khiển", "Calibration và interrogation output"],
     testPoints: [
-      { id: "68 MHz OSC", label: "68 MHz oscillator frequency", description: "BNC connector." },
-      { id: "PULSE DETECT", label: "Pulse Detect", description: "Test point pulse detect." },
-      { id: "RFG FREQ.", label: "RFG Frequency", description: "BNC connector." },
+      {
+        ...undocumentedPoint("68 MHz OSC", "68 MHz oscillator frequency", "BNC connector theo Figure 3-32.", "Oscillator RF sample", rfgPointSource),
+        nominal: "68 MHz theo nhãn Figure 3-32; tần số thực theo revision chưa xác nhận",
+        instrument: "Frequency counter phù hợp 68 MHz; manual không chỉ định instrument/setup riêng tại BNC này",
+        conditions: ["Figure 3-32 ghi 68 MHz, nhưng mô tả PDF 107–108 có TCXO 63 MHz và cả 68 MHz; giữ mâu thuẫn, không dùng ±0.001% của TX FREQ cho RFG."],
+      },
+      undocumentedPoint("PULSE DETECT", "Pulse Detect", "Một Test point Pulse Detect theo Figure 3-32, không tách thành TXP1/TXP2 khi hình không nêu.", "Detected pulse; comparator TTL được mô tả nhưng chưa xác minh mức tại pin", rfgPointSource),
+      {
+        ...undocumentedPoint("RFG FREQ.", "RFG Frequency", "BNC connector RFG Frequency (J4 theo PDF 107); không phải TX FREQ của TXU.", "RF frequency sample từ RFG", rfgPointSource),
+        instrument: "Frequency counter phù hợp dải RF; manual không chỉ định instrument/setup hoặc dung sai riêng tại BNC này",
+      },
     ],
     faceplate: "rfg",
     notes: ["Mặt panel Figure 3-32 ghi 68 MHz OSC; phần văn bản liền kề có chỗ ghi 63 MHz. Explorer ưu tiên nhãn vật lý 68 MHz."],
@@ -574,12 +820,24 @@ export const DME_320_BLOCKS: readonly Dme320BlockDefinition[] = [
     indicators: ["Display xanh 4 digit", "AC FAIL - đỏ", "ON BATT - vàng", "CHARGING - vàng"],
     controls: ["TEMP", "DC V", "DC I", "BATT V", "BATT I"],
     testPoints: [
-      { id: "+5V_TP", label: "+5 V", description: "Tip jack đỏ." },
-      { id: "+15V_TP", label: "+15 V", description: "Tip jack đỏ." },
-      { id: "-15V_TP", label: "-15 V", description: "Tip jack đỏ." },
-      { id: "GND", label: "Common", description: "Tip jack đen." },
+      {
+        id: "ACDC VOLT", label: "AC/DC Voltage", description: "Tip jack ACDC VOLT tại đầu vào giám sát AC/DC của PMU, không phải rail +5/±15 V.",
+        signalType: "Điện áp DC", nominal: "+28 VDC", tolerance: "±1.4 V",
+        instrument: "DMM/DVM và test leads (§6.5.9)",
+        conditions: ["Đầu đen vào GND trên PMU, đầu đỏ vào ACDC VOLT theo PDF 311.", "Không nhầm test jack với nút chọn ACDC VOLT/DC V của display; không phải telemetry mô phỏng."], source: pmuPowerSource,
+      },
+      {
+        id: "BATT VOLT", label: "Battery Voltage", description: "Test point BATT VOLT theo Figure 6-16; không phải nút chọn display BATT V.",
+        signalType: "Điện áp DC battery", nominal: "Theo battery/điều kiện sạc; chưa xác minh giá trị cố định tại jack",
+        tolerance: "Chưa có dung sai đo tại jack BATT VOLT trong §6.5.9",
+        instrument: "DMM/DVM phù hợp nguồn DC; manual không nêu quy trình đo riêng cho BATT VOLT",
+        conditions: ["Figure 6-16 ghi T/P BATT VOLT; không tự áp dung sai AC/DC hoặc coi ngưỡng alarm/cutoff là dung sai jack.", "Ngưỡng điển hình 22 V alarm / 20 V cutoff ở §3.5.2 là giá trị preset, không phải nominal phép đo."],
+        source: `${pmuPowerSource} §3.5.2, trang 3-44–3-45 (PDF 124–125).`,
+      },
+      commonPoint(pmuPowerSource),
     ],
     faceplate: "pmu",
+    notes: ["Table 3-13 (Rev. B/2022-05-10) ghi +5V_TP/+15V_TP/-15V_TP/GND, mâu thuẫn Figure 6-16 và thủ tục §6.5.9 (Rev. B/2019-08-19). Catalog đo bảo dưỡng dùng ACDC VOLT/BATT VOLT/GND theo hình và thủ tục, không khẳng định bảng đã được hãng sửa.", "Ba T/P phía trên khác năm nút chọn display TEMP/DC V/DC I/BATT V/BATT I; không biến số hiển thị mẫu thành dữ liệu live."],
   },
   {
     id: "acdc",
@@ -641,6 +899,14 @@ export const DME_320_BLOCKS: readonly Dme320BlockDefinition[] = [
     indicators: noIndicators,
     controls: ["27 dB sample ports", "Forward/reflected sampling"],
     testPoints: noTestPoints,
+    adjustments: [{
+      id: "rf-power-output-check", label: "RF Peak Power Output Check",
+      control: "1DC3 coupled port → attenuator → peak power sensor; Power Viewer Plus offset",
+      instrument: "Wideband peak power sensor R&S ERP-Z81 hoặc tương đương; PC Power Viewer Plus; attenuator 20 dB/50 Ω/5 W continuous và cáp N 50 Ω có loss đã biết (§6.5.3)",
+      target: "ANT (J2): công suất được ấn định ±1 dB; đọc qua tuyến sample đã bù loss, không có một mức W cố định cho mọi trạm",
+      conditions: [readonlyReference, "Chọn Figure 6-5 cho s/n ≤00022, Figure 6-6 cho s/n ≥00023; thủ tục dùng 1DC3 coupled port, không phải DETECTED VIDEO BNC.", "Offset dùng coupling thực và attenuation thực đo bằng network analyzer cộng cable loss; manual ghi nominal 30 dB +20 dB, trong khi catalog RF có nhãn 27 dB. Không hardcode coupling chung hoặc cộng bù hai lần.", "Setup calibration §4.4.7.1 dùng attenuator khác (50 dB/250 W) nên không tráo với setup maintenance này; thông số rating/đấu nối thật cần quy trình an toàn đầy đủ."],
+      source: "MOPIENS 310/320 DME Technical Manual, §6.5.3 / Figures 6-5/6-6, trang 6-9–6-11 (PDF 295–297), Rev. B/2019-08-19; calibration setup Figure 4-98, PDF 223.",
+    }],
     faceplate: "rear-rf",
   },
   {
