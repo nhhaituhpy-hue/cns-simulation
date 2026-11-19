@@ -9,6 +9,14 @@
 - Theo yêu cầu chủ repository, workflow **CI** chỉ chạy thủ công qua **Actions → CI → Run workflow**; không tự chạy khi push hoặc mở pull request.
 - Việc này không tắt webhook triển khai Dokploy và không thay đổi các lệnh lint, typecheck, test, build cục bộ.
 
+## Sentry — báo lỗi tùy chọn
+
+- Tích hợp thủ công App Router bằng `@sentry/nextjs`: browser, Node/edge, lỗi Server Components và trang lỗi toàn cục. Không có DSN thì không khởi tạo SDK; tracing lấy mẫu `0.1`, không bật Session Replay hay gửi PII mặc định.
+- Dokploy **runtime environment**: đặt `SENTRY_DSN` cho server/edge. Nếu thiếu, server/edge dùng `NEXT_PUBLIC_SENTRY_DSN` (nếu có ở runtime/build); browser chỉ dùng `NEXT_PUBLIC_SENTRY_DSN`, không bao giờ đọc biến server riêng.
+- Dokploy **Docker build arguments**: đặt `NEXT_PUBLIC_SENTRY_DSN` để nhúng DSN công khai vào browser; thay đổi giá trị này cần build lại. Có thể đặt cùng DSN cho hai biến. Build/run không cần các biến Sentry nếu chưa dùng dịch vụ.
+- Upload source maps chỉ bật khi có đủ `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` ở **build time**; Dockerfile nhận cả ba qua build args. Không cần đặt chúng ở runtime. Token là secret: chỉ cấp trong hệ thống build tin cậy, không đưa vào `NEXT_PUBLIC_*`, Git, log hoặc image công khai; build args có thể xuất hiện trong provenance/cache của builder. Image runner không kế thừa các build args này.
+- Kiểm tra cục bộ: `npm install`, `npm run lint`, `npm run typecheck`, `npm run test:run`, `npm run build` khi không đặt các biến Sentry. Không sửa workflow CI trong thay đổi này.
+
 ## AI worker — gateway cho GPT-6.2 Sol
 
 - Cho phép đúng `https://api.hainh.io.vn/v1` trong danh sách endpoint. Đặt `CNS_AI_BASE_URL` và `CNS_AI_MODEL=gpt-6.2-sol` ở worker khi chuyển gateway; `CNS_AI_API_KEY` là key riêng của worker, không đặt ở web/Git. Giá trị mặc định và khả năng đọc cấu hình cũ không đổi.
