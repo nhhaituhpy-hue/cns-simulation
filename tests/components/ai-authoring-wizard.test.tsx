@@ -188,7 +188,7 @@ it("creates from prose only after AI soạn kịch bản with the explicit descr
 });
 
 it("uploads actual documents with optional aim and keeps native fields behind advanced editing", async () => {
-  const { fetcher } = server();
+  const { fetcher } = server({ ...fixture(), mode: "documents" });
   const { container } = render(<AiAuthoringWizard moduleId="dvor-220" />);
   expect(container.querySelector("dialog")).toBeNull();
   expect(screen.queryByLabelText("Tên kịch bản")).not.toBeInTheDocument();
@@ -379,7 +379,7 @@ it("blocks final creation for required issues even when every section is confirm
 });
 
 it("rejects unsafe uploads locally and retries an uncertain upload with its original multipart identity", async () => {
-  const api = server(); let failed = false;
+  const api = server({ ...fixture(), mode: "documents" }); let failed = false;
   const original = api.fetcher.getMockImplementation()!;
   api.fetcher.mockImplementation(async (url, init) => {
     if (init?.method === "POST" && !failed) { failed = true; throw new Error("offline"); }

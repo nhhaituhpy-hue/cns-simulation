@@ -6,8 +6,10 @@
 
 ## Trạng thái CI GitHub
 
-- Theo yêu cầu chủ repository, workflow **CI** chỉ chạy thủ công qua **Actions → CI → Run workflow**; không tự chạy khi push hoặc mở pull request.
-- Việc này không tắt webhook triển khai Dokploy và không thay đổi các lệnh lint, typecheck, test, build cục bộ.
+- Workflow **CI** chạy tự động cho pull request và khi push vào nhánh `main`. Vẫn có thể chạy thủ công qua **Actions → CI → Run workflow**.
+- Workflow CI độc lập với webhook triển khai Dokploy; các lệnh lint, typecheck, test, build cục bộ không thay đổi.
+- Các bài kiểm thử tài liệu AI, kho tri thức và hàng đợi PostgreSQL tạo dữ liệu tạm trong thư mục tạm của hệ điều hành, không phụ thuộc vào thư mục riêng của máy chạy.
+- Dữ liệu giả lập cho luồng tải tài liệu phản ánh chế độ trả về của API; hai bài kiểm thử duyệt toàn bộ danh mục DVOR 1150A có thời gian chờ riêng để chạy ổn định trong bộ kiểm thử đầy đủ.
 
 ## AI worker — gateway cho GPT-6.2 Sol
 
