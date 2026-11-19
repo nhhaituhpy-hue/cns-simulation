@@ -168,6 +168,10 @@ self-test độc lập không được coi là đã sửa. Bảng bên dưới g
 
 ### Tình trạng sau đợt sửa hiệu chuẩn
 
+- **Định dạng Cam Ranh:** Helper dùng nhãn Carrier Power và đơn vị % riêng
+  (HC tr. 3); bảng MON Frequency hiển thị setpoint 2, reading 3 và factor 9
+  chữ số thập phân (CR tr. 12), không đổi độ chính xác ô nhập tham chiếu.
+
 - **TX Reading (CR 10, HC 16–20):** hai bảng TX, năm dòng RF mỗi bảng.
   Hộp thoại dòng hiển thị factor/setpoint/reading và nhận một giá trị tham
   chiếu. Chỉ số đọc CMA/SMA của TX và đầu ra đã chọn thay đổi.

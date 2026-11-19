@@ -254,7 +254,7 @@ function MonitorFrequency({ device, snapshot, dispatch, openDialog, allowed }: O
   });
   const [mon1, mon2] = monitor;
   const ready = mon1.reading !== null && mon2.reading !== null;
-  const mapReading = (value: number | null) => formatValue(value, 5);
+  const mapReading = (value: number | null) => formatValue(value, 3);
   return (
     <>
       <CalibrationGroupSection title="Status">
@@ -269,7 +269,7 @@ function MonitorFrequency({ device, snapshot, dispatch, openDialog, allowed }: O
         { id: "item", label: "Item", render: () => "Carrier freq." },
         { id: "factor1", label: "MON1 Cal. Factor", render: () => formatValue(mon1.factor, 9) },
         { id: "factor2", label: "MON2 Cal. Factor", render: () => formatValue(mon2.factor, 9) },
-        { id: "setpoint", label: "Setpoint", render: () => mapReading(setpoint) },
+        { id: "setpoint", label: "Setpoint", render: () => formatValue(setpoint, 2) },
         { id: "reading1", label: "MON1 Reading", render: () => mapReading(mon1.reading) },
         { id: "reading2", label: "MON2 Reading", render: () => mapReading(mon2.reading) },
         { id: "unit", label: "Unit", render: () => "MHz" },
