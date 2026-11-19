@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { NextResponse } from "next/server";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { getDatabasePool } from "@/lib/db";
+import { isTrustedRequestOrigin } from "@/lib/request-origin";
 import { isScenarioParametersModuleId } from "@/lib/scenario-parameters";
 import { saveDocuments } from "@/lib/ai/documents/storage";
 import { DOCUMENT_LIMITS, validateUploads, type DocumentUpload } from "@/lib/ai/documents/validation";
@@ -18,7 +19,7 @@ const json=(value:unknown,status=200)=>NextResponse.json(value,{status,headers:{
 async function auth(request?:Request){
  const profile=await getCurrentProfile();if(!profile)return{response:json({error:"Chưa đăng nhập.",code:"UNAUTHORIZED"},401)};
  if(profile.role!=="admin")return{response:json({error:"Không có quyền soạn kịch bản.",code:"FORBIDDEN"},403)};
- if(request){const expected=process.env.CNS_PUBLIC_ORIGIN||new URL(request.url).origin;if(request.headers.get("origin")!==expected||request.headers.get("sec-fetch-site")==="cross-site")return{response:json({error:"Nguồn yêu cầu không hợp lệ.",code:"INVALID_ORIGIN"},403)};}
+ if(request&&!isTrustedRequestOrigin(request))return{response:json({error:"Nguồn yêu cầu không hợp lệ.",code:"INVALID_ORIGIN"},403)};
  return{profile};
 }
 function input(message="Thông tin yêu cầu không hợp lệ."):never{throw new AuthoringError("INVALID_INPUT",message);}
