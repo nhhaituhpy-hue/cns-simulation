@@ -298,7 +298,9 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
 
   function handleSectionChange(sectionId: string) {
     if (sectionId === "logout") {
-      logout();
+      if (device.session.username) logout();
+      else if (device.connection.connected) setLoginOpen(true);
+      else setConnectionOpen(true);
       return;
     }
     setActiveSectionId(sectionId);
@@ -307,7 +309,7 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
   }
 
   function handleNavigationItem(itemId: string) {
-    if (itemId === "logout") logout();
+    if (itemId === "logout" || itemId === "login") handleSectionChange("logout");
     else if (isDvor220ScreenId(itemId)) navigate(itemId);
   }
 
@@ -343,7 +345,7 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
   const requestedScreen = activeScreenId.startsWith("setup-") ? (
     <Dvor220SetupScreen screenId={activeScreenId} device={device} snapshot={snapshot} dispatch={dispatch} />
   ) : activeScreenId.startsWith("maintenance-") || activeScreenId.startsWith("flight-") || activeScreenId.startsWith("history-") ? (
-    <Dvor220MaintenanceScreen screenId={activeScreenId} device={device} snapshot={snapshot} dispatch={dispatch} advanceTime={advanceTime} syncClock={syncClock} navigate={navigate} />
+    <Dvor220MaintenanceScreen screenId={activeScreenId} device={device} snapshot={snapshot} dispatch={dispatch} advanceTime={advanceTime} syncClock={syncClock} navigate={navigate} openDialog={setActiveDialog} controlsDialogActive={activeDialog !== null} />
   ) : (
     <Dvor220MainScreen screenId={activeScreenId} device={device} snapshot={snapshot} openDialog={setActiveDialog} navigate={navigate} />
   );

@@ -52,6 +52,12 @@
 - Manual đầy đủ và corpus tra cứu HTML/JSONL lưu riêng ngoài repository/public assets; nội dung thiếu căn cứ hoặc mâu thuẫn vẫn được ghi rõ, không mặc định thành giới hạn hãng. Tham chiếu tài liệu không thay thế quy trình bảo trì thiết bị thật.
 - Kiểm thử liên quan: `tests/dvor220/` và `node scripts/verify-dvor220-measurements-browser.mjs` trên Node 24. Browser harness dùng component/CSS/assets thật ở loopback, kiểm native dialog, keyboard/focus, mọi điểm đo/waveform và desktop/mobile; không thay thế QA route xác thực production. Source/Git và triển khai được báo riêng, không suy deploy từ build hoặc push.
 
+### DVOR 220 — cửa sổ PMDT (đợt Cam Ranh)
+
+- Đưa cây Executive Monitor và các nhóm Setup về cấu trúc Cam Ranh, thêm hộp thoại Equipment Status Detail và bảng Thermal Control hai TX.
+- Power Supply dùng đúng tên rail, bộ AC/DC và hai vị trí battery; số đo chưa mô phỏng theo từng module hiển thị `—`. Version là bản đối chiếu, không phải inventory trực tiếp; cập nhật firmware chỉ hiển thị.
+- Monitor Reference Check xem trước báo động theo chiều dịch góc, không thay đổi thiết bị hoặc mô phỏng hệ quả executive. History Log tìm theo khoảng thời gian, loại bản ghi và user LMI; xuất CSV hoặc in PDF ở trình duyệt.
+
 ## DVOR 1150A và DME 1119A — nền mục cấu hình bắt buộc
 
 - Các mục đã thêm trong **Giá trị cấu hình bắt buộc** dùng nền sáng đồng màu phần xung quanh, không còn nền xám đen từ editor dùng chung. Chỉ sửa CSS trong khối này của DVOR 1150A và DME 1119A; giữ ô nhập trắng, nút, layout, quyền và logic chấm.

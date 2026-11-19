@@ -108,9 +108,16 @@ export function buildDvor220Navigation(options: {
   standbyMonitorEnabled: boolean;
 }): MopiensNavigationSection[] {
   const monitorItems = [
-    { id: "monitor-cha", label: "CH.A Monitor" },
-    { id: "monitor-chb1", label: "CH.B.1 Monitor" },
-    { id: "monitor-chb2", label: "CH.B.2 Monitor" },
+    {
+      id: "executive-monitor",
+      label: "Executive Monitor",
+      expandedByDefault: true,
+      children: [
+        { id: "monitor-cha", label: "CH.A Monitor" },
+        { id: "monitor-chb1", label: "CH.B.1 Monitor" },
+        { id: "monitor-chb2", label: "CH.B.2 Monitor" },
+      ],
+    },
     ...(options.standbyMonitorEnabled
       ? [{ id: "monitor-standby", label: "Standby Monitor" }]
       : []),
@@ -149,14 +156,28 @@ export function buildDvor220Navigation(options: {
       label: "Setup",
       items: [
         { id: "setup-station", label: "Station Setup" },
-        { id: "setup-transmitter", label: "Transmitter Setup" },
-        { id: "setup-thermal", label: "Thermal Control" },
-        { id: "setup-transmitter-limit", label: "Transmitter Limit Setup" },
-        { id: "setup-monitor", label: "Monitor Setup" },
-        { id: "setup-limits", label: "Monitor Limit Setup" },
-        ...(options.standbyMonitorEnabled
-          ? [{ id: "setup-standby-limits", label: "Standby Monitor Limit Setup" }]
-          : []),
+        {
+          id: "setup-transmitter-menu",
+          label: "Transmitter",
+          expandedByDefault: true,
+          children: [
+            { id: "setup-transmitter", label: "Transmitter Setup" },
+            { id: "setup-thermal", label: "Thermal Control Setup" },
+            { id: "setup-transmitter-limit", label: "Transmitter Limit Setup" },
+          ],
+        },
+        {
+          id: "setup-monitor-menu",
+          label: "Monitor",
+          expandedByDefault: true,
+          children: [
+            { id: "setup-monitor", label: "Monitor Setup" },
+            { id: "setup-limits", label: "Monitor Limit Setup" },
+            ...(options.standbyMonitorEnabled
+              ? [{ id: "setup-standby-limits", label: "Standby Monitor Limit Setup" }]
+              : []),
+          ],
+        },
         { id: "setup-system", label: "System Setup" },
         { id: "setup-environmental", label: "Environmental Setup" },
         { id: "setup-communication", label: "Communication Setup" },
@@ -172,16 +193,16 @@ export function buildDvor220Navigation(options: {
           label: "Calibration",
           expandedByDefault: true,
           children: [
-            { id: "maintenance-tx-reading", label: "TX Reading Calibration" },
-            { id: "maintenance-tx-setpoint", label: "TX Setpoint Calibration" },
-            { id: "maintenance-monitor-cal", label: "Monitor Calibration" },
-            { id: "maintenance-pdc-cal", label: "PDC Calibration" },
+            { id: "maintenance-tx-reading", label: "TX Reading Cal." },
+            { id: "maintenance-tx-setpoint", label: "TX Setpoint Cal." },
+            { id: "maintenance-monitor-cal", label: "MON Cal." },
+            { id: "maintenance-pdc-cal", label: "PDC Cal." },
           ],
         },
         { id: "maintenance-advanced", label: "Advanced Controls" },
         { id: "maintenance-users", label: "User Management" },
-        { id: "maintenance-time", label: "Time Synchronization" },
-        { id: "maintenance-version", label: "Version Information" },
+        { id: "maintenance-time", label: "Time Sync" },
+        { id: "maintenance-version", label: "Version" },
       ],
     },
     {
@@ -201,8 +222,8 @@ export function buildDvor220Navigation(options: {
     },
     {
       id: "logout",
-      label: `${options.userName ?? "Administrator"} Logout`,
-      items: [{ id: "logout", label: "Logout" }],
+      label: options.userName ? `${options.userName} Logout` : "Login",
+      items: options.userName ? [{ id: "logout", label: "Logout" }] : [{ id: "login", label: "Login" }],
     },
   ];
 }

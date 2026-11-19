@@ -13,6 +13,14 @@ import {
 afterEach(() => cleanup());
 
 describe("MOPIENS presentation primitives", () => {
+  it("mounts dialogs outside the scaled desktop container", () => {
+    const { container } = render(<MopiensModal open title="Test modal" onClose={vi.fn()}>Body</MopiensModal>);
+    const dialog = screen.getByRole("dialog", { name: "Test modal" });
+
+    expect(container).not.toContainElement(dialog);
+    expect(dialog.parentElement?.parentElement).toBe(document.body);
+  });
+
   it("always prevents native modal form submission", () => {
     render(
       <MopiensModal

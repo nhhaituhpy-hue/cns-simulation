@@ -5,8 +5,10 @@ import {
   useEffect,
   useId,
   useRef,
+  useSyncExternalStore,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
+import { createPortal } from "react-dom";
 import { MopiensBeveledButton } from "./instruments";
 import type {
   MopiensConfirmationModalProps,
@@ -26,6 +28,10 @@ const focusableSelector = [
   "[tabindex]:not([tabindex='-1'])",
 ].join(",");
 
+const subscribeToPortalHost = () => () => {};
+const getPortalHost = () => document.body;
+const getServerPortalHost = () => null;
+
 export function MopiensModal({
   open,
   title,
@@ -43,13 +49,14 @@ export function MopiensModal({
 }: MopiensModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
+  const portalHost = useSyncExternalStore(subscribeToPortalHost, getPortalHost, getServerPortalHost);
   const onCloseRef = useRef(onClose);
   useEffect(() => {
     onCloseRef.current = onClose;
   });
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || !portalHost) return;
     const previousFocus = document.activeElement instanceof HTMLElement
       ? document.activeElement
       : null;
@@ -57,20 +64,22 @@ export function MopiensModal({
     const first = dialogRef.current?.querySelector<HTMLElement>(focusableSelector);
     (preferred ?? first ?? dialogRef.current)?.focus();
 
+    return () => previousFocus?.focus();
+  }, [open, portalHost]);
+
+  useEffect(() => {
+    if (!open || !portalHost || !closeOnEscape) return;
     const handleDocumentKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && closeOnEscape) {
+      if (event.key === "Escape") {
         event.preventDefault();
         onCloseRef.current();
       }
     };
     document.addEventListener("keydown", handleDocumentKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleDocumentKeyDown);
-      previousFocus?.focus();
-    };
-  }, [closeOnEscape, open]);
+    return () => document.removeEventListener("keydown", handleDocumentKeyDown);
+  }, [closeOnEscape, open, portalHost]);
 
-  if (!open) return null;
+  if (!open || !portalHost) return null;
 
   function keepFocusInside(event: ReactKeyboardEvent<HTMLDivElement>) {
     if (event.key !== "Tab") return;
@@ -93,7 +102,7 @@ export function MopiensModal({
     }
   }
 
-  return (
+  return createPortal(
     <div
       className={styles.modalBackdrop}
       onMouseDown={(event) => {
@@ -108,6 +117,7 @@ export function MopiensModal({
         aria-labelledby={ariaLabel ? undefined : titleId}
         tabIndex={-1}
         className={`${styles.modalWindow} ${styles[`modalSize${size[0].toUpperCase()}${size.slice(1)}`]}`}
+        data-branded={brandLabel ? "" : undefined}
         onKeyDown={keepFocusInside}
       >
         <header className={styles.modalTitleBar}>
@@ -155,7 +165,8 @@ export function MopiensModal({
           ) : null}
         </form>
       </div>
-    </div>
+    </div>,
+    portalHost,
   );
 }
 

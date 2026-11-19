@@ -122,6 +122,27 @@ Các màn hình tham chiếu có cả ảnh Guest và Administrator. Ô bị kh�
 không có giá trị ở ảnh Guest không phải bằng chứng tính năng bị thiếu.
 Các số đo và cài đặt đang chạy tại Cam Ranh không phải mặc định chung.
 
+### Tình trạng sau đợt sửa cửa sổ PMDT
+
+- **Main (CR 1–5, TM Figs. 4-77–80):** mở riêng các bảng chi tiết Transmitter,
+  Monitor, PDC và Power. Trạng thái từng module/rail chưa mô phỏng để trống, không
+  suy ra từ trạng thái chung. Power Supply tách đúng các bộ nguồn theo ảnh; số đo
+  battery bank chỉ dùng dữ liệu tổng của engine, không gán cho từng battery.
+- **Setup (CR 6–7):** phân nhóm Transmitter/Monitor; Thermal Control hiển thị
+  hai TX trên cùng hàng và cho phép sửa riêng hoặc cùng lúc trong Draft.
+- **Maintenance (CR 13–14):** Add User và Delete User mở dialog; Time Sync
+  so sánh giờ trình duyệt với đồng hồ mô phỏng. Bảng Version chép mã/revision
+  thấy trong ảnh làm tham chiếu; không giả lập uptime, NTP hay ghi firmware.
+- **Flight Inspection (CR 14, TM Fig. 4-147):** mở Monitor Reference Check từ
+  Monitor Check, xem báo động CW/CCW và trả về gốc. Dịch góc chỉ tác động màn hình
+  đối chiếu, không đổi TX, tạo log thiết bị hoặc thử executive shutdown; nút
+  Power/Output và Changeover dùng các dialog điều khiển mô phỏng hiện có.
+- **History (CR 15):** PMDT/LMI tìm theo ngày và loại, LMI có Detail Options
+  theo user. CSV/PDF chỉ dùng kết quả đã tìm trong phiên trình duyệt.
+
+Các khoảng trống còn lại trong bảng dưới (Advanced Controls, các trang Setup
+chưa nêu trên, self-test độc lập và calibration) không được coi là đã sửa.
+
 ### Main
 
 | Cửa sổ / nguồn | Hiển thị hoặc điều khiển | Baseline và sai khác |
