@@ -235,6 +235,9 @@ function createCalibrationState(): Dvor220CalibrationState {
     monitorRfLevelOffsets: Object.fromEntries(
       DVOR220_MONITOR_IDS.map((monitorId) => [monitorId, structuredClone(channelRfLevelOffsets)]),
     ) as Dvor220CalibrationState["monitorRfLevelOffsets"],
+    monitorBearingErrorOffsets: Object.fromEntries(
+      DVOR220_MONITOR_IDS.map((monitorId) => [monitorId, structuredClone(channelRfLevelOffsets)]),
+    ),
   };
   return {
     ...values,
