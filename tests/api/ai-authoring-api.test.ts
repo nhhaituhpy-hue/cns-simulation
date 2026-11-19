@@ -36,6 +36,14 @@ describe("guided authoring HTTP boundary",()=>{
  it("enqueues baseline analysis after upload but does not finalize a scenario",async()=>{const f=new FormData();f.set("moduleId","dvor-1150a");f.append("files",new File(["Công suất TX1: 125 W"],"defaults.txt",{type:"text/plain"}));h.save.mockResolvedValue([{id,name:"defaults.txt",mimeType:"text/plain",bytes:25,sha256:"a".repeat(64),storageKey:"private"}]);const r=await createAuthoringResponse(request(f));expect(r.status).toBe(201);expect(h.enqueue).toHaveBeenCalled();expect(h.finalize).not.toHaveBeenCalled();});
  it("denies unauthenticated and student access before file parsing",async()=>{h.profile.mockResolvedValue(null);expect((await createAuthoringResponse(request(new FormData()))).status).toBe(401);h.profile.mockResolvedValue({id,role:"student"});expect((await getAuthoringResponse(id)).status).toBe(403);expect(h.save).not.toHaveBeenCalled();});
  it("rejects cross-origin and arbitrary multipart fields",async()=>{const f=new FormData();f.set("moduleId","dvor-1150a");f.set("actorId",id);expect((await createAuthoringResponse(request(f))).status).toBe(400);const r=new Request("https://labs.cnsvn.com/api/ai/scenario-authoring",{method:"POST",headers:{origin:"https://bad.example"},body:f});expect((await createAuthoringResponse(r)).status).toBe(403);expect(h.create).not.toHaveBeenCalled();});
+ it("accepts the local dev server origin only in development",async()=>{
+  const f=()=>{const d=new FormData();d.set("moduleId","dvor-1150a");d.set("mode","description");d.set("context","TX1 cảnh báo công suất thấp.");return d;};
+  const local=()=>new Request("http://localhost:3000/api/ai/scenario-authoring",{method:"POST",headers:{origin:"http://localhost:3000","Idempotency-Key":"local-1"},body:f()});
+  try{
+   vi.stubEnv("NODE_ENV","production");const denied=await createAuthoringResponse(local());expect(denied.status).toBe(403);expect((await denied.json()).code).toBe("INVALID_ORIGIN");expect(h.create).not.toHaveBeenCalled();
+   vi.stubEnv("NODE_ENV","development");expect((await createAuthoringResponse(local())).status).toBe(201);expect(h.create).toHaveBeenCalledTimes(1);
+  }finally{vi.unstubAllEnvs();}
+ });
  it("accepts an explicit whole-blueprint confirmation without client-supplied rubric",async()=>{
   h.update.mockResolvedValue({...session,revision:2});
   const r=new Request("https://labs.cnsvn.com/a",{method:"PATCH",headers:{origin:"https://labs.cnsvn.com","Content-Type":"application/json"},body:JSON.stringify({expectedRevision:1,mutation:{action:"confirm-blueprint"}})});

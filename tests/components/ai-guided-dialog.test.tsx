@@ -82,8 +82,10 @@ it("keeps old job history read-only inside the modal and restores focus when clo
   expect(await screen.findByText("Historical draft")).toBeVisible();
   expect(within(screen.getByRole("dialog")).getByRole("link", { name: "Mở kịch bản cũ để kiểm tra" })).toHaveAttribute("href", "/simulator/software/dme-320?scenarioId=old-source");
   fireEvent(screen.getByRole("dialog"), new Event("cancel", { cancelable: true }));
-  await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-  expect(trigger).toHaveFocus();
+  await waitFor(() => {
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
   expect(screen.queryByText("Historical draft")).not.toBeInTheDocument();
   expect(vi.mocked(fetch).mock.calls.every(([, options]) => !options?.method || options.method === "GET")).toBe(true);
 });
