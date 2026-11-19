@@ -45,6 +45,7 @@
 
 ## DVOR 220 — điểm đo và tham chiếu manual
 
+- [Bản đồ tài liệu và báo cáo sai khác DVOR 220](docs/simulators/dvor-220-manual-fidelity-audit.md): sơ đồ chức năng, vị trí trên mặt thiết bị và cửa sổ PMDT trước khi sửa simulator.
 - Từ cabinet/sơ đồ, chọn đúng LRU rồi bấm điểm đo trên danh sách hoặc connector tương ứng trên mặt panel để mở hộp thoại tham chiếu. Có thiết bị đo, loại tín hiệu, giá trị đã xác minh, điều kiện và nguồn trang/mục; điểm không có waveform không sinh đồ thị hoặc số đo giả.
 - Giữ 12 ảnh scope có sẵn, tách cài đặt và số đọc của ảnh khỏi nominal/dung sai. SYN J1/J6, từng TP33–36 và từng test pin MSG/MON được định danh riêng; pin/jack/BNC giữ đúng loại. Không áp một hệ số coupling chung cho PDC hoặc hiển thị số PMU tĩnh như telemetry.
 - CMA/SMA/PDC hiển thị quy trình hiệu chỉnh chỉ đọc theo manual, không sao chép vít DVOR 1150A hay tự tạo hàm truyền góc–số đo. TX Reading Cal./TX Setpoint Cal. được phân biệt; không ghi engine, store vận hành, cấu hình kịch bản hoặc điểm thi từ trang sơ đồ.
