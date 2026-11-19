@@ -811,3 +811,9 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 - `src/styles/theme-tokens.css`: CNS design system tokens (`--cns-*`) giờ theme-aware — light values under `:root`/`[data-theme="light"]`, dark values under `[data-theme="dark"]`.
 - Global replacement: Thay hardcoded dark colors (`#E6EDF5`, `#9AA9BC`, `#6B7A8D`, `#101922`, `#141f2a`, `#111a24`, `border-white/[0.0X]`, `bg-white/[0.0X]`) bằng `--cns-*` tokens và `black/[0.X]` trong ~15 file.
 - Kiểm thử: `npx vitest run` (881 passed), `npm run typecheck` (sạch), `npm run lint` (sạch), `npm run build` (72/72 routes đạt).
+
+### 2026-11-19 — Sửa lưu cấu hình khi khởi động lại ADS-B
+- Bỏ `operatorUserId` khỏi request khi terminal chưa đăng nhập, tránh HTTP 400 do gửi `null`; giữ nguyên validation API dùng chung và dữ liệu lưu trong PostgreSQL.
+- Thêm regression test cho hydrate cấu hình đã lưu khác mặc định → đăng nhập → Restart → PUT thành công, kiểm tra operator được lưu là `null`.
+- Kiểm thử: regression test thất bại trước bản sửa và đạt sau bản sửa; 3 file focused Vitest (13 tests) đạt, `npm run lint`, `npm run typecheck` và production build (93/93 pages) đạt.
+- Mở rộng bỏ operator `null` tại 5 caller persistence khác; tái hiện DME 320 Reboot trả 400 sau Apply chưa lưu Flash, thêm 5 regression tests (đỏ trước/sáng sau), 77 focused tests và lint/typecheck/build đạt; giữ nguyên API, gates và revision behavior.

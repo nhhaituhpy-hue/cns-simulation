@@ -99,7 +99,7 @@ export function AdsbSimulatorLab() {
           config: currentConfig,
           expectedRevision: revisionRef.current,
           changedFields: collectChangedConfigFields(previousConfig, currentConfig),
-          operatorUserId: terminal.loginUser,
+          operatorUserId: terminal.loginUser ?? undefined,
           sessionId: sessionIdRef.current,
         });
         revisionRef.current = response.revision;
