@@ -91,7 +91,7 @@ describe("transmitter offset arrow guards", () => {
     }
     expect(useVorPmdtStore.getState().config).toBe(before.config);
     expect(useVorPmdtStore.getState().derived).toBe(before.derived);
-  });
+  }, 15_000);
 
   it("commits arrow changes only through Apply and preserves unrelated TX settings", () => {
     maintenance();

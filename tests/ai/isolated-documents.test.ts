@@ -1,12 +1,13 @@
 // @vitest-environment node
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it, vi } from "vitest";
 import { runDocumentParser } from "@/lib/ai/documents/isolated";
 let root: string | undefined;
 afterEach(async()=>{vi.unstubAllEnvs();if(root)await rm(root,{recursive:true,force:true});root=undefined;});
 const metadata={id:"11111111-1111-4111-8111-111111111111",name:"notes.txt",mimeType:"text/plain",bytes:5,sha256:"a".repeat(64),storageKey:"unused"};
-async function script(contents:string){root=await mkdtemp("/opt/data/cache/scratch/cns-parser-test-");const path=join(root,"parser.mjs");await writeFile(path,contents);return path;}
+async function script(contents:string){root=await mkdtemp(join(tmpdir(),"cns-parser-test-"));const path=join(root,"parser.mjs");await writeFile(path,contents);return path;}
 it("starts a separate parser with no AI or database secrets and a fixed heap cap",async()=>{
  vi.stubEnv("CNS_AI_API_KEY","never-pass-this");vi.stubEnv("DATABASE_URL","never-pass-this-either");
  const path=await script(`process.once('message',({metadata})=>{process.send({ok:true,document:{id:metadata.id,name:metadata.name,sha256:metadata.sha256,segments:[{label:'text',text:JSON.stringify({secret:!!process.env.CNS_AI_API_KEY,db:!!process.env.DATABASE_URL,heap:process.execArgv})}]}});process.disconnect();});`);

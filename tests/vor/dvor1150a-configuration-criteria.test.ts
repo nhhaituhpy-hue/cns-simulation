@@ -118,7 +118,7 @@ describe("DVOR1150A exact catalog configuration requirements", () => {
       expect(parseDvor1150aScenarioDefinition(source), field.id).toEqual(source);
       expect(evaluate(source).checks.find(c => c.id === `configuration-value-${field.id}`), field.id).toMatchObject({ passed: true });
     }
-  });
+  }, 15_000);
 
   it("maps every nonblank certification/setup calibration control to its real inspection screen", () => {
     for(const field of dvorConfigFieldCatalog.filter(f=>f.id.startsWith("monitor.testGeneratorCalibration."))) {

@@ -1,13 +1,14 @@
 // @vitest-environment node
 import { createHash } from "node:crypto";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it } from "vitest";
 import { retrieveDeviceKnowledge } from "@/lib/ai/knowledge/retrieve";
 import { validateEvidenceDocuments } from "@/lib/ai/scenario-generation/validation";
 const roots: string[]=[];
 afterEach(async()=>{for(const root of roots.splice(0))await rm(root,{recursive:true,force:true});});
-async function temporary(){const root=await mkdtemp("/opt/data/cache/scratch/cns-kb-build-test-");roots.push(root);return root;}
+async function temporary(){const root=await mkdtemp(join(tmpdir(),"cns-kb-build-test-"));roots.push(root);return root;}
 
 it("extracts actual PDF pages with hashes and original page locators, not invented semantic facts",async()=>{
  const { extractPdfReference }=await import("../../scripts/build-device-knowledge.mjs");
