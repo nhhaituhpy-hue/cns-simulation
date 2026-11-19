@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { afterEach, expect, it, vi } from "vitest";
 import { mkdtemp, rm, readFile, readdir, writeFile, symlink } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import * as validation from "@/lib/ai/documents/validation";
@@ -16,7 +17,7 @@ it("stores generated keys and extracts text/markdown with verified identity", as
   expect(validation?.validateUploads).toBeTypeOf("function");
   expect(storage?.saveDocuments).toBeTypeOf("function");
   expect(extraction?.extractDocuments).toBeTypeOf("function");
-  root = await mkdtemp("/opt/data/cache/scratch/cns-ai-doc-test-"); vi.stubEnv("CNS_AI_STORAGE_DIR", root);
+  root = await mkdtemp(join(tmpdir(), "cns-ai-doc-test-")); vi.stubEnv("CNS_AI_STORAGE_DIR", root);
   const jobId = randomUUID(); const files = [upload(), upload("guide.md", "# Fault\nTX1 HPA fault", "text/markdown")];
   validation!.validateUploads(files);
   const manifests = await storage!.saveDocuments(jobId, files);
@@ -41,12 +42,12 @@ it("rejects invalid count, bytes, extension, MIME and unsafe filenames before wr
   expect(() => validation!.validateUploads([])).not.toThrow();
 });
 it("rejects forged job IDs without creating paths", async () => {
-  root = await mkdtemp("/opt/data/cache/scratch/cns-ai-doc-test-"); vi.stubEnv("CNS_AI_STORAGE_DIR", root);
+  root = await mkdtemp(join(tmpdir(), "cns-ai-doc-test-")); vi.stubEnv("CNS_AI_STORAGE_DIR", root);
   await expect(storage!.saveDocuments("../escape", [upload()])).rejects.toMatchObject({ code: "INVALID_STORAGE_KEY" });
   expect(await readdir(root)).toEqual([]);
 });
 it("rejects actual bytes that disagree with the upload declaration and removes only its failed partial upload", async () => {
-  root = await mkdtemp("/opt/data/cache/scratch/cns-ai-doc-test-"); vi.stubEnv("CNS_AI_STORAGE_DIR", root);
+  root = await mkdtemp(join(tmpdir(), "cns-ai-doc-test-")); vi.stubEnv("CNS_AI_STORAGE_DIR", root);
   const goodJob = randomUUID(); await storage!.saveDocuments(goodJob, [upload()]);
   const failedJob = randomUUID();
   await expect(storage!.saveDocuments(failedJob, [upload(), { ...upload(), size: 2 }])).rejects.toMatchObject({ code: "INVALID_UPLOAD" });
@@ -55,7 +56,7 @@ it("rejects actual bytes that disagree with the upload declaration and removes o
   expect(await readdir(root)).toEqual([goodJob]);
 });
 it("verifies stored content digest and rejects forged keys and symlink files", async () => {
-  root = await mkdtemp("/opt/data/cache/scratch/cns-ai-doc-test-"); vi.stubEnv("CNS_AI_STORAGE_DIR", root);
+  root = await mkdtemp(join(tmpdir(), "cns-ai-doc-test-")); vi.stubEnv("CNS_AI_STORAGE_DIR", root);
   const [metadata] = await storage!.saveDocuments(randomUUID(), [upload()]);
   await expect(storage!.loadDocument({ ...metadata, storageKey: "../../etc/passwd" })).rejects.toMatchObject({ code: "INVALID_STORAGE_KEY" });
   await writeFile(join(root, metadata.storageKey), "modified");
@@ -112,7 +113,7 @@ it("rejects duplicate, encrypted, path-traversing and entity-encoded external DO
   }
 });
 it("rejects byte-identical files whose digest metadata was forged", async () => {
-  root = await mkdtemp("/opt/data/cache/scratch/cns-ai-doc-test-"); vi.stubEnv("CNS_AI_STORAGE_DIR", root);
+  root = await mkdtemp(join(tmpdir(), "cns-ai-doc-test-")); vi.stubEnv("CNS_AI_STORAGE_DIR", root);
   const [metadata] = await storage!.saveDocuments(randomUUID(), [upload()]);
   await expect(storage!.loadDocument({ ...metadata, sha256: "0".repeat(64) })).rejects.toMatchObject({ code: "DOCUMENT_INTEGRITY" });
 });
