@@ -56,13 +56,39 @@ const channelByScreen: Partial<Record<Dvor220ScreenId, Dvor220MonitorChannelId>>
 const monitorGroups: readonly {
   id: string;
   title: string;
-  parameters: readonly Dvor220MonitorParameter[];
+  rows: readonly { parameter: Dvor220MonitorParameter; label: string }[];
   defaultOpen: boolean;
 }[] = [
-  { id: "system", title: "System Parameters", parameters: ["bearingError", "rfLevel"], defaultOpen: true },
-  { id: "modulation", title: "RF Modulation", parameters: ["fmIndex", "am30Hz", "am9960Hz"], defaultOpen: true },
-  { id: "frequency", title: "Frequency / Error", parameters: ["carrierFrequency", "subcarrierFrequency", "distortion9960Hz"], defaultOpen: false },
-  { id: "identification", title: "Identification", parameters: ["ident1020Hz"], defaultOpen: false },
+  {
+    id: "system",
+    title: "System Parameters",
+    rows: [
+      { parameter: "bearingError", label: "Bearing Error" },
+      { parameter: "rfLevel", label: "RF Level" },
+    ],
+    defaultOpen: true,
+  },
+  {
+    id: "modulation",
+    title: "Modulation",
+    rows: [
+      { parameter: "am30Hz", label: "30Hz AM" },
+      { parameter: "am9960Hz", label: "9960Hz AM" },
+      { parameter: "ident1020Hz", label: "1020Hz AM" },
+      { parameter: "fmIndex", label: "FM Index" },
+      { parameter: "distortion9960Hz", label: "9960Hz Distortion" },
+    ],
+    defaultOpen: true,
+  },
+  {
+    id: "frequency",
+    title: "Frequency Error",
+    rows: [
+      { parameter: "carrierFrequency", label: "Carrier" },
+      { parameter: "subcarrierFrequency", label: "Sub Carrier" },
+    ],
+    defaultOpen: false,
+  },
 ];
 
 export function toneForDvor220Status(status: Dvor220Status | Dvor220Snapshot["serviceStatus"]): MopiensVisualTone {
@@ -736,16 +762,16 @@ function MonitorScreen({ screenId, device, snapshot }: Dvor220MainScreenProps) {
       {monitorGroups.map((group) => (
         <FieldSection key={group.id} title={group.title} defaultOpen={group.defaultOpen}>
           <div className={styles.monitorReadingRows}>
-            {group.parameters.map((parameter) => (
+            {group.rows.map(({ parameter, label }) => (
               <div key={parameter} className={styles.monitorReadingPair}>
                 <FieldReadingBar
-                  label={parameterLabels[parameter]}
+                  label={label}
                   source="MON1"
                   reading={mon1Channel.readings[parameter]}
                   band={configuration.limits[parameter]}
                 />
                 <FieldReadingBar
-                  label={parameterLabels[parameter]}
+                  label={label}
                   source="MON2"
                   reading={mon2Channel.readings[parameter]}
                   band={configuration.limits[parameter]}
@@ -755,6 +781,27 @@ function MonitorScreen({ screenId, device, snapshot }: Dvor220MainScreenProps) {
           </div>
         </FieldSection>
       ))}
+      <FieldSection title="Identification" defaultOpen={false}>
+        <div className={styles.monitorReadingRows}>
+          <div className={styles.monitorReadingPair}>
+            {([["MON1", mon1Channel], ["MON2", mon2Channel]] as const).map(([source, channel]) => {
+              const tone = readingTone(channel.readings.ident1020Hz.status);
+              return (
+                <div key={source} className={styles.fieldReadingCard} data-tone={tone} aria-label={`${source} Code`}>
+                  <div className={styles.fieldReadingIdentity}>
+                    <span className={styles.fieldStatusLamp} data-tone={tone} aria-hidden />
+                    <span>Code</span>
+                  </div>
+                  <div className={styles.fieldReadingBody}>
+                    <strong>{source}</strong>
+                    <output>{device.configuration.running.station.identCode}</output>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </FieldSection>
     </div>
   );
 }
