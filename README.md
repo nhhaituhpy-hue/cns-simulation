@@ -58,6 +58,12 @@
 - Power Supply dùng đúng tên rail, bộ AC/DC và hai vị trí battery; số đo chưa mô phỏng theo từng module hiển thị `—`. Version là bản đối chiếu, không phải inventory trực tiếp; cập nhật firmware chỉ hiển thị.
 - Monitor Reference Check xem trước báo động theo chiều dịch góc, không thay đổi thiết bị hoặc mô phỏng hệ quả executive. History Log tìm theo khoảng thời gian, loại bản ghi và user LMI; xuất CSV hoặc in PDF ở trình duyệt.
 
+### DVOR 220 — hiệu chuẩn PMDT (đợt Cam Ranh)
+
+- TX Reading và TX Setpoint tách bảng TX1/TX2, có hộp thoại từng thông số và một ô nhập giá trị tham chiếu. TX Reading sửa số đo CMA/SMA; TX Setpoint đổi hệ số và giá trị đặt hiển thị, không làm đổi tín hiệu phát khi hiệu chuẩn.
+- MON Cal tách MON1, MON2 và Frequency. PDC có phép hiệu chuẩn công suất độc lập theo năm đầu ra. Nút VSWR sideband có đúng vị trí để đối chiếu nhưng chưa bật do chưa có quy trình xác nhận.
+- Initialize và Calibrate tác động trên bộ nhớ chạy; Save lưu đúng mục đang hiệu chuẩn vào bộ nhớ không mất dữ liệu mô phỏng. Kiểm tra luồng và trạng thái bằng các test trong `tests/dvor220/`.
+
 ## DVOR 1150A và DME 1119A — nền mục cấu hình bắt buộc
 
 - Các mục đã thêm trong **Giá trị cấu hình bắt buộc** dùng nền sáng đồng màu phần xung quanh, không còn nền xám đen từ editor dùng chung. Chỉ sửa CSS trong khối này của DVOR 1150A và DME 1119A; giữ ô nhập trắng, nút, layout, quyền và logic chấm.

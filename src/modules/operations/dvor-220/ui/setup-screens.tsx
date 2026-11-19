@@ -78,6 +78,20 @@ function numberValue(value: string, fallback: number): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function calibratedSetpointInput(value: number, max: number, step: number, factor: number, onChange: (nominal: number) => void) {
+  const display = (nominal: number) => Number((nominal / factor).toPrecision(12));
+  return {
+    value: display(value),
+    min: 0,
+    max: display(max),
+    step: factor === 1 ? step : "any",
+    onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+      const displayed = numberValue(event.target.value, display(value));
+      onChange(displayed === display(max) ? max : Number((displayed * factor).toPrecision(12)));
+    },
+  };
+}
+
 function ConfigurationActions({
   device,
   snapshot,
@@ -324,6 +338,7 @@ function TransmitterSetup({
       <div className={styles.twoColumnLayout}>
         {DVOR220_TRANSMITTER_IDS.map((transmitterId) => {
           const transmitter = configuration.transmitters[transmitterId];
+          const factors = device.calibration.transmitterSetpointFactors[transmitterId];
           return (
             <fieldset key={transmitterId} className={styles.formSection} disabled={disabled}>
               <legend>{transmitterId.toUpperCase()}</legend>
@@ -332,15 +347,15 @@ function TransmitterSetup({
                 <MopiensBeveledButton onClick={() => openHelper(transmitterId)}>Helper...</MopiensBeveledButton>
               </div>
               <div className={styles.formGridSingle}>
-                <FormField label="Carrier Scale (%)"><input type="number" min="0" max="100" step="0.1" value={transmitter.carrierScalePercent} onChange={(event) => transmitterPatch(transmitterId, { carrierScalePercent: numberValue(event.target.value, transmitter.carrierScalePercent) })} /></FormField>
+                <FormField label="Carrier Scale (%)"><input type="number" {...calibratedSetpointInput(transmitter.carrierScalePercent, 100, 0.1, factors.carrier, (carrierScalePercent) => transmitterPatch(transmitterId, { carrierScalePercent }))} /></FormField>
                 {(["usbCos", "usbSin", "lsbCos", "lsbSin"] as const).map((output) => (
                   <FormField key={output} label={`${output.toUpperCase()} Power (W)`}>
-                    <input type="number" min="0" max="5" step="0.01" value={transmitter.sidebandPowerW[output]} onChange={(event) => transmitterPatch(transmitterId, { sidebandPowerW: { [output]: numberValue(event.target.value, transmitter.sidebandPowerW[output]) } })} />
+                    <input type="number" {...calibratedSetpointInput(transmitter.sidebandPowerW[output], 5, 0.01, factors[output], (value) => transmitterPatch(transmitterId, { sidebandPowerW: { [output]: value } }))} />
                   </FormField>
                 ))}
                 <FormField label="Carrier to Sideband Phase (°)"><input type="number" min="0" max="359.9" step="0.1" value={transmitter.rfPhaseDeg.carrierToSideband} onChange={(event) => transmitterPatch(transmitterId, { rfPhaseDeg: { carrierToSideband: numberValue(event.target.value, transmitter.rfPhaseDeg.carrierToSideband) } })} /></FormField>
-                <FormField label="30 Hz AM (%)"><input type="number" min="0" max="40" step="0.1" value={transmitter.am30HzPercent} disabled={disabled || transmitter.useStationModulation} onChange={(event) => transmitterPatch(transmitterId, { am30HzPercent: numberValue(event.target.value, transmitter.am30HzPercent) })} /></FormField>
-                <FormField label="IDENT Modulation (%)"><input type="number" min="0" max="20" step="0.1" value={transmitter.identModulationPercent} disabled={disabled || transmitter.useStationIdent} onChange={(event) => transmitterPatch(transmitterId, { identModulationPercent: numberValue(event.target.value, transmitter.identModulationPercent) })} /></FormField>
+                <FormField label="30 Hz AM (%)"><input type="number" disabled={disabled || transmitter.useStationModulation} {...calibratedSetpointInput(transmitter.useStationModulation ? configuration.station.am30HzPercent : transmitter.am30HzPercent, 40, 0.1, factors.am30Hz, (am30HzPercent) => transmitterPatch(transmitterId, { am30HzPercent }))} /></FormField>
+                <FormField label="IDENT Modulation (%)"><input type="number" disabled={disabled || transmitter.useStationIdent} {...calibratedSetpointInput(transmitter.useStationIdent ? configuration.station.identModulationPercent : transmitter.identModulationPercent, 20, 0.1, factors.ident1020Hz, (identModulationPercent) => transmitterPatch(transmitterId, { identModulationPercent }))} /></FormField>
                 <FormField label="Voice Modulation (%)"><input type="number" min="0" max="40" step="0.1" value={transmitter.voiceModulationPercent} disabled={disabled || transmitter.useStationModulation} onChange={(event) => transmitterPatch(transmitterId, { voiceModulationPercent: numberValue(event.target.value, transmitter.voiceModulationPercent) })} /></FormField>
                 <FormField label="Azimuth Offset (°)"><input type="number" min="-40" max="40" step="0.01" value={transmitter.azimuthOffsetDeg} disabled={disabled || transmitter.useStationAzimuth} onChange={(event) => transmitterPatch(transmitterId, { azimuthOffsetDeg: numberValue(event.target.value, transmitter.azimuthOffsetDeg) })} /></FormField>
                 <FormField label="IDENT Code"><input maxLength={4} value={transmitter.identCode} disabled={disabled || transmitter.useStationIdent} onChange={(event) => transmitterPatch(transmitterId, { identCode: event.target.value.toUpperCase() })} /></FormField>

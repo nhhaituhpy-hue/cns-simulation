@@ -1040,6 +1040,33 @@
   gap: 8px;
 }
 
+.calibrationDialog {
+  display: grid;
+  gap: 12px;
+}
+
+.calibrationCurrent,
+.calibrationInputRow,
+.calibrationInputRow label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.calibrationCurrent dd {
+  margin: 4px 0 0;
+  padding: 3px 6px;
+  border: 1px solid #8b9298;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.calibrationInputRow input {
+  width: 8em;
+}
+
 .historyOptions > fieldset {
   display: flex;
   flex-direction: column;

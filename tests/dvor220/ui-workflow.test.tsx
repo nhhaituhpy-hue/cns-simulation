@@ -55,6 +55,82 @@ describe("MOPIENS DVOR 220 simulator UI", () => {
     }
   });
 
+  it("opens the selected TX reading row and calibrates from one reference", () => {
+    const store = createUiStore();
+    connectAndLogin(store);
+    fireEvent.click(screen.getByRole("button", { name: "Maintenance" }));
+    fireEvent.click(screen.getByRole("button", { name: "TX Reading Cal." }));
+    expect(screen.getByRole("table", { name: "TX2 Power Output Readings" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Calibrate Carrier (TX1)" }));
+    const dialog = within(screen.getByRole("dialog", { name: "Calibration" }));
+    expect(dialog.getByText("Current Cal. Factor")).toBeInTheDocument();
+    expect(dialog.getByText("Current Setpoint")).toBeInTheDocument();
+    expect(dialog.getByText("Current Reading")).toBeInTheDocument();
+    const reference = dialog.getByRole("spinbutton", { name: "Reference value" });
+    expect(dialog.getAllByRole("spinbutton")).toEqual([reference]);
+    fireEvent.change(reference, { target: { value: "104" } });
+    fireEvent.click(dialog.getByRole("button", { name: "Calibrate" }));
+    expect(store.getState().snapshot.transmitters.tx1.forwardPowerW.carrier).toBe(104);
+    const save = dialog.getByRole("button", { name: "Save" });
+    expect(save).toBeEnabled();
+    fireEvent.click(save);
+    fireEvent.click(dialog.getByRole("button", { name: "Close" }));
+    expect(screen.queryByRole("dialog", { name: "Calibration" })).not.toBeInTheDocument();
+    expect(store.getState().device.calibration.saved.transmitterReadingFactors.tx1.carrier).toBe(1.04);
+    expect(screen.getByRole("table", { name: "TX1 Power Output Readings" })).toHaveTextContent("104.00 W");
+  });
+
+  it("renders independent TX setpoint, monitor frequency and PDC actions", () => {
+    const store = createUiStore();
+    connectAndLogin(store);
+    act(() => { store.getState().advanceTime(1000); });
+    fireEvent.click(screen.getByRole("button", { name: "Maintenance" }));
+    fireEvent.click(screen.getByRole("button", { name: "TX Setpoint Cal." }));
+    const setpoints = within(screen.getByRole("table", { name: "TX1 Setpoints" }));
+    expect(setpoints.getAllByRole("row")).toHaveLength(8);
+    expect(setpoints.getByText("AM 30Hz Mod.")).toBeInTheDocument();
+    expect(setpoints.getByText("1020 Hz Mod.")).toBeInTheDocument();
+    expect(screen.getByText("TX2 Setpoints", { selector: "summary" })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "MON Cal." }));
+    fireEvent.click(screen.getByRole("tab", { name: "MON2" }));
+    const monitor = within(screen.getByRole("table", { name: "CH.A" }));
+    expect(monitor.getAllByRole("row")).toHaveLength(7);
+    expect(screen.getByText("CH.A", { selector: "summary" })).toBeVisible();
+    expect(monitor.getByRole("button", { name: "Calibrate RF Level (MON2 · CH.A)" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("tab", { name: "Frequency" }));
+    expect(screen.getByRole("columnheader", { name: "MON2 Reading" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Run Changeover" }));
+    expect(screen.getByRole("alertdialog", { name: "Transmitter Change Over" })).toBeInTheDocument();
+    fireEvent.keyDown(document, { key: "Escape" });
+    fireEvent.click(screen.getByRole("button", { name: "PDC Cal." }));
+    const pdc = within(screen.getByRole("table", { name: "PDC Calibration" }));
+    expect(pdc.getAllByRole("row")).toHaveLength(6);
+    expect(pdc.getByRole("button", { name: "Calibrate LSB SIN (TX1)" })).toBeEnabled();
+    expect(pdc.getByRole("button", { name: "Calibrate LSB SIN VSWR" })).toBeDisabled();
+    expect(pdc.getByRole("button", { name: "Calibrate Carrier VSWR" })).toBeEnabled();
+  });
+
+  it("edits the calibrated display setpoint in Transmitter Setup without changing the configuration range", () => {
+    const store = createUiStore();
+    connectAndLogin(store);
+    fireEvent.click(screen.getByRole("button", { name: "Maintenance" }));
+    fireEvent.click(screen.getByRole("button", { name: "TX Setpoint Cal." }));
+    fireEvent.click(screen.getByRole("button", { name: "Calibrate CSB Power (TX1)" }));
+    const dialog = within(screen.getByRole("dialog", { name: "Calibration" }));
+    fireEvent.change(dialog.getByRole("spinbutton", { name: "Reference value" }), { target: { value: "101" } });
+    fireEvent.click(dialog.getByRole("button", { name: "Calibrate" }));
+    fireEvent.click(dialog.getByRole("button", { name: "Save" }));
+    fireEvent.click(dialog.getByRole("button", { name: "Close" }));
+    expect(store.getState().snapshot.transmitters.tx1.forwardPowerW.carrier).toBe(100);
+    fireEvent.click(screen.getByRole("button", { name: "Setup" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Transmitter Setup$/ }));
+    const tx1 = within(screen.getByRole("group", { name: "TX1" }));
+    const carrier = tx1.getByRole("spinbutton", { name: "Carrier Scale (%)" });
+    expect(carrier).toHaveValue(101);
+    fireEvent.change(carrier, { target: { value: "90.9" } });
+    expect(store.getState().device.configuration.draft.transmitters.tx1.carrierScalePercent).toBe(90);
+  });
+
   it("enforces PMDT control ownership for a remote profile in LOCAL", () => {
     const store = createUiStore();
     render(<Dvor220Simulator store={store} />);

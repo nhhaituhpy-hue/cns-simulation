@@ -9,6 +9,7 @@ import {
 import {
   appendDvor220Log,
   deriveDvor220Snapshot,
+  dvor220NominalTransmitterSetpoint,
   getDvor220GroundCheckDurationMs,
   reconcileDvor220State,
   resetDvor220MonitorAveragesMutating,
@@ -25,6 +26,7 @@ import {
   validateDvor220ScenarioDefinition,
 } from "./scenario";
 import {
+  DVOR220_MONITOR_CHANNEL_IDS,
   DVOR220_MONITOR_IDS,
   DVOR220_RF_OUTPUT_IDS,
   DVOR220_TRANSMITTER_IDS,
@@ -156,164 +158,84 @@ function login(
   return success(state);
 }
 
+type SingleCalibrationTarget = Exclude<Dvor220CalibrationTarget, { kind: "monitor-frequency" }>;
+
+function calibrationSlot(values: Dvor220CalibrationValues, target: SingleCalibrationTarget): { factors: Record<string, number>; key: string } {
+  if (target.kind === "transmitter-reading") return { factors: values.transmitterReadingFactors[target.transmitterId], key: target.output };
+  if (target.kind === "transmitter-setpoint") return { factors: values.transmitterSetpointFactors[target.transmitterId], key: target.parameter };
+  if (target.kind === "pdc") return { factors: values.pdcFactors, key: target.parameter };
+  if (target.parameter === "rfLevel") return { factors: values.monitorRfLevelOffsets[target.monitorId], key: target.channelId };
+  return { factors: values.monitorFactors[target.monitorId][target.channelId], key: target.parameter };
+}
+
+function readCalibration(values: Dvor220CalibrationValues, target: SingleCalibrationTarget) {
+  const { factors, key } = calibrationSlot(values, target);
+  return factors[key];
+}
+
+function writeCalibration(values: Dvor220CalibrationValues, target: SingleCalibrationTarget, value: number) {
+  const { factors, key } = calibrationSlot(values, target);
+  factors[key] = value;
+}
+
+function calibrationTargets(target: Dvor220CalibrationTarget): SingleCalibrationTarget[] {
+  if (target.kind !== "monitor-frequency") return [target];
+  return DVOR220_MONITOR_IDS.flatMap((monitorId) => DVOR220_MONITOR_CHANNEL_IDS.map((channelId) => ({
+    kind: "monitor" as const, monitorId, channelId, parameter: "carrierFrequency" as const,
+  })));
+}
+
 function applyCalibration(
   state: Dvor220DeviceState,
   command: Extract<Dvor220Command, { type: "calibrate" }>["calibration"],
 ): string | null {
-  if (!Number.isFinite(command.indicatedValue) || !Number.isFinite(command.referenceValue)) {
-    return "Calibration values must be finite numbers.";
-  }
-  if (command.kind !== "monitor" && command.indicatedValue === 0) {
-    return "The indicated calibration value must not be zero.";
+  const reference = command.referenceValue;
+  if (!Number.isFinite(reference)) return "Enter a finite calibration reference.";
+  if (command.kind === "monitor-frequency") {
+    if (reference <= 0 || DVOR220_MONITOR_IDS.some((id) => !Number.isFinite(command.readings[id]) || command.readings[id] <= 0)) {
+      return "Frequency calibration requires positive readings for MON1 and MON2 and a positive reference.";
+    }
+    const targets = calibrationTargets(command);
+    const factors = targets.map((target) => {
+      if (target.kind !== "monitor") return NaN;
+      const current = state.calibration.monitorFactors[target.monitorId].cha.carrierFrequency;
+      return current * (reference / command.readings[target.monitorId]);
+    });
+    if (factors.some((factor) => !Number.isFinite(factor) || factor <= 0)) return "Invalid frequency calibration factor.";
+    targets.forEach((target, index) => writeCalibration(state.calibration, target, factors[index]));
+    return null;
   }
 
-  if (command.kind === "transmitter-reading") {
-    const current = state.calibration.transmitterReadingFactors[command.transmitterId][command.output];
-    state.calibration.transmitterReadingFactors[command.transmitterId][command.output] =
-      current * command.referenceValue / command.indicatedValue;
-    return null;
-  }
+  const indicated = command.indicatedValue;
+  if (!Number.isFinite(indicated)) return "A finite current reading is required.";
+  const current = readCalibration(state.calibration, command);
+  let next: number;
   if (command.kind === "transmitter-setpoint") {
-    if (command.referenceValue === 0) return "The reference setpoint value must not be zero.";
-    const current = state.calibration.transmitterSetpointFactors[command.transmitterId][command.parameter];
-    const next = current * command.referenceValue / command.indicatedValue;
-    const compensation = current / next;
-    for (const layer of [state.configuration.running, state.configuration.draft]) {
-      const transmitter = layer.transmitters[command.transmitterId];
-      if (command.parameter === "carrier") {
-        transmitter.carrierScalePercent *= compensation;
-      } else if (command.parameter === "am30Hz") {
-        const setpoint = transmitter.useStationModulation
-          ? layer.station.am30HzPercent
-          : transmitter.am30HzPercent;
-        transmitter.useStationModulation = false;
-        transmitter.am30HzPercent = setpoint * compensation;
-      } else if (command.parameter === "ident1020Hz") {
-        const setpoint = transmitter.useStationIdent
-          ? layer.station.identModulationPercent
-          : transmitter.identModulationPercent;
-        transmitter.useStationIdent = false;
-        transmitter.identModulationPercent = setpoint * compensation;
-      } else {
-        transmitter.sidebandPowerW[command.parameter] *= compensation;
-      }
-    }
-    state.calibration.transmitterSetpointFactors[command.transmitterId][command.parameter] = next;
-    state.configuration.draftDirty = !configurationsEqual(
-      state.configuration.draft,
-      state.configuration.running,
-    );
-    state.configuration.flashDirty = !configurationsEqual(
-      state.configuration.running,
-      state.configuration.flash,
-    );
+    if (indicated <= 0 || reference <= 0) return "Setpoint calibration requires positive current and reference readings.";
+    next = dvor220NominalTransmitterSetpoint(state.configuration.running, command.transmitterId, command.parameter) / reference;
+    if (next <= 0 || !Number.isFinite(1 / next)) return "Invalid setpoint calibration factor.";
+  } else if (command.kind === "pdc" && command.parameter === "carrierVswr") {
+    if (indicated <= 1 || reference < 1) return "VSWR calibration requires a current reading above 1.00 and a reference of at least 1.00.";
+    next = current * ((reference - 1) / (indicated - 1));
+    if (!Number.isFinite(next)) return "Invalid VSWR calibration factor.";
+    writeCalibration(state.calibration, command, next);
     return null;
-  }
-  if (command.kind === "pdc") {
-    const current = state.calibration.pdcFactors[command.parameter];
-    if (command.parameter === "carrierPower") {
-      if (command.indicatedValue < 0) return "PDC indicated power must be greater than zero.";
-      if (command.referenceValue < 0) return "PDC reference power must not be negative.";
-      state.calibration.pdcFactors.carrierPower =
-        current * command.referenceValue / command.indicatedValue;
-      return null;
-    }
-    if (command.referenceValue < 1) return "PDC VSWR reference must be at least 1.00.";
-    if (command.indicatedValue <= 1 || Math.abs(command.indicatedValue - 1) < 0.000_001) {
-      return "PDC VSWR calibration requires a current reading greater than 1.00.";
-    }
-    state.calibration.pdcFactors.carrierVswr =
-      current * (command.referenceValue - 1) / (command.indicatedValue - 1);
+  } else if (command.kind === "monitor" && command.parameter === "rfLevel") {
+    next = current + (reference - indicated);
+    if (!Number.isFinite(next)) return "Invalid RF Level calibration offset.";
+    writeCalibration(state.calibration, command, next);
     return null;
+  } else {
+    if (indicated === 0 || reference === 0) return "Calibration requires nonzero current and reference readings.";
+    if (command.kind !== "monitor" && (indicated < 0 || reference < 0)) return "Power calibration requires positive readings.";
+    next = current * (reference / indicated);
   }
-  if (command.parameter === "rfLevel") {
-    state.calibration.monitorRfLevelOffsets[command.monitorId][command.channelId] +=
-      command.referenceValue - command.indicatedValue;
-    return null;
-  }
-  if (command.indicatedValue === 0) return "The indicated monitor value must not be zero.";
-  const current = state.calibration.monitorFactors[command.monitorId][command.channelId][command.parameter];
-  state.calibration.monitorFactors[command.monitorId][command.channelId][command.parameter] =
-    current * command.referenceValue / command.indicatedValue;
+  if (!Number.isFinite(next) || next === 0) return "Invalid calibration factor.";
+  writeCalibration(state.calibration, command, next);
   return null;
 }
 
-function calibrationValues(state: Dvor220DeviceState): Dvor220CalibrationValues {
-  return {
-    transmitterReadingFactors: cloneDvor220(state.calibration.transmitterReadingFactors),
-    transmitterSetpointFactors: cloneDvor220(state.calibration.transmitterSetpointFactors),
-    pdcFactors: cloneDvor220(state.calibration.pdcFactors),
-    monitorFactors: cloneDvor220(state.calibration.monitorFactors),
-    monitorRfLevelOffsets: cloneDvor220(state.calibration.monitorRfLevelOffsets),
-  };
-}
-
-function calibrationValue(
-  values: Dvor220CalibrationValues,
-  target: Dvor220CalibrationTarget,
-): number {
-  if (target.kind === "transmitter-reading") {
-    return values.transmitterReadingFactors[target.transmitterId][target.output];
-  }
-  if (target.kind === "transmitter-setpoint") {
-    return values.transmitterSetpointFactors[target.transmitterId][target.parameter];
-  }
-  if (target.kind === "pdc") return values.pdcFactors[target.parameter];
-  if (target.parameter === "rfLevel") {
-    return values.monitorRfLevelOffsets[target.monitorId][target.channelId];
-  }
-  return values.monitorFactors[target.monitorId][target.channelId][target.parameter];
-}
-
-function setCalibrationValue(
-  state: Dvor220DeviceState,
-  target: Dvor220CalibrationTarget,
-  value: number,
-) {
-  if (target.kind === "transmitter-reading") {
-    state.calibration.transmitterReadingFactors[target.transmitterId][target.output] = value;
-  } else if (target.kind === "transmitter-setpoint") {
-    const current = state.calibration.transmitterSetpointFactors[target.transmitterId][target.parameter];
-    const compensation = current / value;
-    for (const layer of [state.configuration.running, state.configuration.draft]) {
-      const transmitter = layer.transmitters[target.transmitterId];
-      if (target.parameter === "carrier") {
-        transmitter.carrierScalePercent *= compensation;
-      } else if (target.parameter === "am30Hz") {
-        const setpoint = transmitter.useStationModulation
-          ? layer.station.am30HzPercent
-          : transmitter.am30HzPercent;
-        transmitter.useStationModulation = false;
-        transmitter.am30HzPercent = setpoint * compensation;
-      } else if (target.parameter === "ident1020Hz") {
-        const setpoint = transmitter.useStationIdent
-          ? layer.station.identModulationPercent
-          : transmitter.identModulationPercent;
-        transmitter.useStationIdent = false;
-        transmitter.identModulationPercent = setpoint * compensation;
-      } else {
-        transmitter.sidebandPowerW[target.parameter] *= compensation;
-      }
-    }
-    state.calibration.transmitterSetpointFactors[target.transmitterId][target.parameter] = value;
-    state.configuration.draftDirty = !configurationsEqual(
-      state.configuration.draft,
-      state.configuration.running,
-    );
-    state.configuration.flashDirty = !configurationsEqual(
-      state.configuration.running,
-      state.configuration.flash,
-    );
-  } else if (target.kind === "pdc") {
-    state.calibration.pdcFactors[target.parameter] = value;
-  } else if (target.parameter === "rfLevel") {
-    state.calibration.monitorRfLevelOffsets[target.monitorId][target.channelId] = value;
-  } else {
-    state.calibration.monitorFactors[target.monitorId][target.channelId][target.parameter] = value;
-  }
-}
-
-function defaultCalibrationValue(target: Dvor220CalibrationTarget): number {
+function defaultCalibrationValue(target: SingleCalibrationTarget): number {
   return target.kind === "monitor" && target.parameter === "rfLevel" ? 0 : 1;
 }
 
@@ -894,7 +816,9 @@ export function reduceDvor220Command(
     case "initialize-calibration": {
       const denied = requirePermission(state, "calibrate");
       if (denied) return failure(state, denied);
-      setCalibrationValue(state, command.target, defaultCalibrationValue(command.target));
+      for (const target of calibrationTargets(command.target)) {
+        writeCalibration(state.calibration, target, defaultCalibrationValue(target));
+      }
       resetDvor220MonitorAveragesMutating(state);
       recordControl(state, `Calibration initialized: ${command.target.kind}`);
       return success(state);
@@ -903,7 +827,9 @@ export function reduceDvor220Command(
     case "save-calibration": {
       const denied = requirePermission(state, "calibrate");
       if (denied) return failure(state, denied);
-      state.calibration.saved = calibrationValues(state);
+      for (const target of calibrationTargets(command.target)) {
+        writeCalibration(state.calibration.saved, target, readCalibration(state.calibration, target));
+      }
       recordControl(state, "Calibration factors saved to non-volatile memory");
       return success(state);
     }
@@ -911,10 +837,10 @@ export function reduceDvor220Command(
     case "close-calibration": {
       const denied = requirePermission(state, "calibrate");
       if (denied) return failure(state, denied);
-      const current = calibrationValue(calibrationValues(state), command.target);
-      const saved = calibrationValue(state.calibration.saved, command.target);
-      if (current !== saved) {
-        setCalibrationValue(state, command.target, defaultCalibrationValue(command.target));
+      const unsaved = calibrationTargets(command.target).filter((target) =>
+        readCalibration(state.calibration, target) !== readCalibration(state.calibration.saved, target));
+      if (unsaved.length > 0) {
+        for (const target of unsaved) writeCalibration(state.calibration, target, defaultCalibrationValue(target));
         resetDvor220MonitorAveragesMutating(state);
         recordControl(state, `Unsaved calibration discarded; parameter default restored: ${command.target.kind}`);
       }

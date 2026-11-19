@@ -529,8 +529,7 @@ function EquipmentScreen({ device, snapshot }: Dvor220MainScreenProps) {
 }
 
 function PdcScreen({ device, snapshot }: Dvor220MainScreenProps) {
-  const activeTransmitterId = snapshot.activeTransmitterId ?? "tx1";
-  const transmitter = snapshot.transmitters[activeTransmitterId];
+  const activeTransmitterId = snapshot.activeTransmitterId;
   const limits = device.configuration.running.transmitterLimits;
   const outputLabels = {
     carrier: "Carrier",
@@ -552,10 +551,10 @@ function PdcScreen({ device, snapshot }: Dvor220MainScreenProps) {
             <FieldMetricBar
               key={output}
               label={outputLabels[output]}
-              source={activeTransmitterId.toUpperCase()}
-              value={output === "carrier" ? snapshot.pdc.carrierPowerW : transmitter.forwardPowerW[output]}
+              source={activeTransmitterId?.toUpperCase() ?? "—"}
+              value={snapshot.pdc.forwardPowerW[output]}
               unit="W"
-              status={output === "carrier" ? snapshot.pdc.status : transmitter.status}
+              status={output === "carrier" ? snapshot.pdc.status : classifyDvor220Reading(snapshot.pdc.forwardPowerW[output], limits.sidebandPower)}
               band={output === "carrier" ? limits.carrierPower : limits.sidebandPower}
             />
           ))}
