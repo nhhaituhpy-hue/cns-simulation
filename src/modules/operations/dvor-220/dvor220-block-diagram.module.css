@@ -52,11 +52,9 @@
 .cabinetBrandVertical,
 .cabinetCaption,
 .bayTitle,
-.cspCabinetPanel text,
 .narrowCard text,
 .amplifierModule text,
 .dcdcCabinetModule text,
-.pdcCabinetPanel text,
 .powerShelf text,
 .acdcShelf text,
 .lmiDoor text,
@@ -80,17 +78,12 @@
 .bayTitle { fill: #94abb2; font-size: 7px; text-anchor: start; letter-spacing: 0.8px; }
 .fanStrip { fill: #8f9a99; stroke: #46565a; stroke-width: 1; }
 
-.cspCabinetPanel > rect,
 .narrowCard > rect:first-child,
 .dcdcCabinetModule > rect:first-child,
-.pdcCabinetPanel > rect:nth-child(2),
 .powerShelf > rect:not(:first-child),
 .acdcShelf g > rect,
 .lmiDoor > rect:first-child,
 .lmiDoor > rect:nth-child(2) { fill: url("#dvor220-panel"); stroke: #59686b; stroke-width: 1.1; }
-.cspCabinetPanel text { font-size: 6px; }
-.cspCabinetPanel path { fill: none; stroke: #455458; stroke-width: 1; }
-.cspCabinetPanel circle:last-of-type { fill: #a8b1af; stroke: #455458; stroke-width: 1; }
 .narrowCard > rect:nth-child(2) { fill: #313e41; stroke: #718084; stroke-width: 0.8; }
 .narrowCard > rect:not(:first-child, :nth-child(2)) { fill: #d6dcda; stroke: #59676a; stroke-width: 0.8; }
 .narrowCard text { font-size: 6px; writing-mode: vertical-rl; }
@@ -100,9 +93,6 @@
 .amplifierModule circle:not([class]) { fill: #d0d6d3; stroke: #465458; stroke-width: 1.2; }
 .dcdcCabinetModule text { font-size: 6px; }
 .dcdcCabinetModule circle:not([class]) { fill: #c7cecb; stroke: #4c5b5e; stroke-width: 1; }
-.pdcCabinetPanel > rect:first-child { fill: #172a31; stroke: #758589; stroke-width: 1.5; }
-.pdcCabinetPanel circle:not([class]) { fill: #cbd2cf; stroke: #465458; stroke-width: 1.3; }
-.pdcCabinetPanel text { font-size: 6px; }
 .powerShelf circle:not([class]) { fill: #d8ddda; stroke: #4e5d60; stroke-width: 1; }
 .powerShelf rect:not(:first-child) { fill: #bdc6c3; stroke: #536267; stroke-width: 1; }
 .powerShelf path { fill: none; stroke: #4b5a5d; stroke-width: 1; }
@@ -223,20 +213,21 @@
 .faceplateFigure { display: flex; min-width: 0; min-height: 650px; margin: 0; flex-direction: column; align-items: center; justify-content: center; border: 1px solid #6b7a7e; border-radius: 4px; background: radial-gradient(circle at 50% 14%, rgb(255 255 255 / 72%), transparent 36%), linear-gradient(135deg, #aeb7b8, #e1e5e4 48%, #9ba6a8); padding: 18px; }
 .faceplateFigure[data-wide] { min-height: 410px; }
 .faceplateFigure figcaption { margin-top: 10px; color: #465356; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 10px; font-weight: 800; }
-.moduleFaceplate { display: block; width: auto; max-width: 100%; max-height: 650px; overflow: visible; }
+.moduleFaceplate { overflow: visible; }
+.faceplateFigure .moduleFaceplate { display: block; width: auto; max-width: 100%; max-height: 650px; }
 .faceplateFigure[data-wide] .moduleFaceplate { width: 100%; height: auto; max-height: 560px; }
 .faceplateShadow { fill: #111b1d; opacity: 0.25; filter: drop-shadow(8px 10px 10px rgb(0 0 0 / 25%)); }
 .faceplateBody { stroke: #455357; stroke-width: 2; }
 .faceplateTitleStrip { fill: #b5bdbb; stroke: #566568; stroke-width: 1.3; }
+.faceplateEjector rect { fill: #aeb7b4; stroke: #49565a; stroke-width: 2; }
+.faceplateEjector path { fill: none; stroke: #49565a; stroke-width: 1.4; }
 .faceplateTitle,
 .faceplatePartNumber,
 .faceplateSmallLabel,
 .faceplateSectionTitle,
 .cspCenterLabel,
 .faceplateVerticalBrand,
-.lmiLampLabel,
-.lmiFaceBrand,
-.lmiFaceSubBrand,
+.lmiLockLabel,
 .pmuDigits,
 .breaker text {
   fill: #172326;
@@ -259,6 +250,7 @@
 .faceplateLed[data-color="amber"] circle { fill: #f4b93e; stroke: #76551b; filter: drop-shadow(0 0 3px #ffc85c); }
 .faceplateLed[data-color="blue"] circle { fill: #3f8ef1; stroke: #1d4d8a; filter: drop-shadow(0 0 3px #65aaff); }
 .faceplateLed[data-color="off"] circle { fill: #616b6c; stroke: #303b3e; }
+.faceplateLed[data-unlit] circle { filter: brightness(0.55); }
 .faceplateLed text,
 .faceplateButton text,
 .faceplateTestJack text,
@@ -272,6 +264,7 @@
 .faceplateTestJack[data-color="black"] circle:first-child { fill: #232b2d; stroke: #090d0e; }
 .faceplateTestJack circle:nth-child(2) { fill: #d8dcda; stroke: #3e4c4f; stroke-width: 1; }
 .faceplateTestPin rect { fill: #89918e; stroke: #3f4b4e; stroke-width: 1; }
+.faceplateUnlabeledPin { fill: #89918e; stroke: #3f4b4e; stroke-width: 1; }
 .faceplateTestPin path { fill: none; stroke: #e6e4cd; stroke-width: 2.5; }
 .faceplateTestPin text { fill: #1c292d; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 9px; font-weight: 780; }
 .rotarySwitches circle { fill: #d2d7d3; stroke: #4c595d; stroke-width: 1.5; }
@@ -281,9 +274,10 @@
 .measurementHitTarget { fill: transparent; stroke: transparent; stroke-width: 2; }
 .measurementConnector[role="button"]:hover .measurementHitTarget,
 .measurementConnector[role="button"]:focus-visible .measurementHitTarget { fill: rgb(0 119 153 / 14%); stroke: #00667f; }
-.faceplateCoax circle:first-child { fill: #dfe3e0; stroke: #465458; stroke-width: 2; }
-.faceplateCoax circle:nth-child(2) { fill: #565f61; stroke: #20282a; stroke-width: 2; }
-.faceplateCoax circle:nth-child(3) { fill: #e9ece9; stroke: #2e3a3d; stroke-width: 1.4; }
+.faceplateCoax rect { fill: #aeb7b4; stroke: #465458; stroke-width: 1.5; }
+.faceplateCoax circle:first-of-type { fill: #dfe3e0; stroke: #465458; stroke-width: 2; }
+.faceplateCoax circle:nth-of-type(2) { fill: #565f61; stroke: #20282a; stroke-width: 2; }
+.faceplateCoax circle:nth-of-type(3) { fill: #e9ece9; stroke: #2e3a3d; stroke-width: 1.4; }
 .faceplateHeader rect { fill: #2e393c; stroke: #111718; stroke-width: 1.2; }
 .faceplateHeader circle { fill: #d7dcda; stroke: #111718; stroke-width: 0.8; }
 .faceplateHandle rect { fill: #dce1de; stroke: #4e5c60; stroke-width: 2; }
@@ -293,35 +287,28 @@
 .volumeScrew circle:first-child { fill: #d5dad7; stroke: #566367; stroke-width: 1.4; }
 .volumeScrew circle:nth-child(2) { fill: #919b9a; stroke: #4a575a; stroke-width: 1; }
 .volumeScrew path { fill: none; stroke: #3f4c4f; stroke-width: 2; }
-.lmiFaceScreenFrame { fill: #b3bab8; stroke: #536164; stroke-width: 2; }
-.lmiFaceScreen { fill: #172f38; stroke: #3f5258; stroke-width: 2; }
+.lmiFaceScreenFrame { fill: #d9dada; stroke: #536164; stroke-width: 2; }
 .lmiRightPanel { fill: #abb3b2; stroke: #536164; stroke-width: 2; }
 .lmiLampWindow { fill: #101719; stroke: #eff1ed; stroke-width: 2; }
-.lmiLampLabel { fill: #eef2ef; font-size: 10px; }
-.lmiFaceBrand { fill: #a5d7e0; font-size: 34px; letter-spacing: 2px; }
-.lmiFaceSubBrand { fill: #7799a1; font-size: 12px; }
+.lmiLampLabel { fill: #eef2ef; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 15px; font-weight: 850; }
+.lmiLockLabel { font-size: 12px; }
 .keylockOuter { fill: #87908f; stroke: #3e4b4e; stroke-width: 2; }
-.keylockInner { fill: #323d40; stroke: #111718; stroke-width: 1.4; }
-.keylockKey { fill: none; stroke: #84c8db; stroke-width: 7; }
-.fanVent { fill: #738082; stroke: #354346; stroke-width: 2; }
-.fanSymbol circle { fill: #222f33; stroke: #c7cfcc; stroke-width: 2; }
-.fanSymbol path { fill: #667477; stroke: #9ca8a7; stroke-width: 1; }
+.keylockInner { fill: none; stroke: #323d40; stroke-width: 3; }
+.keylockKey { fill: none; stroke: #287f98; stroke-width: 7; }
+.keylockRing { fill: none; stroke: #e8e8df; stroke-width: 2; }
 .acAvailableLamp { fill: #f2f5e8; stroke: #617073; stroke-width: 3; filter: drop-shadow(0 0 8px #efffc1); }
 .breaker rect:first-child { fill: #b2bab8; stroke: #536164; stroke-width: 2; }
 .breaker rect:nth-child(2) { fill: #f0f2ee; stroke: #4f5d60; stroke-width: 2; }
 .breaker path { fill: none; stroke: #3e4c4f; stroke-width: 4; }
 .pmuDisplay { fill: #1d2425; stroke: #566568; stroke-width: 2; }
+.pmuDisplayDividers { fill: none; stroke: #566568; stroke-width: 1; }
 .pmuDigits { fill: #78ff9f; font-size: 36px; letter-spacing: 6px; }
-.acdcVent circle { fill: #707d7f; stroke: #3f4d51; stroke-width: 2; }
-.acdcVent path { fill: none; stroke: #c6cecb; stroke-width: 3; }
+.acdcHandle { fill: none; stroke: #465458; stroke-width: 5; }
+.acdcVent rect { fill: #47575b; stroke: #263437; stroke-width: 1.4; }
+.acdcVent path { fill: none; stroke: #47575b; stroke-width: 11; stroke-linecap: round; }
 .acdcRelease { fill: #909b99; stroke: #465458; stroke-width: 2; }
-.asuFaceInterior { fill: #0b7189; stroke: #6ad6e6; stroke-width: 2; }
-.asuFaceBoard { fill: #bcc5c2; stroke: #425155; stroke-width: 2; }
-.asuRfInput,
-.asuRfOutput { fill: #e0e4e1; stroke: #465458; stroke-width: 2; }
-.asuPowerMeterPanel { fill: #d2d7d4; stroke: #465458; stroke-width: 2; }
-.asuAnalogMeter { fill: #f3f0dc; stroke: #465458; stroke-width: 2; }
-.asuSelector { fill: #a5afad; stroke: #465458; stroke-width: 2; }
+.asuFaceDoor { fill: #0b819a; stroke: #245c67; stroke-width: 2; }
+.asuFaceMark { fill: #e2f2f4; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 28px; font-weight: 850; }
 
 .detailPlaceholder { display: flex; min-height: 300px; flex-direction: column; align-items: center; justify-content: center; border: 1px dashed #6d7e83; border-radius: 4px; background: #d5dad9; padding: 32px; color: #263438; text-align: center; }
 .detailPlaceholder span { color: #315c6a; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 11px; font-weight: 900; letter-spacing: 0.1em; }

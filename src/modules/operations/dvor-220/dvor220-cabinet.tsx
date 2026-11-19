@@ -9,6 +9,7 @@ import {
   DVOR_220_BLOCKS,
   DVOR_220_HOTSPOT_TO_BLOCK,
 } from "./block-diagram-data";
+import { Dvor220ModuleFaceplate } from "./dvor220-module-faceplates";
 import styles from "./dvor220-block-diagram.module.css";
 
 interface Dvor220CabinetProps {
@@ -120,17 +121,16 @@ function LmiDoor() {
     <g className={styles.lmiDoor} aria-hidden>
       <rect x="485" y="34" width="222" height="924" rx="5" />
       <rect x="501" y="58" width="190" height="882" rx="3" />
-      <rect x="514" y="92" width="134" height="142" rx="3" />
-      <rect className={styles.lmiScreen} x="525" y="106" width="91" height="96" rx="2" />
+      <rect x="530" y="102" width="132" height="71" rx="1" />
+      <rect className={styles.lmiScreen} x="545" y="110" width="88" height="53" rx="1" />
       {["N", "W", "A", "M"].map((label, index) => (
         <g key={label}>
-          <rect x="623" y={108 + index * 20} width="18" height="14" rx="2" />
-          <text x="632" y={118 + index * 20}>{label}</text>
+          <rect x="640" y={112 + index * 10} width="14" height="7" rx="1" />
+          <text x="647" y={117.5 + index * 10}>{label}</text>
         </g>
       ))}
-      <circle cx="632" cy="198" r="8" />
-      <path d="M632 190v22" />
-      <text x="581" y="220">LOCAL MAINTENANCE INTERFACE</text>
+      <circle cx="647" cy="157" r="3.5" />
+      <path d="M647 154v11" />
       <rect x="529" y="272" width="146" height="3" rx="1" />
       <rect x="529" y="289" width="146" height="3" rx="1" />
       <rect x="529" y="306" width="146" height="3" rx="1" />
@@ -183,38 +183,19 @@ function FrontCabinet({ selectedHotspotIds, onSelect }: CabinetLayerProps) {
       <g aria-hidden>
         <rect className={styles.rackBay} x="94" y="60" width="358" height="194" rx="2" />
         <text className={styles.bayTitle} x="102" y="69">1A1 · AUXILIARY ELECTRONICS</text>
-        <g className={styles.cspCabinetPanel}>
-          <rect x="105" y="72" width="55" height="176" rx="2" />
-          <text x="132.5" y="87">CSP</text>
-          {[0, 1, 2, 3, 4].map((row) => (
-            <g key={row}>
-              <Led x={120} y={102 + row * 17} color={row < 2 ? "green" : row === 2 ? "red" : "off"} />
-              <Led x={145} y={102 + row * 17} color={row < 2 ? "green" : row === 2 ? "red" : "off"} />
-              <path d={`M123 ${102 + row * 17}h19`} />
-            </g>
-          ))}
-          {[0, 1, 2, 3].map((row) => <Led key={row} x={121 + (row % 2) * 22} y={192 + Math.floor(row / 2) * 14} color={row === 0 ? "green" : "off"} />)}
-          <circle cx="145" cy="227" r="5" />
-          <Screw x={132.5} y={239} radius={3} />
+        <g transform="translate(105 72) scale(0.1833 0.2071)">
+          <Dvor220ModuleFaceplate kind="csp" blockId="csp" />
         </g>
         {auxCards.map(([x, label, leds]) => <NarrowCard key={`${x}-${label}`} x={x} label={label} leds={leds} />)}
       </g>
 
       <TransmitterRack y={262} transmitter={1} />
 
-      <g className={styles.pdcCabinetPanel} aria-hidden>
-        <rect x="94" y="490" width="358" height="100" rx="2" />
-        <rect x="105" y="500" width="335" height="82" rx="2" />
-        <text x="272" y="517">1A8A1 · POWER DETECTOR / CHANGEOVER</text>
-        {[136, 196, 256, 316, 382].map((x, index) => (
-          <g key={x}>
-            <circle cx={x} cy="548" r="9" />
-            <circle cx={x} cy="548" r="4" />
-            <text x={x} y="568">{["LSB COS", "LSB SIN", "USB COS", "USB SIN", "CAR"][index]}</text>
-          </g>
-        ))}
-        <PullHandle x={272} y={527} height={40} />
-        <Led x={424} y={514} color="green" />
+      <g aria-hidden>
+        <rect className={styles.rackBay} x="94" y="490" width="358" height="100" rx="2" />
+        <g transform="translate(105 500) scale(0.3722 0.328)">
+          <Dvor220ModuleFaceplate kind="pdc" blockId="pdc" />
+        </g>
       </g>
 
       <TransmitterRack y={592} transmitter={2} />
