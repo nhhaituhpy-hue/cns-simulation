@@ -1,7 +1,8 @@
 // @vitest-environment node
 import { randomUUID } from "node:crypto";
 import { readFile, readdir, mkdtemp, rm } from "node:fs/promises";
-import { resolve } from "node:path";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { Client, Pool } from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { createGenerationJob, getGenerationJob, listGenerationJobs, claimGenerationJob, heartbeatGenerationJob, completeGenerationJob, failGenerationJob, generationInputHash } from "@/lib/ai/scenario-generation/jobs";
@@ -38,7 +39,7 @@ describe.skipIf(!testUrl)("durable AI queue in isolated PostgreSQL", () => {
     await control.query(`create database "${databaseName}"`); created = true;
     url.pathname = `/${databaseName}`; pool = new Pool({ connectionString: url.href, max: 6, connectionTimeoutMillis: 5000 });
     globalThis.cnsSimulatorDatabasePool = pool;
-    storageDir=await mkdtemp("/opt/data/cache/scratch/cns-ai-job-test-"); process.env.CNS_AI_STORAGE_DIR=storageDir; process.env.CNS_AI_ENABLED="true";
+    storageDir=await mkdtemp(join(tmpdir(),"cns-ai-job-test-")); process.env.CNS_AI_STORAGE_DIR=storageDir; process.env.CNS_AI_ENABLED="true";
     for (const file of (await readdir(resolve("database/migrations"))).filter(name => /^\d+_.*\.sql$/.test(name)).sort()) {
       await pool.query(await readFile(resolve("database/migrations", file), "utf8"));
       if (file === "0001_users_and_sessions.sql") for (const [id, role] of [[actorId, "admin"], [otherId, "student"]]) await pool.query(`insert into public.users (id,username,email,password_hash,full_name,work_unit,role,must_change_password) values ($1,$2,$3,'non-login-fixture','Test','Lab',$4,false)`, [id, `test-${role}`, `${role}@attech.com.vn`, role]);
