@@ -67,9 +67,10 @@ slot lệch trong hình 3-2 (ví dụ VAU là 1A1A12).
 **Baseline.** [Sơ đồ hiện tại](../../src/modules/operations/dvor-220/dvor220-system-diagram.tsx)
 đã có năm hình giản lược, cặp TX, PDC, ASU, bộ chia và hai MON. Nó chưa phải
 sơ đồ dây của TM: overview gộp bus nguồn và chỉ nối DC/DC-A tới SCU, gộp
-đường đo MON, không vẽ nhánh đầu đo PIR của bộ chia và để AC/DC là một khối
-`×3` mặc dù TM phân biệt số vị trí khay và số bộ được lắp. Không suy ra
-số lượng lắp thực tế từ bản vẽ khay.
+đường đo MON và không vẽ nhánh đầu đo PIR của bộ chia. Khối AC/DC `×3`
+khớp cấu hình chuẩn trong Fig. 1-8 / Fig. 7-25: khay có năm vị trí, ba bộ ở
+A1/A3/A5. CR 5 cũng hiển thị AC/DC-A/C/E; giữ tách biệt ký hiệu vị trí
+với số lượng thiết bị được lắp.
 
 ## 2. Mặt thiết bị: vị trí và sai khác
 
@@ -135,7 +136,7 @@ Các số đo và cài đặt đang chạy tại Cam Ranh không phải mặc đ
 | Monitor › Executive Monitor › CH.B.2 — CR 4, TM 4-92–94 | Như B.1, dữ liệu riêng B.2. | Có view CH.B.2; cùng sai khác phân cấp. |
 | Monitor › Standby Monitor — TM 4-98–100 | Kênh đường tải giả, thông số System và Modulation; chỉ khi trang bị/cấu hình. | Có đường dẫn tùy cấu hình; ảnh CR không xác nhận kênh standby được dùng ở Cam Ranh. |
 | Monitor › Monitor Self-Test — CR 4, TM 4-101 | Bảng theo MON, từng kích thích và kết quả; kết quả dòng độc lập với nhau. | Đã có hai bảng, nhưng sinh giá trị từ CH.A hiện tại và dùng chung kết quả cho mọi dòng; thiếu dòng FM Index −1 và bảng bắt đầu từ 1 thay vì 0. |
-| Power Supply — CR 5, TM 4-102–105 | DC/DC-A và DC/DC với cột V/I cho #1/#2; AC/DC theo bộ; Battery #1/#2 với V/I/nhiệt độ/trạng thái. | Có các phần nguồn, nhưng DC rail là một bộ số V/I kèm thanh đồ thị, Battery là một dòng gộp. Rail DC/DC đang đặt 6V/18V/2×28V thay vì hàng theo tham chiếu; không ánh xạ các hàng này vào jack mặt trước. |
+| Power Supply — CR 5, TM 4-102–105 | DC/DC-A: 5/15/−15 V; DC/DC: 5/8/15/−15/28/50 V. V/I cho #1 và #2; AC/DC-A/C/E; Battery #1/#2 với V/I/nhiệt độ/trạng thái. | Có các phần nguồn, nhưng DC rail là một bộ số V/I kèm thanh đồ thị, Battery là một dòng gộp. Các nhãn 6V/18V/2×28V và AC/DC-B không theo ảnh CR. |
 | Environmental — CR 5, TM 4-106 | Smoke/temperature và các bảng analog, digital, expansion digital input theo số cổng. | Đã có bốn nhóm; phần Setup chưa cung cấp cấu hình tương ứng cho các cổng. |
 
 ### Setup
@@ -159,15 +160,15 @@ Các số đo và cài đặt đang chạy tại Cam Ranh không phải mặc đ
 | --- | --- | --- |
 | Calibration › TX Reading Cal — CR 10, HC 16–20, TM 4-119/120 | Bảng TX1 và TX2, carrier + bốn sideband, factor/setpoint/current reading; Calibration từng dòng mở dialog. Ảnh hưởng hiển thị ở CMA SMA Status. | Có engine đọc và hệ số, nhưng dùng bộ chọn + hai ô số chung, không có action/dialog từng dòng. |
 | Calibration › TX Setpoint Cal — CR 11, HC 1–16, TM 4-121–135 | Hai bảng công suất + AM 30 Hz + 1020 Hz; dialog có factor/reading hiện hành, một số tham chiếu và Calibrate/Save/Close. Calibration cập nhật factor và setpoint để **không** đổi output thật tại thời điểm calibrate; chỉnh output ở Transmitter Setup sau đó. | UI dùng các cột **TX Reading** thay vì setpoint factors/readings; bảng thiếu hàng AM/IDENT dù bộ chọn có. Đừng thay đổi bất biến công suất khi sửa UI. |
-| Calibration › MON Cal — CR 11–12, HC 25–30, TM 4-136–143 | Tabs MON1, MON2, Frequency; bảng từng kênh, nominal, current, factor; dialog từng tham số. CR/HC xác nhận six readings của CH.A; TM mô tả thêm distortion, các kênh tùy cấu hình và Frequency chung. | Có selector MON/channel/parameter nhưng lại hiển thị bảng TX reading và không có tab/dialog Frequency chuyên dụng. |
-| Calibration › PDC Cal — CR 12, HC 21–24 | Carrier, USB COS/SIN, LSB COS/SIN; factor, setpoint, reading và hai cột calibration power / VSWR. HC xác nhận quy trình power từng nhánh cập nhật PDC Status. | Chỉ carrier power và carrier VSWR; thiếu bốn power target độc lập và thẻ/dialog tương ứng. Cần xác nhận quy tắc VSWR từng nhánh từ ảnh hoặc bản PMDT trước khi mô hình hóa. |
+| Calibration › MON Cal — CR 11–12, HC 25–30, TM 4-136–143 | Tabs MON1, MON2, Frequency; bảng từng kênh, nominal, current, factor; dialog từng tham số. Tab Frequency có trạng thái TX đang phát, Run Changeover, carrier setpoint và hai cặp factor/reading MON1/MON2. | Có selector MON/channel/parameter nhưng lại hiển thị bảng TX reading và không có tab/dialog Frequency chuyên dụng. |
+| Calibration › PDC Cal — CR 12, HC 21–24 | Carrier, USB COS/SIN, LSB COS/SIN; factor, setpoint, reading và nút Power Calibration **và** VSWR Calibration ở từng dòng. HC xác nhận quy trình power từng nhánh cập nhật PDC Status. | Chỉ carrier power và carrier VSWR; thiếu bốn cặp target/action sideband. Ảnh xác nhận vị trí các nút VSWR, không xác nhận mô hình tính của từng nút. |
 | Advanced Controls — CR 12–13, TM 4-144/145 cho Antenna Diagnostics/Fault Clear | Cảnh báo, tab TX1/TX2; IDENT Keying, Sideband Blending, Manual Sideband Antenna Switching, Automatic Ground Error Curve Check và Standby TX Azimuth Disable. | Có nhóm certification/antenna/ground check nội bộ; thiếu cấu trúc tab TX và một số lệnh theo ảnh. Các đồ thị/công cụ mô phỏng bổ sung không đồng nghĩa có trong menu PMDT bản CR. |
 | User Management + Add User — CR 13, TM 4-148/149 | Danh sách user và access, chọn dòng để xóa, nút Add User mở form, đổi mật khẩu. | Có form inline và nút Delete từng dòng; đối chiếu dialog, lựa chọn và luồng đổi mật khẩu. |
 | Time Sync — CR 13, TM 4-150/151 | Local PC Time và System Time, chọn nguồn và Sync; dialog Equipment Time. | Có nút synchronize nhưng chỉ hiện simulator timestamp/NTP placeholder, không có chọn/hiển thị hai đồng hồ. |
 | Version — CR 14, TM 4-152/153 | Inventory theo subrack/unit/ref des, P/N, HW Rev, SW Ver, up time; TM còn có cửa sổ Firmware Update chỉ bật khi kết nối RS-232 tại chỗ. | Chỉ metadata và vài chuỗi firmware giả; thiếu bảng theo thiết bị, không có dialog update. |
 | Flight Inspection › Monitor Check + Monitor Reference Check — CR 14, TM 4-146/147 | Nút mở reference check; chọn channel, dịch azimuth CW/CCW, trạng thái RF, Power/Output và Changeover. Tách khỏi ground error check. | Thay bằng checklist, changeover trực tiếp và kết quả ground error; chưa có màn hình monitor reference check chuyên dụng. |
-| History Log › PMDT History Log — CR 15, TM 4-154/155 | From/To, chọn nhiều class Alarm/Control/Event, Search, lưu kết quả CSV. | Tìm text + chọn một class, không có khoảng thời gian hoặc xuất kết quả ở màn hình này. |
-| History Log › LMI History Log — CR 15, TM 4-156/157 | From/To, Detail Options, Search/Download, bảng kết quả và CSV. | Dùng chung UI giản lược với PMDT Log; không có date range, các tùy chọn LMI hoặc CSV. |
+| History Log › PMDT History Log — CR 15, TM 4-154/155 | From/To, chọn nhiều class Alarm/Control/Event, Search, Save CSV. CR có thêm Save PDF (ảnh chỉ xác nhận nút). | Tìm text + chọn một class, không có khoảng thời gian hoặc xuất kết quả ở màn hình này. |
+| History Log › LMI History Log — CR 15, TM 4-156/157 | From/To, Detail Options (Username, Types), Search/Download, bảng kết quả và Save CSV. CR cũng có nút Save PDF. | Dùng chung UI giản lược với PMDT Log; không có date range, các tùy chọn LMI hoặc xuất kết quả. |
 
 ### Shell và cửa sổ tiện ích (TM §4.4.2–4.4.3)
 
