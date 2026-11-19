@@ -146,7 +146,7 @@ function PanelFrame({ width, height, title, partNumber, mounting = "screw", ejec
       <rect className={styles.faceplateBody} x="4" y={4 + bodyInset} width={width - 16} height={height - 16 - bodyInset * 2} rx="5" fill={`url(#${gradientId})`} />
       {mounting === "screw" ? <>
         <rect className={styles.faceplateTitleStrip} x="12" y="12" width={width - 32} height="42" rx="3" />
-        <text className={styles.faceplateTitle} x={width / 2 - 4} y="40" textAnchor="middle">{title}</text>
+        <text className={styles.faceplateTitle} x={width / 2 - 4} y="49" textAnchor="middle">{title}</text>
         <Screw x={width / 2 - 4} y={24} radius={7} />
         <Screw x={width / 2 - 4} y={height - 28} radius={7} />
       </> : null}
@@ -612,9 +612,13 @@ function AcdcFaceplate() {
         ))}
       </g>
       <rect className={styles.acdcRelease} x="146" y="190" width="56" height="17" rx="5" />
-      <text className={styles.faceplateSmallLabel} x="174" y="184" textAnchor="middle">RELEASE</text>
-      <Led x={215} y={193} label="AC OK/FAIL" color="green" lit={false} align="center" />
-      <Led x={269} y={193} label="DC OK/FAIL" color="green" lit={false} align="center" />
+      <text className={styles.faceplateSmallLabel} x="174" y="186" textAnchor="middle">RELEASE</text>
+      {([[215, "AC OK/FAIL"], [269, "DC OK/FAIL"]] as const).map(([x, label]) => (
+        <g key={label}>
+          <Led x={x} y={193} color="green" lit={false} />
+          <text className={`${styles.faceplateSmallLabel} ${styles.acdcStatusLabel}`} x={x} y="178" textAnchor="middle">{label}</text>
+        </g>
+      ))}
     </PanelFrame>
   );
 }
