@@ -62,6 +62,7 @@ export type Dvor220FaceplateKind =
   | "mon"
   | "fan"
   | "pdc"
+  | "quint-divider"
   | "power-switch"
   | "pmu"
   | "acdc"
@@ -171,7 +172,7 @@ const occurrence = (
 });
 
 const front = {
-  lmi: hotspot("front-lmi", "front", 514, 92, 134, 142, "1A6", "LMI", "display"),
+  lmi: hotspot("front-lmi", "front", 530, 102, 132, 71, "1A6", "LMI", "display"),
   csp: hotspot("front-csp", "front", 105, 72, 55, 176, "1A1A1", "CSP", "control"),
   tsg: hotspot("front-tsg", "front", 164, 72, 21, 176, "1A1A2", "TSG", "card"),
   scu1: hotspot("front-scu-1", "front", 188, 72, 22, 176, "1A1A3", "SCU 1", "card"),
@@ -477,7 +478,7 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     assemblyIds: ["1A1A6", "1A1A7"],
     partNumber: "0130-7550",
     description: "Cặp giao diện mạng tùy chọn cung cấp Ethernet LAN và SNMP cho truy cập giám sát từ xa.",
-    manualReference: "Manual §3.2.10, Figures 3-26/3-27 (PDF 120).",
+    manualReference: "Manual §3.3.4, Figures 3-26/3-27 (PDF 120).",
     cabinetHotspots: [front.niu1, front.niu2],
     diagramOccurrences: [occurrence("overview-niu", [front.niu1.id, front.niu2.id]), occurrence("control-niu", [front.niu1.id, front.niu2.id])],
     indicators: ["POWER", "FAULT", "LAN link/activity"],
@@ -524,7 +525,7 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     assemblyIds: ["1A1A12"],
     partNumber: "0130-7430",
     description: "Lọc dải 300-3000 Hz và khuếch đại audio voice đưa đến khối tạo điều chế.",
-    manualReference: "Manual §3.2.13, Figures 3-32/3-33 (PDF 124).",
+    manualReference: "Manual §3.3.7, Figures 3-32/3-33 (PDF 124).",
     cabinetHotspots: [front.vau],
     diagramOccurrences: [occurrence("overview-vau", [front.vau.id]), occurrence("control-vau", [front.vau.id])],
     indicators: ["POWER", "FAULT"],
@@ -553,12 +554,13 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     assemblyIds: ["1PD1"],
     partNumber: "0230-7370",
     description: "Năm bộ chia 3 đường phân phối FFM1, FFM2, FFM3, standby transmitter và TSG đến hai monitor cùng cổng test.",
-    manualReference: "Manual §3.2.5, Figures 3-14/3-15 (PDF 107).",
+    manualReference: "Manual §3.2.4, Figures 3-14/3-15 (PDF 107).",
     cabinetHotspots: [rear.divider],
     diagramOccurrences: [occurrence("overview-divider", [rear.divider.id]), occurrence("monitor-divider", [rear.divider.id])],
     indicators: [],
-    controls: ["FFM1", "FFM2", "FFM3", "Standby TX", "TSG", "Hai ngõ MON và một ngõ test cho mỗi đường"],
+    controls: ["FFM1", "FFM2", "FFM3", "Standby TX", "TSG", "Hai ngõ MON và một BNC đo PIR cho mỗi đường; ảnh không ghi thứ tự nhánh"],
     testPoints: [],
+    faceplate: "quint-divider",
   },
   {
     id: "sma-lsb",
@@ -665,7 +667,7 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     cabinetHotspots: [front.tx1Syn, front.tx2Syn],
     diagramOccurrences: [occurrence("overview-tx1-syn", [front.tx1Syn.id]), occurrence("overview-tx2-syn", [front.tx2Syn.id]), occurrence("txrf-tx1-syn", [front.tx1Syn.id]), occurrence("txrf-tx2-syn", [front.tx2Syn.id])],
     indicators: ["POWER LED6 - xanh", "PLL FAIL LED7 - đỏ", "ERROR LED8 - đỏ"],
-    controls: ["RESET", "Frequency coded switches", "MCU/CPLD service connectors"],
+    controls: ["SW2–SW6 · frequency coded switches", "14-pin header · không gắn chức năng trong Fig. 7-16"],
     testPoints: [
       { id: "J1", label: "CSB MON / Carrier Frequency", description: "Tần số sóng mang theo Station Setup và rotary coded switches.", signalType: "RF carrier", nominal: "Theo tần số đài đã cấu hình", tolerance: "Mức RF tham khảo −5 dBm ±4 dB; không phải dung sai tần số.", instrument: "Frequency counter / RF power sensor", conditions: ["Transmitter ON; LED SYN bình thường.", "SW2–SW6 phải khớp PMDT → Station Setup → Carrier Frequency."], source: "Manual §7.2.16, PDF 481 (7-21)." },
       { id: "J6", label: "40 MHz MON", description: "Reference 40 MHz từ TCXO.", signalType: "RF reference clock", nominal: "40 MHz", tolerance: "Mức RF tham khảo −5 dBm ±4 dB; manual không nêu dung sai Hz tại bước này.", instrument: "Frequency counter / RF power sensor", conditions: ["Transmitter ON; LED SYN bình thường."], source: "Manual §7.2.16, PDF 481 (7-21)." },
@@ -763,8 +765,8 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     manualReference: "Manual §3.2.22, Figures 3-64/3-65; §7.2.20, Figure 7-24 (PDF 159-161, 487).",
     cabinetHotspots: [front.pmu1, front.pmu2],
     diagramOccurrences: [occurrence("overview-pmu", [front.pmu1.id, front.pmu2.id]), occurrence("power-pmu1", [front.pmu1.id]), occurrence("power-pmu2", [front.pmu2.id]), occurrence("control-pmu", [front.pmu1.id, front.pmu2.id])],
-    indicators: ["7-segment information display", "ON BATT - hổ phách", "AC FAIL - đỏ", "BAT CHARGE - hổ phách", "PMU temperature/status LEDs"],
-    controls: ["Nút chọn ACDC output current/voltage", "Battery output current/voltage", "RESET", "MCU JTAG"],
+    indicators: ["7-segment information display", "AC FAIL - đỏ", "ON BAT - hổ phách", "BAT CHARGE - hổ phách"],
+    controls: ["MCU JTAG", "RESET", "PMU TEMP", "AC/DC V", "AC/DC I", "BAT V", "BAT I"],
     testPoints: [
       ...["GND", "Battery Voltage", "AC/DC Voltage"].map((label) => ({ id: label, label, description: label === "GND" ? "Điểm tham chiếu GND." : "Điện áp DC tại chân đo PMU so với GND; không lấy số minh họa trên mặt panel làm giá trị hiện tại.", signalType: "DC voltage", instrument: "Digital multimeter", tolerance: "Figure xác định vị trí/chức năng, không nêu dung sai điện áp.", conditions: ["Đo riêng PMU1/PMU2; không suy điện áp pin đang sạc từ điện áp danh định 24 V."], source: "Manual §6.5.11–6.5.12, Figure 6-5, PDF 442–444 (6-20–6-22); Figure 7-24, PDF 487 (7-27)." })),
     ],

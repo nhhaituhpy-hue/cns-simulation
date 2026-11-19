@@ -26,7 +26,7 @@ const surfaceLabels: Record<Dvor220CabinetSurface, string> = {
   asu: "ASU",
 };
 
-const wideFaceplates = new Set(["lmi", "fan", "pdc", "power-switch", "pmu", "acdc", "asu"]);
+const wideFaceplates = new Set(["lmi", "fan", "pdc", "quint-divider", "power-switch", "pmu", "acdc", "asu"]);
 
 function WaveformButton({ waveform, onOpen }: { waveform: Dvor220WaveformReference; onOpen: (waveform: Dvor220WaveformReference) => void }) {
   return (

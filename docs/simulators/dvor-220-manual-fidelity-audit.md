@@ -110,6 +110,28 @@ nối từ mép trái/phải khi nhìn thẳng. Hình ảnh module lắp sẵn h
 cần thiết để xác nhận những kích thước đó; không đánh dấu toàn bộ tủ “chính
 xác tuyệt đối” chỉ từ hình mặt bên.
 
+### Tình trạng sau đợt sửa mặt thiết bị
+
+Bảng trên giữ nguyên sai khác lúc kiểm toán. Đã chỉnh LMI, CSP, TSG, SCU,
+DC/DC-A, SMA (USB/LSB), CMA, DC/DC TX, MSG, SYN, MON, FAN, PDC, cầu dao 1A4,
+PMU và AC/DC theo tỷ lệ của hình nguồn; không thay cấu hình lắp đặt. NIU có
+RJ1/USB2 và VAU có MIC theo cạnh thấy được trong ảnh. SCU giữ ID CAN TxD/RxD
+và dùng chân đo; PDC giữ J20–J24. Các phím, LED và đầu cắm service minh họa
+không phải mô hình trạng thái mới. Các vị trí là tỷ lệ từ hình, không phải kích
+thước cơ khí.
+
+- **Cần ảnh Cam Ranh có nhãn:** không đổi cấu hình AC/DC hoặc sơ đồ nội thất
+  ASU khi chưa xác minh biến thể lắp đặt. Bản vẽ nội thất hiện có vẫn là sơ đồ:
+  mỗi SM minh họa 6 ngõ, khác 12 ngõ theo tài liệu; cụm đồng hồ công suất tùy
+  chọn cũng chưa xác minh. Mặt chi tiết ASU nay chỉ vẽ cửa đóng theo Fig. 3-68.
+- **Cần ảnh 1PD1 có nhãn:** Fig. 3-14 đủ để vẽ hàng năm BNC đo PIR. Không suy
+  thứ tự FFM1/2/3, Standby và TSG từ thứ tự trên sơ đồ Fig. 3-15, và không nối
+  cổng nào với phép đo riêng cho đến khi có xác nhận.
+- **Cần ảnh nhìn thẳng / sơ đồ chân:** IFB, EMU, MODEM và ASU-IF chưa được xác
+  nhận ở mức từng đầu nối/nút như các mặt có callout bảo trì. Phần tủ tổng quan
+  không dùng để xác định vị trí từng chân. PMU không sinh số đo giả; VR1 của
+  PDC vẫn là tham chiếu nội bộ, không phải nút trên mặt trước.
+
 ## 3. PMDT: cửa sổ, nội dung và sai khác
 
 Đối chiếu [menu DVOR 220](../../src/modules/operations/dvor-220/ui/navigation.ts),
