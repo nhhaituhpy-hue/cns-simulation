@@ -25,7 +25,8 @@ export type Dvor220MonitorParameter = (typeof DVOR220_MONITOR_PARAMETERS)[number
 
 export const DVOR220_RF_OUTPUT_IDS = ["carrier", "usbCos", "usbSin", "lsbCos", "lsbSin"] as const;
 export type Dvor220RfOutputId = (typeof DVOR220_RF_OUTPUT_IDS)[number];
-export type Dvor220PdcCalibrationParameter = "carrierPower" | "carrierVswr";
+export type Dvor220PdcCalibrationParameter = "carrierVswr" | Dvor220RfOutputId;
+export type Dvor220TransmitterSetpointParameter = Dvor220RfOutputId | "am30Hz" | "ident1020Hz";
 
 export const DVOR220_TRANSMITTER_UNIT_IDS = [
   "msg",
@@ -421,7 +422,7 @@ export type Dvor220InjectedFault =
 
 export interface Dvor220CalibrationValues {
   transmitterReadingFactors: Record<Dvor220TransmitterId, Record<Dvor220RfOutputId, number>>;
-  transmitterSetpointFactors: Record<Dvor220TransmitterId, Record<Dvor220RfOutputId | "am30Hz" | "ident1020Hz", number>>;
+  transmitterSetpointFactors: Record<Dvor220TransmitterId, Record<Dvor220TransmitterSetpointParameter, number>>;
   pdcFactors: Record<Dvor220PdcCalibrationParameter, number>;
   monitorFactors: Record<
     Dvor220MonitorId,
@@ -586,6 +587,7 @@ export interface Dvor220AntennaSnapshot {
 export interface Dvor220PdcSnapshot {
   status: Dvor220Status;
   carrierPowerW: number;
+  forwardPowerW: Record<Dvor220RfOutputId, number>;
   carrierVswr: number;
   antennas: Dvor220AntennaSnapshot[];
 }
@@ -637,7 +639,7 @@ export type Dvor220CalibrationCommand =
   | {
       kind: "transmitter-setpoint";
       transmitterId: Dvor220TransmitterId;
-      parameter: Dvor220RfOutputId | "am30Hz" | "ident1020Hz";
+      parameter: Dvor220TransmitterSetpointParameter;
       indicatedValue: number;
       referenceValue: number;
     }
@@ -654,13 +656,19 @@ export type Dvor220CalibrationCommand =
       parameter: Dvor220PdcCalibrationParameter;
       indicatedValue: number;
       referenceValue: number;
+    }
+  | {
+      kind: "monitor-frequency";
+      readings: Record<Dvor220MonitorId, number>;
+      referenceValue: number;
     };
 
 export type Dvor220CalibrationTarget =
   | Pick<Extract<Dvor220CalibrationCommand, { kind: "transmitter-reading" }>, "kind" | "transmitterId" | "output">
   | Pick<Extract<Dvor220CalibrationCommand, { kind: "transmitter-setpoint" }>, "kind" | "transmitterId" | "parameter">
   | Pick<Extract<Dvor220CalibrationCommand, { kind: "monitor" }>, "kind" | "monitorId" | "channelId" | "parameter">
-  | Pick<Extract<Dvor220CalibrationCommand, { kind: "pdc" }>, "kind" | "parameter">;
+  | Pick<Extract<Dvor220CalibrationCommand, { kind: "pdc" }>, "kind" | "parameter">
+  | { kind: "monitor-frequency" };
 
 export type Dvor220Command =
   | { type: "connect"; profile: Dvor220ConnectionProfile }
@@ -708,7 +716,7 @@ export type Dvor220Command =
   | { type: "end-scenario" }
   | { type: "calibrate"; calibration: Dvor220CalibrationCommand }
   | { type: "initialize-calibration"; target: Dvor220CalibrationTarget }
-  | { type: "save-calibration" }
+  | { type: "save-calibration"; target: Dvor220CalibrationTarget }
   | { type: "close-calibration"; target: Dvor220CalibrationTarget }
   | { type: "start-ground-check"; transmitterId?: Dvor220TransmitterId }
   | { type: "add-user"; account: Dvor220UserAccount }

@@ -228,10 +228,7 @@ function createCalibrationState(): Dvor220CalibrationState {
       tx1: unitFactors([...DVOR220_RF_OUTPUT_IDS, "am30Hz", "ident1020Hz"] as const),
       tx2: unitFactors([...DVOR220_RF_OUTPUT_IDS, "am30Hz", "ident1020Hz"] as const),
     },
-    pdcFactors: {
-      carrierPower: 1,
-      carrierVswr: 1,
-    },
+    pdcFactors: unitFactors([...DVOR220_RF_OUTPUT_IDS, "carrierVswr"] as const),
     monitorFactors: Object.fromEntries(
       DVOR220_MONITOR_IDS.map((monitorId) => [monitorId, structuredClone(channelFactors)]),
     ) as Dvor220CalibrationState["monitorFactors"],

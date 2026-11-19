@@ -140,8 +140,37 @@ Các số đo và cài đặt đang chạy tại Cam Ranh không phải mặc đ
 - **History (CR 15):** PMDT/LMI tìm theo ngày và loại, LMI có Detail Options
   theo user. CSV/PDF chỉ dùng kết quả đã tìm trong phiên trình duyệt.
 
-Các khoảng trống còn lại trong bảng dưới (Advanced Controls, các trang Setup
-chưa nêu trên, self-test độc lập và calibration) không được coi là đã sửa.
+Các khoảng trống về Advanced Controls, các trang Setup chưa nêu trên và
+self-test độc lập không được coi là đã sửa. Bảng bên dưới ghi baseline của
+đợt audit, không phải trạng thái sau các đợt sửa.
+
+### Tình trạng sau đợt sửa hiệu chuẩn
+
+- **TX Reading (CR 10, HC 16–20):** hai bảng TX, năm dòng RF mỗi bảng.
+  Hộp thoại dòng hiển thị factor/setpoint/reading và nhận một giá trị tham
+  chiếu. Chỉ số đọc CMA/SMA của TX và đầu ra đã chọn thay đổi.
+- **TX Setpoint (CR 11, HC 1–16, TM 4-121–135):** bảng năm đầu ra RF,
+  AM 30 Hz và 1020 Hz cho từng TX. Giá trị đặt hiển thị theo giá trị tham
+  chiếu; Transmitter Setup hiển thị theo hệ số, đổi ngược về giá trị gốc
+  khi nhập. Tín hiệu phát và cấu hình danh định không đổi khi hiệu chuẩn;
+  Save giữ hệ số qua Reset, không lưu cấu hình Setup.
+- **MON (CR 11–12, HC 25–30, TM 4-136–143):** MON1/MON2 có sáu thông số
+  trên mỗi kênh đang bật; RF Level dùng offset riêng. Tab Frequency có TX
+  active và Run Changeover, hai cặp factor/reading; một tham chiếu theo hộp
+  thoại TM. Chỉ hiệu chỉnh số đọc MON, không đổi tần số TX. Engine vẫn
+  dùng tần số phát chung của cấu hình trạm, không giả lập độ lệch riêng
+  của hai bộ SYN khi Changeover.
+- **PDC (CR 12, HC 21–24):** năm giá trị công suất PDC độc lập với số đo
+  CMA/SMA và bảng VSWR 48 anten. Giữ luồng VSWR carrier của simulator;
+  chưa bật bốn nút VSWR sideband đến khi có hình hộp thoại và quy trình
+  xác minh các đại lượng cần đọc hoặc hiệu chỉnh.
+- **Bộ nhớ:** Calibrate và Initialize tác động ngay trên running; Save
+  ghi mục đang mở (cả hai MON đối với Frequency). Tài liệu xác nhận
+  Initialize về mặc định và Save vào non-volatile nhưng không mô tả
+  Close khi chưa Save; simulator giữ hành vi đã có: Close bỏ thay đổi
+  chưa Save về mặc định của mục đó, không đổi giá trị đã lưu. Reset hoặc
+  power cycle lấy lại giá trị đã lưu trong phiên mô phỏng. Tải lại trình
+  duyệt bắt đầu phiên khác; API cấu hình không lưu hệ số hiệu chuẩn.
 
 ### Main
 

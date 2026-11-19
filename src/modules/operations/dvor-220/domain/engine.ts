@@ -9,6 +9,7 @@ import {
   DVOR220_TRANSMITTER_UNIT_IDS,
   type Dvor220AlarmBand,
   type Dvor220AntennaSnapshot,
+  type Dvor220Configuration,
   type Dvor220DeviceState,
   type Dvor220HistoryFilter,
   type Dvor220LogCategory,
@@ -24,6 +25,7 @@ import {
   type Dvor220Snapshot,
   type Dvor220Status,
   type Dvor220TransmitterId,
+  type Dvor220TransmitterSetpointParameter,
   type Dvor220TransmitterSnapshot,
   type Dvor220TransmitterUnitId,
 } from "./types";
@@ -167,20 +169,37 @@ function transmitterUnitStatus(
   return "normal";
 }
 
-function transmitterTrueOutputPower(
+export function dvor220NominalTransmitterSetpoint(
+  configuration: Dvor220Configuration,
+  transmitterId: Dvor220TransmitterId,
+  parameter: Dvor220TransmitterSetpointParameter,
+): number {
+  const { station } = configuration;
+  const transmitter = configuration.transmitters[transmitterId];
+  if (parameter === "carrier") return station.carrierPowerW * transmitter.carrierScalePercent / 100;
+  if (parameter === "am30Hz") return transmitter.useStationModulation ? station.am30HzPercent : transmitter.am30HzPercent;
+  if (parameter === "ident1020Hz") return transmitter.useStationIdent ? station.identModulationPercent : transmitter.identModulationPercent;
+  return transmitter.sidebandPowerW[parameter];
+}
+
+export function dvor220TransmitterSetpoint(
   state: Dvor220DeviceState,
   transmitterId: Dvor220TransmitterId,
-  output: Dvor220RfOutputId,
+  parameter: Dvor220TransmitterSetpointParameter,
+): number {
+  return dvor220NominalTransmitterSetpoint(state.configuration.running, transmitterId, parameter)
+    / state.calibration.transmitterSetpointFactors[transmitterId][parameter];
+}
+
+export function dvor220TransmitterPhysicalValue(
+  state: Dvor220DeviceState,
+  transmitterId: Dvor220TransmitterId,
+  parameter: Dvor220TransmitterSetpointParameter,
 ): number {
   const runtime = state.transmitters[transmitterId];
+  const output = parameter === "am30Hz" || parameter === "ident1020Hz" ? "carrier" : parameter;
   if (!runtime.powerOn || !runtime.rfOutputs[output]) return 0;
-  const configuration = state.configuration.running;
-  const transmitter = configuration.transmitters[transmitterId];
-  const setpoint = output === "carrier"
-    ? configuration.station.carrierPowerW * transmitter.carrierScalePercent / 100
-    : transmitter.sidebandPowerW[output];
-  const setpointFactor = state.calibration.transmitterSetpointFactors[transmitterId][output];
-  return setpoint * setpointFactor;
+  return dvor220NominalTransmitterSetpoint(state.configuration.running, transmitterId, parameter);
 }
 
 function transmitterOutputPower(
@@ -188,7 +207,7 @@ function transmitterOutputPower(
   transmitterId: Dvor220TransmitterId,
   output: Dvor220RfOutputId,
 ): number {
-  const truePower = transmitterTrueOutputPower(state, transmitterId, output);
+  const truePower = dvor220TransmitterPhysicalValue(state, transmitterId, output);
   const readingFactor = state.calibration.transmitterReadingFactors[transmitterId][output];
   return round(truePower * readingFactor, output === "carrier" ? 2 : 3);
 }
@@ -259,11 +278,11 @@ function baseMonitorValues(
   );
   const compositeAvailable = carrierAvailable && sidebandsAvailable;
   const trueCarrierPower = monitoredTransmitterId
-    ? transmitterTrueOutputPower(state, monitoredTransmitterId, "carrier")
+    ? dvor220TransmitterPhysicalValue(state, monitoredTransmitterId, "carrier")
     : 0;
   const trueSidebandPowers = monitoredTransmitterId
     ? (["usbCos", "usbSin", "lsbCos", "lsbSin"] as const).map((output) =>
-        transmitterTrueOutputPower(state, monitoredTransmitterId, output),
+        dvor220TransmitterPhysicalValue(state, monitoredTransmitterId, output),
       )
     : [0, 0, 0, 0];
   const trueSidebandPower = trueSidebandPowers.reduce((sum, power) => sum + power, 0);
@@ -277,11 +296,6 @@ function baseMonitorValues(
   const rfLevelDb = carrierAvailable && trueCarrierPower > 0 && rfReferencePower > 0
     ? 10 * Math.log10(trueCarrierPower / rfReferencePower)
     : -50;
-  const stationModulation = transmitter.useStationModulation;
-  const stationIdent = transmitter.useStationIdent;
-  const setpointFactors = monitoredTransmitterId
-    ? state.calibration.transmitterSetpointFactors[monitoredTransmitterId]
-    : state.calibration.transmitterSetpointFactors.tx1;
   const factors = state.calibration.monitorFactors[monitorId][channelId];
   const rfLevelOffset = state.calibration.monitorRfLevelOffsets[monitorId][channelId];
   const withCalibration = (parameter: Dvor220MonitorParameter, value: number) =>
@@ -295,15 +309,15 @@ function baseMonitorValues(
     fmIndex: withCalibration("fmIndex", compositeAvailable ? 16 + monitorBias : 0),
     am30Hz: withCalibration(
       "am30Hz",
-      carrierAvailable
-        ? (stationModulation ? configuration.station.am30HzPercent : transmitter.am30HzPercent) * setpointFactors.am30Hz + monitorBias
+      carrierAvailable && monitoredTransmitterId
+        ? dvor220TransmitterPhysicalValue(state, monitoredTransmitterId, "am30Hz") + monitorBias
         : 0,
     ),
     am9960Hz: withCalibration("am9960Hz", compositeAvailable ? am9960Percent + channelBias : 0),
     ident1020Hz: withCalibration(
       "ident1020Hz",
-      carrierAvailable
-        ? (stationIdent ? configuration.station.identModulationPercent : transmitter.identModulationPercent) * setpointFactors.ident1020Hz
+      carrierAvailable && monitoredTransmitterId
+        ? dvor220TransmitterPhysicalValue(state, monitoredTransmitterId, "ident1020Hz")
         : 0,
     ),
     rfLevel: withCalibration("rfLevel", carrierAvailable ? rfLevelDb + monitorBias + channelBias : -50),
@@ -570,8 +584,11 @@ function pdcSnapshot(state: Dvor220DeviceState): Dvor220Snapshot["pdc"] {
   const fault = getFault(state, "pdc", () => true);
   const antennas = buildAntennaSnapshots(state);
   const active = activeTransmitterId(state);
-  const trueCarrierPowerW = active ? transmitterTrueOutputPower(state, active, "carrier") : 0;
-  const carrierPowerW = round(trueCarrierPowerW * state.calibration.pdcFactors.carrierPower, 2);
+  const forwardPowerW = Object.fromEntries(DVOR220_RF_OUTPUT_IDS.map((output) => [
+    output,
+    round(active ? dvor220TransmitterPhysicalValue(state, active, output) * state.calibration.pdcFactors[output] : 0, output === "carrier" ? 2 : 3),
+  ])) as Record<Dvor220RfOutputId, number>;
+  const carrierPowerW = forwardPowerW.carrier;
   const trueCarrierVswr = 1.38;
   const carrierVswr = round(
     1 + (trueCarrierVswr - 1) * state.calibration.pdcFactors.carrierVswr,
@@ -594,6 +611,7 @@ function pdcSnapshot(state: Dvor220DeviceState): Dvor220Snapshot["pdc"] {
   return {
     status: fault?.condition ?? aggregateStatus([carrierPowerStatus, carrierStatus, antennaStatus]),
     carrierPowerW,
+    forwardPowerW,
     carrierVswr,
     antennas,
   };
