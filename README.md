@@ -806,3 +806,4 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 - Bỏ `operatorUserId` khỏi request khi terminal chưa đăng nhập, tránh HTTP 400 do gửi `null`; giữ nguyên validation API dùng chung và dữ liệu lưu trong PostgreSQL.
 - Thêm regression test cho hydrate cấu hình đã lưu khác mặc định → đăng nhập → Restart → PUT thành công, kiểm tra operator được lưu là `null`.
 - Kiểm thử: regression test thất bại trước bản sửa và đạt sau bản sửa; 3 file focused Vitest (13 tests) đạt, `npm run lint`, `npm run typecheck` và production build (93/93 pages) đạt.
+- Mở rộng bỏ operator `null` tại 5 caller persistence khác; tái hiện DME 320 Reboot trả 400 sau Apply chưa lưu Flash, thêm 5 regression tests (đỏ trước/sáng sau), 77 focused tests và lint/typecheck/build đạt; giữ nguyên API, gates và revision behavior.
