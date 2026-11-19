@@ -229,7 +229,7 @@ function ReadingDialog({ row, nominal, allowed, dispatch, onClose }: {
       <fieldset>
         <legend>Current Setting ({row.context})</legend>
         <dl className={styles.calibrationCurrent}>
-          <div><dt>{row.target.kind === "monitor" && row.target.parameter === "bearingError" ? "Current Cal. Offset (°)" : "Current Cal. Factor"}</dt><dd>{formatValue(row.factor, 5)}</dd></div>
+          <div><dt>Current Cal. Factor</dt><dd>{formatValue(row.factor, 5)}</dd></div>
           {row.target.kind !== "pdc" || row.target.parameter !== "carrierVswr" ? (
             <div><dt>{nominal ? "Nominal" : "Current Setpoint"}</dt><dd>{formatRowValue(row, row.setting)}</dd></div>
           ) : null}
@@ -323,7 +323,7 @@ export function CalibrationScreen({ screenId, device, snapshot, dispatch, openDi
         <CalibrationGroupSection key={title} title={title}>
           <MopiensTable dense caption={title} rows={rows} getRowId={(row) => row.id} columns={[
           { id: "item", label: "Item", render: (row) => row.label },
-          { id: "factor", label: monitor ? "Cal. Factor / Offset" : "Cal. Factor", align: "right", render: (row) => `${formatValue(row.factor, pdc ? 9 : 5)}${row.target.kind === "monitor" && row.target.parameter === "bearingError" ? " ° offset" : ""}` },
+          { id: "factor", label: "Cal. Factor", align: "right", render: (row) => formatValue(row.factor, pdc ? 9 : 5) },
           { id: "setting", label: monitor ? "Nominal Value" : "Setpoint", align: "right", render: (row) => formatRowValue(row, row.setting, !unitColumn) },
           { id: "reading", label: "Current Reading", align: "right", render: (row) => formatRowValue(row, row.reading, !unitColumn) },
           ...(unitColumn ? [{ id: "unit", label: "Unit", render: (row: ReadingRow) => row.unit }] : []),
