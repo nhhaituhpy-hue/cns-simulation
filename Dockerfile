@@ -20,6 +20,11 @@ COPY . .
 # Skip telemetry during build
 ENV NEXT_TELEMETRY_DISABLED=1
 
+ARG NEXT_PUBLIC_SENTRY_DSN
+ARG SENTRY_AUTH_TOKEN
+ARG SENTRY_ORG
+ARG SENTRY_PROJECT
+
 RUN npm run build
 
 # ── Production runner ───────────────────────────
