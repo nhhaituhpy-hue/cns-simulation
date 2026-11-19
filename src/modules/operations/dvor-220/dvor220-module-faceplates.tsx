@@ -98,20 +98,21 @@ function Coax({ x, y, pointId, label, radius = 18, labelRight = false, flange = 
   );
 }
 
-function BoxHeader({ x, y, pins, label, labelRight = false, horizontal = false }: { x: number; y: number; pins: 10 | 14; label?: string; labelRight?: boolean; horizontal?: boolean }) {
+function BoxHeader({ x, y, pins, label, labelRight = false, horizontal = false, rowPitch = 10 }: { x: number; y: number; pins: 10 | 14; label?: string; labelRight?: boolean; horizontal?: boolean; rowPitch?: number }) {
   const rows = pins / 2;
+  const rowOffset = rows * rowPitch / 2;
   return (
     <g className={styles.faceplateHeader} aria-hidden>
       <g transform={horizontal ? `rotate(90 ${x} ${y})` : undefined}>
-        <rect x={x - 18} y={y - rows * 5 - 6} width="36" height={rows * 10 + 12} rx="2" />
+        <rect x={x - 18} y={y - rowOffset - 6} width="36" height={rowOffset * 2 + 12} rx="2" />
         {Array.from({ length: rows }, (_, row) => (
           <g key={row}>
-            <circle cx={x - 7} cy={y - (rows - 1) * 5 + row * 10} r="2.4" />
-            <circle cx={x + 7} cy={y - (rows - 1) * 5 + row * 10} r="2.4" />
+            <circle cx={x - 7} cy={y + (row - (rows - 1) / 2) * rowPitch} r="2.4" />
+            <circle cx={x + 7} cy={y + (row - (rows - 1) / 2) * rowPitch} r="2.4" />
           </g>
         ))}
       </g>
-      {label ? <text x={labelRight ? x + 24 : x} y={y + (labelRight ? 4 : horizontal ? 30 : rows * 5 + 19)} textAnchor={labelRight ? "start" : "middle"}>{label}</text> : null}
+      {label ? <text x={labelRight ? x + 24 : x} y={y + (labelRight ? 4 : horizontal ? 30 : rowOffset + 19)} textAnchor={labelRight ? "start" : "middle"}>{label}</text> : null}
     </g>
   );
 }
@@ -438,7 +439,7 @@ function SynFaceplate() {
       <Led x={58} y={227} label="PLL" color="red" lit={false} />
       <Led x={58} y={244} label="ERROR" color="red" lit={false} />
       <Led x={58} y={262} />
-      <BoxHeader x={58} y={308} pins={14} />
+      <BoxHeader x={58} y={308} pins={14} rowPitch={8.5} />
       <g className={styles.rotarySwitches}>
         <title>SW2–SW6 · Chọn tần số · hình minh họa cố định, không mô phỏng hiệu chỉnh</title>
         {switches.map((y, index) => (

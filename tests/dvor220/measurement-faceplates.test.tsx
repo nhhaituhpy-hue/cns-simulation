@@ -176,6 +176,12 @@ describe("DVOR 220 source-aligned measurement connectors", () => {
     }
     expect(panel).toHaveAttribute("width", "210");
     expect(panel).toHaveAttribute("height", "720");
+    const unlabeledIndicator = panel.querySelector('circle[cy="262"]')!;
+    const header = panel.querySelector('rect[width="36"]')!;
+    expect(Number(header.getAttribute("y"))).toBeGreaterThan(
+      Number(unlabeledIndicator.getAttribute("cy")) + Number(unlabeledIndicator.getAttribute("r")),
+    );
+    expect(Number(header.getAttribute("y")) + Number(header.getAttribute("height"))).toBeLessThan(356);
     const points = within(panel).getAllByRole("button");
     expect(points.map((point) => point.getAttribute("data-point-id"))).toEqual(["J1", "TP33", "TP34", "TP35", "TP36", "J6"]);
     expect(points[0]!.querySelector("circle")).toHaveAttribute("cy", "138");
