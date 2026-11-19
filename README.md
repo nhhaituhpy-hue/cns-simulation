@@ -427,6 +427,12 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-11-19 — Đối chiếu mặt LRU DVOR 220 với manual
+
+- Vẽ lại vị trí tương đối, nhãn và loại đầu đo của các mặt LRU có hình tham chiếu; giữ nguyên ID và hành vi mở tham chiếu phép đo.
+- Tách cửa ngoài ASU khỏi trang nội thất; thêm mặt năm BNC của bộ chia 1PD1, không tự gán thứ tự nhánh.
+- Xem [phạm vi đã sửa và các điểm cần ảnh xác minh](docs/simulators/dvor-220-manual-fidelity-audit.md#tình-trạng-sau-đợt-sửa-mặt-thiết-bị).
+
 ### 2026-10-19 — Dựng harness giao diện (component playground) để chỉnh sửa UI
 
 - Bổ sung route dev `/playground` liệt kê toàn bộ component trong `src/components` (225 file), nhóm theo thư mục, có tìm kiếm và xem source.
