@@ -123,7 +123,7 @@ function Dvor1150aConfigPersistence() {
               action === "backup" ? previousBackupConfig : previousConfig,
               nextConfig,
             ),
-            operatorUserId: state.authenticatedUserId,
+            operatorUserId: state.authenticatedUserId ?? undefined,
             sessionId: sessionIdRef.current,
           });
           revisionRef.current = response.revision;
@@ -222,7 +222,7 @@ function Dme1119aConfigPersistence() {
               action === "backup" ? previousBackupConfig : previousConfig,
               nextConfig,
             ),
-            operatorUserId: state.authenticatedUserId,
+            operatorUserId: state.authenticatedUserId ?? undefined,
             sessionId: sessionIdRef.current,
           });
           revisionRef.current = response.revision;
@@ -327,7 +327,7 @@ function Dvor1150ConfigPersistence() {
               action === "backup" && previousBackupConfig ? previousBackupConfig : previousConfig,
               currentConfig,
             ),
-            operatorUserId: state.authenticatedUserId,
+            operatorUserId: state.authenticatedUserId ?? undefined,
             sessionId: sessionIdRef.current,
           });
           revisionRef.current = response.revision;
@@ -430,7 +430,7 @@ function Dvor220ConfigPersistence({ store }: { store: Dvor220StoreApi }) {
               action === "flash-save" ? previousFlash : previousRunning,
               action === "flash-save" ? extractDvor220Config(current.flash) : running,
             ),
-            operatorUserId: state.device.session.username,
+            operatorUserId: state.device.session.username ?? undefined,
             sessionId: sessionIdRef.current,
           });
           revisionRef.current = response.revision;
@@ -518,7 +518,7 @@ function Dme320ConfigPersistence({ store }: { store: Dme320StoreApi }) {
               action === "flash-save" ? previousFlash : previousRunning,
               action === "flash-save" ? extractDme320Config(current.flash) : running,
             ),
-            operatorUserId: state.simulation.session.userId,
+            operatorUserId: state.simulation.session.userId ?? undefined,
             sessionId: sessionIdRef.current,
           });
           revisionRef.current = response.revision;

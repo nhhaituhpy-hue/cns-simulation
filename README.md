@@ -11,6 +11,14 @@
 - Các bài kiểm thử tài liệu AI, kho tri thức và hàng đợi PostgreSQL tạo dữ liệu tạm trong thư mục tạm của hệ điều hành, không phụ thuộc vào thư mục riêng của máy chạy.
 - Dữ liệu giả lập cho luồng tải tài liệu phản ánh chế độ trả về của API; hai bài kiểm thử duyệt toàn bộ danh mục DVOR 1150A có thời gian chờ riêng để chạy ổn định trong bộ kiểm thử đầy đủ.
 
+## Sentry — báo lỗi tùy chọn
+
+- Tích hợp thủ công App Router bằng `@sentry/nextjs`: browser, Node/edge, lỗi Server Components và trang lỗi toàn cục. Không có DSN thì không khởi tạo SDK; tracing lấy mẫu `0.1`, không bật Session Replay hay gửi PII mặc định.
+- Dokploy **runtime environment**: đặt `SENTRY_DSN` cho server/edge. Nếu thiếu, server/edge dùng `NEXT_PUBLIC_SENTRY_DSN` (nếu có ở runtime/build); browser chỉ dùng `NEXT_PUBLIC_SENTRY_DSN`, không bao giờ đọc biến server riêng.
+- Dokploy **Docker build arguments**: đặt `NEXT_PUBLIC_SENTRY_DSN` để nhúng DSN công khai vào browser; thay đổi giá trị này cần build lại. Có thể đặt cùng DSN cho hai biến. Build/run không cần các biến Sentry nếu chưa dùng dịch vụ.
+- Upload source maps chỉ bật khi có đủ `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` ở **build time**; Dockerfile nhận cả ba qua build args. Không cần đặt chúng ở runtime. Token là secret: chỉ cấp trong hệ thống build tin cậy, không đưa vào `NEXT_PUBLIC_*`, Git, log hoặc image công khai; build args có thể xuất hiện trong provenance/cache của builder. Image runner không kế thừa các build args này.
+- Kiểm tra cục bộ: `npm install`, `npm run lint`, `npm run typecheck`, `npm run test:run`, `npm run build` khi không đặt các biến Sentry. Không sửa workflow CI trong thay đổi này.
+
 ## AI worker — gateway cho GPT-6.2 Sol
 
 - Cho phép đúng `https://api.hainh.io.vn/v1` trong danh sách endpoint. Đặt `CNS_AI_BASE_URL` và `CNS_AI_MODEL=gpt-6.2-sol` ở worker khi chuyển gateway; `CNS_AI_API_KEY` là key riêng của worker, không đặt ở web/Git. Giá trị mặc định và khả năng đọc cấu hình cũ không đổi.
@@ -803,3 +811,9 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 - `src/styles/theme-tokens.css`: CNS design system tokens (`--cns-*`) giờ theme-aware — light values under `:root`/`[data-theme="light"]`, dark values under `[data-theme="dark"]`.
 - Global replacement: Thay hardcoded dark colors (`#E6EDF5`, `#9AA9BC`, `#6B7A8D`, `#101922`, `#141f2a`, `#111a24`, `border-white/[0.0X]`, `bg-white/[0.0X]`) bằng `--cns-*` tokens và `black/[0.X]` trong ~15 file.
 - Kiểm thử: `npx vitest run` (881 passed), `npm run typecheck` (sạch), `npm run lint` (sạch), `npm run build` (72/72 routes đạt).
+
+### 2026-11-19 — Sửa lưu cấu hình khi khởi động lại ADS-B
+- Bỏ `operatorUserId` khỏi request khi terminal chưa đăng nhập, tránh HTTP 400 do gửi `null`; giữ nguyên validation API dùng chung và dữ liệu lưu trong PostgreSQL.
+- Thêm regression test cho hydrate cấu hình đã lưu khác mặc định → đăng nhập → Restart → PUT thành công, kiểm tra operator được lưu là `null`.
+- Kiểm thử: regression test thất bại trước bản sửa và đạt sau bản sửa; 3 file focused Vitest (13 tests) đạt, `npm run lint`, `npm run typecheck` và production build (93/93 pages) đạt.
+- Mở rộng bỏ operator `null` tại 5 caller persistence khác; tái hiện DME 320 Reboot trả 400 sau Apply chưa lưu Flash, thêm 5 regression tests (đỏ trước/sáng sau), 77 focused tests và lint/typecheck/build đạt; giữ nguyên API, gates và revision behavior.

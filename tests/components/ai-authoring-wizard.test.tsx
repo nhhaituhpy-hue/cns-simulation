@@ -482,3 +482,18 @@ it("lets the user delete a saved authoring session from history or reset an acti
     expect.objectContaining({ method: "DELETE" }),
   );
 });
+
+it.each([
+  [403, { code: "INVALID_ORIGIN" }, /INVALID_ORIGIN/],
+  [403, { code: "FORBIDDEN" }, /không có quyền tạo kịch bản/],
+  [401, { code: "UNAUTHORIZED" }, /Phiên đăng nhập đã hết hạn/],
+] as const)("reports the real reason when creation is rejected with %i %o", async (status, payload, message) => {
+  const api = server();
+  const impl = api.fetcher.getMockImplementation()!;
+  api.fetcher.mockImplementation(async (url: string, init?: RequestInit) => init?.method === "POST" ? reply(payload, status) : impl(url, init));
+  render(<AiAuthoringWizard moduleId="dvor-220" initialMode="description" />);
+  fireEvent.change(screen.getByLabelText("Mô tả tình huống"), { target: { value: "Máy phát báo lỗi công suất; luyện xác định nguyên nhân và khôi phục." } });
+  fireEvent.click(screen.getByRole("button", { name: "AI soạn kịch bản" }));
+  expect(await screen.findByText(message)).toBeInTheDocument();
+  if (payload.code === "INVALID_ORIGIN") expect(screen.queryByText(/hết hạn/)).not.toBeInTheDocument();
+});

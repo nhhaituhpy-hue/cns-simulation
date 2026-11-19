@@ -54,7 +54,8 @@ jobs:
         run: npm run typecheck
 
       - name: Unit and component tests
-        run: npm run test:run
+        # Limit contention between CPU-heavy simulator and jsdom suites.
+        run: npm run test:run -- --maxWorkers=2
 
       - name: Production build
         run: npm run build
