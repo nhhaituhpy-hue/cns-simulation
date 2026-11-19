@@ -1494,12 +1494,16 @@
   width: min(100%, 620px);
   max-height: calc(100dvh - 32px);
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   overflow: hidden;
   border: 1px solid #2d617d;
   border-radius: 2px;
   background: #f2f2f2;
   box-shadow: 0 16px 40px rgb(5 18 27 / 40%);
+}
+
+.modalWindow[data-branded] {
+  grid-template-rows: auto auto minmax(0, 1fr);
 }
 
 .modalSizeSmall {

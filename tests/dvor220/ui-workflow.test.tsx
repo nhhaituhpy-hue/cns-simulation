@@ -114,6 +114,108 @@ describe("MOPIENS DVOR 220 simulator UI", () => {
     expect(store.getState().snapshot.effectiveMonitorBypass).toBe(false);
   });
 
+  it("uses the Cam Ranh power rail and converter labels without fabricating per-module readings", () => {
+    const store = createUiStore();
+    connectAndLogin(store);
+    fireEvent.click(screen.getByRole("button", { name: "Power Supply" }));
+    const labels = (name: string) => within(screen.getByRole("table", { name }))
+      .getAllByRole("row").slice(1).map((row) => within(row).getAllByRole("cell")[0].textContent);
+    expect(labels("DC/DC-A")).toEqual(["5V", "15V", "-15V"]);
+    expect(labels("DC/DC")).toEqual(["5V", "8V", "15V", "-15V", "28V", "50V"]);
+    expect(labels("AC/DC")).toEqual(["AC/DC-A", "AC/DC-C", "AC/DC-E"]);
+    expect(labels("Battery")).toEqual(["Battery #1", "Battery #2"]);
+    expect(within(screen.getByRole("table", { name: "DC/DC-A" })).getAllByText("—")).toHaveLength(12);
+  });
+
+  it("opens equipment detail windows separately from PMDT measurements", () => {
+    const store = createUiStore();
+    connectAndLogin(store);
+    fireEvent.click(screen.getByRole("button", { name: "Equipment Status" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Transmitter 1/ }));
+    const tx = within(screen.getByRole("dialog", { name: "Transmitter Status Detail" }));
+    const general = within(tx.getByRole("table", { name: "General" }));
+    expect(general.getByRole("columnheader", { name: "TX2" })).toBeInTheDocument();
+    expect(general.getByText("On ANT")).toBeInTheDocument();
+    fireEvent.click(tx.getByRole("button", { name: "Close" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Monitor\s*(BYPASSED|AUTOMATIC)$/ }));
+    const monitor = within(screen.getByRole("dialog", { name: "Monitor Status Detail" }));
+    expect(monitor.getByRole("table", { name: "CH.B.2" })).toBeInTheDocument();
+  });
+
+  it("edits independent or linked thermal settings in the draft only", () => {
+    const store = createUiStore();
+    connectAndLogin(store);
+    fireEvent.click(screen.getByRole("button", { name: "Setup" }));
+    fireEvent.click(screen.getByRole("button", { name: "Thermal Control Setup" }));
+    const tx2Before = store.getState().device.configuration.running.thermal.tx2.fanStartC;
+    fireEvent.change(screen.getByLabelText("TX1 Operation Temperature"), { target: { value: "50" } });
+    expect(store.getState().device.configuration.draft.thermal.tx2.fanStartC).toBe(tx2Before);
+    fireEvent.click(screen.getByLabelText("Same to TX1 and TX2"));
+    fireEvent.change(screen.getByLabelText("TX1 Operation Temperature"), { target: { value: "51" } });
+    expect(store.getState().device.configuration.draft.thermal.tx2.fanStartC).toBe(51);
+    expect(store.getState().device.configuration.running.thermal.tx2.fanStartC).toBe(tx2Before);
+  });
+
+  it("previews course-shift alarms in both directions without changing the equipment", () => {
+    const store = createUiStore();
+    connectAndLogin(store);
+    act(() => { store.getState().advanceTime(1000); });
+    const before = store.getState().device;
+    fireEvent.click(screen.getByRole("button", { name: "Flight Inspection" }));
+    fireEvent.click(screen.getByRole("button", { name: "Monitor Reference Check" }));
+    const reference = within(screen.getByRole("dialog", { name: "Monitor Reference Check" }));
+    const baseline = Number(reference.getByRole("meter", { name: "MON1" }).getAttribute("aria-valuenow"));
+    fireEvent.click(reference.getByRole("button", { name: "Azimuth Course Shift Alarm, CW" }));
+    expect(Number(reference.getByRole("meter", { name: "MON1" }).getAttribute("aria-valuenow"))).toBeGreaterThan(baseline);
+    expect(reference.getByLabelText("MON1: Alarm")).toBeInTheDocument();
+    fireEvent.click(reference.getByRole("button", { name: "Azimuth Course Shift Alarm, CCW" }));
+    expect(Number(reference.getByRole("meter", { name: "MON1" }).getAttribute("aria-valuenow"))).toBeLessThan(baseline);
+    expect(reference.getByLabelText("MON1: Alarm")).toBeInTheDocument();
+    fireEvent.click(reference.getByRole("button", { name: "Return to origin" }));
+    expect(Number(reference.getByRole("meter", { name: "MON1" }).getAttribute("aria-valuenow"))).toBe(baseline);
+    expect(store.getState().device).toEqual(before);
+    fireEvent.click(reference.getByRole("button", { name: "Changeover" }));
+    expect(screen.getByRole("alertdialog", { name: "Transmitter Change Over" })).toBeInTheDocument();
+  });
+
+  it("searches separate PMDT and LMI history by date, class, and LMI username", () => {
+    const store = createUiStore();
+    connectAndLogin(store);
+    act(() => { store.getState().dispatch({ type: "set-keylock", mode: "MAINT" }); });
+    fireEvent.click(screen.getByRole("button", { name: "History Log" }));
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    const pmdt = within(screen.getByRole("table", { name: "PMDT history records" }));
+    expect(pmdt.getByText(/Connected to/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save CSV" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Event" }));
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    expect(pmdt.queryByText(/Connected to/)).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("From"), { target: { value: "2027-01-01T00:00" } });
+    expect(screen.getByRole("button", { name: "Search" })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "LMI History Log" }));
+    fireEvent.click(screen.getByRole("button", { name: "Detail Options" }));
+    const options = within(screen.getByRole("dialog", { name: "Detail Options" }));
+    fireEvent.change(options.getByLabelText("Username"), { target: { value: "Administrator" } });
+    fireEvent.click(options.getByRole("button", { name: "OK" }));
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    expect(within(screen.getByRole("table", { name: "LMI history records" })).getByText("Keylock changed to MAINT")).toBeInTheDocument();
+  });
+
+  it("shows the version reference and keeps firmware update display only", () => {
+    const store = createUiStore();
+    connectAndLogin(store);
+    const before = store.getState().device;
+    fireEvent.click(screen.getByRole("button", { name: "Maintenance" }));
+    fireEvent.click(screen.getByRole("button", { name: "Version" }));
+    const versions = within(screen.getByRole("table", { name: "Version Information" }));
+    expect(versions.getByRole("columnheader", { name: "Up Time" })).toBeInTheDocument();
+    expect(versions.getByText("1A1A2").parentElement).toHaveTextContent("1.0.0 #05123");
+    fireEvent.click(versions.getByRole("button", { name: "Firmware Update 1A1A2" }));
+    expect(screen.getByRole("dialog", { name: "Firmware Update" })).toHaveTextContent("Display only");
+    expect(store.getState().device).toEqual(before);
+  });
+
   it("edits Draft, applies Running and saves the Flash profile", () => {
     const store = createUiStore();
     connectAndLogin(store);

@@ -4,10 +4,12 @@ import { useState, type CSSProperties, type ReactNode } from "react";
 import {
   MopiensBeveledButton,
   MopiensGauge,
+  MopiensModal,
   MopiensStatusIndicator,
   MopiensTable,
   type MopiensVisualTone,
 } from "@/modules/operations/mopiens-pmdt";
+import { classifyDvor220Reading } from "../domain/engine";
 import {
   DVOR220_RF_OUTPUT_IDS,
   DVOR220_TRANSMITTER_IDS,
@@ -204,11 +206,6 @@ function FieldMetricBar({
   return <FieldReadingBar label={label} source={source} reading={measurement(value, unit, status)} band={band} />;
 }
 
-function PowerRailBar({ value, maximum }: { value: number; maximum: number }) {
-  const railStyle = { "--field-rail-level": `${Math.max(0, Math.min(100, (Math.abs(value) / maximum) * 100))}%` } as CSSProperties;
-  return <span className={styles.powerRailBar} style={railStyle} aria-hidden><span /></span>;
-}
-
 function InputSignalTable({
   caption,
   prefix,
@@ -371,21 +368,100 @@ function HomeScreen({ device, snapshot, openDialog, navigate }: Dvor220MainScree
   );
 }
 
-function EquipmentScreen({ device, snapshot, navigate }: Dvor220MainScreenProps) {
+type EquipmentDetailId = "tx1" | "tx2" | "monitor" | "pdc" | "power";
+
+function EquipmentDetail({ id, device, snapshot, onClose }: Pick<Dvor220MainScreenProps, "device" | "snapshot"> & { id: EquipmentDetailId; onClose: () => void }) {
+  const { configuration } = device;
+  const txDetail = id === "tx1" || id === "tx2";
+  const columns = txDetail ? ["TX1", "TX2"] : id === "monitor" ? ["MON1", "MON2"] : id === "power" ? ["#1", "#2", "#3", "#4", "#5"] : ["Status"];
+  const txs = DVOR220_TRANSMITTER_IDS.map((tx) => snapshot.transmitters[tx]);
+  const mons = [snapshot.monitors.mon1, snapshot.monitors.mon2];
+  type DetailRow = [label: string, ...values: string[]];
+  const sections: { title: string; rows: DetailRow[] }[] = [];
+  const add = (title: string, rows: DetailRow[]) => sections.push({ title, rows });
+  if (txDetail) {
+    add("General", [
+      ["Main TX", ...txs.map((tx) => formatDvor220Status(tx.designation))],
+      ["Output", ...txs.map((tx) => tx.path === "antenna" ? "On ANT" : tx.path === "load" ? "On Load" : "Disconnected")],
+      ["Status", ...txs.map((tx) => formatDvor220Status(tx.status))],
+    ]);
+    const modules = {
+      msg: ["MSG", "Over Power Detection", "Local Phase"],
+      syn: ["SYN", "Frequency Setting", "PLL Lock", ...["Carrier", "USB COS", "USB SIN", "LSB COS", "LSB SIN"].flatMap((output) =>
+        [`${output} Frequency Alarm`, `${output} Bite Alarm`])],
+      cma: ["CMA", "CSB Forward Power", "AMP Temperature"],
+      smaUsb: ["SMA USB", "COS Status", "SIN Status", "USB COS Forward Power", "USB SIN Forward Power", "AMP Temperature"],
+      smaLsb: ["SMA LSB", "COS Status", "SIN Status", "LSB COS Forward Power", "LSB SIN Forward Power", "AMP Temperature"],
+      dcdc: ["DC/DC", "DC/DC +5V", "DC/DC +8V", "DC/DC +15V", "DC/DC −15V", "DC/DC +28V", "DC/DC +50V"],
+      fan: ["FAN"],
+    } as const;
+    for (const unit of DVOR220_TRANSMITTER_UNIT_IDS) {
+      const [title, ...unmodeled] = modules[unit];
+      add(title, [
+        ["Status", ...txs.map((tx) => formatDvor220Status(tx.units[unit]))],
+        ...(unit === "fan" ? [["Operation", ...txs.map((tx) => tx.fanOn ? "On" : "Off")] as DetailRow] : []),
+        ...unmodeled.map((label): DetailRow => [label]),
+      ]);
+    }
+  } else if (id === "monitor") {
+    add("MON", [
+      ["Monitor Action", ...mons.map((mon) => mon.effectiveBypass ? "Bypass" : "Auto")],
+      ["Fault Status", ...mons.map((mon) => formatDvor220Status(mon.hardwareStatus))],
+    ]);
+    for (const [channel, label] of [["cha", "CH.A"], ["chb1", "CH.B.1"], ["chb2", "CH.B.2"], ["standby", "STB"]] as const) {
+      if (channel === "standby" && !mons.some((mon) => mon.channels.standby.enabled)) continue;
+      add(label, (["bearingError", "fmIndex", "am30Hz", "am9960Hz", "ident1020Hz", "rfLevel", "distortion9960Hz"] as const)
+        .map((parameter): DetailRow => [
+          parameterLabels[parameter], ...mons.map((mon) => formatDvor220Status(mon.channels[channel].readings[parameter].status)),
+        ]));
+    }
+    add("Frequency", (["carrierFrequency", "subcarrierFrequency"] as const).map((parameter) => [
+      parameterLabels[parameter], ...mons.map((mon) => formatDvor220Status(mon.channels.cha.readings[parameter].status)),
+    ]));
+    add("IDENT", [["IDENT Code"]]);
+  } else if (id === "pdc") {
+    const limits = configuration.running.transmitterLimits;
+    const pdc = snapshot.pdc;
+    const unavailable = ["fault", "unplugged", "off", "not-present"].includes(pdc.status);
+    const status = (value: Dvor220Status) => formatDvor220Status(unavailable ? pdc.status : value);
+    add("PDC", [
+      ["Carrier Power Alarm", status(classifyDvor220Reading(pdc.carrierPowerW, limits.carrierPower))],
+      ["USB COS Power Alarm"], ["USB SIN Power Alarm"], ["LSB COS Power Alarm"], ["LSB SIN Power Alarm"],
+      ["Carrier VSWR Alarm", status(pdc.carrierVswr >= limits.vswrUpperAlarm ? "alarm" : pdc.carrierVswr > limits.vswrUpperWarning ? "warning" : "normal")],
+      ["Sideband VSWR Alarm"], ["Sideband Phase Alarm"],
+      ["Antenna", status(pdc.antennas.some((antenna) => antenna.status === "alarm") ? "alarm" : pdc.antennas.some((antenna) => antenna.status === "warning") ? "warning" : "normal")],
+    ]);
+  } else {
+    add("Power", [["PMU"], ["DC/DC-A +5V"], ["DC/DC-A +15V"], ["DC/DC-A −15V"], ["AC/DC"], ["Battery"]]);
+  }
+  const title = txDetail ? "Transmitter Status Detail" : id === "monitor" ? "Monitor Status Detail" : id === "pdc" ? "PDC Detail" : "Power Supply Detail";
+  return (
+    <MopiensModal open title={title} size="large" onClose={onClose}
+      actions={[{ id: "close", label: "Close", onClick: onClose }]}>
+      <p>— Status not modeled at this level.</p>
+      {sections.map((section) => (
+        <MopiensTable key={section.title} caption={section.title} rows={section.rows} getRowId={(row) => row[0]} dense
+          columns={[{ id: "item", label: "Items", render: (row) => row[0] }, ...columns.map((label, index) =>
+            ({ id: label, label, render: (row: DetailRow) => row[index + 1] ?? "—" }))]} />
+      ))}
+    </MopiensModal>
+  );
+}
+
+function EquipmentScreen({ device, snapshot }: Dvor220MainScreenProps) {
+  const [detailId, setDetailId] = useState<EquipmentDetailId | null>(null);
   const groups = [
     ...DVOR220_TRANSMITTER_IDS.map((id) => ({
       id,
       label: `Transmitter ${id === "tx1" ? "1" : "2"}`,
       detail: `${snapshot.transmitters[id].designation.toUpperCase()} · ${formatDvor220Status(snapshot.transmitters[id].path)}`,
-      screen: "cma-sma" as Dvor220ScreenId,
       status: snapshot.transmitters[id].status,
       units: DVOR220_TRANSMITTER_UNIT_IDS.map((unit) => ({ label: unit.toUpperCase(), status: snapshot.transmitters[id].units[unit] })),
     })),
     {
-      id: "monitor",
+      id: "monitor" as const,
       label: "Monitor",
       detail: snapshot.effectiveMonitorBypass ? "BYPASSED" : "AUTOMATIC",
-      screen: "monitor-cha" as Dvor220ScreenId,
       status: snapshot.monitors.mon1.status,
       units: [
         { label: "MON1", status: snapshot.monitors.mon1.status },
@@ -393,10 +469,9 @@ function EquipmentScreen({ device, snapshot, navigate }: Dvor220MainScreenProps)
       ],
     },
     {
-      id: "pdc",
+      id: "pdc" as const,
       label: "PDC",
       detail: `${snapshot.pdc.antennas.filter((antenna) => antenna.status !== "normal").length} ANTENNA ALERTS`,
-      screen: "pdc" as Dvor220ScreenId,
       status: snapshot.pdc.status,
       units: [
         { label: "PDC", status: snapshot.pdc.status },
@@ -404,10 +479,9 @@ function EquipmentScreen({ device, snapshot, navigate }: Dvor220MainScreenProps)
       ],
     },
     {
-      id: "power",
+      id: "power" as const,
       label: "Power",
       detail: snapshot.power.source.toUpperCase(),
-      screen: "power" as Dvor220ScreenId,
       status: snapshot.power.status,
       units: [
         { label: "PMU", status: snapshot.power.status },
@@ -426,7 +500,7 @@ function EquipmentScreen({ device, snapshot, navigate }: Dvor220MainScreenProps)
         <div className={styles.equipmentGroups}>
           {groups.map((group) => (
             <section key={group.id} className={styles.equipmentGroup} data-tone={toneForDvor220Status(group.status)}>
-              <button type="button" className={styles.equipmentGroupTitle} onClick={() => navigate(group.screen)}>
+              <button type="button" className={styles.equipmentGroupTitle} onClick={() => setDetailId(group.id)}>
                 <span className={styles.fieldSectionToggle} aria-hidden />
                 <strong>{group.label}</strong>
                 <small>{group.detail}</small>
@@ -449,6 +523,7 @@ function EquipmentScreen({ device, snapshot, navigate }: Dvor220MainScreenProps)
           ))}
         </div>
       </div>
+      {detailId ? <EquipmentDetail id={detailId} device={device} snapshot={snapshot} onClose={() => setDetailId(null)} /> : null}
     </div>
   );
 }
@@ -471,7 +546,7 @@ function PdcScreen({ device, snapshot }: Dvor220MainScreenProps) {
   return (
     <div className={styles.screenBody}>
       <ScreenTitle title="PDC Status" />
-      <FieldSection title="Carrier Power Output">
+      <FieldSection title="PDC Power Output">
         <div className={styles.fieldReadingGrid}>
           {DVOR220_RF_OUTPUT_IDS.map((output) => (
             <FieldMetricBar
@@ -731,90 +806,39 @@ function MonitorSelfTestScreen({ snapshot }: Dvor220MainScreenProps) {
 }
 
 function PowerScreen({ device, snapshot }: Dvor220MainScreenProps) {
-  const powered = device.power.source !== "off";
-  const railStatus: Dvor220Status = powered ? "normal" : "off";
-  const auxiliaryRails = [
-    { id: "5v", item: "5V", voltage: powered ? 5.0 : 0, current: powered ? 0.48 : 0, maximum: 5 },
-    { id: "minus5v", item: "-5V", voltage: powered ? -5.08 : 0, current: powered ? 0.30 : 0, maximum: 5 },
-    { id: "15v", item: "15V", voltage: powered ? 15.07 : 0, current: powered ? 0.18 : 0, maximum: 15 },
-    { id: "minus15v", item: "-15V", voltage: powered ? -15.07 : 0, current: powered ? 0.18 : 0, maximum: 15 },
-  ];
-  const dcRails = [
-    { id: "5v", item: "5V", voltage: powered ? 5.02 : 0, current: powered ? 2.09 : 0, maximum: 5 },
-    { id: "6v", item: "6V", voltage: powered ? 5.83 : 0, current: powered ? 1.78 : 0, maximum: 6 },
-    { id: "18v", item: "18V", voltage: powered ? 18.05 : 0, current: powered ? 3.52 : 0, maximum: 18 },
-    { id: "28v-a", item: "28V A", voltage: powered ? 28.17 : 0, current: powered ? 1.15 : 0, maximum: 28 },
-    { id: "28v-b", item: "28V B", voltage: powered ? 28.13 : 0, current: powered ? 1.15 : 0, maximum: 28 },
-    { id: "50v", item: "50V", voltage: powered ? 50.28 : 0, current: powered ? 2.41 : 0, maximum: 50 },
-  ];
-  const acDcRows = [
-    { id: "acdc-a", item: "AC/DC-A", voltage: device.power.acAvailable ? 27.8 : 0, current: powered ? 5.2 : 0, temperature: 35.2 },
-    { id: "acdc-b", item: "AC/DC-B", voltage: device.power.acAvailable ? 27.8 : 0, current: powered ? 5.2 : 0, temperature: 35.8 },
-    { id: "acdc-c", item: "AC/DC-C", voltage: device.power.acAvailable ? 27.8 : 0, current: powered ? 6.3 : 0, temperature: 36.1 },
-  ];
+  const batteryPresent = device.power.batteryPresent;
   const railColumns = [
-    { id: "item", label: "Item", width: "18%", render: (row: (typeof auxiliaryRails)[number]) => row.item },
-    { id: "graph", label: "Voltage", width: "38%", render: (row: (typeof auxiliaryRails)[number]) => <PowerRailBar value={row.voltage} maximum={row.maximum} /> },
-    { id: "voltage", label: "Voltage (V)", align: "right" as const, render: (row: (typeof auxiliaryRails)[number]) => row.voltage.toFixed(2) },
-    { id: "current", label: "Current (A)", align: "right" as const, render: (row: (typeof auxiliaryRails)[number]) => row.current.toFixed(2) },
+    { id: "item", label: "Items", render: (rail: string) => rail },
+    ...[1, 2].flatMap((slot) => [
+      { id: `voltage-${slot}`, label: `#${slot} Voltage (V)`, render: () => "—" },
+      { id: `current-${slot}`, label: `#${slot} Current (A)`, render: () => "—" },
+    ]),
+  ];
+  const moduleColumns = [
+    { id: "item", label: "Items", render: (item: string) => item },
+    { id: "voltage", label: "Voltage (V)", render: () => "—" },
+    { id: "current", label: "Current (A)", render: () => "—" },
+    { id: "temperature", label: "Temperature (°C)", render: () => "—" },
   ];
   return (
     <div className={styles.screenBody}>
       <ScreenTitle title="Power Supply" />
-      <FieldSection title="DC/DC-A">
-        <MopiensTable
-          caption="Auxiliary DC/DC readings"
-          rows={auxiliaryRails}
-          dense
-          getRowId={(row) => row.id}
-          rowTone={() => toneForDvor220Status(railStatus)}
-          columns={railColumns}
-        />
-      </FieldSection>
       <FieldSection title="DC/DC">
-        <MopiensTable
-          caption="Main DC/DC readings"
-          rows={dcRails}
-          dense
-          getRowId={(row) => row.id}
-          rowTone={() => toneForDvor220Status(railStatus)}
-          columns={railColumns}
-        />
+        <MopiensTable caption="DC/DC-A" rows={["5V", "15V", "-15V"]} getRowId={(rail) => rail} columns={railColumns} dense />
+        <MopiensTable caption="DC/DC" rows={["5V", "8V", "15V", "-15V", "28V", "50V"]} getRowId={(rail) => rail} columns={railColumns} dense />
       </FieldSection>
       <FieldSection title="AC/DC">
-        <MopiensTable
-          caption="AC/DC module readings"
-          rows={acDcRows}
-          dense
-          getRowId={(row) => row.id}
-          rowTone={() => device.power.acAvailable ? "normal" : "alarm"}
-          columns={[
-            { id: "item", label: "Item", render: (row) => row.item },
-            { id: "voltage", label: "Voltage (V)", align: "right", render: (row) => row.voltage.toFixed(1) },
-            { id: "current", label: "Current (A)", align: "right", render: (row) => row.current.toFixed(1) },
-            { id: "temperature", label: "Temperature (°C)", align: "right", render: (row) => row.temperature.toFixed(1) },
-            { id: "status", label: "Status", width: "18%", render: () => device.power.acAvailable ? "Normal" : "AC failure" },
-          ]}
-        />
+        <MopiensTable caption="AC/DC" rows={["AC/DC-A", "AC/DC-C", "AC/DC-E"]} getRowId={(item) => item} dense
+          columns={[...moduleColumns, { id: "status", label: "Status", render: () => device.power.acAvailable ? "—" : "Off" }]} />
       </FieldSection>
-      {device.configuration.running.optionalUnits.battery ? (
-        <FieldSection title="Battery">
-          <MopiensTable
-            caption="Backup battery readings"
-            rows={[{ id: "battery", item: "Battery Bank", voltage: snapshot.power.batteryVoltageV, current: device.power.batteryCurrentA, temperature: device.power.batteryTemperatureC }]}
-            dense
-            getRowId={(row) => row.id}
-            rowTone={() => toneForDvor220Status(snapshot.power.batteryStatus)}
-            columns={[
-              { id: "item", label: "Item", render: (row) => row.item },
-              { id: "voltage", label: "Voltage (V)", align: "right", render: (row) => row.voltage.toFixed(2) },
-              { id: "current", label: "Current (A)", align: "right", render: (row) => row.current.toFixed(2) },
-              { id: "temperature", label: "Temperature (°C)", align: "right", render: (row) => row.temperature.toFixed(1) },
-              { id: "status", label: "Status", render: () => `${formatDvor220Status(snapshot.power.batteryStatus)} · ${snapshot.power.batteryRemainingMinutes} min` },
-            ]}
-          />
-        </FieldSection>
-      ) : null}
+      <FieldSection title="Battery">
+        <MopiensTable caption="Battery" rows={["Battery #1", "Battery #2"]} getRowId={(item) => item} dense
+          columns={[...moduleColumns, { id: "status", label: "Status", render: () => batteryPresent ? "—" : "Not installed" }]} />
+        {batteryPresent ? (
+          <p>Simulated battery bank: {snapshot.power.batteryVoltageV.toFixed(2)} V · {device.power.batteryCurrentA.toFixed(2)} A · {device.power.batteryTemperatureC.toFixed(1)} °C · {formatDvor220Status(snapshot.power.batteryStatus)} · {snapshot.power.batteryRemainingMinutes} min</p>
+        ) : null}
+      </FieldSection>
+      <p>— No per-module reading is available in the simulator.</p>
     </div>
   );
 }

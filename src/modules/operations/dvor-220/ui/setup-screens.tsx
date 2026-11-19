@@ -428,31 +428,59 @@ function TransmitterSetup({
 }
 
 function ThermalSetup({ configuration, disabled, patch }: { configuration: Dvor220Configuration; disabled: boolean; patch: (patch: Dvor220DeepPartial<Dvor220Configuration>) => void }) {
-  function thermalPatch(transmitterId: Dvor220TransmitterId, value: Dvor220DeepPartial<Dvor220Configuration["thermal"][Dvor220TransmitterId]>) {
-    patch({ thermal: { [transmitterId]: value } } as Dvor220DeepPartial<Dvor220Configuration>);
+  const [sameSettings, setSameSettings] = useState(false);
+  type Thermal = Dvor220Configuration["thermal"][Dvor220TransmitterId];
+  const update = (id: Dvor220TransmitterId, value: Dvor220DeepPartial<Thermal>) =>
+    patch({ thermal: sameSettings ? { tx1: value, tx2: value } : { [id]: value } });
+
+  function numeric(label: string, read: (thermal: Thermal) => number, write: (value: number) => Dvor220DeepPartial<Thermal>) {
+    return {
+      label, unit: "°C",
+      field: (id: Dvor220TransmitterId) => {
+        const value = read(configuration.thermal[id]);
+        return <input type="number" step="0.1" aria-label={`${id.toUpperCase()} ${label}`} value={value}
+          onChange={(event) => update(id, write(numberValue(event.target.value, value)))} />;
+      },
+    };
   }
+
+  const groups = [
+    { title: "Cooling Fans", rows: [
+      { label: "Operation Mode", unit: "", field: (id: Dvor220TransmitterId) =>
+        <select aria-label={`${id.toUpperCase()} Operation Mode`} value={configuration.thermal[id].fanMode}
+          onChange={(event) => update(id, { fanMode: event.target.value as Thermal["fanMode"] })}>
+          <option value="auto">Auto</option><option value="on">On</option><option value="off">Off</option>
+        </select> },
+      numeric("Operation Temperature", (t) => t.fanStartC, (value) => ({ fanStartC: value })),
+      numeric("Stop Temperature", (t) => t.fanStopC, (value) => ({ fanStopC: value })),
+    ] },
+    { title: "Overheat Protection", rows: (["cma", "usb", "lsb"] as const).flatMap((unit) => [
+      numeric(`${unit.toUpperCase()} Transmitter Shutdown at`, (t) => t.shutdownC[unit], (value) => ({ shutdownC: { [unit]: value } })),
+      numeric(`${unit.toUpperCase()} Transmitter Restart at`, (t) => t.restartC[unit], (value) => ({ restartC: { [unit]: value } })),
+    ]) },
+  ];
+
   return (
-    <div className={styles.twoColumnLayout}>
-      {DVOR220_TRANSMITTER_IDS.map((transmitterId) => {
-        const thermal = configuration.thermal[transmitterId];
-        return (
-          <fieldset key={transmitterId} className={styles.formSection} disabled={disabled}>
-            <legend>{transmitterId.toUpperCase()} Thermal Control</legend>
-            <div className={styles.formGridSingle}>
-              <FormField label="Fan Mode"><select value={thermal.fanMode} onChange={(event) => thermalPatch(transmitterId, { fanMode: event.target.value as "auto" | "on" | "off" })}><option value="auto">Auto</option><option value="on">On</option><option value="off">Off</option></select></FormField>
-              <FormField label="Fan Start (°C)"><input type="number" step="0.1" value={thermal.fanStartC} onChange={(event) => thermalPatch(transmitterId, { fanStartC: numberValue(event.target.value, thermal.fanStartC) })} /></FormField>
-              <FormField label="Fan Stop (°C)"><input type="number" step="0.1" value={thermal.fanStopC} onChange={(event) => thermalPatch(transmitterId, { fanStopC: numberValue(event.target.value, thermal.fanStopC) })} /></FormField>
-              {(["cma", "usb", "lsb"] as const).map((unit) => (
-                <div className={styles.inlineFieldPair} key={unit}>
-                  <FormField label={`${unit.toUpperCase()} Shutdown`}><input type="number" step="0.1" value={thermal.shutdownC[unit]} onChange={(event) => thermalPatch(transmitterId, { shutdownC: { [unit]: numberValue(event.target.value, thermal.shutdownC[unit]) } })} /></FormField>
-                  <FormField label={`${unit.toUpperCase()} Restart`}><input type="number" step="0.1" value={thermal.restartC[unit]} onChange={(event) => thermalPatch(transmitterId, { restartC: { [unit]: numberValue(event.target.value, thermal.restartC[unit]) } })} /></FormField>
-                </div>
-              ))}
-            </div>
-          </fieldset>
-        );
-      })}
-    </div>
+    <fieldset className={styles.formSection} disabled={disabled}>
+      <legend>Thermal Control</legend>
+      <label><input type="checkbox" checked={sameSettings} onChange={(event) => setSameSettings(event.target.checked)} /> Same to TX1 and TX2</label>
+      <div className={styles.fieldInputTableFrame}>
+        <table className={styles.editorTable}>
+          <caption>Thermal Control settings</caption>
+          <thead><tr>{["Items", "TX1", "TX2", "Units", "Helper"].map((label) => <th key={label} scope="col">{label}</th>)}</tr></thead>
+          {groups.map((group) => (
+            <tbody key={group.title}>
+              <tr><th scope="rowgroup" colSpan={5}>{group.title}</th></tr>
+              {group.rows.map((row) => <tr key={row.label}>
+                <th scope="row">{row.label}</th>
+                {DVOR220_TRANSMITTER_IDS.map((id) => <td key={id}>{row.field(id)}</td>)}
+                <td>{row.unit}</td><td />
+              </tr>)}
+            </tbody>
+          ))}
+        </table>
+      </div>
+    </fieldset>
   );
 }
 
