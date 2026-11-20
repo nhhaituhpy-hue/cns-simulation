@@ -171,20 +171,31 @@ const occurrence = (
   targetCabinetHotspotIds,
 });
 
+export const DVOR_220_ACDC_BAY = ([
+  [1, 105, 63, true],
+  [2, 172, 63, false],
+  [3, 239, 63, true],
+  [4, 306, 63, false],
+  [5, 373, 67, true],
+] as const).map(([number, x, width, installed]) => ({
+  installed,
+  hotspot: hotspot(`front-acdc-${number}`, "front", x, 930, width, 34, `1A5A${number}`, `AC/DC ${number}`, "power"),
+}));
+const installedAcdc = DVOR_220_ACDC_BAY.filter((slot) => slot.installed).map((slot) => slot.hotspot);
+
+export const DVOR_220_AUX_MODULES = {
+  csp: hotspot("front-csp", "front", 105, 72, 84, 176, "1A1A1", "CSP", "control"),
+  tsg: hotspot("front-tsg", "front", 230, 72, 17, 176, "1A1A2", "TSG", "card"),
+  scu1: hotspot("front-scu-1", "front", 254, 72, 17, 176, "1A1A3", "SCU 1", "card"),
+  scu2: hotspot("front-scu-2", "front", 278, 72, 17, 176, "1A1A4", "SCU 2", "card"),
+  niu1: hotspot("front-niu-1", "front", 326, 72, 19, 79, "1A1A6", "NIU 1", "card"),
+  dcdcAux1: hotspot("front-dcdc-aux-1", "front", 350, 72, 19, 79, "1A1A8", "DC/DC-A 1", "power"),
+  dcdcAux2: hotspot("front-dcdc-aux-2", "front", 350, 169, 19, 79, "1A1A9", "DC/DC-A 2", "power"),
+} as const;
+
 const front = {
+  ...DVOR_220_AUX_MODULES,
   lmi: hotspot("front-lmi", "front", 530, 102, 132, 71, "1A6", "LMI", "display"),
-  csp: hotspot("front-csp", "front", 105, 72, 55, 176, "1A1A1", "CSP", "control"),
-  tsg: hotspot("front-tsg", "front", 164, 72, 21, 176, "1A1A2", "TSG", "card"),
-  scu1: hotspot("front-scu-1", "front", 188, 72, 22, 176, "1A1A3", "SCU 1", "card"),
-  scu2: hotspot("front-scu-2", "front", 213, 72, 22, 176, "1A1A4", "SCU 2", "card"),
-  emu: hotspot("front-emu", "front", 238, 72, 22, 176, "1A1A5", "EMU", "card"),
-  niu1: hotspot("front-niu-1", "front", 263, 72, 22, 176, "1A1A6", "NIU 1", "card"),
-  niu2: hotspot("front-niu-2", "front", 288, 72, 22, 176, "1A1A7", "NIU 2", "card"),
-  dcdcAux1: hotspot("front-dcdc-aux-1", "front", 313, 72, 22, 176, "1A1A8", "DC/DC-A 1", "power"),
-  dcdcAux2: hotspot("front-dcdc-aux-2", "front", 338, 72, 22, 176, "1A1A9", "DC/DC-A 2", "power"),
-  modem1: hotspot("front-modem-1", "front", 363, 72, 22, 176, "1A1A10", "MODEM 1", "card"),
-  modem2: hotspot("front-modem-2", "front", 388, 72, 22, 176, "1A1A11", "MODEM 2", "card"),
-  vau: hotspot("front-vau", "front", 413, 72, 27, 176, "1A1A12", "VAU", "card"),
   tx1Fan: hotspot("front-tx1-fan", "front", 105, 262, 335, 12, "1A2A8", "FAN TX1", "power"),
   tx1SmaLsb: hotspot("front-tx1-sma-lsb", "front", 105, 280, 56, 198, "1A2A1", "LSB SMA", "amplifier"),
   tx1Cma: hotspot("front-tx1-cma", "front", 165, 280, 68, 198, "1A2A2", "CMA", "amplifier"),
@@ -205,17 +216,13 @@ const front = {
   powerSwitch: hotspot("front-power-switch", "front", 105, 836, 90, 84, "1A4", "POWER PANEL", "control"),
   pmu1: hotspot("front-pmu-1", "front", 200, 836, 118, 84, "1A4A1", "PMU 1", "power"),
   pmu2: hotspot("front-pmu-2", "front", 322, 836, 118, 84, "1A4A2", "PMU 2", "power"),
-  acdc1: hotspot("front-acdc-1", "front", 105, 930, 63, 34, "1A5A1", "AC/DC 1", "power"),
-  acdc2: hotspot("front-acdc-2", "front", 172, 930, 63, 34, "1A5A2", "AC/DC 2", "power"),
-  acdc3: hotspot("front-acdc-3", "front", 239, 930, 63, 34, "1A5A3", "AC/DC 3", "power"),
-  acdc4: hotspot("front-acdc-4", "front", 306, 930, 63, 34, "1A5A4", "AC/DC 4", "power"),
-  acdc5: hotspot("front-acdc-5", "front", 373, 930, 67, 34, "1A5A5", "AC/DC 5", "power"),
 } as const;
 
-const rear = {
-  ifb: hotspot("rear-ifb", "rear", 176, 84, 248, 88, "1A7", "IFB", "rear"),
-  divider: hotspot("rear-rf-divider", "rear", 176, 188, 248, 82, "1PD1", "QUINT 3-WAY", "rf"),
+export const DVOR_220_REAR_MODULES = {
+  ifb: hotspot("rear-ifb", "rear", 204, 74, 192, 115, "1A7", "IFB", "rear"),
+  divider: hotspot("rear-rf-divider", "rear", 122, 244, 55, 158, "1PD1", "QUINT 3-WAY", "rf"),
 } as const;
+const rear = DVOR_220_REAR_MODULES;
 
 const asu = {
   shell: hotspot("asu-shell", "asu", 72, 42, 456, 45, "2A1", "ASU", "asu"),
@@ -464,12 +471,13 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     partNumber: "0130-7540",
     description: "Giám sát nhiệt độ, xâm nhập và khói; gửi trạng thái môi trường về SCU qua CAN bus.",
     manualReference: "Manual §3.2.9, Figures 3-24/3-25 (PDF 118-119).",
-    cabinetHotspots: [front.emu],
-    diagramOccurrences: [occurrence("overview-emu", [front.emu.id]), occurrence("control-emu", [front.emu.id])],
+    cabinetHotspots: [],
+    diagramOccurrences: [occurrence("overview-emu"), occurrence("control-emu")],
     indicators: ["POWER", "FAULT"],
     controls: ["Đầu vào cảm biến nhiệt độ", "Đầu vào smoke và intrusion", "CAN bus"],
     testPoints: [],
     faceplate: "card",
+    notes: ["Vị trí EMU trống trong ảnh tủ Cam Ranh; mặt card là tham chiếu theo tài liệu."],
   },
   {
     id: "niu",
@@ -479,12 +487,13 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     partNumber: "0130-7550",
     description: "Cặp giao diện mạng tùy chọn cung cấp Ethernet LAN và SNMP cho truy cập giám sát từ xa.",
     manualReference: "Manual §3.3.4, Figures 3-26/3-27 (PDF 120).",
-    cabinetHotspots: [front.niu1, front.niu2],
-    diagramOccurrences: [occurrence("overview-niu", [front.niu1.id, front.niu2.id]), occurrence("control-niu", [front.niu1.id, front.niu2.id])],
+    cabinetHotspots: [front.niu1],
+    diagramOccurrences: [occurrence("overview-niu", [front.niu1.id]), occurrence("control-niu", [front.niu1.id])],
     indicators: ["POWER", "FAULT", "LAN link/activity"],
     controls: ["Ethernet LAN", "USB/service", "Kết nối nội bộ đến SCU"],
     testPoints: [],
     faceplate: "card",
+    notes: ["Ảnh tủ Cam Ranh chỉ cho thấy NIU ở vị trí trên; vị trí dưới trống."],
   },
   {
     id: "dcdc-aux",
@@ -511,12 +520,13 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     partNumber: "0130-7420",
     description: "Giao diện modem đường thuê riêng hoặc dial-up phục vụ PMDT và RCU từ xa.",
     manualReference: "Manual §3.2.12, Figures 3-30/3-31 (PDF 123).",
-    cabinetHotspots: [front.modem1, front.modem2],
-    diagramOccurrences: [occurrence("overview-modem", [front.modem1.id, front.modem2.id]), occurrence("control-modem", [front.modem1.id, front.modem2.id])],
+    cabinetHotspots: [],
+    diagramOccurrences: [occurrence("overview-modem"), occurrence("control-modem")],
     indicators: ["POWER", "TxD", "RxD", "Carrier/Link"],
     controls: ["RS-232", "Dedicated line / dial-up", "Cấu hình flow control"],
     testPoints: [],
     faceplate: "card",
+    notes: ["Cả hai vị trí MODEM trống trong ảnh tủ Cam Ranh; mặt card là tham chiếu theo tài liệu."],
   },
   {
     id: "vau",
@@ -526,12 +536,13 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     partNumber: "0130-7430",
     description: "Lọc dải 300-3000 Hz và khuếch đại audio voice đưa đến khối tạo điều chế.",
     manualReference: "Manual §3.3.7, Figures 3-32/3-33 (PDF 124).",
-    cabinetHotspots: [front.vau],
-    diagramOccurrences: [occurrence("overview-vau", [front.vau.id]), occurrence("control-vau", [front.vau.id])],
+    cabinetHotspots: [],
+    diagramOccurrences: [occurrence("overview-vau"), occurrence("control-vau")],
     indicators: ["POWER", "FAULT"],
     controls: ["Voice input", "Filtered audio output", "Level adjustment nội bộ"],
     testPoints: [],
     faceplate: "card",
+    notes: ["Vị trí VAU trống trong ảnh tủ Cam Ranh; mặt card là tham chiếu theo tài liệu."],
   },
   {
     id: "ifb",
@@ -540,12 +551,13 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     assemblyIds: ["1A7"],
     partNumber: "0130-3410",
     description: "Điểm giao tiếp vật lý và chống surge giữa cabinet với voice, IDENT, cảm biến môi trường, LMI, mạng và thiết bị từ xa.",
-    manualReference: "Manual §3.2.6, Figures 3-16/3-17 (PDF 108-110).",
+    manualReference: "Manual §3.2.5, Figures 3-16/3-17 (PDF 108-110).",
     cabinetHotspots: [rear.ifb],
     diagramOccurrences: [occurrence("overview-ifb", [rear.ifb.id]), occurrence("control-ifb", [rear.ifb.id])],
     indicators: [],
     controls: ["Voice/IDENT", "Environmental sensors", "LAN/USB", "RS-232/Modem", "Surge protection"],
     testPoints: [],
+    notes: ["Ảnh mặt sau Cam Ranh xác nhận bố trí nhóm đầu nối, không xác nhận pinout hoặc định danh từng terminal."],
   },
   {
     id: "rf-divider",
@@ -561,6 +573,7 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     controls: ["FFM1", "FFM2", "FFM3", "Standby TX", "TSG", "Hai ngõ MON và một BNC đo PIR cho mỗi đường; ảnh không ghi thứ tự nhánh"],
     testPoints: [],
     faceplate: "quint-divider",
+    notes: ["Cụm 1PD1 lắp dọc bên trái ở mặt sau tủ Cam Ranh. Mặt chi tiết theo Fig. 3-14 vẽ linh kiện nằm ngang, không dùng để suy thứ tự BNC trong tủ."],
   },
   {
     id: "sma-lsb",
@@ -780,11 +793,15 @@ export const DVOR_220_BLOCKS: readonly Dvor220BlockDefinition[] = [
     partNumber: "3151-0016",
     description: "Các SMPS 1600 W đổi 85-265 VAC thành +28 VDC; cabinet hỗ trợ tối đa năm module để dự phòng.",
     manualReference: "Manual §3.2.23, Figures 3-66/3-67; §7.2.21, Figure 7-25 (PDF 162, 488).",
-    cabinetHotspots: [front.acdc1, front.acdc2, front.acdc3, front.acdc4, front.acdc5],
-    diagramOccurrences: [occurrence("overview-acdc", [front.acdc1.id, front.acdc3.id, front.acdc5.id]), occurrence("power-acdc1", [front.acdc1.id]), occurrence("power-acdc3", [front.acdc3.id]), occurrence("power-acdc5", [front.acdc5.id])],
+    cabinetHotspots: installedAcdc,
+    diagramOccurrences: [
+      occurrence("overview-acdc", installedAcdc.map((slot) => slot.id)),
+      ...installedAcdc.map((slot) => occurrence(`power-acdc${slot.assemblyId.slice(-1)}`, [slot.id])),
+    ],
     indicators: ["DC OK - xanh / DC FAIL - đỏ", "AC OK - xanh / AC FAIL - đỏ"],
     controls: ["Extraction handle", "Power supply release knob", "PMBus đến PMU"],
     testPoints: [],
+    notes: ["Ảnh tủ Cam Ranh: lắp bộ chuyển đổi ở 1A5A1, 1A5A3 và 1A5A5; hai vị trí còn lại có tấm che."],
     faceplate: "acdc",
   },
   {

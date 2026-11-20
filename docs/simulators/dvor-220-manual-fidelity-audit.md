@@ -92,9 +92,8 @@ slot lệch trong hình 3-2 (ví dụ VAU là 1A1A12).
 đã có năm hình giản lược, cặp TX, PDC, ASU, bộ chia và hai MON. Nó chưa phải
 sơ đồ dây của TM: overview gộp bus nguồn và chỉ nối DC/DC-A tới SCU, gộp
 đường đo MON và không vẽ nhánh đầu đo PIR của bộ chia. Khối AC/DC `×3`
-khớp cấu hình chuẩn trong Fig. 1-8 / Fig. 7-25: khay có năm vị trí, ba bộ ở
-A1/A3/A5. CR 5 cũng hiển thị AC/DC-A/C/E; giữ tách biệt ký hiệu vị trí
-với số lượng thiết bị được lắp.
+khớp CR 5 (AC/DC-A/C/E) và ảnh tủ Cam Ranh (A1/A3/A5). TM §3.1.5 nêu cấu
+hình hai bộ và Fig. 3-5 vẽ năm vị trí; số vị trí không phải số bộ được lắp.
 
 ## 2. Mặt thiết bị: vị trí và sai khác
 
@@ -138,23 +137,69 @@ xác tuyệt đối” chỉ từ hình mặt bên.
 
 Bảng trên giữ nguyên sai khác lúc kiểm toán. Đã chỉnh LMI, CSP, TSG, SCU,
 DC/DC-A, SMA (USB/LSB), CMA, DC/DC TX, MSG, SYN, MON, FAN, PDC, cầu dao 1A4,
-PMU và AC/DC theo tỷ lệ của hình nguồn; không thay cấu hình lắp đặt. NIU có
+PMU và AC/DC theo tỷ lệ của hình nguồn; đợt đó không thay cấu hình lắp đặt. NIU có
 RJ1/USB2 và VAU có MIC theo cạnh thấy được trong ảnh. SCU giữ ID CAN TxD/RxD
 và dùng chân đo; PDC giữ J20–J24. Các phím, LED và đầu cắm service minh họa
 không phải mô hình trạng thái mới. Các vị trí là tỷ lệ từ hình, không phải kích
 thước cơ khí.
 
-- **Cần ảnh Cam Ranh có nhãn:** không đổi cấu hình AC/DC hoặc sơ đồ nội thất
-  ASU khi chưa xác minh biến thể lắp đặt. Bản vẽ nội thất hiện có vẫn là sơ đồ:
+- **Cần ảnh bên trong ASU Cam Ranh:** bản vẽ nội thất hiện có vẫn là sơ đồ:
   mỗi SM minh họa 6 ngõ, khác 12 ngõ theo tài liệu; cụm đồng hồ công suất tùy
   chọn cũng chưa xác minh. Mặt chi tiết ASU nay chỉ vẽ cửa đóng theo Fig. 3-68.
 - **Cần ảnh 1PD1 có nhãn:** Fig. 3-14 đủ để vẽ hàng năm BNC đo PIR. Không suy
   thứ tự FFM1/2/3, Standby và TSG từ thứ tự trên sơ đồ Fig. 3-15, và không nối
   cổng nào với phép đo riêng cho đến khi có xác nhận.
-- **Cần ảnh nhìn thẳng / sơ đồ chân:** IFB, EMU, MODEM và ASU-IF chưa được xác
-  nhận ở mức từng đầu nối/nút như các mặt có callout bảo trì. Phần tủ tổng quan
-  không dùng để xác định vị trí từng chân. PMU không sinh số đo giả; VR1 của
-  PDC vẫn là tham chiếu nội bộ, không phải nút trên mặt trước.
+- **Cần ảnh nhìn thẳng / sơ đồ chân:** chưa xác nhận bố trí đầu nối/nút của
+  EMU, MODEM và ASU-IF tại Cam Ranh. Phần tủ tổng quan không dùng để xác định
+  vị trí từng chân. PMU không sinh số đo giả; VR1 của PDC vẫn là tham chiếu
+  nội bộ, không phải nút trên mặt trước.
+
+### Đối chiếu ảnh tủ Cam Ranh
+
+Dùng [12 ảnh lắp đặt do Hoàng cung cấp](https://drive.google.com/drive/folders/1bgCO8s3ocfaMyDhdPbLtQdrGIQmylWPE)
+để xác định hình dạng nhìn thấy và vị trí
+lắp, ưu tiên hơn hình TM khi khác nhau. TM vẫn là nguồn tên tín hiệu, chân đo
+và trình tự bảo trì khi ảnh không đọc được. Không lấy màu đèn đang sáng, giá
+trị trên màn hình hoặc góc chụp làm trạng thái mặc định hay kích thước cơ khí.
+
+- **Nguồn ảnh DVOR:** [mặt trước mở](https://drive.google.com/file/d/1J1aoXzI-K2iY7dOQAnCF3MzFPfe9iLnl/view)
+  (`1795144077168`), [ốp sau LMI](https://drive.google.com/file/d/152hEcNOxxImTiycLezaU_3AAGGuazOaQ/view)
+  (`1795144077198`) và [mặt sau mở](https://drive.google.com/file/d/1Qk9mMXdl4Oa5uHSM3E94yu0V8BnO6l-q/view)
+  (`1795144077227`; tờ kiểm tra ghi 220 DVOR).
+  Các ảnh cửa đóng `1795143354041`–`1795143354246` chụp hai tủ; phân biệt
+  theo nhãn 220 DVOR và 320 DME. Ba ảnh mở tủ `1795144123374`–`1795144123436`
+  thuộc tủ DME, nhận diện qua CSP ghi TRANSPONDER và các module DME; không
+  dùng cho mặt DVOR.
+
+| Khối / nguồn TM | Ảnh Cam Ranh xác nhận | Giới hạn hoặc khác biệt trong bản vẽ mô phỏng trước cập nhật |
+| --- | --- | --- |
+| **LMI**, Fig. 4-1 / Fig. 3-10 | Cửa tủ DVOR có màn hình bên trái; NORMAL, WARNING, ALARM, MAINT và khóa bên phải. Ảnh sau cửa cho thấy ốp LMI đang lắp. | Bố trí mặt trước phù hợp; không suy thêm đầu nối sau ốp. |
+| **CSP**, Fig. 4-2 | Hai cột TX, cụm MON 1/2 và các chỉ báo/phím ở phần dưới đúng thứ tự. | Bố trí chính phù hợp; không suy trạng thái từng đèn từ ảnh. |
+| **TSG**, Fig. 7-1; **SCU**, Fig. 7-2 | TSG rồi hai SCU cạnh CSP; có ejector, cụm đèn và header dọc; đầu BNC thấp của TSG nhìn thấy. | Không đọc được từng chân CAN hoặc thông số đầu nối từ ảnh; giữ callout TM. |
+| **NIU**, Figs. 3-26/27; **DC/DC-A**, Figs. 3-28/29, 7-3 | Nửa khay phải có NIU ở hàng trên (cáp LAN ghi NIU DVOR), không thấy NIU ở hàng dưới. Hai DC/DC-A nằm cùng cột, một trên và một dưới như Fig. 3-2. | Mô phỏng xếp hai NIU và hai DC/DC-A thành các card cao cạnh nhau. Giữ thứ tự RJ1/USB2 và danh tính jack nguồn theo TM, không suy từ cáp hay màu nhựa. |
+| **EMU, MODEM, VAU**, Figs. 3-2, 3-24–25, 3-30–33 | Các vị trí ghi EMU, MODEM và VAU trong ảnh không có card cắm; vị trí NIU dưới cũng trống. | Fig. 3-2 vẽ cả các vị trí có thể lắp; ảnh chỉ xác nhận cấu hình được chụp, không xóa các khối chức năng khỏi sơ đồ học. Chưa có mặt card đã lắp để xác nhận đầu nối riêng. |
+| **LSB/USB SMA**, Fig. 7-4; **CMA**, Fig. 7-7 | Cả hai khay: LSB SMA, CMA, USB SMA từ trái qua; tay kéo phía trái mỗi mặt, cặp ENV dọc trên SMA và một ENV gần đáy CMA. | Bố trí và số đầu ENV phù hợp; ảnh không đọc được số J2/J5/J6, dùng TM. |
+| **DC/DC TX**, Fig. 7-10 | Cả hai khay có tay kéo và dãy jack ở phía phải, trước MSG. | Hình không đọc được nhãn các rail; giữ thứ tự và ký hiệu TM. |
+| **MSG**, Fig. 7-11; **SYN**, Fig. 7-16; **MON**, Fig. 7-17 | Hai khay đều theo thứ tự MSG, SYN, MON. Thấy BNC 30 Hz trên MSG; hai đầu coax và dãy công tắc trên SYN; cụm LED và hai header dọc trên MON. | Chưa đọc được định danh từng chân đo hay khoảng cách cơ khí; giữ callout TM và thay đổi khoảng hở đã kiểm tra. |
+| **FAN**, Fig. 7-22 | Dải ngang phía trên mỗi khay TX; cụm đèn ngang và giắc dây phía phải. | Khớp bố trí tổng quát; giữ số chân và nhãn TM. |
+| **PDC**, Fig. 7-23 / Fig. 6-1 | Nhãn in LSB COS, LSB SIN, USB COS, USB SIN, CARRIER; bốn giắc có bích vuông, CARRIER không có bích vuông, tay kéo ngang ở dưới. | Trật tự và kiểu gá phù hợp với mặt chi tiết. J20–J24 là chú thích TM; ảnh không biến VR1 thành điểm ngoài mặt. |
+| **Cầu dao 1A4 và PMU**, Fig. 7-24 | Đèn AC AVAILABLE nằm phía trên cụm ba cầu dao; hai PMU có tay kéo ngang, cụm FND bên trái và phím bên phải. | Vùng ngay dưới tay kéo và nhãn nhỏ không đủ rõ cho từng chân. Không dùng các số đọc lúc chụp làm giá trị mặc định. |
+| **AC/DC**, §3.1.5, Figs. 3-5, 7-25 | Khay 5 vị trí, bộ chuyển đổi ở A1/A3/A5 và tấm che ở A2/A4; mặt các bộ có tay kéo dọc mép trên, grille và đèn phía dưới. | TM mô tả hai bộ và hình khay cho thấy năm vị trí; mô phỏng vẽ và cho chọn cả năm bộ. Ảnh xác nhận cấu hình ba bộ, không xác nhận P/N trên nhãn nhỏ. |
+| **IFB**, Figs. 3-16/17 | Gắn ngang phía trên ở mặt sau. Bốn D-sub bên trên; cụm LAN/USB bên dưới trái, hai cụm terminal phía dưới, ribbon ở hai cạnh. | Mô phỏng dùng hàng sáu cổng chung; ảnh xác nhận bố trí nhóm, không đủ để dạy pinout. |
+| **1PD1**, Figs. 3-14/15 | Mặt sau thấy cụm bộ chia lắp dọc thanh bên trái, các BNC đo quay vào trong tủ; dây phân phối ở phía đối diện. | Bản cabinet minh họa nằm ngang dưới IFB như cách trình bày linh kiện rời trong TM. Không đọc được thứ tự FFM1/2/3, Standby và TSG của các BNC trong ảnh. |
+| **ASU, ASU-IF, TM, SM, Power Monitor**, Figs. 3-68–76 | Có vỏ xanh và bó cáp cạnh hai tủ chính; không có ảnh ASU mở hoặc nhãn P/N đọc được để xác nhận cấu hình. | Chưa phân biệt 0233-7210 với 0233-7211, vị trí đầu nối ASU-IF, ngõ SM hoặc Power Monitor tùy chọn. |
+
+**Sau đối chiếu:** hình tủ Cam Ranh hiển thị ba AC/DC và hai tấm che, bố trí
+AUX có hai hàng ở bên phải, nhóm đầu nối IFB và bộ chia 1PD1 lắp dọc. Các khối
+không lắp vẫn mở được từ sơ đồ chức năng tổng quát theo TM, nhưng không có
+vùng chọn trên mặt tủ. Không đổi điểm đo, màn hình PMDT hoặc logic mô phỏng.
+Các backplane TX và cụm terminal nguồn ở mặt sau vẫn là hình khái quát,
+không dùng làm sơ đồ đi dây của tủ.
+
+**Còn thiếu:** ảnh ASU mở và nhãn P/N; ảnh có nhãn/sơ đồ cho từng BNC 1PD1 và
+terminal IFB; hình riêng có nhãn của EMU, MODEM và ASU-IF (nếu có); bản vẽ có
+kích thước để xác nhận kích thước và khoảng cách thực. Khay trống chỉ mô tả
+cấu hình được chụp. Quy trình VSWR sideband vẫn chưa có.
 
 ## 3. PMDT: cửa sổ, nội dung và sai khác
 
