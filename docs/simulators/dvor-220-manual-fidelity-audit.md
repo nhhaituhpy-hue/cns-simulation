@@ -177,7 +177,8 @@ self-test độc lập không được coi là đã sửa. Bảng bên dưới g
   khi nhập. Tín hiệu phát và cấu hình danh định không đổi khi hiệu chuẩn;
   Save giữ hệ số qua Reset, không lưu cấu hình Setup.
 - **MON (CR 11–12, HC 25–30, TM 4-136–143):** MON1/MON2 có sáu thông số
-  trên mỗi kênh đang bật; RF Level dùng offset riêng. Tab Frequency có TX
+  trên mỗi kênh đang bật; RF Level và Bearing Error dùng offset riêng (Bearing
+  Error tính bằng độ, cho phép tham chiếu 0). Tab Frequency có TX
   active và Run Changeover, hai cặp factor/reading; một tham chiếu theo hộp
   thoại TM. Chỉ hiệu chỉnh số đọc MON, không đổi tần số TX. Engine vẫn
   dùng tần số phát chung của cấu hình trạm, không giả lập độ lệch riêng

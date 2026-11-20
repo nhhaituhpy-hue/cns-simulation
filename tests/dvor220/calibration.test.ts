@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { parseDvor220Config } from "@/lib/simulator-config/dvor-220";
 import { reduceDvor220Command } from "@/modules/operations/dvor-220/domain/commands";
 import {
-  deriveDvor220Snapshot, dvor220TransmitterPhysicalValue, dvor220TransmitterSetpoint,
+  advanceDvor220Time, deriveDvor220Snapshot, dvor220TransmitterPhysicalValue, dvor220TransmitterSetpoint,
 } from "@/modules/operations/dvor-220/domain/engine";
 import {
   DVOR220_MONITOR_CHANNEL_IDS, DVOR220_RF_OUTPUT_IDS, DVOR220_TRANSMITTER_IDS,
@@ -21,6 +21,60 @@ function calibrate(state: Dvor220DeviceState, calibration: Dvor220CalibrationCom
 }
 
 describe("DVOR 220 calibration", () => {
+  it("calibrates MON1 CH.A Bearing Error to zero", () => {
+    let state = advanceDvor220Time(createAuthorizedDvor220State(), 1000);
+    const indicatedValue = deriveDvor220Snapshot(state).monitors.mon1.channels.cha.readings.bearingError.value;
+    state = calibrate(state, { kind: "monitor", monitorId: "mon1", channelId: "cha", parameter: "bearingError", indicatedValue, referenceValue: 0 });
+    state = advanceDvor220Time(state, 1000);
+    expect(deriveDvor220Snapshot(state).monitors.mon1.channels.cha.readings.bearingError).toMatchObject({ value: 0, status: "normal", unit: "°" });
+  });
+
+  it("keeps bearing offsets additive, scoped and saved through reset", () => {
+    let state = advanceDvor220Time(createAuthorizedDvor220State(), 1000);
+    const target = { kind: "monitor", monitorId: "mon1", channelId: "cha", parameter: "bearingError" } as const;
+    const reading = () => deriveDvor220Snapshot(state).monitors.mon1.channels.cha.readings.bearingError.value;
+    for (const referenceValue of [0, -0.1, 0.1]) {
+      state = calibrate(state, { ...target, indicatedValue: reading(), referenceValue });
+      state = advanceDvor220Time(state, 1000);
+      expect(reading()).toBe(referenceValue);
+    }
+    expect(state.calibration.monitorBearingErrorOffsets?.mon1?.cha).toBeCloseTo(0.12);
+    expect(state.calibration.monitorBearingErrorOffsets?.mon2?.cha).toBe(0);
+    expect(state.calibration.monitorBearingErrorOffsets?.mon1?.chb1).toBe(0);
+    state = run(state, { type: "save-calibration", target });
+    state = run(state, { type: "initialize-calibration", target });
+    expect(state.calibration.monitorBearingErrorOffsets?.mon1?.cha).toBe(0);
+    state = run(state, { type: "reset" });
+    expect(state.calibration.monitorBearingErrorOffsets?.mon1?.cha).toBeCloseTo(0.12);
+    state = calibrate(state, { ...target, indicatedValue: 0.1, referenceValue: -0.1 });
+    state = run(state, { type: "close-calibration", target });
+    expect(state.calibration.monitorBearingErrorOffsets?.mon1?.cha).toBe(0);
+    state = run(state, { type: "power-cycle" });
+    expect(state.calibration.monitorBearingErrorOffsets?.mon1?.cha).toBeCloseTo(0.12);
+    const unchanged = structuredClone(state.calibration);
+    expect(reduceDvor220Command(state, { type: "calibrate", calibration: { ...target, indicatedValue: 0.1, referenceValue: NaN } }).ok).toBe(false);
+    expect(state.calibration).toEqual(unchanged);
+  });
+
+  it("loads legacy bearing factors and migrates the selected target to an offset", () => {
+    let state = createAuthorizedDvor220State();
+    delete state.calibration.monitorBearingErrorOffsets;
+    delete state.calibration.saved.monitorBearingErrorOffsets;
+    state.calibration.monitorFactors.mon1.cha.bearingError = 2;
+    state.calibration.saved.monitorFactors.mon1.cha.bearingError = 2;
+    state = JSON.parse(JSON.stringify(state)) as Dvor220DeviceState;
+    state = advanceDvor220Time(state, 1000);
+    expect(deriveDvor220Snapshot(state).monitors.mon1.channels.cha.readings.bearingError.value).toBe(-0.04);
+    const target = { kind: "monitor", monitorId: "mon1", channelId: "cha", parameter: "bearingError" } as const;
+    state = calibrate(state, { ...target, indicatedValue: -0.04, referenceValue: 0 });
+    expect(state.calibration.monitorFactors.mon1.cha.bearingError).toBe(1);
+    state = run(state, { type: "save-calibration", target });
+    state = run(state, { type: "power-cycle" });
+    state = advanceDvor220Time(state, 1000);
+    expect(deriveDvor220Snapshot(state).monitors.mon1.channels.cha.readings.bearingError.value).toBe(0);
+    expect(state.calibration.saved.monitorFactors.mon1.cha.bearingError).toBe(1);
+  });
+
   const txCases = DVOR220_TRANSMITTER_IDS.flatMap((tx) => [...DVOR220_RF_OUTPUT_IDS, "am30Hz", "ident1020Hz"].map(
     (parameter) => [tx, parameter] as [typeof tx, (typeof DVOR220_RF_OUTPUT_IDS)[number] | "am30Hz" | "ident1020Hz"],
   ));

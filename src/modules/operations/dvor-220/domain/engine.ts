@@ -299,7 +299,9 @@ function baseMonitorValues(
   const factors = state.calibration.monitorFactors[monitorId][channelId];
   const rfLevelOffset = state.calibration.monitorRfLevelOffsets[monitorId][channelId];
   const withCalibration = (parameter: Dvor220MonitorParameter, value: number) =>
-    parameter === "rfLevel" ? value + rfLevelOffset : value * factors[parameter];
+    parameter === "rfLevel" ? value + rfLevelOffset
+      : parameter === "bearingError" ? value * factors.bearingError + (state.calibration.monitorBearingErrorOffsets?.[monitorId]?.[channelId] ?? 0)
+      : value * factors[parameter];
 
   return {
     bearingError: withCalibration(

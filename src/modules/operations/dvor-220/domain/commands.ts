@@ -165,6 +165,12 @@ function calibrationSlot(values: Dvor220CalibrationValues, target: SingleCalibra
   if (target.kind === "transmitter-setpoint") return { factors: values.transmitterSetpointFactors[target.transmitterId], key: target.parameter };
   if (target.kind === "pdc") return { factors: values.pdcFactors, key: target.parameter };
   if (target.parameter === "rfLevel") return { factors: values.monitorRfLevelOffsets[target.monitorId], key: target.channelId };
+  if (target.parameter === "bearingError") {
+    const offsets = values.monitorBearingErrorOffsets ??= {};
+    const channels = offsets[target.monitorId] ??= {};
+    channels[target.channelId] ??= 0;
+    return { factors: channels as Record<string, number>, key: target.channelId };
+  }
   return { factors: values.monitorFactors[target.monitorId][target.channelId], key: target.parameter };
 }
 
@@ -174,6 +180,9 @@ function readCalibration(values: Dvor220CalibrationValues, target: SingleCalibra
 }
 
 function writeCalibration(values: Dvor220CalibrationValues, target: SingleCalibrationTarget, value: number) {
+  if (target.kind === "monitor" && target.parameter === "bearingError") {
+    values.monitorFactors[target.monitorId][target.channelId].bearingError = 1;
+  }
   const { factors, key } = calibrationSlot(values, target);
   factors[key] = value;
 }
@@ -220,9 +229,13 @@ function applyCalibration(
     if (!Number.isFinite(next)) return "Invalid VSWR calibration factor.";
     writeCalibration(state.calibration, command, next);
     return null;
-  } else if (command.kind === "monitor" && command.parameter === "rfLevel") {
+  } else if (command.kind === "monitor" && (command.parameter === "rfLevel" || command.parameter === "bearingError")) {
     next = current + (reference - indicated);
-    if (!Number.isFinite(next)) return "Invalid RF Level calibration offset.";
+    if (command.parameter === "bearingError") {
+      const legacyFactor = state.calibration.monitorFactors[command.monitorId][command.channelId].bearingError;
+      next = reference - (indicated - current) / legacyFactor;
+    }
+    if (!Number.isFinite(next)) return "Invalid monitor calibration offset.";
     writeCalibration(state.calibration, command, next);
     return null;
   } else {
@@ -236,7 +249,7 @@ function applyCalibration(
 }
 
 function defaultCalibrationValue(target: SingleCalibrationTarget): number {
-  return target.kind === "monitor" && target.parameter === "rfLevel" ? 0 : 1;
+  return target.kind === "monitor" && (target.parameter === "rfLevel" || target.parameter === "bearingError") ? 0 : 1;
 }
 
 type TransmitterHelperSettings = Extract<

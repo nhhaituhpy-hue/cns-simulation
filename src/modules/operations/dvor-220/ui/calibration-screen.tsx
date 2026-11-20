@@ -110,6 +110,7 @@ function monitorGroups(device: Dvor220DeviceState, snapshot: Dvor220Snapshot, mo
       const live = snapshot.monitors[monitorId].channels[channelId].readings[parameter];
       const factors = (values: typeof state.saved) => parameter === "rfLevel"
         ? values.monitorRfLevelOffsets[monitorId][channelId]
+        : parameter === "bearingError" ? values.monitorBearingErrorOffsets?.[monitorId]?.[channelId] ?? 0
         : values.monitorFactors[monitorId][channelId][parameter];
       return {
         id: `${monitorId}-${channelId}-${parameter}`,

@@ -429,6 +429,7 @@ export interface Dvor220CalibrationValues {
     Record<Dvor220MonitorChannelId, Record<Exclude<Dvor220MonitorParameter, "rfLevel">, number>>
   >;
   monitorRfLevelOffsets: Record<Dvor220MonitorId, Record<Dvor220MonitorChannelId, number>>;
+  monitorBearingErrorOffsets?: Partial<Record<Dvor220MonitorId, Partial<Record<Dvor220MonitorChannelId, number>>>>;
 }
 
 export interface Dvor220CalibrationState extends Dvor220CalibrationValues {
