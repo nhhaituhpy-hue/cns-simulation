@@ -4,6 +4,7 @@ const APPROVED_AI_PROVIDERS = {
   [APPROVED_AI_BASE_URL]: "cliproxy-vn",
   "https://cliproxy.cnsvn.com/v1": "cliproxy-cnsvn",
   "https://api.hainh.io.vn/v1": "oracle-gw",
+  "https://gw.cnsvn.com/v1": "cnsvn-gw",
 } as const;
 type ApprovedAiBaseUrl = keyof typeof APPROVED_AI_PROVIDERS;
 const APPROVED_AI_BASE_URLS = Object.keys(APPROVED_AI_PROVIDERS) as ApprovedAiBaseUrl[];
