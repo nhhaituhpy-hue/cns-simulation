@@ -53,6 +53,7 @@
 - Kiểm thử liên quan: `tests/dvor220/` và `node scripts/verify-dvor220-measurements-browser.mjs` trên Node 24. Browser harness dùng component/CSS/assets thật ở loopback, kiểm native dialog, keyboard/focus, mọi điểm đo/waveform và desktop/mobile; không thay thế QA route xác thực production. Source/Git và triển khai được báo riêng, không suy deploy từ build hoặc push.
 - QA sau khi hợp nhất: tách nhãn AC OK/FAIL và DC OK/FAIL phía trên hai đèn tương ứng; dời tiêu đề EMU, MODEM và ASU-IF xuống dưới vít. Không đổi vị trí đèn, vít, cấu hình phần cứng hoặc phép đo.
 - QA vòng 2: tách hai giắc JTAG trên MON và chừa khoảng cách giữa ejector dưới với chân đo MON TP51 và MSG TP64 (Fig. 7-17 / 7-11); không đổi vị trí chân đo hoặc tham chiếu tín hiệu.
+- [Đối chiếu ảnh tủ Cam Ranh](docs/simulators/dvor-220-manual-fidelity-audit.md#đối-chiếu-ảnh-tủ-cam-ranh): vẽ ba AC/DC ở A1/A3/A5, khay AUX theo ảnh, nhóm đầu nối IFB và 1PD1 nằm dọc ở mặt sau. Khối không lắp chỉ chọn từ sơ đồ chức năng; không suy pinout, thứ tự BNC hay cấu hình bên trong ASU.
 
 ### DVOR 220 — cửa sổ PMDT (đợt Cam Ranh)
 

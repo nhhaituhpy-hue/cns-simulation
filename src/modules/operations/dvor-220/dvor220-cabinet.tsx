@@ -4,10 +4,14 @@ import type {
   Dvor220BlockId,
   Dvor220CabinetHotspot,
   Dvor220CabinetSurface,
+  Dvor220FaceplateKind,
 } from "./block-diagram-data";
 import {
+  DVOR_220_ACDC_BAY,
+  DVOR_220_AUX_MODULES,
   DVOR_220_BLOCKS,
   DVOR_220_HOTSPOT_TO_BLOCK,
+  DVOR_220_REAR_MODULES,
 } from "./block-diagram-data";
 import { Dvor220ModuleFaceplate } from "./dvor220-module-faceplates";
 import styles from "./dvor220-block-diagram.module.css";
@@ -146,13 +150,47 @@ function LmiDoor() {
   );
 }
 
-function FrontCabinet({ selectedHotspotIds, onSelect }: CabinetLayerProps) {
-  const auxCards = [
-    [164, "TSG", 3], [188, "SCU", 3], [213, "SCU", 3], [238, "EMU", 2],
-    [263, "NIU", 3], [288, "NIU", 3], [313, "DC/A", 3], [338, "DC/A", 3],
-    [363, "MDM", 3], [388, "MDM", 3], [413, "VAU", 2],
-  ] as const;
+function CabinetFaceplate({ slot, kind, blockId, viewWidth, viewHeight }: {
+  slot: Dvor220CabinetHotspot;
+  kind: Dvor220FaceplateKind;
+  blockId: Dvor220BlockId;
+  viewWidth: number;
+  viewHeight: number;
+}) {
+  return (
+    <g transform={`translate(${slot.x} ${slot.y}) scale(${slot.width / viewWidth} ${slot.height / viewHeight})`}>
+      <Dvor220ModuleFaceplate kind={kind} blockId={blockId} />
+    </g>
+  );
+}
 
+function AuxRack() {
+  const { csp, tsg, scu1, scu2, niu1, dcdcAux1, dcdcAux2 } = DVOR_220_AUX_MODULES;
+  const emptySlots = [
+    [302, 72, 176, "EMU"], [326, 169, 79, "NIU"], [374, 72, 79, "MODEM"],
+    [374, 169, 79, "MODEM"], [398, 72, 79, "VAU"],
+  ] as const;
+  return (
+    <g aria-hidden>
+      <rect className={styles.rackBay} x="94" y="60" width="358" height="194" rx="2" />
+      <text className={styles.bayTitle} x="102" y="69">1A1 · AUXILIARY ELECTRONICS</text>
+      <path className={styles.auxRackRail} d="M322 155h118v10H322z" />
+      {emptySlots.map(([x, y, height, label]) => (
+        <g key={`${x}-${y}`} className={styles.auxEmptySlot}>
+          <path d={`M${x} ${y}h19m-19 ${height - 2}h19`} />
+          <text x={x + 9.5} y={y + 10}>{label}</text>
+        </g>
+      ))}
+      <CabinetFaceplate slot={csp} kind="csp" blockId="csp" viewWidth={300} viewHeight={850} />
+      <CabinetFaceplate slot={tsg} kind="card" blockId="tsg" viewWidth={190} viewHeight={720} />
+      {[scu1, scu2].map((slot) => <CabinetFaceplate key={slot.id} slot={slot} kind="card" blockId="scu" viewWidth={190} viewHeight={720} />)}
+      <CabinetFaceplate slot={niu1} kind="card" blockId="niu" viewWidth={190} viewHeight={720} />
+      {[dcdcAux1, dcdcAux2].map((slot) => <CabinetFaceplate key={slot.id} slot={slot} kind="dcdc-aux" blockId="dcdc-aux" viewWidth={230} viewHeight={720} />)}
+    </g>
+  );
+}
+
+function FrontCabinet({ selectedHotspotIds, onSelect }: CabinetLayerProps) {
   return (
     <svg className={styles.cabinetDrawing} viewBox="0 0 760 1000" role="img" aria-label="Mặt trước cabinet DVOR 220 mở cửa">
       <defs>
@@ -180,14 +218,7 @@ function FrontCabinet({ selectedHotspotIds, onSelect }: CabinetLayerProps) {
       <rect className={styles.cabinetHeader} x="94" y="28" width="358" height="25" rx="2" />
       <text className={styles.cabinetBrand} x="273" y="45">MOPIENS · 220 DVOR</text>
 
-      <g aria-hidden>
-        <rect className={styles.rackBay} x="94" y="60" width="358" height="194" rx="2" />
-        <text className={styles.bayTitle} x="102" y="69">1A1 · AUXILIARY ELECTRONICS</text>
-        <g transform="translate(105 72) scale(0.1833 0.2071)">
-          <Dvor220ModuleFaceplate kind="csp" blockId="csp" />
-        </g>
-        {auxCards.map(([x, label, leds]) => <NarrowCard key={`${x}-${label}`} x={x} label={label} leds={leds} />)}
-      </g>
+      <AuxRack />
 
       <TransmitterRack y={262} transmitter={1} />
 
@@ -224,23 +255,70 @@ function FrontCabinet({ selectedHotspotIds, onSelect }: CabinetLayerProps) {
         ))}
       </g>
 
-      <g className={styles.acdcShelf} aria-hidden>
+      <g aria-hidden>
         <rect className={styles.rackBay} x="94" y="926" width="358" height="42" rx="2" />
-        {[105, 172, 239, 306, 373].map((x, index) => (
-          <g key={x}>
-            <rect x={x} y="930" width={index === 4 ? 67 : 63} height="34" rx="1" />
-            {[0, 1, 2].map((row) => <path key={row} d={`M${x + 8} ${937 + row * 8}h${index === 4 ? 51 : 47}`} />)}
-            <circle cx={x + 8} cy="958" r="2.5" />
-            <Led x={x + 17} y={958} color="green" />
-            <text x={x + 33} y="946">AC/DC {index + 1}</text>
-          </g>
+        {DVOR_220_ACDC_BAY.map(({ installed, hotspot: slot }) => installed ? (
+          <CabinetFaceplate key={slot.id} slot={slot} kind="acdc" blockId="acdc" viewWidth={480} viewHeight={225} />
+        ) : (
+          <rect key={slot.id} className={styles.acdcBlank} x={slot.x} y={slot.y} width={slot.width} height={slot.height} rx="1" data-slot-state="blank" data-assembly-id={slot.assemblyId} />
         ))}
       </g>
 
       <LmiDoor />
-      <text className={styles.cabinetCaption} x="273" y="990">FRONT · DUAL EQUIPMENT CONFIGURATION</text>
+      <text className={styles.cabinetCaption} x="273" y="990">FRONT · CAM RANH · DUAL EQUIPMENT</text>
       <CabinetHotspots surface="front" selectedHotspotIds={selectedHotspotIds} onSelect={onSelect} />
     </svg>
+  );
+}
+
+function RearInterfaceBoard() {
+  const { x, y, width, height } = DVOR_220_REAR_MODULES.ifb;
+  return (
+    <g className={styles.rearAssembly} transform={`translate(${x} ${y})`} data-board="ifb" aria-hidden>
+      <rect className={styles.rearIfbBoard} width={width} height={height} rx="4" />
+      <text x={width / 2} y="-7">1A7 · INTERFACE BOARD</text>
+      {[14, 47, 125, 155].map((x) => (
+        <g key={x} data-connector-kind="d-sub">
+          <rect className={styles.ifbSocketShell} x={x} y="5" width="24" height="11" rx="2.5" />
+          <path d={`M${x + 5} 7h14l-2 6H${x + 7}z`} />
+        </g>
+      ))}
+      {[1, 182].map((x) => (
+        <g key={x} data-connector-kind="ribbon">
+          <rect className={styles.ifbSocket} x={x} y="33" width="9" height="52" rx="1.5" />
+        </g>
+      ))}
+      <g data-connector-kind="lan"><rect className={styles.ifbSocketShell} x="18" y="96" width="14" height="17" rx="1" /></g>
+      <g data-connector-kind="usb"><rect className={styles.ifbSocketShell} x="35" y="99" width="9" height="14" rx="1" /></g>
+      {[59, 126].map((x) => (
+        <g key={x} data-connector-kind="terminal-block">
+          <rect className={styles.ifbTerminalBlock} x={x} y="96" width="28" height="12" rx="1" />
+          <path d={`M${x + 3} 100h22m-22 4h22`} />
+        </g>
+      ))}
+    </g>
+  );
+}
+
+function RearDivider() {
+  const { x, y, width, height } = DVOR_220_REAR_MODULES.divider;
+  return (
+    <g className={styles.rearDivider} transform={`translate(${x} ${y})`} data-board="1pd1" aria-hidden>
+      <rect x="11" width="24" height={height} rx="2" />
+      <text x={width / 2} y="-7">1PD1</text>
+      {Array.from({ length: 5 }, (_, index) => {
+        const centerY = 16 + index * 31;
+        return (
+          <g key={centerY}>
+            {[centerY - 7, centerY + 5].map((y) => <circle key={y} cx="16" cy={y} r="3.1" />)}
+            <g data-connector-kind="bnc">
+              <rect x="34" y={centerY - 3.5} width="18" height="7" rx="1.5" />
+              <path d={`M41 ${centerY - 3.5}v7m6-7v7`} />
+            </g>
+          </g>
+        );
+      })}
+    </g>
   );
 }
 
@@ -262,31 +340,7 @@ function RearCabinet({ selectedHotspotIds, onSelect }: CabinetLayerProps) {
       <rect className={styles.rearInterior} x="108" y="42" width="384" height="894" rx="3" />
       <text className={styles.cabinetBrand} x="300" y="33">MOPIENS 220 DVOR · REAR</text>
 
-      <g className={styles.rearAssembly} aria-hidden>
-        <rect x="176" y="84" width="248" height="88" rx="3" />
-        <text x="300" y="101">1A7 · INTERFACE BOARD</text>
-        {[0, 1, 2, 3, 4, 5].map((column) => (
-          <g key={column}>
-            <rect x={190 + column * 36} y="116" width="26" height="24" rx="2" />
-            <path d={`M196 ${122 + (column % 2) * 4}h14M196 ${130 + (column % 2) * 4}h14`} />
-          </g>
-        ))}
-        <text x="300" y="160">VOICE · IDENT · ENV · LAN · RS-232 · USB</text>
-      </g>
-
-      <g className={styles.rearDivider} aria-hidden>
-        <rect x="176" y="188" width="248" height="82" rx="3" />
-        <text x="300" y="205">1PD1 · QUINT 3-WAY RF DIVIDER</text>
-        {[0, 1, 2, 3, 4].map((column) => (
-          <g key={column}>
-            <circle cx={204 + column * 48} cy="230" r="8" />
-            <path d={`M${204 + column * 48} 238v13m-12 0h24`} />
-            <circle cx={192 + column * 48} cy="256" r="4" />
-            <circle cx={204 + column * 48} cy="256" r="4" />
-            <circle cx={216 + column * 48} cy="256" r="4" />
-          </g>
-        ))}
-      </g>
+      <RearInterfaceBoard />
 
       {[300, 500].map((y, rack) => (
         <g className={styles.rearBackplane} key={y} aria-hidden>
@@ -299,6 +353,8 @@ function RearCabinet({ selectedHotspotIds, onSelect }: CabinetLayerProps) {
         </g>
       ))}
 
+      <RearDivider />
+
       <g className={styles.rearPower} aria-hidden>
         <rect x="140" y="704" width="320" height="184" rx="3" />
         <text x="300" y="724">PMU / AC-DC REAR TERMINALS</text>
@@ -307,7 +363,7 @@ function RearCabinet({ selectedHotspotIds, onSelect }: CabinetLayerProps) {
         <path d="M174 778C210 908, 250 740, 290 878S386 748, 426 838" />
       </g>
 
-      <text className={styles.cabinetCaption} x="300" y="956">REAR · DOOR OPEN</text>
+      <text className={styles.cabinetCaption} x="300" y="956">REAR · CAM RANH · DOOR OPEN</text>
       <CabinetHotspots surface="rear" selectedHotspotIds={selectedHotspotIds} onSelect={onSelect} />
     </svg>
   );

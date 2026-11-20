@@ -56,7 +56,6 @@
 .amplifierModule text,
 .dcdcCabinetModule text,
 .powerShelf text,
-.acdcShelf text,
 .lmiDoor text,
 .rearAssembly text,
 .rearDivider text,
@@ -77,11 +76,14 @@
 .cabinetCaption { fill: #8ba2ab; font-size: 10px; letter-spacing: 1px; }
 .bayTitle { fill: #94abb2; font-size: 7px; text-anchor: start; letter-spacing: 0.8px; }
 .fanStrip { fill: #8f9a99; stroke: #46565a; stroke-width: 1; }
+.auxRackRail { fill: #a6b1b1; stroke: #536468; stroke-width: 1; }
+.auxEmptySlot path { fill: none; stroke: #819096; stroke-width: 2; }
+.auxEmptySlot text { fill: #9eafb4; font-size: 4.5px; text-anchor: middle; }
 
 .narrowCard > rect:first-child,
 .dcdcCabinetModule > rect:first-child,
 .powerShelf > rect:not(:first-child),
-.acdcShelf g > rect,
+.acdcBlank,
 .lmiDoor > rect:first-child,
 .lmiDoor > rect:nth-child(2) { fill: url("#dvor220-panel"); stroke: #59686b; stroke-width: 1.1; }
 .narrowCard > rect:nth-child(2) { fill: #313e41; stroke: #718084; stroke-width: 0.8; }
@@ -96,9 +98,7 @@
 .powerShelf circle:not([class]) { fill: #d8ddda; stroke: #4e5d60; stroke-width: 1; }
 .powerShelf rect:not(:first-child) { fill: #bdc6c3; stroke: #536267; stroke-width: 1; }
 .powerShelf path { fill: none; stroke: #4b5a5d; stroke-width: 1; }
-.powerShelf text,
-.acdcShelf text { font-size: 5.5px; }
-.acdcShelf path { fill: none; stroke: #6d7b7e; stroke-width: 1; }
+.powerShelf text { font-size: 5.5px; }
 .lmiDoor > rect:first-child { fill: #7d898a; }
 .lmiDoor > rect:nth-child(2) { fill: #b7bfbd; }
 .lmiDoor rect:not(:first-child, :nth-child(2), .lmiScreen) { fill: #d1d6d4; stroke: #5a686b; stroke-width: 0.8; }
@@ -117,18 +117,22 @@
 
 .rearCabinetOuter { fill: url("#dvor220-rear-metal"); stroke: #dfe5e2; stroke-width: 2; }
 .rearInterior { fill: #17292f; stroke: #849194; stroke-width: 1.5; }
-.rearAssembly > rect,
-.rearDivider > rect,
+.rearDivider rect,
 .rearBackplane > rect:first-child,
 .rearPower > rect { fill: #aab5b3; stroke: #465559; stroke-width: 1.4; }
-.rearAssembly rect:not(:first-child),
 .rearBackplane rect:not(:first-child),
 .rearPower rect:not(:first-child) { fill: #d0d6d3; stroke: #59676a; stroke-width: 0.8; }
-.rearAssembly path,
+.rearIfbBoard { fill: #3a6253; stroke: #a2b5a8; stroke-width: 1.4; }
+.ifbSocketShell { fill: #d0d6d3; stroke: #59676a; stroke-width: 0.8; }
+.ifbSocket, .rearAssembly path { fill: #243139; }
+.ifbTerminalBlock { fill: #86a56f; stroke: #c0bc73; stroke-width: 0.8; }
+.ifbTerminalBlock + path { fill: none; stroke: #43564d; stroke-width: 1.4; }
+.rearAssembly text,
+.rearDivider text { fill: #d6dfdb; }
 .rearDivider path,
 .rearBackplane path,
 .rearPower path { fill: none; stroke: #536367; stroke-width: 1.4; }
-.rearDivider circle { fill: #cfd5d2; stroke: #435256; stroke-width: 1; }
+.rearDivider circle { fill: #cda769; stroke: #776141; stroke-width: 1; }
 .rearAssembly text,
 .rearDivider text,
 .rearBackplane text,

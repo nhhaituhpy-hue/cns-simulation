@@ -36,6 +36,23 @@ try {
     page.on("pageerror", (e) => errors.push(e.message));
     page.on("request", (r) => { if (r.method() !== "GET") writes.push(r.url()); });
     await page.goto(`http://127.0.0.1:${server.address().port}`, { waitUntil: "load" });
+    const front = page.getByRole("img", { name: /Mặt trước cabinet/ });
+    const installedAcdc = front.getByRole("button", { name: /^AC\/DC \d,/ });
+    assert.deepEqual(await installedAcdc.evaluateAll((slots) => slots.map((slot) => slot.getAttribute("aria-label"))), [
+      "AC/DC 1, 1A5A1", "AC/DC 3, 1A5A3", "AC/DC 5, 1A5A5",
+    ]);
+    assert.equal(await front.getByRole("button", { name: /^(EMU|MODEM|VAU)[ ,]/ }).count(), 0);
+    if (viewport.width === 1440) await front.screenshot({ path: join(output, "cam-ranh-front.png") });
+    await installedAcdc.nth(1).click();
+    await page.getByRole("heading", { name: "AC-to-DC Converter" }).waitFor();
+    await page.getByRole("tab", { name: "Rear Cabinet" }).click();
+    const rear = page.getByRole("img", { name: /Mặt sau cabinet/ });
+    if (viewport.width === 1440) await rear.screenshot({ path: join(output, "cam-ranh-rear.png") });
+    await rear.getByRole("button", { name: "IFB, 1A7" }).click();
+    await page.getByRole("heading", { name: "Interface Board" }).waitFor();
+    await rear.getByRole("button", { name: "QUINT 3-WAY, 1PD1" }).click();
+    await page.getByRole("group", { name: "Mặt panel QUINT 3-WAY RF DIVIDER" }).waitFor();
+    await page.getByRole("tab", { name: "Front Cabinet" }).click();
     await page.getByRole("button", { name: "MSG, 1A2A5", exact: true }).first().click();
     const trigger = page.getByRole("button", { name: "Xem tín hiệu TP49 Carrier Modulation Signal", exact: true }).first();
     await trigger.focus(); await page.keyboard.press("Enter");
