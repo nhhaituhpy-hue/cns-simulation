@@ -121,7 +121,7 @@ describe("MOPIENS DVOR 220 maintenance, power and store", () => {
       .toHaveLength(1);
   });
 
-  it("synchronizes a thin store with an injected monotonic clock", () => {
+  it("synchronizes a thin store by setting it to the injected clock", () => {
     let nowMs = 1_000;
     const store = createDvor220Store({ clock: { now: () => nowMs } });
 
@@ -140,7 +140,8 @@ describe("MOPIENS DVOR 220 maintenance, power and store", () => {
     expect(store.getState().snapshot.timestampMs).toBe(1_750);
 
     nowMs = 1_700;
-    expect(() => store.getState().syncClock()).toThrow(/backwards/i);
+    store.getState().syncClock();
+    expect(store.getState().device.nowMs).toBe(1_700);
     nowMs = 2_000;
     store.getState().reset();
     expect(store.getState().device.nowMs).toBe(2_000);

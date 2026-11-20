@@ -16,6 +16,7 @@ import {
   type Dvor220DeviceState,
   type Dvor220Snapshot,
 } from "../domain/types";
+import { formatDvor220Time } from "../domain/time";
 import { formatDvor220Status, toneForDvor220Status } from "./main-screens";
 import styles from "../dvor220.module.css";
 
@@ -61,7 +62,7 @@ export function Dvor220LmiView({ device, snapshot, dispatch, advanceTime, onShow
         { id: "tx1", label: "TX1", value: `${snapshot.transmitters.tx1.path} ${snapshot.transmitters.tx1.designation}`, tone: toneForDvor220Status(snapshot.transmitters.tx1.status) },
         { id: "tx2", label: "TX2", value: `${snapshot.transmitters.tx2.path} ${snapshot.transmitters.tx2.designation}`, tone: toneForDvor220Status(snapshot.transmitters.tx2.status) },
         { id: "power", label: "POWER", value: snapshot.power.source.toUpperCase(), tone: toneForDvor220Status(snapshot.power.status) },
-        { id: "time", label: "TIME", value: new Date(device.nowMs).toLocaleTimeString("en-GB", { hour12: false }), grow: true },
+        { id: "time", label: "TIME", value: formatDvor220Time(device.nowMs), grow: true },
       ]}
       onSoftKey={handleSoftKey}
     >
@@ -157,7 +158,7 @@ function LmiHistory({ device }: Pick<Dvor220LmiViewProps, "device">) {
   return (
     <div className={styles.lmiPage}>
       <MopiensTable caption="Latest LMI history" rows={device.history.lmi.slice(-12).reverse()} dense getRowId={(row) => `${row.id}`} rowTone={(row) => row.category === "alarm" ? "alarm" : row.category === "control" ? "info" : undefined} columns={[
-        { id: "time", label: "Time", width: "22%", render: (row) => new Date(row.timestampMs).toLocaleTimeString("en-GB", { hour12: false }) },
+        { id: "time", label: "Time", width: "22%", render: (row) => formatDvor220Time(row.timestampMs) },
         { id: "category", label: "Class", width: "14%", render: (row) => row.category.toUpperCase() },
         { id: "detail", label: "Detail", render: (row) => row.message },
         { id: "user", label: "User", width: "16%", render: (row) => row.userId },
