@@ -868,7 +868,7 @@
 .transmitterHelperDialog {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0;
 }
 
 .transmitterHelperTabs {
@@ -890,37 +890,104 @@
 }
 
 .transmitterHelperTabs button[aria-selected="true"] {
-  background: #208ac4;
-  color: #fff;
+  background: #f8f8f8;
+  color: #17232b;
+}
+
+.helperPanel {
+  border: 1px solid #d5d5d5;
+  border-top: 0;
+  background: #f8f8f8;
+  padding: 18px 24px 16px;
 }
 
 .helperGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 7px 14px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
 }
 
-.helperSwitchGrid {
+.helperPowerField {
+  min-width: 0;
+}
+
+.helperPowerHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: #17232b;
+  font-weight: 600;
+}
+
+.helperPowerDot {
+  width: 11px;
+  height: 11px;
+  flex: 0 0 11px;
+  border: 1px solid #6db1d6;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, #b5ebff, #009de6 55%, #0074ba);
+  margin-right: 4px;
+}
+
+.helperPowerControls {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px 16px;
+  grid-template-columns: minmax(0, 1fr) 82px 18px;
+  align-items: center;
+  gap: 12px;
+  margin-left: 36px;
+  background: #efefef;
+  padding: 10px 12px;
 }
 
-.helperState,
-.helperNote {
+.helperPowerControls input[type="number"] {
+  min-width: 0;
+  width: 100%;
+  height: 28px;
+  border: 1px solid #a5a5a5;
+  border-radius: 0;
+  background: #fff;
+  padding: 2px 5px;
+  color: #17232b;
+  font: inherit;
+}
+
+.helperPowerControls input[type="range"] {
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.helperCheckbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #17232b;
+  font-weight: 400;
+}
+
+.helperCheckbox input {
   margin: 0;
-  line-height: 1.45;
+  accent-color: #087dbb;
 }
 
-.helperState {
-  border: 1px solid #9cabb4;
-  background: #eef5f8;
-  padding: 6px 8px;
-  color: #244f69;
-  font-weight: 700;
+.helperActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
 }
 
-.helperNote { color: #5b6971; }
+.helperExtension {
+  margin-right: auto;
+  color: #5b6971;
+  font-size: 10px;
+}
 
 .formField {
   display: grid;
@@ -1266,8 +1333,7 @@
   .monitorReadingPair { grid-template-columns: repeat(2, minmax(230px, 1fr)); }
   .equipmentFieldLayout { grid-template-columns: 165px minmax(0, 1fr); }
   .channelSetupGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .helperGrid,
-  .helperSwitchGrid { grid-template-columns: 1fr; }
+  .helperGrid { grid-template-columns: 1fr; }
   .scenarioSummaryBar,
   .scenarioTwoColumns,
   .scenarioRawGrid,

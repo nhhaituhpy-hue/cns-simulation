@@ -168,6 +168,9 @@ self-test độc lập không được coi là đã sửa. Bảng bên dưới g
 
 ### Tình trạng sau đợt sửa hiệu chuẩn
 
+- **Helper (HC tr. 3):** hộp thoại Output Power có Carrier Power, USB COS/SIN,
+  LSB COS/SIN; mỗi dòng có slider và ô số đồng bộ, đơn vị %/W nằm riêng bên phải.
+
 - **Định dạng Cam Ranh:** Helper dùng nhãn Carrier Power và đơn vị % riêng
   (HC tr. 3); bảng MON Frequency hiển thị setpoint 2, reading 3 và factor 9
   chữ số thập phân (CR tr. 12), không đổi độ chính xác ô nhập tham chiếu.
