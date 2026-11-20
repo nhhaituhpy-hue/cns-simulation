@@ -105,6 +105,15 @@ function ModuleBody({ hotspot }: { hotspot: Dvor1150CabinetHotspot }) {
   const width = hotspot.width;
   const height = hotspot.height;
 
+  // TM Figure 1-4, PDF 26: upright BCPS enclosures behind the cutaway power panel.
+  if (DVOR_1150_HOTSPOT_TO_BLOCK.get(hotspot.id) === "bcps") {
+    return (
+      <g aria-hidden className={styles.cabinetBcps}>
+        <rect x={x} y={y} width={width} height={height} rx="2" />
+      </g>
+    );
+  }
+
   if (hotspot.kind === "amplifier") {
     return (
       <g aria-hidden className={styles.cabinetAmplifier}>
@@ -143,7 +152,7 @@ function ModuleBody({ hotspot }: { hotspot: Dvor1150CabinetHotspot }) {
   if (hotspot.kind === "power") {
     return (
       <g aria-hidden className={styles.cabinetPowerModule}>
-        <rect x={x} y={y} width={width} height={height} rx="2" />
+        <path d={`M${x} ${y}H${x + width}l-4 14 8 14-8 14 8 14-8 14 4 ${height - 70}H${x}Z`} />
         <circle cx={x + width * 0.28} cy={y + height * 0.58} r={Math.min(14, width * 0.13)} />
         <rect x={x + width * 0.52} y={y + height * 0.2} width={width * 0.32} height={height * 0.58} rx="2" />
       </g>
@@ -181,7 +190,13 @@ function ElectronicsCabinetDrawing() {
       <text className={styles.bayLabel} x="137" y="670">TRANSMITTER 2</text>
       <rect className={styles.powerBay} x="124" y="852" width="362" height="92" rx="3" />
 
-      {hotspots.map((hotspot) => <ModuleBody key={hotspot.id} hotspot={hotspot} />)}
+      <g data-layer="behind-power-panel">
+        {hotspots.filter((hotspot) => DVOR_1150_HOTSPOT_TO_BLOCK.get(hotspot.id) === "bcps")
+          .map((hotspot) => <ModuleBody key={hotspot.id} hotspot={hotspot} />)}
+      </g>
+      {hotspots.filter((hotspot) => DVOR_1150_HOTSPOT_TO_BLOCK.get(hotspot.id) !== "bcps")
+        .map((hotspot) => <ModuleBody key={hotspot.id} hotspot={hotspot} />)}
+      <text className={styles.hiddenPowerLabel} x="389" y="862">BEHIND POWER PANEL</text>
       {hotspots.map((hotspot) => <CabinetLabel key={`${hotspot.id}-label`} hotspot={hotspot} />)}
 
       {[48, 146, 236, 444, 464, 634, 648, 856, 944].flatMap((y) => [
@@ -226,16 +241,7 @@ function CommutatorRackDrawing() {
       <RibbonCable x={386} y={128} height={310} />
       <RibbonCable x={386} y={646} height={252} />
 
-      {Array.from({ length: 8 }, (_, row) =>
-        Array.from({ length: 3 }, (_, column) => (
-          <circle key={`upper-${row}-${column}`} className={styles.commutatorConnector} cx={160 + column * 56} cy={142 + row * 37} r="10" />
-        )),
-      )}
-      {Array.from({ length: 7 }, (_, row) =>
-        Array.from({ length: 3 }, (_, column) => (
-          <circle key={`lower-${row}-${column}`} className={styles.commutatorConnector} cx={160 + column * 56} cy={664 + row * 35} r="10" />
-        )),
-      )}
+      {/* TM Figure 1-5, PDF 31: covered CCA plates; no front-face connector grids. */}
       <circle className={styles.controlConnector} cx="158" cy="518" r="13" />
       <rect className={styles.controlConnector} x="150" y="548" width="18" height="38" rx="3" />
       <rect className={styles.controlPlate} x="196" y="528" width="78" height="36" rx="2" />
