@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { DVOR_220_BLOCK_BY_ID } from "@/modules/operations/dvor-220/block-diagram-data";
 import { Dvor220ModuleFaceplate } from "@/modules/operations/dvor-220/dvor220-module-faceplates";
 import { Dvor220BlockDiagram } from "@/modules/operations/dvor-220/dvor220-block-diagram";
+import styles from "@/modules/operations/dvor-220/dvor220-block-diagram.module.css";
 
 afterEach(cleanup);
 
@@ -328,6 +329,31 @@ describe("DVOR 220 source-aligned measurement connectors", () => {
     expect(pins.map((pin) => pin.getAttribute("data-point-id"))).toEqual(["TP47", "TP48", "TP49", "TP51"]);
     expect(pins.map((pin) => pin.querySelector("path")?.getAttribute("d"))).toEqual(["M58 533v18", "M58 553v18", "M58 573v18", "M58 593v18"]);
   });
+
+  it("keeps the MON MCU and ZYNQ housings separate and above RESET (Fig. 7-17)", () => {
+    render(<Dvor220ModuleFaceplate kind="mon" blockId="mon" />);
+    const panel = within(screen.getByRole("img", { name: "Mặt panel MON" }));
+    const [mcu, zynq] = ["MCU JTAG", "ZYNQ JTAG"].map((label) => panel.getByText(label).parentElement!.querySelector("rect")!);
+    const top = (rect: Element) => Number(rect.getAttribute("y"));
+    const bottom = (rect: Element) => top(rect) + Number(rect.getAttribute("height"));
+    const reset = panel.getByText("RESET").previousElementSibling!.querySelector("rect")!;
+    expect(top(zynq) - bottom(mcu)).toBeGreaterThanOrEqual(4);
+    expect(top(reset) - bottom(zynq)).toBeGreaterThanOrEqual(4);
+  });
+
+  it.each([["mon", "TP51"], ["msg", "TP64"]] as const)(
+    "leaves clearance below the lowest %s pin and its stroke (Figs. 7-11 and 7-17)",
+    (blockId, pointId) => {
+      render(<Dvor220ModuleFaceplate kind={blockId} blockId={blockId} />);
+      const panel = screen.getByRole("img", { name: `Mặt panel ${blockId.toUpperCase()}` });
+      const ejectors = panel.querySelectorAll(`.${styles.faceplateEjector} rect`);
+      expect(ejectors).toHaveLength(2);
+      const lowerEjectorY = Number(ejectors[1].getAttribute("y"));
+      const path = panel.querySelector(`[data-point-id="${pointId}"] path`)!.getAttribute("d")!;
+      const [, top, length] = path.match(/^M\d+ (\d+)v(\d+)$/)!;
+      expect(lowerEjectorY - Number(top) - Number(length)).toBeGreaterThanOrEqual(4);
+    },
+  );
 
   it("shows the cooling fan indicators in a horizontal row to the left of the six-pin Molex (Fig. 7-22)", () => {
     render(<Dvor220ModuleFaceplate kind="fan" blockId="fan" />);
