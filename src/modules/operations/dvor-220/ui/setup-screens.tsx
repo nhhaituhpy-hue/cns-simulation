@@ -123,16 +123,35 @@ function calibratedSetpointInput(value: number, max: number, step: number, facto
   };
 }
 
+function SetupNumberInput({ value, digits, ...props }: Omit<React.InputHTMLAttributes<HTMLInputElement>, "value"> & { value: number; digits?: number }) {
+  const [editing, setEditing] = useState(false);
+  return <input {...props} type="number" value={editing || digits === undefined ? value : value.toFixed(digits)}
+    onFocus={() => setEditing(true)} onBlur={() => setEditing(false)} />;
+}
+
+function ConfigurationCommitActions({ device, snapshot, dispatch, saveLabel = "Profile Save" }: Pick<Dvor220SetupScreenProps, "device" | "snapshot" | "dispatch"> & { saveLabel?: string }) {
+  const permission = getDvor220PermissionDecision(device, "configure");
+  const errors = snapshot.configurationIssues.some((issue) => issue.severity === "error");
+  return <>
+    <MopiensBeveledButton tone="primary" onClick={() => dispatch({ type: "apply-draft" })}
+      disabled={!permission.allowed || !device.configuration.draftDirty || errors}>Apply</MopiensBeveledButton>
+    <MopiensBeveledButton tone={device.configuration.flashDirty && !device.scenario.active ? "warning" : "default"}
+      onClick={() => dispatch({ type: "save-profile" })}
+      disabled={!permission.allowed || !device.configuration.flashDirty || device.scenario.active}>{saveLabel}</MopiensBeveledButton>
+  </>;
+}
+
 function ConfigurationActions({
   device,
   snapshot,
   dispatch,
-}: Pick<Dvor220SetupScreenProps, "device" | "snapshot" | "dispatch">) {
+  statusOnly = false,
+}: Pick<Dvor220SetupScreenProps, "device" | "snapshot" | "dispatch"> & { statusOnly?: boolean }) {
   const permission = getDvor220PermissionDecision(device, "configure");
   const errors = snapshot.configurationIssues.filter((issue) => issue.severity === "error");
   const warnings = snapshot.configurationIssues.filter((issue) => issue.severity === "warning");
   return (
-    <footer className={styles.configurationFooter}>
+    <footer className={`${styles.configurationFooter} ${statusOnly ? styles.transmitterSetupStatus : ""}`}>
       <div className={styles.validationSummary} role={errors.length ? "alert" : "status"}>
         <strong>
           {errors.length
@@ -150,20 +169,7 @@ function ConfigurationActions({
         >
           Reset Draft
         </MopiensBeveledButton>
-        <MopiensBeveledButton
-          tone="primary"
-          onClick={() => dispatch({ type: "apply-draft" })}
-          disabled={!permission.allowed || !device.configuration.draftDirty || errors.length > 0}
-        >
-          Apply
-        </MopiensBeveledButton>
-        <MopiensBeveledButton
-          tone={device.configuration.flashDirty && !device.scenario.active ? "warning" : "default"}
-          onClick={() => dispatch({ type: "save-profile" })}
-          disabled={!permission.allowed || !device.configuration.flashDirty || device.scenario.active}
-        >
-          Profile Save
-        </MopiensBeveledButton>
+        {!statusOnly ? <ConfigurationCommitActions device={device} snapshot={snapshot} dispatch={dispatch} /> : null}
       </div>
     </footer>
   );
@@ -250,16 +256,20 @@ function helperSettingsEqual(left: TransmitterHelperSettings, right: Transmitter
 function TransmitterSetup({
   configuration,
   device,
+  snapshot,
   disabled,
   patch,
   dispatch,
 }: {
   configuration: Dvor220Configuration;
   device: Dvor220DeviceState;
+  snapshot: Dvor220Snapshot;
   disabled: boolean;
   patch: (patch: Dvor220DeepPartial<Dvor220Configuration>) => void;
   dispatch: (command: Dvor220Command) => Dvor220CommandResult;
 }) {
+  const [sameTransmitters, setSameTransmitters] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState<string[]>([]);
   const [helperOpen, setHelperOpen] = useState(false);
   const helperDescriptionId = useId();
   const [helperTransmitterId, setHelperTransmitterId] = useState<Dvor220TransmitterId>("tx1");
@@ -272,7 +282,7 @@ function TransmitterSetup({
   }));
 
   function transmitterPatch(transmitterId: Dvor220TransmitterId, value: Dvor220DeepPartial<Dvor220Configuration["transmitters"][Dvor220TransmitterId]>) {
-    patch({ transmitters: { [transmitterId]: value } } as Dvor220DeepPartial<Dvor220Configuration>);
+    patch({ transmitters: sameTransmitters ? { tx1: value, tx2: value } : { [transmitterId]: value } } as Dvor220DeepPartial<Dvor220Configuration>);
   }
 
   function openHelper(transmitterId: Dvor220TransmitterId) {
@@ -365,39 +375,99 @@ function TransmitterSetup({
     dispatch({ type: "save-transmitter-helper", transmitterIds: helperTargets });
   }
 
+  type Transmitter = Dvor220Configuration["transmitters"][Dvor220TransmitterId];
+  type SetupRow = { label: string; unit?: string; helper?: boolean; input: (id: Dvor220TransmitterId) => ReactNode };
+  function numberRow(section: string, label: string, unit: string, read: (tx: Transmitter) => number,
+    write: (value: number) => Dvor220DeepPartial<Transmitter>,
+    options: { min: number; max: number; step: number; digits?: number; inherited?: (tx: Transmitter) => boolean }): SetupRow {
+    return { label, unit, input: (id) => {
+      const tx = configuration.transmitters[id];
+      return <SetupNumberInput aria-label={[id.toUpperCase(), section, label].filter(Boolean).join(" ")} value={read(tx)}
+        min={options.min} max={options.max} step={options.step} digits={options.digits}
+        disabled={disabled || options.inherited?.(tx)}
+        onChange={(event) => transmitterPatch(id, write(numberValue(event.target.value, read(tx))))} />;
+    } };
+  }
+
+  const outputLabels = { carrier: "Carrier", usbCos: "USB COS", usbSin: "USB SIN", lsbCos: "LSB COS", lsbSin: "LSB SIN" };
+  const powerRows: SetupRow[] = (["carrier", "usbCos", "usbSin", "lsbCos", "lsbSin"] as const).map((output) => ({
+    label: outputLabels[output], unit: output === "carrier" ? "%" : "W", helper: true,
+    input: (id) => {
+      const tx = configuration.transmitters[id];
+      const carrier = output === "carrier";
+      const input = calibratedSetpointInput(carrier ? tx.carrierScalePercent : tx.sidebandPowerW[output],
+        carrier ? 100 : 5, carrier ? 0.1 : 0.01, device.calibration.transmitterSetpointFactors[id][output],
+        (value) => transmitterPatch(id, carrier ? { carrierScalePercent: value } : { sidebandPowerW: { [output]: value } }));
+      return <SetupNumberInput {...input} aria-label={`${id.toUpperCase()} ${outputLabels[output]}`} digits={carrier ? undefined : 3} disabled={disabled} />;
+    },
+  }));
+  const optionRows: SetupRow[] = ([["Modulation Depth", "useStationModulation"], ["IDENT", "useStationIdent"], ["Azimuth", "useStationAzimuth"]] as const).map(([label, key]) => ({
+    label, input: (id) => <select aria-label={`${id.toUpperCase()} Setup Option ${label}`} disabled={disabled}
+      value={configuration.transmitters[id][key] ? "station" : "individual"}
+      onChange={(event) => transmitterPatch(id, { [key]: event.target.value === "station" })}>
+      <option value="individual">Setup individually</option><option value="station">As per Station Setup</option>
+    </select>,
+  }));
+  function phaseRows(section: "RF Phasing" | "STB RF Phasing", key: "rfPhaseDeg" | "standbyRfPhaseDeg") {
+    return ([["USB Phasing COS to SIN", "usbCosToSin"], ["LSB Phasing COS to SIN", "lsbCosToSin"], ["Carrier to sideband", "carrierToSideband"]] as const).map(([label, field]) =>
+      numberRow(section, label, "°", (tx) => tx[key][field], (value) => ({ [key]: { [field]: value } }), { min: 0, max: 359.9, step: 0.1, digits: 1 }));
+  }
+  const modulationRows: SetupRow[] = ([["30Hz", "am30Hz", "am30HzPercent", "useStationModulation", 40], ["IDENT", "ident1020Hz", "identModulationPercent", "useStationIdent", 20]] as const).map(([label, parameter, key, inherited, max]) => ({
+    label, unit: "%", input: (id) => {
+      const tx = configuration.transmitters[id];
+      return <SetupNumberInput aria-label={`${id.toUpperCase()} ${label}`} disabled={disabled || tx[inherited]}
+        {...calibratedSetpointInput(tx[inherited] ? configuration.station[key] : tx[key], max, 0.1,
+          device.calibration.transmitterSetpointFactors[id][parameter], (value) => transmitterPatch(id, { [key]: value }))} />;
+    },
+  }));
+  const sections: { title: string; rows: SetupRow[] }[] = [
+    { title: "Output Power", rows: powerRows },
+    { title: "Setup Option", rows: optionRows },
+    { title: "Azimuth Offset", rows: [numberRow("Azimuth Offset", "Azimuth", "°", (tx) => tx.azimuthOffsetDeg,
+      (azimuthOffsetDeg) => ({ azimuthOffsetDeg }), { min: -40, max: 40, step: 0.01, digits: 1, inherited: (tx) => tx.useStationAzimuth })] },
+    { title: "RF Phasing", rows: phaseRows("RF Phasing", "rfPhaseDeg") },
+    { title: "STB RF Phasing", rows: phaseRows("STB RF Phasing", "standbyRfPhaseDeg") },
+    { title: "Modulation Depth", rows: [...modulationRows,
+      numberRow("", "Voice", "%", (tx) => tx.voiceModulationPercent, (voiceModulationPercent) => ({ voiceModulationPercent }),
+        { min: 0, max: 40, step: 0.1, inherited: (tx) => tx.useStationModulation }),
+      { label: "IDENT code", input: (id) => <input aria-label={`${id.toUpperCase()} IDENT code`} maxLength={4}
+        value={configuration.transmitters[id].identCode} disabled={disabled || configuration.transmitters[id].useStationIdent}
+        onChange={(event) => transmitterPatch(id, { identCode: event.target.value.toUpperCase() })} /> },
+    ] },
+  ];
+
   return (
     <>
-      <div className={styles.twoColumnLayout}>
-        {DVOR220_TRANSMITTER_IDS.map((transmitterId) => {
-          const transmitter = configuration.transmitters[transmitterId];
-          const factors = device.calibration.transmitterSetpointFactors[transmitterId];
-          return (
-            <fieldset key={transmitterId} className={styles.formSection} disabled={disabled}>
-              <legend>{transmitterId.toUpperCase()}</legend>
-              <div className={styles.transmitterHelperBar}>
-                <span>RF setpoints: {transmitter.trackingEnabled ? "Tracking" : "Manual"}</span>
-                <MopiensBeveledButton onClick={() => openHelper(transmitterId)}>Helper...</MopiensBeveledButton>
-              </div>
-              <div className={styles.formGridSingle}>
-                <FormField label="Carrier Scale (%)"><input type="number" {...calibratedSetpointInput(transmitter.carrierScalePercent, 100, 0.1, factors.carrier, (carrierScalePercent) => transmitterPatch(transmitterId, { carrierScalePercent }))} /></FormField>
-                {(["usbCos", "usbSin", "lsbCos", "lsbSin"] as const).map((output) => (
-                  <FormField key={output} label={`${output.toUpperCase()} Power (W)`}>
-                    <input type="number" {...calibratedSetpointInput(transmitter.sidebandPowerW[output], 5, 0.01, factors[output], (value) => transmitterPatch(transmitterId, { sidebandPowerW: { [output]: value } }))} />
-                  </FormField>
-                ))}
-                <FormField label="Carrier to Sideband Phase (°)"><input type="number" min="0" max="359.9" step="0.1" value={transmitter.rfPhaseDeg.carrierToSideband} onChange={(event) => transmitterPatch(transmitterId, { rfPhaseDeg: { carrierToSideband: numberValue(event.target.value, transmitter.rfPhaseDeg.carrierToSideband) } })} /></FormField>
-                <FormField label="30 Hz AM (%)"><input type="number" disabled={disabled || transmitter.useStationModulation} {...calibratedSetpointInput(transmitter.useStationModulation ? configuration.station.am30HzPercent : transmitter.am30HzPercent, 40, 0.1, factors.am30Hz, (am30HzPercent) => transmitterPatch(transmitterId, { am30HzPercent }))} /></FormField>
-                <FormField label="IDENT Modulation (%)"><input type="number" disabled={disabled || transmitter.useStationIdent} {...calibratedSetpointInput(transmitter.useStationIdent ? configuration.station.identModulationPercent : transmitter.identModulationPercent, 20, 0.1, factors.ident1020Hz, (identModulationPercent) => transmitterPatch(transmitterId, { identModulationPercent }))} /></FormField>
-                <FormField label="Voice Modulation (%)"><input type="number" min="0" max="40" step="0.1" value={transmitter.voiceModulationPercent} disabled={disabled || transmitter.useStationModulation} onChange={(event) => transmitterPatch(transmitterId, { voiceModulationPercent: numberValue(event.target.value, transmitter.voiceModulationPercent) })} /></FormField>
-                <FormField label="Azimuth Offset (°)"><input type="number" min="-40" max="40" step="0.01" value={transmitter.azimuthOffsetDeg} disabled={disabled || transmitter.useStationAzimuth} onChange={(event) => transmitterPatch(transmitterId, { azimuthOffsetDeg: numberValue(event.target.value, transmitter.azimuthOffsetDeg) })} /></FormField>
-                <FormField label="IDENT Code"><input maxLength={4} value={transmitter.identCode} disabled={disabled || transmitter.useStationIdent} onChange={(event) => transmitterPatch(transmitterId, { identCode: event.target.value.toUpperCase() })} /></FormField>
-                <MopiensSlideSwitch label="Use station modulation" checked={transmitter.useStationModulation} disabled={disabled} onCheckedChange={(checked) => transmitterPatch(transmitterId, { useStationModulation: checked })} />
-                <MopiensSlideSwitch label="Use station azimuth" checked={transmitter.useStationAzimuth} disabled={disabled} onCheckedChange={(checked) => transmitterPatch(transmitterId, { useStationAzimuth: checked })} />
-                <MopiensSlideSwitch label="Use station IDENT" checked={transmitter.useStationIdent} disabled={disabled} onCheckedChange={(checked) => transmitterPatch(transmitterId, { useStationIdent: checked })} />
-              </div>
-            </fieldset>
-          );
-        })}
+      <header className={`${styles.screenTitle} ${styles.transmitterSetupHeader}`}>
+        <h2>Transmitter Setup</h2>
+        <div className={styles.actionRow}>
+          <label><input type="checkbox" checked={sameTransmitters} disabled={disabled}
+            onChange={(event) => setSameTransmitters(event.target.checked)} /> Same to TX1 and TX2</label>
+          <ConfigurationCommitActions device={device} snapshot={snapshot} dispatch={dispatch} saveLabel="Save" />
+        </div>
+      </header>
+      <div className={styles.transmitterSetupTableWrap}>
+        <table className={styles.transmitterSetupTable} aria-label="Transmitter Setup">
+          <thead><tr>{["Items", "TX1", "TX2", "Units", "Helper"].map((label) => <th key={label} scope="col">{label}</th>)}</tr></thead>
+          {sections.map(({ title, rows }) => {
+            const collapsed = collapsedSections.includes(title);
+            return <tbody key={title}>
+              <tr className={styles.transmitterSetupSection}><td colSpan={5}>
+                <button type="button" aria-expanded={!collapsed} aria-label={title}
+                  onClick={() => setCollapsedSections((current) => collapsed ? current.filter((name) => name !== title) : [...current, title])}>
+                  <span aria-hidden="true">{collapsed ? "▸" : "▾"}</span> {title}
+                </button>
+              </td></tr>
+              {!collapsed && rows.map((row) => <tr key={row.label}>
+                <th scope="row">{row.label}</th>
+                {DVOR220_TRANSMITTER_IDS.map((id) => <td key={id}>{row.input(id)}</td>)}
+                <td>{row.unit}</td>
+                <td>{row.helper ? <a href="#output-power" aria-disabled={disabled} tabIndex={disabled ? -1 : undefined}
+                  onClick={(event) => { event.preventDefault(); if (!disabled) openHelper("tx1"); }}>Helper</a> : null}</td>
+              </tr>)}
+            </tbody>;
+          })}
+        </table>
       </div>
 
       <MopiensModal
@@ -786,7 +856,7 @@ export function Dvor220SetupScreen({ screenId, device, snapshot, dispatch }: Dvo
   };
   let content: ReactNode;
   if (screenId === "setup-station") content = <StationSetup configuration={configuration} disabled={disabled} patch={patch} />;
-  else if (screenId === "setup-transmitter") content = <TransmitterSetup configuration={configuration} device={device} disabled={disabled} patch={patch} dispatch={dispatch} />;
+  else if (screenId === "setup-transmitter") content = <TransmitterSetup configuration={configuration} device={device} snapshot={snapshot} disabled={disabled} patch={patch} dispatch={dispatch} />;
   else if (screenId === "setup-thermal") content = <ThermalSetup configuration={configuration} disabled={disabled} patch={patch} />;
   else if (screenId === "setup-transmitter-limit") content = <TransmitterLimitSetup configuration={configuration} disabled={disabled} patch={patch} />;
   else if (screenId === "setup-monitor") content = <MonitorSetup configuration={configuration} disabled={disabled} patch={patch} />;
@@ -800,11 +870,11 @@ export function Dvor220SetupScreen({ screenId, device, snapshot, dispatch }: Dvo
   const tone: MopiensVisualTone = disabled ? "inactive" : device.configuration.draftDirty ? "warning" : "normal";
   return (
     <div className={styles.screenBody} data-configuration-state={device.configuration.draftDirty ? "dirty" : "clean"}>
-      <SetupHeader title={DVOR220_SCREEN_LABELS[screenId]}>
+      {screenId !== "setup-transmitter" ? <SetupHeader title={DVOR220_SCREEN_LABELS[screenId]}>
         <span className={styles.inlineState} data-tone={tone}>{disabled ? permission.reason : device.configuration.draftDirty ? "Draft has unapplied changes" : "Draft matches running configuration"}</span>
-      </SetupHeader>
+      </SetupHeader> : null}
       {content}
-      <ConfigurationActions device={device} snapshot={snapshot} dispatch={dispatch} />
+      <ConfigurationActions device={device} snapshot={snapshot} dispatch={dispatch} statusOnly={screenId === "setup-transmitter"} />
     </div>
   );
 }

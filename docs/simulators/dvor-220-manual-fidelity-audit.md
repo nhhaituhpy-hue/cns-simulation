@@ -12,6 +12,17 @@ không đánh giá LMI như một ứng dụng riêng, DME 320, hoặc chức n�
 | CR | [Sử dụng PMDT DVOR 220 Cam Ranh](https://drive.google.com/file/d/1po4pTePLULoFY2DmQ77XXbD0XHPd-QWT/view) | 15 trang PDF; nguồn cho menu, nhãn và bố cục của bản PMDT tại Cam Ranh. |
 | HC | [Tài liệu hiệu chỉnh DVOR 220](https://docs.google.com/document/d/1at5AD7GveWcdQkCeXTQFqqY3WQmCEssu/edit) | 30 trang bản xuất PDF; nguồn cho luồng Calibrate / Save / Close và Helper. |
 
+Transmitter Setup theo HC PDF 3 (lặp lại ở 6, 9, 12, 15): bảng chung
+Items / TX1 / TX2 / Units / Helper; Output Power → Setup Option → Azimuth
+Offset → RF Phasing → STB RF Phasing → Modulation Depth. Header chứa Same
+to TX1 and TX2, Apply, Save; checkbox sao chép giá trị cấu hình khi sửa từ
+bất kỳ TX nào. Giữ nguyên bù hệ số setpoint, giới hạn/bước nhập, quyền và
+luồng Draft → Running → Flash; sideband 3 số lẻ, góc 1 số lẻ khi không sửa.
+Helper ở năm hàng Output Power mở hộp thoại hiện có với TX1 mặc định.
+Không thêm Helper cho RF/STB phasing vì HC không mô tả hộp thoại/thao tác.
+Dòng trạng thái validation và Reset Draft dưới bảng là phần mở rộng simulator;
+Apply/Profile Save ở footer của các trang Setup khác không đổi.
+
 Đối với luồng hiệu chỉnh, HC là nguồn quyết định khi khác TM. Cập nhật hiển thị:
 Current Reading sideband trong bảng 2 số lẻ, Setpoint vẫn 3 (HC PDF 1, 17,
 21); hộp thoại sideband TX Setpoint 2/2 số lẻ (5, 8, 11, 14), TX Reading/PDC
