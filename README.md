@@ -437,6 +437,11 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ### 2026-11-20 — DVOR 220 Advanced Control: tinh chỉnh giao diện PR #19
 
+- Lượt đối chiếu tiếp theo: cảnh báo hẹp hơn và dịch tâm sang phải, giảm chiều
+  cao section/tab/nút, Apply về cột 22% pane với icon xám; scrollbar riêng
+  dùng track/thumb thay arrow lớn. Chỉ đổi CSS của trang.
+- Kiểm tra lại Chrome hai tab ở 1600×1051; lint/typecheck, 166 test DVOR 220
+  và production build đạt.
 - Thu gọn cảnh báo, form 60% chiều rộng, tab TX và hàng radio theo CR 12–13;
   Apply có biểu tượng check tròn, cùng cột; hai nút Manual Control/Run cùng cỡ.
 - Tab workspace dùng Advanced Control, cây vẫn Advanced Controls như guide.

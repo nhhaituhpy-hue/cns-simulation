@@ -4,16 +4,16 @@
   height: 100%;
   min-height: 0;
   background: #efefef;
-  font-size: 9px;
-  line-height: 1.3;
+  font-size: 8px;
+  line-height: 1.2;
 }
 
 .advancedTitle {
   background: #97b7d2;
   color: white;
-  padding: 6px;
+  padding: 4px 6px;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .advancedPane {
@@ -22,22 +22,42 @@
   overflow-y: scroll;
   border: 1px solid #bfc0c3;
   padding: 0 3px;
-  scrollbar-color: #bcbcbc #eeeeee;
+  scrollbar-color: auto;
   scrollbar-width: auto;
+}
+
+.advancedPane::-webkit-scrollbar {
+  width: 12px;
+}
+
+.advancedPane::-webkit-scrollbar-track {
+  background: #eeeeee;
+  border-left: 1px solid #d3d3d3;
+}
+
+.advancedPane::-webkit-scrollbar-thumb {
+  background: #bcbcbc;
+  border: 1px solid #eeeeee;
+  min-height: 24px;
+}
+
+.advancedPane::-webkit-scrollbar-button {
+  display: none;
 }
 
 .advancedWarning {
   color: #df2929;
   text-align: center;
-  width: 60%;
-  min-width: min(420px, 100%);
-  font-size: 9px;
-  line-height: 1.3;
-  margin: 10px 0;
+  width: 48%;
+  max-width: 480px;
+  min-width: min(336px, 92%);
+  font-size: 7.5px;
+  line-height: 1.15;
+  margin: 8px 0 8px 8%;
 }
 
 .advancedWarning p {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
 }
 
 .advancedControlsForm {
@@ -54,23 +74,25 @@
 .advancedControlsForm .advancedSection > summary {
   background: transparent;
   color: #5c829b;
-  border-bottom: 2px groove #d2d2d2;
+  border-bottom: 1px solid #bfc0c0;
   font-weight: 400;
-  padding: 3px 2px 1px;
+  padding: 2px 2px 1px;
 }
 
 .advancedControlsForm .advancedSection > summary::before {
   color: #666;
   font-weight: 700;
+  font-size: 11px;
+  line-height: 1;
 }
 
 .advancedControlsForm .advancedSectionBody {
-  padding: 6px 18px;
+  padding: 4px 18px;
 }
 
 .advancedRadioRow {
   display: grid;
-  grid-template-columns: 166px 60px;
+  grid-template-columns: calc(36.667% - 18px) 40px;
   align-items: center;
   gap: 12px;
   border: 0;
@@ -80,23 +102,23 @@
 
 .advancedRadios {
   display: flex;
-  gap: 7px;
+  gap: 5px;
   align-items: center;
   justify-self: start;
   border: 1px solid #dedede;
-  padding: 5px 4px;
+  padding: 3px;
   color: #5c829b;
 }
 
 .advancedRadios label {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
 }
 
 .advancedRadios input {
-  width: 11px;
-  height: 11px;
+  width: 10px;
+  height: 10px;
   margin: 0;
   accent-color: #454545;
 }
@@ -108,7 +130,7 @@
 
 .advancedApply,
 .advancedAction {
-  height: 21px;
+  height: 17px;
   border: 1px solid #b8b8b8;
   box-shadow: inset 1px 1px #fafafa;
   background: linear-gradient(#ededed, #d7d7d7);
@@ -121,11 +143,11 @@
 
 .advancedApply {
   display: inline-flex;
-  gap: 7px;
+  gap: 3px;
   align-items: center;
   justify-content: center;
   color: #555;
-  padding: 0 4px;
+  padding: 0 2px;
 }
 
 .advancedApply:disabled {
@@ -137,18 +159,21 @@
 .advancedCheck {
   display: inline-grid;
   place-content: center;
-  width: 12px;
-  height: 12px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  border: 1px solid #7d9180;
-  background: #93a58f;
+  border: 1px solid #929292;
+  background: #a5a5a5;
   color: #f4f4f4;
-  font-size: 10px;
+  font-size: 8px;
   font-weight: 700;
 }
 
 .advancedAction {
-  width: 100px;
+  width: 54px;
+  padding: 0;
+  font-size: 7px;
+  white-space: nowrap;
 }
 
 .advancedTabs {
@@ -157,7 +182,7 @@
 }
 
 .advancedTabs button {
-  padding: 1px 8px;
+  padding: 1px 6px;
   border: 1px solid #d3d3d3;
   border-radius: 2px 2px 0 0;
   background: linear-gradient(#f1f1f1, #e4e4e4);
