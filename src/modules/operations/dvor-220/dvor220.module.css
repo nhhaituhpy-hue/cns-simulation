@@ -919,6 +919,109 @@
   gap: 7px;
 }
 
+.transmitterSetupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.transmitterSetupHeader label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.transmitterSetupTableWrap {
+  overflow-x: auto;
+}
+
+.transmitterSetupTable {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+  background: #fff;
+  color: #243b50;
+  font-size: 12px;
+}
+
+.transmitterSetupTable th,
+.transmitterSetupTable td {
+  padding: 4px 10px;
+  text-align: left;
+  font-weight: normal;
+}
+
+.transmitterSetupTable thead th {
+  border-right: 1px solid #ddd;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.transmitterSetupTable th:first-child {
+  width: 32%;
+}
+
+.transmitterSetupTable input,
+.transmitterSetupTable select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 90px;
+  color: inherit;
+  background: #fff;
+  border: 1px solid #c6cdd4;
+  padding: 3px 4px;
+  font: inherit;
+}
+
+.transmitterSetupTable input:disabled,
+.transmitterSetupTable select:disabled {
+  background: #eee;
+  color: #747d86;
+}
+
+.transmitterSetupSection button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  margin-top: 9px;
+  padding: 3px 0;
+  border: 0;
+  border-bottom: 1px solid #b8cde3;
+  background: transparent;
+  color: #487fa5;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.transmitterSetupTable a {
+  color: #243b50;
+}
+
+.transmitterSetupTable a[aria-disabled="true"] {
+  color: #747d86;
+  cursor: default;
+}
+
+.configurationFooter.transmitterSetupStatus {
+  position: static;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 4px 0;
+  font-size: 11px;
+}
+
+.transmitterSetupStatus .validationSummary {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
 .transmitterHelperBar {
   display: flex;
   align-items: center;

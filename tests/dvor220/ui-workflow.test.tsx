@@ -42,7 +42,7 @@ describe("MOPIENS DVOR 220 simulator UI", () => {
     connectAndLogin(store);
     fireEvent.click(screen.getByRole("button", { name: "Setup" }));
     fireEvent.click(screen.getByRole("button", { name: /^Transmitter Setup$/ }));
-    fireEvent.click(within(screen.getByRole("group", { name: "TX1" })).getByRole("button", { name: "Helper..." }));
+    fireEvent.click(screen.getAllByRole("link", { name: "Helper" })[0]);
     const dialog = within(screen.getByRole("dialog", { name: "Output Power" }));
     const panel = dialog.getByRole("tabpanel", { name: "TX1 Output Power" });
     const fields = within(panel).getAllByRole("group").slice(0, 5);
@@ -77,7 +77,7 @@ describe("MOPIENS DVOR 220 simulator UI", () => {
     connectAndLogin(store);
     fireEvent.click(screen.getByRole("button", { name: "Setup" }));
     fireEvent.click(screen.getByRole("button", { name: /^Transmitter Setup$/ }));
-    fireEvent.click(within(screen.getByRole("group", { name: "TX1" })).getByRole("button", { name: "Helper..." }));
+    fireEvent.click(screen.getAllByRole("link", { name: "Helper" })[0]);
     const dialog = within(screen.getByRole("dialog", { name: "Output Power" }));
     const input = dialog.getByRole("spinbutton", { name: "USB COS" });
     const slider = dialog.getByRole("slider", { name: "USB COS slider" });
@@ -93,7 +93,7 @@ describe("MOPIENS DVOR 220 simulator UI", () => {
     connectAndLogin(store);
     fireEvent.click(screen.getByRole("button", { name: "Setup" }));
     fireEvent.click(screen.getByRole("button", { name: /^Transmitter Setup$/ }));
-    fireEvent.click(within(screen.getByRole("group", { name: "TX1" })).getByRole("button", { name: "Helper..." }));
+    fireEvent.click(screen.getAllByRole("link", { name: "Helper" })[0]);
     expect(screen.getByRole("dialog", { name: "Output Power" })).toBeInTheDocument();
   });
 
@@ -108,7 +108,7 @@ describe("MOPIENS DVOR 220 simulator UI", () => {
     connectAndLogin(store);
     fireEvent.click(screen.getByRole("button", { name: "Setup" }));
     fireEvent.click(screen.getByRole("button", { name: /^Transmitter Setup$/ }));
-    fireEvent.click(within(screen.getByRole("group", { name: "TX1" })).getByRole("button", { name: "Helper..." }));
+    fireEvent.click(screen.getAllByRole("link", { name: "Helper" })[0]);
     const dialog = within(screen.getByRole("dialog", { name: "Output Power" }));
     const slider = dialog.getByRole("slider", { name: `${label} slider` });
     const input = dialog.getByRole("spinbutton", { name: label });
@@ -138,7 +138,7 @@ describe("MOPIENS DVOR 220 simulator UI", () => {
     connectAndLogin(store);
     fireEvent.click(screen.getByRole("button", { name: "Setup" }));
     fireEvent.click(screen.getByRole("button", { name: /^Transmitter Setup$/ }));
-    fireEvent.click(within(screen.getByRole("group", { name: "TX1" })).getByRole("button", { name: "Helper..." }));
+    fireEvent.click(screen.getAllByRole("link", { name: "Helper" })[0]);
     const dialog = within(screen.getByRole("dialog", { name: "Output Power" }));
     const carrier = dialog.getByRole("spinbutton", { name: "Carrier Power" });
     expect(carrier).toHaveValue(100);
@@ -260,8 +260,7 @@ describe("MOPIENS DVOR 220 simulator UI", () => {
     expect(store.getState().snapshot.transmitters.tx1.forwardPowerW.carrier).toBe(100);
     fireEvent.click(screen.getByRole("button", { name: "Setup" }));
     fireEvent.click(screen.getByRole("button", { name: /^Transmitter Setup$/ }));
-    const tx1 = within(screen.getByRole("group", { name: "TX1" }));
-    const carrier = tx1.getByRole("spinbutton", { name: "Carrier Scale (%)" });
+    const carrier = screen.getByRole("spinbutton", { name: "TX1 Carrier" });
     expect(carrier).toHaveValue(101);
     fireEvent.change(carrier, { target: { value: "90.9" } });
     expect(store.getState().device.configuration.draft.transmitters.tx1.carrierScalePercent).toBe(90);
