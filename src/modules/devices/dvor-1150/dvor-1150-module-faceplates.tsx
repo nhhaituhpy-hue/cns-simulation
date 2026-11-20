@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import styles from "./dvor-1150-module-faceplates.module.css";
 
 function FaceplateDefs() {
@@ -195,31 +198,60 @@ function SidebandFaceplate() {
 }
 
 function StatusDisplayFaceplate() {
+  const [bypassEnabled, setBypassEnabled] = useState(false);
   const indicators = [
-    { x: 150, label: "NORM", color: "green" },
-    { x: 245, label: "ALARM", color: "red" },
-    { x: 340, label: "BYPASS", color: "amber" },
+    { x: 150, label: "Normal", color: "green" },
+    { x: 245, label: "Alarm", color: "red" },
   ] as const;
 
   return (
-    <svg className={`${styles.faceplate} ${styles.statusPanel}`} viewBox="0 0 760 310" role="img" aria-labelledby="dvor1150-status-title">
+    <svg className={`${styles.faceplate} ${styles.statusPanel}`} viewBox="0 0 760 310" role="group" aria-labelledby="dvor1150-status-title">
       <title id="dvor1150-status-title">Status Display Panel DVOR 1150 theo Figure 1-4 và Table 3-6</title>
       <FaceplateDefs />
       <rect className={styles.statusFrame} x="14" y="14" width="732" height="282" rx="7" />
       <rect className={styles.statusPlate} x="28" y="28" width="704" height="254" rx="4" />
       <text className={styles.statusBrand} x="380" y="62">MODEL 1150 VOR · STATUS DISPLAY</text>
-      {[1, 2].map((system, index) => (
-        <g key={system} transform={`translate(${index * 360} 0)`}>
-          <text className={styles.statusSystem} x="205" y="103">SYSTEM {system === 1 ? "A" : "B"}</text>
+      {[1, 2].map((monitor, index) => (
+        <g key={monitor} transform={`translate(${index * 360} 0)`}>
+          <text className={styles.statusSystem} x="205" y="103">MON{monitor}</text>
           {indicators.map((indicator) => (
-            <g key={indicator.label}>
+            <g key={indicator.label} role="img" aria-label={`Integral ${indicator.label} ${monitor} indicator`}>
               <circle className={styles.statusLampBezel} cx={indicator.x} cy="170" r="24" />
               <circle className={styles.statusLamp} data-color={indicator.color} cx={indicator.x} cy="170" r="14" />
-              <text className={styles.statusLabel} x={indicator.x} y="216">{indicator.label}</text>
+              <text className={styles.statusLabel} x={indicator.x} y="216">
+                <tspan x={indicator.x}>Integral</tspan>
+                <tspan x={indicator.x} dy="16">{indicator.label} {monitor}</tspan>
+              </text>
             </g>
           ))}
         </g>
       ))}
+      <text className={styles.statusLabel} x="700" y="103">
+        <tspan x="700">Integral</tspan>
+        <tspan x="700" dy="16">Bypass</tspan>
+      </text>
+      <g role="img" aria-label={`Integral Bypass indicator ${bypassEnabled ? "on" : "off"}`}>
+        <circle className={styles.statusLampBezel} cx="700" cy="170" r="24" />
+        <circle className={styles.statusLamp} data-color="amber" data-active={bypassEnabled} cx="700" cy="170" r="14" />
+      </g>
+      <g
+        className={styles.statusBypassSwitch}
+        role="switch"
+        aria-label="Integral Bypass"
+        aria-checked={bypassEnabled}
+        tabIndex={0}
+        onClick={() => setBypassEnabled((enabled) => !enabled)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            setBypassEnabled((enabled) => !enabled);
+          }
+        }}
+      >
+        <rect x="680" y="213" width="40" height="34" rx="5" />
+        <circle cx="700" cy="230" r="10" />
+        <path d={bypassEnabled ? "M700 230v-12" : "M700 230v12"} />
+      </g>
       <Screw x={46} y={46} />
       <Screw x={714} y={46} />
       <Screw x={46} y={264} />
