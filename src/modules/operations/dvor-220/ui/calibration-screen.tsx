@@ -62,9 +62,10 @@ function formatValue(value: number | null, digits = 2) {
   return value === null ? "—" : value.toFixed(digits);
 }
 
-function formatRowValue(row: ReadingRow, value: number | null, showUnit = true) {
+function formatRowValue(row: ReadingRow, value: number | null, showUnit = true, reading = false) {
   const parameter = row.target.kind === "transmitter-reading" ? row.target.output : row.target.parameter;
-  const digits = row.unit === "W" && parameter !== "carrier" ? 3 : 2;
+  const digits = reading && parameter === "carrier" && row.target.kind !== "pdc" ? 0
+    : !reading && row.unit === "W" && parameter !== "carrier" ? 3 : 2;
   return showUnit && value !== null && row.unit ? `${formatValue(value, digits)} ${row.unit}` : formatValue(value, digits);
 }
 
@@ -139,13 +140,14 @@ function pdcGroup(device: Dvor220DeviceState, snapshot: Dvor220Snapshot): Calibr
 }
 
 function CalibrationDialog({
-  title = "Calibration", target, label, unit, initialValue, locked, dirty, dispatch, onClose, toCommand, children,
+  title = "Calibration", target, label, unit, initialValue, initialDigits, locked, dirty, dispatch, onClose, toCommand, children,
 }: {
   title?: string;
   target: Dvor220CalibrationTarget;
   label: string;
   unit: string;
   initialValue: number | null;
+  initialDigits?: number;
   locked: boolean;
   dirty: boolean;
   dispatch: CalibrationProps["dispatch"];
@@ -153,7 +155,7 @@ function CalibrationDialog({
   toCommand: (reference: number) => Dvor220CalibrationCommand | null;
   children?: ReactNode;
 }) {
-  const [input, setInput] = useState(initialValue === null ? "" : String(initialValue));
+  const [input, setInput] = useState(initialValue === null ? "" : initialDigits === undefined ? String(initialValue) : initialValue.toFixed(initialDigits));
   const [feedback, setFeedback] = useState<{ message: string; ok: boolean } | null>(null);
   function run(command: Parameters<typeof dispatch>[0], message: string) {
     const result = dispatch(command);
@@ -214,26 +216,40 @@ function CalibrationGroupSection({ title, children }: { title: string; children:
   );
 }
 
-function ReadingDialog({ row, nominal, allowed, dispatch, onClose }: {
+function ReadingDialog({ row, nominal, activeTransmitterId, allowed, dispatch, onClose }: {
   row: ReadingRow;
   nominal: boolean;
+  activeTransmitterId: Dvor220Snapshot["activeTransmitterId"];
   allowed: boolean;
   dispatch: CalibrationProps["dispatch"];
   onClose: () => void;
 }) {
+  const target = row.target;
+  const monitor = target.kind === "monitor";
+  const parameter = target.kind === "transmitter-reading" ? target.output : target.parameter;
+  const sideband = row.unit === "W" && parameter !== "carrier";
+  const power = target.kind === "transmitter-reading" || (target.kind === "pdc" && parameter !== "carrierVswr");
+  const monitorNames = { am30Hz: "AM30", ident1020Hz: "AM1020", am9960Hz: "AM9960" };
+  const name = monitor && parameter in monitorNames ? monitorNames[parameter as keyof typeof monitorNames]
+    : target.kind === "transmitter-setpoint" && sideband ? `${parameter.toUpperCase()} Power`
+    : power ? `${row.label} Power` : row.label;
+  const context = monitor ? `${target.monitorId.toUpperCase()}:${channelLabels[target.channelId]} Channel on ${activeTransmitterId?.toUpperCase() ?? "—"}`
+    : power ? `Reading, ${row.context}` : row.context;
+  const initialDigits = monitor ? 2 : row.unit === "W" ? sideband ? 4 : 1 : undefined;
   return (
-    <CalibrationDialog target={row.target} label={`${row.label} (${row.context})`} unit={row.unit}
+    <CalibrationDialog target={row.target} label={`${name} (${context})`} unit={row.unit}
       locked={!allowed} dirty={row.factor !== row.savedFactor} initialValue={row.setting ?? row.reading}
+      initialDigits={initialDigits}
       dispatch={dispatch} onClose={onClose}
       toCommand={(referenceValue) => row.reading === null ? null : { ...row.target, indicatedValue: row.reading, referenceValue }}>
       <fieldset>
-        <legend>Current Setting ({row.context})</legend>
+        <legend>Current Setting ({monitor ? target.monitorId.toUpperCase() : row.context})</legend>
         <dl className={styles.calibrationCurrent}>
-          <div><dt>Current Cal. Factor</dt><dd>{formatValue(row.factor, 5)}</dd></div>
+          <div><dt>{monitor && parameter === "bearingError" ? "Current Cal. Offset" : "Current Cal. Factor"}</dt><dd><span>{formatValue(row.factor, 5)}</span></dd></div>
           {row.target.kind !== "pdc" || row.target.parameter !== "carrierVswr" ? (
-            <div><dt>{nominal ? "Nominal" : "Current Setpoint"}</dt><dd>{formatRowValue(row, row.setting)}</dd></div>
+            <div><dt>{nominal ? "Nominal" : "Current Setpoint"}</dt><dd><span>{formatValue(row.setting)}</span>{!monitor && row.setting !== null && row.unit ? ` ${row.unit}` : ""}</dd></div>
           ) : null}
-          <div><dt>Current Reading</dt><dd>{formatRowValue(row, row.reading)}</dd></div>
+          <div><dt>Current Reading</dt><dd><span>{monitor || row.unit === "W" ? formatValue(row.reading, sideband && power ? 4 : 2) : formatRowValue(row, row.reading, false)}</span></dd></div>
         </dl>
       </fieldset>
     </CalibrationDialog>
@@ -325,7 +341,7 @@ export function CalibrationScreen({ screenId, device, snapshot, dispatch, openDi
           { id: "item", label: "Item", render: (row) => row.label },
           { id: "factor", label: "Cal. Factor", align: "right", render: (row) => formatValue(row.factor, pdc ? 9 : 5) },
           { id: "setting", label: monitor ? "Nominal Value" : "Setpoint", align: "right", render: (row) => formatRowValue(row, row.setting, !unitColumn) },
-          { id: "reading", label: "Current Reading", align: "right", render: (row) => formatRowValue(row, row.reading, !unitColumn) },
+          { id: "reading", label: "Current Reading", align: "right", render: (row) => formatRowValue(row, row.reading, !unitColumn, true) },
           ...(unitColumn ? [{ id: "unit", label: "Unit", render: (row: ReadingRow) => row.unit }] : []),
           { id: "calibrate", label: pdc ? "Power Calibration" : "Calibration", render: (row) => (
             <MopiensBeveledButton disabled={!permission.allowed || row.reading === null}
@@ -341,6 +357,7 @@ export function CalibrationScreen({ screenId, device, snapshot, dispatch, openDi
       ))}
       {pdc ? <p>Sideband VSWR controls are shown for reference; their calibration procedure is not documented.</p> : null}
       {selected ? <ReadingDialog key={selected.id} row={selected} nominal={monitor} allowed={permission.allowed}
+        activeTransmitterId={snapshot.activeTransmitterId}
         dispatch={dispatch} onClose={() => setSelection(null)} /> : null}
     </div>
   );

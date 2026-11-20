@@ -270,7 +270,14 @@ export interface Dvor220SessionState {
   failedLoginCount: number;
 }
 
+export interface Dvor220AdvancedControls {
+  identKeying: "normal" | "off" | "continuous";
+  sidebandBlending: "normal" | "off";
+  standbyAzimuthEmulation: "normal" | "off";
+}
+
 export interface Dvor220TransmitterRuntime {
+  advancedControls: Dvor220AdvancedControls;
   powerOn: boolean;
   designation: Dvor220TransmitterDesignation;
   path: Dvor220TransmitterPath;
@@ -564,6 +571,7 @@ export interface Dvor220MonitorSnapshot {
 }
 
 export interface Dvor220TransmitterSnapshot {
+  advancedControls: Dvor220AdvancedControls;
   transmitterId: Dvor220TransmitterId;
   designation: Dvor220TransmitterDesignation;
   path: Dvor220TransmitterPath;
@@ -686,6 +694,7 @@ export type Dvor220Command =
   | { type: "set-monitor-bypass"; monitorId?: Dvor220MonitorId; bypass: boolean }
   | { type: "reset" }
   | { type: "fault-clear"; transmitterId?: Dvor220TransmitterId }
+  | { type: "set-advanced-control"; transmitterId: Dvor220TransmitterId; control: keyof Dvor220AdvancedControls; value: "normal" | "off" | "continuous" }
   | { type: "patch-draft"; patch: Dvor220DeepPartial<Dvor220Configuration> }
   | { type: "replace-draft"; configuration: Dvor220Configuration }
   | { type: "reset-draft" }

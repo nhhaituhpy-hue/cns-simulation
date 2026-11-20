@@ -1,4 +1,4 @@
-import { cloneDvor220 } from "./defaults";
+import { cloneDvor220, createDvor220AdvancedControls } from "./defaults";
 import { hasDvor220ControlOwnership, isDvor220MonitorEffectivelyBypassed } from "./permissions";
 import {
   DVOR220_MONITOR_CHANNEL_IDS,
@@ -247,6 +247,7 @@ function buildTransmitterSnapshot(
     units,
     forwardPowerW,
     frequencies,
+    advancedControls: { ...createDvor220AdvancedControls(), ...runtime.advancedControls },
     temperaturesC: { ...runtime.temperaturesC },
     fanOn: runtime.fanOn,
   };
@@ -364,7 +365,14 @@ function rawMonitorValue(
       && fault.channelId === channelId
       && fault.parameter === parameter,
   );
-  return injected?.value ?? baseMonitorValues(state, monitorId, channelId)[parameter];
+  if (injected) return injected.value;
+  if (parameter === "ident1020Hz" && channelId !== "standby") {
+    const transmitterId = activeTransmitterId(state);
+    const keying = transmitterId ? state.transmitters[transmitterId].advancedControls?.identKeying : "normal";
+    if (keying === "off") return 0;
+    if (keying === "continuous") return (state.configuration.running.monitor.channels[channelId].limits.ident1020Hz.upperAlarm ?? 100) + 1;
+  }
+  return baseMonitorValues(state, monitorId, channelId)[parameter];
 }
 
 function average(values: readonly number[]): number {

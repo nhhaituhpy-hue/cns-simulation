@@ -78,7 +78,7 @@ export const DVOR220_SCREEN_LABELS: Record<Dvor220ScreenId, string> = {
   "maintenance-tx-setpoint": "TX Setpoint Calibration",
   "maintenance-monitor-cal": "Monitor Calibration",
   "maintenance-pdc-cal": "PDC Calibration",
-  "maintenance-advanced": "Advanced Controls",
+  "maintenance-advanced": "Advanced Control",
   "maintenance-certification": "Monitor Certification",
   "maintenance-antenna": "Antenna Tests",
   "maintenance-thermal": "Thermal Test",

@@ -1,31 +1,11 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { MopiensBeveledButton, MopiensModal, MopiensPropertyGrid, type MopiensVisualTone } from "@/modules/operations/mopiens-pmdt";
+import { MopiensModal } from "@/modules/operations/mopiens-pmdt";
 import { getDvor220PermissionDecision } from "../domain/permissions";
-import { DVOR220_TRANSMITTER_IDS, type Dvor220MonitorParameter, type Dvor220StationConfiguration } from "../domain/types";
+import { DVOR220_TRANSMITTER_IDS, type Dvor220AdvancedControls, type Dvor220TransmitterId } from "../domain/types";
 import type { Dvor220MaintenanceScreenProps } from "./maintenance-screens";
-import { formatDvor220Status, toneForDvor220Status } from "./main-screens";
 import styles from "../dvor220.module.css";
-
-const certificationCommands: { label: string; parameter: Dvor220MonitorParameter; direction: "upper" | "lower" }[] = [
-  { label: "Azimuth Course Shift Alarm CW", parameter: "bearingError", direction: "upper" },
-  { label: "Azimuth Course Shift Alarm CCW", parameter: "bearingError", direction: "lower" },
-  { label: "30 Hz AM High Alarm", parameter: "am30Hz", direction: "upper" },
-  { label: "30 Hz AM Low Alarm", parameter: "am30Hz", direction: "lower" },
-  { label: "9960 Hz Subcarrier AM High Alarm", parameter: "am9960Hz", direction: "upper" },
-  { label: "9960 Hz Subcarrier AM Low Alarm", parameter: "am9960Hz", direction: "lower" },
-  { label: "RF Level High Alarm", parameter: "rfLevel", direction: "upper" },
-  { label: "RF Level Low Alarm", parameter: "rfLevel", direction: "lower" },
-];
-
-const identKeyers: { value: Dvor220StationConfiguration["identKeyer"]; label: string }[] = [
-  { value: "independent", label: "Independent" },
-  { value: "associated-master", label: "Associated Master" },
-  { value: "associated-slave", label: "Associated Slave" },
-  { value: "continuous", label: "Continuous" },
-  { value: "none", label: "None" },
-];
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return <details open className={styles.advancedSection}>
@@ -42,7 +22,7 @@ function AntennaManual() {
   const usb = swapped ? opposite : selected;
   const lsb = swapped ? selected : opposite;
   return <>
-    <MopiensBeveledButton onClick={() => setOpen(true)}>Antenna Manual</MopiensBeveledButton>
+    <button type="button" className={styles.advancedAction} onClick={() => setOpen(true)}>Manual Control...</button>
     <MopiensModal open={open} title="Antenna Manual" size="large" onClose={() => setOpen(false)}
       actions={[{ id: "close", label: "Close", onClick: () => setOpen(false) }]}>
       <h3>Antenna Select</h3>
@@ -60,8 +40,14 @@ function AntennaManual() {
               else { setSelected(antenna); setSwapped(false); }
             }}>
             <span>#{antenna}</span>
-            {antenna === usb || antenna === lsb ? <strong>{antenna === usb ? "USB" : "LSB"}</strong> : null}
           </button>;
+        })}
+        {([["USB", usb], ["LSB", lsb]] as const).map(([sideband, antenna]) => {
+          const angle = (antenna - 1) * Math.PI / 24;
+          return <strong key={sideband} className={styles.antennaMarker} aria-label={`${sideband} antenna #${antenna}`}
+            style={{ left: `${50 - 30 * Math.sin(angle)}%`, top: `${50 - 30 * Math.cos(angle)}%` }}>
+            {sideband}
+          </strong>;
         })}
         <span className={styles.carrierAntenna}>Carrier</span>
       </div>
@@ -69,73 +55,85 @@ function AntennaManual() {
   </>;
 }
 
-export function AdvancedControlsScreen({ device, snapshot, dispatch, groundCheck }: Dvor220MaintenanceScreenProps & { groundCheck: ReactNode }) {
-  const [identKeyer, setIdentKeyer] = useState(device.configuration.running.station.identKeyer);
-  const configure = getDvor220PermissionDecision(device, "configure");
-  function toggle(command: typeof certificationCommands[number]) {
-    const prefix = `certification-${command.parameter}-`;
-    const active = device.faults.some((fault) => fault.id === `${prefix}${command.direction}-mon1`);
-    for (const fault of device.faults.filter((fault) => fault.id.startsWith(prefix))) {
-      dispatch({ type: "clear-fault", faultId: fault.id });
-    }
-    if (active) return;
-    const band = device.configuration.running.monitor.channels.cha.limits[command.parameter];
-    const limit = command.direction === "upper" ? band.upperAlarm : band.lowerAlarm;
-    if (limit === null) return;
-    const value = limit + (command.direction === "upper" ? 0.01 : -0.01);
-    for (const monitorId of ["mon1", "mon2"] as const) {
-      dispatch({ type: "inject-fault", fault: {
-        id: `${prefix}${command.direction}-${monitorId}`, kind: "monitor-parameter",
-        monitorId, channelId: "cha", parameter: command.parameter, value,
-      } });
-    }
-  }
-  return <div className={styles.screenBody}>
-    <header className={styles.screenTitle}><h2>Advanced Controls</h2></header>
-    <Section title="Monitor Certification">
-      <p>Bypass the monitor to prevent shutdown (TM 6.5.3).</p>
-      <div className={styles.actionRow}>
-        {certificationCommands.map((command) => <MopiensBeveledButton key={command.label}
-          disabled={device.configuration.running.monitor.channels.cha.limits[command.parameter][command.direction === "upper" ? "upperAlarm" : "lowerAlarm"] === null}
-          pressed={device.faults.some((fault) => fault.id === `certification-${command.parameter}-${command.direction}-mon1`)}
-          onClick={() => toggle(command)}>{command.label}</MopiensBeveledButton>)}
+
+function AppliedControl({ title, control, applied, disabled, dispatch, transmitterId }: {
+  title: string;
+  control: keyof Dvor220AdvancedControls;
+  applied: Dvor220AdvancedControls[keyof Dvor220AdvancedControls];
+  disabled: boolean;
+  dispatch: Dvor220MaintenanceScreenProps["dispatch"];
+  transmitterId: Dvor220TransmitterId;
+}) {
+  const [selection, setSelection] = useState(applied);
+  return <Section title={title}>
+    <fieldset className={styles.advancedRadioRow} disabled={disabled} aria-label={title}>
+      <div className={styles.advancedRadios}>
+        {(["normal", "off", ...(control === "identKeying" ? ["continuous"] as const : [])] as const).map((value) =>
+          <label key={value}><input type="radio" name={`${transmitterId}-${control}`} checked={selection === value}
+            onChange={() => setSelection(value)} />{value === "normal" ? "Normal" : value === "off" ? "Off" : "Continuous"}</label>)}
       </div>
-      <div className={styles.maintenanceToolbar}>
-        <label className={styles.formField}><span>IDENT Keyer</span>
-          <select value={identKeyer} onChange={(event) => setIdentKeyer(event.target.value as typeof identKeyer)}>
-            {identKeyers.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
-          </select>
-        </label>
-        <MopiensBeveledButton disabled={!configure.allowed} onClick={() => {
-          const result = dispatch({ type: "patch-draft", patch: { station: { identKeyer } } });
-          if (result.ok) dispatch({ type: "apply-draft" });
-        }}>Apply</MopiensBeveledButton>
-      </div>
-      <MopiensPropertyGrid ariaLabel="Certification results" sections={[
-        ...(["mon1", "mon2"] as const).map((monitorId) => ({
-          id: monitorId, title: `${monitorId.toUpperCase()} CH.A`,
-          rows: (["bearingError", "am30Hz", "am9960Hz", "rfLevel", "ident1020Hz"] as const).map((parameter) => {
-            const reading = snapshot.monitors[monitorId].channels.cha.readings[parameter];
-            const tone: MopiensVisualTone = reading.status === "disabled" ? "inactive" : reading.status === "stabilizing" ? "pending" : toneForDvor220Status(reading.status);
-            return { id: parameter, label: parameter, value: `${reading.value.toFixed(2)} — ${formatDvor220Status(reading.status)}`, tone };
-          }),
-        })),
-        { id: "executive", title: `Voting Logic: ${device.configuration.running.monitor.votingLogic}`, rows: [
-          { id: "vote", label: "Executive Vote", value: snapshot.executiveAlarm ? "Active" : "Inactive" },
-          { id: "phase", label: "Action Phase", value: formatDvor220Status(device.executive.phase) },
-          ...DVOR220_TRANSMITTER_IDS.map((id) => ({ id, label: id.toUpperCase(), value: `${formatDvor220Status(snapshot.transmitters[id].status)} — ${snapshot.transmitters[id].path}` })),
-        ] },
-      ]} />
+      <button type="button" className={styles.advancedApply} disabled={disabled || selection === applied} onClick={() =>
+        dispatch({ type: "set-advanced-control", transmitterId, control, value: selection })}>
+        <span className={styles.advancedCheck} aria-hidden="true">✓</span>Apply
+      </button>
+    </fieldset>
+  </Section>;
+}
+
+type AdvancedProps = Dvor220MaintenanceScreenProps & { groundCheck: (transmitterId: Dvor220TransmitterId) => ReactNode };
+
+function TransmitterControls({ transmitterId, device, dispatch, groundCheck }: AdvancedProps & { transmitterId: Dvor220TransmitterId }) {
+  const [groundOpen, setGroundOpen] = useState(false);
+  const controls = device.transmitters[transmitterId].advancedControls;
+  const allowed = getDvor220PermissionDecision(device, "control").allowed;
+  const main = device.transmitters[transmitterId].designation === "main";
+  return <div className={styles.advancedControlsForm}>
+    <AppliedControl title="IDENT Keying" control="identKeying" applied={controls.identKeying} disabled={!allowed} dispatch={dispatch} transmitterId={transmitterId} />
+    <AppliedControl title="Sideband Blending" control="sidebandBlending" applied={controls.sidebandBlending} disabled={!allowed} dispatch={dispatch} transmitterId={transmitterId} />
+    <Section title="Sideband Antenna Switching"><AntennaManual /></Section>
+    <Section title="Automated Ground Error Curve Check">
+      <button type="button" className={styles.advancedAction} onClick={() => {
+        setGroundOpen(true);
+        if (getDvor220PermissionDecision(device, "calibrate").allowed
+          && device.connection.profile?.location === "local" && device.keylock === "MAINT"
+          && device.groundCheck.status !== "running") {
+          dispatch({ type: "start-ground-check", transmitterId });
+        }
+      }}>Run...</button>
+      <MopiensModal open={groundOpen} title="Automated Ground Error Curve Check" size="large" onClose={() => setGroundOpen(false)}
+        actions={[{ id: "close", label: "Close", onClick: () => setGroundOpen(false) }]}>
+        {groundCheck(transmitterId)}
+      </MopiensModal>
     </Section>
-    <Section title="Antenna Manual"><AntennaManual /></Section>
-    <Section title="Fault Clear">
-      <p>Before executing the fault clear control, it should be checked if the cause of the reverse fault trip has been removed. Repetitive attempts to do the fault clear without eliminating the cause of the reverse protection trip may result in a damage with the LMA.</p>
-      <div className={styles.actionRow}>{DVOR220_TRANSMITTER_IDS.map((transmitterId) => <div key={transmitterId}>
-        <MopiensBeveledButton disabled={!getDvor220PermissionDecision(device, "control").allowed}
-          onClick={() => dispatch({ type: "fault-clear", transmitterId })}>{transmitterId.toUpperCase()}</MopiensBeveledButton>
-        <span> Reverse fault: {device.transmitters[transmitterId].reverseFaultLatched ? "Latched" : "Clear"}</span>
-      </div>)}</div>
-    </Section>
-    <Section title="Automatic Ground Error Check">{groundCheck}</Section>
+    <div className={main ? styles.advancedDisabled : undefined}>
+      <AppliedControl title="Standby Transmitter Azimuth Emulation" control="standbyAzimuthEmulation" applied={controls.standbyAzimuthEmulation} disabled={!allowed || main} dispatch={dispatch} transmitterId={transmitterId} />
+    </div>
+  </div>;
+}
+
+export function AdvancedControlsScreen(props: AdvancedProps) {
+  const [transmitterId, setTransmitterId] = useState<Dvor220TransmitterId>("tx1");
+  return <div className={styles.advancedScreen}>
+    <header className={styles.advancedTitle}>Advanced Control</header>
+    <div className={styles.advancedPane}>
+    <div className={styles.advancedWarning}>
+      <p><strong>*** WARNING ***</strong></p>
+      <p><strong><u>HAZARDOUSLY MISLEADING INFORMATION</u> (HMI)</strong></p>
+      <p>Use of the controls on this page may produce Hazardously Misleading Information (HMI).<br />
+        Therefore, these controls must not be used during normal operations,<br />
+        <strong>particularly when supporting live aircraft traffic.</strong></p>
+      <p>Use of the controls on this page may also result in an abrupt system shutdown.<br />
+        To prevent such an event, all monitors <strong>must be</strong> bypassed before proceeding.</p>
+      <p>Before closing this page, ensure that all controls are returned to their normal states.</p>
+    </div>
+    <div role="tablist" aria-label="Advanced Control transmitter" className={styles.advancedTabs}>
+      {DVOR220_TRANSMITTER_IDS.map((id) => <button key={id} type="button" role="tab"
+        id={`advanced-tab-${id}`} aria-controls={`advanced-panel-${id}`} aria-selected={transmitterId === id}
+        onClick={() => setTransmitterId(id)}>{id.toUpperCase()}</button>)}
+    </div>
+    <div role="tabpanel" id={`advanced-panel-${transmitterId}`} aria-labelledby={`advanced-tab-${transmitterId}`}>
+      <TransmitterControls key={transmitterId} {...props} transmitterId={transmitterId} />
+    </div>
+    </div>
   </div>;
 }
