@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useId, useState, type ChangeEvent, type ReactNode } from "react";
 import {
   MopiensBeveledButton,
   MopiensModal,
@@ -76,6 +76,31 @@ function FormField({
 function numberValue(value: string, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function HelperPowerField({ label, unit, value, max, step, onChange }: {
+  label: string;
+  unit: string;
+  value: number;
+  max: number;
+  step: number;
+  onChange: (value: number) => void;
+}) {
+  const id = useId();
+  const inputProps = {
+    min: 0, max, step, value,
+    onChange: (event: ChangeEvent<HTMLInputElement>) => onChange(numberValue(event.target.value, value)),
+  };
+  return (
+    <div className={styles.formField}>
+      <label htmlFor={id}>{label}</label>
+      <span className={styles.helperPowerControls}>
+        <input type="range" aria-label={`${label} slider`} {...inputProps} />
+        <input id={id} type="number" {...inputProps} />
+        <span>{unit}</span>
+      </span>
+    </div>
+  );
 }
 
 function calibratedSetpointInput(value: number, max: number, step: number, factor: number, onChange: (nominal: number) => void) {
@@ -370,7 +395,7 @@ function TransmitterSetup({
 
       <MopiensModal
         open={helperOpen}
-        title="Transmitter Setup Helper"
+        title="Output Power"
         brandLabel="MOPIENS 220 DVOR"
         size="large"
         closeOnBackdrop={false}
@@ -398,16 +423,12 @@ function TransmitterSetup({
           <fieldset className={styles.formSection} disabled={disabled}>
             <legend>{helperTransmitterId.toUpperCase()} RF Output Setpoint</legend>
             <div className={styles.helperGrid}>
-              <FormField label="Carrier Power">
-                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <input style={{ width: "100%" }} type="number" min="0" max="100" step="0.1" value={activeHelper.carrierScalePercent} onChange={(event) => updateHelperCarrier(numberValue(event.target.value, activeHelper.carrierScalePercent))} />
-                  <span aria-hidden="true">%</span>
-                </span>
-              </FormField>
+              <HelperPowerField label="Carrier Power" unit="%" value={activeHelper.carrierScalePercent}
+                max={100} step={0.1} onChange={updateHelperCarrier} />
               {(["usbCos", "usbSin", "lsbCos", "lsbSin"] as const).map((output) => (
-                <FormField key={output} label={`${output.toUpperCase()} (W)`}>
-                  <input type="number" min="0" max="5" step="0.01" value={activeHelper.sidebandPowerW[output]} onChange={(event) => updateHelperSideband(output, numberValue(event.target.value, activeHelper.sidebandPowerW[output]))} />
-                </FormField>
+                <HelperPowerField key={output} label={output.replace(/(Cos|Sin)/, " $1").toUpperCase()} unit="W"
+                  value={activeHelper.sidebandPowerW[output]} max={5} step={0.01}
+                  onChange={(value) => updateHelperSideband(output, value)} />
               ))}
             </div>
           </fieldset>

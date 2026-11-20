@@ -4,6 +4,10 @@ import { Dvor220Simulator } from "@/modules/operations/dvor-220/dvor220-simulato
 import { createDefaultDvor220Configuration } from "@/modules/operations/dvor-220/domain/defaults";
 import { createDvor220Store, type Dvor220StoreApi } from "@/modules/operations/dvor-220/store/dvor220-store";
 
+vi.mock("@/components/simulator/simulator-config-persistence", () => ({
+  Dvor220ConfigPersistenceBoundary: () => null,
+}));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     back: vi.fn(),
@@ -33,13 +37,58 @@ function connectAndLogin(store: Dvor220StoreApi) {
 }
 
 describe("MOPIENS DVOR 220 simulator UI", () => {
+  it("uses the Cam Ranh Output Power dialog title", () => {
+    const store = createUiStore();
+    connectAndLogin(store);
+    fireEvent.click(screen.getByRole("button", { name: "Setup" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Transmitter Setup$/ }));
+    fireEvent.click(within(screen.getByRole("group", { name: "TX1" })).getByRole("button", { name: "Helper..." }));
+    expect(screen.getByRole("dialog", { name: "Output Power" })).toBeInTheDocument();
+  });
+
+  it.each([
+    ["Carrier Power", "%", "100", "0.1", "80", "70"],
+    ["USB COS", "W", "5", "0.01", "1.5", "1.7"],
+    ["USB SIN", "W", "5", "0.01", "1.5", "1.7"],
+    ["LSB COS", "W", "5", "0.01", "1.5", "1.7"],
+    ["LSB SIN", "W", "5", "0.01", "1.5", "1.7"],
+  ])("links both Cam Ranh Helper controls for %s with a separate unit", (label, unit, max, step, sliderValue, numberValue) => {
+    const store = createUiStore();
+    connectAndLogin(store);
+    fireEvent.click(screen.getByRole("button", { name: "Setup" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Transmitter Setup$/ }));
+    fireEvent.click(within(screen.getByRole("group", { name: "TX1" })).getByRole("button", { name: "Helper..." }));
+    const dialog = within(screen.getByRole("dialog", { name: "Output Power" }));
+    const slider = dialog.getByRole("slider", { name: `${label} slider` });
+    const input = dialog.getByRole("spinbutton", { name: label });
+    expect(input.parentElement?.lastElementChild).toHaveTextContent(unit);
+    for (const control of [slider, input]) {
+      expect(control).toHaveAttribute("min", "0");
+      expect(control).toHaveAttribute("max", max);
+      expect(control).toHaveAttribute("step", step);
+    }
+    expect(slider).toHaveValue(String((input as HTMLInputElement).value));
+    fireEvent.change(slider, { target: { value: sliderValue } });
+    expect(input).toHaveValue(Number(sliderValue));
+    fireEvent.change(input, { target: { value: numberValue } });
+    expect(slider).toHaveValue(numberValue);
+    const tx1Value = numberValue;
+    fireEvent.click(dialog.getByRole("tab", { name: "TX2" }));
+    expect(input).not.toHaveValue(Number(tx1Value));
+    fireEvent.click(dialog.getByRole("tab", { name: "TX1" }));
+    expect(input).toHaveValue(Number(tx1Value));
+    for (const name of ["Sync", "Sideband same setting", "Tracking", "Same to TX1 and TX2"]) {
+      expect(dialog.getByRole("switch", { name })).toBeEnabled();
+    }
+  });
+
   it("matches Cam Ranh Helper carrier label and separate percent unit", () => {
     const store = createUiStore();
     connectAndLogin(store);
     fireEvent.click(screen.getByRole("button", { name: "Setup" }));
     fireEvent.click(screen.getByRole("button", { name: /^Transmitter Setup$/ }));
     fireEvent.click(within(screen.getByRole("group", { name: "TX1" })).getByRole("button", { name: "Helper..." }));
-    const dialog = within(screen.getByRole("dialog", { name: "Transmitter Setup Helper" }));
+    const dialog = within(screen.getByRole("dialog", { name: "Output Power" }));
     const carrier = dialog.getByRole("spinbutton", { name: "Carrier Power" });
     expect(carrier).toHaveValue(100);
     expect(carrier.parentElement).toHaveTextContent("%");
