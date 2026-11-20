@@ -90,6 +90,24 @@ describe("Cam Ranh Advanced Control", () => {
     expect(screen.queryByRole("dialog", { name: "Antenna Manual" })).not.toBeInTheDocument();
   });
 
+  it("keeps sideband markers on an inner ring separate from every antenna label", () => {
+    setup();
+    fireEvent.click(screen.getByRole("button", { name: "Manual Control..." }));
+    const ring = screen.getByRole("group", { name: "Sideband antennas" });
+    for (let index = 1; index <= 48; index++) {
+      const antenna = index % 48 + 1;
+      fireEvent.click(within(ring).getByRole("button", { name: `Antenna #${antenna}` }));
+      for (const [sideband, number] of [["USB", antenna], ["LSB", (antenna + 23) % 48 + 1]] as const) {
+        const marker = within(ring).getByLabelText(`${sideband} antenna #${number}`);
+        expect(marker.parentElement).toBe(ring);
+        const x = parseFloat(marker.style.left) - 50;
+        const y = parseFloat(marker.style.top) - 50;
+        expect(Math.hypot(x, y)).toBeCloseTo(30);
+        expect(within(ring).getByRole("button", { name: `Antenna #${number}` })).not.toContainElement(marker);
+      }
+    }
+  });
+
   it("opens ground check gated by local MAINT and starts for the tab TX", () => {
     const store = setup();
     fireEvent.click(screen.getByRole("tab", { name: "TX2" }));

@@ -40,8 +40,14 @@ function AntennaManual() {
               else { setSelected(antenna); setSwapped(false); }
             }}>
             <span>#{antenna}</span>
-            {antenna === usb || antenna === lsb ? <strong>{antenna === usb ? "USB" : "LSB"}</strong> : null}
           </button>;
+        })}
+        {([["USB", usb], ["LSB", lsb]] as const).map(([sideband, antenna]) => {
+          const angle = (antenna - 1) * Math.PI / 24;
+          return <strong key={sideband} className={styles.antennaMarker} aria-label={`${sideband} antenna #${antenna}`}
+            style={{ left: `${50 - 30 * Math.sin(angle)}%`, top: `${50 - 30 * Math.cos(angle)}%` }}>
+            {sideband}
+          </strong>;
         })}
         <span className={styles.carrierAntenna}>Carrier</span>
       </div>

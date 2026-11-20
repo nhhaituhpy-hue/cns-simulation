@@ -437,6 +437,12 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ### 2026-11-20 — DVOR 220 Advanced Control: tinh chỉnh giao diện PR #19
 
+- Antenna Manual: tách marker USB/LSB khỏi button, đặt theo góc trên vòng
+  trong (bán kính 30%, vòng anten 44%) để không che số hoặc cắt mép.
+  Thêm regression cho cả 48 vị trí; Chrome kiểm tra bounding box không
+  overlap/clip ở cả 48 lựa chọn, chụp #1/#13/#25/#37.
+- Kiểm tra marker: lint/typecheck đạt (hai warning sẵn có), 167 test
+  DVOR 220 đạt; production build đạt.
 - Chốt CSS: nút Manual Control/Run đủ chỗ cho nhãn và padding (DOM cả hai
   tab: scrollWidth = clientWidth = 71px); tăng nhẹ Apply, radio và heading
   cảnh báo; pane flex lấp khoảng trống tới Event. Ảnh Chrome 1600×1051 và
