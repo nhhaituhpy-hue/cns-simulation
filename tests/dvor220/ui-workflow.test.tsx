@@ -203,6 +203,23 @@ describe("MOPIENS DVOR 220 simulator UI", () => {
     expect(within(screen.getByRole("table", { name: "DC/DC-A" })).getAllByText("—")).toHaveLength(12);
   });
 
+  it("groups executive monitor readings as in the Cam Ranh CH A Monitor screen", () => {
+    const store = createUiStore();
+    connectAndLogin(store);
+    fireEvent.click(screen.getByRole("button", { name: "CH.A Monitor" }));
+    for (const group of ["System Parameters", "Modulation", "Frequency Error", "Identification"]) {
+      expect(screen.getByText(group, { selector: "summary span" })).toBeInTheDocument();
+    }
+    for (const label of ["Bearing Error", "RF Level", "30Hz AM", "9960Hz AM", "1020Hz AM", "FM Index", "9960Hz Distortion", "Carrier", "Sub Carrier"]) {
+      expect(screen.getByLabelText(`MON1 ${label}`)).toBeInTheDocument();
+      expect(screen.getByLabelText(`MON2 ${label}`)).toBeInTheDocument();
+    }
+    expect(screen.getByLabelText("MON1 Code")).toHaveTextContent("TST");
+    expect(screen.getByLabelText("MON2 Code")).toHaveTextContent("TST");
+    expect(screen.queryByText("RF Modulation")).not.toBeInTheDocument();
+    expect(screen.queryByText("Frequency / Error")).not.toBeInTheDocument();
+  });
+
   it("opens equipment detail windows separately from PMDT measurements", () => {
     const store = createUiStore();
     connectAndLogin(store);

@@ -55,6 +55,7 @@
 ### DVOR 220 — cửa sổ PMDT (đợt Cam Ranh)
 
 - Đưa cây Executive Monitor và các nhóm Setup về cấu trúc Cam Ranh, thêm hộp thoại Equipment Status Detail và bảng Thermal Control hai TX.
+- CH.A/CH.B.1/CH.B.2 Monitor Readings dùng nhóm và nhãn Cam Ranh: Bearing Error, Modulation (30Hz/9960Hz/1020Hz AM, FM Index, 9960Hz Distortion), Frequency Error (Carrier/Sub Carrier) và Identification Code.
 - Power Supply dùng đúng tên rail, bộ AC/DC và hai vị trí battery; số đo chưa mô phỏng theo từng module hiển thị `—`. Version là bản đối chiếu, không phải inventory trực tiếp; cập nhật firmware chỉ hiển thị.
 - Monitor Reference Check xem trước báo động theo chiều dịch góc, không thay đổi thiết bị hoặc mô phỏng hệ quả executive. History Log tìm theo khoảng thời gian, loại bản ghi và user LMI; xuất CSV hoặc in PDF ở trình duyệt.
 
