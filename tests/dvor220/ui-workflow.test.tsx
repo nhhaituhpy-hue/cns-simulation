@@ -33,6 +33,42 @@ function connectAndLogin(store: Dvor220StoreApi) {
 }
 
 describe("MOPIENS DVOR 220 simulator UI", () => {
+  it("matches Cam Ranh Helper carrier label and separate percent unit", () => {
+    const store = createUiStore();
+    connectAndLogin(store);
+    fireEvent.click(screen.getByRole("button", { name: "Setup" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Transmitter Setup$/ }));
+    fireEvent.click(within(screen.getByRole("group", { name: "TX1" })).getByRole("button", { name: "Helper..." }));
+    const dialog = within(screen.getByRole("dialog", { name: "Transmitter Setup Helper" }));
+    const carrier = dialog.getByRole("spinbutton", { name: "Carrier Power" });
+    expect(carrier).toHaveValue(100);
+    expect(carrier.parentElement).toHaveTextContent("%");
+    expect(dialog.queryByText("Carrier Scale (%)")).not.toBeInTheDocument();
+    fireEvent.change(carrier, { target: { value: "80" } });
+    fireEvent.click(dialog.getByRole("button", { name: "Apply" }));
+    expect(store.getState().device.configuration.running.transmitters.tx1.carrierScalePercent).toBe(80);
+  });
+
+  it("matches Cam Ranh Frequency table decimal places without limiting reference input", () => {
+    const store = createUiStore();
+    connectAndLogin(store);
+    act(() => { store.getState().advanceTime(1000); });
+    fireEvent.click(screen.getByRole("button", { name: "Maintenance" }));
+    fireEvent.click(screen.getByRole("button", { name: "MON Cal." }));
+    fireEvent.click(screen.getByRole("tab", { name: "Frequency" }));
+    const cells = within(screen.getByRole("table", { name: "MON" })).getAllByRole("cell");
+    expect(cells[1]).toHaveTextContent(/^1\.000000000$/);
+    expect(cells[2]).toHaveTextContent(/^1\.000000000$/);
+    expect(cells[3]).toHaveTextContent(/^113\.00$/);
+    expect(cells[4]).toHaveTextContent(/^113\.000$/);
+    expect(cells[5]).toHaveTextContent(/^113\.000$/);
+    fireEvent.click(screen.getByRole("button", { name: "Calibrate carrier frequency" }));
+    const reference = within(screen.getByRole("dialog", { name: "Freq Calibration" })).getByRole("spinbutton", { name: "Reference value" });
+    expect(reference).toHaveAttribute("step", "any");
+    fireEvent.change(reference, { target: { value: "113.00001" } });
+    expect(reference).toHaveValue(113.00001);
+  });
+
   it("runs Connection to Login and exposes the complete PMDT chrome", () => {
     const store = createUiStore();
     render(<Dvor220Simulator store={store} />);

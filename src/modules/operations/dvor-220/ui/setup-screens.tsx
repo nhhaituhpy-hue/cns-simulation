@@ -398,8 +398,11 @@ function TransmitterSetup({
           <fieldset className={styles.formSection} disabled={disabled}>
             <legend>{helperTransmitterId.toUpperCase()} RF Output Setpoint</legend>
             <div className={styles.helperGrid}>
-              <FormField label="Carrier Scale (%)">
-                <input type="number" min="0" max="100" step="0.1" value={activeHelper.carrierScalePercent} onChange={(event) => updateHelperCarrier(numberValue(event.target.value, activeHelper.carrierScalePercent))} />
+              <FormField label="Carrier Power">
+                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <input style={{ width: "100%" }} type="number" min="0" max="100" step="0.1" value={activeHelper.carrierScalePercent} onChange={(event) => updateHelperCarrier(numberValue(event.target.value, activeHelper.carrierScalePercent))} />
+                  <span aria-hidden="true">%</span>
+                </span>
               </FormField>
               {(["usbCos", "usbSin", "lsbCos", "lsbSin"] as const).map((output) => (
                 <FormField key={output} label={`${output.toUpperCase()} (W)`}>
