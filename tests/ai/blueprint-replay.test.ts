@@ -108,7 +108,7 @@ it("rejects unsupported, underspecified, unsafe, no-op and unbounded proposals w
 });
 
 const moduleCases: Array<{ moduleId: ScenarioParametersModuleId; templateId: string; initial: [string, number][]; recovery: [string, number | boolean][] }> = [
-  { moduleId: "dvor-1150", templateId: "carrier-9960", initial: [["configuration.transmitters.tx1.nominal.outputPower", 37.4]], recovery: [["configuration.transmitters.tx1.nominal.outputPower", 125], ["startPolicy.startMonitorBypassed", false]] },
+  { moduleId: "dvor-1150", templateId: "carrier-9960", initial: [["configuration.transmitters.tx1.nominal.outputPower", 37.4]], recovery: [["configuration.transmitters.tx1.nominal.outputPower", 106], ["startPolicy.startMonitorBypassed", false]] },
   { moduleId: "dme-1119a", templateId: "tx1-delay-drift", initial: [["configuration.txConfigNominal.rtcParameters.replyDelayOffset", 0.17]], recovery: [["configuration.txConfigNominal.rtcParameters.replyDelayOffset", -0.6], ["startPolicy.integralMonitorBypassed", false], ["startPolicy.standbyMonitorBypassed", false]] },
   { moduleId: "dvor-220", templateId: "carrier-9960", initial: [["configuration.transmitters.tx1.carrierScalePercent", 43.7]], recovery: [["configuration.transmitters.tx1.carrierScalePercent", 100], ...["usbCos", "usbSin", "lsbCos", "lsbSin"].map(k => [`configuration.transmitters.tx1.sidebandPowerW.${k}`, 1] as [string, number])] },
   { moduleId: "dme-320", templateId: "low-power", initial: [["configuration.transmitters.tx1.outputPowerPercent", 43.7]], recovery: [["configuration.transmitters.tx1.outputPowerPercent", 100]] },

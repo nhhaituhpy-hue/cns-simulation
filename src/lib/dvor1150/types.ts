@@ -17,11 +17,12 @@ export type Dvor1150ConfigValue = string | number | boolean | null;
 export type Dvor1150PmdtMode = "preview" | "author" | "student";
 export type Dvor1150SecurityLevel = 0 | 1 | 2 | 3 | 4;
 export type Dvor1150ConnectionType = "direct" | "modem";
-export type Dvor1150TransmitterMode = "main" | "load" | "off";
+export type Dvor1150TransmitterMode = "main" | "antenna" | "load" | "off";
 export type Dvor1150IndicatorColor = "green" | "yellow" | "red" | "gray";
 export type Dvor1150ParameterStatus = "normal" | "warning" | "alarm";
 export type Dvor1150TransferCause = "none" | "manual" | "monitor-alarm";
-export type Dvor1150TransferPhase = "idle" | "alarm-detected" | "transferred" | "shutdown" | "manual";
+export type Dvor1150TransferPhase = "idle" | "alarm-detected" | "transferred" | "shutdown" | "manual" | "restarted";
+export type Dvor1150IdentMode = "Normal" | "Off" | "Continuous";
 
 export interface Dvor1150TransferState {
   cause: Dvor1150TransferCause;
@@ -349,23 +350,25 @@ export interface Dvor1150NotchRow {
   indicator: Dvor1150IndicatorColor;
 }
 
-export interface Dvor1150FaultHistoryData {
-  monitorData: Array<{
-    timestamp: string;
-    monitor: Dvor1150MonitorId;
-    parameter: Dvor1150MonitorParameter;
-    value: number;
-    indicator: Dvor1150IndicatorColor;
-  }>;
-  systemStatus: Array<{
-    timestamp: string;
-    monitorLogic: "AND" | "OR";
-    monitor1Alarm: boolean;
-    monitor2Alarm: boolean;
-    tx1On: boolean;
-    tx2On: boolean;
-  }>;
+export interface Dvor1150FaultSample {
+  timestamp: string;
+  monitors: Dvor1150Snapshot["monitors"];
+  monitorLogic: Dvor1150Config["monitor"]["votingLogic"];
+  bypass: boolean;
+  identEnabled: boolean;
+  notchEnabled: boolean;
+  notchIndicator: Dvor1150IndicatorColor;
+  vswrExecutive: boolean;
+  vswrIndicator: Dvor1150IndicatorColor;
+  main: Dvor1150TransmitterId | null;
+  antenna: Dvor1150TransmitterId | null;
+  on: Record<Dvor1150TransmitterId, boolean>;
 }
+
+export type Dvor1150FaultHistoryData = Array<{
+  preAlarm: Dvor1150FaultSample | null;
+  alarm: Dvor1150FaultSample;
+}>;
 
 export interface Dvor1150VswrRow {
   antenna: number;

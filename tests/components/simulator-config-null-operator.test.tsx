@@ -157,6 +157,8 @@ it("persists DVOR 1150 Apply, accepts Backup only on success, and restores the a
     act(() => {
       state.login("SEC3", "THREE");
       state.setLocalMode(true);
+      state.setConfigValue("monitor.monitorStartupDelay", 0);
+      state.setConfigValue("monitor.monitorShutdownDelay", 0);
       state.setConfigValue("transmitters.tx1.nominal.outputPower", 60);
       expect(state.applyConfigChanges()).toBe(true);
       expect(store.getState().lastCommand).toMatch(/^Automatic monitor/);

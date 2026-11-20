@@ -22,6 +22,7 @@ function MenuItemRow({ group, item, closeMenu, depth = 0 }: { group: Dvor1150Men
   const backupConfig = useDvor1150PmdtStore((state) => state.backupConfig);
   const setBypass = useDvor1150PmdtStore((state) => state.setMonitorBypass);
   const setTransmitterMode = useDvor1150PmdtStore((state) => state.setTransmitterMode);
+  const dualTransmitters = useDvor1150PmdtStore((state) => state.config.station.transmitterConfig === "Dual Transmitters");
   const executeCommand = useDvor1150PmdtStore((state) => state.executeCommand);
   const security = useDvor1150PmdtStore((state) => state.securityLevel);
   const local = useDvor1150PmdtStore((state) => state.config.simulation.local);
@@ -33,6 +34,7 @@ function MenuItemRow({ group, item, closeMenu, depth = 0 }: { group: Dvor1150Men
   const isTx = item.action === "set-transmitter-mode";
   const isMaintenanceTx = isTx && item.transmitterMode !== "main";
   const unavailable = !item.enabled
+    || (!dualTransmitters && (item.transmitterId === "tx2" || item.id === "tx-tx2"))
     || (group.id !== "system" && group.id !== "info" && !connected)
     || (item.id === "system-connect" && connected)
     || (item.id === "system-logoff" && !connected)

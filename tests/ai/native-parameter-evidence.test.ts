@@ -21,7 +21,7 @@ function compiled1150() {
   ], { status: "supported", moduleId: "dvor-1150", templateId: "carrier-9960", title: "Training recovery", situation: "Low output", cause: "Training setting",
     citations: [{ documentId: "test-source", segmentLabel: "Test", quote }],
     initial: [{ fieldId: "configuration.transmitters.tx1.nominal.outputPower", value: 37.4, citationIndexes: [0] }],
-    recovery: [{ fieldId: "configuration.transmitters.tx1.nominal.outputPower", value: 125, citationIndexes: [0] },
+    recovery: [{ fieldId: "configuration.transmitters.tx1.nominal.outputPower", value: 106, citationIndexes: [0] },
       { fieldId: "startPolicy.startMonitorBypassed", value: false, citationIndexes: [0] }], diagnosisCitationIndexes: [0] });
 }
 
@@ -351,7 +351,7 @@ it.each(["draft", "restore", "wrong-module", "wrong-scenario", "wrong-field", "t
 
 it("counts every compiled DVOR1150 step using real Apply then bypass evidence, even in the same millisecond", () => {
   const { blueprint, definition, store } = start1150();
-  store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 125);
+  store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 106);
   expect(store.getState().applyConfigChanges()).toBe(true);
   expect(store.getState().setMonitorBypass("mon1", false)).toBe(true);
   const payload = JSON.parse(JSON.stringify(payload1150(store)));
@@ -360,7 +360,7 @@ it("counts every compiled DVOR1150 step using real Apply then bypass evidence, e
   expect(report.correct).toBe(report.totalRequiredSteps);
   expect(report.steps.every(step => step.status === "correct")).toBe(true);
   expect(payload.parameterChangeLogs).toEqual(expect.arrayContaining([
-    expect.objectContaining({ nativeFieldId: "transmitters.tx1.nominal.outputPower", before: 37.4, after: 125, phase: "apply", sequence: 1 }),
+    expect.objectContaining({ nativeFieldId: "transmitters.tx1.nominal.outputPower", before: 37.4, after: 106, phase: "apply", sequence: 1 }),
     expect.objectContaining({ nativeFieldId: "simulation.integralMonitorBypass", before: true, after: false, phase: "command", sequence: 2 }),
   ]));
 });
@@ -417,7 +417,7 @@ it("rotates DVOR220 evidence on restart without treating old display history as 
 
 it("rotates DVOR1150 evidence on restore while retaining readable old display rows", () => {
   const { blueprint, definition, store } = start1150();
-  store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 125);
+  store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 106);
   expect(store.getState().applyConfigChanges()).toBe(true);
   const previous = payload1150(store);
   expect(store.getState().restoreScenario()).toBe(true);
@@ -434,7 +434,7 @@ it("rotates DVOR1150 evidence on restore while retaining readable old display ro
 it("does not count bypass released before its required correction", () => {
   const { blueprint, definition, store } = start1150();
   expect(store.getState().setMonitorBypass("mon1", false)).toBe(true);
-  store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 125);
+  store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 106);
   expect(store.getState().applyConfigChanges()).toBe(true);
   const bypass = blueprint.rubric.steps.find(step => step.alternatives.flat().some(matcher =>
     matcher.kind === "parameter" && matcher.fieldId === "simulation.integralMonitorBypass"))!;
@@ -496,13 +496,13 @@ it.each(["legacy-row", "unknown-field", "restore", "wrong-control", "alarm-row",
 
 it.each([false, true])("never lets generic action claims replace missing DVOR1150 parameter proof (malformed scope: %s)", malformedScope => {
   const { blueprint, definition, store } = start1150();
-  store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 125);
+  store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 106);
   expect(store.getState().applyConfigChanges()).toBe(true);
   const payload = payload1150(store);
   if (malformedScope) payload.parameterEvidence = { ...payload.parameterEvidence!, runId: "invalid-run" };
   const report = assessAttemptSteps("dvor-1150", definition, { ...payload, parameterChangeLogs: [],
     actionHistory: [action("config-apply", 1, { parameterChanges: [{
-      fieldId: "transmitters.tx1.nominal.outputPower", label: "Synthetic claim", before: 37.4, after: 125, phase: "apply", accepted: true,
+      fieldId: "transmitters.tx1.nominal.outputPower", label: "Synthetic claim", before: 37.4, after: 106, phase: "apply", accepted: true,
     }] })] }, blueprint.rubric);
   // The generic event remains an attempted-action reference, never accepted proof.
   expect(report.steps.filter(step => step.resultEvidenceIds?.includes("state:transmitters.tx1.nominal.outputPower")))
@@ -511,7 +511,7 @@ it.each([false, true])("never lets generic action claims replace missing DVOR115
 
 it("does not accept native operation timestamps that contradict their sequence", () => {
   const { blueprint, definition, store } = start1150();
-  store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 125);
+  store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 106);
   expect(store.getState().applyConfigChanges()).toBe(true);
   expect(store.getState().setMonitorBypass("mon1", false)).toBe(true);
   const payload = structuredClone(payload1150(store));

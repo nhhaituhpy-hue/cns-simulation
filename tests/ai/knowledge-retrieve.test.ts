@@ -252,7 +252,7 @@ it("passes only exact recovered quotes into the existing citation compiler", asy
   const proposal = { status: "supported", moduleId: input.moduleId, templateId: "carrier-9960", title: "Synthetic training", situation: input.description,
     cause: "Synthetic configuration hypothesis", citations: [{ documentId: doc.id, segmentLabel: segment.label, quote: safe }],
     initial: [{ fieldId: "configuration.transmitters.tx1.nominal.outputPower", value: 37.4, citationIndexes: [0] }],
-    recovery: [{ fieldId: "configuration.transmitters.tx1.nominal.outputPower", value: 125, citationIndexes: [0] }, { fieldId: "startPolicy.startMonitorBypassed", value: false, citationIndexes: [0] }], diagnosisCitationIndexes: [0] };
+    recovery: [{ fieldId: "configuration.transmitters.tx1.nominal.outputPower", value: 106, citationIndexes: [0] }, { fieldId: "startPolicy.startMonitorBypassed", value: false, citationIndexes: [0] }], diagnosisCitationIndexes: [0] };
   const blueprintInput = { moduleId: input.moduleId, description: input.description, mode: "documents" } as const;
   const output = compileScenarioBlueprint(blueprintInput, excerpts, proposal);
   expect(output.citations[0]).toMatchObject({ sha256: doc.sha256, segmentLabel: segment.label, quote: safe });

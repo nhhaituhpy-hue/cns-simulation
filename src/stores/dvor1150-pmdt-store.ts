@@ -19,6 +19,8 @@ import {
   type Dvor1150ConfigValue,
   type Dvor1150ConnectionType,
   type Dvor1150DiagnosticRun,
+  type Dvor1150FaultSample,
+  type Dvor1150IdentMode,
   type Dvor1150MonitorId,
   type Dvor1150PmdtMode,
   type Dvor1150ScenarioEvidence,
@@ -276,14 +278,6 @@ function persistentConfigValue(config: Dvor1150Config): Dvor1150Config {
   return next;
 }
 
-interface AutomaticDvor1150Transfer {
-  config: Dvor1150Config;
-  snapshot: Dvor1150Snapshot;
-  target: Dvor1150TransmitterId | null;
-  action: "transfer" | "shutdown" | null;
-  transfer: Dvor1150TransferState;
-}
-
 const diagnosticSubsystems = [
   "Logon / RMM",
   "Power Supplies",
@@ -312,78 +306,6 @@ function createIdleDvor1150DiagnosticState(): Dvor1150DiagnosticState {
   };
 }
 
-/**
- * Performs one automatic relay attempt. If the standby path is also in
- * alarm, both transmitters are explicitly taken Off; the helper never calls
- * itself again, so TX1/TX2 cannot oscillate indefinitely.
- */
-function applyAutomaticDvor1150Transfer(
-  config: Dvor1150Config,
-  mainTransmitter?: Dvor1150TransmitterId | null,
-): AutomaticDvor1150Transfer {
-  const snapshot = buildDvor1150Snapshot(config, undefined, mainTransmitter ?? undefined);
-  const active = snapshot.activeTransmitter;
-  const noAction = { config, snapshot, target: null, action: null, transfer: snapshot.transfer } as const;
-
-  if (
-    config.simulation.integralMonitorBypass
-    || !snapshot.data.monitorIntegral.alarm
-    || !active
-    || config.station.transmitterConfig !== "Dual Transmitters"
-  ) {
-    return noAction;
-  }
-
-  const target: Dvor1150TransmitterId = active === "tx1" ? "tx2" : "tx1";
-  if (!config.transmitters[target].enabled) return noAction;
-
-  const transferred = cloneDvor1150Config(config);
-  transferred.transmitters[active].onAir = false;
-  transferred.transmitters[active].load = false;
-  transferred.transmitters[target].enabled = true;
-  transferred.transmitters[target].onAir = true;
-  transferred.transmitters[target].load = false;
-  const transferMain = mainTransmitter ?? active;
-  const transfer: Dvor1150TransferState = {
-    cause: "monitor-alarm",
-    phase: "transferred",
-    from: active,
-    to: target,
-    message: `Automatic transfer from ${active.toUpperCase()} to ${target.toUpperCase()} after monitor alarm`,
-  };
-  const transferredSnapshot = buildDvor1150Snapshot(transferred, undefined, transferMain, transfer);
-
-  if (transferredSnapshot.data.monitorIntegral.alarm) {
-    const shutdown = cloneDvor1150Config(transferred);
-    for (const transmitterId of ["tx1", "tx2"] as const) {
-      shutdown.transmitters[transmitterId].enabled = false;
-      shutdown.transmitters[transmitterId].onAir = false;
-      shutdown.transmitters[transmitterId].load = false;
-    }
-    return {
-      config: shutdown,
-      snapshot: buildDvor1150Snapshot(shutdown, undefined, transferMain, {
-        cause: "monitor-alarm",
-        phase: "shutdown",
-        from: active,
-        to: null,
-        message: "Automatic monitor shutdown: both transmitters off",
-      }),
-      target: null,
-      action: "shutdown",
-      transfer: {
-        cause: "monitor-alarm",
-        phase: "shutdown",
-        from: active,
-        to: null,
-        message: "Automatic monitor shutdown: both transmitters off",
-      },
-    };
-  }
-
-  return { config: transferred, snapshot: transferredSnapshot, target, action: "transfer", transfer };
-}
-
 function copyTransmitterRoutes(source: Dvor1150Config, target: Dvor1150Config): Dvor1150Config {
   const next = cloneDvor1150Config(target);
   for (const transmitterId of ["tx1", "tx2"] as const) {
@@ -394,6 +316,31 @@ function copyTransmitterRoutes(source: Dvor1150Config, target: Dvor1150Config): 
   return next;
 }
 
+function selectAntenna(config: Dvor1150Config, target: Dvor1150TransmitterId) {
+  for (const id of ["tx1", "tx2"] as const) {
+    if (id === target) config.transmitters[id].enabled = true;
+    config.transmitters[id].onAir = id === target;
+    config.transmitters[id].load = id !== target && config.transmitters[id].enabled;
+  }
+}
+
+function faultSample(config: Dvor1150Config, snapshot: Dvor1150Snapshot): Dvor1150FaultSample {
+  return {
+    timestamp: snapshot.data.timestamp,
+    monitors: snapshot.monitors,
+    monitorLogic: config.monitor.votingLogic,
+    bypass: config.simulation.integralMonitorBypass,
+    identEnabled: config.monitor.identMonitoringEnabled,
+    notchEnabled: config.monitor.notch.enabled,
+    notchIndicator: snapshot.data.maintenanceAlerts.find((row) => row.label === "Notch Monitor")?.indicator ?? "gray",
+    vswrExecutive: config.monitor.sidebandVswrExecutiveAlarm,
+    vswrIndicator: snapshot.data.maintenanceAlerts.find((row) => row.label === "Sideband Antenna VSWR")?.indicator ?? "gray",
+    main: snapshot.mainTransmitter,
+    antenna: snapshot.activeTransmitter,
+    on: { tx1: snapshot.effectiveTransmitters.tx1.enabled, tx2: snapshot.effectiveTransmitters.tx2.enabled },
+  };
+}
+
 export function createDvor1150PmdtStore(
   options: Dvor1150PmdtStoreOptions = {},
 ): UseBoundStore<StoreApi<Dvor1150PmdtStore>> {
@@ -401,6 +348,14 @@ export function createDvor1150PmdtStore(
   return create<Dvor1150PmdtStore>()((set, get) => {
     let accounts = initialAccounts();
     let lastActivityAt = now().getTime();
+    let identMode: Dvor1150IdentMode = "Normal";
+    let onAirSince = lastActivityAt;
+    let alarmSince: number | null = null;
+    let shutdownAt: number | null = null;
+    let attemptedRestart = false;
+    let triedStandby = false;
+    let preAlarm: Dvor1150FaultSample | null = null;
+    let settledTransfer: Dvor1150TransferState | undefined;
     const recompute = (
       config: Dvor1150Config,
       previous?: Dvor1150Snapshot,
@@ -411,10 +366,112 @@ export function createDvor1150PmdtStore(
         config,
         now(),
         mainTransmitter ?? previous?.mainTransmitter ?? undefined,
-        transfer ?? previous?.transfer,
+        transfer ?? settledTransfer,
       );
-      if (previous?.data.logs.length) next.data.logs = [...previous.data.logs];
+      for (const monitor of Object.values(next.monitors)) {
+        if (next.activeTransmitter && monitor.commStatus !== "gray" && identMode !== "Normal") {
+          if (identMode === "Off") monitor.ident = { value: "No Ident", indicator: "red" };
+          if (identMode === "Continuous" && monitor.ident.value === "Normal") {
+            monitor.ident = { value: "Continuous Ident", indicator: "green" };
+          }
+        }
+      }
+      if (previous) {
+        next.data.logs = previous.data.logs;
+        next.data.faultHistory = previous.data.faultHistory;
+      }
       return next;
+    };
+
+    const resetOperation = () => {
+      onAirSince = now().getTime();
+      alarmSince = shutdownAt = null;
+      attemptedRestart = triedStandby = false;
+      preAlarm = null;
+      identMode = "Normal";
+      settledTransfer = undefined;
+    };
+
+    const advanceOperation = (config: Dvor1150Config, previous: Dvor1150Snapshot): { derived: Dvor1150Snapshot; lastCommand?: string } => {
+      const ms = now().getTime();
+      config.simulation.timestamp = formatDvor1150Timestamp(new Date(ms));
+      const snapshot = recompute(config, previous);
+      const active = snapshot.activeTransmitter;
+      const main = snapshot.mainTransmitter;
+      const logTransition = (transfer: Dvor1150TransferState, severity: "yellow" | "red") => {
+        settledTransfer = transfer;
+        const derived = recompute(config, snapshot, main, transfer);
+        if (derived.activeTransmitter && derived.data.monitorIntegral.alarm) {
+          alarmSince = ms + config.monitor.monitorStartupDelay * 1000;
+        }
+        derived.data.logs = [...snapshot.data.logs, {
+          timeTag: snapshot.data.timestamp,
+          user: "Op System",
+          message: transfer.message,
+          severity,
+        }];
+        return { derived, lastCommand: transfer.message };
+      };
+      if (!active) {
+        alarmSince = null;
+        if (
+          shutdownAt !== null && !attemptedRestart && main && !config.simulation.integralMonitorBypass
+          && config.rms.automaticRestartsEnabled && ms >= shutdownAt + config.rms.firstRestartDelay * 1000
+        ) {
+          attemptedRestart = true;
+          triedStandby = false;
+          onAirSince = ms;
+          preAlarm = null;
+          selectAntenna(config, main);
+          return logTransition({
+            cause: "monitor-alarm", phase: "restarted", from: null, to: main,
+            message: `Automatic restart on ${main.toUpperCase()}`,
+          }, "yellow");
+        }
+        return { derived: snapshot };
+      }
+      if (!snapshot.data.monitorIntegral.alarm) {
+        if (!snapshot.monitorAnnunciation.alarm) preAlarm = faultSample(config, snapshot);
+        alarmSince = null;
+        return { derived: snapshot };
+      }
+      if (config.simulation.integralMonitorBypass) {
+        alarmSince = null;
+        return { derived: snapshot };
+      }
+      const eligibleAt = onAirSince + config.monitor.monitorStartupDelay * 1000;
+      alarmSince ??= Math.max(ms, eligibleAt);
+      if (ms < Math.max(alarmSince, eligibleAt) + config.monitor.monitorShutdownDelay * 1000) {
+        snapshot.transfer = {
+          cause: "monitor-alarm", phase: "alarm-detected", from: active, to: null,
+          message: `Monitor alarm on ${active.toUpperCase()} — waiting for timer`,
+        };
+        return { derived: snapshot };
+      }
+
+      snapshot.data.faultHistory = [{ preAlarm, alarm: faultSample(config, snapshot) }, ...snapshot.data.faultHistory].slice(0, 3);
+      alarmSince = null;
+      const standby = active === "tx1" ? "tx2" : "tx1";
+      if (!triedStandby && config.station.transmitterConfig === "Dual Transmitters" && config.transmitters[standby].enabled) {
+        triedStandby = true;
+        onAirSince = ms;
+        selectAntenna(config, standby);
+        config.transmitters[active].load = false;
+        config.transmitters[active].enabled = false;
+        return logTransition({
+          cause: "monitor-alarm", phase: "transferred", from: active, to: standby,
+          message: `Automatic monitor transfer to ${standby.toUpperCase()}`,
+        }, "yellow");
+      }
+      shutdownAt = ms;
+      for (const id of ["tx1", "tx2"] as const) {
+        config.transmitters[id].enabled = config.transmitters[id].onAir = config.transmitters[id].load = false;
+      }
+      return logTransition({
+        cause: "monitor-alarm", phase: "shutdown", from: active, to: null,
+        message: config.station.transmitterConfig === "Dual Transmitters"
+          ? "Automatic monitor shutdown: both transmitters off" : "Automatic monitor shutdown: transmitter off",
+      }, "red");
     };
 
     const parameterProof = (state: Dvor1150PmdtStoreState, after: Dvor1150Config,
@@ -436,7 +493,9 @@ export function createDvor1150PmdtStore(
       const state = get();
       const storedDefinition = structuredClone(definition);
       const config = configurationForDvor1150Scenario(storedDefinition, state.config);
+      resetOperation();
       const derived = recompute(config, state.derived, storedDefinition.startPolicy.mainTransmitterId);
+      derived.data.faultHistory = [];
       derived.data.logs = [...derived.data.logs, {
         timeTag: config.simulation.timestamp,
         user: state.authenticatedUserId ?? "SYSTEM",
@@ -477,6 +536,7 @@ export function createDvor1150PmdtStore(
           return false;
         }
         const studentState = buildInitialState(now);
+        resetOperation();
         const config = configurationForDvor1150Scenario(definition, studentState.config);
         const derived = buildDvor1150Snapshot(config, now());
         set({
@@ -627,10 +687,10 @@ export function createDvor1150PmdtStore(
           return;
         }
         const config = cloneDvor1150Config(state.config);
-        config.simulation.timestamp = formatDvor1150Timestamp(now());
-        const configDraft = cloneDvor1150Config(state.configDraft);
+        const operation = advanceOperation(config, state.derived);
+        const configDraft = copyTransmitterRoutes(config, state.configDraft);
         configDraft.simulation.timestamp = config.simulation.timestamp;
-        set({ config, configDraft, derived: recompute(config, state.derived) });
+        set({ config, configDraft, ...operation });
       },
       setLocalMode: (enabled) => {
         const state = get();
@@ -638,33 +698,10 @@ export function createDvor1150PmdtStore(
         const config = cloneDvor1150Config(state.config);
         config.simulation.local = enabled;
         if (!enabled) config.simulation.integralMonitorBypass = false;
-        const automaticTransfer = !enabled
-          ? applyAutomaticDvor1150Transfer(config, state.derived.mainTransmitter)
-          : null;
-        const nextConfig = automaticTransfer?.config ?? config;
-        const derived = automaticTransfer?.snapshot ?? recompute(nextConfig, state.derived);
-        let configDraft = cloneDvor1150Config(state.configDraft);
-        configDraft.simulation.local = config.simulation.local;
-        configDraft.simulation.integralMonitorBypass = config.simulation.integralMonitorBypass;
-        if (automaticTransfer?.action) configDraft = copyTransmitterRoutes(nextConfig, configDraft);
-        if (automaticTransfer?.action) {
-          derived.data.logs = [...derived.data.logs, {
-            timeTag: nextConfig.simulation.timestamp,
-            user: "Op System",
-            message: automaticTransfer.transfer.message,
-            severity: automaticTransfer.action === "shutdown" ? "red" : "yellow",
-          }];
-        }
-        set({
-          config: nextConfig,
-          configDraft,
-          derived,
-          lastCommand: automaticTransfer?.action === "transfer" && automaticTransfer.target
-            ? `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}`
-            : automaticTransfer?.action === "shutdown"
-              ? "Automatic monitor shutdown: both transmitters off"
-              : enabled ? "Local On" : "Local Off",
-        });
+        const operation = advanceOperation(config, state.derived);
+        const configDraft = copyTransmitterRoutes(config, state.configDraft);
+        configDraft.simulation = { ...config.simulation };
+        set({ config, configDraft, lastCommand: enabled ? "Local On" : "Local Off", ...operation });
         return true;
       },
       setMonitorBypass: (_monitor, enabled) => {
@@ -672,32 +709,15 @@ export function createDvor1150PmdtStore(
         if (state.securityLevel < 3 || (enabled && !state.config.simulation.local)) return false;
         const config = cloneDvor1150Config(state.config);
         config.simulation.integralMonitorBypass = enabled;
-        const automaticTransfer = !enabled
-          ? applyAutomaticDvor1150Transfer(config, state.derived.mainTransmitter)
-          : null;
-        const nextConfig = automaticTransfer?.config ?? config;
-        const derived = automaticTransfer?.snapshot ?? recompute(nextConfig, state.derived);
-        let configDraft = cloneDvor1150Config(state.configDraft);
-        configDraft.simulation.integralMonitorBypass = enabled;
-        if (automaticTransfer?.action) configDraft = copyTransmitterRoutes(nextConfig, configDraft);
-        if (automaticTransfer?.action) {
-          derived.data.logs = [...derived.data.logs, {
-            timeTag: nextConfig.simulation.timestamp,
-            user: "Op System",
-            message: automaticTransfer.transfer.message,
-            severity: automaticTransfer.action === "shutdown" ? "red" : "yellow",
-          }];
-        }
+        const operation = advanceOperation(config, state.derived);
+        const configDraft = copyTransmitterRoutes(config, state.configDraft);
+        configDraft.simulation = { ...config.simulation };
         set({
-          config: nextConfig,
+          config,
           configDraft,
-          derived,
-          lastCommand: automaticTransfer?.action === "transfer" && automaticTransfer.target
-            ? `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}`
-            : automaticTransfer?.action === "shutdown"
-              ? "Automatic monitor shutdown: both transmitters off"
-              : enabled ? "Integral Monitor Bypass On" : "Integral Monitor Bypass Off",
-          ...parameterProof(state, nextConfig, "command", "integral-monitor-bypass", "Integral Monitor Bypass", ["simulation.integralMonitorBypass"]),
+          lastCommand: enabled ? "Integral Monitor Bypass On" : "Integral Monitor Bypass Off",
+          ...operation,
+          ...parameterProof(state, config, "command", "integral-monitor-bypass", "Integral Monitor Bypass", ["simulation.integralMonitorBypass"]),
         });
         return true;
       },
@@ -736,11 +756,7 @@ export function createDvor1150PmdtStore(
           }
         }
         const config = cloneDvor1150Config(state.configDraft);
-        const automaticTransfer = config.simulation.integralMonitorBypass
-          ? null
-          : applyAutomaticDvor1150Transfer(config, state.derived.mainTransmitter);
-        const nextConfig = automaticTransfer?.config ?? config;
-        const derived = automaticTransfer?.snapshot ?? recompute(nextConfig, state.derived);
+        const { derived, lastCommand } = advanceOperation(config, state.derived);
         derived.data.logs = [...derived.data.logs, { timeTag: config.simulation.timestamp, user: state.authenticatedUserId ?? "", message: "Configuration applied", severity: "yellow" }];
         const changedFields = collectChangedConfigFields(
           persistentConfigValue(state.config),
@@ -748,22 +764,18 @@ export function createDvor1150PmdtStore(
         );
 
         set({
-          config: nextConfig,
-          configDraft: cloneDvor1150Config(nextConfig),
+          config,
+          configDraft: cloneDvor1150Config(config),
           derived,
           configDirty: false,
           // Training changes must be contained in the current browser session.
           needBackup: state.scenario.active ? false : true,
           configurationCommit: state.scenario.active ? null : { action: "apply" },
-          ...parameterProof(state, nextConfig, "apply", "config-apply", "Configuration Apply", changedFields),
+          ...parameterProof(state, config, "apply", "config-apply", "Configuration Apply", changedFields),
           scenarioAcceptedActionControlIds: state.scenario.active
             ? [...new Set([...state.scenarioAcceptedActionControlIds, "config-apply"])]
             : state.scenarioAcceptedActionControlIds,
-          lastCommand: automaticTransfer?.action === "transfer" && automaticTransfer.target
-            ? `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}`
-            : automaticTransfer?.action === "shutdown"
-              ? "Automatic monitor shutdown: both transmitters off"
-              : "Apply (F7)",
+          lastCommand: lastCommand ?? "Apply (F7)",
         });
         return true;
       },
@@ -854,15 +866,17 @@ export function createDvor1150PmdtStore(
       setTransmitterMode: (transmitterId, mode) => {
         const state = get();
         if (state.securityLevel < 3) return false;
-        if (mode === "main" && state.config.station.transmitterConfig === "Single Transmitter" && transmitterId === "tx2") return false;
+        if (state.config.station.transmitterConfig === "Single Transmitter" && transmitterId === "tx2") return false;
         if (mode !== "main" && !state.config.simulation.local) return false;
         const config = cloneDvor1150Config(state.config);
-        if (mode === "main") {
-          for (const id of ["tx1", "tx2"] as const) {
-            const isSelected = id === transmitterId;
-            config.transmitters[id].enabled = isSelected;
-            config.transmitters[id].onAir = isSelected;
-            config.transmitters[id].load = false;
+        const commandAt = now();
+        config.simulation.timestamp = formatDvor1150Timestamp(commandAt);
+        if (mode === "main" || mode === "antenna") {
+          selectAntenna(config, transmitterId);
+          if (state.derived.activeTransmitter !== transmitterId) {
+            onAirSince = commandAt.getTime();
+            alarmSince = null;
+            preAlarm = null;
           }
         } else if (mode === "load") {
           config.transmitters[transmitterId].enabled = true;
@@ -873,22 +887,29 @@ export function createDvor1150PmdtStore(
           config.transmitters[transmitterId].onAir = false;
           config.transmitters[transmitterId].load = false;
         }
-        const configDraft = cloneDvor1150Config(state.configDraft);
-        configDraft.transmitters = cloneDvor1150Config(config).transmitters;
+        shutdownAt = null;
+        attemptedRestart = triedStandby = false;
+        const configDraft = copyTransmitterRoutes(config, state.configDraft);
+        configDraft.simulation.timestamp = config.simulation.timestamp;
         const derived = recompute(
           config,
           state.derived,
           mode === "main" ? transmitterId : state.derived.mainTransmitter,
         );
+        if (derived.activeTransmitter !== state.derived.activeTransmitter) {
+          alarmSince = null;
+          preAlarm = null;
+        }
         const transfer: Dvor1150TransferState = {
           cause: "manual",
           phase: "manual",
           from: state.derived.activeTransmitter,
-          to: mode === "main" ? transmitterId : null,
+          to: mode === "main" || mode === "antenna" ? transmitterId : null,
           message: mode === "main"
             ? `Manual transfer to ${transmitterId.toUpperCase()}`
-            : `Manual ${transmitterId.toUpperCase()} ${mode}`,
+            : mode === "antenna" ? `Manual antenna switch to ${transmitterId.toUpperCase()}` : `Manual ${transmitterId.toUpperCase()} ${mode}`,
         };
+        settledTransfer = transfer;
         derived.transfer = transfer;
         derived.data.logs = [...derived.data.logs, {
           timeTag: config.simulation.timestamp,
@@ -973,7 +994,17 @@ export function createDvor1150PmdtStore(
         }
         if (commandId === "run-full-diagnostics") return get().runDiagnostics("full");
         if (commandId === "run-on-air-diagnostics") return get().runDiagnostics("on-air");
-        if (commandId === "reset-rms" || commandId === "reset-intrusion" || commandId === "reset-smoke" || commandId === "abort-tests" || commandId === "dme-1-on" || commandId === "dme-2-on" || commandId === "dme-off" || commandId === "dme-transfer" || commandId === "ident-normal" || commandId === "ident-off" || commandId === "ident-continuous" || commandId === "run-ground-check" || commandId === "run-monitor-test" || commandId.startsWith("run-certification-") || commandId === "record-notch-baseline") {
+        if (commandId === "ident-normal" || commandId === "ident-off" || commandId === "ident-continuous") {
+          identMode = commandId === "ident-off" ? "Off" : commandId === "ident-continuous" ? "Continuous" : "Normal";
+          const derived = recompute(state.config, state.derived);
+          const lastCommand = `VOR Ident: ${identMode}`;
+          derived.data.logs = [...derived.data.logs, {
+            timeTag: formatDvor1150Timestamp(now()), user: state.authenticatedUserId ?? "", message: lastCommand, severity: "green",
+          }];
+          set({ derived, lastCommand });
+          return true;
+        }
+        if (commandId === "reset-rms" || commandId === "reset-intrusion" || commandId === "reset-smoke" || commandId === "abort-tests" || commandId === "dme-1-on" || commandId === "dme-2-on" || commandId === "dme-off" || commandId === "dme-transfer" || commandId === "run-ground-check" || commandId === "run-monitor-test" || commandId.startsWith("run-certification-") || commandId === "record-notch-baseline") {
           set({ lastCommand: commandId });
           return true;
         }
@@ -1055,7 +1086,9 @@ export function createDvor1150PmdtStore(
         }
         if (!state.scenario.active) return false;
         const config = initialConfigurationForSession(state.config);
-        const derived = recompute(config, state.derived);
+        resetOperation();
+        const derived = recompute(config, state.derived, "tx1");
+        derived.data.faultHistory = [];
         derived.data.logs = [...derived.data.logs, {
           timeTag: config.simulation.timestamp,
           user: state.authenticatedUserId ?? "SYSTEM",
@@ -1094,6 +1127,7 @@ export function createDvor1150PmdtStore(
       reset: () => {
         accounts = initialAccounts();
         lastActivityAt = now().getTime();
+        resetOperation();
         set(buildInitialState(now));
       },
     };

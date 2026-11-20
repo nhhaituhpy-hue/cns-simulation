@@ -3,6 +3,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import type {
   Dvor1150Config,
+  Dvor1150FaultSample,
   Dvor1150IndicatorColor,
   Dvor1150MonitorId,
   Dvor1150MonitorParameter,
@@ -317,7 +318,8 @@ function MonitorIntegrityBlock({ monitorId }: { monitorId: Dvor1150MonitorId }) 
 }
 
 function Dvor1150MonitorIntegrity() {
-  return <div className="dvor1150-content dvor1150-integrity-content"><MonitorIntegrityBlock monitorId="mon1" /><MonitorIntegrityBlock monitorId="mon2" /></div>;
+  const dual = useDvor1150PmdtStore((state) => state.config.station.monitorConfig === "Dual Monitors");
+  return <div className="dvor1150-content dvor1150-integrity-content"><MonitorIntegrityBlock monitorId="mon1" />{dual && <MonitorIntegrityBlock monitorId="mon2" />}</div>;
 }
 
 function Dvor1150MonitorTestData() {
@@ -391,12 +393,79 @@ function Dvor1150GroundCheck() {
 function Dvor1150FaultHistory() {
   const activeView = useDvor1150PmdtStore((state) => state.activeView);
   const history = useDvor1150PmdtStore((state) => state.derived.data.faultHistory);
-  const timestamps = Array.from(new Set(history.systemStatus.map((row) => row.timestamp))).slice(0, 3);
-  while (timestamps.length < 3) timestamps.push("03/29/06 13:23:59");
-  const monitorValue = (monitor: Dvor1150MonitorId, parameter: Dvor1150MonitorParameter, timestamp: string) => history.monitorData.find((row) => row.monitor === monitor && row.parameter === parameter && row.timestamp === timestamp);
-  const monitorData = <div className="dvor1150-fault-monitor-data"><div className="dvor1150-history-dates">{timestamps.map((timestamp) => <DateBox key={timestamp} value={timestamp} />)}</div>{(["mon1", "mon2"] as const).map((monitor) => <fieldset className="dvor1150-panel" key={monitor}><legend>Monitor {monitor === "mon1" ? 1 : 2}</legend><table className="dvor1150-table"><tbody>{parameterOrder.map((parameter) => <tr key={parameter}><th>{parameterMeta[parameter].label}</th>{timestamps.map((timestamp) => { const row = monitorValue(monitor, parameter, timestamp); return <td key={timestamp}>{row ? <Readout value={row.value.toFixed(parameterMeta[parameter].digits)} indicator={row.indicator} /> : ""}</td>; })}<td>{parameterMeta[parameter].unit}</td></tr>)}<tr><th>Ident Status</th>{timestamps.map((timestamp) => <td key={timestamp}><Readout value="Normal" /></td>)}<td /></tr><tr><th>Notch Monitor</th>{timestamps.map((timestamp) => <td key={timestamp}><StatusBox indicator="green" /></td>)}<td /></tr><tr><th>Sideband VSWR</th>{timestamps.map((timestamp) => <td key={timestamp}><StatusBox indicator="green" /></td>)}<td /></tr></tbody></table></fieldset>)}</div>;
-  const systemStatus = <div className="dvor1150-fault-system-status"><div className="dvor1150-history-dates">{timestamps.map((timestamp) => <DateBox key={timestamp} value={timestamp} />)}</div><table className="dvor1150-table"><tbody><tr><th colSpan={4}>Monitor</th></tr><tr><th>Monitor Logic</th>{timestamps.map((timestamp) => <td key={timestamp}>{history.systemStatus.find((row) => row.timestamp === timestamp)?.monitorLogic ?? "AND"}</td>)}<td /></tr><tr><th>Monitor 1</th>{timestamps.map((timestamp) => <td key={timestamp}><StatusBox indicator={history.systemStatus.find((row) => row.timestamp === timestamp)?.monitor1Alarm ? "red" : "green"} /></td>)}<td /></tr><tr><th>Monitor 2</th>{timestamps.map((timestamp) => <td key={timestamp}><StatusBox indicator={history.systemStatus.find((row) => row.timestamp === timestamp)?.monitor2Alarm ? "red" : "green"} /></td>)}<td /></tr><tr><th>Ident Monitoring</th>{timestamps.map((timestamp) => <td key={timestamp}><input type="checkbox" checked readOnly /> Enabled</td>)}<td /></tr><tr><th>Notch Monitor</th>{timestamps.map((timestamp) => <td key={timestamp}><input type="checkbox" checked readOnly /> Enabled<br /><input type="checkbox" readOnly /> Executive</td>)}<td /></tr><tr><th>Sideband VSWR</th>{timestamps.map((timestamp) => <td key={timestamp}><input type="checkbox" readOnly /> Executive</td>)}<td /></tr><tr><th colSpan={4}>Transmitter</th></tr><tr><th>On Antenna</th>{timestamps.map((timestamp) => <td key={timestamp}>Tx 1&nbsp;&nbsp; Tx 2</td>)}<td /></tr><tr><th>Main</th>{timestamps.map((timestamp) => <td key={timestamp}><StatusBox indicator="green" /></td>)}<td /></tr><tr><th>On</th>{timestamps.map((timestamp) => <td key={timestamp}><StatusBox indicator="green" /></td>)}<td /></tr></tbody></table></div>;
-  return <Screen title="Fault History" tabs={<ScreenTabs screenId="monitor-data" activeView={activeView} views={["monitor-fault-history-data", "monitor-fault-history-system-status"]} /> }><div className="dvor1150-content">{activeView === "monitor-fault-history-system-status" ? systemStatus : monitorData}</div></Screen>;
+  const alarmSamples = [history[0]?.alarm, history[1]?.alarm, history[2]?.alarm];
+  const monitorSamples = [history[0]?.preAlarm, ...alarmSamples];
+  const isSystem = activeView === "monitor-fault-history-system-status";
+  const sampleHeader = (sample: Dvor1150FaultSample | null | undefined, index: number, withPhase: boolean) =>
+    <th key={index} scope="col">{withPhase && <div>{index === 0 ? "PreAlarm" : "Alarm"}</div>}<DateBox value={sample?.timestamp ?? "—"} /></th>;
+  const monitorData = <div className="dvor1150-fault-monitor-data">
+    {(["mon1", "mon2"] as const).map((id) => <fieldset className="dvor1150-panel" key={id}>
+      <legend>{id === "mon1" ? "Monitor 1" : "Monitor 2"}</legend>
+      <table className="dvor1150-table">
+        <thead><tr><th />{monitorSamples.map((sample, index) => sampleHeader(sample, index, true))}<th /></tr></thead>
+        <tbody>
+          {parameterOrder.map((parameter) => <tr key={parameter}>
+            <th scope="row">{parameterMeta[parameter].label}</th>
+            {monitorSamples.map((sample, index) => {
+              const monitor = sample?.monitors[id];
+              const row = monitor?.commStatus !== "gray" ? monitor?.parameters[parameter] : undefined;
+              return <td key={index}>{row && <Readout value={row.value.toFixed(parameterMeta[parameter].digits)} indicator={row.indicator} />}</td>;
+            })}
+            <td>{parameterMeta[parameter].unit}</td>
+          </tr>)}
+          <tr><th scope="row">Ident Status</th>{monitorSamples.map((sample, index) => {
+            const monitor = sample?.monitors[id];
+            return <td key={index}>{monitor && monitor.commStatus !== "gray" && <Readout value={monitor.ident.value} indicator={monitor.ident.indicator} />}</td>;
+          })}<td /></tr>
+          {(["Notch Monitor", "Sideband VSWR"] as const).map((label) => <tr key={label}><th scope="row">{label}</th>
+            {monitorSamples.map((sample, index) => <td key={index}>{sample && sample.monitors[id].commStatus !== "gray" &&
+              <StatusBox indicator={label === "Notch Monitor" ? sample.notchIndicator : sample.vswrIndicator} />}</td>)}<td />
+          </tr>)}
+        </tbody>
+      </table>
+    </fieldset>)}
+  </div>;
+  const paired = (left: [string, boolean], right: [string, boolean]) =>
+    <span className="dvor1150-history-pair">{[left, right].map(([label, active]) =>
+      <span key={label}><StatusBox indicator={active ? "green" : "gray"} /> {label}</span>)}</span>;
+  const systemRow = (label: string, render: (sample: Dvor1150FaultSample) => ReactNode) =>
+    <tr key={label}><th scope="row">{label}</th>{alarmSamples.map((sample, index) => <td key={index}>{sample && render(sample)}</td>)}</tr>;
+  const systemStatus = <div className="dvor1150-fault-system-status">
+    <table className="dvor1150-table">
+      <thead><tr><th />{alarmSamples.map((sample, index) => sampleHeader(sample, index, false))}</tr></thead>
+      <tbody>
+        <tr><th colSpan={4}>Monitor</th></tr>
+        {systemRow("Monitor Logic", (sample) => sample.monitorLogic)}
+        {(["mon1", "mon2"] as const).map((id) => systemRow(id === "mon1" ? "Monitor 1" : "Monitor 2", (sample) =>
+          sample.monitors[id].commStatus !== "gray" && paired(["Bypass", sample.bypass], ["Alarm", !sample.monitors[id].healthy])))}
+        {systemRow("Ident Monitoring", (sample) => sample.identEnabled ? "Enabled" : "Disabled")}
+        {systemRow("Notch Monitor", (sample) => sample.notchEnabled ? "Enabled" : "Disabled")}
+        {systemRow("Sideband VSWR", (sample) => sample.vswrExecutive ? "Executive" : "Advisory")}
+        <tr><th colSpan={4}>Transmitter</th></tr>
+        {systemRow("On Antenna", (sample) => paired(["TX1", sample.antenna === "tx1"], ["TX2", sample.antenna === "tx2"]))}
+        {systemRow("Main", (sample) => paired(["TX1", sample.main === "tx1"], ["TX2", sample.main === "tx2"]))}
+        {systemRow("On", (sample) => paired(["TX1", sample.on.tx1], ["TX2", sample.on.tx2]))}
+      </tbody>
+    </table>
+  </div>;
+  return <Screen title="Fault History" tabs={<ScreenTabs screenId="monitor-data" activeView={activeView} views={["monitor-fault-history-data", "monitor-fault-history-system-status"]} />}>
+    <div className="dvor1150-content">{history.length === 0 && <p>No recorded faults.</p>}{isSystem ? systemStatus : monitorData}</div>
+  </Screen>;
+}
+
+function Dvor1150StandbyStatus() {
+  const dual = useDvor1150PmdtStore((state) => state.config.station.transmitterConfig === "Dual Transmitters");
+  const { activeTransmitter, mainTransmitter, effectiveTransmitters } = useDvor1150PmdtStore((state) => state.derived);
+  if (!dual) return <div className="dvor1150-content">No standby transmitter installed.</div>;
+  const id = (activeTransmitter ?? mainTransmitter) === "tx2" ? "tx1" : "tx2";
+  const standby = effectiveTransmitters[id];
+  return <div className="dvor1150-content">
+    <fieldset className="dvor1150-panel">
+      <legend>Standby</legend>
+      <p>{id.toUpperCase()} — {standby.load ? "On Load" : standby.enabled ? "On" : "Off"}</p>
+      <p>Standby monitor measurements are not available in this demo.</p>
+    </fieldset>
+  </div>;
 }
 
 export function Dvor1150MonitorDataScreen() {
@@ -409,7 +478,7 @@ export function Dvor1150MonitorDataScreen() {
   if (activeView === "monitor-test-data") body = <Dvor1150MonitorTestData />;
   if (activeView === "monitor-notch") body = <Dvor1150NotchMonitor />;
   if (activeView === "monitor-sideband-vswr") body = <Dvor1150SidebandVswr />;
-  if (activeView === "monitor-standby") body = <div className="dvor1150-content dvor1150-empty-screen" />;
+  if (activeView === "monitor-standby") body = <Dvor1150StandbyStatus />;
   return <Screen title="Monitor Data" tabs={<ScreenTabs screenId="monitor-data" activeView={activeView} views={views} />}>{body}</Screen>;
 }
 
@@ -432,7 +501,7 @@ export function Dvor1150TxDataScreen() {
   const data = useDvor1150PmdtStore((state) => state.derived.data);
   const transmitter = activeView === "tx-data-tx2" ? "tx2" : "tx1";
   const timestamp = data.timestamp;
-  return <Screen title="Transmitter Data" tabs={<ScreenTabs screenId="tx-data" activeView={activeView} views={["tx-data-tx1", "tx-data-tx2"]} />}><div className="dvor1150-content dvor1150-tx-data-content"><DateBox value={timestamp} /><div className="dvor1150-tx-data-grid"><div><fieldset className="dvor1150-panel"><legend>Power</legend><table className="dvor1150-table"><tbody>{data.txPower.map((row) => <tr key={row.parameter}><th>{row.parameter}</th><td>{row[transmitter].toFixed(2)}</td><td>{row.unit}</td></tr>)}</tbody></table></fieldset><fieldset className="dvor1150-panel"><legend>VSWR</legend><table className="dvor1150-table"><tbody>{data.txVswr.map((row) => <tr key={row.parameter}><th>{row.parameter}</th><td>{formatNumber(row[transmitter], 2)}</td><td>: 1</td></tr>)}</tbody></table></fieldset></div><fieldset className="dvor1150-panel"><legend>Frequency</legend><table className="dvor1150-table"><tbody>{data.txFrequency.map((row) => <tr key={row.parameter}><th>{row.parameter}</th><td>{formatNumber(row[transmitter], row.unit === "MHz" ? 4 : 2)}</td><td>{row.unit}</td></tr>)}</tbody></table></fieldset></div></div></Screen>;
+  return <Screen title="Transmitter Data" tabs={<ScreenTabs screenId="tx-data" activeView={activeView} views={["tx-data-tx1", "tx-data-tx2"]} />}><div className="dvor1150-content dvor1150-tx-data-content"><div className="dvor1150-tx-data-grid"><div><DateBox value={timestamp} /><fieldset className="dvor1150-panel"><legend>Power</legend><table className="dvor1150-table"><tbody>{data.txPower.map((row) => <tr key={row.parameter}><th>{row.parameter}</th><td>{row[transmitter].toFixed(2)}</td><td>{row.unit}</td></tr>)}</tbody></table></fieldset><fieldset className="dvor1150-panel"><legend>VSWR</legend><table className="dvor1150-table"><tbody>{data.txVswr.map((row) => <tr key={row.parameter}><th>{row.parameter}</th><td>{formatNumber(row[transmitter], 2)}</td><td>: 1</td></tr>)}</tbody></table></fieldset></div><div><DateBox value={timestamp} /><fieldset className="dvor1150-panel"><legend>Frequency</legend><table className="dvor1150-table"><tbody>{data.txFrequency.map((row) => <tr key={row.parameter}><th>{row.parameter}</th><td>{formatNumber(row[transmitter], row.unit === "MHz" ? 4 : 2)}</td><td>{row.unit}</td></tr>)}</tbody></table></fieldset></div></div></div></Screen>;
 }
 
 const nominalFields: readonly [string, string, string, number][] = [["Azimuth Index", "azimuthIndex", "°", 2], ["Output Power", "outputPower", "Watts", 1], ["Voice Modulation", "voiceModulation", "%", 1], ["Ident Modulation", "identModulation", "%", 1], ["Reference Modulation", "referenceModulation", "%", 1], ["SBO RF Level", "sboRfLevel", "%", 1]];

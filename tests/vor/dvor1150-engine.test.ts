@@ -115,6 +115,7 @@ describe("DVOR 1150 configuration and PMDT engine", () => {
 
   it("excludes an uninstalled Monitor 2 from a single-monitor station", () => {
     const config = cloneDvor1150Config(defaultDvor1150Config);
+    config.monitor.votingLogic = "OR";
     config.monitor.offsets.mon2.deviation = 10;
     config.station.monitorConfig = "Single Monitor";
 
@@ -243,7 +244,8 @@ describe("DVOR 1150 configuration and PMDT engine", () => {
   });
 
   it("keeps the logical Main on TX1 after a one-step automatic transfer to TX2", () => {
-    const store = createDvor1150PmdtStore();
+    let time = 0;
+    const store = createDvor1150PmdtStore({ now: () => new Date(time) });
     expect(store.getState().login("SEC3", "THREE")).toBe(true);
     expect(store.getState().setLocalMode(true)).toBe(true);
     expect(store.getState().setMonitorBypass("mon1", true)).toBe(true);
@@ -251,15 +253,28 @@ describe("DVOR 1150 configuration and PMDT engine", () => {
     expect(store.getState().applyConfigChanges()).toBe(true);
 
     expect(store.getState().setMonitorBypass("mon1", false)).toBe(true);
+    expect(store.getState().derived.transfer.phase).toBe("alarm-detected");
+    time = 39_999;
+    store.getState().refreshClock();
+    expect(store.getState().derived.activeTransmitter).toBe("tx1");
+    time += 1;
+    store.getState().refreshClock();
     const state = store.getState();
     expect(state.derived.activeTransmitter).toBe("tx2");
     expect(state.derived.mainTransmitter).toBe("tx1");
     expect(state.derived.data.transmitters.tx1).toMatchObject({ main: "green", antenna: "gray", off: "red" });
     expect(state.derived.data.transmitters.tx2).toMatchObject({ main: "gray", antenna: "green" });
+    expect(state.derived.monitors.mon2.controlling).toBe(true);
+    expect(state.derived.data.faultHistory[0]).toMatchObject({
+      preAlarm: { main: "tx1", antenna: "tx1" },
+      alarm: { main: "tx1", antenna: "tx1", bypass: false, on: { tx1: true, tx2: true } },
+    });
+    expect(state.derived.data.logs.some((row) => row.message === "Configuration applied")).toBe(true);
   });
 
   it("turns both DVOR 1150 transmitters Off when the standby path also alarms", () => {
-    const store = createDvor1150PmdtStore();
+    let time = 0;
+    const store = createDvor1150PmdtStore({ now: () => new Date(time) });
     expect(store.getState().login("SEC3", "THREE")).toBe(true);
     expect(store.getState().setLocalMode(true)).toBe(true);
     expect(store.getState().setMonitorBypass("mon1", true)).toBe(true);
@@ -268,11 +283,101 @@ describe("DVOR 1150 configuration and PMDT engine", () => {
     expect(store.getState().applyConfigChanges()).toBe(true);
 
     expect(store.getState().setMonitorBypass("mon1", false)).toBe(true);
+    time = 40_000;
+    store.getState().refreshClock();
+    expect(store.getState().derived.activeTransmitter).toBe("tx2");
+    store.getState().refreshClock();
+    time = 80_000;
+    store.getState().refreshClock();
     const state = store.getState();
     expect(state.derived.activeTransmitter).toBe(null);
     expect(state.config.transmitters.tx1.enabled).toBe(false);
     expect(state.config.transmitters.tx2.enabled).toBe(false);
     expect(state.lastCommand).toBe("Automatic monitor shutdown: both transmitters off");
+    expect(state.derived.data.faultHistory.map((row) => row.alarm.antenna)).toEqual(["tx2", "tx1"]);
+    expect(state.derived.data.faultHistory.map((row) => row.preAlarm?.antenna)).toEqual(["tx1", "tx1"]);
+    expect(state.derived.data.transmitters.tx1).toMatchObject({ main: "green", off: "red" });
+    expect(state.derived.data.transmitters.tx2).toMatchObject({ main: "gray", off: "red" });
+  });
+
+  it("cancels the alarm countdown when the vote clears or Bypass is turned on", () => {
+    let time = 0;
+    const store = createDvor1150PmdtStore({ now: () => new Date(time) });
+    const controls = store.getState();
+    controls.login("SEC3", "THREE");
+    controls.setLocalMode(true);
+    controls.setConfigValue("monitor.monitorStartupDelay", 0);
+    controls.setConfigValue("monitor.monitorShutdownDelay", 5);
+    const fault = (voice: number) => {
+      controls.setConfigValue("transmitters.tx1.nominal.voiceModulation", voice);
+      expect(controls.applyConfigChanges()).toBe(true);
+    };
+    fault(30);
+    time = 4000;
+    fault(0);
+    expect(store.getState().derived.transfer.phase).toBe("idle");
+    fault(30);
+    time = 5000;
+    controls.refreshClock();
+    expect(store.getState().derived.activeTransmitter).toBe("tx1");
+    controls.setMonitorBypass("mon1", true);
+    time = 15_000;
+    controls.refreshClock();
+    expect(store.getState().derived.data.monitorIntegral).toMatchObject({ alarm: true, bypass: true });
+    expect(store.getState().derived.data.faultHistory).toHaveLength(0);
+    controls.setMonitorBypass("mon1", false);
+    time = 19_999;
+    controls.refreshClock();
+    expect(store.getState().derived.activeTransmitter).toBe("tx1");
+    time += 1;
+    controls.refreshClock();
+    expect(store.getState().derived.activeTransmitter).toBe("tx2");
+  });
+
+  it("schedules only the documented first restart after an automatic shutdown", () => {
+    let time = 0;
+    const store = createDvor1150PmdtStore({ now: () => new Date(time) });
+    const controls = store.getState();
+    controls.login("SEC3", "THREE");
+    controls.setLocalMode(true);
+    controls.setConfigValue("monitor.monitorStartupDelay", 1);
+    controls.setConfigValue("monitor.monitorShutdownDelay", 1);
+    controls.setConfigValue("rms.automaticRestartsEnabled", true);
+    controls.setConfigValue("rms.firstRestartDelay", 3);
+    controls.setConfigValue("station.transmitterConfig", "Single Transmitter");
+    controls.setConfigValue("transmitters.tx1.nominal.voiceModulation", 30);
+    expect(controls.applyConfigChanges()).toBe(true);
+
+    for (const [at, phase] of [[2000, "shutdown"], [4999, "shutdown"], [5000, "restarted"], [7000, "shutdown"], [320_000, "shutdown"]] as const) {
+      time = at;
+      controls.refreshClock();
+      expect(store.getState().derived.transfer.phase).toBe(phase);
+    }
+    expect(store.getState().derived.data.faultHistory).toHaveLength(2);
+  });
+
+  it("keeps manual routes, pending drafts and Ident commands independent", () => {
+    const store = createDvor1150PmdtStore();
+    const controls = store.getState();
+    controls.login("SEC3", "THREE");
+    controls.setLocalMode(true);
+    controls.setConfigValue("transmitters.tx2.offsets.outputPowerScale", 97);
+    expect(controls.setTransmitterMode("tx2", "main")).toBe(true);
+    const { derived, configDraft, config } = store.getState();
+    expect(derived.transfer).toMatchObject({ cause: "manual", phase: "manual", from: "tx1", to: "tx2" });
+    expect(derived.data.transmitters.tx1).toMatchObject({ main: "gray", antenna: "gray", load: "green", off: "gray" });
+    expect(derived.data.transmitters.tx2).toMatchObject({ main: "green", antenna: "green", load: "gray", off: "gray" });
+    expect(configDraft.transmitters.tx2.offsets.outputPowerScale).toBe(97);
+    expect(config.transmitters.tx2.offsets.outputPowerScale).not.toBe(97);
+    expect(controls.executeCommand("ident-off")).toBe(true);
+    expect(store.getState().derived.monitors.mon2.ident.value).toBe("No Ident");
+    controls.refreshClock();
+    expect(store.getState().derived.transfer.phase).toBe("manual");
+    expect(store.getState().derived.activeTransmitter).toBe("tx2");
+    expect(controls.executeCommand("ident-continuous")).toBe(true);
+    expect(store.getState().derived.monitors.mon2.ident.value).toBe("Continuous Ident");
+    expect(controls.setTransmitterMode("tx1", "antenna")).toBe(true);
+    expect(store.getState().derived).toMatchObject({ mainTransmitter: "tx2", activeTransmitter: "tx1" });
   });
 
   it("keeps a loaded scenario session-only, restores it with F8 semantics, and ends at TST", () => {
