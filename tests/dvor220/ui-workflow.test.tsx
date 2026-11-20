@@ -37,6 +37,41 @@ function connectAndLogin(store: Dvor220StoreApi) {
 }
 
 describe("MOPIENS DVOR 220 simulator UI", () => {
+  it("places Helper checkboxes and actions in the HC field blocks and panel", () => {
+    const store = createUiStore();
+    connectAndLogin(store);
+    fireEvent.click(screen.getByRole("button", { name: "Setup" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Transmitter Setup$/ }));
+    fireEvent.click(within(screen.getByRole("group", { name: "TX1" })).getByRole("button", { name: "Helper..." }));
+    const dialog = within(screen.getByRole("dialog", { name: "Output Power" }));
+    const panel = dialog.getByRole("tabpanel", { name: "TX1 Output Power" });
+    const fields = within(panel).getAllByRole("group").slice(0, 5);
+    for (const [index, name] of ["Carrier Power", "USB COS", "USB SIN", "LSB COS", "LSB SIN"].entries()) {
+      expect(fields[index]).toHaveAccessibleName(name);
+      expect(within(fields[index]).getByRole("spinbutton", { name })).toBeInTheDocument();
+    }
+    const carrier = within(within(panel).getByRole("group", { name: "Carrier Power" }));
+    const usbCos = within(within(panel).getByRole("group", { name: "USB COS" }));
+    const sync = carrier.getByRole("checkbox", { name: "Sync" });
+    const sameSidebands = usbCos.getByRole("checkbox", { name: "Sideband same setting" });
+    expect(sync.parentElement?.parentElement).toContainElement(carrier.getByText("Carrier Power"));
+    expect(sameSidebands.parentElement?.parentElement).toContainElement(usbCos.getByText("USB COS"));
+    for (const checkbox of [sync, sameSidebands]) {
+      expect(checkbox).toHaveAttribute("type", "checkbox");
+      fireEvent.click(checkbox);
+      expect(checkbox).toBeChecked();
+    }
+    const actions = within(within(panel).getByRole("group", { name: "Output Power actions" }));
+    expect(actions.getByRole("checkbox", { name: "Tracking" })).toHaveAttribute("type", "checkbox");
+    expect(actions.getByRole("checkbox", { name: "Same to TX1 and TX2" })).toBeEnabled();
+    expect(actions.getByRole("button", { name: "Apply" })).toBeDisabled();
+    const footer = dialog.getByRole("button", { name: "Save" }).closest("footer")!;
+    expect(within(footer).getAllByRole("button").map((button) => button.textContent)).toEqual(["Save", "Close"]);
+    expect(dialog.queryByRole("switch")).not.toBeInTheDocument();
+    expect(dialog.queryByText(/RF Output Setpoint|Edited values are local/)).not.toBeInTheDocument();
+    expect(sync).toHaveAccessibleDescription("Sync follows Carrier only in this Helper session.");
+  });
+
   it("preserves three-decimal USB COS power in both Helper controls", () => {
     const store = createUiStore();
     connectAndLogin(store);
@@ -94,7 +129,7 @@ describe("MOPIENS DVOR 220 simulator UI", () => {
     fireEvent.click(dialog.getByRole("tab", { name: "TX1" }));
     expect(input).toHaveValue(Number(tx1Value));
     for (const name of ["Sync", "Sideband same setting", "Tracking", "Same to TX1 and TX2"]) {
-      expect(dialog.getByRole("switch", { name })).toBeEnabled();
+      expect(dialog.getByRole("checkbox", { name })).toBeEnabled();
     }
   });
 

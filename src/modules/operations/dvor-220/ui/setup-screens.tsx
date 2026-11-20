@@ -78,22 +78,28 @@ function numberValue(value: string, fallback: number): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-function HelperPowerField({ label, unit, value, max, step, onChange }: {
+function HelperPowerField({ label, unit, value, max, step, disabled, onChange, children }: {
   label: string;
   unit: string;
   value: number;
   max: number;
   step: number;
+  disabled: boolean;
   onChange: (value: number) => void;
+  children?: ReactNode;
 }) {
   const id = useId();
   const inputProps = {
-    min: 0, max, step, value,
+    min: 0, max, step, value, disabled,
     onChange: (event: ChangeEvent<HTMLInputElement>) => onChange(numberValue(event.target.value, value)),
   };
   return (
-    <div className={styles.formField}>
-      <label htmlFor={id}>{label}</label>
+    <div className={styles.helperPowerField} role="group" aria-labelledby={`${id}-label`}>
+      <div className={styles.helperPowerHeader}>
+        <span className={styles.helperPowerDot} aria-hidden="true" />
+        <label id={`${id}-label`} htmlFor={id}>{label}</label>
+        {children}
+      </div>
       <span className={styles.helperPowerControls}>
         <input type="range" aria-label={`${label} slider`} {...inputProps} />
         <input id={id} type="number" {...inputProps} />
@@ -255,6 +261,7 @@ function TransmitterSetup({
   dispatch: (command: Dvor220Command) => Dvor220CommandResult;
 }) {
   const [helperOpen, setHelperOpen] = useState(false);
+  const helperDescriptionId = useId();
   const [helperTransmitterId, setHelperTransmitterId] = useState<Dvor220TransmitterId>("tx1");
   const [sameToBoth, setSameToBoth] = useState(false);
   const [sidebandsSame, setSidebandsSame] = useState(false);
@@ -401,9 +408,8 @@ function TransmitterSetup({
         closeOnBackdrop={false}
         onClose={() => setHelperOpen(false)}
         actions={[
-          { id: "close", label: "Close", onClick: () => setHelperOpen(false) },
           { id: "save", label: "Save", disabled: disabled || device.scenario.active || !helperHasUnsavedChanges, onClick: saveHelper },
-          { id: "apply", label: "Apply", tone: "primary", disabled: disabled || !helperValid || !helperHasUnappliedChanges, onClick: applyHelper },
+          { id: "close", label: "Close", onClick: () => setHelperOpen(false) },
         ]}
       >
         <div className={styles.transmitterHelperDialog}>
@@ -420,46 +426,54 @@ function TransmitterSetup({
               </button>
             ))}
           </div>
-          <fieldset className={styles.formSection} disabled={disabled}>
-            <legend>{helperTransmitterId.toUpperCase()} RF Output Setpoint</legend>
+          <div className={styles.helperPanel} role="tabpanel" aria-label={`${helperTransmitterId.toUpperCase()} Output Power`}>
             <div className={styles.helperGrid}>
               <HelperPowerField label="Carrier Power" unit="%" value={activeHelper.carrierScalePercent}
-                max={100} step={0.1} onChange={updateHelperCarrier} />
+                max={100} step={0.1} disabled={disabled} onChange={updateHelperCarrier}>
+                <label className={styles.helperCheckbox}>
+                  <input type="checkbox" checked={syncEnabled} disabled={disabled}
+                    aria-describedby={`${helperDescriptionId}-sync`}
+                    onChange={(event) => setSyncEnabled(event.target.checked)} />
+                  Sync
+                </label>
+              </HelperPowerField>
               {(["usbCos", "usbSin", "lsbCos", "lsbSin"] as const).map((output) => (
                 <HelperPowerField key={output} label={output.replace(/(Cos|Sin)/, " $1").toUpperCase()} unit="W"
-                  value={activeHelper.sidebandPowerW[output]} max={5} step={0.001}
-                  onChange={(value) => updateHelperSideband(output, value)} />
+                  value={activeHelper.sidebandPowerW[output]} max={5} step={0.001} disabled={disabled}
+                  onChange={(value) => updateHelperSideband(output, value)}>
+                  {output === "usbCos" && (
+                    <label className={styles.helperCheckbox}>
+                      <input type="checkbox" checked={sidebandsSame} disabled={disabled}
+                        onChange={(event) => setSidebandsSame(event.target.checked)} />
+                      Sideband same setting
+                    </label>
+                  )}
+                </HelperPowerField>
               ))}
             </div>
-          </fieldset>
-          <fieldset className={styles.formSection} disabled={disabled}>
-            <legend>Helper</legend>
-            <div className={styles.helperSwitchGrid}>
-              <MopiensSlideSwitch label="Same to TX1 and TX2" checked={sameToBoth} disabled={disabled} onCheckedChange={setSameToBoth} />
-              <MopiensSlideSwitch label="Sideband same setting" checked={sidebandsSame} disabled={disabled} onCheckedChange={setSidebandsSame} />
-              <MopiensSlideSwitch label="Sync" checked={syncEnabled} disabled={disabled} onCheckedChange={setSyncEnabled} />
-              <MopiensSlideSwitch
-                label="Tracking"
-                checked={activeHelper.trackingEnabled}
-                disabled={disabled}
-                onCheckedChange={(trackingEnabled) => updateActiveHelper({ ...activeHelper, trackingEnabled })}
-              />
+            <div className={styles.helperActions} role="group" aria-label="Output Power actions">
+              <label className={`${styles.helperCheckbox} ${styles.helperExtension}`}>
+                <input type="checkbox" checked={sameToBoth} disabled={disabled}
+                  onChange={(event) => setSameToBoth(event.target.checked)} />
+                Same to TX1 and TX2
+              </label>
+              <label className={styles.helperCheckbox}>
+                <input type="checkbox" checked={activeHelper.trackingEnabled} disabled={disabled}
+                  aria-describedby={`${helperDescriptionId}-tracking`}
+                  onChange={(event) => updateActiveHelper({ ...activeHelper, trackingEnabled: event.target.checked })} />
+                Tracking
+              </label>
+              <MopiensBeveledButton tone="primary" disabled={disabled || !helperValid || !helperHasUnappliedChanges}
+                aria-description={!helperValid
+                  ? "Carrier must be 0–100%; each sideband must be 0–5 W."
+                  : "Edited values are local to Helper. Apply sends them to running RAM. Save writes applied setpoints to non-volatile flash and is disabled during scenarios."}
+                onClick={applyHelper}>
+                Apply
+              </MopiensBeveledButton>
             </div>
-          </fieldset>
-          <p className={styles.helperState} role="status">
-            {!helperValid
-              ? "Carrier must be 0–100%; each sideband must be 0–5 W."
-              : helperHasUnappliedChanges
-                ? "Edited values are local to Helper. Apply sends them to running RAM."
-                : helperHasUnsavedChanges
-                  ? device.scenario.active
-                    ? "Applied in RAM for the active scenario. Save is disabled so the training baseline remains session-only."
-                    : "Applied in RAM; use Save to write these setpoints to non-volatile flash."
-                  : "Helper values match running RAM and saved flash."}
-          </p>
-          <p className={styles.helperNote}>
-            Sync follows Carrier only in this Helper session. Tracking remains active after Apply and scales sideband setpoints with later Carrier changes.
-          </p>
+            <span hidden id={`${helperDescriptionId}-sync`}>Sync follows Carrier only in this Helper session.</span>
+            <span hidden id={`${helperDescriptionId}-tracking`}>Tracking remains active after Apply and scales sideband setpoints with later Carrier changes.</span>
+          </div>
         </div>
       </MopiensModal>
     </>
