@@ -4,13 +4,15 @@ import { useRef, useState, type ReactNode } from "react";
 import type {
   Dvor1150Config,
   Dvor1150FaultSample,
+  Dvor1150GroundCheckData,
   Dvor1150IndicatorColor,
+  Dvor1150LogEntry,
   Dvor1150MonitorId,
   Dvor1150MonitorParameter,
   Dvor1150ScreenId,
   Dvor1150ViewId,
 } from "@/lib/dvor1150";
-import { getDvor1150ConfigValue, isDvor1150ScenarioStudentEditable } from "@/lib/dvor1150";
+import { formatDvor1150Timestamp, getDvor1150ConfigValue, isDvor1150ScenarioStudentEditable } from "@/lib/dvor1150";
 import { getDvor1150SynthesizerSwitches } from "@/lib/dvor1150/config-utils";
 import { dvor1150AdStatus } from "@/lib/dvor1150/engine";
 import type { Dvor1150AdRow } from "@/lib/dvor1150/types";
@@ -141,8 +143,17 @@ function AdDataTable({ title, rows, temperature = false }: { title: string; rows
   return <fieldset className={`dvor1150-panel dvor1150-ad-panel ${temperature ? "dvor1150-temperature-panel" : ""}`}><legend>{title}</legend><table className="dvor1150-table"><thead><tr><th>Parameter</th><th>Lo Limit</th><th>Data</th><th>Hi Limit</th><th>Unit</th></tr></thead><tbody>{rows.map((row) => <tr key={row.parameter}><th>{row.parameter}</th><td><StaticInput value={row.low.toFixed(2)} /></td><td><Readout value={row.value.toFixed(2)} indicator={dvor1150AdStatus(row)} /></td><td><StaticInput value={row.high.toFixed(2)} /></td><td>{row.unit}</td></tr>)}</tbody></table></fieldset>;
 }
 
-function RmsMaintenanceAlerts({ data }: { data: ReturnType<typeof useDvor1150PmdtStore.getState>["derived"]["data"] }) {
-  return <div className="dvor1150-alert-log-panel"><div className="dvor1150-log-actions"><button type="button">Update</button><button type="button">Reset</button></div><table className="dvor1150-table"><thead><tr><th>Alert</th><th>Tx 1</th><th>Tx 2</th><th>Monitor 1</th><th>Monitor 2</th></tr></thead><tbody>{data.maintenanceAlerts.map((row) => <tr key={row.label}><th>{row.label}</th><td><StatusBox indicator={row.indicator} /></td><td><StatusBox indicator={row.indicator} /></td><td><StatusBox indicator={row.indicator} /></td><td><StatusBox indicator={row.indicator} /></td></tr>)}</tbody></table></div>;
+function RmsMaintenanceAlerts() {
+  const { data, monitors } = useDvor1150PmdtStore((state) => state.derived);
+  const update = useDvor1150PmdtStore((state) => state.refreshClock);
+  return <div className="dvor1150-alert-log-panel">
+    <div className="dvor1150-log-actions"><button type="button" onClick={update}>Update</button><button type="button" disabled title="Live alerts clear when their conditions clear">Reset</button></div>
+    <table className="dvor1150-table"><thead><tr><th>Alert</th><th>Source</th><th>Status</th></tr></thead>
+      <tbody>{data.maintenanceAlerts.map((row) => <tr key={row.label}><th>{row.label}</th><td>RMS</td><td><StatusBox indicator={row.indicator} /></td></tr>)}
+        {(["mon1", "mon2"] as const).filter((id) => monitors[id].commStatus !== "gray").map((id) => <tr key={id}><th>Integrity</th><td>{id === "mon1" ? "Monitor 1" : "Monitor 2"}</td><td><StatusBox indicator={monitors[id].healthy ? "green" : "red"} value={monitors[id].healthy ? "Normal" : "Alarm"} /></td></tr>)}
+      </tbody>
+    </table>
+  </div>;
 }
 
 export function Dvor1150RmsDataScreen() {
@@ -150,50 +161,58 @@ export function Dvor1150RmsDataScreen() {
   const data = useDvor1150PmdtStore((state) => state.derived.data);
   const dual = useDvor1150PmdtStore((state) => state.config.station.transmitterConfig === "Dual Transmitters");
   const temperatures = data.temperatureData.slice(1, dual ? 3 : 2);
-  return <Screen title="RMS Data" tabs={<ScreenTabs screenId="rms-data" activeView={activeView} views={["rms-maintenance-alerts", "rms-ad-data"]} />}><div className="dvor1150-content">{activeView === "rms-ad-data" ? <><DateBox value={data.timestamp} /><div className="dvor1150-ad-data-grid"><AdDataTable title="Transmitter 1" rows={data.adDataByTransmitter.tx1} />{dual ? <AdDataTable title="Transmitter 2" rows={data.adDataByTransmitter.tx2} /> : null}<AdDataTable title="Temperature" rows={temperatures} temperature /></div></> : <RmsMaintenanceAlerts data={data} />}</div></Screen>;
+  return <Screen title="RMS Data" tabs={<ScreenTabs screenId="rms-data" activeView={activeView} views={["rms-maintenance-alerts", "rms-ad-data"]} />}><div className="dvor1150-content">{activeView === "rms-ad-data" ? <><DateBox value={data.timestamp} /><div className="dvor1150-ad-data-grid"><AdDataTable title="Transmitter 1" rows={data.adDataByTransmitter.tx1} />{dual ? <AdDataTable title="Transmitter 2" rows={data.adDataByTransmitter.tx2} /> : null}<AdDataTable title="Temperature" rows={temperatures} temperature /></div></> : <RmsMaintenanceAlerts />}</div></Screen>;
 }
 
-type Dvor1150LogTableRow = {
-  timeTag: string;
-  user: string;
-  message: string;
-  severity: Dvor1150IndicatorColor;
-};
+function RmsLogActions({ onReset, children }: { onReset: () => void; children?: ReactNode }) {
+  const update = useDvor1150PmdtStore((state) => state.refreshClock);
+  const canReset = useDvor1150PmdtStore((state) => state.securityLevel >= 3 && state.config.simulation.local && !state.loginDialogOpen);
+  return <div className="dvor1150-log-actions"><button type="button" onClick={update}>Update</button><button type="button" disabled={!canReset} onClick={onReset}>{children ?? "Reset"}</button></div>;
+}
 
-const fallbackLogRows: Dvor1150LogTableRow[] = [
-  { timeTag: "03/29/06 10:44:51", user: "Monitor 2", message: "Deviation", severity: "green" as const },
-  { timeTag: "03/29/06 10:44:10", user: "Monitor 2", message: "Deviation", severity: "green" as const },
-  { timeTag: "03/29/06 10:43:28", user: "Monitor 1", message: "30 Hz Mod", severity: "green" as const },
-];
-
-function LogTable({ mode, rows }: { mode: "alarms" | "maintenance" | "command"; rows: readonly Dvor1150LogTableRow[] }) {
-  const heading = mode === "command" ? "Command Activity" : mode === "maintenance" ? "Maintenance Alerts" : "Alarms";
-  return <div className="dvor1150-log-table-panel"><div className="dvor1150-log-actions"><button type="button">Update</button><button type="button">Reset</button></div><table className="dvor1150-table"><thead>{mode === "command" ? <tr><th>Time Tag</th><th>User Name</th><th>Command</th></tr> : <tr><th>Time Tag</th><th>Type</th><th>{mode === "alarms" ? "Alarm" : "Alert"}</th><th>State</th></tr>}</thead><tbody>{rows.map((row, index) => mode === "command" ? <tr key={`${row.timeTag}-${index}`}><td>{row.timeTag}</td><td>{row.user}</td><td>{row.message}</td></tr> : <tr key={`${row.timeTag}-${index}`}><td>{row.timeTag}</td><td>{row.user}</td><td>{row.message}</td><td>{row.severity === "green" ? "Normal" : row.severity === "yellow" ? "Alert Low" : "Alarm"}</td></tr>)}</tbody></table><span className="dvor1150-log-caption">{heading}</span></div>;
+function LogTable({ mode }: { mode: NonNullable<Dvor1150LogEntry["kind"]> }) {
+  const all = useDvor1150PmdtStore((state) => state.derived.data.logs);
+  const reset = useDvor1150PmdtStore((state) => state.resetRmsLog);
+  const rows = all.filter((row) => (row.kind ?? "command") === mode).reverse();
+  const command = mode === "command";
+  return <div className="dvor1150-log-table-panel"><RmsLogActions onReset={() => reset(mode)} />
+    <div className="dvor1150-log-scroll"><table className="dvor1150-table"><thead><tr><th>Time Tag</th><th>{command ? "User Name" : "Type"}</th><th>{command ? "Command" : mode === "alarm" ? "Alarm" : "Alert"}</th>{!command && <th>State</th>}</tr></thead>
+      <tbody>{rows.length === 0 && <tr><td colSpan={command ? 3 : 4}>No entries</td></tr>}{rows.map((row, index) => <tr key={`${row.timeTag}-${index}`}><td>{row.timeTag}</td><td>{row.user}</td><td>{row.message}</td>{!command && <td>{row.state}</td>}</tr>)}</tbody>
+    </table></div></div>;
 }
 
 function OperationalSummary() {
-  return <div className="dvor1150-operational-summary"><div className="dvor1150-log-actions"><button type="button">Update</button><button type="button">Reset</button></div><table className="dvor1150-table"><thead><tr><th /><th>Transmitter 1</th><th>Transmitter 2</th><th>Units</th></tr></thead><tbody><tr><th>Time in Normal State</th><td>0.65</td><td>0.00</td><td>Hours</td></tr><tr><th>Time in Standby State</th><td>0.03</td><td>0.76</td><td>Hours</td></tr><tr><th>Availability</th><td>14.1087</td><td>15.7685</td><td>%</td></tr><tr><th>Start Time</th><td colSpan={2}>03/29/06 10:17:01</td><td /></tr><tr><th>End Time</th><td colSpan={2}>03/29/06 14:59:28</td><td /></tr><tr><th>Elapsed Time</th><td>4.9187</td><td>Hours</td><td /></tr></tbody></table><button type="button" className="dvor1150-summary-reset">Reset Operational Summary</button></div>;
+  const summary = useDvor1150PmdtStore((state) => state.operationalSummary);
+  const reset = useDvor1150PmdtStore((state) => state.resetRmsLog);
+  const hours = (ms: number) => (ms / 3600000).toFixed(4);
+  const availability = (ms: number) => summary.elapsed ? (100 * ms / summary.elapsed).toFixed(4) : "0.0000";
+  return <div className="dvor1150-operational-summary">
+    <RmsLogActions onReset={() => reset("summary")}>Reset Operational Summary</RmsLogActions>
+    <table className="dvor1150-table"><thead><tr><th /><th>Transmitter 1</th><th>Transmitter 2</th><th>Units</th></tr></thead><tbody>
+      <tr><th>Time in Normal State</th><td>{hours(summary.tx1.normal)}</td><td>{hours(summary.tx2.normal)}</td><td>Hours</td></tr>
+      <tr><th>Time in Standby State</th><td>{hours(summary.tx1.standby)}</td><td>{hours(summary.tx2.standby)}</td><td>Hours</td></tr>
+      <tr><th>Availability</th><td>{availability(summary.tx1.normal + summary.tx1.standby)}</td><td>{availability(summary.tx2.normal + summary.tx2.standby)}</td><td>%</td></tr>
+      <tr><th>Start Time</th><td colSpan={2}>{formatDvor1150Timestamp(new Date(summary.start))}</td><td /></tr>
+      <tr><th>End Time</th><td colSpan={2}>{formatDvor1150Timestamp(new Date(summary.last))}</td><td /></tr>
+      <tr><th>Elapsed Time</th><td>{hours(summary.elapsed)}</td><td>Hours</td><td /></tr>
+    </tbody></table></div>;
 }
 
 function ParameterChangeTable() {
   const entries = useDvor1150PmdtStore((state) => state.parameterChangeLogs);
-  const rows = entries.length ? entries : [
-    { id: "sample-1", timeTag: "03/29/06 14:23:08", userName: "SEC3", file: "Monitor #2" },
-    { id: "sample-2", timeTag: "03/29/06 14:23:07", userName: "SEC3", file: "Monitor #1" },
-    { id: "sample-3", timeTag: "03/29/06 14:23:06", userName: "SEC3", file: "RMS" },
-  ];
-  return <div className="dvor1150-log-table-panel"><div className="dvor1150-log-actions"><button type="button">Update</button><button type="button">Reset</button></div><table className="dvor1150-table"><thead><tr><th>Time Tag</th><th>User Name</th><th>File</th></tr></thead><tbody>{rows.map((row) => <tr key={row.id}><td>{row.timeTag}</td><td>{row.userName}</td><td>{row.file}</td></tr>)}</tbody></table></div>;
+  const hidden = useDvor1150PmdtStore((state) => state.hiddenParameterLogRows);
+  const reset = useDvor1150PmdtStore((state) => state.resetRmsLog);
+  const rows = entries.filter((row) => !hidden.has(row.id)).slice(0, 100);
+  return <div className="dvor1150-log-table-panel"><RmsLogActions onReset={() => reset("parameters")} /><div className="dvor1150-log-scroll"><table className="dvor1150-table"><thead><tr><th>Time Tag</th><th>User Name</th><th>File</th></tr></thead><tbody>{!rows.length && <tr><td colSpan={3}>No entries</td></tr>}{rows.map((row) => <tr key={row.id}><td>{row.timeTag}</td><td>{row.userName}</td><td>{row.file}</td></tr>)}</tbody></table></div></div>;
 }
 
 export function Dvor1150RmsLogsScreen() {
   const activeView = useDvor1150PmdtStore((state) => state.activeView);
-  const stored = useDvor1150PmdtStore((state) => state.derived.data.logs);
-  const rows = stored.length ? stored.map((row) => ({ timeTag: row.timeTag, user: row.user, message: row.message, severity: row.severity })) : fallbackLogRows;
   const views = ["rms-logs-operational-summary", "rms-logs-alarms", "rms-logs-maintenance-alerts", "rms-logs-command-activity", "rms-logs-parameter-change"] as const;
   let content: ReactNode = <OperationalSummary />;
-  if (activeView === "rms-logs-alarms") content = <LogTable mode="alarms" rows={rows} />;
-  if (activeView === "rms-logs-maintenance-alerts") content = <LogTable mode="maintenance" rows={rows} />;
-  if (activeView === "rms-logs-command-activity") content = <LogTable mode="command" rows={rows} />;
+  if (activeView === "rms-logs-alarms") content = <LogTable mode="alarm" />;
+  if (activeView === "rms-logs-maintenance-alerts") content = <LogTable mode="maintenance" />;
+  if (activeView === "rms-logs-command-activity") content = <LogTable mode="command" />;
   if (activeView === "rms-logs-parameter-change") content = <ParameterChangeTable />;
   return <Screen title="RMS Logs" tabs={<ScreenTabs screenId="rms-logs" activeView={activeView} views={views} />}><div className="dvor1150-content">{content}</div></Screen>;
 }
@@ -322,24 +341,55 @@ function Dvor1150MonitorIntegrity() {
   return <div className="dvor1150-content dvor1150-integrity-content"><MonitorIntegrityBlock monitorId="mon1" />{dual && <MonitorIntegrityBlock monitorId="mon2" />}</div>;
 }
 
-function Dvor1150MonitorTestData() {
-  const config = useDvor1150PmdtStore((state) => state.configDraft);
-  const executeCommand = useDvor1150PmdtStore((state) => state.executeCommand);
-  const result1 = useDvor1150PmdtStore((state) => state.derived.data.monitorTestResults.mon1);
-  const result2 = useDvor1150PmdtStore((state) => state.derived.data.monitorTestResults.mon2);
-  const fields: readonly [string, string, string, number][] = [["Azimuth Angle", "azimuthAngle", "°", 2], ["30 Hz Modulation", "hz30Modulation", "%", 1], ["9960 Hz Modulation", "hz9960Modulation", "%", 1], ["Deviation", "deviation", "Ratio", 1], ["Ident Modulation", "identModulation", "%", 1], ["Ident Control", "identControl", "", 0], ["Audio Modulation", "audioModulation", "%", 1], ["Audio Frequency", "audioFrequency", "Hz", 0]];
-  return <div className="dvor1150-content dvor1150-monitor-test-data"><fieldset className="dvor1150-panel dvor1150-test-generator-setup"><legend>Test Generator Setup</legend><DateBox value={config.simulation.timestamp} /><table className="dvor1150-table"><thead><tr><th> </th><th>Monitor 1</th><th>Monitor 2</th><th> </th></tr></thead><tbody>{fields.map(([label, field, unit, digits]) => <tr key={field}><th>{label}</th><td>{field === "identControl" ? <Dvor1150ConfigControl fieldId="monitor.testGenerator.identControl" type="select" /> : <Dvor1150ConfigControl fieldId={`monitor.testGenerator.${field}`} digits={digits} />}</td><td>{field === "identControl" ? config.monitor.testGenerator.identControl : formatNumber(config.monitor.testGenerator[field as keyof typeof config.monitor.testGenerator] as number, digits)}</td><td>{unit}</td></tr>)}</tbody></table></fieldset><fieldset className="dvor1150-panel dvor1150-test-results"><legend>Test Results</legend><div className="dvor1150-test-result-columns"><TestResultColumn title="Monitor 1" result={result1} onRun={() => executeCommand("run-monitor-test")} /><TestResultColumn title="Monitor 2" result={result2} onRun={() => executeCommand("run-monitor-test")} /></div></fieldset></div>;
+function useMaintenanceControls() {
+  const canStart = useDvor1150PmdtStore((state) => !state.loginDialogOpen && state.securityLevel >= 3 && state.config.simulation.local && !state.maintenance.job && !state.diagnosticState.running);
+  const dual = useDvor1150PmdtStore((state) => state.config.station.monitorConfig === "Dual Monitors");
+  const maintenance = useDvor1150PmdtStore((state) => state.maintenance);
+  const start = useDvor1150PmdtStore((state) => state.startMaintenance);
+  const execute = useDvor1150PmdtStore((state) => state.executeCommand);
+  const abort = () => execute("abort-tests");
+  return { canStart, dual, maintenance, start, abort };
 }
 
-function TestResultColumn({ title, result, onRun }: { title: string; result: { available: boolean; values: { azimuthAngle: number; hz30Modulation: number; hz9960Modulation: number; deviation: number }; status: Dvor1150IndicatorColor }; onRun: () => void }) {
-  return <fieldset className="dvor1150-panel"><legend>{result.available ? title : "Unavailable"}</legend><div className="dvor1150-test-result-title">{title}</div><div className="dvor1150-test-result-field"><span>Azimuth Angle</span><StaticInput value={result.values.azimuthAngle.toFixed(2)} /></div><div className="dvor1150-test-result-field"><span>30 Hz Mod</span><StaticInput value={result.values.hz30Modulation.toFixed(1)} /></div><div className="dvor1150-test-result-field"><span>9960 Hz Mod</span><StaticInput value={result.values.hz9960Modulation.toFixed(1)} /></div><div className="dvor1150-test-result-field"><span>Deviation</span><StaticInput value={result.values.deviation.toFixed(1)} /></div><button type="button" disabled={!result.available} onClick={onRun}>Run</button></fieldset>;
+function Dvor1150MonitorTestData() {
+  const config = useDvor1150PmdtStore((state) => state.configDraft);
+  const { canStart, dual, maintenance, start, abort } = useMaintenanceControls();
+  const fields: readonly [string, string, string, number][] = [["Azimuth Angle", "azimuthAngle", "°", 2], ["30 Hz Modulation", "hz30Modulation", "%", 1], ["9960 Hz Modulation", "hz9960Modulation", "%", 1], ["Deviation", "deviation", "Ratio", 1], ["Ident Modulation", "identModulation", "%", 1], ["Ident Control", "identControl", "", 0], ["Audio Modulation", "audioModulation", "%", 1], ["Audio Frequency", "audioFrequency", "Hz", 0]];
+  return <div className="dvor1150-content dvor1150-monitor-test-data"><fieldset className="dvor1150-panel dvor1150-test-generator-setup"><legend>Test Generator Setup</legend><DateBox value={config.simulation.timestamp} /><table className="dvor1150-table"><thead><tr><th> </th><th>Monitor 1</th>{dual && <th>Monitor 2</th>}<th> </th></tr></thead><tbody>{fields.map(([label, field, unit, digits]) => <tr key={field}><th>{label}</th><td>{field === "identControl" ? <Dvor1150ConfigControl fieldId="monitor.testGenerator.identControl" type="select" /> : <Dvor1150ConfigControl fieldId={`monitor.testGenerator.${field}`} digits={digits} />}</td>{dual && <td>{field === "identControl" ? config.monitor.testGenerator.identControl : formatNumber(config.monitor.testGenerator[field as keyof typeof config.monitor.testGenerator] as number, digits)}</td>}<td>{unit}</td></tr>)}</tbody></table></fieldset><fieldset className="dvor1150-panel dvor1150-test-results"><legend>Test Results</legend>
+    <div className="dvor1150-test-result-columns">{(["mon1", "mon2"] as const).slice(0, dual ? 2 : 1).map((id, index) => {
+      const result = maintenance.monitor[id];
+      const running = maintenance.job?.kind === "monitor" && maintenance.job.target === id;
+      const title = `Monitor ${index + 1}`;
+      const fields = [["Azimuth Angle", "azimuthAngle", 2], ["30 Hz Mod", "hz30Modulation", 1], ["9960 Hz Mod", "hz9960Modulation", 1], ["Deviation", "deviation", 1]] as const;
+      return <fieldset key={id} className="dvor1150-panel"><legend>{title}</legend><DateBox value={result?.timestamp ?? ""} />
+        {fields.map(([label, field, digits]) => <div key={field} className="dvor1150-test-result-field"><span>{label}</span><StaticInput value={result?.values[field].toFixed(digits) ?? ""} /></div>)}
+        <p role="status">{running ? "Running" : result ? "Completed" : "Not run"}</p>
+        <button type="button" aria-label={`Run ${title} Test`} disabled={!canStart} onClick={() => start("monitor", id)}>Run</button>
+        {running && <button type="button" onClick={abort}>Abort All Tests</button>}
+      </fieldset>;
+    })}</div></fieldset></div>;
 }
 
 function Dvor1150CertificationResults() {
-  const data = useDvor1150PmdtStore((state) => state.derived.data);
-  const executeCommand = useDvor1150PmdtStore((state) => state.executeCommand);
-  const render = (monitorId: Dvor1150MonitorId) => <fieldset className="dvor1150-panel dvor1150-certification-monitor"><legend>Monitor {monitorId === "mon1" ? 1 : 2}</legend><div className="dvor1150-certification-head"><DateBox value={data.timestamp} /><span>Date / Time</span></div><table className="dvor1150-table"><thead><tr><th> </th><th>Low Limit</th><th>Data</th><th>High Limit</th><th>Data</th><th> </th></tr></thead><tbody>{data.certificationResults[monitorId].filter((row) => row.parameter !== "rfLevel").map((row) => { const meta = parameterMeta[row.parameter]; const lowStatus = row.lowData < row.lowLimit ? "red" : "green"; const highStatus = row.highData > row.highLimit ? "red" : "green"; return <tr key={row.parameter}><th>{meta.label}</th><td>{row.lowLimit.toFixed(meta.digits)}</td><td><Readout value={row.lowData.toFixed(meta.digits)} indicator={lowStatus} /></td><td>{row.highLimit.toFixed(meta.digits)}</td><td><Readout value={row.highData.toFixed(meta.digits)} indicator={highStatus} /></td><td>{meta.unit}</td></tr>; })}</tbody></table><button type="button" onClick={() => executeCommand(`run-certification-${monitorId}`)}>Run</button></fieldset>;
-  return <div className="dvor1150-content dvor1150-certification-content"><div className="dvor1150-certification-grid">{render("mon1")}{render("mon2")}</div><button type="button" disabled className="dvor1150-set-monitor-limits">Set to Monitor Limits</button></div>;
+  const { canStart, dual, maintenance, start, abort } = useMaintenanceControls();
+  const render = (id: Dvor1150MonitorId, index: number) => {
+    const result = maintenance.certification[id];
+    const running = maintenance.job?.kind === "certification" && maintenance.job.target === id;
+    const title = `Monitor ${index + 1}`;
+    return <fieldset className="dvor1150-panel dvor1150-certification-monitor" key={id}><legend>{title}</legend>
+      <DateBox value={result?.timestamp ?? ""} /><table className="dvor1150-table"><thead><tr><th /><th>Low Limit</th><th>Data</th><th>High Limit</th><th>Data</th><th /></tr></thead>
+      <tbody>{result?.values.map((row) => {
+        const meta = parameterMeta[row.parameter];
+        const color = (value: number, limit: number) => Math.abs(value - limit) <= (row.tolerance ?? 0) + 1e-9 ? "green" : "red";
+        return <tr key={row.parameter}><th>{meta.label}</th><td>{row.lowLimit.toFixed(meta.digits)}</td><td><Readout value={row.lowData.toFixed(meta.digits)} indicator={color(row.lowData, row.lowLimit)} /></td><td>{row.highLimit.toFixed(meta.digits)}</td><td><Readout value={row.highData.toFixed(meta.digits)} indicator={color(row.highData, row.highLimit)} /></td><td>{meta.unit}</td></tr>;
+      })}</tbody></table><p role="status">{running ? "Running" : result ? "Completed" : "Not run"}</p>
+      <button type="button" aria-label={`Run ${title} Certification`} disabled={!canStart} onClick={() => start("certification", id)}>Run</button>
+      {running && <button type="button" onClick={abort}>Abort All Tests</button>}
+    </fieldset>;
+  };
+  return <div className="dvor1150-content dvor1150-certification-content"><div className="dvor1150-certification-grid">
+    {(["mon1", "mon2"] as const).slice(0, dual ? 2 : 1).map(render)}
+  </div><button type="button" disabled className="dvor1150-set-monitor-limits">Set to Monitor Limits</button><p>Demo certification uses the applied monitor alarm limits.</p></div>;
 }
 
 function Dvor1150NotchMonitor() {
@@ -354,39 +404,107 @@ function Dvor1150SidebandVswr() {
   return <div className="dvor1150-content dvor1150-vswr-content"><div className="dvor1150-vswr-toolbar"><DateBox value={data.timestamp} /><label className="dvor1150-check-line"><Dvor1150ConfigControl fieldId="monitor.sidebandVswrExecutiveAlarm" type="boolean" /> Sideband VSWR Executive Alarm</label><label>Tolerance <Dvor1150ConfigControl fieldId="monitor.sidebandVswrTolerance" digits={2} /> : 1</label><label>Number of Antennas in Alarm <Dvor1150ConfigControl fieldId="monitor.numberOfAntennasInAlarm" digits={0} /></label></div><div className="dvor1150-vswr-columns">{[0, 1, 2, 3].map((column) => <table className="dvor1150-table" key={column}><thead><tr><th>Antenna</th><th>VSWR</th></tr></thead><tbody>{data.sidebandVswr.slice(column * 12, column * 12 + 12).map((row) => <tr key={row.antenna}><th>{row.antenna}</th><td><Readout value={row.value.toFixed(2)} indicator={row.indicator} /></td></tr>)}</tbody></table>)}</div></div>;
 }
 
-function GroundCheckGraph({ data, mode }: { data: ReturnType<typeof useDvor1150PmdtStore.getState>["derived"]["data"]["groundCheck"]; mode: "quadrantal" | "fft" | "station" }) {
-  const points = data.rows.map((row, index) => `${20 + (index * 328) / Math.max(1, data.rows.length - 1)},${91 - row.stationError * 20}`).join(" ");
-  return <svg className="dvor1150-ground-graph" viewBox="0 0 360 190" role="img" aria-label={`Ground check ${mode} graph`}><rect x="18" y="12" width="330" height="155" fill="#f0f0f0" stroke="#707070" /><path d="M18 90H348M18 12V167" stroke="#808080" strokeDasharray="2 3" /><polyline points={points} fill="none" stroke="#00a000" strokeWidth="1" /></svg>;
+const groundCurves = [
+  ["Station Error", "#087827"], ["FFT Sum", "#2a46b8"], ["Bias", "#724500"],
+  ["Duantal", "#703894"], ["Quadrantal", "#a92226"], ["Octantal", "#00697c"],
+] as const;
+type GroundCurve = typeof groundCurves[number][0];
+
+function GroundCheckGraph({ data, curves, markers, legend }: { data: Dvor1150GroundCheckData; curves: GroundCurve[]; markers: boolean; legend: boolean }) {
+  const harmonic = (azimuth: number, order: number, { amplitude, phase }: Dvor1150GroundCheckData["duantal"]) => amplitude * Math.cos((order * azimuth + phase) * Math.PI / 180);
+  const lines = groundCurves.filter(([key]) => curves.includes(key)).map(([key, color]) => ({
+    key, color, values: [...data.rows, { ...data.rows[0], azimuth: 360 }].map(({ azimuth, stationError }) => {
+      const d = harmonic(azimuth, 1, data.duantal), q = harmonic(azimuth, 2, data.quadrantal), o = harmonic(azimuth, 4, data.octantal);
+      return { azimuth, value: key === "Station Error" ? stationError : key === "FFT Sum" ? data.bias + d + q + o : key === "Duantal" ? d : key === "Quadrantal" ? q : key === "Octantal" ? o : data.bias };
+    }),
+  }));
+  const range = Math.max(0.1, ...lines.flatMap((line) => line.values.map(({ value }) => Math.abs(value))));
+  const x = (angle: number) => 42 + angle * 306 / 360;
+  const y = (value: number) => 87 - value / range * 60;
+  return <div><svg className="dvor1150-ground-graph" viewBox="0 0 366 188" role="img" aria-label={`Ground check: ${curves.join(", ")}`}>
+    <rect x="42" y="20" width="306" height="134" fill="#f0f0f0" stroke="#707070" />
+    <path d="M42 87H348" stroke="#808080" strokeDasharray="2 3" />
+    {[0, 90, 180, 270, 360].map((angle) => <text key={angle} x={x(angle)} y="168" textAnchor="middle" fontSize="9">{angle}°</text>)}
+    {[range, 0, -range].map((value) => <text key={value} x="38" y={y(value) + 3} textAnchor="end" fontSize="9">{value.toFixed(2)}</text>)}
+    <text x="5" y="12" fontSize="9">Error (°)</text><text x="195" y="183" textAnchor="middle" fontSize="9">Azimuth</text>
+    {lines.map(({ key, color, values }) => <g key={key}><polyline points={values.map(({ azimuth, value }) => `${x(azimuth)},${y(value)}`).join(" ")} fill="none" stroke={color} />
+      {markers && values.map(({ azimuth, value }) => <circle key={azimuth} cx={x(azimuth)} cy={y(value)} r={2} fill={color} />)}
+    </g>)}
+  </svg>{legend && <div className="dvor1150-ground-legend">{lines.map(({ key, color }) => <span key={key} style={{ color }}>{key}</span>)}</div>}</div>;
 }
 
-function Dvor1150AdvancedGroundCheck({ data, onClose }: { data: ReturnType<typeof useDvor1150PmdtStore.getState>["derived"]["data"]["groundCheck"]; onClose: () => void }) {
-  return <section className="dvor1150-advanced-ground-dialog" role="dialog" aria-modal="true" aria-label="Ground Check Error Graph"><header>Ground Check Error Graph <button type="button" onClick={onClose}>×</button></header><div className="dvor1150-advanced-ground-body"><h3>VOR Ground Check Errors: 03/30/07 09:43:52</h3><GroundCheckGraph data={data} mode="quadrantal" /><fieldset><legend>Graph Options</legend><label><input type="checkbox" checked readOnly /> Legend</label><label><input type="checkbox" readOnly /> Markers</label><label><input type="checkbox" readOnly /> FFT Sum</label><label><input type="checkbox" readOnly /> Station Error</label><label><input type="checkbox" checked readOnly /> Bias</label><label><input type="checkbox" checked readOnly /> Quadrantal</label><label><input type="checkbox" checked readOnly /> Octantal</label></fieldset></div><footer><button type="button">Print...</button><button type="button">Copy</button><button type="button">Save As...</button><button type="button" onClick={onClose}>Close</button></footer></section>;
+function groundCheckCsv(data: Dvor1150GroundCheckData) {
+  return ["Azimuth (deg),Station Error (deg)", ...data.rows.map(({ azimuth, stationError }) => `${azimuth.toFixed(2)},${stationError.toFixed(4)}`)].join("\n");
 }
 
-function GroundCheckErrorTable({ data }: { data: ReturnType<typeof useDvor1150PmdtStore.getState>["derived"]["data"]["groundCheck"] }) {
+function Dvor1150AdvancedGroundCheck({ data, timestamp, onClose }: { data: Dvor1150GroundCheckData; timestamp: string; onClose: () => void }) {
+  const [curves, setCurves] = useState<GroundCurve[]>(["Bias", "Duantal", "Quadrantal", "Octantal"]);
+  const [markers, setMarkers] = useState(false);
+  const [legend, setLegend] = useState(true);
+  const [message, setMessage] = useState("");
+  const toggle = (key: GroundCurve) => setCurves((current) => current.includes(key) ? current.filter((curve) => curve !== key) : [...current, key]);
+  const save = () => {
+    const url = URL.createObjectURL(new Blob([groundCheckCsv(data)], { type: "text/csv" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "dvor-1150-ground-check.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+  return <section className="dvor1150-advanced-ground-dialog" role="dialog" aria-modal="true" aria-label="Ground Check Error Graph">
+    <header>Ground Check Error Graph <button type="button" aria-label="Close graph" onClick={onClose}>×</button></header>
+    <div className="dvor1150-advanced-ground-body"><h3>VOR Ground Check Errors: {timestamp}</h3>
+      <GroundCheckGraph data={data} curves={curves} markers={markers} legend={legend} />
+      <fieldset><legend>Graph Options</legend>
+        <label><input type="checkbox" checked={legend} onChange={(event) => setLegend(event.target.checked)} /> Legend</label>
+        <label><input type="checkbox" checked={markers} onChange={(event) => setMarkers(event.target.checked)} /> Markers</label>
+        {groundCurves.map(([key]) => <label key={key}><input type="checkbox" checked={curves.includes(key)} onChange={() => toggle(key)} /> {key}</label>)}
+      </fieldset>
+    </div>
+    <footer><button type="button" onClick={() => window.print()}>Print...</button>
+      <button type="button" onClick={async () => {
+        try { await navigator.clipboard.writeText(groundCheckCsv(data)); setMessage("Sample data copied"); }
+        catch { setMessage("Clipboard unavailable; use Save As."); }
+      }}>Copy</button>
+      <button type="button" onClick={save}>Save As...</button><button type="button" onClick={onClose}>Close</button></footer>
+    {message && <p role="status">{message}</p>}
+  </section>;
+}
+
+function GroundCheckErrorTable({ data }: { data: Dvor1150GroundCheckData }) {
   const rows = [
+    ["Duantal Error", data.duantal.amplitude, data.duantal.phase],
     ["Quadrantal Error", data.quadrantal.amplitude, data.quadrantal.phase],
     ["Octantal Error", data.octantal.amplitude, data.octantal.phase],
     ["Bias", data.bias, null],
   ] as const;
-  return <table className="dvor1150-table dvor1150-ground-error-table"><thead><tr><th> </th><th>Amplitude</th><th>Phase</th><th> </th></tr></thead><tbody>{rows.map(([label, amplitude, phase]) => <tr key={label}><th>{label}</th><td>{amplitude.toFixed(3)}</td><td>{phase === null ? "-" : phase.toFixed(1)}</td><td>°</td></tr>)}</tbody></table>;
+  return <table className="dvor1150-table dvor1150-ground-error-table"><thead><tr><th /><th>Amplitude</th><th>Phase</th><th /></tr></thead><tbody>{rows.map(([label, amplitude, phase]) => <tr key={label}><th>{label}</th><td>{amplitude.toFixed(3)}</td><td>{phase === null ? "-" : phase.toFixed(1)}</td><td>°</td></tr>)}</tbody></table>;
 }
 
 function Dvor1150GroundCheck() {
-  const data = useDvor1150PmdtStore((state) => state.derived.data);
-  const executeCommand = useDvor1150PmdtStore((state) => state.executeCommand);
+  const { canStart, maintenance, start, abort } = useMaintenanceControls();
+  const hasAntenna = useDvor1150PmdtStore((state) => state.derived.activeTransmitter !== null);
   const [advanced, setAdvanced] = useState(false);
-  const [mode, setMode] = useState<"quadrantal" | "fft" | "station">("quadrantal");
+  const [mode, setMode] = useState<"FFT Errors" | "FFT Sum" | "Station Error">("FFT Errors");
+  const [markers, setMarkers] = useState(false);
+  const [legend, setLegend] = useState(true);
+  const data = maintenance.ground?.values;
+  const running = maintenance.job?.kind === "ground";
   return <>
     <div className="dvor1150-content dvor1150-ground-check-content">
-      <div className="dvor1150-ground-check-top"><DateBox value={data.timestamp} /><button type="button" onClick={() => executeCommand("run-ground-check")}>Run</button></div>
-      <div className="dvor1150-ground-check-grid">
-        <div className="dvor1150-ground-samples"><table className="dvor1150-table"><thead><tr><th>Azimuth</th><th>Station<br />Error</th></tr></thead><tbody>{data.groundCheck.rows.map((row) => <tr key={row.azimuth}><th>{row.azimuth.toFixed(2)}</th><td>{row.stationError.toFixed(2)}</td></tr>)}</tbody></table><div className="dvor1150-error-spread"><span>Error Spread</span><StaticInput value={data.groundCheck.errorSpread.toFixed(2)} /></div></div>
-        <div className="dvor1150-ground-plot"><GroundCheckErrorTable data={data.groundCheck} /><GroundCheckGraph data={data.groundCheck} mode={mode} /></div>
-        <div className="dvor1150-ground-options"><fieldset><legend>Graph Options</legend><label><input type="radio" checked={mode === "quadrantal"} onChange={() => setMode("quadrantal")} /> EPI Forms</label><label><input type="radio" checked={mode === "fft"} onChange={() => setMode("fft")} /> FFT Sum</label><label><input type="radio" checked={mode === "station"} onChange={() => setMode("station")} /> Station Error</label><label><input type="checkbox" readOnly /> Markers</label><label><input type="checkbox" checked readOnly /> Legend</label><button type="button" onClick={() => setAdvanced(true)}>Advanced...</button></fieldset></div>
-      </div>
+      <div className="dvor1150-ground-check-top"><DateBox value={maintenance.ground?.timestamp ?? ""} /><button type="button" disabled={!canStart || !hasAntenna} onClick={() => start("ground")}>Run</button>{running && <button type="button" onClick={abort}>Abort All Tests</button>}</div>
+      <p className="dvor1150-diagnostic-note">Demo sweep only. Real-station ground check requires the supported cards, nominal monitor angle and a NOTAM.</p>
+      <p role="status">{running ? "Sweep running" : data ? "16 samples completed" : "No ground check has completed."}</p>
+      {data && <div className="dvor1150-ground-check-grid">
+        <div className="dvor1150-ground-samples"><table className="dvor1150-table"><thead><tr><th>Azimuth</th><th>Station<br />Error</th></tr></thead><tbody>{data.rows.map((row) => <tr key={row.azimuth}><th>{row.azimuth.toFixed(2)}</th><td>{row.stationError.toFixed(2)}</td></tr>)}</tbody></table><div className="dvor1150-error-spread"><span>Error Spread</span><StaticInput value={data.errorSpread.toFixed(2)} /></div></div>
+        <div className="dvor1150-ground-plot"><GroundCheckErrorTable data={data} /><GroundCheckGraph data={data} curves={mode === "FFT Errors" ? ["Bias", "Duantal", "Quadrantal", "Octantal"] : [mode]} markers={markers} legend={legend} /></div>
+        <div className="dvor1150-ground-options"><fieldset><legend>Graph Options</legend>
+          {(["FFT Errors", "FFT Sum", "Station Error"] as const).map((option) => <label key={option}><input type="radio" checked={mode === option} onChange={() => setMode(option)} /> {option}</label>)}
+          <label><input type="checkbox" checked={markers} onChange={(event) => setMarkers(event.target.checked)} /> Markers</label><label><input type="checkbox" checked={legend} onChange={(event) => setLegend(event.target.checked)} /> Legend</label><button type="button" onClick={() => setAdvanced(true)}>Advanced...</button>
+        </fieldset></div>
+      </div>}
     </div>
-    {advanced ? <Dvor1150AdvancedGroundCheck data={data.groundCheck} onClose={() => setAdvanced(false)} /> : null}
+    {advanced && data && maintenance.ground && <Dvor1150AdvancedGroundCheck data={data} timestamp={maintenance.ground.timestamp} onClose={() => setAdvanced(false)} />}
   </>;
 }
 
@@ -517,20 +635,26 @@ export function Dvor1150TxConfigScreen() {
 
 function Dvor1150DiagnosticsScreen() {
   const activeView = useDvor1150PmdtStore((state) => state.activeView);
-  const data = useDvor1150PmdtStore((state) => state.derived.data);
-  const securityLevel = useDvor1150PmdtStore((state) => state.securityLevel);
-  const local = useDvor1150PmdtStore((state) => state.config.simulation.local);
-  const loginDialogOpen = useDvor1150PmdtStore((state) => state.loginDialogOpen);
+  const config = useDvor1150PmdtStore((state) => state.config);
+  const powerUpAt = useDvor1150PmdtStore((state) => state.powerUpAt);
+  const canRun = useDvor1150PmdtStore((state) => !state.loginDialogOpen && !state.maintenance.job && !state.diagnosticState.running && state.securityLevel >= 2);
+  const canOffAir = useDvor1150PmdtStore((state) => state.securityLevel >= 3 && state.config.simulation.local);
   const diagnosticState = useDvor1150PmdtStore((state) => state.diagnosticState);
   const runDiagnostics = useDvor1150PmdtStore((state) => state.runDiagnostics);
   const cancelDiagnostics = useDvor1150PmdtStore((state) => state.cancelDiagnostics);
-  const modules = ["RMS", "Monitor 1", "Monitor 2", "Audio Gen 1", "Audio Gen 2"];
+  const modules = [["RMS", true], ["Monitor 1", true], ["Monitor 2", config.station.monitorConfig === "Dual Monitors"], ["Audio Gen 1", true], ["Audio Gen 2", config.station.transmitterConfig === "Dual Transmitters"]] as const;
   const tests = ["CPU Functional Test", "RAM Check", "PROM Check", "EEPROM Check"];
-  const canFull = !loginDialogOpen && securityLevel >= 3 && local && !diagnosticState.running;
-  const canOnAir = !loginDialogOpen && securityLevel >= 2 && !diagnosticState.running;
   const indicatorFor = (status: "idle" | "pass" | "fault") => status === "fault" ? "red" as const : status === "pass" ? "green" as const : "gray" as const;
-  const powerUp = <div className="dvor1150-content dvor1150-diagnostics-content"><DateBox value={data.timestamp} /><table className="dvor1150-table dvor1150-power-up-table"><thead><tr><th> </th>{modules.map((module) => <th key={module}>{module}</th>)}</tr></thead><tbody>{tests.map((test) => <tr key={test}><th>{test}</th>{modules.map((module) => <td key={module}><StatusBox indicator={diagnosticState.completed ? "green" : "gray"} /></td>)}</tr>)}</tbody></table><p className="dvor1150-diagnostic-note">Green indicates the latest power-up integrity check passed. Use Fault Isolation to localize an active scenario fault.</p></div>;
-  const faultIsolation = <div className="dvor1150-content dvor1150-fault-isolation"><DateBox value={diagnosticState.startedAt ?? data.timestamp} /><table className="dvor1150-table"><thead><tr><th>Sub System</th><th>Progress</th><th>Results</th></tr></thead><tbody>{diagnosticState.rows.map((row) => <tr key={row.subsystem}><th>{row.subsystem}</th><td>{row.progress}%</td><td><StatusBox indicator={indicatorFor(row.status)} value={row.result} /></td></tr>)}</tbody></table><fieldset className="dvor1150-panel"><legend>Fault Isolation Results</legend><div className="dvor1150-fault-results" role="status">{diagnosticState.completed ? diagnosticState.result ?? "NO FAULT FOUND" : "Run a diagnostic to populate the result."}</div></fieldset>{diagnosticState.run === "full" ? <p className="dvor1150-diagnostic-note">Full Diagnostics changes the radiated signal. Issue a NOTAM before running this test.</p> : null}<div className="dvor1150-diagnostic-actions"><button type="button" disabled={!canFull} onClick={() => runDiagnostics("full")}>Run Full Diagnostics</button><button type="button" disabled={!diagnosticState.running} onClick={cancelDiagnostics}>Cancel</button><button type="button" disabled={!canOnAir} onClick={() => runDiagnostics("on-air")}>Run On Air Diagnostics</button></div></div>;
+  const powerUp = <div className="dvor1150-content dvor1150-diagnostics-content"><DateBox value={powerUpAt} />
+    <table className="dvor1150-table dvor1150-power-up-table"><thead><tr><th />{modules.map(([module]) => <th key={module}>{module}</th>)}</tr></thead>
+      <tbody>{tests.map((test) => <tr key={test}><th>{test}</th>{modules.map(([module, installed]) => <td key={module}><StatusBox indicator={installed ? "green" : "gray"} value={installed ? "Pass" : "N/A"} /></td>)}</tr>)}</tbody>
+    </table><p className="dvor1150-diagnostic-note">Demo power-up results assume installed processors passed the self-tests; live faults are shown in Fault Isolation.</p></div>;
+  const faultIsolation = <div className="dvor1150-content dvor1150-fault-isolation"><DateBox value={diagnosticState.startedAt ?? ""} />
+    <table className="dvor1150-table"><thead><tr><th>Sub System</th><th>Progress</th><th>Results</th></tr></thead><tbody>{diagnosticState.rows.map((row) => <tr key={row.subsystem}><th>{row.subsystem}</th><td><progress aria-label={`${row.subsystem} progress`} value={row.progress} max={100} /> {row.progress}%</td><td><StatusBox indicator={indicatorFor(row.status)} value={row.result} /></td></tr>)}</tbody></table>
+    <fieldset className="dvor1150-panel"><legend>Fault Isolation Results</legend><div className="dvor1150-fault-results" role="status">{diagnosticState.running ? "Diagnostics running" : diagnosticState.cancelled ? "Diagnostics cancelled" : diagnosticState.result ?? "Run a diagnostic to populate the result."}</div></fieldset>
+    <p className="dvor1150-diagnostic-note">Off Air Diagnostics on a real station requires a NOTAM. Demo test results do not alter the RF route.</p>
+    <div className="dvor1150-diagnostic-actions"><button type="button" disabled={!canRun || !canOffAir} onClick={() => runDiagnostics("full")}>Run Off Air Diagnostics</button><button type="button" disabled={!diagnosticState.running} onClick={cancelDiagnostics}>Cancel</button><button type="button" disabled={!canRun} onClick={() => runDiagnostics("on-air")}>Run On Air Diagnostics</button></div>
+  </div>;
   return <Screen title="Diagnostics Data and Commands" tabs={<ScreenTabs screenId="diagnostics" activeView={activeView} views={["diagnostics-power-up", "diagnostics-fault-isolation"]} />}>{activeView === "diagnostics-fault-isolation" ? faultIsolation : powerUp}</Screen>;
 }
 

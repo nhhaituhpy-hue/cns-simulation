@@ -1,4 +1,6 @@
 import { SELEX_DVOR_TRAINING_ACCOUNTS } from "@/lib/simulator-training-accounts";
+import { certifyMonitor, completeMaintenance, idleMaintenance, limitRmsLogs, rmsConditionLogs, startOperationalSummary, updateOperationalSummary, type MaintenanceJob, type MaintenanceState, type PendingRmsCondition } from "@/lib/dvor1150/maintenance";
+import { dvor1150AdStatus } from "@/lib/dvor1150/engine";
 import {
   applyDvor1150ConfigPatches,
   buildDvor1150Snapshot,
@@ -21,6 +23,7 @@ import {
   type Dvor1150DiagnosticRun,
   type Dvor1150FaultSample,
   type Dvor1150IdentMode,
+  type Dvor1150LogEntry,
   type Dvor1150MonitorId,
   type Dvor1150PmdtMode,
   type Dvor1150ScenarioEvidence,
@@ -97,6 +100,7 @@ export interface Dvor1150DiagnosticState {
   run: Dvor1150DiagnosticRun | null;
   startedAt: string | null;
   result: string | null;
+  cancelled: boolean;
   rows: Dvor1150DiagnosticRow[];
 }
 
@@ -140,6 +144,10 @@ export interface Dvor1150PmdtStoreState {
   scenarioHardwareDispositionConfirmed: boolean;
   scenarioStage: Dvor1150ScenarioStage;
   diagnosticState: Dvor1150DiagnosticState;
+  powerUpAt: string;
+  maintenance: MaintenanceState;
+  operationalSummary: ReturnType<typeof startOperationalSummary>;
+  hiddenParameterLogRows: ReadonlySet<string>;
   lastCommand: string | null;
 }
 
@@ -185,6 +193,8 @@ export interface Dvor1150PmdtStoreActions {
   endScenario: () => boolean;
   runDiagnostics: (run: Exclude<Dvor1150DiagnosticRun, "not-required">) => boolean;
   cancelDiagnostics: () => void;
+  startMaintenance: (kind: MaintenanceJob["kind"], monitor?: Dvor1150MonitorId) => boolean;
+  resetRmsLog: (section: NonNullable<Dvor1150LogEntry["kind"]> | "parameters" | "summary") => boolean;
   toggleScenarioHardware: (occurrenceKey: string) => void;
   inspectScenarioHardware: (occurrenceKey: string) => void;
   setScenarioHardwareReasoning: (reasoning: string) => void;
@@ -245,6 +255,10 @@ function buildInitialState(now: () => Date): Dvor1150PmdtStoreState {
     scenarioHardwareDispositionConfirmed: false,
     scenarioStage: "pmdt",
     diagnosticState: createIdleDvor1150DiagnosticState(),
+    powerUpAt: derived.data.timestamp,
+    maintenance: idleMaintenance(),
+    operationalSummary: startOperationalSummary(now().getTime()),
+    hiddenParameterLogRows: new Set(),
     lastCommand: null,
   };
 }
@@ -290,6 +304,28 @@ const diagnosticSubsystems = [
   "Control",
 ] as const;
 
+const onAirSubsystems = new Set<string>(["Logon / RMM", "Power Supplies", "Monitor", "Alarm/Alert Analysis"]);
+
+function finishDiagnostic(state: Dvor1150PmdtStoreState): Dvor1150DiagnosticState {
+  const run = state.diagnosticState;
+  const diagnosis = state.scenario.definition?.diagnosis;
+  const scenarioFault = diagnosis?.disposition === "replace-module" ? diagnosis : null;
+  const data = state.derived.data;
+  const supplyAlert = [...data.adDataByTransmitter.tx1, ...data.adDataByTransmitter.tx2, ...data.temperatureData]
+    .some((row) => dvor1150AdStatus(row) === "red");
+  const rows: Dvor1150DiagnosticRow[] = run.rows.map((row) => {
+    if (row.result === "Not run") return row;
+    const failed = row.subsystem === scenarioFault?.diagnosticSubsystem
+      || (row.subsystem === "Power Supplies" && supplyAlert)
+      || (row.subsystem === "Monitor" && data.monitorIntegral.alarm);
+    return { ...row, status: failed ? "fault" : "pass", progress: 100, result: failed ? "FAULT INDICATED" : "PASS" };
+  });
+  const failed = rows.filter((row) => row.status === "fault");
+  const result = failed.some((row) => row.subsystem === scenarioFault?.diagnosticSubsystem) && scenarioFault
+    ? scenarioFault.diagnosticResult : failed.length ? failed.map((row) => row.subsystem).join(", ") : "NO FAULT FOUND";
+  return { ...run, rows, result, running: false, completed: true };
+}
+
 function createIdleDvor1150DiagnosticState(): Dvor1150DiagnosticState {
   return {
     running: false,
@@ -297,6 +333,7 @@ function createIdleDvor1150DiagnosticState(): Dvor1150DiagnosticState {
     run: null,
     startedAt: null,
     result: null,
+    cancelled: false,
     rows: diagnosticSubsystems.map((subsystem) => ({
       subsystem,
       status: "idle",
@@ -356,6 +393,13 @@ export function createDvor1150PmdtStore(
     let triedStandby = false;
     let preAlarm: Dvor1150FaultSample | null = null;
     let settledTransfer: Dvor1150TransferState | undefined;
+    let diagnosticStarted = 0;
+    const pendingConditions = new Map<string, PendingRmsCondition>();
+    const appendCommand = (derived: Dvor1150Snapshot, user: string | null, message: string) => ({
+      ...derived, data: { ...derived.data, logs: limitRmsLogs([...derived.data.logs, {
+        timeTag: formatDvor1150Timestamp(now()), user: user ?? "GUEST", message, severity: "green", kind: "command",
+      }]) },
+    });
     const recompute = (
       config: Dvor1150Config,
       previous?: Dvor1150Snapshot,
@@ -390,6 +434,7 @@ export function createDvor1150PmdtStore(
       preAlarm = null;
       identMode = "Normal";
       settledTransfer = undefined;
+      pendingConditions.clear();
     };
 
     const advanceOperation = (config: Dvor1150Config, previous: Dvor1150Snapshot): { derived: Dvor1150Snapshot; lastCommand?: string } => {
@@ -404,12 +449,13 @@ export function createDvor1150PmdtStore(
         if (derived.activeTransmitter && derived.data.monitorIntegral.alarm) {
           alarmSince = ms + config.monitor.monitorStartupDelay * 1000;
         }
-        derived.data.logs = [...snapshot.data.logs, {
+        derived.data.logs = limitRmsLogs([...snapshot.data.logs, {
           timeTag: snapshot.data.timestamp,
           user: "Op System",
           message: transfer.message,
           severity,
-        }];
+          kind: "command",
+        }]);
         return { derived, lastCommand: transfer.message };
       };
       if (!active) {
@@ -520,6 +566,7 @@ export function createDvor1150PmdtStore(
         scenarioHardwareDispositionConfirmed: false,
         scenarioStage: "pmdt",
         diagnosticState: createIdleDvor1150DiagnosticState(),
+        maintenance: idleMaintenance(),
         lastCommand: command,
       });
       return true;
@@ -682,7 +729,8 @@ export function createDvor1150PmdtStore(
       },
       refreshClock: () => {
         const state = get();
-        if (state.securityLevel > 0 && now().getTime() - lastActivityAt >= 15 * 60 * 1000) {
+        const ms = now().getTime();
+        if (state.securityLevel > 0 && ms - lastActivityAt >= 15 * 60 * 1000) {
           get().logout();
           return;
         }
@@ -690,7 +738,22 @@ export function createDvor1150PmdtStore(
         const operation = advanceOperation(config, state.derived);
         const configDraft = copyTransmitterRoutes(config, state.configDraft);
         configDraft.simulation.timestamp = config.simulation.timestamp;
-        set({ config, configDraft, ...operation });
+        const entries = rmsConditionLogs(config, operation.derived, ms, pendingConditions);
+        if (entries.length) operation.derived.data.logs = limitRmsLogs([...operation.derived.data.logs, ...entries]);
+        const diagnostic = state.diagnosticState;
+        const progress = diagnostic.running ? Math.min(100, Math.floor((ms - diagnosticStarted) / (diagnostic.run === "full" ? 80 : 50))) : 0;
+        const diagnosticState = !diagnostic.running ? diagnostic : progress < 100 ? {
+          ...diagnostic,
+          rows: diagnostic.rows.map((row) => row.result === "Not run" ? row : { ...row, progress }),
+        } : finishDiagnostic({ ...state, derived: operation.derived });
+        set({
+          config, configDraft, ...operation, diagnosticState,
+          operationalSummary: updateOperationalSummary(state.operationalSummary, ms, state.derived),
+          maintenance: completeMaintenance(state.maintenance, ms, operation.derived),
+          scenarioAcceptedActionControlIds: diagnostic.running && diagnosticState.completed && state.scenario.active
+            ? [...new Set([...state.scenarioAcceptedActionControlIds, `diagnostics-run-${diagnostic.run}`])]
+            : state.scenarioAcceptedActionControlIds,
+        });
       },
       setLocalMode: (enabled) => {
         const state = get();
@@ -701,7 +764,8 @@ export function createDvor1150PmdtStore(
         const operation = advanceOperation(config, state.derived);
         const configDraft = copyTransmitterRoutes(config, state.configDraft);
         configDraft.simulation = { ...config.simulation };
-        set({ config, configDraft, lastCommand: enabled ? "Local On" : "Local Off", ...operation });
+        const command = enabled ? "Local On" : "Local Off";
+        set({ config, configDraft, lastCommand: command, ...operation, derived: appendCommand(operation.derived, state.authenticatedUserId, command) });
         return true;
       },
       setMonitorBypass: (_monitor, enabled) => {
@@ -717,6 +781,7 @@ export function createDvor1150PmdtStore(
           configDraft,
           lastCommand: enabled ? "Integral Monitor Bypass On" : "Integral Monitor Bypass Off",
           ...operation,
+          derived: appendCommand(operation.derived, state.authenticatedUserId, enabled ? "Integral Monitor Bypass On" : "Integral Monitor Bypass Off"),
           ...parameterProof(state, config, "command", "integral-monitor-bypass", "Integral Monitor Bypass", ["simulation.integralMonitorBypass"]),
         });
         return true;
@@ -757,7 +822,7 @@ export function createDvor1150PmdtStore(
         }
         const config = cloneDvor1150Config(state.configDraft);
         const { derived, lastCommand } = advanceOperation(config, state.derived);
-        derived.data.logs = [...derived.data.logs, { timeTag: config.simulation.timestamp, user: state.authenticatedUserId ?? "", message: "Configuration applied", severity: "yellow" }];
+        derived.data.logs = appendCommand(derived, state.authenticatedUserId, "Configuration applied").data.logs;
         const changedFields = collectChangedConfigFields(
           persistentConfigValue(state.config),
           persistentConfigValue(config),
@@ -911,12 +976,7 @@ export function createDvor1150PmdtStore(
         };
         settledTransfer = transfer;
         derived.transfer = transfer;
-        derived.data.logs = [...derived.data.logs, {
-          timeTag: config.simulation.timestamp,
-          user: state.authenticatedUserId ?? "",
-          message: transfer.message,
-          severity: "green",
-        }];
+        derived.data.logs = appendCommand(derived, state.authenticatedUserId, transfer.message).data.logs;
         set({
           config,
           configDraft,
@@ -933,41 +993,54 @@ export function createDvor1150PmdtStore(
         const allowed = run === "full"
           ? state.securityLevel >= 3 && state.config.simulation.local
           : state.securityLevel >= 2;
-        if (!allowed || state.loginDialogOpen) return false;
-        const diagnosis = state.scenario.definition?.diagnosis;
-        const failedSubsystem = diagnosis?.disposition === "replace-module"
-          ? diagnosis.diagnosticSubsystem
-          : null;
-        const rows = diagnosticSubsystems.map((subsystem) => {
-          const failed = failedSubsystem === subsystem;
-          return {
-            subsystem,
-            status: failed ? "fault" as const : "pass" as const,
-            progress: 100,
-            result: failed ? "FAULT ISOLATED" : "PASS",
-          };
-        });
-        const result = diagnosis?.diagnosticResult ?? "NO FAULT FOUND";
+        if (!allowed || state.loginDialogOpen || state.diagnosticState.running || state.maintenance.job) return false;
+        diagnosticStarted = now().getTime();
+        const lastCommand = run === "full" ? "Run Off Air Diagnostics" : "Run On Air Diagnostics";
         set({
           diagnosticState: {
-            running: false,
-            completed: true,
+            ...createIdleDvor1150DiagnosticState(),
+            running: true,
             run,
-            startedAt: state.derived.data.timestamp,
-            result,
-            rows,
+            startedAt: formatDvor1150Timestamp(new Date(diagnosticStarted)),
+            rows: diagnosticSubsystems.map((subsystem) => ({
+              subsystem, status: "idle", progress: 0,
+              result: run === "full" || onAirSubsystems.has(subsystem) ? "Running" : "Not run",
+            })),
           },
-          scenarioAcceptedActionControlIds: state.scenario.active
-            ? [...new Set([...state.scenarioAcceptedActionControlIds, `diagnostics-run-${run}`])]
-            : state.scenarioAcceptedActionControlIds,
-          lastCommand: run === "full" ? "Run Full Diagnostics" : "Run On Air Diagnostics",
+          derived: appendCommand(state.derived, state.authenticatedUserId, lastCommand), lastCommand,
         });
         return true;
       },
-      cancelDiagnostics: () => set((state) => ({
-        diagnosticState: { ...state.diagnosticState, running: false },
+      cancelDiagnostics: () => set((state) => state.diagnosticState.running ? {
+        diagnosticState: { ...state.diagnosticState, running: false, cancelled: true, rows: state.diagnosticState.rows.map((row) => row.result === "Not run" ? row : { ...row, result: "Cancelled" }) },
+        derived: appendCommand(state.derived, state.authenticatedUserId, "Cancel Diagnostics"),
         lastCommand: "Cancel Diagnostics",
-      })),
+      } : state),
+      startMaintenance: (kind, target = "mon1") => {
+        const state = get();
+        if (state.loginDialogOpen || state.securityLevel < 3 || !state.config.simulation.local
+          || state.maintenance.job || state.diagnosticState.running) return false;
+        const ms = now().getTime();
+        const active = state.derived.activeTransmitter;
+        const monitor = state.derived.data.monitorTestResults[target];
+        const job: MaintenanceJob | null = kind === "ground" ? (active
+          ? { kind, target: active, finishesAt: ms + 4000, values: state.derived.data.groundCheck } : null)
+          : !monitor.available ? null : kind === "monitor"
+            ? { kind, target, finishesAt: ms + 5000, values: monitor.values }
+            : { kind, target, finishesAt: ms + 8000, values: certifyMonitor(state.config, target) };
+        if (!job) return false;
+        const lastCommand = kind === "ground" ? "Run Ground Check" : `Run ${kind} test: Monitor ${target === "mon1" ? 1 : 2}`;
+        set({ maintenance: { ...state.maintenance, job }, derived: appendCommand(state.derived, state.authenticatedUserId, lastCommand), lastCommand });
+        return true;
+      },
+      resetRmsLog: (section) => {
+        const state = get();
+        if (state.loginDialogOpen || state.securityLevel < 3 || !state.config.simulation.local) return false;
+        if (section === "summary") set({ operationalSummary: startOperationalSummary(now().getTime()) });
+        else if (section === "parameters") set({ hiddenParameterLogRows: new Set(state.parameterChangeLogs.map((row) => row.id)) });
+        else set({ derived: { ...state.derived, data: { ...state.derived.data, logs: state.derived.data.logs.filter((row) => (row.kind ?? "command") !== section) } } });
+        return true;
+      },
       toggleScenarioHardware: (occurrenceKey) => set((state) => ({
         scenarioHardwareSelection: state.scenarioHardwareSelection.includes(occurrenceKey)
           ? state.scenarioHardwareSelection.filter((key) => key !== occurrenceKey)
@@ -1004,7 +1077,18 @@ export function createDvor1150PmdtStore(
           set({ derived, lastCommand });
           return true;
         }
-        if (commandId === "reset-rms" || commandId === "reset-intrusion" || commandId === "reset-smoke" || commandId === "abort-tests" || commandId === "dme-1-on" || commandId === "dme-2-on" || commandId === "dme-off" || commandId === "dme-transfer" || commandId === "run-ground-check" || commandId === "run-monitor-test" || commandId.startsWith("run-certification-") || commandId === "record-notch-baseline") {
+        if (commandId === "abort-tests") {
+          if (!state.maintenance.job || state.loginDialogOpen || state.securityLevel < 3 || !state.config.simulation.local) return false;
+          const lastCommand = "Abort All Tests";
+          set({ maintenance: { ...state.maintenance, job: null }, derived: appendCommand(state.derived, state.authenticatedUserId, lastCommand), lastCommand });
+          return true;
+        }
+        if (commandId === "run-ground-check") return get().startMaintenance("ground");
+        if (commandId === "run-monitor-test") return get().startMaintenance("monitor");
+        if (commandId === "run-certification-mon1" || commandId === "run-certification-mon2") {
+          return get().startMaintenance("certification", commandId === "run-certification-mon1" ? "mon1" : "mon2");
+        }
+        if (commandId === "reset-rms" || commandId === "reset-intrusion" || commandId === "reset-smoke" || commandId === "dme-1-on" || commandId === "dme-2-on" || commandId === "dme-off" || commandId === "dme-transfer" || commandId === "record-notch-baseline") {
           set({ lastCommand: commandId });
           return true;
         }
@@ -1112,6 +1196,7 @@ export function createDvor1150PmdtStore(
           scenarioHardwareDispositionConfirmed: false,
           scenarioStage: "pmdt",
           diagnosticState: createIdleDvor1150DiagnosticState(),
+          maintenance: idleMaintenance(),
           lastCommand: "Scenario ended; Đài TEST/TST defaults restored",
         });
         return true;

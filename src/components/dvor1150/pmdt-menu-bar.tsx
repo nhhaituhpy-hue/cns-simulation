@@ -29,6 +29,7 @@ function MenuItemRow({ group, item, closeMenu, depth = 0 }: { group: Dvor1150Men
   const needBackup = useDvor1150PmdtStore((state) => state.needBackup);
   const scenarioActive = useDvor1150PmdtStore((state) => state.scenario.active);
   const backupPending = useDvor1150PmdtStore((state) => state.configurationBackupPending);
+  const testRunning = useDvor1150PmdtStore((state) => state.maintenance.job !== null);
   const hasChildren = Boolean(item.children?.length);
   const [expanded, setExpanded] = useState(false);
   const isTx = item.action === "set-transmitter-mode";
@@ -44,6 +45,7 @@ function MenuItemRow({ group, item, closeMenu, depth = 0 }: { group: Dvor1150Men
     || (item.action === "config-restore" && (security < 3 || !local || scenarioActive || backupPending))
     || (item.action === "config-backup" && (security < 3 || !needBackup || backupPending))
     || (item.action === "set-bypass" && (security < 3 || !local))
+    || (item.commandId === "abort-tests" && (!testRunning || security < 3 || !local))
     || (item.action === "execute-command" && ((item.commandId === "enable-command-mode" || item.commandId === "disable-command-mode") ? security < 3 || !direct : security < 2));
 
   function selectItem() {

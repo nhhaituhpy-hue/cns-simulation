@@ -22,7 +22,7 @@ const variants = [
   { id: "dme-1119a" as const, render: () => <DmeLayout simulatorId="dme-1119a" scenarioAuthoringEnabled />, store: useDmePmdtStore },
 ];
 beforeEach(() => { harness.query = "review=1&scenarioId=published-row"; harness.props = null; harness.snapshot = null; useDvor1150PmdtStore.getState().reset(); useVorPmdtStore.getState().reset(); useDmePmdtStore.getState().reset(); });
-afterEach(() => { cleanup(); vi.restoreAllMocks(); });
+afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); });
 describe("SELEX native practice registration", () => {
   it.each(variants)("registers $id metadata, native evidence and one shell submit only after published load", async variant => {
     const definition = createTemplateDefinition(variant.id, variant.id === "dme-1119a" ? "tx1-delay-drift" : "carrier-9960");
@@ -54,6 +54,7 @@ describe("SELEX native practice registration", () => {
     const view = render(variant.render());
     await screen.findByLabelText("Practice shell");
     expect(screen.getByRole("button", { name: /Bước 2/ })).toBeDisabled();
+    if (variant.id === "dvor-1150") vi.useFakeTimers({ toFake: ["Date"] });
     act(() => {
       if (variant.id === "dvor-1150") {
         const state = useDvor1150PmdtStore.getState();
@@ -80,6 +81,12 @@ describe("SELEX native practice registration", () => {
         expect(state.executeRmsCommand("tx-command-transfer")).toBe(true);
       }
     });
+    if (variant.id === "dvor-1150") {
+      expect(screen.getByRole("button", { name: /Bước 2/ })).toBeDisabled();
+      vi.setSystemTime(Date.now() + 8000);
+      act(() => useDvor1150PmdtStore.getState().refreshClock());
+      vi.useRealTimers();
+    }
     expect(screen.getByRole("button", { name: /Bước 2/ })).toBeEnabled();
     fireEvent.click(screen.getByRole("button", { name: /Bước 2/ }));
     expect(await screen.findByRole("heading", { name: `Sơ đồ khối ${variant.id === "dvor-1150" ? "DVOR 1150" : variant.id === "dvor-1150a" ? "DVOR 1150A" : "DME 1119A"}` })).toBeInTheDocument();
