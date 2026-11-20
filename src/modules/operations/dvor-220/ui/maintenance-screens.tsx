@@ -11,6 +11,12 @@ import {
 } from "@/modules/operations/mopiens-pmdt";
 import { getDvor220PermissionDecision } from "../domain/permissions";
 import {
+  DVOR220_TIME_ZONE_LABEL,
+  formatDvor220DateTime,
+  parseDvor220TimeInput,
+  toDvor220TimeInput,
+} from "../domain/time";
+import {
   classifyDvor220Reading,
   filterDvor220History,
   getDvor220GroundCheckDurationMs,
@@ -368,9 +374,9 @@ function TimeScreen({ device, syncClock }: Dvor220MaintenanceScreenProps) {
   return (
     <div className={styles.screenBody}>
       <MaintenanceHeader title="Time Sync" />
-      <MopiensPropertyGrid ariaLabel="Time Sync clocks" sections={[{ id: "time", title: "Time Sync", rows: [
-        { id: "local", label: "Local PC Time", value: new Date().toLocaleString("en-GB", { hour12: false }) },
-        { id: "system", label: "System Time", value: new Date(device.nowMs).toLocaleString("en-GB", { hour12: false }) },
+      <MopiensPropertyGrid ariaLabel="Time Sync clocks" sections={[{ id: "time", title: `Time Sync (Vietnam time, ${DVOR220_TIME_ZONE_LABEL})`, rows: [
+        { id: "local", label: "Local PC Time", value: formatDvor220DateTime(new Date()) },
+        { id: "system", label: "System Time", value: formatDvor220DateTime(device.nowMs) },
       ]}]} />
       <div className={styles.actionRow}>
         <MopiensBeveledButton tone="primary" disabled={!permission.allowed} onClick={syncClock}>Sync.</MopiensBeveledButton>
@@ -596,11 +602,6 @@ const historyHeadings = ["Time", "Type", "Username", "Detail"];
 const historyFields = (row: Dvor220LogEntry) =>
   [new Date(row.timestampMs).toISOString(), row.category, row.userId, row.message];
 
-function localTimeInput(timestampMs: number) {
-  const date = new Date(timestampMs);
-  return new Date(timestampMs - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 23);
-}
-
 function downloadHistoryCsv(title: string, rows: Dvor220LogEntry[]) {
   const escape = (value: string) => {
     const safe = /^\s*[=+@-]|^[\t\r\n]/.test(value) ? `'${value}` : value;
@@ -646,15 +647,15 @@ function printHistory(title: string, rows: Dvor220LogEntry[]) {
 function HistoryScreen({ screenId, device }: Dvor220MaintenanceScreenProps) {
   const isLmi = screenId === "history-lmi";
   const title = isLmi ? "LMI History Log" : "PMDT History Log";
-  const [from, setFrom] = useState(() => `${localTimeInput(device.nowMs).slice(0, 10)}T00:00:00`);
-  const [to, setTo] = useState(() => localTimeInput(device.nowMs));
+  const [from, setFrom] = useState(() => `${toDvor220TimeInput(device.nowMs).slice(0, 10)}T00:00:00`);
+  const [to, setTo] = useState(() => toDvor220TimeInput(device.nowMs));
   const [categories, setCategories] = useState<Dvor220LogCategory[]>([...historyCategories]);
   const [username, setUsername] = useState("");
   const [showDetail, setShowDetail] = useState(false);
   const [result, setResult] = useState<Dvor220LogEntry[] | null>(null);
   const rows = isLmi ? device.history.lmi : device.history.pmdt;
-  const fromMs = new Date(from).getTime();
-  const toMs = new Date(to).getTime();
+  const fromMs = parseDvor220TimeInput(from);
+  const toMs = parseDvor220TimeInput(to);
   const validRange = Number.isFinite(fromMs) && Number.isFinite(toMs) && fromMs <= toMs;
   const matchingUsers = [...new Set(rows.map((row) => row.userId))].sort();
   const search = () => {
@@ -698,7 +699,7 @@ function HistoryScreen({ screenId, device }: Dvor220MaintenanceScreenProps) {
       <MopiensTable caption={`${isLmi ? "LMI" : "PMDT"} history records`} rows={result ?? []} dense getRowId={(row) => `${row.id}`}
         emptyLabel={result === null ? "Select a date range and run Search." : "No matching records."}
         rowTone={(row) => row.category === "alarm" ? "alarm" : row.category === "control" ? "info" : undefined} columns={[
-          { id: "time", label: "Time", width: "21%", render: (row) => new Date(row.timestampMs).toLocaleString("en-GB", { hour12: false }) },
+          { id: "time", label: "Time", width: "21%", render: (row) => formatDvor220DateTime(row.timestampMs) },
           { id: "class", label: "Type", width: "12%", render: (row) => row.category.toUpperCase() },
           { id: "user", label: "Username", width: "15%", render: (row) => row.userId },
           { id: "detail", label: "Detail", render: (row) => row.message },

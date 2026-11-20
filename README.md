@@ -60,6 +60,11 @@
 - Power Supply dùng đúng tên rail, bộ AC/DC và hai vị trí battery; số đo chưa mô phỏng theo từng module hiển thị `—`. Version là bản đối chiếu, không phải inventory trực tiếp; cập nhật firmware chỉ hiển thị.
 - Monitor Reference Check xem trước báo động theo chiều dịch góc, không thay đổi thiết bị hoặc mô phỏng hệ quả executive. History Log tìm theo khoảng thời gian, loại bản ghi và user LMI; xuất CSV hoặc in PDF ở trình duyệt.
 
+### DVOR 220 — Time Sync theo giờ Việt Nam
+
+- Nút **Sync.** ở Maintenance › Time Sync đặt đồng hồ thiết bị về giờ hiện tại thay vì chạy lại khoảng ~101 ngày từ giờ huấn luyện cố định; trước đây việc chạy lại kích hoạt automatic logout 60 phút và đăng xuất học viên.
+- Bộ đếm đang chờ giữ thời gian còn lại sau khi đồng bộ; Sync có thể lùi đồng hồ. Đồng hồ PMDT/LMI, thanh trạng thái, log và ô From/To của History Log dùng giờ Việt Nam (Asia/Ho_Chi_Minh, UTC+7) bất kể múi giờ trình duyệt. Kiểm tra bằng `tests/dvor220/time-sync.test.ts`.
+
 ### DVOR 220 — hiệu chuẩn PMDT (đợt Cam Ranh)
 
 - TX Reading và TX Setpoint tách bảng TX1/TX2, có hộp thoại từng thông số và một ô nhập giá trị tham chiếu. TX Reading sửa số đo CMA/SMA; TX Setpoint đổi hệ số và giá trị đặt hiển thị, không làm đổi tín hiệu phát khi hiệu chuẩn.

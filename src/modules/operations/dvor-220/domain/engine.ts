@@ -1082,6 +1082,35 @@ export function advanceDvor220Time(
   return next;
 }
 
+/**
+ * PMDT Time Sync sets the equipment clock instead of replaying elapsed time.
+ * Pending timers keep their remaining duration across the jump, so syncing
+ * from the fixed training start never fires logout or other deadlines.
+ */
+export function synchronizeDvor220Clock(
+  state: Dvor220DeviceState,
+  targetMs: number,
+): Dvor220DeviceState {
+  if (!Number.isFinite(targetMs)) {
+    throw new Error("targetMs must be a finite number.");
+  }
+  const next = cloneDvor220(state);
+  const offsetMs = targetMs - next.nowMs;
+  const shift = (value: number | null) => (value === null ? null : value + offsetMs);
+  next.nowMs = targetMs;
+  next.connection.connectedAtMs = shift(next.connection.connectedAtMs);
+  next.session.loggedInAtMs = shift(next.session.loggedInAtMs);
+  next.session.lastActivityAtMs = shift(next.session.lastActivityAtMs);
+  next.monitorAveraging.nextSampleAtMs += offsetMs;
+  next.groundCheck.startedAtMs = shift(next.groundCheck.startedAtMs);
+  next.groundCheck.completesAtMs = shift(next.groundCheck.completesAtMs);
+  next.executive.pendingSinceMs = shift(next.executive.pendingSinceMs);
+  next.executive.powerOnHoldoffUntilMs = shift(next.executive.powerOnHoldoffUntilMs);
+  next.executive.postChangeoverUntilMs = shift(next.executive.postChangeoverUntilMs);
+  next.executive.shutdownLockedUntilMs = shift(next.executive.shutdownLockedUntilMs);
+  return next;
+}
+
 export function getDvor220GroundCheckDurationMs(): number {
   return GROUND_CHECK_DURATION_MS;
 }

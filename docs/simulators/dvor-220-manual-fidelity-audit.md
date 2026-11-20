@@ -153,7 +153,11 @@ Các số đo và cài đặt đang chạy tại Cam Ranh không phải mặc đ
 - **Setup (CR 6–7):** phân nhóm Transmitter/Monitor; Thermal Control hiển thị
   hai TX trên cùng hàng và cho phép sửa riêng hoặc cùng lúc trong Draft.
 - **Maintenance (CR 13–14):** Add User và Delete User mở dialog; Time Sync
-  so sánh giờ trình duyệt với đồng hồ mô phỏng. Bảng Version chép mã/revision
+  so sánh giờ máy tính với đồng hồ mô phỏng, cả hai hiển thị theo giờ Việt Nam
+  (Asia/Ho_Chi_Minh, UTC+7) theo quyết định của Hoàng. Sync **đặt** đồng hồ thiết
+  bị về giờ hiện tại, không chạy lại các sự kiện định thời trong khoảng thời gian
+  nhảy; các bộ đếm đang chờ (automatic logout, executive, ground check, lấy mẫu
+  monitor) giữ nguyên thời gian còn lại, log cũ giữ nguyên dấu thời gian. Bảng Version chép mã/revision
   thấy trong ảnh làm tham chiếu; không giả lập uptime, NTP hay ghi firmware.
 - **Flight Inspection (CR 14, TM Fig. 4-147):** mở Monitor Reference Check từ
   Monitor Check, xem báo động CW/CCW và trả về gốc. Dịch góc chỉ tác động màn hình

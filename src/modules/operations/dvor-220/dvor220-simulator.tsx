@@ -20,6 +20,7 @@ import {
   type MopiensTabDefinition,
 } from "@/modules/operations/mopiens-pmdt";
 import { getDvor220PermissionDecision } from "./domain/permissions";
+import { formatDvor220DateTime, formatDvor220Time } from "./domain/time";
 import {
   type Dvor220Command,
   type Dvor220CommandResult,
@@ -339,7 +340,7 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
     { id: "tx1", label: "TX1", value: `${formatDvor220Status(snapshot.transmitters.tx1.status)}, ${snapshot.transmitters.tx1.path}, ${snapshot.transmitters.tx1.designation}`, tone: toneForDvor220Status(snapshot.transmitters.tx1.status) },
     { id: "tx2", label: "TX2", value: `${formatDvor220Status(snapshot.transmitters.tx2.status)}, ${snapshot.transmitters.tx2.path}, ${snapshot.transmitters.tx2.designation}`, tone: toneForDvor220Status(snapshot.transmitters.tx2.status) },
     { id: "monitor", label: "MON", value: `${snapshot.effectiveMonitorBypass ? "Bypassed" : "Auto"}, ${snapshot.executiveAlarm ? "Alarm" : "Normal"}`, tone: snapshot.executiveAlarm ? "alarm" : snapshot.effectiveMonitorBypass ? "warning" : "normal" },
-    { id: "clock", label: "Time", value: new Date(device.nowMs).toLocaleString("en-GB", { hour12: false }), grow: true },
+    { id: "clock", label: "Time", value: formatDvor220DateTime(device.nowMs), grow: true },
   ];
 
   const requestedScreen = activeScreenId.startsWith("setup-") ? (
@@ -477,7 +478,7 @@ export function Dvor220Simulator({ store: providedStore, initialView = "pmdt" }:
               {visibleLogs.length ? (
                 <table>
                   <thead><tr><th>Time</th><th>Detail</th><th>Type</th><th>User ID</th></tr></thead>
-                  <tbody>{visibleLogs.map((row) => <tr key={row.id} data-category={row.category}><td>{new Date(row.timestampMs).toLocaleTimeString("en-GB", { hour12: false })}</td><td>{row.message}</td><td>{row.category.toUpperCase()}</td><td>{row.userId}</td></tr>)}</tbody>
+                  <tbody>{visibleLogs.map((row) => <tr key={row.id} data-category={row.category}><td>{formatDvor220Time(row.timestampMs)}</td><td>{row.message}</td><td>{row.category.toUpperCase()}</td><td>{row.userId}</td></tr>)}</tbody>
                 </table>
               ) : commandError ? null : <p className={styles.emptyOutput}>No matching PMDT events.</p>}
             </div>
