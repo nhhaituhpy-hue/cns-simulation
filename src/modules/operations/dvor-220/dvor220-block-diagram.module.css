@@ -307,6 +307,7 @@
 .acdcVent rect { fill: #47575b; stroke: #263437; stroke-width: 1.4; }
 .acdcVent path { fill: none; stroke: #47575b; stroke-width: 11; stroke-linecap: round; }
 .acdcRelease { fill: #909b99; stroke: #465458; stroke-width: 2; }
+.faceplateSmallLabel.acdcStatusLabel { font-size: 8px; }
 .asuFaceDoor { fill: #0b819a; stroke: #245c67; stroke-width: 2; }
 .asuFaceMark { fill: #e2f2f4; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 28px; font-weight: 850; }
 

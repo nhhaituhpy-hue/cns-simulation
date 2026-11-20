@@ -260,10 +260,29 @@ describe("DVOR 220 source-aligned measurement connectors", () => {
     const panel = screen.getByRole("img", { name: "Mặt panel AC/DC CONVERTER" });
     expect(panel).toHaveAttribute("viewBox", "0 0 480 225");
     expect(within(panel).getByText("RELEASE")).toHaveAttribute("x", "174");
-    const lamps = ["AC OK/FAIL", "DC OK/FAIL"].map((label) => within(panel).getByText(label).previousElementSibling!);
+    const labels = ["AC OK/FAIL", "DC OK/FAIL"].map((label) => within(panel).getByText(label));
+    const lamps = labels.map((label) => label.parentElement!.querySelector("circle")!);
     expect(lamps.map((lamp) => lamp.getAttribute("cx"))).toEqual(["215", "269"]);
-    expect(lamps.every((lamp) => lamp.getAttribute("cy") === "193")).toBe(true);
+    labels.forEach((label, index) => {
+      const lamp = lamps[index];
+      expect(lamp).toHaveAttribute("cy", "193");
+      expect(label).toHaveAttribute("x", lamp.getAttribute("cx"));
+      expect(label).toHaveAttribute("text-anchor", "middle");
+      expect(Number(label.getAttribute("y"))).toBeLessThan(Number(lamp.getAttribute("cy")) - Number(lamp.getAttribute("r")));
+    });
   });
+
+  it.each([["emu", "EMU"], ["modem", "MODEM"], ["asu-if", "ASU-IF"]] as const)(
+    "keeps the %s title between the upper mounting screw and the strip edge",
+    (blockId, title) => {
+      render(<Dvor220ModuleFaceplate kind="card" blockId={blockId} />);
+      const panel = screen.getByRole("img", { name: `Mặt panel ${title}` });
+      const titleBaseline = Number(within(panel).getByText(title).getAttribute("y"));
+      const upperScrew = panel.querySelector("circle")!;
+      expect(titleBaseline - 17).toBeGreaterThan(Number(upperScrew.getAttribute("cy")) + Number(upperScrew.getAttribute("r")));
+      expect(titleBaseline + 4).toBeLessThan(54);
+    },
+  );
 
   it("places NIU Ethernet above USB Type-C without adding generic service controls (Figs. 3-26/27)", () => {
     render(<Dvor220ModuleFaceplate kind="card" blockId="niu" />);
