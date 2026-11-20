@@ -2,7 +2,8 @@
 
 Phạm vi: sơ đồ khối/dữ liệu khối, mặt module, tủ và sơ đồ hệ thống trong
 `src/modules/devices/dvor-1150`; trạng thái phần mềm trong
-`src/modules/operations/dvor-1150`. Baseline mã nguồn tại
+`src/modules/operations/dvor-1150` và PMDT chạy tại
+`src/app/simulator/dvor-1150/page.tsx` (re-check riêng §4). Baseline phần cứng tại
 [`b368ae207fdbbe07e533c04ae6a696a49c5b9a17`](https://github.com/nhhaituhpy-hue/cns-simulation/commit/b368ae207fdbbe07e533c04ae6a696a49c5b9a17).
 Chỉ kiểm toán, không sửa simulator; không đánh giá DVOR 1150A hoặc DME 1119A.
 Đây không phải hướng dẫn thao tác/bảo trì thiết bị thật.
@@ -28,9 +29,9 @@ Không suy kích thước chế tạo, vị trí chân hoặc trạng thái mặ
 Trạng thái: **Khớp** = đúng nội dung được dẫn, không chứng nhận toàn thiết bị;
 **Một phần** = có biểu diễn nhưng thiếu/giản lược; **Sai khác** = có chi tiết
 mâu thuẫn nguồn; **Thiếu** = chưa có trong bề mặt được audit;
-**Chưa xác minh** = bộ nguồn không đủ kết luận. Mỗi dòng phần mềm bên dưới
-đều có trạng thái **Thiếu** vì module operations mới là manifest `planned`;
-không lấy tính năng ở namespace hoặc dòng thiết bị khác để điền vào stub.
+**Chưa xác minh** = bộ nguồn không đủ kết luận. Riêng phần mềm §4 dùng
+verdict match/partial/missing/extra và ghi TODO nếu không có ảnh nội dung;
+chỉ listing operations planned, không phải PMDT renderer/store hiện có.
 
 ## 1. Sơ đồ chức năng
 
@@ -128,72 +129,141 @@ PDF 31 Fig. 1-5; đã đọc cả hình render PDF và S112809/S112858.
 
 ## 4. Phần mềm khai thác so với bộ 38 ảnh
 
-[Manifest operations](../../src/modules/operations/dvor-1150/manifest.ts)
-chỉ khai báo ID, tên, mô tả, routes và `status: "planned"`; `index.ts` chỉ
-export manifest. Không có renderer PMDT trong thư mục đó. Đường
-`/simulator/software/dvor-1150` là khai báo route, không chứng minh có ứng
-dụng. Phần dưới là backlog fidelity cho stub này, không phủ nhận mã mô
-phỏng khác nằm ngoài phạm vi thư mục đã giao.
+### PMDT re-check summary
+
+Re-check PMDT tại SHA `2a2477974238853d7eb02dbb779e48b53f0db512`;
+giữ nguyên baseline phần cứng ở đầu bài. **40 dòng: match 4, partial 34,
+missing 1, extra 1.** Đây là verdict theo phạm vi từng dòng, không phải
+chứng nhận toàn màn hình hay thuật toán thiết bị. Bộ 38 ảnh gồm **34 ảnh
+PMDT + 4 hình phần cứng** đã nêu ở quy ước; không có 38 cửa sổ PMDT riêng.
+
+PMDT **đang chạy**, không phải stub:
+[route](../../src/app/simulator/dvor-1150/page.tsx) →
+[Dvor1150PmdtLayout](../../src/components/dvor1150/pmdt-layout.tsx) →
+`Dvor1150ScreenRouter`, dùng `useDvor1150PmdtStore`. Chỉ
+[listing operations](../../src/modules/operations/dvor-1150/manifest.ts)
+còn `planned`; không dùng trạng thái listing để kết luận thiếu renderer.
+
+**Giả định DEMO 5–6 (quyết định chủ sở hữu, không xác nhận máy thật):**
+dual TX, dual MON, hot standby; ảnh mẫu manual là ground truth UI. Phần
+không có ảnh chỉ đối chiếu TM §3.4 và MX, giữ TODO/điều kiện chưa rõ.
+Không lấy giá trị đo, ngày hoặc calibration trong ảnh làm mặc định bắt buộc.
+
+Ưu tiên cho đợt sửa sau, không sửa implementation trong re-check này:
+1. **P1 — persistence:** toolbar Reset gọi Restore; cả hai trở về baseline,
+   không phải bỏ draft/khôi phục backup theo MX (§4.4).
+2. **P1 — command thật:** Ident, DME, reset detector, Abort/Run test và Record
+   Baseline phần lớn chỉ ghi `lastCommand`, không đổi dữ liệu (§4.1–4.3).
+3. **P1 — A/D:** kênh −12 V trên ảnh bị tính/đặt tên +12 V trong engine;
+   form limits lại ghi −12 V nhưng dùng cùng khóa dương (§4.1).
+4. **P1 — history/diagnostics:** lịch sử không giữ ba snapshot; status bị
+   hard-code; Power Up Results lấy trạng thái fault-isolation chung (§4.2–4.3).
+5. **P2 — ground check:** thiếu Duantal, trục/legend và các đường harmonic;
+   advanced/export/toggles mới là khung (§4.2).
+6. **P2 — configuration:** General nhiều ô tĩnh, Station ghi Cold Standby
+   cố định trái với DEMO hot standby; Security Codes chỉ đọc; DIP thiếu màu/
+   chú giải RF Channel Select; thừa RF Level ở test-generator calibration.
+7. **P2 — shell/menu:** Cancel login, Print/Copy chưa xử lý; thiếu status hint,
+   sidebar DME và gating DME-present; giữ các dialog chưa có ảnh là TODO.
+
+**Code key dùng trong từng dòng** (tên component sau key là citation cụ thể):
+PS = [pmdt-screens.tsx](../../src/components/dvor1150/pmdt-screens.tsx);
+ST = [dvor1150-pmdt-store.ts / useDvor1150PmdtStore](../../src/stores/dvor1150-pmdt-store.ts);
+EN = [engine.ts](../../src/lib/dvor1150/engine.ts);
+ME = [menu-structure.ts / dvor1150MenuStructure](../../src/lib/dvor1150/menu-structure.ts)
+và [pmdt-menu-bar.tsx / MenuItemRow](../../src/components/dvor1150/pmdt-menu-bar.tsx);
+SI = [pmdt-sidebar.tsx / Dvor1150Sidebar](../../src/components/dvor1150/pmdt-sidebar.tsx);
+CC = [pmdt-config-control.tsx / Dvor1150ConfigControl](../../src/components/dvor1150/pmdt-config-control.tsx).
+`match` = khớp nội dung UI được dẫn, không áp dụng cho sai khác shell dùng
+chung hay số đo phụ thuộc cấu hình; `partial` = có nhưng giản lược/sai khác;
+`missing` = implementation nội dung chưa có; `extra` = có trường thừa so
+với ảnh. Dòng không có ảnh mở nội dung luôn giữ **TODO**, dù có verdict.
 
 ### 4.1 Khung chung, truy cập và RMS
 
-| Ảnh / màn hình | Tài liệu/ảnh: cửa sổ, menu, trường cần có | Simulator / trạng thái / gap |
-| --- | --- | --- |
-| S113042 — Login, Fig. 3-4 | PMDT Login; User ID, Password; OK, Cancel. | **Thiếu** dialog/login và quyền theo phiên. Không sao chép tài khoản/mật khẩu ảnh thành credential mặc định. |
-| S113057 — RMS Data, Fig. 3-7 | Shell: title trạm/Model 1150/PMDT; menu System, RMS, Monitors, Transmitters, Diagnostics, Info; Connected; toolbar biểu tượng, Next F5, Close F6, Apply F7, Reset F8; status Ready/CAP/Level/user/time. | **Thiếu** shell và trạng thái nút; hai tab Maintenance Alerts/Alarms, A/D Data. Chức năng biểu tượng không rõ chỉ từ ảnh: chưa xác minh. |
-| S113057 — sidebar + A/D | Alert, Local; TX1/2 Main/Antenna/Load/Off; MON1/2 Normal/Alarm/Bypass; Azimuth Angle, 30 Hz Mod, 9960 Hz Mod, Deviation, RF Level. A/D TX1/2: +5, +12 digital/analog, −12, +28 V, PA Voltage; Lo/Hi Limit và Volts; nhiệt độ TX1/2 °C. | **Thiếu** route cells độc lập, màu trạng thái, timestamp và dữ liệu/giới hạn. Không coi giá trị chụp là mặc định; đối chiếu thêm MX Transfer/sidebar. |
-| S113102 — Logs/Operational Summary, Fig. 3-8 | TX1/2 Time in Normal State, Time in Standby State, Availability; Start/End Time, Elapsed Time; Reset Operational Summary. | **Thiếu** bộ đếm, khoảng thời gian và reset summary. |
-| S113106 — Alarm log, Fig. 3-9 | Update, Reset; bảng Time Tag, Type, Alarm, State. | **Thiếu** log alarm, thời gian, trạng thái và reset. |
-| S113110 — Maintenance Alerts, Fig. 3-10 | Update, Reset; Time Tag, Type, Alert, State; scroll. | **Thiếu** log cảnh báo bảo trì, phân biệt alert/normal. |
-| S113115 — Command Activity, Fig. 3-11 | Update, Reset; Time Tag, User Name, Command. | **Thiếu** nhật ký command và người thực hiện. |
-| S113119 — Parameter Change, Fig. 3-12 | Update, Reset; Time Tag, User Name, File. | **Thiếu** log thay đổi cấu hình; cần phân biệt với command log. |
-| S113123 — RMS Configuration/General, Fig. 3-13 | RSCU Type/Connection Type; TX1/2 Ident; Startup/Shutdown Delay; Monitor Voting Logic AND/OR. | **Thiếu** cấu hình chung và validation; MX quy định voting tác động transfer. |
-| S113123 — General (tiếp) | Digital I/O: Smoke/Intrusion Alarm Installed, Enable Remote Reset, Exit/Entry Delay; Spare #1/#2 Usage. Modem: Dial In VOR # Rings, Tone Dial Out, Dial Out VOR/DME Enabled, Dial Out Phone Number. Automatic Restarts Enabled, First Restart Delay. DME Type, Dual, Keying Output Enabled. | **Thiếu** toàn bộ nhóm trường. Sidebar DME TX1/2 Normal/Antenna là giao diện DVOR cần ghi nhận, không audit nội bộ DME. |
-| S113130 — Station, Fig. 3-14 | User Configuration: CVOR/DVOR, Single/Dual Equipment, Dual/Single Monitors, Hot Standby, Frequency; RMS hiển thị DVOR/Dual Equip/Dual Monitors/Cold Standby; Display DIP Switch Settings, Allow Remote Configuration, Station Identifier. | **Thiếu** trường đọc/ghi và trạng thái disabled theo quyền/thiết bị. Không hợp thức hóa mọi tùy chọn CVOR cho DVOR. |
-| S113137 — Synthesizer DIP, Fig. 3-15 | Dialog Required Settings; S1 các vị trí 1–8, RF Channel Select, ghi chú rocker switch, OK. | **Thiếu** cửa sổ tính DIP từ frequency; MX `station.frequencyMHz`. |
-| S113142 — A/D Limits, Fig. 3-16 | Lo/Hi TX1/2 cho +5/+12 digital/+12 analog/−12/+28/PA Voltage và TX temperatures. | **Thiếu** giới hạn riêng và đơn vị; MX `rms.adLimits.*`. |
-| S113146 — Security Codes, Fig. 3-17 | Unavailable indicator; hai nhóm User ID/Password/Level, một tài khoản Level 4 và các dòng chọn level. | **Thiếu** quản trị account/permission. Cần quy tắc quyền và che mật khẩu, không suy từ ô trống. |
-| S113151 — RMS Commands, Fig. 3-18 | RMS: Status, Data, Logs, Configuration, Commands, Config Restore/Backup; Commands: Set Time and Date, Change Password, Reset Intrusion/Smoke Detector, Reset RMS Hardware, Enable/Disable Command Mode. | **Thiếu** menu, quyền enable/disable và hộp thoại xác nhận; ảnh không cung cấp toàn bộ dialog. |
-| S113156 — DME Commands, Fig. 3-19 | DME Control: DME #1 On, DME #2 On, DME Off, Transfer, DME #1/#2 Terminal; một số mục disabled. | **Thiếu** bề mặt tích hợp/menu có điều kiện DME present (TM PDF 203 §3.4.2.8). Không cần mô phỏng phần cứng DME trong audit này. |
+| Ảnh / màn hình | Ground truth | PMDT hiện có / citation code | Verdict / gap cụ thể |
+| --- | --- | --- | --- |
+| S113042 — Login, Fig. 3-4 | PMDT Login; User ID, Password; OK, Cancel. | [Dvor1150LoginDialog](../../src/components/dvor1150/pmdt-login-dialog.tsx): đủ title, hai ô, OK/Cancel; ST `login` kiểm account huấn luyện, khóa sau ba lần sai. | **partial** — Cancel và × không có handler, không hủy dialog. Không sao chép credential từ ảnh; bố cục dialog trong overlay khác cửa sổ độc lập mẫu. |
+| S113057 — RMS Data, Fig. 3-7 | Title trạm/Model 1150/PMDT; sáu menu; Connected; Print/Copy, Next F5, Close F6, Apply F7, Reset F8; Ready/CAP/Level/user/time. | `Dvor1150PmdtLayout` ghép [TitleBar](../../src/components/dvor1150/pmdt-title-bar.tsx), ME, [Toolbar](../../src/components/dvor1150/pmdt-toolbar.tsx), [StatusBar](../../src/components/dvor1150/pmdt-status-bar.tsx); PS `Dvor1150RmsDataScreen` có hai tab. | **partial** — Print/Copy và nút cửa sổ không xử lý; tab ghi “Maintenance Alerts”, thiếu “/Alarms”; thêm NUM và chrome ATTECH/Scenario Parameters của ứng dụng huấn luyện ngoài ảnh. Chức năng biểu tượng không kết luận từ ảnh đơn lẻ. |
+| S113057 — sidebar + A/D | Dual TX Main/Antenna/Load/Off; MON1/2 Normal/Alarm/Bypass; năm số đo; A/D mỗi TX: +5/+12/−12/+28/PA Voltage, Lo/Hi, Volts; hai nhiệt độ °C. | SI đủ route cells, Local/Alert, bypass chung; PS `Dvor1150RmsDataScreen/AdDataTable` lấy EN `adRowsFor/temperatureRows`, có TX1/2 và temperature. | **partial** — EN `adParameterMeta` ghi hai hàng +12 VDC, `plus12VLogic` tính quanh **+12**, không phải −12 của ảnh. TX1/2/temperature xếp dọc thay vì temperature bên phải; sidebar luôn đọc MON1 (`activeMonitor`), chưa chọn theo controlling monitor. |
+| S113102 — Logs/Operational Summary, Fig. 3-8 | Hai TX: Time in Normal/Standby State, Availability; Start/End/Elapsed Time, Hours/%; Reset Operational Summary. | PS `OperationalSummary` đủ nhãn, số mẫu 0.65/0.03 giờ, 14.1087%, ngày 2006 và nút. | **partial** — số/ngày hard-code, không là bộ đếm; Update/Reset/Reset Operational Summary không handler. Bố cục gộp một bảng thay các nhóm tách rời trên ảnh. |
+| S113106 — Alarm log, Fig. 3-9 | Update/Reset; Time Tag, Type, Alarm, State, vùng cuộn trắng. | PS `Dvor1150RmsLogsScreen/LogTable`: đúng bốn cột, dùng `derived.data.logs` hoặc fallback. | **partial** — chung dữ liệu với Maintenance/Command, không lọc loại; Type lấy `row.user`, State suy từ severity thay sự kiện alarm. Update/Reset không handler; thiếu panel cuộn trắng như ảnh. |
+| S113110 — Maintenance Alerts, Fig. 3-10 | Update/Reset; Time Tag, Type, Alert, State và scroll. | PS `LogTable(mode="maintenance")`: đủ nhãn bốn cột. | **partial** — cùng nguồn không lọc với alarm; Type vẫn là user; chỉ map green/yellow/khác thành Normal/Alert Low/Alarm, không đủ trạng thái high/low trong ảnh. Hai nút chưa hoạt động. |
+| S113115 — Command Activity, Fig. 3-11 | Time Tag, User Name, Command; Update/Reset. | PS `LogTable(mode="command")`: đủ ba cột, cùng nguồn logs/fallback. | **partial** — không tách nhật ký command; nhiều command ST chỉ đặt `lastCommand`, không append log, Update/Reset không xử lý. Không yêu cầu sao chép mật độ/số dòng mẫu. |
+| S113119 — Parameter Change, Fig. 3-12 | Time Tag, User Name, File; Update/Reset. | PS `ParameterChangeTable` dùng ST `parameterChangeLogs`, fallback ba dòng SEC3/Monitor/RMS. | **partial** — có log riêng, nhưng tên File mẫu “Monitor #1/#2” không chi tiết “Monitor #… Alarm Limits” trong ảnh; Update/Reset không handler. Fallback không phải lịch sử đã xảy ra. |
+| S113123 — RMS Configuration/General, Fig. 3-13 | RCSU/Connection Type; TX1/2 Ident; Startup/Shutdown Delay (seconds); voting AND/OR. | PS `Dvor1150RmsGeneralConfiguration`: đủ nhóm; delays/voting qua CC, Ident “VOR” và RCSU/connection qua `StaticInput/StaticSelect`. | **partial** — RCSU, connection và hai Ident chỉ đọc, không cấu hình; voting/delays có binding nhưng chưa xác nhận timer phần cứng. Không suy quyền ghi từ screenshot disabled. |
+| S113123 — General (tiếp) | Digital I/O, remote reset/delays/spares; modem/rings/dial-out/phone; Automatic Restarts/First Restart Delay; DME Type/Dual/Keying. | PS `Dvor1150RmsGeneralConfiguration` có các nhóm và CC cho smoke/intrusion, automatic restart, delay, dual DME/keying. | **partial** — remote reset, exit/entry, spares, modem và DME Type là ô tĩnh; chỉ có Dial Out VOR Enabled, thiếu Dial Out DME Enabled. Không có sidebar DME ở SI dù ảnh có; checkbox restart không chứng minh đã có chu trình restart (TODO điều kiện theo TM §3.4/MX). |
+| S113130 — Station, Fig. 3-14 | CVOR/DVOR, Single/Dual, MON1/2, Hot Standby, Frequency MHz, DIP, remote config, identifier; nhóm RMS báo cấu hình máy. | PS `Dvor1150RmsStationConfiguration/Dvor1150ConfigRadioGroup`: đủ nhóm, CC frequency 4 số lẻ; Hot Standby checked khi dual TX. | **partial** — RMS luôn ghi **Cold Standby**/Dual Equip/Dual Monitors, không phản ánh draft và trái DEMO hot standby; Hot Standby chỉ suy từ dual, không là cấu hình riêng. Remote Configuration luôn checked/disabled; ảnh cũng thể hiện Cold Standby nhưng không lấy trạng thái mẫu ấy thay quyết định DEMO 5. |
+| S113137 — Synthesizer DIP, Fig. 3-15 | Required Settings, **S1 đỏ**, vị trí 1–8; “1 – RF Channel Select”, ghi chú rocker, OK. | PS `Dvor1150SynthesizerDipDialog/dvor1150DipState`: tám bit từ frequency, S1/Note/OK và đóng ×. | **partial** — switch trắng/xám thay đỏ; thiếu “1 – RF Channel Select” và nét/ký hiệu ON như mẫu. Công thức 8-bit có thật nhưng bảng ánh xạ switch chưa được chứng thực chỉ bằng ảnh; không coi là pinout đã xác nhận. |
+| S113142 — A/D Limits, Fig. 3-16 | TX1/2 Lo/Hi của **năm** hàng +5/+12/−12/+28/PA Voltage (Volts); hai TX temperatures (°C). | PS `Dvor1150RmsAdLimits/adParameters`: đủ hai bảng và nhiệt độ, CC theo từng TX. | **partial** — label −12 VDC trỏ vào `rms.adLimits.*.plus12VLogic` (giới hạn dương), EN cũng tính dương; cần thống nhất dấu/kênh, không thêm hàng digital/analog mà ảnh này không có. Temperature bị đẩy xuống dưới, không nằm bên phải. |
+| S113146 — Security Codes, Fig. 3-17 | Unavailable, hai nhóm User ID/Password/Level; nhiều hàng, tài khoản Level 4. | PS `Dvor1150SecurityCodes`: đủ hai nhóm × năm hàng, SEC4/SEC3, password trống, Level 4/3. | **partial** — toàn bộ là static disabled, không quản trị account; tab hiện với cả SEC3/SEC4, chưa có state matrix theo quyền. Nội dung password trống không là bằng chứng mật khẩu thật; **TODO** xác nhận các trạng thái chưa có ảnh. |
+| S113151 — RMS Commands, Fig. 3-18 | Status/Data/Logs/Configuration/Commands/Restore/Backup; Set Time and Date, Change Password, Reset Intrusion/Smoke/RMS, Enable/Disable Command Mode. | ME đủ các mục, Change Password disabled; ST `executeCommand` và local-mode handlers. | **partial** — Set Time chỉ refresh đồng hồ, không có dialog; Reset detector/RMS chỉ ghi tên lệnh; password chưa triển khai. **TODO** nội dung dialog connect/password/restore/backup vì không có ảnh, không thiết kế từ menu tĩnh. |
+| S113156 — DME Commands, Fig. 3-19 | DME Control → DME #1 On/#2 On, DME Off, Transfer, #1/#2 Terminal (disabled). | ME có submenu, ghi **“DME's Off”**; terminal disabled; ST nhận các command DME. | **partial** — khác label “DME Off”; các lệnh chỉ đặt `lastCommand`, không đổi trạng thái DME; menu không gate theo `rms.dmePresent` dù TM PDF 203 §3.4.2.8 có điều kiện. Chỉ audit tích hợp UI, không audit phần cứng DME. |
 
 ### 4.2 Monitor: cấu hình, đo, kiểm tra và lịch sử
 
-| Ảnh / màn hình | Trường/menu/cửa sổ được thấy | Simulator / trạng thái / gap |
-| --- | --- | --- |
-| S113200 — Alarm Limits, Fig. 3-20 | Enable Ident Monitoring; Monitor 1/2 Azimuth Angle riêng, 30 Hz/9960 Hz Modulation, 9960 Hz Deviation, RF Level; Alarm Low/PreAlarm Low/Nominal/PreAlarm High/Alarm High và đơn vị. | **Thiếu** bảng limits; MX yêu cầu azimuth riêng, các ngưỡng khác dùng chung. |
-| S113204 — Offsets and Scale Factors, Fig. 3-21 | MON1/2; Field Detector và Test Generator/Certification: Azimuth Angle Offset, 30 Hz Modulation Scale, 9960 Hz Modulation Scale, 9960 Hz Deviation Scale; RF Level Offset ở Field Detector. | **Thiếu** hiệu chỉnh theo nguồn đo; không trộn test calibration với live path (MX). |
-| S113208 — Monitor Commands, Fig. 3-22 | Monitors: Data, Fault History, Configuration, Commands; Monitor Bypass → On/Off; Abort All Tests. | **Thiếu** bypass/abort; MX yêu cầu alarm còn hiển thị nhưng bypass chặn tự transfer. |
-| S113212 — Integrity, Fig. 3-23 | Bảy tab: Integrity, Ground Check, Certification Test Results, Test Data, Notch Monitor, Sideband Antenna VSWR, Standby; MON1/2 timestamp, Comm Status, Controlling, Ident Monitor Enabled; limits/prelimits/data và Ident. | **Thiếu** trạng thái và bảng màu green/yellow/red; TM PDF 207 §3.4.2.11.1 giải thích controlling/audio và gán MON theo TX antenna. |
-| S113215 — Test Data, Fig. 3-24 | Test Generator Setup MON1/2: azimuth, 30/9960 modulation, deviation, ident modulation/control, audio modulation/frequency; Test Results MON1/2, Unavailable, Run. | **Thiếu** setup/test/results; TM PDF 208: test khoảng 2 phút, abort; audio 300–3000 Hz bước 30. Không suy timer từ ảnh. |
-| S113220 — Certification Test Results, Fig. 3-25 | MON1/2 Low Limit/Data/High Limit/Data; azimuth/modulation/deviation; Run riêng, timestamps; Set to Monitor Limits. | **Thiếu** chạy kiểm định/copy limits và kết quả; TM PDF 209 quy định thời gian khoảng 3 phút, abort và đỏ khi ngoài tolerance. |
-| S113224 — Notch Monitor, Fig. 3-26 | Enable Notch Monitoring, Tolerance %, Executive Alarm, Record Baseline; 48 hàng Antenna/Baseline/Current chia ba nhóm. | **Thiếu** đủ 48 anten và baseline; MX giới hạn quy tắc executive nếu manual chưa xác lập. Không tự suy transfer từ màu xanh của ảnh. |
-| S113228 — Sideband Antenna VSWR, Fig. 3-27 | Sideband VSWR Executive Alarm, Tolerance, Number of Antennas in Alarm; 48 Antenna/VSWR chia ba nhóm. | **Thiếu** 48 hàng, tolerance/voting anten; MX cho executive tham gia system alarm/transfer. |
-| S113233 — Ground Check, Fig. 3-28 | Bảng Azimuth/Station Error, Error Spread; Duantal/Quadrantal/Octantal amplitude/phase, Bias; Graph Options FFT Errors/FFT Sum/Station Error/Markers/Legend; Advanced, Run, graph. | **Thiếu** ground-check sweep, harmonic analysis và lựa chọn graph. Không suy thuật toán FFT từ ảnh. |
-| S113236 — Advanced Ground Check, Fig. 3-29 | Dialog Ground Check Error Graph: Error (°) theo Azimuth; Legend, Markers, FFT Sum, Station Error, Bias, Duantal, Quadrantal, Octantal; Print, Copy, Save As, Close. | **Thiếu** dialog/export/graph toggles và dữ liệu nhất quán màn chính. |
-| S113241 — Fault History/Monitor Data, Fig. 3-30 | MON1/2; ba cột timestamp snapshot với PreAlarm/Alarm; azimuth, 30/9960 modulation, deviation, RF Level, Ident Status, Notch Monitor, Sideband VSWR. | **Thiếu** snapshot lịch sử và màu từng giá trị, không chỉ log văn bản. |
-| S113244 — Fault History/System Status, Fig. 3-31 | Cùng timestamp: voting AND, MON1/2 Bypass/Alarm, Ident Monitoring, Notch/VSWR Enabled/Executive; TX1/2 On Antenna/Main/On. | **Thiếu** snapshot liên kết với Monitor Data và lịch sử route. |
-| Standby tab — thấy trên S113212–S113233 | Có nhãn tab nhưng không ảnh mở nội dung trong bộ 38. | **Thiếu / chưa xác minh nội dung ảnh**; phải đối chiếu TM §3.4.2.11 trước thiết kế, không lấy nội dung từ tab Integrity. |
+| Ảnh / màn hình | Ground truth | PMDT hiện có / citation code | Verdict / gap cụ thể |
+| --- | --- | --- | --- |
+| S113200 — Alarm Limits, Fig. 3-20 | Ident Monitoring; azimuth riêng MON1/2, 30/9960 Mod, 9960 Deviation, RF Level; Alarm Low/PreAlarm Low/Nominal/PreAlarm High/Alarm High và °/%/Ratio/dB. | PS `Dvor1150MonitorConfigScreen`: đủ năm band, azimuth riêng; CC bind limits chung còn lại như MX. | **partial** — label **“Deviation”** thay “9960 Hz Deviation”; độ chính xác azimuth hai số lẻ khác ảnh cấu hình một số lẻ. Có binding chứ không phải màn thiếu. |
+| S113204 — Offsets and Scale Factors, Fig. 3-21 | MON1/2, Field Detector và Test Generator/Certification: azimuth °, ba modulation/deviation scales %; RF Level Offset dB **chỉ Field Detector**. | PS `CalibrationTable/calibrationRows` dựng hai cột cho cả năm hàng của mỗi MON. | **extra** — thừa ô **RF Level Offset ở Test Generator/Certification** cho cả MON1/2; ảnh để trống cột ấy. Nhãn “9960 Hz Deviation Scale”/đơn vị còn lại có; giá trị calibration phụ thuộc cấu hình, không ép bằng mẫu. |
+| S113208 — Monitor Commands, Fig. 3-22 | Data/Fault History/Configuration/Commands; Monitor Bypass On/Off, Abort All Tests. | ME đủ menu; ST `setMonitorBypass` đổi bypass chung, giữ alarm và chặn auto-transfer; `executeCommand("abort-tests")`. | **partial** — bypass có thật; Abort chỉ đặt `lastCommand`, không hủy test đang chạy. Không suy hai bypass độc lập từ hai nút sidebar. |
+| S113212 — Integrity, Fig. 3-23 | Bảy tab; hai MON xếp dọc, timestamp/Comm/Controlling/Ident Enabled; alarm/prealarm/data, Ident, °/%/Ratio/dB. | PS `Dvor1150MonitorDataScreen/MonitorIntegrityBlock` có đủ tab/nhóm, màu từ EN `monitorResult`. | **partial** — “Deviation” thiếu tiền tố 9960 Hz; EN `buildDvor1150Snapshot` luôn truyền controlling=true cho MON1, false cho MON2, không gán lại theo TX antenna như TM PDF 207 §3.4.2.11.1. Bố cục có, không còn kết luận “Thiếu”. |
+| S113215 — Test Data, Fig. 3-24 | Setup MON1/2 với tám thông số; kết quả Azimuth/30/9960/Deviation, Unavailable, Run, °/%/Ratio/Hz. | PS `Dvor1150MonitorTestData/TestResultColumn`: đủ hàng; MON1 editable, MON2 mirror cùng config; EN `buildMonitorTestResults` luôn available=true. | **partial** — thiếu setup riêng MON2, không tái hiện Unavailable; results thiếu cột đơn vị; Run chỉ đặt command, không có chu trình/abort. TM PDF 208 nêu khoảng hai phút và audio 300–3000 Hz bước 30; không suy timer từ ảnh. |
+| S113220 — Certification Test Results, Fig. 3-25 | MON1/2 **xếp dọc**; Low Limit/Data/High Limit/Data; azimuth/mod/deviation, °/%/Ratio; Run, hai timestamps, Set to Monitor Limits. | PS `Dvor1150CertificationResults`: hai MON **cạnh nhau**, mỗi MON một timestamp; EN `buildCertificationResults` lấy live value cho cả lowData/highData. | **partial** — chưa là hai điểm thử độc lập; Run chỉ ghi command, Set to Monitor Limits luôn disabled; thiếu timestamp kết quả riêng. TM PDF 209 nêu khoảng ba phút/abort/tolerance, chưa được chu trình hiện tại thể hiện. |
+| S113224 — Notch Monitor, Fig. 3-26 | Enable, Tolerance %, Executive Alarm, Record Baseline; 48 Antenna/Baseline/Current, **3 × 16**. | PS `Dvor1150NotchMonitor`, EN `buildNotchData`: đủ 48 hàng, ba nhóm, checkbox và dữ liệu tính từ baseline. | **partial** — Executive Alarm cố định false/disabled; Record Baseline chỉ ghi command, không lưu baseline mới. **TODO** điều kiện executive chưa rõ theo TM §3.4/MX; không suy transfer từ checkbox/màu mẫu. |
+| S113228 — Sideband Antenna VSWR, Fig. 3-27 | Executive Alarm, Tolerance **:1**, Number of Antennas in Alarm; 48 Antenna/VSWR chia **4 × 12**, không phải ba nhóm. | PS `Dvor1150SidebandVswr`: đúng controls CC, 48 hàng/four-column layout, readout hai số lẻ; EN tính snapshot và executive status theo MX. | **match** — không thấy thiếu/thừa trường, nhãn hay đơn vị trong nội dung được dẫn; số VSWR là dữ liệu tính, không cần bằng 48 số mẫu. Chưa kiểm thử transfer động tại dòng này. |
+| S113233 — Ground Check, Fig. 3-28 | Azimuth/Station Error, Error Spread; **Duantal/Quadrantal/Octantal**, Bias amplitude/phase; FFT Errors/FFT Sum/Station Error/Markers/Legend; Run/Advanced; trục và đường màu. | PS `Dvor1150GroundCheck/GroundCheckErrorTable/GroundCheckGraph`: bảng, Run, Advanced; chỉ Quadrantal/Octantal/Bias và một polyline xanh. | **partial** — thiếu Duantal, tick/nhãn trục/legend/nhiều đường; “EPI Forms” thay “FFT Errors”; chọn mode chỉ đổi aria-label, không đổi dữ liệu vẽ. Markers/Legend readOnly; Run không tạo sweep. |
+| S113236 — Advanced Ground Check, Fig. 3-29 | Ground Check Error Graph, Error (°)/Azimuth; Legend/Markers/FFT Sum/Station Error/Bias/**Duantal**/Quadrantal/Octantal; Print/Copy/Save As/Close. | PS `Dvor1150AdvancedGroundCheck` có dialog, graph dùng chung, Close và ba nút export. | **partial** — thiếu Duantal, trục số/legend/đường harmonic; options readOnly, Print/Copy/Save As không handler; title ngày giờ hard-code 03/30/07, không theo dữ liệu chính. |
+| S113241 — Fault History/Monitor Data, Fig. 3-30 | Hai MON; ba timestamp snapshot, tiêu đề PreAlarm/Alarm; số đo màu, Ident, Notch/VSWR. | PS `Dvor1150FaultHistory` dựng ba timestamp và hai MON; EN `buildFaultHistory` chỉ dựng snapshot hiện tại với thông số đang bất thường. | **partial** — thiếu lịch sử ba sự kiện/tiêu đề PreAlarm–Alarm; thiếu ô normal tại snapshot lỗi; fallback đệm timestamp 2006, có thể trùng key. Ident Normal/Notch/VSWR green hard-code, không phải snapshot đã lưu. |
+| S113244 — Fault History/System Status, Fig. 3-31 | Cùng timestamp: logic, MON1/2 **Bypass/Alarm**, Ident/Notch/VSWR Enabled/Executive; từng TX1/2 On Antenna/Main/On. | PS `Dvor1150FaultHistory(system-status)` đọc logic/alarm; phần khác phần lớn literal/checkbox; EN chỉ giữ một systemStatus. | **partial** — thiếu Bypass và route cells TX1/2 thực từng snapshot; “On Antenna” chỉ chữ Tx1/Tx2, Main/On đèn green cố định; Enabled/Executive hard-code, không liên kết lịch sử Monitor Data. |
+| Standby tab — nhãn trên S113212–S113233, **không có ảnh mở tab** | Chỉ xác nhận nhãn Standby; nội dung không được bộ 38 ảnh chứng minh. | PS `Dvor1150MonitorDataScreen`, view `monitor-standby` trả empty div; browser thấy tab trống. | **missing** — **TODO mở:** chưa có implementation nội dung và chưa có ground-truth screenshot. Đối chiếu TM §3.4.2.11/MX trước thiết kế, không tự lấp bằng Integrity hay tuyên bố layout mong đợi. |
 
 ### 4.3 Transmitter và diagnostics
 
-| Ảnh / màn hình | Trường/menu/cửa sổ được thấy | Simulator / trạng thái / gap |
-| --- | --- | --- |
-| S113248 — Transmitter Data, Fig. 3-32 | Tab TX1/TX2, timestamps; Power Carrier/SB1–4 Watts, VSWR Carrier/SB1–4; Frequency 30 Hz AM/FM, Sideband Frequency, Carrier, Tx Lower/Upper Sideband. | **Thiếu** dữ liệu riêng mỗi TX và đơn vị Hz/MHz, không gộp power/VSWR thành monitor RF Level. |
-| S113252 — TX Offsets and Scale Factors, Fig. 3-33 | Hai cột TX1/TX2: Azimuth Angle Offset, Output Power Scale, Voice/Ident/Reference Modulation Scale; SB1-2/SB3-4 Phase Offset; Carrier-Sideband Phase Offset; SB1–4 RF Level Scale; Cabinet Temperature Offset. | **Thiếu** mọi trường và ảnh hưởng downstream; MX phân biệt phase/scale/temperature và điều kiện transfer. |
-| S113255 — TX Nominal, Fig. 3-34 | Azimuth Index, Output Power, Voice Modulation, Ident Modulation, Reference Modulation, USB RF Level; giá trị/đơn vị, timestamp. | **Thiếu** bảng nominal; MX có `identCode` nhưng ảnh không thấy ô đó tại đây: cần xác minh nơi nhập, không tự thêm vào ảnh mẫu. |
-| S113258 — Transmitter Commands, Fig. 3-35 | Transmitters: Data, Configuration, Commands; Transfer, Transmitter 1, Transmitter 2, VOR Ident, Hold Commutator… | **Thiếu** command/menu và dialog Hold Commutator chưa thấy nội dung. |
-| S113302 — Antenna Control, Fig. 3-36 | Transmitter 1 submenu Antenna/Load/Off; status hint dưới cửa sổ. | **Thiếu** command/route feedback cho từng TX; MX tách Main/Antenna/Load/Off, không đổi tất cả cùng lúc. |
-| S113305 — Ident Control, Fig. 3-37 | VOR Ident → Normal/Off/Continuous. | **Thiếu** chế độ nhận dạng và cập nhật chỉ báo; không suy ident alarm tự transfer (MX). |
-| S113309 — Power Up Results, Fig. 3-38 | Diagnostics Data and Commands; Power Up Results/Fault Isolation; cột RMS, MON1/2, Audio Gen1/2; CPU Functional Test, RAM, PROM, EEPROM Check. | **Thiếu** ma trận kết quả boot, không dùng một đèn Normal chung thay thế. |
-| S113312 — Fault Isolation, Fig. 3-39 | Sub System/Progress/Results: Logon/RMM, Power Supplies, Monitor + Cert Enabled, Audio Generator, Synthesizer, Power Amplifier, Distribution, Alarm/Alert Analysis, Control; Fault Isolation Results; Run Off Air Diagnostics, Cancel, Run On Air Diagnostics. | **Thiếu** quy trình chẩn đoán, tiến độ, kết quả và khóa điều kiện on/off-air. |
+| Ảnh / màn hình | Ground truth | PMDT hiện có / citation code | Verdict / gap cụ thể |
+| --- | --- | --- | --- |
+| S113248 — Transmitter Data, Fig. 3-32 | Tab TX1/TX2; timestamp nhóm dữ liệu; Carrier/SB1–4 Watts, VSWR :1; 30 Hz AM/FM/Sideband Frequency Hz, Carrier/Tx Lower/Upper Sideband MHz. | PS `Dvor1150TxDataScreen`: hai TX, đủ Power/VSWR/Frequency và Hz/MHz, giá trị riêng theo transmitter. | **partial** — chỉ một timestamp chung thay hai ô thời gian trong ảnh; nhãn/giá trị tính theo config có, không gộp thành RF Level. Không coi số carrier 113.1000 MHz mẫu là mặc định bắt buộc. |
+| S113252 — TX Offsets and Scale Factors, Fig. 3-33 | Hai cột TX: azimuth °, output/voice/ident/reference scales %, SB1-2/SB3-4/carrier-sideband phase °, bốn SB RF scales %, cabinet temp °C. | PS `Dvor1150TxConfigScreen/offsetFields`: đủ 13 hàng đúng thứ tự, hai cột CC độc lập, đúng đơn vị/timestamp; EN `effectiveTransmitter` nhận offsets. | **match** — không thấy gap trường/thứ tự/đơn vị trong nội dung ảnh; scale/phase hiện tại là DEMO config, không phải bản chép calibration mẫu. Tác động downstream xem §4.4. |
+| S113255 — TX Nominal, Fig. 3-34 | Azimuth Index, Output Power, Voice/Ident/Reference Modulation, **SBO RF Level**; °/Watts/% và timestamp. | PS `Dvor1150TxConfigScreen/nominalFields`: đủ sáu hàng, một cột nominal chung mirror sang TX2. | **match** — nhãn là **SBO**, không phải USB như ghi nhận cũ. Không thấy gap nội dung/đơn vị/thứ tự; không tự thêm ô identCode vào mẫu nominal này. |
+| S113258 — Transmitter Commands, Fig. 3-35 | Data/Configuration/Commands → Transfer, Transmitter 1/2, VOR Ident, Hold Commutator… (disabled). | ME đủ nhóm/mục và Hold Commutator disabled. | **match** — khớp menu nhìn thấy; không đồng nghĩa mọi command có tác dụng (hai dòng sau). **TODO:** không có ảnh dialog Hold Commutator, không suy nội dung hay quy tắc enable. |
+| S113302 — Antenna Control, Fig. 3-36 | Transmitter 1 submenu Antenna/Load/Off; status hint “Turn on Transmitter 1 to Antenna”. | ME `transmitterCommands` có ba mục cho từng TX; ST `setTransmitterMode` cập nhật RF route/Off và log. | **partial** — Antenna dispatch `main`, gộp chọn logical Main và route; statusbar chỉ Ready/Alert, thiếu hover hint. Các route cells đã có; kiểm contract Main/Antenna ở §4.4, không yêu cầu mọi ô cùng đổi. |
+| S113305 — Ident Control, Fig. 3-37 | VOR Ident → Normal/Off/Continuous và status hint. | ME `transmitterIdent` đủ ba mục; ST `executeCommand` nhận `ident-*`. | **partial** — chỉ đổi `lastCommand`, không sửa identControl/data/status và không cập nhật checkmark/hint. Không tự coi ident alarm là điều kiện transfer (MX). |
+| S113309 — Power Up Results, Fig. 3-38 | Năm cột RMS/MON1/2/Audio Gen1/2, bốn hàng CPU/RAM/PROM/EEPROM, từng kết quả green. | PS `Dvor1150DiagnosticsScreen` đủ ma trận 4 × 5, nhưng mọi ô lấy cùng `diagnosticState.completed`. | **partial** — mặc định tất cả gray; hoàn tất fault isolation thì tất cả green, không có kết quả boot riêng từng module/test. Thêm note huấn luyện ngoài ảnh; không suy mọi test pass từ một cờ completed. |
+| S113312 — Fault Isolation, Fig. 3-39 | Chín subsystem Logon/RMM…Control; Monitor + Cert Enabled; Progress/Results, vùng kết quả; Run Off Air Diagnostics/Cancel/Run On Air Diagnostics. | PS `Dvor1150DiagnosticsScreen`, ST `runDiagnostics/cancelDiagnostics`: đủ chín hàng, %/kết quả/gating security/local và cảnh báo NOTAM khi full. | **partial** — thiếu Cert Enabled; nút ghi **Run Full Diagnostics** thay **Run Off Air Diagnostics**; trạng thái %/text thay thanh progress mẫu. ST hoàn tất tức thì 100%, không đặt running=true nên Cancel không có giai đoạn chạy để hủy. Chưa chứng thực trình tự/chất lượng tín hiệu trên máy thật. |
 
 ### 4.4 Hợp đồng hành vi không thể xác nhận chỉ bằng ảnh
 
-| Nguồn | Yêu cầu đối chiếu | Simulator / trạng thái / gap |
-| --- | --- | --- |
-| MX Apply and persistence; S113123/S113142 toolbar; TM PDF 201 §3.4.2.7 | SEC3/SEC4 → Local → draft → Apply F7 → Need Backup → RMS Config Backup; Reset F8 bỏ draft; Restore persistent nhưng giữ Local/Bypass/connection. | **Thiếu trong stub** cả draft/running/persistent và validation/log parameter-change. Ảnh không chứng minh mỗi bước chuyển trạng thái. |
-| MX Configuration and derived values; S113200/204/248/252/255 | Frequency, nominal/scale/phase/monitor calibration phải tính lại snapshot; RMS temperature/A-D chỉ cảnh báo bảo trì, test generator không đổi tuyến live. | **Thiếu trong stub** graph ảnh hưởng cấu hình → số đo, không chỉ dựng form tĩnh. |
-| MX Transfer/sidebar; S113057/212/244/302 | Manual transfer khác monitor-alarm transfer; Main logic khác Antenna thực; cả hai path alarm → shutdown Off; bypass giữ alarm và chặn tự transfer. | **Thiếu trong stub** state machine và event log. Đây là contract MX, không khẳng định đã quan sát chuỗi sự kiện trong ảnh tĩnh. |
+| Nguồn / ảnh liên quan | Contract | PMDT hiện có / citation code | Verdict / gap cụ thể |
+| --- | --- | --- | --- |
+| MX Apply and persistence; S113123/S113142 toolbar; TM PDF 201 §3.4.2.7 | SEC3/SEC4 → Local → draft → Apply F7 → Need Backup → Backup; Reset bỏ draft; Restore backup và giữ Local/Bypass/connection. | ST `applyConfigChanges/backupConfig/restoreConfig/resetConfigDraft` có draft, validation, log, backup; CC gate SEC3+Local; `Dvor1150PmdtLayout` có persistence boundary. | **partial** — [Toolbar](../../src/components/dvor1150/pmdt-toolbar.tsx) Reset gọi **restoreConfig**; cả restore/reset gọi **initialConfigurationForSession**, hàm clone **defaultDvor1150Config**, bỏ backup và chỉ giữ connected/timestamp, không Local/Bypass. Keyboard F8 dùng reset khác đường toolbar nhưng cùng lệch MX. Không khẳng định ảnh tĩnh chứng minh persistence; **TODO** dialog backup/restore chưa có ảnh. |
+| MX Configuration and derived values; S113200/204/248/252/255 | Config phải tính lại live/monitor/AD/temperature/test; test calibration tách live, RMS maintenance không tự RF transfer. | EN `buildDvor1150Snapshot/effectiveTransmitter/monitorResult/buildGroundCheck/buildMonitorTestResults`; ST apply gọi recompute/automatic-transfer; có tests engine/influence-matrix. | **partial** — graph ảnh hưởng có thật, chưa audit toán học toàn bộ; −12 V và shared test setup lệch ở §4.1/4.2; certification lấy live value cho cả low/high, Run không tạo phép thử. Không coi test có sẵn là đã chạy hay số đo DEMO là đo vật lý. |
+| MX Transfer/sidebar; S113057/212/244/302 | Manual ≠ monitor-alarm; Main logic ≠ Antenna; hai path alarm → shutdown Off; bypass giữ alarm nhưng chặn auto-transfer. | ST `setTransmitterMode/applyAutomaticDvor1150Transfer/setMonitorBypass` có cause/phase, Main riêng, transfer rồi shutdown, log; SI đọc route cells độc lập. | **partial** — state machine không thiếu; SI không render riêng transfer cause/phase/message như MX yêu cầu, StatusBar vẫn Ready/Alert. Timing/automatic restart chưa được browser pass kiểm; **TODO mở**, không suy delay/điều kiện từ checkbox. |
+
+### 4.5 Browser pass và TODO thiếu bằng chứng
+
+Browser tại `/simulator/dvor-1150`, server `:3100` với `MEDIA_CAPTURE_MODE=1`,
+Chrome CDP `:29229`, desktop **1440 × 900**, phiên DEMO SEC4; mở qua menu/tab,
+không đổi source hoặc inject store. Đã render login, workspace, RMS Status,
+mọi tab RMS Data/Logs/Config (kể cả DIP/Security), Monitor Data/Config/History
+(kể cả Advanced/Standby), TX Data cả hai TX/Config, hai Diagnostics và các
+submenu RMS/DME/Monitor/TX/Antenna/Ident/Info. Màn chính không bị overlap
+mới thấy được trong pass này; khác bố cục/khung và graph được ghi từng dòng.
+Ảnh runtime ở `/home/ubuntu/shots26/pmdt-*.png`, **không commit**, không thay
+ground truth S. Pass là kiểm hình/render/navigation, **không** phải kiểm
+chức năng toàn bộ command, SEC3/SEC4 state matrix hay persistence/transfer.
+
+Các nội dung thiếu ảnh dưới đây giữ TODO; **không phát sinh dòng mới ngoài
+40 dòng gốc** (Standby đã được tính ở §4.2):
+- **Standby:** dòng missing ở §4.2; chỉ nhãn được chứng minh.
+- **System/Info, RMS Status:** ME System có Logon RMS/Logoff/Simulation
+  Parameters, Info rỗng; PS `Dvor1150RmsStatusScreen` đang dùng maintenance
+  indicators. Không có ảnh tương ứng để tuyên bố khớp/sai nội dung.
+- **Connect, Change Password, Config Restore/Backup, Hold Commutator:**
+  ME password/Hold disabled, ST restore/backup chạy trực tiếp; không có ảnh
+  dialog. TODO đối chiếu TM §3.4/MX và xin bằng chứng, không sáng tác fields.
+- **SEC3/SEC4, notch Executive Alarm, automatic restart, transfer timing:**
+  các ảnh đơn không xác lập đủ state/điều kiện. DEMO 6 giữ phần chưa rõ mở;
+  không suy rule máy thật từ checkbox hay disabled control.
 
 ## 5. Test, tài liệu liên quan và giới hạn kiểm chứng
 
@@ -203,8 +273,9 @@ phỏng khác nằm ngoài phạm vi thư mục đã giao.
 `tests/scenario-exams/hardware-presentation.test.ts` có kiểm identity 1A3 và
 evidence/reference criteria. Không phải test vị trí đèn, điểm đo hoặc fidelity
 với S/TM. `tests/vor/dvor1150-{engine,influence-matrix,scenario-workflow,scenario-policy}.test.ts`
-và `generate-dvor1150-scenario-fixtures.test.ts` thuộc engine/scenario khác
-phạm vi operations stub: đã xác định vị trí, chưa audit thuật toán hoặc chạy.
+và `generate-dvor1150-scenario-fixtures.test.ts` thuộc engine/scenario của
+PMDT hiện có: đã đọc code liên quan cho §4, không audit toán học toàn bộ
+hoặc chạy lại tests trong đợt docs-only này.
 
 Tìm trong `docs/` không thấy tài liệu baseline riêng cho DVOR 1150 thường;
 không dùng tài liệu DVOR 1150A thay nguồn. Audit DVOR 220 chỉ dùng làm mẫu
@@ -216,9 +287,9 @@ sinh lại fixture. CodeGraph không có executable trong PATH hoặc
 `node_modules/.bin`; kiểm tra môi trường một lần rồi đọc source trực tiếp,
 không tạo index/artifact vào repo. PDF đã mở bằng PyMuPDF, trích text đủ
 332 trang và render các hình/bảng cần đối chiếu; tất cả 38 PNG mở thành công.
-Không render UI simulator trong trình duyệt: các nhận xét vị trí simulator
-dựa trên SVG/source, **chưa xác minh trực quan runtime**. Không có sửa chữa
-hay xác nhận thiết bị đang lắp ngoài hiện trường trong đợt audit này.
+Phần cứng ở baseline đầu bài chưa xác minh runtime trong audit gốc; riêng
+PMDT đã có browser pass §4.5 tại SHA re-check, không mở rộng thành kiểm
+phần cứng hoặc xác nhận máy thật. Không sửa simulator.
 
 ## 6. Câu hỏi cần chủ sở hữu xác nhận
 
