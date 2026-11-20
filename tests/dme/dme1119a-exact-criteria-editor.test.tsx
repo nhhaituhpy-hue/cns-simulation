@@ -1,7 +1,13 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { beforeEach, expect, it } from "vitest";
+import { beforeEach, expect, it, vi } from "vitest";
 import { Dme1119aScenarioParametersPanel } from "@/components/dme/dme-scenario-parameters";
 import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
+
+// Initial-configuration fields are covered in scenario-menu-groups.test.tsx.
+vi.mock("@/components/dme/dme-scenario-field-groups", async (importOriginal) => ({
+  ...await importOriginal<typeof import("@/components/dme/dme-scenario-field-groups")>(),
+  DmeScenarioFieldGroups: () => null,
+}));
 
 beforeEach(() => useDmePmdtStore.getState().reset());
 it("creates a typed exact-value target without changing running equipment", () => {
