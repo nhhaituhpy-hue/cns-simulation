@@ -427,7 +427,7 @@ function TransmitterSetup({
                 max={100} step={0.1} onChange={updateHelperCarrier} />
               {(["usbCos", "usbSin", "lsbCos", "lsbSin"] as const).map((output) => (
                 <HelperPowerField key={output} label={output.replace(/(Cos|Sin)/, " $1").toUpperCase()} unit="W"
-                  value={activeHelper.sidebandPowerW[output]} max={5} step={0.01}
+                  value={activeHelper.sidebandPowerW[output]} max={5} step={0.001}
                   onChange={(value) => updateHelperSideband(output, value)} />
               ))}
             </div>

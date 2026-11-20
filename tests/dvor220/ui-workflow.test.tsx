@@ -37,6 +37,22 @@ function connectAndLogin(store: Dvor220StoreApi) {
 }
 
 describe("MOPIENS DVOR 220 simulator UI", () => {
+  it("preserves three-decimal USB COS power in both Helper controls", () => {
+    const store = createUiStore();
+    connectAndLogin(store);
+    fireEvent.click(screen.getByRole("button", { name: "Setup" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Transmitter Setup$/ }));
+    fireEvent.click(within(screen.getByRole("group", { name: "TX1" })).getByRole("button", { name: "Helper..." }));
+    const dialog = within(screen.getByRole("dialog", { name: "Output Power" }));
+    const input = dialog.getByRole("spinbutton", { name: "USB COS" });
+    const slider = dialog.getByRole("slider", { name: "USB COS slider" });
+    fireEvent.change(input, { target: { value: "1.609" } });
+    expect(input).toHaveValue(1.609);
+    expect(slider).toHaveValue("1.609");
+    expect(input).toBeValid();
+    expect(slider).toBeValid();
+  });
+
   it("uses the Cam Ranh Output Power dialog title", () => {
     const store = createUiStore();
     connectAndLogin(store);
@@ -48,10 +64,10 @@ describe("MOPIENS DVOR 220 simulator UI", () => {
 
   it.each([
     ["Carrier Power", "%", "100", "0.1", "80", "70"],
-    ["USB COS", "W", "5", "0.01", "1.5", "1.7"],
-    ["USB SIN", "W", "5", "0.01", "1.5", "1.7"],
-    ["LSB COS", "W", "5", "0.01", "1.5", "1.7"],
-    ["LSB SIN", "W", "5", "0.01", "1.5", "1.7"],
+    ["USB COS", "W", "5", "0.001", "1.5", "1.7"],
+    ["USB SIN", "W", "5", "0.001", "1.5", "1.7"],
+    ["LSB COS", "W", "5", "0.001", "1.5", "1.7"],
+    ["LSB SIN", "W", "5", "0.001", "1.5", "1.7"],
   ])("links both Cam Ranh Helper controls for %s with a separate unit", (label, unit, max, step, sliderValue, numberValue) => {
     const store = createUiStore();
     connectAndLogin(store);
