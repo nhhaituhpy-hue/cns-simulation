@@ -103,6 +103,9 @@ export interface Dvor1150PmdtStoreState {
   config: Dvor1150Config;
   configDraft: Dvor1150Config;
   configurationBackup: Dvor1150Config | null;
+  configurationCommit: { action: "apply" | "backup" | "restore" } | null;
+  configurationPersistenceReady: boolean;
+  configurationBackupPending: boolean;
   configDirty: boolean;
   needBackup: boolean;
   parameterChangeLogs: SimulatorParameterChangeLogEntry[];
@@ -161,6 +164,7 @@ export interface Dvor1150PmdtStoreActions {
   resetConfigDraft: () => boolean;
   restoreConfig: () => boolean;
   backupConfig: () => boolean;
+  finishConfigurationBackup: (backup: Dvor1150Config | null) => void;
   replaceConfig: (
     config: Dvor1150Config,
     backupConfig?: Dvor1150Config,
@@ -204,6 +208,9 @@ function buildInitialState(now: () => Date): Dvor1150PmdtStoreState {
     config,
     configDraft: cloneDvor1150Config(config),
     configurationBackup: cloneDvor1150Config(defaultDvor1150Config),
+    configurationCommit: null,
+    configurationPersistenceReady: false,
+    configurationBackupPending: false,
     configDirty: false,
     needBackup: false,
     parameterChangeLogs: [],
@@ -264,7 +271,7 @@ function initialConfigurationForSession(current: Dvor1150Config): Dvor1150Config
 }
 
 function persistentConfigValue(config: Dvor1150Config): Dvor1150Config {
-  const next = cloneDvor1150Config(config);
+  const next = copyTransmitterRoutes(defaultDvor1150Config, config);
   next.simulation = { ...defaultDvor1150Config.simulation };
   return next;
 }
@@ -747,6 +754,7 @@ export function createDvor1150PmdtStore(
           configDirty: false,
           // Training changes must be contained in the current browser session.
           needBackup: state.scenario.active ? false : true,
+          configurationCommit: state.scenario.active ? null : { action: "apply" },
           ...parameterProof(state, nextConfig, "apply", "config-apply", "Configuration Apply", changedFields),
           scenarioAcceptedActionControlIds: state.scenario.active
             ? [...new Set([...state.scenarioAcceptedActionControlIds, "config-apply"])]
@@ -761,43 +769,52 @@ export function createDvor1150PmdtStore(
       },
       resetConfigDraft: () => {
         const state = get();
-        if (state.scenario.active) return get().restoreScenario();
-        if (state.securityLevel < 3 || !state.config.simulation.local) return false;
-        const config = initialConfigurationForSession(state.config);
+        if (state.securityLevel < 3 || !state.config.simulation.local || !state.configDirty) return false;
         set({
-          config,
-          configDraft: cloneDvor1150Config(config),
-          configurationBackup: cloneDvor1150Config(config),
-          derived: recompute(config),
+          configDraft: cloneDvor1150Config(state.config),
           configDirty: false,
-          needBackup: false,
-          lastCommand: "Reset (F8): Simulation Parameters baseline",
+          lastCommand: "Reset (F8): Unapplied changes discarded",
         });
         return true;
       },
       restoreConfig: () => {
         const state = get();
-        if (state.scenario.active) return get().restoreScenario();
-        if (state.securityLevel < 3 || !state.config.simulation.local) return false;
-        const config = initialConfigurationForSession(state.config);
+        if (state.securityLevel < 3 || !state.config.simulation.local || state.scenario.active || !state.configurationBackup || state.configurationBackupPending) return false;
+        const config = preserveLiveSimulation(copyTransmitterRoutes(state.config, state.configurationBackup), state.config);
         set({
           config,
           configDraft: cloneDvor1150Config(config),
-          configurationBackup: cloneDvor1150Config(config),
-          derived: recompute(config),
+          derived: recompute(config, state.derived),
           configDirty: false,
           needBackup: false,
-          lastCommand: "RMS Config Restore: Simulation Parameters baseline",
+          configurationCommit: { action: "restore" },
+          lastCommand: "RMS Config Restore",
+          ...parameterProof(state, config, "restore", "rms-config-restore", "RMS Configuration Restore"),
         });
         return true;
       },
       backupConfig: () => {
         const state = get();
-        if (state.securityLevel < 3 || !state.needBackup || state.scenario.active) return false;
+        if (state.securityLevel < 3 || !state.needBackup || state.scenario.active || state.configurationBackupPending) return false;
+        if (state.configurationPersistenceReady) {
+          set({ configurationBackupPending: true, configurationCommit: { action: "backup" }, lastCommand: "RMS Config Backup" });
+          return true;
+        }
+        get().finishConfigurationBackup(state.config);
+        set({ lastCommand: "RMS Config Backup" });
+        return true;
+      },
+      finishConfigurationBackup: (backup) => {
+        const state = get();
+        if (!backup || state.scenario.active) {
+          set({ configurationBackupPending: false });
+          return;
+        }
         const previousBackup = state.configurationBackup ?? defaultDvor1150Config;
+        const saved = persistentConfigValue(backup);
         const changedFields = collectChangedConfigFields(
           persistentConfigValue(previousBackup),
-          persistentConfigValue(state.config),
+          saved,
         );
         const nextLogs = createParameterChangeLogEntries({
           changedFields,
@@ -807,12 +824,11 @@ export function createDvor1150PmdtStore(
           actionLabel: "RMS Configuration Backup",
         });
         set({
-          configurationBackup: cloneDvor1150Config(state.config),
+          configurationBackup: saved,
+          configurationBackupPending: false,
           parameterChangeLogs: prependParameterChangeLogEntries(state.parameterChangeLogs, nextLogs),
-          needBackup: false,
-          lastCommand: "RMS Config Backup",
+          needBackup: collectChangedConfigFields(saved, persistentConfigValue(state.config)).length > 0,
         });
-        return true;
       },
       replaceConfig: (persistedConfig, persistedBackup = persistedConfig, parameterChangeLogs) => {
         const state = get();

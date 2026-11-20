@@ -9,7 +9,10 @@ import type {
   Dvor1150ScreenId,
   Dvor1150ViewId,
 } from "@/lib/dvor1150";
-import { getDvor1150ConfigValue } from "@/lib/dvor1150";
+import { getDvor1150ConfigValue, isDvor1150ScenarioStudentEditable } from "@/lib/dvor1150";
+import { getDvor1150SynthesizerSwitches } from "@/lib/dvor1150/config-utils";
+import { dvor1150AdStatus } from "@/lib/dvor1150/engine";
+import type { Dvor1150AdRow } from "@/lib/dvor1150/types";
 import { canEditDvor1150SecurityCodes, type Dvor1150SecurityCodeEdit, useDvor1150PmdtStore } from "@/stores/dvor1150-pmdt-store";
 import { Dvor1150ConfigControl } from "./pmdt-config-control";
 import { Dvor1150Toolbar } from "./pmdt-toolbar";
@@ -112,8 +115,12 @@ function ConfigRadio({ fieldId, value, label }: { fieldId: string; value: string
   const config = useDvor1150PmdtStore((state) => state.configDraft);
   const security = useDvor1150PmdtStore((state) => state.securityLevel);
   const local = useDvor1150PmdtStore((state) => state.config.simulation.local);
+  const scenario = useDvor1150PmdtStore((state) => state.scenario);
   const setConfigValue = useDvor1150PmdtStore((state) => state.setConfigValue);
-  return <label className="dvor1150-config-radio"><input type="radio" checked={getDvor1150ConfigValue(config, fieldId) === value} disabled={security < 3 || !local} onChange={() => setConfigValue(fieldId, value)} />{label}</label>;
+  const editable = security >= 3 && local && (!scenario.active || Boolean(
+    scenario.definition && isDvor1150ScenarioStudentEditable(scenario.definition, fieldId),
+  ));
+  return <label className="dvor1150-config-radio"><input type="radio" checked={getDvor1150ConfigValue(config, fieldId) === value} disabled={!editable} onChange={() => setConfigValue(fieldId, value)} />{label}</label>;
 }
 
 function formatNumber(value: number | null, digits: number): string {
@@ -129,8 +136,8 @@ export function Dvor1150RmsStatusScreen() {
   return <Screen title="RMS Status"><div className="dvor1150-content dvor1150-rms-status-content"><DateBox value={data.timestamp} /><fieldset className="dvor1150-panel"><legend>RMS Status</legend><table className="dvor1150-table"><tbody>{data.maintenanceAlerts.map((row) => <tr key={row.label}><th>{row.label}</th><td><StatusBox indicator={row.indicator} /></td></tr>)}</tbody></table></fieldset></div></Screen>;
 }
 
-function AdDataTable({ title, rows }: { title: string; rows: readonly { parameter: string; low: number; value: number; high: number; unit: string }[] }) {
-  return <fieldset className="dvor1150-panel dvor1150-ad-panel"><legend>{title}</legend><table className="dvor1150-table"><thead><tr><th>Parameter</th><th>Lo Limit</th><th>Data</th><th>Hi Limit</th><th>Unit</th></tr></thead><tbody>{rows.map((row, index) => <tr key={`${row.parameter}-${index}`}><th>{row.parameter}</th><td><StaticInput value={row.low.toFixed(2)} /></td><td><Readout value={row.value.toFixed(2)} /></td><td><StaticInput value={row.high.toFixed(2)} /></td><td>{row.unit}</td></tr>)}</tbody></table></fieldset>;
+function AdDataTable({ title, rows, temperature = false }: { title: string; rows: readonly Dvor1150AdRow[]; temperature?: boolean }) {
+  return <fieldset className={`dvor1150-panel dvor1150-ad-panel ${temperature ? "dvor1150-temperature-panel" : ""}`}><legend>{title}</legend><table className="dvor1150-table"><thead><tr><th>Parameter</th><th>Lo Limit</th><th>Data</th><th>Hi Limit</th><th>Unit</th></tr></thead><tbody>{rows.map((row) => <tr key={row.parameter}><th>{row.parameter}</th><td><StaticInput value={row.low.toFixed(2)} /></td><td><Readout value={row.value.toFixed(2)} indicator={dvor1150AdStatus(row)} /></td><td><StaticInput value={row.high.toFixed(2)} /></td><td>{row.unit}</td></tr>)}</tbody></table></fieldset>;
 }
 
 function RmsMaintenanceAlerts({ data }: { data: ReturnType<typeof useDvor1150PmdtStore.getState>["derived"]["data"] }) {
@@ -140,10 +147,9 @@ function RmsMaintenanceAlerts({ data }: { data: ReturnType<typeof useDvor1150Pmd
 export function Dvor1150RmsDataScreen() {
   const activeView = useDvor1150PmdtStore((state) => state.activeView);
   const data = useDvor1150PmdtStore((state) => state.derived.data);
-  const tx1 = data.adDataByTransmitter.tx1.map(({ parameter, low, value, high, unit }) => ({ parameter, low, value, high, unit }));
-  const tx2 = data.adDataByTransmitter.tx2.map(({ parameter, low, value, high, unit }) => ({ parameter, low, value, high, unit }));
-  const temperatures = data.temperatureData.filter((row) => row.parameter.includes("Transmitter")).map(({ parameter, low, value, high, unit }) => ({ parameter, low, value, high, unit }));
-  return <Screen title="RMS Data" tabs={<ScreenTabs screenId="rms-data" activeView={activeView} views={["rms-maintenance-alerts", "rms-ad-data"]} />}><div className="dvor1150-content">{activeView === "rms-ad-data" ? <><DateBox value={data.timestamp} /><div className="dvor1150-rms-ad-grid"><AdDataTable title="Transmitter 1" rows={tx1} /><AdDataTable title="Transmitter 2" rows={tx2} /><AdDataTable title="Temperature" rows={temperatures} /></div></> : <RmsMaintenanceAlerts data={data} />}</div></Screen>;
+  const dual = useDvor1150PmdtStore((state) => state.config.station.transmitterConfig === "Dual Transmitters");
+  const temperatures = data.temperatureData.slice(1, dual ? 3 : 2);
+  return <Screen title="RMS Data" tabs={<ScreenTabs screenId="rms-data" activeView={activeView} views={["rms-maintenance-alerts", "rms-ad-data"]} />}><div className="dvor1150-content">{activeView === "rms-ad-data" ? <><DateBox value={data.timestamp} /><div className="dvor1150-ad-data-grid"><AdDataTable title="Transmitter 1" rows={data.adDataByTransmitter.tx1} />{dual ? <AdDataTable title="Transmitter 2" rows={data.adDataByTransmitter.tx2} /> : null}<AdDataTable title="Temperature" rows={temperatures} temperature /></div></> : <RmsMaintenanceAlerts data={data} />}</div></Screen>;
 }
 
 type Dvor1150LogTableRow = {
@@ -194,19 +200,29 @@ export function Dvor1150RmsLogsScreen() {
 function Dvor1150RmsGeneralConfiguration() {
   const config = useDvor1150PmdtStore((state) => state.configDraft);
   return <div className="dvor1150-content dvor1150-rms-general-grid"><DateBox value={config.simulation.timestamp} /><div className="dvor1150-rms-general-columns">
-    <div><fieldset className="dvor1150-panel"><legend>RCSU Configuration</legend><div className="dvor1150-config-row"><span className="dvor1150-config-label">RCSU Type</span><StaticSelect value="None/1138 RSCU" /><span /></div><div className="dvor1150-config-row"><span className="dvor1150-config-label">Connection Type</span><StaticSelect value="Dedicated Modem" /><span /></div></fieldset><fieldset className="dvor1150-panel"><legend>Ident Configuration</legend><div className="dvor1150-config-row"><span className="dvor1150-config-label">Transmitter 1 Ident</span><StaticInput value="VOR" /><span /></div><div className="dvor1150-config-row"><span className="dvor1150-config-label">Transmitter 2 Ident</span><StaticInput value="VOR" /><span /></div></fieldset><fieldset className="dvor1150-panel"><legend>Monitor Configuration</legend><ConfigRow label="Startup Delay (seconds)" fieldId="monitor.monitorStartupDelay" digits={0} unit="" /><ConfigRow label="Shutdown Delay (seconds)" fieldId="monitor.monitorShutdownDelay" digits={0} unit="" /><div className="dvor1150-radio-line"><span>Monitor Voting Logic</span><ConfigRadio fieldId="monitor.votingLogic" value="AND" label="AND" /><ConfigRadio fieldId="monitor.votingLogic" value="OR" label="OR" /></div></fieldset></div>
+    <div><fieldset className="dvor1150-panel"><legend>RCSU Configuration</legend><div className="dvor1150-config-row"><span className="dvor1150-config-label">RCSU Type</span><label><Dvor1150ConfigControl fieldId="rms.rcsuPresent" /> 2138 Present</label><span /></div><div className="dvor1150-config-row"><span className="dvor1150-config-label">Connection Type</span>{config.rms.rcsuPresent ? <Dvor1150ConfigControl fieldId="rms.rcsuConnectionType" /> : <StaticSelect value="Not Present" />}<span /></div></fieldset><fieldset className="dvor1150-panel"><legend>Ident Configuration</legend><div className="dvor1150-config-row"><span className="dvor1150-config-label">Transmitter 1 Ident</span><Dvor1150ConfigControl fieldId="transmitters.tx1.nominal.identCode" /><span /></div><div className="dvor1150-config-row"><span className="dvor1150-config-label">Transmitter 2 Ident</span><Dvor1150ConfigControl fieldId="transmitters.tx2.nominal.identCode" /><span /></div></fieldset><fieldset className="dvor1150-panel"><legend>Monitor Configuration</legend><ConfigRow label="Startup Delay (seconds)" fieldId="monitor.monitorStartupDelay" digits={0} unit="" /><ConfigRow label="Shutdown Delay (seconds)" fieldId="monitor.monitorShutdownDelay" digits={0} unit="" /><div className="dvor1150-radio-line"><span>Monitor Voting Logic</span><ConfigRadio fieldId="monitor.votingLogic" value="AND" label="AND" /><ConfigRadio fieldId="monitor.votingLogic" value="OR" label="OR" /></div></fieldset></div>
     <div><fieldset className="dvor1150-panel"><legend>Digital I/O Configuration</legend><div className="dvor1150-check-grid"><label><Dvor1150ConfigControl fieldId="rms.smokeAlarmInstalled" type="boolean" /> Smoke Alarm Installed</label><label><input type="checkbox" checked disabled readOnly /> Enable Remote Reset</label><label><Dvor1150ConfigControl fieldId="rms.intrusionAlarmInstalled" type="boolean" /> Intrusion Alarm Installed</label><label><input type="checkbox" checked disabled readOnly /> Enable Remote Reset</label><div className="dvor1150-config-row"><span>Exit Delay (minutes)</span><StaticInput value="0" /><span /></div><div className="dvor1150-config-row"><span>Entry Delay (minutes)</span><StaticInput value="0" /><span /></div></div><div className="dvor1150-config-row"><span className="dvor1150-config-label">Spare #1 Usage</span><StaticSelect value="Not Present" /><span /></div><div className="dvor1150-config-row"><span className="dvor1150-config-label">Spare #2 Usage</span><StaticSelect value="Not Present" /><span /></div></fieldset><fieldset className="dvor1150-panel"><legend>Modem Configuration</legend><div className="dvor1150-config-row"><span className="dvor1150-config-label">Dial In VOR # Rings</span><StaticInput value="1" /><span /></div><label className="dvor1150-check-line"><input type="checkbox" checked disabled readOnly /> Tone Dial Out</label><label className="dvor1150-check-line"><input type="checkbox" checked disabled readOnly /> Dial Out VOR Enabled</label><div className="dvor1150-config-row"><span className="dvor1150-config-label">Dial Out Phone Number</span><StaticInput value="6827" /><span /></div></fieldset><fieldset className="dvor1150-panel"><legend>Automatic Restarts</legend><label className="dvor1150-check-line"><Dvor1150ConfigControl fieldId="rms.automaticRestartsEnabled" type="boolean" /> Automatic Restarts Enabled</label><ConfigRow label="First Restart Delay (seconds)" fieldId="rms.firstRestartDelay" digits={0} /></fieldset><fieldset className="dvor1150-panel"><legend>DME Configuration</legend><div className="dvor1150-config-row"><span className="dvor1150-config-label">DME Type</span><StaticSelect value="SELEX 1118/1119" /><span /></div><label className="dvor1150-check-line"><Dvor1150ConfigControl fieldId="rms.dualDme" type="boolean" /> Dual</label><label className="dvor1150-check-line"><Dvor1150ConfigControl fieldId="rms.keyingOutputEnabled" type="boolean" /> Keying Output Enabled</label></fieldset></div>
   </div></div>;
 }
 
 function Dvor1150ConfigRadioGroup({ onOpenDip }: { onOpenDip: () => void }) {
   const config = useDvor1150PmdtStore((state) => state.configDraft);
-  return <fieldset className="dvor1150-panel dvor1150-user-config-panel"><legend>User Configuration</legend><div className="dvor1150-radio-line"><ConfigRadio fieldId="station.stationType" value="CVOR" label="CVOR" /><ConfigRadio fieldId="station.stationType" value="DVOR" label="DVOR" /></div><div className="dvor1150-radio-line"><ConfigRadio fieldId="station.transmitterConfig" value="Dual Transmitters" label="Dual Equip" /><ConfigRadio fieldId="station.transmitterConfig" value="Single Transmitter" label="Single Equip" /></div><div className="dvor1150-radio-line"><ConfigRadio fieldId="station.monitorConfig" value="Dual Monitors" label="Dual Monitors" /><ConfigRadio fieldId="station.monitorConfig" value="Single Monitor" label="Single Monitor" /></div><label className="dvor1150-check-line"><input type="checkbox" checked={config.station.transmitterConfig === "Dual Transmitters"} disabled readOnly /> Hot Standby</label><ConfigRow label="Frequency" fieldId="station.frequencyMHz" digits={4} unit="MHz" /><button type="button" className="dvor1150-dip-open-button" onClick={onOpenDip}>Display DIP Switch Settings</button><label className="dvor1150-check-line"><input type="checkbox" checked disabled readOnly /> Allow Remote Configuration</label></fieldset>;
+  return <fieldset className="dvor1150-panel dvor1150-user-config-panel"><legend>User Configuration</legend><div className="dvor1150-radio-line"><ConfigRadio fieldId="station.stationType" value="CVOR" label="CVOR" /><ConfigRadio fieldId="station.stationType" value="DVOR" label="DVOR" /></div><div className="dvor1150-radio-line"><ConfigRadio fieldId="station.transmitterConfig" value="Dual Transmitters" label="Dual Equip" /><ConfigRadio fieldId="station.transmitterConfig" value="Single Transmitter" label="Single Equip" /></div><div className="dvor1150-radio-line"><ConfigRadio fieldId="station.monitorConfig" value="Dual Monitors" label="Dual Monitors" /><ConfigRadio fieldId="station.monitorConfig" value="Single Monitor" label="Single Monitor" /></div><label className="dvor1150-check-line"><input type="checkbox" checked={config.station.transmitterConfig === "Dual Transmitters"} disabled readOnly /> Hot Standby</label><ConfigRow label="Frequency" fieldId="station.frequencyMHz" digits={4} unit="MHz" /><button type="button" className="dvor1150-dip-open-button" disabled={!getDvor1150SynthesizerSwitches(config.station.frequencyMHz)} onClick={onOpenDip}>Display DIP Switch Settings</button><label className="dvor1150-check-line"><input type="checkbox" checked disabled readOnly /> Allow Remote Configuration</label></fieldset>;
 }
 
 function Dvor1150RmsStationConfiguration({ onOpenDip }: { onOpenDip: () => void }) {
   const config = useDvor1150PmdtStore((state) => state.configDraft);
-  return <div className="dvor1150-content dvor1150-station-config"><div className="dvor1150-station-dates"><DateBox value={config.simulation.timestamp} /><DateBox value={config.simulation.timestamp} /></div><div className="dvor1150-station-grid"><Dvor1150ConfigRadioGroup onOpenDip={onOpenDip} /><fieldset className="dvor1150-panel dvor1150-rms-station-panel"><legend>RMS</legend><button type="button" disabled>DVOR</button><button type="button" disabled>Dual Equip</button><button type="button" disabled>Dual Monitors</button><button type="button" disabled>Cold Standby</button></fieldset></div><div className="dvor1150-station-identifier"><span>Station Identifier</span><Dvor1150ConfigControl fieldId="station.stationDescription" type="text" /></div></div>;
+  const backup = useDvor1150PmdtStore((state) => state.configurationBackup?.station ?? state.config.station);
+  const dual = backup.transmitterConfig === "Dual Transmitters";
+  const equipmentChanged = backup.transmitterConfig !== config.station.transmitterConfig;
+  const rows = [
+    ["Station Type", backup.stationType, backup.stationType !== config.station.stationType],
+    ["Equipment", dual ? "Dual Equip" : "Single Equip", equipmentChanged],
+    ["Monitors", backup.monitorConfig, backup.monitorConfig !== config.station.monitorConfig],
+    ["Standby", dual ? "Hot Standby" : "No Standby", equipmentChanged],
+    ["Frequency", `${backup.frequencyMHz.toFixed(4)} MHz`, backup.frequencyMHz !== config.station.frequencyMHz],
+  ] as const;
+  return <div className="dvor1150-content dvor1150-station-config"><div className="dvor1150-station-dates"><DateBox value={config.simulation.timestamp} /><DateBox value={config.simulation.timestamp} /></div><div className="dvor1150-station-grid"><Dvor1150ConfigRadioGroup onOpenDip={onOpenDip} /><fieldset className="dvor1150-panel dvor1150-rms-station-panel"><legend>RMS</legend>{rows.map(([label, value, mismatch]) => <output key={label} className={mismatch ? "dvor1150-config-mismatch" : undefined} aria-label={`RMS ${label}`} title={mismatch ? "Differs from User Configuration" : undefined}>{value}</output>)}</fieldset></div><div className="dvor1150-station-identifier"><span>Station Identifier</span><Dvor1150ConfigControl fieldId="station.stationDescription" type="text" /></div></div>;
 }
 
 const adParameters: readonly [string, string][] = [["plus5V", "+5 VDC"], ["plus12V", "+12 VDC"], ["plus12VLogic", "-12 VDC"], ["plus28V", "+28 VDC"], ["paVoltage", "PA Voltage"]];
@@ -267,14 +283,10 @@ function SecurityCodesScreen({ tabs }: { tabs: ReactNode }) {
   return <Screen title="RMS Configuration" tabs={tabs} securityDraftDirty={dirty}><Dvor1150SecurityCodes onDirtyChange={setDirty} /></Screen>;
 }
 
-function dvor1150DipState(frequencyMHz: number): boolean[] {
-  const channel = Math.max(0, Math.round((frequencyMHz - 108) * 10));
-  return Array.from({ length: 8 }, (_, index) => Boolean(channel & (1 << index)));
-}
-
 function Dvor1150SynthesizerDipDialog({ frequencyMHz, onClose }: { frequencyMHz: number; onClose: () => void }) {
-  const bits = dvor1150DipState(frequencyMHz);
-  return <section className="dvor1150-dip-dialog" role="dialog" aria-modal="true" aria-label="Synthesizer DIP Switches"><header className="dvor1150-dip-dialog-titlebar"><span>Synthesizer DIP Switches - Required Settings</span><button type="button" aria-label="Close" onClick={onClose}>×</button></header><div className="dvor1150-dip-dialog-body"><div className="dvor1150-dip-column"><span>S1</span>{bits.map((enabled, index) => <div className="dvor1150-dip-switch-row" key={index}><span className={`dvor1150-dip-switch ${enabled ? "dvor1150-dip-switch--on" : ""}`}><span /></span><span>{index + 1}</span></div>)}</div><button type="button" onClick={onClose}>OK</button><fieldset><legend>Note:</legend><span>For rocker-type DIP switches, the side indicated with ▼ should be depressed.</span></fieldset></div></section>;
+  const bits = getDvor1150SynthesizerSwitches(frequencyMHz);
+  if (!bits) return null;
+  return <section className="dvor1150-dip-dialog" role="dialog" aria-modal="true" aria-label="Synthesizer DIP Switches"><header className="dvor1150-dip-dialog-titlebar"><span>Synthesizer DIP Switches - Required Settings</span><button type="button" aria-label="Close" onClick={onClose}>×</button></header><div className="dvor1150-dip-dialog-body"><div className="dvor1150-dip-column"><span>S1</span>{bits.map((enabled, index) => <div className="dvor1150-dip-switch-row" key={index}><span className={`dvor1150-dip-switch ${enabled ? "dvor1150-dip-switch--on" : ""}`}><span /></span><span aria-label={`Switch ${index + 1} ${enabled ? "On" : "Off"}`}>{index + 1}</span></div>)}</div><button type="button" onClick={onClose}>OK</button><fieldset><legend>Note:</legend><span>For rocker-type DIP switches, the side indicated with ▼ should be depressed.</span></fieldset></div></section>;
 }
 
 export function Dvor1150RmsConfigScreen() {

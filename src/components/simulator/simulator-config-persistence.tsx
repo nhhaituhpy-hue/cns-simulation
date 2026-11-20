@@ -36,7 +36,7 @@ import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
 import { useDvor1150PmdtStore } from "@/stores/dvor1150-pmdt-store";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
 
-type SyncStatus = "" | "loading" | "saved" | "error";
+type SyncStatus = "" | "loading" | "saving" | "saved" | "error" | "offline";
 
 function createSessionId(): string | null {
   return typeof globalThis.crypto?.randomUUID === "function"
@@ -249,6 +249,7 @@ function Dvor1150ConfigPersistence() {
   useEffect(() => {
     sessionIdRef.current = createSessionId();
     readyRef.current = false;
+    const initialCommit = useDvor1150PmdtStore.getState().configurationCommit;
     let cancelled = false;
 
     async function hydrate() {
@@ -262,9 +263,15 @@ function Dvor1150ConfigPersistence() {
         );
         if (!config || !backupConfig) throw new Error("Cấu hình DVOR 1150 từ server không hợp lệ.");
         if (cancelled) return;
+        const state = useDvor1150PmdtStore.getState();
+        if (state.configDirty || state.configurationCommit !== initialCommit) {
+          setStatus("offline");
+          return;
+        }
         replaceConfig(config, backupConfig, parameterChangesFromHistory(response.history, "RMS"));
         revisionRef.current = response.revision;
         readyRef.current = true;
+        useDvor1150PmdtStore.setState({ configurationPersistenceReady: true });
         setStatus("saved");
       } catch {
         if (cancelled) return;
@@ -272,7 +279,7 @@ function Dvor1150ConfigPersistence() {
         // The Zustand store is already initialized from the DVOR 1150 baseline,
         // so leave it intact and disable remote persistence for this session.
         readyRef.current = false;
-        setStatus("");
+        setStatus("offline");
       }
     }
 
@@ -280,6 +287,7 @@ function Dvor1150ConfigPersistence() {
     return () => {
       cancelled = true;
       readyRef.current = false;
+      useDvor1150PmdtStore.setState({ configurationPersistenceReady: false, configurationBackupPending: false });
     };
   }, [replaceConfig]);
 
@@ -289,34 +297,24 @@ function Dvor1150ConfigPersistence() {
       // Scenarios are examiner-controlled, session-only exercises. Never
       // persist either their injected baseline or student corrections.
       if (state.scenario.active || previousState.scenario.active) return;
+      const commit = state.configurationCommit;
+      if (!commit || commit === previousState.configurationCommit) return;
 
       const currentConfig = extractDvor1150Config(state.config);
       const previousConfig = extractDvor1150Config(previousState.config);
-      const configChanged = !areJsonEqual(currentConfig, previousConfig);
-      const backupChanged = !areJsonEqual(
-        state.configurationBackup,
-        previousState.configurationBackup,
-      );
-      let action: "apply" | "restore" | "backup" | null = null;
-      if (state.lastCommand === "Apply (F7)" && previousState.configDirty && !state.configDirty && configChanged) {
-        action = "apply";
-      } else if (state.lastCommand?.startsWith("RMS Config Restore") && configChanged) {
-        action = "restore";
-      } else if (state.lastCommand?.startsWith("Reset (F8)") && configChanged) {
-        action = "restore";
-      } else if (state.lastCommand === "RMS Config Backup" && backupChanged) {
-        action = "backup";
-      }
-      if (!action) return;
+      const { action } = commit;
+      const sessionId = sessionIdRef.current;
 
-      const backupConfig = state.configurationBackup
+      const backupConfig = action === "backup" ? currentConfig : state.configurationBackup
         ? extractDvor1150Config(state.configurationBackup)
         : undefined;
       const previousBackupConfig = previousState.configurationBackup
         ? extractDvor1150Config(previousState.configurationBackup)
         : undefined;
+      setStatus("saving");
       persistChainRef.current = persistChainRef.current
         .then(async () => {
+          if (!readyRef.current || sessionIdRef.current !== sessionId) return;
           const response = await applySimulatorConfig({
             simulatorId: "dvor-1150",
             action,
@@ -328,19 +326,27 @@ function Dvor1150ConfigPersistence() {
               currentConfig,
             ),
             operatorUserId: state.authenticatedUserId ?? undefined,
-            sessionId: sessionIdRef.current,
+            sessionId,
           });
+          if (!readyRef.current || sessionIdRef.current !== sessionId) return;
           revisionRef.current = response.revision;
+          if (action === "backup" && useDvor1150PmdtStore.getState().configurationBackupPending) {
+            useDvor1150PmdtStore.getState().finishConfigurationBackup(currentConfig);
+          }
           setStatus("saved");
         })
         .catch((error) => {
+          if (!readyRef.current || sessionIdRef.current !== sessionId) return;
           console.error("DVOR 1150 configuration persistence failed:", error);
+          if (action === "backup") useDvor1150PmdtStore.getState().finishConfigurationBackup(null);
           setStatus("error");
         });
     });
   }, []);
 
-  return <span className="sr-only" role="status" aria-live="polite">{status}</span>;
+  const message = status === "error" ? "Configuration could not be saved to the server."
+    : status === "offline" ? "Offline configuration: changes last for this session only." : null;
+  return <span className={message ? "dvor1150-config-notice" : "sr-only"} role="status">{message ?? status}</span>;
 }
 
 function Dvor220ConfigPersistence({ store }: { store: Dvor220StoreApi }) {

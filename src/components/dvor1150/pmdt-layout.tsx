@@ -117,6 +117,7 @@ export function Dvor1150PmdtLayout({
       const button = shell.current?.querySelector<HTMLButtonElement>(`${scope} button[data-pmdt-key="${event.key}"]`);
       if (!button) return;
       event.preventDefault();
+      if (event.key === "F8" && !button.disabled) button.focus();
       button.click();
     };
     document.addEventListener("keydown", onKey);

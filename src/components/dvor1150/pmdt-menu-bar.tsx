@@ -26,6 +26,8 @@ function MenuItemRow({ group, item, closeMenu, depth = 0 }: { group: Dvor1150Men
   const security = useDvor1150PmdtStore((state) => state.securityLevel);
   const local = useDvor1150PmdtStore((state) => state.config.simulation.local);
   const needBackup = useDvor1150PmdtStore((state) => state.needBackup);
+  const scenarioActive = useDvor1150PmdtStore((state) => state.scenario.active);
+  const backupPending = useDvor1150PmdtStore((state) => state.configurationBackupPending);
   const hasChildren = Boolean(item.children?.length);
   const [expanded, setExpanded] = useState(false);
   const isTx = item.action === "set-transmitter-mode";
@@ -37,8 +39,8 @@ function MenuItemRow({ group, item, closeMenu, depth = 0 }: { group: Dvor1150Men
     || (item.action === "change-password" && !canChangePassword)
     || (isTx && security < 3)
     || (isMaintenanceTx && !local)
-    || (item.action === "config-restore" && (security < 3 || !local))
-    || (item.action === "config-backup" && (security < 3 || !needBackup))
+    || (item.action === "config-restore" && (security < 3 || !local || scenarioActive || backupPending))
+    || (item.action === "config-backup" && (security < 3 || !needBackup || backupPending))
     || (item.action === "set-bypass" && (security < 3 || !local))
     || (item.action === "execute-command" && ((item.commandId === "enable-command-mode" || item.commandId === "disable-command-mode") ? security < 3 || !direct : security < 2));
 

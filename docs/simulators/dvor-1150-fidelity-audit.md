@@ -345,6 +345,13 @@ máy thật. PR #30 không sửa simulator.
 
 ## 6. TODO mở — đồng nghiệp khảo sát trạm thật
 
+**DEMO ASSUMPTION — cấu hình PMDT:** Dual Transmitters luôn dùng Hot
+Standby, Single Transmitter không có Standby. Cột RMS trên tab Station là
+cấu hình đã sao lưu; giá trị khác bản nháp được tô đỏ (TM §3.4.2.7.2).
+Giới hạn A/D −12 V đối dấu từ giá trị DEMO cũ, giữ bề rộng dải; các mức
+này không phải thông số nghiệm thu trạm. Backup ngoại tuyến chỉ tồn tại
+trong phiên; mật khẩu huấn luyện không tham gia lưu/khôi phục cấu hình.
+
 Các mục sau **chưa được xác minh ngoài hiện trường**; giả định DEMO phía
 trên chỉ giúp xây demo, không thay câu trả lời của đồng nghiệp vận hành.
 

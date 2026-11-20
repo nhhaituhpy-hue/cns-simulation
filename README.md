@@ -437,6 +437,12 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-11-20 — DVOR 1150 PMDT: cấu hình RMS
+
+- F7 áp dụng bản nháp vào cấu hình đang chạy; F8 chỉ bỏ thay đổi chưa áp dụng. Config Backup lưu cấu hình đang chạy; Config Restore nạp bản lưu mà không đổi Direct/Local, Integral Bypass hoặc đường phát hiện tại. Khôi phục bài tập là thao tác riêng tại Scenario Parameters.
+- Đối chiếu cấu hình Station với bản lưu RMS; mã công tắc S1 theo Bảng 9-3 (kênh 50 kHz). Hai bộ phát hiển thị đúng đường −12 VDC; cảnh báo A/D và nhiệt độ không điều khiển chuyển bộ phát.
+- **DEMO ASSUMPTION:** cấu hình hai bộ phát dùng Hot Standby, không mô phỏng lựa chọn Cold Standby. Chế độ ngoại tuyến giữ cấu hình trong phiên; tài khoản huấn luyện vẫn không đưa vào Config Backup.
+
 ### 2026-11-20 — DVOR 1150 PMDT: giao diện và quyền truy cập
 
 - Bổ sung kết nối mô phỏng Direct/Modem, đăng nhập phân quyền và đăng xuất khi không hoạt động theo Rev. K §3.4.2.3. Không mở cổng thiết bị hay thực hiện cuộc gọi.

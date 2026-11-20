@@ -83,7 +83,7 @@ export function Dvor1150SimulationParametersPanel() {
       </details>)}
     </div>
     <footer className="pmdt-config-panel-footer">
-      <button type="button" data-pmdt-key="F8" disabled={!canEdit} onClick={resetConfigDraft}>Reset (F8)</button>
+      <button type="button" data-pmdt-key="F8" disabled={!canEdit || !configDirty} onClick={resetConfigDraft}>Reset (F8)</button>
       <button type="button" data-pmdt-key="F7" disabled={!canEdit || !configDirty} onClick={applyConfigChanges}>Apply (F7)</button>
       <span>{configDirty ? "Apply (F7) to commit" : "Parameters are staged"}</span>
     </footer>
