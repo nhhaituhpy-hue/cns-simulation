@@ -1,12 +1,22 @@
 # DVOR 1150 — đối chiếu simulator với tài liệu
 
 Phạm vi: sơ đồ khối/dữ liệu khối, mặt module, tủ và sơ đồ hệ thống trong
-`src/modules/devices/dvor-1150`; trạng thái phần mềm trong
-`src/modules/operations/dvor-1150` và PMDT chạy tại
-`src/app/simulator/dvor-1150/page.tsx` (re-check riêng §4). Baseline phần cứng tại
+`src/modules/devices/dvor-1150`; phân biệt listing operations
+`src/modules/operations/dvor-1150` với PMDT đang có tại
+`src/app/simulator/dvor-1150/page.tsx` → `Dvor1150PmdtLayout`
+(`src/components/dvor1150/pmdt-layout.tsx`) → `useDvor1150PmdtStore`
+(`src/stores/dvor1150-pmdt-store.ts`). Stage 1 chưa tái đối chiếu màn hình;
+PR #30 bổ sung re-check 40 dòng phần mềm ở §4. Baseline mã nguồn phần cứng tại
 [`b368ae207fdbbe07e533c04ae6a696a49c5b9a17`](https://github.com/nhhaituhpy-hue/cns-simulation/commit/b368ae207fdbbe07e533c04ae6a696a49c5b9a17).
-Chỉ kiểm toán, không sửa simulator; không đánh giá DVOR 1150A hoặc DME 1119A.
+Đợt baseline chỉ kiểm toán; Stage 1 sửa sơ đồ/citation như ghi dưới đây.
+Không đánh giá DVOR 1150A hoặc DME 1119A.
 Đây không phải hướng dẫn thao tác/bảo trì thiết bị thật.
+
+Cập nhật Stage 1 trên nền `2a2477974238853d7eb02dbb779e48b53f0db512`:
+chỉ bổ sung occurrence/đường mẫu sơ đồ, chuẩn hóa citation và sửa nhận định
+sai về trạng thái PMDT. Các mục phần cứng chưa được đánh dấu Stage 1 vẫn
+là gap baseline. Các marker cần đối chiếu lại ở §4 của Stage 1 được thay
+bằng kết quả re-check trong PR #30, không suy tính năng từ manifest.
 
 ## Nguồn và quy ước
 
@@ -30,8 +40,36 @@ Trạng thái: **Khớp** = đúng nội dung được dẫn, không chứng nh�
 **Một phần** = có biểu diễn nhưng thiếu/giản lược; **Sai khác** = có chi tiết
 mâu thuẫn nguồn; **Thiếu** = chưa có trong bề mặt được audit;
 **Chưa xác minh** = bộ nguồn không đủ kết luận. Riêng phần mềm §4 dùng
-verdict match/partial/missing/extra và ghi TODO nếu không có ảnh nội dung;
-chỉ listing operations planned, không phải PMDT renderer/store hiện có.
+verdict match/partial/missing/extra và giữ TODO khi không có ảnh nội dung.
+Chỉ listing operations là `planned`, không phải PMDT renderer/store hiện có;
+không kết luận thiếu từ manifest.
+
+## Giả định DEMO
+
+Hoàng chưa vận hành DVOR 1150 thật (đang dùng 1150A). **Cả tám lựa chọn
+dưới đây đều là giả định DEMO do chủ sở hữu chọn, không phải xác nhận phần
+cứng/phần mềm của trạm thật.** Không dùng chúng để đóng TODO khảo sát ở §6.
+
+| # | Giả định DEMO — không xác nhận thiết bị thật | Nguồn / ranh giới áp dụng |
+| --- | --- | --- |
+| 1 | **Giả định DEMO:** chọn thế hệ mới nhất trong TM Rev. K January 2008: CSB amplifier mới, RF monitor/dummy load mới; không trộn biến thể cũ/mới. | TM §2.3.2.3/8, PDF 54 §2.3.1; không suy P/N trạm thật. Stage 1 không thay kết cấu amplifier/tải. |
+| 2 | **Giả định DEMO:** MON 012255-1001, không có field detector ngoài; giữ monitor interface bên phải như hình simulator hiện tại. | TM §1.2.2.1; vị trí bên phải là lựa chọn demo. Stage 1 chưa thay cabinet/detector; hình còn detector ngoài là gap, không phải cấu hình demo đã hoàn tất. |
+| 3 | **Giả định DEMO:** ưu tiên Table 3-6: Normal/Alarm MON1/MON2 và **một** Integral Bypass switch kèm indicator; bỏ hai nhóm SYSTEM A/B. | TM PDF 227 Table 3-6; dành cho Stage 3, không sửa mặt status ở Stage 1. |
+| 4 | **Giả định DEMO:** caption Rev. F October 2002 là nhãn cũ; chuẩn hóa Rev. K January 2008. | TM PDF 54 Fig. 2-2; Stage 1 sửa caption, không chứng minh lịch sử máy thật. |
+| 5 | **Giả định DEMO:** 38 ảnh là sample figure của manual và ground truth UI; demo dual TX, dual MON, **hot standby**. | S113130/212/248 là nguồn bố cục, không dùng trạng thái Cold Standby trong sample làm cấu hình demo. PMDT là đợt riêng. |
+| 6 | **Giả định DEMO:** UI chưa có ảnh dùng TM §3.4 + MX; điều kiện manual để mở vẫn để mở, không suy từ checkbox. | Standby, System/Info, Hold Commutator, connect/password/restore/backup, SEC3/4, notch Executive Alarm, automatic restart, transfer timing: PMDT đợt riêng; S113151/224/258 không đủ chứng minh luồng. |
+| 7 | **Giả định DEMO:** Table 3-10 + Fig. 1-4 thắng mapping Table 3-9: A4/A20 = SYN, A5/A6/A21/A22 = SB; GND theo Fig. 3-40. Table 3-9 là **nghi errata**, chưa phải errata được hãng xác nhận. | TM PDF 26, 229–231; Stage 1 giữ mapping đúng và bổ sung ghi chú nghi errata. |
+| 8 | **Giả định DEMO:** citation dùng đúng PDF Rev. K 332 trang được giao; sửa offset 56 trang trong catalog waveform. | Đã đối chiếu từng hình: Fig. 7-3 → PDF 257; 7-4/5 → 258; 7-7 → 259; 7-8 → 260; 7-16/17 → 264; 7-30 → 271. Stage 1 chỉ sửa citation, không tái hiệu chuẩn waveform. |
+
+### Lộ trình chia đợt
+
+| Đợt | Phạm vi | Tình trạng trong cập nhật này |
+| --- | --- | --- |
+| Stage 1 | Block/system diagram: thêm SB TX2, mẫu FWD/REV; caption, mapping/citation | Đợt hiện tại; không sửa các gap wiring khác. |
+| Stage 2 | Mặt sideband generator | Chưa thực hiện. |
+| Stage 3 | Status panel | Chưa thực hiện. |
+| Stage 4 | Cabinet BCPS và bỏ lưới commutator không có nguồn | Chưa thực hiện; đồng bộ cấu hình MON/interface không detector ngoài còn là TODO phần cứng, không ngầm coi đã xong. |
+| PMDT | Tái đối chiếu PMDT **hiện có** theo TM §3.4 + MX + 38 ảnh | [PR #30](https://github.com/nhhaituhpy-hue/cns-simulation/pull/30): re-check 40 dòng và browser pass, kết quả ở §4; docs-only, không phải xây ứng dụng từ stub. Chỉ operations listing là planned. |
 
 ## 1. Sơ đồ chức năng
 
@@ -44,10 +82,10 @@ có hình trên sơ đồ chính (`diagramOccurrences` của nhiều card để 
 | Khối | Simulator so với tài liệu | Trạng thái | Khoảng trống / nguồn |
 | --- | --- | --- | --- |
 | Status display 1A1 | Có hai Display CCA và danh sách Normal/Alarm 1/2, Bypass; có khối DISPLAY nối RMS. | Một phần | Hình mặt riêng thêm Bypass mỗi hệ, không có switch; TM PDF 227 Table 3-6; PDF 26 Fig. 1-4. |
-| RF monitor 1A2 | Mô tả detector/amplifier/distributor, carrier dummy load; có mẫu carrier và sideband. | Một phần | Sơ đồ mẫu sideband chỉ một đường mỗi ISO, không tách đủ FWD/REV như TM PDF 54 Fig. 2-2; §2.3.2.8 phân biệt đời tải giả. |
+| RF monitor 1A2 | Stage 1 đã tách hai đường mẫu REV/FWD từ mỗi ISO1–4 về RF Monitor A2, có nhãn riêng. | Một phần | Đã sửa gap tám đường mẫu theo TM PDF 54 Fig. 2-2; §2.3.2.8 còn phân biệt đời tải giả, chưa đổi mặt/engine. |
 | CSB amplifier 1A3/1A19 | Hai occurrence TX, mô tả khoảng 120 W và AM 30 Hz/1020 Hz/voice phù hợp chức năng. | Một phần | Gộp output hai TX qua một LPF/coupler, không diễn tả transfer/dummy load; TM PDF 54 Fig. 2-2, §2.3.2.3. |
 | Frequency synthesizer 1A4/1A20 | Có carrier/USB/LSB, PLL/feedback, cặp TX. | Một phần | Đường feedback từ sample trong SVG kết thúc ở vùng CSB, thiếu vòng LPF → SYN rõ ràng; TM PDF 54 Fig. 2-2, §2.3.2.1, Figs. 2-3–2-6. |
-| Sideband generator 1A5/6/21/22 | Catalog có đủ bốn assembly/occurrence và TP theo cặp SB. Sơ đồ chỉ vẽ hai khối TX1 A5/A6. | Thiếu | Chưa có hai occurrence TX2 A21/A22 trên SVG; TM PDF 54 Fig. 2-2 thể hiện cặp main/standby; PDF 231 Table 3-10. |
+| Sideband generator 1A5/6/21/22 | Stage 1 đã vẽ đủ TX1 A5/A6 và TX2 A21/A22, chọn được từng occurrence đến hotspot tủ riêng; LSB1/2, USB3/4 theo Table 3-10/Fig. 1-4. | Khớp phạm vi occurrence | Đã sửa thiếu TX2 (TM PDF 54 Fig. 2-2, PDF 26 Fig. 1-4, PDF 231 Table 3-10); sample đầu ra vẫn gộp main/standby, không phải sơ đồ transfer/wiring. |
 | Audio generator 1A7/1A23 | Có hai TX; danh sách 360 Hz sin/cos, ident, reference đúng chức năng. | Một phần | Đường audio dùng chung, chưa tách đầy đủ drive/control/đo power; TM §2.3.2.2, Fig. 2-7; PDF 264 Figs. 7-16/17. |
 | Monitor CCA 1A8/1A24 | Hai monitor, TP1–15/TP0 và Integral Fault có dữ liệu. | Một phần | Một đường detector đi vào vùng MON2, không thể hiện hai tín hiệu độc lập đến MON1/2; TM PDF 54 Fig. 2-2, PDF 228 Table 3-8; §2.4.4.2. |
 | Modem 1A9 | Catalog mô tả SCC/dial-up và có hotspot. | Một phần | Không có occurrence trên sơ đồ; không phân biệt tuyến modem với video terminal; TM §1.2.1.8, §2.3.2.14, Fig. 2-32. |
@@ -69,11 +107,11 @@ có hình trên sơ đồ chính (`diagramOccurrences` của nhiều card để 
 | Sideband antenna array | Có anten 1–48, mô tả vòng đường kính 44 ft. | Khớp | Không phải mô hình trường/pha từng anten; TM §1.2.4, PDF 54 Fig. 2-2. |
 | Field monitor antenna | Có đường vào field detector, không gán vào tủ điện tử. | Khớp | Vị trí thực địa không được xác minh; TM §1.2.4, PDF 54 Fig. 2-2. |
 
-**Giới hạn sơ đồ:** ISO1–4 được vẽ nhưng không có block/hotspot riêng;
-đường sample không phân nhánh FWD/REV đầy đủ (TM PDF 54 Fig. 2-2).
-SVG ghi `FIGURE 2-2 · REV. F · OCTOBER 2002`, trong khi trang nguồn được
-cung cấp là Rev. K January 2008; không có bằng chứng để khẳng định nội dung
-SVG thực sự lấy từ bản Rev. F. Không dùng caption làm chứng cứ phiên bản.
+**Sau Stage 1:** đủ tám đường mẫu FWD/REV (TM PDF 54 Fig. 2-2), caption
+đã đổi thành `FIGURE 2-2 · REV. K · JANUARY 2008`. ISO1–4 vẫn không có
+block/hotspot riêng. Caption chuẩn hóa theo giả định DEMO #4, không phải
+xác nhận lịch sử phiên bản máy thật; các gap feedback/nguồn/monitor ở bảng
+vẫn chưa được sửa. Các nhánh audio/main-standby vẫn là biểu diễn gộp chức năng.
 
 ## 2. Mặt thiết bị: vị trí và sai khác
 
@@ -85,7 +123,7 @@ khác dùng placeholder, **không phải** mặt điều khiển được đối
 | Module / nguồn | Tài liệu: thứ tự, điều khiển, điểm đo | Simulator / trạng thái / gap |
 | --- | --- | --- |
 | SYN; TM PDF 229 Fig. 3-40, S113326 | TP1/2/3 gần đầu trên, khoảng trống, TP4/5, GND, J8 Carrier Freq 10 mW (typ.); tay kéo dưới, R81 bên trái tay kéo. | **Khớp tương đối:** cùng thứ tự và vùng vị trí. Hình có vít/trim minh họa, không có kích thước chuẩn hay thao tác điện. |
-| SYN signals; TM PDF 230 Table 3-9 | TP1 LSB quadrature, TP2 USB quadrature, TP3 phase error, TP4 carrier phase control, TP5 manual SB phase; TP6 ground trong bảng nhưng GND trên hình. | **Khớp:** catalog giữ GND và ghi chú TP6; không nên đổi nhãn mặt thành TP6 khi chưa có nguồn khác. J8 đang nằm trong `controls`, không phải điều khiển chỉnh. |
+| SYN signals; TM PDF 230 Table 3-9 | TP1 LSB quadrature, TP2 USB quadrature, TP3 phase error, TP4 carrier phase control, TP5 manual SB phase; TP6 ground trong bảng nhưng GND trên hình. | **Khớp:** catalog giữ GND và ghi chú TP6; Stage 1 thêm ghi chú Table 3-9 **nghi errata** về assembly, ưu tiên Table 3-10/Fig. 1-4. J8 đang nằm trong `controls`, không phải điều khiển chỉnh; không sửa mặt SYN. |
 | SB generator: nhóm trên; TM PDF 230 Fig. 3-41, S113339 | Nhóm TP1–4, A1R100, A1R18, TP5 ở mép trái; Q101 phía dưới nhóm. | **Một phần:** đúng thứ tự dọc nhưng simulator đặt điểm trên trục giữa thay vì lệch trái; heatsink/tay kéo được đơn giản hóa. |
 | SB generator: nhóm dưới; cùng Fig. 3-41, S113339 | TP6, A3R18, GND, A3R100, TP7–10 ở mép phải bên dưới Q201. | **Sai khác:** simulator đảo GND và A3R18; gom nhóm vào giữa và đặt phần lớn nhóm phía trên Q201. Sai vị trí tương đối dù đủ tên. |
 | SB adjustments; TM PDF 231 Table 3-10, PDF 230 Fig. 3-41 | A1/A3 R18/R24 balance, R51 DC offset, R73 mean phase, R97 zero, R100 detector calibration, R102 dynamic phase. Một số nằm trên mặt bên bo. | **Một phần:** catalog có danh sách, mặt riêng chỉ vẽ R18/R100; không tách điểm nội bộ/mặt trước cho các trim còn lại. Không chuyển tất cả thành nút trên panel. |
@@ -103,10 +141,12 @@ khác dùng placeholder, **không phải** mặt điều khiển được đối
 | PIN driver/commutator/interface; TM §1.2.2.1–3, Figs. 1-5, 2-45/46 | Đầu nối điều khiển/RF và strap; upgrade interface có splitter/detector tùy MON. | **Thiếu mặt chi tiết:** tủ minh họa không phải bản đồ chân, connector hoặc vị trí strap. |
 | LPF/coupler/sample/antenna; TM §2.3.1, §2.3.2.4/5, §1.2.4 | Các cụm RF/antenna không phải card mặt điều khiển tương đương SYN. | **Chưa xác minh:** không có panel riêng; không tự dựng mặt điều khiển từ tên tín hiệu schematic. |
 
-**Sai khác dẫn nguồn waveform:** catalog ghi PDF 313–316, 320, 327 cho
-Figs. 7-3–7-8, 7-16/17, 7-30. Trong TM được giao, các hình tương ứng ở
-PDF **257–260, 264, 271**; các số trang catalog không áp dụng cho tệp này.
-Đây có thể là phân trang của bản xuất khác, chưa có bằng chứng xác nhận.
+**Đã sửa Stage 1 — citation waveform:** catalog từng ghi PDF 313–316,
+320, 327; nay trỏ đúng TM PDF **257–260, 264, 271**, kèm Rev. K January
+2008 cho Figs. 7-3/4/5/7/8, 7-16/17, 7-30. Đã đối chiếu từng page/figure
+trong PDF 332 trang. Nguyên nhân offset cũ chưa được xác nhận. Riêng
+Fig. 7-30 ghi MON **012617-1003**; ảnh waveform không chứng nhận tương
+đương điện/biên độ cho MON 012255-1001 demo (TODO khảo sát).
 Waveform là ảnh tham chiếu tĩnh. Audit không xác nhận hiệu chuẩn,
 biên độ live, tính đúng đắn engine hay mô hình điện từ từ các ảnh này.
 
@@ -273,54 +313,72 @@ Các nội dung thiếu ảnh dưới đây giữ TODO; **không phát sinh dòn
 `tests/scenario-exams/hardware-presentation.test.ts` có kiểm identity 1A3 và
 evidence/reference criteria. Không phải test vị trí đèn, điểm đo hoặc fidelity
 với S/TM. `tests/vor/dvor1150-{engine,influence-matrix,scenario-workflow,scenario-policy}.test.ts`
-và `generate-dvor1150-scenario-fixtures.test.ts` thuộc engine/scenario của
-PMDT hiện có: đã đọc code liên quan cho §4, không audit toán học toàn bộ
-hoặc chạy lại tests trong đợt docs-only này.
+và `generate-dvor1150-scenario-fixtures.test.ts` thuộc PMDT DVOR 1150 hiện
+có, không phải một stub hay dòng thiết bị khác. Store ở
+`src/stores/dvor1150-pmdt-store.ts`; test tại `tests/state/vor-pmdt-store.test.ts`.
+Stage 1 chưa tái audit thuật toán/luồng phần mềm với ảnh; PR #30 đã đọc
+code liên quan cho §4 và kiểm hình runtime, không audit toán học toàn bộ
+hoặc chạy lại tests trong đợt docs-only. Test focused của thay đổi sơ đồ
+Stage 1 được ghi riêng dưới đây.
 
 Tìm trong `docs/` không thấy tài liệu baseline riêng cho DVOR 1150 thường;
 không dùng tài liệu DVOR 1150A thay nguồn. Audit DVOR 220 chỉ dùng làm mẫu
 cấu trúc. Các assertion về repo ở mục này dựa trên mã/test tại SHA đầu bài,
 không phải thông tin thiết bị cần suy từ manual.
 
-Không chạy Vitest/build/lint vì chỉ thêm tài liệu; đặc biệt không chạy suite
-sinh lại fixture. CodeGraph không có executable trong PATH hoặc
+Đợt audit baseline không chạy Vitest/build/lint vì chỉ thêm tài liệu; đặc biệt
+không chạy suite sinh lại fixture. Stage 1 thêm test dữ liệu/diagram tại
+`tests/vor/dvor1150-block-diagram-data.test.ts` và
+`tests/vor/dvor1150-system-diagram.test.tsx`: occurrence TX2, mapping/GND,
+nghi errata, bảy citation, tám nhánh mẫu, callback chọn bằng chuột/bàn phím,
+trạng thái chưa chọn và input occurrence không hợp lệ. Kiểm tra Stage 1:
+hai file mới, test scenario-workflow/hardware-presentation liên quan,
+`npm run lint` và `npm run typecheck`; không chạy full suite/sinh fixture.
+CodeGraph không có executable trong PATH hoặc
 `node_modules/.bin`; kiểm tra môi trường một lần rồi đọc source trực tiếp,
 không tạo index/artifact vào repo. PDF đã mở bằng PyMuPDF, trích text đủ
 332 trang và render các hình/bảng cần đối chiếu; tất cả 38 PNG mở thành công.
-Phần cứng ở baseline đầu bài chưa xác minh runtime trong audit gốc; riêng
-PMDT đã có browser pass §4.5 tại SHA re-check, không mở rộng thành kiểm
-phần cứng hoặc xác nhận máy thật. Không sửa simulator.
+Phần cứng ở baseline đầu bài chưa xác minh runtime trong audit gốc;
+cập nhật Stage 1 chỉ sửa các hàng được ghi rõ. Riêng PMDT đã có browser
+pass §4.5 trong PR #30, không mở rộng thành kiểm phần cứng hoặc xác nhận
+máy thật. PR #30 không sửa simulator.
 
-## 6. Câu hỏi cần chủ sở hữu xác nhận
+## 6. TODO mở — đồng nghiệp khảo sát trạm thật
 
-1. **Baseline đời máy/P/N nào?** TM PDF 54 §2.3.1 và §2.3.2.3/8 phân biệt
+Các mục sau **chưa được xác minh ngoài hiện trường**; giả định DEMO phía
+trên chỉ giúp xây demo, không thay câu trả lời của đồng nghiệp vận hành.
+
+- [ ] **Baseline đời máy/P/N nào?** TM PDF 54 §2.3.1 và §2.3.2.3/8 phân biệt
    CSB amplifier, RF monitor/dummy load đời cũ/mới. Xin P/N/ảnh máy đích;
    không ghép mọi biến thể thành một cấu hình mặc định.
-2. **MON và detector ngoài?** TM §1.2.2.1 loại detector ngoài với MON
+- [ ] **MON và detector ngoài?** TM §1.2.2.1 loại detector ngoài với MON
    012255-1001; Fig. 1-4/S112809 liệt kê cả 012617-1003/012255-1001.
    Máy đích dùng loại nào, interface lắp trái hay phải? Hộp CURRENT VERSION
    trong simulator chưa được nguồn ảnh xác nhận.
-3. **Status panel thực tế?** TM Table 3-6 và S112809 không chứng minh
+- [ ] **Status panel thực tế?** TM Table 3-6 và S112809 không chứng minh
    hai cụm SYSTEM A/B mỗi cụm có Bypass. Xin ảnh thẳng mặt đọc rõ switch,
    đèn và nhãn để chốt bố cục/biến thể, không suy từ mặt vẽ hiện tại.
-4. **Phiên bản sơ đồ?** SVG tự ghi Rev. F October 2002 nhưng TM PDF 54
-   là Rev. K January 2008. Có bản Rev. F thực sự dùng cho máy đích hay
-   caption cũ? Chưa thể kết luận khác đời phần cứng chỉ từ dòng chữ này.
-5. **Ảnh là mẫu manual hay capture phần mềm trạm?** S113123/130/146 và
+- [ ] **Phiên bản sơ đồ của trạm?** Caption Rev. F October 2002 cũ trong
+   SVG đã chuẩn hóa theo TM PDF 54 Rev. K January 2008 ở Stage 1. Xin
+   xác nhận revision/P/N áp dụng ngoài hiện trường, không dùng caption demo
+   làm bằng chứng máy thật cùng đời.
+- [ ] **Build/cấu hình phần mềm trạm thật?** 38 ảnh dùng làm mẫu manual
+   theo lựa chọn DEMO, chưa thay capture phần mềm trạm. S113123/130/146 và
    S113057 có title trạm/customer service, ngày nội dung 2006/2007 và caption
    figure. Xin version/build PMDT cùng cấu hình single/dual, cold/hot standby;
    giữ 38 ảnh làm ground truth giao diện được cung cấp, không coi ngày tên
    tệp là ngày firmware. TM §3.4 và MX chưa xác lập build đích.
-6. **Quy tắc chưa đủ ảnh?** Xin nội dung tab Standby, menu System/Info,
+- [ ] **Quy tắc chưa đủ ảnh?** Xin nội dung tab Standby, menu System/Info,
    Hold Commutator, hộp thoại connect/password/restore/backup và trạng thái
    quyền SEC3/SEC4 (S113212/258/151/146). Chốt hành vi notch Executive Alarm,
    automatic restart và thời gian transfer theo tài liệu áp dụng; MX còn để
    điều kiện manual cho notch, không tự suy từ checkbox S113224.
-7. **Nhãn/mapping tài liệu không nhất quán?** TM PDF 230 Table 3-9 ghi
+- [ ] **Nhãn/mapping tài liệu không nhất quán?** TM PDF 230 Table 3-9 ghi
    SB1/2 là 1A4/1A21 và SB3/4 là 1A5/1A22, khác Table 3-10 PDF 231 và
    Fig. 1-4 (A4 là SYN, A5/A6 là SB). Xác nhận errata; giữ GND trên
    Fig. 3-40 dù Table 3-9 gọi TP6. Xin Fig. 11-29/ảnh jack và các bản vẽ
    phần 11 còn thiếu trước khi chốt pinout/đường dây.
-8. **Bản PDF nào dùng để dẫn waveform?** Catalog lệch 56 trang với TM
-   được giao ở Figs. 7-3–7-8/7-16/17/7-30 (PDF 257–260/264/271).
-   Có bản xuất dài hơn tương ứng số trang hiện tại hay cần chuẩn hóa citation?
+- [ ] **Waveform áp dụng máy thật?** Stage 1 đã sửa offset citation về
+   PDF 257–260/264/271, nhưng xin xác nhận bộ manual/P/N trạm. Đặc biệt
+   Fig. 7-30 PDF 271 ghi MON 012617-1003: cần nguồn cho waveform tương ứng
+   MON 012255-1001 trước khi coi ảnh đó là chuẩn đo cho demo/trạm thật.

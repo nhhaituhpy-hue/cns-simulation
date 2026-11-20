@@ -111,7 +111,7 @@ const wf = {
     height: 550,
     alt: "Dạng sóng quadrature LSB hoặc USB của Synthesizer DVOR 1150",
     caption: "A4/A20 TP1 hoặc TP2 - LSB/USB quadrature",
-    source: "Figure 7-5, PDF page 314 (manual page 7-8)",
+    source: "Figure 7-5, PDF page 258 (manual page 7-8), Rev. K January 2008",
   },
   sidebandDynamic: {
     src: "/equipment/dvor-1150/waveforms/sideband-dynamic-phase-figure-7-7.webp",
@@ -119,7 +119,7 @@ const wf = {
     height: 565,
     alt: "Dạng sóng điện áp điều khiển pha động Sideband Generator DVOR 1150",
     caption: "A5/A6/A21/A22 TP1 hoặc TP10 - Dynamic Phase Control",
-    source: "Figure 7-7, PDF page 315 (manual page 7-9)",
+    source: "Figure 7-7, PDF page 259 (manual page 7-9), Rev. K January 2008",
   },
   sidebandForward: {
     src: "/equipment/dvor-1150/waveforms/sideband-forward-power-figure-7-8.webp",
@@ -127,7 +127,7 @@ const wf = {
     height: 600,
     alt: "Dạng sóng công suất thuận đã tách sóng của Sideband Generator DVOR 1150",
     caption: "A5/A6/A21/A22 TP5 hoặc TP6 - Forward Power Detected",
-    source: "Figure 7-8, PDF page 316 (manual page 7-10)",
+    source: "Figure 7-8, PDF page 260 (manual page 7-10), Rev. K January 2008",
   },
   audioSinCos: {
     src: "/equipment/dvor-1150/waveforms/audio-360hz-sin-cos-figure-7-16-17.webp",
@@ -135,7 +135,7 @@ const wf = {
     height: 1350,
     alt: "Dạng sóng 360 Hz sin và cos của Audio Generator DVOR 1150",
     caption: "A7/A23 TP7 và TP8 - 360 Hz sin/cos",
-    source: "Figures 7-16 và 7-17, PDF page 320 (manual page 7-14)",
+    source: "Figures 7-16 và 7-17, PDF page 264 (manual page 7-14), Rev. K January 2008",
   },
   rfMonitorForward: {
     src: "/equipment/dvor-1150/waveforms/rf-monitor-carrier-forward-figure-7-3.webp",
@@ -143,7 +143,7 @@ const wf = {
     height: 605,
     alt: "Dạng sóng carrier forward power của RF Monitor DVOR 1150",
     caption: "A2 TX1 FWD/TX2 FWD - 30% modulation tại 30 Hz",
-    source: "Figure 7-3, PDF page 313 (manual page 7-7)",
+    source: "Figure 7-3, PDF page 257 (manual page 7-7), Rev. K January 2008",
   },
   rfMonitorReflected: {
     src: "/equipment/dvor-1150/waveforms/rf-monitor-carrier-reflected-figure-7-4.webp",
@@ -151,7 +151,7 @@ const wf = {
     height: 600,
     alt: "Dạng sóng carrier reflected power của RF Monitor DVOR 1150",
     caption: "A2 TX1 REFLD/TX2 REFLD - VSWR 1.03:1",
-    source: "Figure 7-4, PDF page 314 (manual page 7-8)",
+    source: "Figure 7-4, PDF page 258 (manual page 7-8), Rev. K January 2008",
   },
   monitorComposite: {
     src: "/equipment/dvor-1150/waveforms/monitor-composite-figure-7-30.webp",
@@ -159,7 +159,7 @@ const wf = {
     height: 600,
     alt: "Dạng sóng composite tại TP5 của Monitor CCA DVOR 1150",
     caption: "A8/A24 TP5 - Composite Signal",
-    source: "Figure 7-30, PDF page 327 (manual page 7-21)",
+    source: "Figure 7-30, PDF page 271 (manual page 7-21), Rev. K January 2008",
   },
 } as const satisfies Record<string, Dvor1150WaveformReference>;
 
@@ -261,7 +261,10 @@ export const DVOR_1150_BLOCKS: readonly Dvor1150BlockDefinition[] = [
       { id: "TP5", label: "DVOR Sideband Manual Phase Control Voltage", description: "Điện áp điều khiển pha sideband bằng tay." },
       { id: "GND", label: "Measurement ground", description: "Điểm mass cho oscilloscope hoặc voltmeter." },
     ],
-    notes: ["Table 3-9 gọi điểm mass là TP6; Figure 3-40 in nhãn GND trên panel."],
+    notes: [
+      "Table 3-9 gọi điểm mass là TP6; Figure 3-40 in nhãn GND trên panel.",
+      "Table 3-9 nghi có errata về assembly sideband; theo Table 3-10 và Figure 1-4: A4/A20 là SYN, A5/A6/A21/A22 là Sideband Generator.",
+    ],
   },
   {
     id: "sideband-generator",

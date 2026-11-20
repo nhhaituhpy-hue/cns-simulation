@@ -135,14 +135,14 @@ function SidebandFaceplate() {
     { id: "TP5", y: 464 },
   ] as const;
   const secondGroup = [
-    { id: "TP6", y: 790 },
-    { id: "GND", y: 834 },
-    { id: "A3R18", y: 878, trim: true },
-    { id: "A3R100", y: 922, trim: true },
-    { id: "TP7", y: 966 },
-    { id: "TP8", y: 1010 },
-    { id: "TP9", y: 1054 },
-    { id: "TP10", y: 1098 },
+    { id: "TP6", y: 1340 },
+    { id: "A3R18", y: 1372, trim: true },
+    { id: "GND", y: 1404 },
+    { id: "A3R100", y: 1436, trim: true },
+    { id: "TP7", y: 1468 },
+    { id: "TP8", y: 1500 },
+    { id: "TP9", y: 1532 },
+    { id: "TP10", y: 1564 },
   ] as const;
 
   return (
@@ -156,15 +156,22 @@ function SidebandFaceplate() {
       <rect className={styles.heatSink} x="62" y="690" width="236" height="500" rx="4" />
       {Array.from({ length: 15 }, (_, index) => <path key={index} className={styles.heatSinkFin} d={`M${72 + index * 15} 696v488`} />)}
 
-      {[...firstGroup, ...secondGroup].map((point) => (
-        <g key={point.id}>
-          <text className={styles.sidebandId} x="138" y={point.y + 6} textAnchor="end">{point.id}</text>
-          {"trim" in point ? (
-            <g>
-              <circle className={styles.trimPot} cx="164" cy={point.y} r="13" />
-              <path className={styles.trimSlot} d={`M${154} ${point.y - 10}l20 20`} />
+      {[
+        { points: firstGroup, x: 164, labelX: 138, className: undefined },
+        { points: secondGroup, x: 280, labelX: 258, className: styles.lowerMeasurementGroup },
+      ].map(({ points, x, labelX, className }) => (
+        <g key={x} className={className}>
+          {points.map((point) => (
+            <g key={point.id}>
+              <text className={styles.sidebandId} x={labelX} y={point.y + 6} textAnchor="end">{point.id}</text>
+              {"trim" in point ? (
+                <g>
+                  <circle className={styles.trimPot} cx={x} cy={point.y} r="13" />
+                  <path className={styles.trimSlot} d={`M${x - 10} ${point.y - 10}l20 20`} />
+                </g>
+              ) : <TestPoint x={x} y={point.y} />}
             </g>
-          ) : <TestPoint x={164} y={point.y} />}
+          ))}
         </g>
       ))}
 
