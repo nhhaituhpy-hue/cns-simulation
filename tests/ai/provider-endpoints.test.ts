@@ -1,16 +1,23 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { loadAiProviderConfig } from "@/lib/ai/provider/config";
+import { approvedAiProviderName, loadAiProviderConfig } from "@/lib/ai/provider/config";
 import { requestScenarioJson } from "@/lib/ai/provider/client";
 const previous = "https://cliproxy-vn.hainh.tech/v1";
 const current = "https://cliproxy.cnsvn.com/v1";
 afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 describe("explicitly approved provider endpoints", () => {
-  it.each(["https://api.hainh.io.vn/v1", "https://api.hainh.io.vn/v1/"])("sends GPT-6.2 Sol JSON requests to %s", async baseUrl => {
+  const solEndpoints: [string, string, string][] = [
+    ["https://api.hainh.io.vn/v1", "https://api.hainh.io.vn/v1", "oracle-gw"],
+    ["https://api.hainh.io.vn/v1/", "https://api.hainh.io.vn/v1", "oracle-gw"],
+    ["https://gw.cnsvn.com/v1", "https://gw.cnsvn.com/v1", "cnsvn-gw"],
+    ["https://gw.cnsvn.com/v1/", "https://gw.cnsvn.com/v1", "cnsvn-gw"],
+  ];
+  it.each(solEndpoints)("sends GPT-6.2 Sol JSON requests to %s", async (baseUrl, canonical, provider) => {
     const config = loadAiProviderConfig({ CNS_AI_BASE_URL: baseUrl, CNS_AI_API_KEY: "fixture-only", CNS_AI_MODEL: "gpt-6.2-sol" });
-    expect(config.baseUrl).toBe("https://api.hainh.io.vn/v1");
+    expect(config.baseUrl).toBe(canonical);
+    expect(approvedAiProviderName(config.baseUrl)).toBe(provider);
     const fetcher = vi.fn(async (url: string, init: RequestInit) => {
-      expect(url).toBe("https://api.hainh.io.vn/v1/chat/completions");
+      expect(url).toBe(`${canonical}/chat/completions`);
       expect(init.redirect).toBe("error");
       expect(JSON.parse(String(init.body))).toMatchObject({ model: "gpt-6.2-sol", stream: false, response_format: { type: "json_object" }, reasoning_effort: "low" });
       return new Response(JSON.stringify({ choices: [{ finish_reason: "stop", message: { content: '{"ok":true}' } }] }));
@@ -42,6 +49,8 @@ describe("explicitly approved provider endpoints", () => {
     "https://cliproxy.cnsvn.com.attacker.invalid/v1", "https://localhost/v1", "https://127.0.0.1/v1", "https://evil.invalid/v1",
     "https://api.hainh.io.vn.attacker.invalid/v1", "https://api.hainh.io.vn:443/v1", "https://name:pass@api.hainh.io.vn/v1",
     "http://api.hainh.io.vn/v1", "https://api.hainh.io.vn/v1?x=1", "https://api.hainh.io.vn/v1/../admin",
+    "http://gw.cnsvn.com/v1", "https://gw.cnsvn.com.attacker.invalid/v1", "https://gw.cnsvn.com:443/v1",
+    "https://name:pass@gw.cnsvn.com/v1", "https://gw.cnsvn.com/v1?x=1", "https://gw.cnsvn.com/v1/../admin",
   ])("rejects unapproved URL %s before any outbound request", async baseUrl => {
     expect(() => loadAiProviderConfig({ CNS_AI_BASE_URL: baseUrl, CNS_AI_API_KEY: "fixture-only" })).toThrow();
     const fetcher = vi.fn(); vi.stubGlobal("fetch", fetcher);
