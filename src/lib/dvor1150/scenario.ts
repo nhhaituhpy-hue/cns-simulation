@@ -1,4 +1,4 @@
-import { cloneDvor1150Config, defaultDvor1150Config } from "./defaults";
+import { cloneDvor1150Config, defaultDvor1150Config, migrateDvor1150NegativeRail } from "./defaults";
 import { buildDvor1150Snapshot } from "./engine";
 import {
   dvor1150ConfigFieldCatalog,
@@ -898,6 +898,7 @@ export function parseDvor1150ScenarioDefinition(value: unknown): Dvor1150Scenari
       ? inferLegacyStudentEditableFieldIds(candidate.configuration as Dvor1150Config)
       : rawCandidate.studentEditableFieldIds,
   } as Dvor1150ScenarioDefinition;
+  migrateDvor1150NegativeRail(parsed.configuration);
   try {
     return validateDvor1150ScenarioDefinition(parsed).length === 0 ? parsed : null;
   } catch {

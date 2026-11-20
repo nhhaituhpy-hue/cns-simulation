@@ -16,6 +16,7 @@ import {
   type Dvor1150TransmitterId,
 } from "./types";
 import { formatDvor1150Timestamp } from "./defaults";
+import { getDvor1150SynthesizerSwitches } from "./config-utils";
 
 const DVOR1150_REFERENCE_NOMINAL_OUTPUT_POWER = 100;
 
@@ -231,8 +232,8 @@ function transmitterSidebarState(
 
 function buildValidation(config: Dvor1150Config): Dvor1150Snapshot["validation"] {
   const validation: Dvor1150Snapshot["validation"] = [];
-  if (config.station.frequencyMHz < 108 || config.station.frequencyMHz > 118) {
-    validation.push({ fieldId: "station.frequencyMHz", message: "Frequency must be between 108 and 118 MHz.", severity: "error" });
+  if (!getDvor1150SynthesizerSwitches(config.station.frequencyMHz)) {
+    validation.push({ fieldId: "station.frequencyMHz", message: "Frequency must be a 50 kHz channel from 108.000 to 117.950 MHz.", severity: "error" });
   }
   for (const parameter of DVOR1150_MONITOR_PARAMETERS) {
     const band = config.monitor.alarmLimits[parameter];
@@ -265,13 +266,19 @@ function buildValidation(config: Dvor1150Config): Dvor1150Snapshot["validation"]
   return validation;
 }
 
-const adParameterMeta: Record<Dvor1150AdParameter, { label: string; unit: string; base: number }> = {
-  plus5V: { label: "+5 VDC", unit: "Volts", base: 5 },
-  plus12V: { label: "+12 VDC", unit: "Volts", base: 12 },
-  plus12VLogic: { label: "+12 VDC", unit: "Volts", base: 12 },
-  plus28V: { label: "+28 VDC", unit: "Volts", base: 28 },
-  paVoltage: { label: "PA Voltage", unit: "Volts", base: 45 },
+const adParameterLabels: Record<Dvor1150AdParameter, string> = {
+  plus5V: "+5 VDC",
+  plus12V: "+12 VDC",
+  plus12VLogic: "-12 VDC",
+  plus28V: "+28 VDC",
+  paVoltage: "PA Voltage",
 };
+
+export function dvor1150AdStatus({ value, low, preLow, preHigh, high }: Dvor1150AdRow): Dvor1150IndicatorColor {
+  if (value < low || value > high) return "red";
+  if (value < preLow || value > preHigh) return "yellow";
+  return "green";
+}
 
 function adRowsFor(
   config: Dvor1150Config,
@@ -282,20 +289,20 @@ function adRowsFor(
   const values: Record<Dvor1150AdParameter, number> = {
     plus5V: 5 + (outputFactor - 1) * 0.03,
     plus12V: 12 + (outputFactor - 1) * 0.08,
-    plus12VLogic: 12 + (outputFactor - 1) * -0.05,
+    plus12VLogic: -12 + (outputFactor - 1) * 0.05,
     plus28V: 28 + (outputFactor - 1) * 0.12,
     paVoltage: 45 + (outputFactor - 1) * 2.2,
   };
-  return (Object.keys(adParameterMeta) as Dvor1150AdParameter[]).map((parameter) => {
+  return (Object.keys(adParameterLabels) as Dvor1150AdParameter[]).map((parameter) => {
     const limits = config.rms.adLimits[transmitterId][parameter];
     return {
-      parameter: adParameterMeta[parameter].label,
+      parameter: adParameterLabels[parameter],
       low: limits.low,
       preLow: limits.preLow,
       value: values[parameter],
       preHigh: limits.preHigh,
       high: limits.high,
-      unit: adParameterMeta[parameter].unit,
+      unit: "Volts",
     };
   });
 }
@@ -515,7 +522,11 @@ export function buildDvor1150Snapshot(
   const monitorTestResults = buildMonitorTestResults(config);
   const certificationResults = buildCertificationResults(config, monitors);
   const faultHistory = buildFaultHistory(config, monitors, timestamp, effectiveTransmitters);
-  const maintenanceAlert = config.simulation.alert || monitorAnnunciation.preAlarm || monitorAnnunciation.alarm;
+  const adAlert = [...adDataByTransmitter.tx1,
+    ...(config.station.transmitterConfig === "Dual Transmitters" ? adDataByTransmitter.tx2 : []),
+    ...temperatureData.slice(0, config.station.transmitterConfig === "Dual Transmitters" ? 3 : 2)]
+    .some((row) => dvor1150AdStatus(row) !== "green");
+  const maintenanceAlert = config.simulation.alert || adAlert || monitorAnnunciation.preAlarm || monitorAnnunciation.alarm;
   const data: Dvor1150Snapshot["data"] = {
     connected: config.simulation.connected,
     local: config.simulation.local,

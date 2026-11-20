@@ -1953,18 +1953,27 @@ input[type="checkbox"].dvor1150-control {
   width: 36%;
 }
 
-.dvor1150-pmdt-window .dvor1150-rms-ad-grid {
-  grid-template-columns: 218px 218px 170px;
-  align-items: start;
-  gap: 5px;
-}
-
 .dvor1150-pmdt-window .dvor1150-ad-panel .dvor1150-table {
   width: 100%;
 }
 
 .dvor1150-pmdt-window .dvor1150-ad-panel .dvor1150-control {
-  width: 52px;
+  width: 41px;
+}
+
+.dvor1150-pmdt-window .dvor1150-rms-station-panel output {
+  padding: 2px 5px;
+  border: 1px inset #aaa;
+}
+
+.dvor1150-pmdt-window .dvor1150-config-mismatch,
+.dvor1150-pmdt-window .dvor1150-config-notice {
+  color: #740000;
+  background: #ffc5c5;
+}
+
+.dvor1150-pmdt-window .dvor1150-config-notice {
+  padding: 2px 5px;
 }
 
 .dvor1150-pmdt-window .dvor1150-ad-limit-panel .dvor1150-table {

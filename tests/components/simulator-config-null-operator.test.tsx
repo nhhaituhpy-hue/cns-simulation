@@ -115,10 +115,9 @@ it.each(["dvor-1150a", "dme-1119a", "dvor-1150", "dvor-220", "dme-320"] as const
       });
     } else {
       await act(async () => {
-        useDvor1150PmdtStore.setState({ configDirty: true });
         const next = structuredClone(useDvor1150PmdtStore.getState().config);
         next.station.stationDescription = "Focused null-operator transition";
-        useDvor1150PmdtStore.setState({ config: next, configDirty: false, lastCommand: "Apply (F7)" });
+        useDvor1150PmdtStore.setState({ config: next, configurationCommit: { action: "apply" } });
       });
     }
     await waitFor(() => expect(bodies).toHaveLength(1));
@@ -128,3 +127,72 @@ it.each(["dvor-1150a", "dme-1119a", "dvor-1150", "dvor-220", "dme-320"] as const
     await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("saved"));
   },
 );
+
+it("persists DVOR 1150 Apply, accepts Backup only on success, and restores the acknowledged backup", async () => {
+  const store = useDvor1150PmdtStore;
+  store.getState().reset();
+  const base = getSimulatorConfigAdapter("dvor-1150")!.getDefaultConfig();
+  let applied = base;
+  let backup = base;
+  let revision = 5;
+  let failBackup = true;
+  const puts: { action: string; expectedRevision: number }[] = [];
+  const errorLog = vi.spyOn(console, "error").mockImplementation(() => undefined);
+  vi.stubGlobal("fetch", vi.fn(async (_url: string, options: RequestInit) => {
+    if (options.method === "PUT") {
+      const payload = JSON.parse(options.body as string);
+      puts.push(payload);
+      if (payload.action === "backup" && failBackup) return Response.json({ error: "Save failed" }, { status: 500 });
+      applied = payload.config;
+      backup = payload.backupConfig ?? backup;
+      revision++;
+    }
+    return Response.json({ simulatorId: "dvor-1150", persisted: true, appliedConfig: applied, backupConfig: backup, revision, history: [] });
+  }));
+
+  try {
+    const surface = render(<Dvor1150ConfigPersistenceBoundary />);
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("saved"));
+    const state = store.getState();
+    act(() => {
+      state.login("SEC3", "THREE");
+      state.setLocalMode(true);
+      state.setConfigValue("transmitters.tx1.nominal.outputPower", 60);
+      expect(state.applyConfigChanges()).toBe(true);
+      expect(store.getState().lastCommand).toMatch(/^Automatic monitor/);
+      state.setConfigValue("station.stationDescription", "Unapplied");
+      expect(state.resetConfigDraft()).toBe(true);
+      expect(state.backupConfig()).toBe(true);
+      expect(state.restoreConfig()).toBe(false);
+    });
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("could not be saved"));
+    expect(puts.map(({ action }) => action)).toEqual(["apply", "backup"]);
+    expect(store.getState().needBackup).toBe(true);
+    expect(store.getState().configurationBackup?.transmitters.tx1.nominal.outputPower).toBe(100);
+
+    failBackup = false;
+    act(() => { expect(state.backupConfig()).toBe(true); });
+    await waitFor(() => expect(store.getState().needBackup).toBe(false));
+    act(() => {
+      state.setMonitorBypass("mon1", true);
+      state.setConfigValue("transmitters.tx1.nominal.outputPower", 105);
+      expect(state.applyConfigChanges()).toBe(true);
+      expect(state.restoreConfig()).toBe(true);
+    });
+    await waitFor(() => expect(puts.map(({ expectedRevision }) => expectedRevision)).toEqual([5, 6, 6, 7, 8]));
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("saved"));
+    expect(store.getState().config.transmitters.tx1.nominal.outputPower).toBe(60);
+    expect(store.getState().config.simulation).toMatchObject({ connected: true, local: true, integralMonitorBypass: true });
+    expect(store.getState().connectionType).toBe("direct");
+
+    surface.unmount();
+    store.getState().reset();
+    render(<Dvor1150ConfigPersistenceBoundary />);
+    await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("saved"));
+    expect(store.getState().config.transmitters.tx1.nominal.outputPower).toBe(60);
+    expect(store.getState().config.simulation).toMatchObject({ connected: false, local: false, integralMonitorBypass: false });
+    expect(store.getState().needBackup).toBe(false);
+  } finally {
+    errorLog.mockRestore();
+  }
+});

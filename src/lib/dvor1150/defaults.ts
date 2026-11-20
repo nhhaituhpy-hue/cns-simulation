@@ -35,7 +35,7 @@ const defaultAdLimits = (): Dvor1150Config["rms"]["adLimits"] => {
   const transmitter: Record<Dvor1150AdParameter, Dvor1150AdLimitBand> = {
     plus5V: defaultAdBand(4.75, 4.85, 5.15, 5.25),
     plus12V: defaultAdBand(11.5, 11.7, 12.3, 12.5),
-    plus12VLogic: defaultAdBand(11.5, 11.7, 12.3, 12.5),
+    plus12VLogic: defaultAdBand(-12.5, -12.3, -11.7, -11.5),
     plus28V: defaultAdBand(27, 27.5, 28.5, 29),
     paVoltage: defaultAdBand(42.7, 43.5, 47.5, 48.1),
   };
@@ -49,6 +49,16 @@ const defaultAdLimits = (): Dvor1150Config["rms"]["adLimits"] => {
     },
   };
 };
+
+export function migrateDvor1150NegativeRail(config: Dvor1150Config): Dvor1150Config {
+  for (const id of ["tx1", "tx2"] as const) {
+    const { low, preLow, preHigh, high } = config.rms.adLimits[id].plus12VLogic;
+    if (low > 0 && low < preLow && preLow <= preHigh && preHigh < high) {
+      config.rms.adLimits[id].plus12VLogic = defaultAdBand(-high, -preHigh, -preLow, -low);
+    }
+  }
+  return config;
+}
 
 function transmitter(
   overrides: Partial<Dvor1150TransmitterConfig> = {},

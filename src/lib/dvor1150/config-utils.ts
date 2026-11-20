@@ -100,9 +100,9 @@ const adLimitFields = (["tx1", "tx2"] as const).flatMap((transmitter) =>
   (["plus5V", "plus12V", "plus12VLogic", "plus28V", "paVoltage"] as const).flatMap((parameter) =>
     (["low", "preLow", "preHigh", "high"] as const).map((band) => numeric(
       `rms.adLimits.${transmitter}.${parameter}.${band}`,
-      `${transmitter.toUpperCase()} ${parameter} ${band}`,
+      `${transmitter.toUpperCase()} ${parameter === "plus12VLogic" ? "-12 VDC" : parameter} ${band}`,
       "RMS A/D Limits",
-      { step: 0.01, digits: 2 },
+      { step: 0.01, digits: 2, ...(parameter === "plus12VLogic" ? { max: 0 } : {}) },
     )),
   ),
 );
@@ -139,9 +139,17 @@ const transmitterFields = DVOR1150_TRANSMITTER_IDS.flatMap((transmitter) => [
   numeric(`transmitters.${transmitter}.offsets.cabinetTemperatureOffset`, `${transmitter.toUpperCase()} Cabinet Temperature Offset`, "Transmitter Offsets", { min: -50, max: 50, step: 0.1, digits: 1, unit: "°C" }),
 ]);
 
+// Rev. K Table 9-3 numbers the 50 kHz channels from 1, least-significant bit first.
+export function getDvor1150SynthesizerSwitches(frequencyMHz: number): boolean[] | null {
+  const steps = (frequencyMHz - 108) * 20;
+  const channel = Math.round(steps) + 1;
+  if (channel < 1 || channel > 200 || Math.abs(steps - Math.round(steps)) > 1e-7 || !Number.isFinite(steps)) return null;
+  return Array.from({ length: 8 }, (_, index) => (channel & (1 << index)) !== 0);
+}
+
 export const dvor1150ConfigFieldCatalog: readonly Dvor1150ConfigFieldDefinition[] = [
   { id: "station.stationDescription", label: "Station Description", section: "Station", type: "text" },
-  numeric("station.frequencyMHz", "Transmitter Frequency", "Station", { min: 108, max: 118, step: 0.0001, digits: 4, unit: "MHz" }),
+  numeric("station.frequencyMHz", "Transmitter Frequency", "Station", { min: 108, max: 117.95, step: 0.05, digits: 4, unit: "MHz" }),
   { id: "station.stationType", label: "Station Type", section: "Station", type: "select", options: ["CVOR", "DVOR"] },
   { id: "station.transmitterConfig", label: "Transmitter Configuration", section: "Station", type: "select", options: ["Single Transmitter", "Dual Transmitters"] },
   { id: "station.monitorConfig", label: "Monitor Configuration", section: "Station", type: "select", options: ["Single Monitor", "Dual Monitors"] },
@@ -237,6 +245,9 @@ export interface Dvor1150ConfigPatch {
 
 export function validateDvor1150Config(config: Dvor1150Config): string[] {
   const errors: string[] = [];
+  if (!getDvor1150SynthesizerSwitches(config.station.frequencyMHz)) {
+    errors.push("Transmitter Frequency must be a 50 kHz channel from 108.000 to 117.950 MHz.");
+  }
   for (const field of dvor1150ConfigFieldCatalog) {
     const value = getDvor1150ConfigValue(config, field.id);
     const error = validateDvor1150ConfigField(field, value);

@@ -1,6 +1,7 @@
 import {
   cloneDvor1150Config,
-  createDefaultDvor1150Config,
+  defaultDvor1150Config,
+  migrateDvor1150NegativeRail,
 } from "@/lib/dvor1150/defaults";
 import type { Dvor1150Config } from "@/lib/dvor1150/types";
 import { hasSameJsonShape } from "./shape";
@@ -12,16 +13,20 @@ import {
 
 function normalizeRuntimeFields(config: Dvor1150Config): Dvor1150PersistedConfig {
   const next = cloneDvor1150Config(config);
-  const defaultConfig = createDefaultDvor1150Config();
+  const defaultConfig = defaultDvor1150Config;
 
   // Connection, login, Local/Bypass and the clock belong to the live PMDT
   // session. They must not leak into a user's saved station configuration.
   next.simulation = { ...defaultConfig.simulation };
+  for (const id of ["tx1", "tx2"] as const) {
+    const { enabled, onAir, load } = defaultConfig.transmitters[id];
+    Object.assign(next.transmitters[id], { enabled, onAir, load });
+  }
   return next;
 }
 
 export function getDefaultDvor1150Config(): Dvor1150PersistedConfig {
-  return normalizeRuntimeFields(createDefaultDvor1150Config());
+  return normalizeRuntimeFields(defaultDvor1150Config);
 }
 
 export function extractDvor1150Config(value: Dvor1150Config): Dvor1150PersistedConfig {
@@ -31,7 +36,7 @@ export function extractDvor1150Config(value: Dvor1150Config): Dvor1150PersistedC
 export function parseDvor1150Config(value: unknown): Dvor1150PersistedConfig | null {
   const reference = getDefaultDvor1150Config();
   if (!hasSameJsonShape(value, reference)) return null;
-  return normalizeRuntimeFields(value as Dvor1150Config);
+  return migrateDvor1150NegativeRail(normalizeRuntimeFields(value as Dvor1150Config));
 }
 
 export const dvor1150ConfigAdapter: SimulatorConfigAdapter<Dvor1150PersistedConfig> = {

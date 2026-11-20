@@ -21,6 +21,7 @@ export function Dvor1150Toolbar({ title, nextAvailable, securityDraftDirty = fal
   const dirty = useDvor1150PmdtStore((state) => state.configDirty);
   const security = useDvor1150PmdtStore((state) => state.securityLevel);
   const local = useDvor1150PmdtStore((state) => state.config.simulation.local);
+  const lastCommand = useDvor1150PmdtStore((state) => state.lastCommand);
   const activeView = useDvor1150PmdtStore((state) => state.activeView);
   const configScreen = useDvor1150PmdtStore((state) => ["rms-config", "monitor-config", "tx-config"].includes(state.activeScreen));
   const canEditCodes = useDvor1150PmdtStore(canEditDvor1150SecurityCodes);
@@ -51,6 +52,7 @@ export function Dvor1150Toolbar({ title, nextAvailable, securityDraftDirty = fal
           data-pmdt-key="F8" disabled={!canEdit} onClick={onSecurityCodes ? undefined : resetConfigDraft}><ArrowCounterClockwise size={12} /> Reset (F8)</button>
       </div>
       <span className="sr-only" role="status">{copyMessage}</span>
+      {configScreen && !onSecurityCodes && (lastCommand?.startsWith("Apply failed:") || lastCommand?.startsWith("Apply blocked:")) ? <span className="dvor1150-config-notice" role="alert">{lastCommand}</span> : null}
     </div>
   );
 }

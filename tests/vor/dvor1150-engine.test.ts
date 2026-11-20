@@ -10,8 +10,67 @@ import {
   validateDvor1150ScenarioDefinition,
 } from "@/lib/dvor1150";
 import { createDvor1150PmdtStore } from "@/stores/dvor1150-pmdt-store";
+import { getDvor1150SynthesizerSwitches } from "@/lib/dvor1150/config-utils";
+import { dvor1150AdStatus } from "@/lib/dvor1150/engine";
+import { parseDvor1150Config } from "@/lib/simulator-config/dvor-1150";
 
 describe("DVOR 1150 configuration and PMDT engine", () => {
+  it.each([[108, "10000000"], [108.05, "01000000"], [112.1, "11001010"],
+    [117.95, "00010011"]] as const)("maps %s MHz to the Rev. K S1 switch order", (frequency, expected) => {
+    expect(getDvor1150SynthesizerSwitches(frequency)?.map(Number).join("")).toBe(expected);
+  });
+
+  it("rejects off-channel drafts and updates carrier and sidebands on Apply", () => {
+    const store = createDvor1150PmdtStore();
+    const state = store.getState();
+    state.login("SEC3", "THREE");
+    state.setLocalMode(true);
+    state.setConfigValue("station.frequencyMHz", 112.125);
+    expect(state.applyConfigChanges()).toBe(false);
+    expect(getDvor1150SynthesizerSwitches(112.125)).toBeNull();
+    expect(store.getState().derived.effectiveTransmitters.tx1.carrierFrequency).toBe(112.1);
+    state.setConfigValue("station.frequencyMHz", 113.85);
+    expect(state.applyConfigChanges()).toBe(true);
+    const { derived } = store.getState();
+    expect(derived.effectiveTransmitters.tx1.carrierFrequency).toBe(113.85);
+    expect(derived.effectiveTransmitters.tx1.lowerSidebandFrequency).toBeCloseTo(113.84004);
+    expect(derived.effectiveTransmitters.tx1.upperSidebandFrequency).toBeCloseTo(113.85996);
+    expect(derived.activeTransmitter).toBe("tx1");
+  });
+
+  it("migrates the legacy second 12 V rail with ordered signed limits", () => {
+    const old = cloneDvor1150Config(defaultDvor1150Config);
+    old.rms.adLimits.tx2.plus12VLogic = { low: 11, preLow: 11.8, preHigh: 12.4, high: 12.8 };
+    const migrated = parseDvor1150Config(old)!;
+    expect(old.rms.adLimits.tx2.plus12VLogic.low).toBe(11);
+    expect(migrated.rms.adLimits.tx2.plus12VLogic).toEqual({ low: -12.8, preLow: -12.4, preHigh: -11.8, high: -11 });
+    expect(parseDvor1150Config(migrated)).toEqual(migrated);
+    const rows = buildDvor1150Snapshot(migrated).data.adDataByTransmitter;
+    for (const id of ["tx1", "tx2"] as const) {
+      expect(rows[id].find((row) => row.parameter === "-12 VDC")?.value).toBeCloseTo(-12);
+      expect(rows[id].find((row) => row.parameter === "+12 VDC")?.value).toBeCloseTo(12);
+    }
+  });
+
+  it.each(["rms.adLimits.tx1.plus12VLogic", "rms.adLimits.temperature.tx1"])(
+    "%s can raise RMS maintenance status without moving the RF route", (prefix) => {
+      const store = createDvor1150PmdtStore();
+      const state = store.getState();
+      state.login("SEC3", "THREE");
+      state.setLocalMode(true);
+      const temperature = prefix.includes("temperature");
+      [temperature ? 19 : -11.95, temperature ? 20 : -11.9, temperature ? 22 : -11.8, temperature ? 23 : -11.7]
+        .forEach((value, index) => state.setConfigValue(`${prefix}.${["low", "preLow", "preHigh", "high"][index]}`, value));
+      expect(state.applyConfigChanges()).toBe(true);
+      const { derived } = store.getState();
+      const row = temperature ? derived.data.temperatureData[1] : derived.data.adDataByTransmitter.tx1[2];
+      expect(dvor1150AdStatus(row)).toBe("red");
+      expect(derived.data.rmsStatus.maintenanceAlert).toBe(true);
+      expect(derived.activeTransmitter).toBe("tx1");
+      expect(derived.transfer.cause).toBe("none");
+    },
+  );
+
   it("routes the default antenna path and keeps VSWR values physical", () => {
     const snapshot = buildDvor1150Snapshot(defaultDvor1150Config);
 
@@ -101,8 +160,9 @@ describe("DVOR 1150 configuration and PMDT engine", () => {
     store.getState().setConfigValue("transmitters.tx2.nominal.outputPower", 90);
     expect(store.getState().applyConfigChanges()).toBe(true);
     expect(store.getState().restoreConfig()).toBe(true);
-    expect(store.getState().derived.effectiveTransmitters.tx2.outputPower).toBe(100);
-    expect(store.getState().config.simulation.local).toBe(false);
+    expect(store.getState().derived.effectiveTransmitters.tx2.outputPower).toBe(80);
+    expect(store.getState().config.simulation).toMatchObject({ connected: true, local: true, integralMonitorBypass: true });
+    expect(store.getState().connectionType).toBe("direct");
     expect(store.getState().needBackup).toBe(false);
   });
 
@@ -163,20 +223,23 @@ describe("DVOR 1150 configuration and PMDT engine", () => {
     expect(buildDvor1150Snapshot(outputPower).monitors.mon1.parameters.hz9960Modulation.value).toBeCloseTo(29.4 * Math.sqrt(1.1), 2);
   });
 
-  it("restores Reset (F8) to Simulation Parameters baseline", () => {
+  it("resets unapplied changes without touching running data, logs or backup", () => {
     const store = createDvor1150PmdtStore();
     expect(store.getState().login("SEC3", "THREE")).toBe(true);
     expect(store.getState().setLocalMode(true)).toBe(true);
     store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 120);
     expect(store.getState().applyConfigChanges()).toBe(true);
+    const applied = store.getState();
+    applied.setConfigValue("transmitters.tx1.nominal.outputPower", 90);
 
     expect(store.getState().resetConfigDraft()).toBe(true);
     const state = store.getState();
-    expect(state.config.transmitters.tx1.nominal.outputPower).toBe(100);
-    expect(state.config.monitor.calibration.mon1.fieldDetector.hz9960DeviationScale).toBe(100);
-    expect(state.config.simulation.local).toBe(false);
-    expect(state.needBackup).toBe(false);
-    expect(state.derived.monitors.mon1.parameters.rfLevel.value).toBeCloseTo(0.2, 5);
+    expect(state.configDraft.transmitters.tx1.nominal.outputPower).toBe(120);
+    expect(state.config).toBe(applied.config);
+    expect(state.derived).toBe(applied.derived);
+    expect(state.configurationBackup).toBe(applied.configurationBackup);
+    expect(state.parameterChangeLogs).toBe(applied.parameterChangeLogs);
+    expect(state.needBackup).toBe(true);
   });
 
   it("keeps the logical Main on TX1 after a one-step automatic transfer to TX2", () => {
@@ -237,7 +300,11 @@ describe("DVOR 1150 configuration and PMDT engine", () => {
     state = store.getState();
     expect(evaluateDvor1150Scenario(state.scenario, state.derived, state.config).solved).toBe(true);
 
+    state.setConfigValue("transmitters.tx1.nominal.outputPower", 90);
     expect(state.resetConfigDraft()).toBe(true);
+    expect(store.getState().configDraft.transmitters.tx1.nominal.outputPower).toBe(100);
+    expect(state.restoreConfig()).toBe(false);
+    expect(state.restoreScenario()).toBe(true);
     state = store.getState();
     expect(state.config.transmitters.tx1.nominal.outputPower).toBe(40);
     expect(state.config.simulation.integralMonitorBypass).toBe(true);
