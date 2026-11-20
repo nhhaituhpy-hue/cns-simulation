@@ -197,6 +197,7 @@
 #dvor1150-arrow-external path { fill: #535f63; }
 
 .pathLabels text,
+.samplePath text,
 .diagramReference,
 .signalLegend text,
 .isolatorBlock text,
@@ -206,6 +207,8 @@
   font-size: 10px;
   font-weight: 700;
 }
+
+.samplePath text { stroke: none; }
 
 .pathLabels text,
 .antennaSymbol text {
