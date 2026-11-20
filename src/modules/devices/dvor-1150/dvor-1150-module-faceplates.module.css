@@ -222,6 +222,13 @@
 .statusLamp[data-color="green"] { fill: #21d55a; filter: drop-shadow(0 0 6px #12a940); }
 .statusLamp[data-color="red"] { fill: #ef3c39; filter: drop-shadow(0 0 6px #c71e1c); }
 .statusLamp[data-color="amber"] { fill: #ffc533; filter: drop-shadow(0 0 6px #d89f00); }
+.statusLamp[data-active="false"] { fill: #655b38; filter: none; }
+
+.statusBypassSwitch { cursor: pointer; outline: none; }
+.statusBypassSwitch rect { fill: #a5afaf; stroke: #647174; stroke-width: 2; }
+.statusBypassSwitch circle { fill: #39474b; stroke: #d9dedd; stroke-width: 2; }
+.statusBypassSwitch path { stroke: #eef2f1; stroke-width: 8; stroke-linecap: round; }
+.statusBypassSwitch:focus-visible rect { stroke: #096b87; stroke-width: 4; }
 
 .statusLabel {
   font-size: 13px;
