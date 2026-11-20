@@ -54,6 +54,7 @@
 - QA sau khi hợp nhất: tách nhãn AC OK/FAIL và DC OK/FAIL phía trên hai đèn tương ứng; dời tiêu đề EMU, MODEM và ASU-IF xuống dưới vít. Không đổi vị trí đèn, vít, cấu hình phần cứng hoặc phép đo.
 - QA vòng 2: tách hai giắc JTAG trên MON và chừa khoảng cách giữa ejector dưới với chân đo MON TP51 và MSG TP64 (Fig. 7-17 / 7-11); không đổi vị trí chân đo hoặc tham chiếu tín hiệu.
 - [Đối chiếu ảnh tủ Cam Ranh](docs/simulators/dvor-220-manual-fidelity-audit.md#đối-chiếu-ảnh-tủ-cam-ranh): vẽ ba AC/DC ở A1/A3/A5, khay AUX theo ảnh, nhóm đầu nối IFB và 1PD1 nằm dọc ở mặt sau. Khối không lắp chỉ chọn từ sơ đồ chức năng; không suy pinout, thứ tự BNC hay cấu hình bên trong ASU.
+- ASU dùng P/N 0233-7211 (bản có Power Monitor) làm tham chiếu huấn luyện theo manual, không khẳng định đây là P/N của tủ Cam Ranh.
 
 ### DVOR 220 — cửa sổ PMDT (đợt Cam Ranh)
 
@@ -70,7 +71,7 @@
 ### DVOR 220 — hiệu chuẩn PMDT (đợt Cam Ranh)
 
 - TX Reading và TX Setpoint tách bảng TX1/TX2, có hộp thoại từng thông số và một ô nhập giá trị tham chiếu. TX Reading sửa số đo CMA/SMA; TX Setpoint đổi hệ số và giá trị đặt hiển thị, không làm đổi tín hiệu phát khi hiệu chuẩn.
-- MON Cal tách MON1, MON2 và Frequency. PDC có phép hiệu chuẩn công suất độc lập theo năm đầu ra. Nút VSWR sideband có đúng vị trí để đối chiếu nhưng chưa bật do chưa có quy trình xác nhận.
+- MON Cal tách MON1, MON2 và Frequency. PDC có phép hiệu chuẩn công suất độc lập theo năm đầu ra. Không mô phỏng hiệu chuẩn VSWR sideband: không gán điểm đo và giữ bốn nút ở trạng thái vô hiệu hóa để đối chiếu.
 - Initialize và Calibrate tác động trên bộ nhớ chạy; Save lưu đúng mục đang hiệu chuẩn vào bộ nhớ không mất dữ liệu mô phỏng. Kiểm tra luồng và trạng thái bằng các test trong `tests/dvor220/`.
 
 ## DVOR 1150A và DME 1119A — nền mục cấu hình bắt buộc
