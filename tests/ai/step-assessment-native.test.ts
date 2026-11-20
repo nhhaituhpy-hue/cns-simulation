@@ -35,7 +35,7 @@ function compiledSelex(moduleId: "dvor-1150" | "dvor-1150a") {
   ], { status: "supported", moduleId, templateId: "carrier-9960", title: "Training output recovery", situation: "Simulated low output", cause: "Training setting",
     citations: [{ documentId: "synthetic", segmentLabel: "Test section", quote }],
     initial: [{ fieldId: "configuration.transmitters.tx1.nominal.outputPower", value: 37.4, citationIndexes: [0] }],
-    recovery: [{ fieldId: "configuration.transmitters.tx1.nominal.outputPower", value: moduleId === "dvor-1150a" ? 70 : 125, citationIndexes: [0] }, { fieldId: "startPolicy.startMonitorBypassed", value: false, citationIndexes: [0] }],
+    recovery: [{ fieldId: "configuration.transmitters.tx1.nominal.outputPower", value: moduleId === "dvor-1150a" ? 70 : 106, citationIndexes: [0] }, { fieldId: "startPolicy.startMonitorBypassed", value: false, citationIndexes: [0] }],
     diagnosisCitationIndexes: [0],
   });
 }
@@ -71,7 +71,7 @@ it("assesses a compiled DVOR1150 rubric from native legacy payload without inven
   store.setState({ mode: "student", config: preview.config, configDraft: structuredClone(preview.config), derived: preview.snapshot,
     scenario: { active: true, definition, startedAt: null }, securityLevel: 3, loginDialogOpen: false });
   for (const checkpoint of definition.diagnosis!.pmdtCheckpoints) store.getState().openView("monitor-data", checkpoint.viewId as never, [], checkpoint.label);
-  store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 125);
+  store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 106);
   expect(store.getState().applyConfigChanges()).toBe(true);
   expect(store.getState().setMonitorBypass("mon1", false)).toBe(true);
   const state = store.getState();

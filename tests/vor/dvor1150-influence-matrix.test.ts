@@ -29,7 +29,7 @@ describe("DVOR 1150 RF and monitor influence matrix", () => {
 
   it("annunciates an installed monitor alarm independently of voting and bypass", () => {
     const config = cloneDvor1150Config(defaultDvor1150Config);
-    config.monitor.votingLogic = "OR";
+    config.monitor.votingLogic = "AND";
     config.simulation.integralMonitorBypass = true;
     config.monitor.calibration.mon2.fieldDetector.hz9960ModulationScale = 120;
     const snapshot = buildDvor1150Snapshot(config);
@@ -37,6 +37,8 @@ describe("DVOR 1150 RF and monitor influence matrix", () => {
     expect(snapshot.monitors.mon2.parameters.hz9960Modulation.value).toBe(36);
     expect(snapshot.monitorAnnunciation.alarm).toBe(true);
     expect(snapshot.data.monitorIntegral.alarm).toBe(false);
+    config.monitor.votingLogic = "OR";
+    expect(buildDvor1150Snapshot(config).data.monitorIntegral).toMatchObject({ alarm: true, bypass: true });
     config.station.monitorConfig = "Single Monitor";
     expect(buildDvor1150Snapshot(config).monitorAnnunciation.alarm).toBe(false);
   });

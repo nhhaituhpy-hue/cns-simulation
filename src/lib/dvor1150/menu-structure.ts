@@ -5,9 +5,9 @@ const transmitterCommands = (id: "tx1" | "tx2"): Dvor1150MenuItem => ({
   label: id === "tx1" ? "Transmitter 1" : "Transmitter 2",
   enabled: true,
   children: [
-    { id: `tx-${id}-antenna`, label: "Antenna", enabled: true, action: "set-transmitter-mode", transmitterId: id, transmitterMode: "main" },
-    { id: `tx-${id}-load`, label: "Load", enabled: true, action: "set-transmitter-mode", transmitterId: id, transmitterMode: "load" },
-    { id: `tx-${id}-off`, label: "Off", enabled: true, action: "set-transmitter-mode", transmitterId: id, transmitterMode: "off" },
+    { id: `tx-${id}-antenna`, label: "Switch to Antenna", enabled: true, action: "set-transmitter-mode", transmitterId: id, transmitterMode: "antenna" },
+    { id: `tx-${id}-load`, label: "Switch to Load", enabled: true, action: "set-transmitter-mode", transmitterId: id, transmitterMode: "load" },
+    { id: `tx-${id}-off`, label: "Turn Off", enabled: true, action: "set-transmitter-mode", transmitterId: id, transmitterMode: "off" },
   ],
 });
 

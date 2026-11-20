@@ -437,6 +437,12 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-11-20 — DVOR 1150 PMDT: vận hành TX và monitor
+
+- Theo Rev. K §2.3.6 và Bảng 3-4, AND cần cả hai monitor báo lỗi, OR cần một; Startup Delay và Shutdown Delay là hai bộ đếm riêng. Bypass vẫn hiện báo động nhưng ngắt đếm; bỏ Bypass bắt đầu đếm mới. Main, Antenna, Load và Off hiển thị riêng; chuyển do lỗi giữ Main, lỗi tiếp ở bộ phát dự phòng đưa cả hai về Off.
+- Fault History giữ ba lỗi gần nhất trong phiên và chụp số đo/trạng thái tại thời điểm tác động; không điền dữ liệu giả. Hai tab dùng cùng dấu thời gian. Ident Normal/Off/Continuous không tự chuyển TX.
+- **DEMO ASSUMPTION:** sau khi tự tắt chỉ chạy lần khởi động lại điều chỉnh được, trên Main; lần cố định 5 phút chưa đủ điều kiện để mô phỏng. Standby chỉ cho biết đường phát dự phòng; không có số đo standby hay lệnh Hold Commutator.
+
 ### 2026-11-20 — DVOR 1150 PMDT: cấu hình RMS
 
 - F7 áp dụng bản nháp vào cấu hình đang chạy; F8 chỉ bỏ thay đổi chưa áp dụng. Config Backup lưu cấu hình đang chạy; Config Restore nạp bản lưu mà không đổi Direct/Local, Integral Bypass hoặc đường phát hiện tại. Khôi phục bài tập là thao tác riêng tại Scenario Parameters.

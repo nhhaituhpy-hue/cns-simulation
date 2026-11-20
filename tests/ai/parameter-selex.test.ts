@@ -22,7 +22,7 @@ it("materializes a non-preset DVOR 1150 setting without changing the baseline co
 });
 
 describe.each([
-  ["dvor-1150", "carrier-9960", "transmitters.tx1.nominal.outputPower", 37.4, 125],
+  ["dvor-1150", "carrier-9960", "transmitters.tx1.nominal.outputPower", 37.4, 106],
   ["dvor-1150a", "carrier-9960", "transmitters.tx1.nominal.outputPower", 13.7, 70],
   ["dme-1119a", "tx1-delay-drift", "txConfigNominal.rtcParameters.replyDelayOffset", 0.17, -0.6],
 ] as const)("%s concrete engine recovery", (moduleId, template, field, stimulus, correction) => {
@@ -47,6 +47,15 @@ describe.each([
 });
 
 function expectCode(run: () => unknown, code: string) { expect(run).toThrowError(expect.objectContaining({ name: "AiScenarioError", code })); }
+
+it("rejects DVOR 1150 recovery that leaves the active transmitter in alarm", () => {
+  const source = createTemplateDefinition("dvor-1150", "carrier-9960");
+  const fieldId = "configuration.transmitters.tx1.nominal.outputPower";
+  expectCode(() => adapter.verify("dvor-1150", source, [
+    { fieldId, value: 125 },
+    { fieldId: "startPolicy.startMonitorBypassed", value: false },
+  ]), "INVALID_RECOVERY");
+});
 
 describe("strict SELEX parameter boundary", () => {
   const source = () => createTemplateDefinition("dvor-1150a", "carrier-9960");

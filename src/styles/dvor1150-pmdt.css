@@ -213,6 +213,12 @@
   white-space: nowrap;
 }
 
+.dvor1150-pmdt-window .dvor1150-transfer-status > span:last-child {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 .dvor1150-pmdt-window .dvor1150-dme-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 14px 14px;
@@ -2343,17 +2349,25 @@ input[type="checkbox"].dvor1150-control {
   padding: 1px 5px;
 }
 
-.dvor1150-pmdt-window .dvor1150-history-dates {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 5px;
-  margin-bottom: 3px;
-}
-
-.dvor1150-pmdt-window .dvor1150-history-dates .dvor1150-date {
+.dvor1150-pmdt-window .dvor1150-fault-monitor-data .dvor1150-date,
+.dvor1150-pmdt-window .dvor1150-fault-system-status .dvor1150-date {
   min-width: 0;
   margin-bottom: 0;
   text-align: center;
+}
+
+.dvor1150-pmdt-window .dvor1150-history-pair {
+  display: flex;
+  justify-content: space-evenly;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.dvor1150-pmdt-window .dvor1150-transfer-status {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin: 4px 0 0;
 }
 
 .dvor1150-pmdt-window .dvor1150-fault-monitor-data,

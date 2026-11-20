@@ -223,10 +223,10 @@ function transmitterSidebarState(
   return {
     // Main identifies the logical primary transmitter, independently from
     // the relay's current Antenna route during an automatic transfer.
-    main: transmitterId === mainId ? operatingColor : "gray" as const,
+    main: transmitterId === mainId ? "green" as const : "gray" as const,
     antenna: transmitterId === antennaId && transmitter.onAir ? operatingColor : "gray" as const,
     load: transmitter.load ? operatingColor : "gray" as const,
-    off: !transmitter.enabled || (!transmitter.onAir && !transmitter.load) ? "red" as const : "gray" as const,
+    off: !transmitter.enabled ? "red" as const : "gray" as const,
   };
 }
 
@@ -405,29 +405,6 @@ function buildNotchData(config: Dvor1150Config, active: Dvor1150EffectiveTransmi
   });
 }
 
-function buildFaultHistory(
-  config: Dvor1150Config,
-  monitors: Dvor1150Snapshot["monitors"],
-  timestamp: string,
-  effectiveTransmitters: Record<Dvor1150TransmitterId, Dvor1150EffectiveTransmitter>,
-): Dvor1150Snapshot["data"]["faultHistory"] {
-  const monitorData = DVOR1150_MONITOR_IDS.flatMap((monitorId) => DVOR1150_MONITOR_PARAMETERS.flatMap((parameter) => {
-    const result = monitors[monitorId].parameters[parameter];
-    return result.status === "normal" ? [] : [{ timestamp, monitor: monitorId, parameter, value: result.value, indicator: result.indicator }];
-  }));
-  return {
-    monitorData,
-    systemStatus: [{
-      timestamp,
-      monitorLogic: config.monitor.votingLogic,
-      monitor1Alarm: !monitors.mon1.healthy,
-      monitor2Alarm: !monitors.mon2.healthy,
-      tx1On: effectiveTransmitters.tx1.onAir,
-      tx2On: effectiveTransmitters.tx2.onAir,
-    }],
-  };
-}
-
 const idleTransferState = (): Dvor1150TransferState => ({
   cause: "none",
   phase: "idle",
@@ -439,7 +416,7 @@ const idleTransferState = (): Dvor1150TransferState => ({
 export function buildDvor1150Snapshot(
   config: Dvor1150Config,
   now = new Date(),
-  mainTransmitter?: Dvor1150TransmitterId,
+  mainTransmitter?: Dvor1150TransmitterId | null,
   transfer: Dvor1150TransferState = idleTransferState(),
 ): Dvor1150Snapshot {
   const effectiveTransmitters = {
@@ -447,11 +424,12 @@ export function buildDvor1150Snapshot(
     tx2: effectiveTransmitter(config, "tx2"),
   };
   const activeId = chooseActiveTransmitter(effectiveTransmitters);
-  const mainId = mainTransmitter ?? activeId;
+  const mainId = config.station.transmitterConfig === "Single Transmitter" && mainTransmitter === "tx2"
+    ? "tx1" : mainTransmitter === undefined ? activeId : mainTransmitter;
   const active = activeId ? effectiveTransmitters[activeId] : null;
   const monitors = {
-    mon1: monitorResult(config, "mon1", active, true),
-    mon2: monitorResult(config, "mon2", active, false),
+    mon1: monitorResult(config, "mon1", active, activeId === "tx1" || (activeId !== null && config.station.monitorConfig === "Single Monitor")),
+    mon2: monitorResult(config, "mon2", active, activeId === "tx2"),
   };
   const hasSecondaryMonitor = config.station.monitorConfig === "Dual Monitors";
   const timestamp = config.simulation.timestamp || formatDvor1150Timestamp(now);
@@ -467,12 +445,12 @@ export function buildDvor1150Snapshot(
   });
   const vswrAlarmCount = sidebandVswr.filter((row) => row.indicator !== "green").length;
   const vswrExecutiveAlarm = config.monitor.sidebandVswrExecutiveAlarm
-    && vswrAlarmCount >= config.monitor.numberOfAntennasInAlarm;
+    && vswrAlarmCount > config.monitor.numberOfAntennasInAlarm;
   const monitorHealthy = !hasSecondaryMonitor
     ? monitors.mon1.healthy
     : config.monitor.votingLogic === "AND"
-      ? monitors.mon1.healthy && monitors.mon2.healthy
-      : monitors.mon1.healthy || monitors.mon2.healthy;
+      ? monitors.mon1.healthy || monitors.mon2.healthy
+      : monitors.mon1.healthy && monitors.mon2.healthy;
   const systemHealthy = monitorHealthy && !vswrExecutiveAlarm;
   // Annunciation is independent of relay voting and Bypass.
   const installedMonitors = DVOR1150_MONITOR_IDS.filter((id) => isInstalledMonitor(config, id)).map((id) => monitors[id]);
@@ -505,12 +483,13 @@ export function buildDvor1150Snapshot(
       tx2: effectiveTransmitters.tx2.active ? effectiveTransmitters.tx2.sidebandVswr[index] : null,
     })),
   ];
+  const controllingMonitor = (monitors.mon2.controlling ? monitors.mon2 : monitors.mon1).parameters;
   const sidebarParams = {
-    azimuth: { value: monitors.mon1.parameters.azimuth.value, status: monitors.mon1.parameters.azimuth.status },
-    hz30Mod: { value: monitors.mon1.parameters.hz30Modulation.value, status: monitors.mon1.parameters.hz30Modulation.status },
-    hz9960Mod: { value: monitors.mon1.parameters.hz9960Modulation.value, status: monitors.mon1.parameters.hz9960Modulation.status },
-    deviation: { value: monitors.mon1.parameters.deviation.value, status: monitors.mon1.parameters.deviation.status },
-    rfLevel: { value: monitors.mon1.parameters.rfLevel.value, status: monitors.mon1.parameters.rfLevel.status },
+    azimuth: controllingMonitor.azimuth,
+    hz30Mod: controllingMonitor.hz30Modulation,
+    hz9960Mod: controllingMonitor.hz9960Modulation,
+    deviation: controllingMonitor.deviation,
+    rfLevel: controllingMonitor.rfLevel,
   };
   const adDataByTransmitter = {
     tx1: adRowsFor(config, "tx1", effectiveTransmitters.tx1),
@@ -521,7 +500,6 @@ export function buildDvor1150Snapshot(
   const groundCheck = buildGroundCheck(config, active);
   const monitorTestResults = buildMonitorTestResults(config);
   const certificationResults = buildCertificationResults(config, monitors);
-  const faultHistory = buildFaultHistory(config, monitors, timestamp, effectiveTransmitters);
   const adAlert = [...adDataByTransmitter.tx1,
     ...(config.station.transmitterConfig === "Dual Transmitters" ? adDataByTransmitter.tx2 : []),
     ...temperatureData.slice(0, config.station.transmitterConfig === "Dual Transmitters" ? 3 : 2)]
@@ -580,7 +558,7 @@ export function buildDvor1150Snapshot(
     monitorTestResults,
     certificationResults,
     notchData,
-    faultHistory,
+    faultHistory: [],
     sidebandVswr,
     txPower,
     txFrequency,

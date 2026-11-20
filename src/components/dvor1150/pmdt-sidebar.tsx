@@ -18,7 +18,7 @@ function Indicator({ color, locked = false }: { color: Dvor1150IndicatorColor; l
 
 const transmitterRows = [
   { key: "main", label: "Main", mode: "main" as const },
-  { key: "antenna", label: "Antenna", mode: undefined },
+  { key: "antenna", label: "Antenna", mode: "antenna" as const },
   { key: "load", label: "Load", mode: "load" as const },
   { key: "off", label: "Off", mode: "off" as const },
 ] as const;
@@ -26,6 +26,7 @@ const transmitterRows = [
 export function Dvor1150Sidebar() {
   const data = useDvor1150PmdtStore((state) => state.derived.data);
   const monitors = useDvor1150PmdtStore((state) => state.derived.monitors);
+  const transfer = useDvor1150PmdtStore((state) => state.derived.transfer);
   const config = useDvor1150PmdtStore((state) => state.config);
   const needBackup = useDvor1150PmdtStore((state) => state.needBackup);
   const monitorAlarm = useDvor1150PmdtStore((state) => state.derived.monitorAnnunciation.alarm);
@@ -39,7 +40,8 @@ export function Dvor1150Sidebar() {
   const canMain = security >= 3;
   const canMaintenance = security >= 3 && local;
   const bypassColor: Dvor1150IndicatorColor = config.simulation.integralMonitorBypass ? "yellow" : "gray";
-  const activeMonitor = monitors.mon1;
+  const activeMonitor = monitors.mon2.controlling ? monitors.mon2 : monitors.mon1;
+  const transferColor = transfer.cause === "manual" ? "green" : transfer.phase === "restarted" ? "yellow" : "red";
   const dualTransmitters = config.station.transmitterConfig === "Dual Transmitters";
   const sidebarParameterRows = [
     { key: "azimuth", id: "azimuth", label: "Azimuth Angle", digits: 2 },
@@ -55,7 +57,6 @@ export function Dvor1150Sidebar() {
     const color = data.transmitters[transmitter][row.key as keyof typeof data.transmitters["tx1"]];
     const commandAllowed = row.mode === "main" ? canMain : canMaintenance;
     const content = <Indicator color={color} locked={loginOpen} />;
-    if (!row.mode) return <span key={transmitter} className="pmdt-transmitter-status-cell">{content}</span>;
     return <button
       key={transmitter}
       type="button"
@@ -99,6 +100,7 @@ export function Dvor1150Sidebar() {
           {transmitterRows.map((row) => <div key={row.key} className="contents"><span className="pmdt-sidebar-grid-blank" />{renderTransmitterCell("tx1", row)}<span className="pmdt-transmitter-label">{row.label}</span><span className="pmdt-sidebar-grid-blank" /></div>)}
         </>}
       </div>
+      {!loginOpen && transfer.phase !== "idle" && <p role="status" className="dvor1150-transfer-status"><Indicator color={transferColor} /> <span>{transfer.message}</span></p>}
     </section>
     <section aria-labelledby="dvor1150-monitors" className="pmdt-sidebar-section">
       <h2 id="dvor1150-monitors" className="pmdt-sidebar-heading">Monitors</h2>

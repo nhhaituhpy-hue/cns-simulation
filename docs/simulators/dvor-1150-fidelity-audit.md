@@ -352,6 +352,15 @@ Giới hạn A/D −12 V đối dấu từ giá trị DEMO cũ, giữ bề rộn
 này không phải thông số nghiệm thu trạm. Backup ngoại tuyến chỉ tồn tại
 trong phiên; mật khẩu huấn luyện không tham gia lưu/khôi phục cấu hình.
 
+**DEMO ASSUMPTION — vận hành PMDT:** TM PDF 154 xác định vote trên
+*alarm* (AND = hai monitor, OR = một); Bảng 3-4 tách Startup Delay và
+Shutdown Delay. Sau mỗi lần lên antenna, mô phỏng áp dụng Startup Delay;
+sau Bypass cần đủ Shutdown Delay mới tác động. Fault History lưu tối đa
+ba sự kiện trong phiên (hình 3-30/31), chụp lỗi trước khi đổi đường. Lần
+khởi động lại điều chỉnh được chạy một lần trên Main sau shutdown; giữ
+TODO cho điều kiện lần cố định 5 phút. Standby chỉ báo Load/On/Off của bộ
+phát còn lại, không giả số đo; Hold Commutator giữ không khả dụng.
+
 Các mục sau **chưa được xác minh ngoài hiện trường**; giả định DEMO phía
 trên chỉ giúp xây demo, không thay câu trả lời của đồng nghiệp vận hành.
 
