@@ -99,9 +99,11 @@ describe("inline library auto-save", () => {
     const { fetchMock, read } = server();
     vi.stubGlobal("fetch", fetchMock);
     render(<Controls />);
-    await ready();
     const all = screen.getByRole("checkbox", { name: "Chọn tất cả Thư viện Ôn tập" });
-    expect(all).toHaveProperty("indeterminate", true);
+    await waitFor(() => {
+      expect(all).toBeEnabled();
+      expect(all).toHaveProperty("indeterminate", true);
+    });
     await user.click(all);
     await waitFor(() => expect(read().practice.map(x => x.id)).toEqual(["scenario-1", "scenario-2"]));
     await waitFor(() => expect(all).toBeEnabled());
