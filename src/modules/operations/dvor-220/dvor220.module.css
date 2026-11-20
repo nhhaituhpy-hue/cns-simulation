@@ -1,3 +1,89 @@
+.advancedTitle {
+  background: #97b7d2;
+  color: white;
+  padding: 7px;
+  font-weight: 600;
+}
+
+.advancedWarning {
+  color: #df2929;
+  text-align: center;
+  width: 620px;
+  max-width: 100%;
+  font-size: 11px;
+}
+
+.advancedWarning p {
+  margin: 14px 0;
+}
+
+.advancedControlsForm {
+  width: 620px;
+  max-width: 100%;
+}
+
+.advancedControlsForm .advancedSection {
+  border: 0;
+  margin-bottom: 3px;
+}
+
+.advancedControlsForm .advancedSection > summary {
+  background: transparent;
+  color: #5c829b;
+  border-bottom: 1px solid #aeb5bb;
+  font-weight: 400;
+  padding: 3px;
+}
+
+.advancedControlsForm .advancedSectionBody {
+  padding: 7px 18px;
+}
+
+.advancedRadioRow {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.advancedRadios {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  min-width: 190px;
+  border: 1px solid #d9dfe3;
+  padding: 5px;
+  color: #5c829b;
+}
+
+.advancedRadios label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.advancedDisabled {
+  opacity: 0.5;
+}
+
+.advancedTabs {
+  display: flex;
+  border-bottom: 1px solid #c7cdd2;
+}
+
+.advancedTabs button {
+  padding: 3px 14px;
+  border: 1px solid #c7cdd2;
+  background: #e3e6e9;
+  cursor: pointer;
+}
+
+.advancedTabs button[aria-selected="true"] {
+  background: white;
+  border-bottom-color: white;
+}
 .advancedSection {
   border: 1px solid #9aa9b5;
   margin-bottom: 10px;

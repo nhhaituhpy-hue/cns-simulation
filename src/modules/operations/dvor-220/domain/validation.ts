@@ -3,9 +3,15 @@ import {
   DVOR220_MONITOR_PARAMETERS,
   DVOR220_TRANSMITTER_IDS,
   type Dvor220AlarmBand,
+  type Dvor220AdvancedControls,
   type Dvor220Configuration,
   type Dvor220ValidationIssue,
 } from "./types";
+
+export function isDvor220AdvancedControlValue(control: unknown, value: unknown): control is keyof Dvor220AdvancedControls {
+  return ["identKeying", "sidebandBlending", "standbyAzimuthEmulation"].includes(String(control))
+    && (value === "normal" || value === "off" || (control === "identKeying" && value === "continuous"));
+}
 
 function issue(
   issues: Dvor220ValidationIssue[],

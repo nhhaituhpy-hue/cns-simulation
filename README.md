@@ -435,6 +435,23 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-11-20 — DVOR 220 Advanced Control theo Cam Ranh (thay PR #17)
+
+- Theo quyết định mới, CR 12–13 là chuẩn cho cảnh báo HMI, tab TX1/TX2 và
+  năm nhóm điều khiển. Gỡ Certification/Fault Clear khỏi trang; giữ lệnh
+  fault-clear của engine và Simulator Tools VSWR.
+- IDENT Keying, Sideband Blending và Standby Transmitter Azimuth Emulation
+  lưu riêng từng TX ở runtime, kiểm tra quyền Control, ghi Control log và về
+  Normal khi System Reset/power-cycle. Không đổi cấu hình Draft/Running/Flash.
+- IDENT Off/Continuous trên TX đang phát nối đường đọc/alarm ident1020Hz
+  hiện có; timing thực chưa biết, dùng averaging hiện có. Hai điều khiển RF
+  còn lại chỉ state/log; không suy đoán hiệu ứng. Manual Control giữ dialog
+  48 anten theo TM Fig.4-144; Run mở ground check có ràng buộc local/MAINT.
+- Bổ sung kiểm thử UI/engine cho từng TX, quyền, log, reset, snapshot và IDENT.
+  Giao diện chưa được kiểm tra trực quan trong trình duyệt.
+- Kiểm tra: lint/typecheck đạt (hai warning navigation sẵn có), DVOR 220
+  166/166 test; production build đạt; full regression 3149 pass, 213 skip.
+
 ### 2026-11-20 — DVOR 220 Advanced Controls theo TM
 
 - Thay console ba tab bằng bốn nhóm thu gọn theo TM: Monitor Certification,

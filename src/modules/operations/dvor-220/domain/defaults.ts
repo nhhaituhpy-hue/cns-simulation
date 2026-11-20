@@ -5,6 +5,7 @@ import {
   DVOR220_MONITOR_PARAMETERS,
   DVOR220_RF_OUTPUT_IDS,
   type Dvor220AlarmBand,
+  type Dvor220AdvancedControls,
   type Dvor220CalibrationState,
   type Dvor220CalibrationValues,
   type Dvor220Configuration,
@@ -18,6 +19,10 @@ import {
 } from "./types";
 
 const minutes = (value: number) => value * 60_000;
+
+export function createDvor220AdvancedControls(): Dvor220AdvancedControls {
+  return { identKeying: "normal", sidebandBlending: "normal", standbyAzimuthEmulation: "normal" };
+}
 
 function band(
   lowerAlarm: number | null,
@@ -278,6 +283,7 @@ function createTransmitterRuntime(
     thermalTrips: { cma: false, usb: false, lsb: false },
     fanOn: false,
     reverseFaultLatched: false,
+    advancedControls: createDvor220AdvancedControls(),
   };
 }
 

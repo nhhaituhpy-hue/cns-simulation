@@ -295,7 +295,7 @@ function GroundErrorGraph({ device }: { device: Dvor220DeviceState }) {
   );
 }
 
-function GroundCheckScreen({ device, dispatch, advanceTime }: Dvor220MaintenanceScreenProps) {
+function GroundCheckScreen({ device, dispatch, advanceTime, transmitterId }: Dvor220MaintenanceScreenProps & { transmitterId?: Dvor220TransmitterId }) {
   const permission = getDvor220PermissionDecision(device, "calibrate");
   const canStart = permission.allowed && device.connection.profile?.location === "local" && device.keylock === "MAINT";
   const running = device.groundCheck.status === "running";
@@ -305,7 +305,7 @@ function GroundCheckScreen({ device, dispatch, advanceTime }: Dvor220Maintenance
       <div className={styles.maintenanceToolbar}>
         <span>Keylock: <strong>{device.keylock}</strong></span>
         {(["LOCAL", "REM", "MAINT"] as const).map((mode) => <MopiensBeveledButton key={mode} pressed={device.keylock === mode} onClick={() => dispatch({ type: "set-keylock", mode })}>{mode}</MopiensBeveledButton>)}
-        <MopiensBeveledButton tone="primary" disabled={!canStart || running} onClick={() => dispatch({ type: "start-ground-check" })}>Run</MopiensBeveledButton>
+        <MopiensBeveledButton tone="primary" disabled={!canStart || running} onClick={() => dispatch({ type: "start-ground-check", transmitterId })}>Run</MopiensBeveledButton>
         <MopiensBeveledButton disabled={!running} onClick={() => advanceTime(getDvor220GroundCheckDurationMs())}>Complete 5 s Test</MopiensBeveledButton>
         <MopiensStatusIndicator compact label="Result" detail={formatDvor220Status(device.groundCheck.status)} tone={device.groundCheck.status === "failed" ? "alarm" : device.groundCheck.status === "completed" ? "normal" : "pending"} />
       </div>
@@ -759,7 +759,7 @@ export function Dvor220MaintenanceScreen(props: Dvor220MaintenanceScreenProps) {
   if (props.screenId === "maintenance-thermal") return <ThermalTestScreen {...props} />;
   if (props.screenId === "maintenance-faults") return <FaultControlsScreen {...props} />;
   if (props.screenId === "maintenance-ground-check") return <GroundCheckScreen {...props} />;
-  if (props.screenId === "maintenance-advanced") return <AdvancedControlsScreen {...props} groundCheck={<GroundCheckScreen {...props} />} />;
+  if (props.screenId === "maintenance-advanced") return <AdvancedControlsScreen {...props} groundCheck={(transmitterId) => <GroundCheckScreen {...props} transmitterId={transmitterId} />} />;
   if (props.screenId === "maintenance-users") return <UserManagementScreen {...props} />;
   if (props.screenId === "maintenance-time") return <TimeScreen {...props} />;
   if (props.screenId === "maintenance-version") return <VersionScreen />;
