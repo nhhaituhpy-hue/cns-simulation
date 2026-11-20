@@ -128,7 +128,7 @@ function PullHandle({ x, y, height, horizontal = false }: { x: number; y: number
   );
 }
 
-function PanelFrame({ width, height, title, partNumber, mounting = "screw", ejectorHeight = 98, bodyInset = 0, children }: { width: number; height: number; title: string; partNumber?: string; mounting?: "screw" | "ejector" | "plain"; ejectorHeight?: number; bodyInset?: number; children: React.ReactNode }) {
+function PanelFrame({ width, height, title, partNumber, mounting = "screw", ejectorHeight = 98, lowerEjectorHeight = ejectorHeight, bodyInset = 0, children }: { width: number; height: number; title: string; partNumber?: string; mounting?: "screw" | "ejector" | "plain"; ejectorHeight?: number; lowerEjectorHeight?: number; bodyInset?: number; children: React.ReactNode }) {
   const gradientId = useId();
   const { onSelect } = useContext(MeasurementContext);
   return (
@@ -151,10 +151,10 @@ function PanelFrame({ width, height, title, partNumber, mounting = "screw", ejec
         <Screw x={width / 2 - 4} y={height - 28} radius={7} />
       </> : null}
       {mounting === "ejector" ? <>
-        {[8, height - ejectorHeight - 12].map((y) => (
+        {[[8, ejectorHeight], [height - lowerEjectorHeight - 12, lowerEjectorHeight]].map(([y, handleHeight]) => (
           <g key={y} className={styles.faceplateEjector} aria-hidden>
-            <rect x="34" y={y} width="48" height={ejectorHeight} rx="4" />
-            <path d={`M34 ${y + 18}h48m-48 ${ejectorHeight - 36}h48`} />
+            <rect x="34" y={y} width="48" height={handleHeight} rx="4" />
+            <path d={`M34 ${y + 18}h48m-48 ${handleHeight - 36}h48`} />
           </g>
         ))}
         <text className={styles.faceplateTitle} x={width - 28} y="46" textAnchor="end">{title}</text>
@@ -412,7 +412,7 @@ function MsgFaceplate() {
     ["TP63", "USB SIN", 582], ["TP64", "LSB SIN", 602],
   ] as const;
   return (
-    <PanelFrame width={210} height={720} title="MSG" partNumber="0130-7510" mounting="ejector">
+    <PanelFrame width={210} height={720} title="MSG" partNumber="0130-7510" mounting="ejector" lowerEjectorHeight={92}>
       <Led x={58} y={136} label="POWER" color="green" />
       <Led x={58} y={171} label="FAULT" color="red" lit={false} />
       <BoxHeader x={58} y={259} pins={14} label="MCU JTAG" labelRight />
@@ -465,10 +465,10 @@ function MonFaceplate() {
   ] as const;
   const pins = [["TP47", "IDENT", 542], ["TP48", "FM 30 Hz", 562], ["TP49", "BASEBAND", 582], ["TP51", "AM 30 Hz", 602]] as const;
   return (
-    <PanelFrame width={220} height={720} title="MON" partNumber="0230-7550" mounting="ejector">
+    <PanelFrame width={220} height={720} title="MON" partNumber="0230-7550" mounting="ejector" lowerEjectorHeight={92}>
       {indicators.map(([label, color, y]) => <Led key={y} x={58} y={y} label={label} color={color} lit={color === "green"} />)}
-      <BoxHeader x={58} y={397} pins={14} label="MCU JTAG" labelRight />
-      <BoxHeader x={58} y={465} pins={10} label="ZYNQ JTAG" labelRight />
+      <BoxHeader x={58} y={397} pins={14} label="MCU JTAG" labelRight rowPitch={8.5} />
+      <BoxHeader x={58} y={465} pins={10} label="ZYNQ JTAG" labelRight rowPitch={8.5} />
       <PushButton x={58} y={514} size={19} />
       <text className={styles.faceplateSmallLabel} x="82" y="518">RESET</text>
       {pins.map(([id, label, y]) => <TestPin key={id} id={id} x={58} y={y} label={label} />)}
