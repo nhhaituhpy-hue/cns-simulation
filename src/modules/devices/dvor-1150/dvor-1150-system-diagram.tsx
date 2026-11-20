@@ -23,6 +23,13 @@ interface DiagramBlockProps extends Dvor1150SystemDiagramProps {
   compact?: boolean;
 }
 
+const sidebandRows = [
+  { occurrenceId: "diagram-sideband-tx1-sb12", label: "TX1 SB1/2 · A5", band: "LSB", y: 264 },
+  { occurrenceId: "diagram-sideband-tx1-sb34", label: "TX1 SB3/4 · A6", band: "USB", y: 326 },
+  { occurrenceId: "diagram-sideband-tx2-sb12", label: "TX2 SB1/2 · A21", band: "LSB", y: 388 },
+  { occurrenceId: "diagram-sideband-tx2-sb34", label: "TX2 SB3/4 · A22", band: "USB", y: 450 },
+] as const;
+
 function getOccurrence(blockId: Dvor1150BlockId, occurrenceId: string) {
   const occurrence = DVOR_1150_BLOCK_BY_ID
     .get(blockId)
@@ -142,18 +149,22 @@ export function Dvor1150SystemDiagram({
       <rect className={styles.commutatorGroup} x="1020" y="150" width="218" height="510" rx="5" />
       <text className={styles.diagramGroupLabel} x="1129" y="174" textAnchor="middle">DVOR COMMUTATOR</text>
 
-      <g aria-hidden className={styles.signalPaths}>
+      <g className={styles.signalPaths}>
         <g className={styles.rfPath}>
           <path d="M180 124H228" />
           <path d="M358 124H400" />
           <path d="M530 124H576" />
           <path d="M722 124H896V96H940" />
-          <path d="M124 164V238H322V276" />
-          <path d="M152 164V220H384V276" />
-          <path d="M430 306H496" />
-          <path d="M430 328H496" />
-          <path d="M430 350H496" />
-          <path d="M430 372H496" />
+          <path d="M82 164V200H250V276H276" />
+          <path d="M96 164V216H238V338H276" />
+          <path d="M138 164V232H226V400H276" />
+          <path d="M152 164V248H214V462H276" />
+          {sidebandRows.map(({ occurrenceId, y }) => (
+            <g key={occurrenceId}>
+              <path d={`M430 ${y + 22}H496`} />
+              <path d={`M430 ${y + 42}H496`} />
+            </g>
+          ))}
           <path d="M634 286H716V328H894" />
           <path d="M634 306H706V374H894" />
           <path d="M634 326H696V420H894" />
@@ -165,17 +176,31 @@ export function Dvor1150SystemDiagram({
           <path d="M1194 268H1216V116" />
         </g>
         <g className={styles.audioPath}>
-          <path d="M204 326H276" />
-          <path d="M204 358H276" />
+          <path d="M204 326H258M258 294V480" />
+          <path d="M204 358H266M266 304V490" />
+          {sidebandRows.map(({ occurrenceId, y }) => (
+            <g key={occurrenceId}>
+              <path d={`M258 ${y + 30}H276`} />
+              <path d={`M266 ${y + 40}H276`} />
+            </g>
+          ))}
           <path d="M157 300V184H293V164" />
         </g>
         <g className={styles.samplePath}>
           <path d="M606 164V176H748V228H770" />
           <path d="M690 164V188H738V250H770" />
-          <path d="M942 336H962V346H788V326" />
-          <path d="M942 382H974V362H808V326" />
-          <path d="M942 428H986V378H828V326" />
-          <path d="M942 474H998V394H848V326" />
+          {[328, 374, 420, 466].map((y, index) => (
+            <g key={y}>
+              <g role="img" aria-label={`Mẫu sideband ISO${index + 1} REV → RF Monitor A2`}>
+                <path d={`M906 ${y - 16}V${y - 22}H${780 + index * 20}V282`} />
+                <text x="950" y={y - 7}>REV</text>
+              </g>
+              <g role="img" aria-label={`Mẫu sideband ISO${index + 1} FWD → RF Monitor A2`}>
+                <path d={`M930 ${y + 16}V${y + 22}H${790 + index * 20}V282`} />
+                <text x="950" y={y + 14}>FWD</text>
+              </g>
+            </g>
+          ))}
           <path d="M634 278H652V190H246V164" />
           <path d="M1068 626H786V646H756" />
         </g>
@@ -206,14 +231,16 @@ export function Dvor1150SystemDiagram({
           <tspan x="396" dy="12">VOICE +</tspan>
           <tspan x="396" dy="12">DC</tspan>
         </text>
-        <text x="190" y="214">LSB RF</text>
-        <text x="190" y="232">USB RF</text>
-        <text x="240" y="316" textAnchor="middle">360 Hz SIN</text>
-        <text x="240" y="350" textAnchor="middle">360 Hz COS</text>
-        <text x="436" y="298">USB SIN</text>
-        <text x="436" y="321">USB COS</text>
-        <text x="436" y="344">LSB SIN</text>
-        <text x="436" y="367">LSB COS</text>
+        <text x="160" y="194">TX1 LSB / USB RF</text>
+        <text x="160" y="242">TX2 LSB / USB RF</text>
+        <text x="230" y="316" textAnchor="middle">360 Hz SIN</text>
+        <text x="230" y="350" textAnchor="middle">360 Hz COS</text>
+        {sidebandRows.map(({ occurrenceId, band, y }) => (
+          <g key={occurrenceId}>
+            <text x="436" y={y + 17}>{band} SIN</text>
+            <text x="436" y={y + 37}>{band} COS</text>
+          </g>
+        ))}
         <text x="728" y="214" textAnchor="end">FWD / REV</text>
         <text x="68" y="296" textAnchor="middle">
           <tspan x="68">MIC / VOICE</tspan>
@@ -230,12 +257,13 @@ export function Dvor1150SystemDiagram({
       <DiagramBlock blockId="csb-power-amplifier" occurrenceId="diagram-csb-tx2" x={293} y={84} width={65} height={80} lines={["CSB AMP", "TX2", "A19"]} compact selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
       <DiagramBlock blockId="low-pass-filter" occurrenceId="diagram-low-pass" x={400} y={84} width={130} height={80} lines={["LOW PASS", "FILTER", "A35 / A36"]} selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
       <DiagramBlock blockId="bidirectional-coupler" occurrenceId="diagram-coupler" x={576} y={84} width={146} height={80} lines={["BI-DIRECTIONAL", "COUPLER", "DC1 / DC2"]} selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
-      <DiagramBlock blockId="rf-monitor" occurrenceId="diagram-rf-monitor" x={770} y={192} width={92} height={134} lines={["RF", "MONITOR", "A2"]} selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
+      <DiagramBlock blockId="rf-monitor" occurrenceId="diagram-rf-monitor" x={770} y={192} width={92} height={90} lines={["RF", "MONITOR", "A2"]} selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
       <DiagramBlock blockId="audio-generator" occurrenceId="diagram-audio-tx1" x={110} y={300} width={47} height={90} lines={["AUDIO", "TX1", "A7"]} compact selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
       <DiagramBlock blockId="audio-generator" occurrenceId="diagram-audio-tx2" x={157} y={300} width={47} height={90} lines={["AUDIO", "TX2", "A23"]} compact selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
-      <DiagramBlock blockId="sideband-generator" occurrenceId="diagram-sideband-tx1-sb12" x={276} y={276} width={77} height={108} lines={["SB GEN", "TX1", "SB1/2", "A5"]} compact selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
-      <DiagramBlock blockId="sideband-generator" occurrenceId="diagram-sideband-tx1-sb34" x={353} y={276} width={77} height={108} lines={["SB GEN", "TX1", "SB3/4", "A6"]} compact selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
-      <DiagramBlock blockId="sideband-sample" occurrenceId="diagram-sideband-sample" x={496} y={268} width={138} height={96} lines={["SIDEBAND", "SAMPLE ASSY", "A29-A32"]} selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
+      {sidebandRows.map(({ occurrenceId, label, y }) => (
+        <DiagramBlock key={occurrenceId} blockId="sideband-generator" occurrenceId={occurrenceId} x={276} y={y} width={154} height={50} lines={["SB GEN", label]} compact selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
+      ))}
+      <DiagramBlock blockId="sideband-sample" occurrenceId="diagram-sideband-sample" x={496} y={268} width={138} height={230} lines={["SIDEBAND", "SAMPLE ASSY", "A29-A32", "MAIN / STANDBY"]} selectedOccurrenceId={selectedOccurrenceId} onSelect={onSelect} />
 
       {[328, 374, 420, 466].map((y, index) => (
         <g key={y} aria-hidden className={styles.isolatorBlock}>
@@ -311,7 +339,7 @@ export function Dvor1150SystemDiagram({
       </g>
 
       <SignalLegend />
-      <text className={styles.diagramReference} x="1340" y="820">FIGURE 2-2 · REV. F · OCTOBER 2002</text>
+      <text className={styles.diagramReference} x="1340" y="820">FIGURE 2-2 · REV. K · JANUARY 2008</text>
     </svg>
   );
 }
