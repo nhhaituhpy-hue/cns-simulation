@@ -1,6 +1,6 @@
 import { configurationsEqual, mergeDvor220Patch } from "./configuration";
 import { createNativeParameterEvidence, recordNativeParameterChanges } from "@/lib/simulator-config/native-parameter-evidence";
-import { cloneDvor220, createInitialDvor220State } from "./defaults";
+import { cloneDvor220, createDvor220AdvancedControls, createInitialDvor220State } from "./defaults";
 import {
   collectChangedConfigFields,
   createParameterChangeLogEntries,
@@ -40,7 +40,7 @@ import {
   type Dvor220TransmitterId,
   type Dvor220UserAccount,
 } from "./types";
-import { hasDvor220ConfigurationErrors, validateDvor220Configuration } from "./validation";
+import { hasDvor220ConfigurationErrors, isDvor220AdvancedControlValue, validateDvor220Configuration } from "./validation";
 
 function failure(state: Dvor220DeviceState, error: string): Dvor220CommandResult {
   return { ok: false, state, error };
@@ -91,6 +91,9 @@ export function synchronizeRuntimeWithConfiguration(state: Dvor220DeviceState) {
 }
 
 function restoreAfterReset(state: Dvor220DeviceState) {
+  for (const id of DVOR220_TRANSMITTER_IDS) {
+    state.transmitters[id].advancedControls = createDvor220AdvancedControls();
+  }
   const mainId = mainTransmitterId(state);
   const standbyId = mainId === "tx1" ? "tx2" : "tx1";
   const configuration = state.configuration.running;
@@ -496,6 +499,24 @@ export function reduceDvor220Command(
       synchronizeRuntimeWithConfiguration(state);
       restoreAfterReset(state);
       recordControl(state, "System Reset restored non-volatile configuration and calibration");
+      state = reconcileDvor220State(state);
+      return success(state);
+    }
+
+    case "set-advanced-control": {
+      const denied = requirePermission(state, "control");
+      if (denied) return failure(state, denied);
+      if (!DVOR220_TRANSMITTER_IDS.includes(command.transmitterId)
+        || !isDvor220AdvancedControlValue(command.control, command.value)) {
+        return failure(state, "Invalid advanced control.");
+      }
+      if (command.control === "standbyAzimuthEmulation" && state.transmitters[command.transmitterId].designation === "main") {
+        return failure(state, "Azimuth emulation is available only on the standby transmitter.");
+      }
+      const controls = state.transmitters[command.transmitterId].advancedControls ??= createDvor220AdvancedControls();
+      if (command.control === "identKeying") controls.identKeying = command.value;
+      else controls[command.control] = command.value as "normal" | "off";
+      recordControl(state, `${command.transmitterId.toUpperCase()} ${command.control}: ${command.value}`);
       state = reconcileDvor220State(state);
       return success(state);
     }

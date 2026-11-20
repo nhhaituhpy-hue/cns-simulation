@@ -146,13 +146,15 @@ Các số đo và cài đặt đang chạy tại Cam Ranh không phải mặc đ
 
 ### Tình trạng sau đợt sửa cửa sổ PMDT
 
-- **Advanced Controls (theo TM):** bốn nhóm thu gọn Monitor Certification,
-  Antenna Manual, Fault Clear và Automatic Ground Error Check. Certification
-  bật/tắt riêng từng tham số CH.A trên MON1/MON2; IDENT Keyer dùng Draft/Apply,
-  nhưng engine chưa sinh alarm theo chế độ Continuous/None. Antenna Manual
-  chỉ giữ trạng thái hiển thị; Fault Clear gọi lệnh xóa latch riêng TX.
-  Theo §4.4.6.2 tr.4-150/151, Figs.4-144/145; §6.5.3 tr.6-7..6-9;
-  §6.5.13 tr.6-23. Khác biệt bố cục CR 12–13 là câu hỏi mở, không triển khai.
+- **Advanced Controls (theo Cam Ranh):** theo quyết định mới của chủ sở hữu,
+  ảnh CR 12–13 thay thế bố cục TM của PR #17: Advanced Control, cảnh báo HMI,
+  tab TX1/TX2 và năm nhóm IDENT Keying, Sideband Blending, Sideband Antenna
+  Switching, Automated Ground Error Curve Check, Standby Transmitter Azimuth
+  Emulation. Apply lưu runtime riêng TX, chỉ bật khi đổi lựa chọn; nhóm emulation
+  khóa ở TX Main. Manual Control giữ nội dung TM §4.4.6.2 Fig.4-144 (48 anten).
+  IDENT Off/Continuous dùng đường đọc ident1020Hz và alarm hiện có; thời gian
+  báo IDENT thực chưa xác minh (dùng averaging hiện có). RF effect của Sideband
+  Blending/Azimuth Emulation chưa biết: chỉ trạng thái và Control log.
 
 - **Main (CR 1–5, TM Figs. 4-77–80):** mở riêng các bảng chi tiết Transmitter,
   Monitor, PDC và Power. Trạng thái từng module/rail chưa mô phỏng để trống, không
@@ -254,7 +256,7 @@ self-test độc lập không được coi là đã sửa. Bảng bên dưới g
 | Calibration › TX Setpoint Cal — CR 11, HC 1–16, TM 4-121–135 | Hai bảng công suất + AM 30 Hz + 1020 Hz; dialog có factor/reading hiện hành, một số tham chiếu và Calibrate/Save/Close. Calibration cập nhật factor và setpoint để **không** đổi output thật tại thời điểm calibrate; chỉnh output ở Transmitter Setup sau đó. | UI dùng các cột **TX Reading** thay vì setpoint factors/readings; bảng thiếu hàng AM/IDENT dù bộ chọn có. Đừng thay đổi bất biến công suất khi sửa UI. |
 | Calibration › MON Cal — CR 11–12, HC 25–30, TM 4-136–143 | Tabs MON1, MON2, Frequency; bảng từng kênh, nominal, current, factor; dialog từng tham số. Tab Frequency có trạng thái TX đang phát, Run Changeover, carrier setpoint và hai cặp factor/reading MON1/MON2. | Có selector MON/channel/parameter nhưng lại hiển thị bảng TX reading và không có tab/dialog Frequency chuyên dụng. |
 | Calibration › PDC Cal — CR 12, HC 21–24 | Carrier, USB COS/SIN, LSB COS/SIN; factor, setpoint, reading và nút Power Calibration **và** VSWR Calibration ở từng dòng. HC xác nhận quy trình power từng nhánh cập nhật PDC Status. | Chỉ carrier power và carrier VSWR; thiếu bốn cặp target/action sideband. Ảnh xác nhận vị trí các nút VSWR, không xác nhận mô hình tính của từng nút. |
-| Advanced Controls — TM §4.4.6.2 tr.4-150/151 Figs.4-144/145; §6.5.3 tr.6-7..6-9; §6.5.13 tr.6-23 | TM là nguồn chuẩn: Monitor Certification, Antenna Manual (48 anten), Fault Clear riêng TX và Automatic Ground Error Check. 4-144/145 là số hình, không phải số trang. | Đã thay console huấn luyện bằng bốn nhóm theo TM; giữ công cụ VSWR ở Simulator Tools. Antenna Manual chỉ hiển thị, không mô hình RF; IDENT Keyer chưa tạo alarm theo mode trong engine. CR 12–13 có bố cục mới khác TM: câu hỏi mở, không triển khai cảnh báo HMI, tab TX hoặc các điều khiển chỉ có trong CR. |
+| Advanced Controls — CR 12–13; TM §4.4.6.2 Fig.4-144 cho nội dung Manual Control | CR là nguồn chuẩn theo quyết định mới, thay bố cục TM của PR #17: Advanced Control, cảnh báo HMI, tab TX1/TX2, năm nhóm theo ảnh; không còn Certification/Fault Clear trên trang. | Runtime riêng TX + Control log, reset về Normal; IDENT nối đường alarm hiện có nhưng timing thực chưa xác minh. Sideband Blending/Azimuth Emulation chỉ state/log, chưa biết RF effect. Manual Control chỉ hiển thị theo TM Fig.4-144; giữ VSWR ở Simulator Tools. |
 | User Management + Add User — CR 13, TM 4-148/149 | Danh sách user và access, chọn dòng để xóa, nút Add User mở form, đổi mật khẩu. | Có form inline và nút Delete từng dòng; đối chiếu dialog, lựa chọn và luồng đổi mật khẩu. |
 | Time Sync — CR 13, TM 4-150/151 | Local PC Time và System Time, chọn nguồn và Sync; dialog Equipment Time. | Có nút synchronize nhưng chỉ hiện simulator timestamp/NTP placeholder, không có chọn/hiển thị hai đồng hồ. |
 | Version — CR 14, TM 4-152/153 | Inventory theo subrack/unit/ref des, P/N, HW Rev, SW Ver, up time; TM còn có cửa sổ Firmware Update chỉ bật khi kết nối RS-232 tại chỗ. | Chỉ metadata và vài chuỗi firmware giả; thiếu bảng theo thiết bị, không có dialog update. |

@@ -435,6 +435,51 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-11-20 — DVOR 220 Advanced Control: tinh chỉnh giao diện PR #19
+
+- Antenna Manual: tách marker USB/LSB khỏi button, đặt theo góc trên vòng
+  trong (bán kính 30%, vòng anten 44%) để không che số hoặc cắt mép.
+  Thêm regression cho cả 48 vị trí; Chrome kiểm tra bounding box không
+  overlap/clip ở cả 48 lựa chọn, chụp #1/#13/#25/#37.
+- Kiểm tra marker: lint/typecheck đạt (hai warning sẵn có), 167 test
+  DVOR 220 đạt; production build đạt.
+- Chốt CSS: nút Manual Control/Run đủ chỗ cho nhãn và padding (DOM cả hai
+  tab: scrollWidth = clientWidth = 71px); tăng nhẹ Apply, radio và heading
+  cảnh báo; pane flex lấp khoảng trống tới Event. Ảnh Chrome 1600×1051 và
+  side-by-side cùng chiều rộng workspace đã đối chiếu lại.
+- Kiểm tra lượt chốt: lint/typecheck đạt (hai warning sẵn có), 166 test
+  DVOR 220 đạt; production build đạt.
+- Lượt đối chiếu tiếp theo: cảnh báo hẹp hơn và dịch tâm sang phải, giảm chiều
+  cao section/tab/nút, Apply về cột 22% pane với icon xám; scrollbar riêng
+  dùng track/thumb thay arrow lớn. Chỉ đổi CSS của trang.
+- Kiểm tra lại Chrome hai tab ở 1600×1051; lint/typecheck, 166 test DVOR 220
+  và production build đạt.
+- Thu gọn cảnh báo, form 60% chiều rộng, tab TX và hàng radio theo CR 12–13;
+  Apply có biểu tượng check tròn, cùng cột; hai nút Manual Control/Run cùng cỡ.
+- Tab workspace dùng Advanced Control, cây vẫn Advanced Controls như guide.
+  Chỉ làm xám heading/radio của TX Main; giữ divider và nút Apply/icon.
+- Nền xám và pane viền có cuộn riêng; không đổi chrome PMDT dùng chung.
+- Đối chiếu trực quan hai tab bằng Chrome cùng viewport với ảnh nguồn.
+- Kiểm tra: lint/typecheck đạt (hai warning navigation sẵn có), DVOR 220
+  166/166 test, build đạt; full regression 3149 pass, 213 skip.
+
+### 2026-11-20 — DVOR 220 Advanced Control theo Cam Ranh (thay PR #17)
+
+- Theo quyết định mới, CR 12–13 là chuẩn cho cảnh báo HMI, tab TX1/TX2 và
+  năm nhóm điều khiển. Gỡ Certification/Fault Clear khỏi trang; giữ lệnh
+  fault-clear của engine và Simulator Tools VSWR.
+- IDENT Keying, Sideband Blending và Standby Transmitter Azimuth Emulation
+  lưu riêng từng TX ở runtime, kiểm tra quyền Control, ghi Control log và về
+  Normal khi System Reset/power-cycle. Không đổi cấu hình Draft/Running/Flash.
+- IDENT Off/Continuous trên TX đang phát nối đường đọc/alarm ident1020Hz
+  hiện có; timing thực chưa biết, dùng averaging hiện có. Hai điều khiển RF
+  còn lại chỉ state/log; không suy đoán hiệu ứng. Manual Control giữ dialog
+  48 anten theo TM Fig.4-144; Run mở ground check có ràng buộc local/MAINT.
+- Bổ sung kiểm thử UI/engine cho từng TX, quyền, log, reset, snapshot và IDENT.
+  Giao diện chưa được kiểm tra trực quan trong trình duyệt.
+- Kiểm tra: lint/typecheck đạt (hai warning navigation sẵn có), DVOR 220
+  166/166 test; production build đạt; full regression 3149 pass, 213 skip.
+
 ### 2026-11-20 — DVOR 220 Advanced Controls theo TM
 
 - Thay console ba tab bằng bốn nhóm thu gọn theo TM: Monitor Certification,
