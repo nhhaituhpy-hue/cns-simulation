@@ -435,6 +435,17 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-11-20 — DVOR 220 Advanced Control: tinh chỉnh giao diện PR #19
+
+- Thu gọn cảnh báo, form 60% chiều rộng, tab TX và hàng radio theo CR 12–13;
+  Apply có biểu tượng check tròn, cùng cột; hai nút Manual Control/Run cùng cỡ.
+- Tab workspace dùng Advanced Control, cây vẫn Advanced Controls như guide.
+  Chỉ làm xám heading/radio của TX Main; giữ divider và nút Apply/icon.
+- Nền xám và pane viền có cuộn riêng; không đổi chrome PMDT dùng chung.
+- Đối chiếu trực quan hai tab bằng Chrome cùng viewport với ảnh nguồn.
+- Kiểm tra: lint/typecheck đạt (hai warning navigation sẵn có), DVOR 220
+  166/166 test, build đạt; full regression 3149 pass, 213 skip.
+
 ### 2026-11-20 — DVOR 220 Advanced Control theo Cam Ranh (thay PR #17)
 
 - Theo quyết định mới, CR 12–13 là chuẩn cho cảnh báo HMI, tab TX1/TX2 và

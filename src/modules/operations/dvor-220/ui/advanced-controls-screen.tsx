@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { MopiensBeveledButton, MopiensModal } from "@/modules/operations/mopiens-pmdt";
+import { MopiensModal } from "@/modules/operations/mopiens-pmdt";
 import { getDvor220PermissionDecision } from "../domain/permissions";
 import { DVOR220_TRANSMITTER_IDS, type Dvor220AdvancedControls, type Dvor220TransmitterId } from "../domain/types";
 import type { Dvor220MaintenanceScreenProps } from "./maintenance-screens";
@@ -22,7 +22,7 @@ function AntennaManual() {
   const usb = swapped ? opposite : selected;
   const lsb = swapped ? selected : opposite;
   return <>
-    <MopiensBeveledButton onClick={() => setOpen(true)}>Manual Control...</MopiensBeveledButton>
+    <button type="button" className={styles.advancedAction} onClick={() => setOpen(true)}>Manual Control...</button>
     <MopiensModal open={open} title="Antenna Manual" size="large" onClose={() => setOpen(false)}
       actions={[{ id: "close", label: "Close", onClick: () => setOpen(false) }]}>
       <h3>Antenna Select</h3>
@@ -66,8 +66,10 @@ function AppliedControl({ title, control, applied, disabled, dispatch, transmitt
           <label key={value}><input type="radio" name={`${transmitterId}-${control}`} checked={selection === value}
             onChange={() => setSelection(value)} />{value === "normal" ? "Normal" : value === "off" ? "Off" : "Continuous"}</label>)}
       </div>
-      <MopiensBeveledButton disabled={disabled || selection === applied} onClick={() =>
-        dispatch({ type: "set-advanced-control", transmitterId, control, value: selection })}>Apply</MopiensBeveledButton>
+      <button type="button" className={styles.advancedApply} disabled={disabled || selection === applied} onClick={() =>
+        dispatch({ type: "set-advanced-control", transmitterId, control, value: selection })}>
+        <span className={styles.advancedCheck} aria-hidden="true">✓</span>Apply
+      </button>
     </fieldset>
   </Section>;
 }
@@ -84,14 +86,14 @@ function TransmitterControls({ transmitterId, device, dispatch, groundCheck }: A
     <AppliedControl title="Sideband Blending" control="sidebandBlending" applied={controls.sidebandBlending} disabled={!allowed} dispatch={dispatch} transmitterId={transmitterId} />
     <Section title="Sideband Antenna Switching"><AntennaManual /></Section>
     <Section title="Automated Ground Error Curve Check">
-      <MopiensBeveledButton onClick={() => {
+      <button type="button" className={styles.advancedAction} onClick={() => {
         setGroundOpen(true);
         if (getDvor220PermissionDecision(device, "calibrate").allowed
           && device.connection.profile?.location === "local" && device.keylock === "MAINT"
           && device.groundCheck.status !== "running") {
           dispatch({ type: "start-ground-check", transmitterId });
         }
-      }}>Run...</MopiensBeveledButton>
+      }}>Run...</button>
       <MopiensModal open={groundOpen} title="Automated Ground Error Curve Check" size="large" onClose={() => setGroundOpen(false)}
         actions={[{ id: "close", label: "Close", onClick: () => setGroundOpen(false) }]}>
         {groundCheck(transmitterId)}
@@ -105,11 +107,12 @@ function TransmitterControls({ transmitterId, device, dispatch, groundCheck }: A
 
 export function AdvancedControlsScreen(props: AdvancedProps) {
   const [transmitterId, setTransmitterId] = useState<Dvor220TransmitterId>("tx1");
-  return <div className={styles.screenBody}>
+  return <div className={styles.advancedScreen}>
     <header className={styles.advancedTitle}>Advanced Control</header>
+    <div className={styles.advancedPane}>
     <div className={styles.advancedWarning}>
       <p><strong>*** WARNING ***</strong></p>
-      <p><strong><u>HAZARDOUSLY MISLEADING INFORMATION (HMI)</u></strong></p>
+      <p><strong><u>HAZARDOUSLY MISLEADING INFORMATION</u> (HMI)</strong></p>
       <p>Use of the controls on this page may produce Hazardously Misleading Information (HMI).<br />
         Therefore, these controls must not be used during normal operations,<br />
         <strong>particularly when supporting live aircraft traffic.</strong></p>
@@ -124,6 +127,7 @@ export function AdvancedControlsScreen(props: AdvancedProps) {
     </div>
     <div role="tabpanel" id={`advanced-panel-${transmitterId}`} aria-labelledby={`advanced-tab-${transmitterId}`}>
       <TransmitterControls key={transmitterId} {...props} transmitterId={transmitterId} />
+    </div>
     </div>
   </div>;
 }

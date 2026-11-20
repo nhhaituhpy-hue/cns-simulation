@@ -29,7 +29,9 @@ describe("Cam Ranh Advanced Control", () => {
     setup();
     expect(screen.getByText("Advanced Control", { exact: true })).toBeInTheDocument();
     expect(screen.getByText("*** WARNING ***")).toBeInTheDocument();
-    expect(screen.getByText("HAZARDOUSLY MISLEADING INFORMATION (HMI)")).toBeInTheDocument();
+    const warningHeading = screen.getByText("HAZARDOUSLY MISLEADING INFORMATION");
+    expect(warningHeading.tagName).toBe("U");
+    expect(warningHeading.parentElement).toHaveTextContent("HAZARDOUSLY MISLEADING INFORMATION (HMI)");
     expect(screen.getByText("particularly when supporting live aircraft traffic.")).toBeInTheDocument();
     expect(screen.getByText("must be")).toBeInTheDocument();
     expect(screen.getByText("Before closing this page, ensure that all controls are returned to their normal states.")).toBeInTheDocument();

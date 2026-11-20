@@ -1,48 +1,78 @@
+.advancedScreen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: #efefef;
+  font-size: 9px;
+  line-height: 1.3;
+}
+
 .advancedTitle {
   background: #97b7d2;
   color: white;
-  padding: 7px;
+  padding: 6px;
   font-weight: 600;
+  font-size: 12px;
+}
+
+.advancedPane {
+  flex: 1;
+  min-height: 0;
+  overflow-y: scroll;
+  border: 1px solid #bfc0c3;
+  padding: 0 3px;
+  scrollbar-color: #bcbcbc #eeeeee;
+  scrollbar-width: auto;
 }
 
 .advancedWarning {
   color: #df2929;
   text-align: center;
-  width: 620px;
-  max-width: 100%;
-  font-size: 11px;
+  width: 60%;
+  min-width: min(420px, 100%);
+  font-size: 9px;
+  line-height: 1.3;
+  margin: 10px 0;
 }
 
 .advancedWarning p {
-  margin: 14px 0;
+  margin: 0 0 8px;
 }
 
 .advancedControlsForm {
-  width: 620px;
-  max-width: 100%;
+  width: 60%;
+  min-width: min(420px, 100%);
+  padding: 2px 0 30px;
 }
 
 .advancedControlsForm .advancedSection {
   border: 0;
-  margin-bottom: 3px;
+  margin-bottom: 1px;
 }
 
 .advancedControlsForm .advancedSection > summary {
   background: transparent;
   color: #5c829b;
-  border-bottom: 1px solid #aeb5bb;
+  border-bottom: 2px groove #d2d2d2;
   font-weight: 400;
-  padding: 3px;
+  padding: 3px 2px 1px;
+}
+
+.advancedControlsForm .advancedSection > summary::before {
+  color: #666;
+  font-weight: 700;
 }
 
 .advancedControlsForm .advancedSectionBody {
-  padding: 7px 18px;
+  padding: 6px 18px;
 }
 
 .advancedRadioRow {
-  display: flex;
+  display: grid;
+  grid-template-columns: 166px 60px;
   align-items: center;
-  gap: 18px;
+  gap: 12px;
   border: 0;
   padding: 0;
   margin: 0;
@@ -50,11 +80,11 @@
 
 .advancedRadios {
   display: flex;
-  gap: 9px;
+  gap: 7px;
   align-items: center;
-  min-width: 190px;
-  border: 1px solid #d9dfe3;
-  padding: 5px;
+  justify-self: start;
+  border: 1px solid #dedede;
+  padding: 5px 4px;
   color: #5c829b;
 }
 
@@ -64,8 +94,61 @@
   gap: 3px;
 }
 
-.advancedDisabled {
-  opacity: 0.5;
+.advancedRadios input {
+  width: 11px;
+  height: 11px;
+  margin: 0;
+  accent-color: #454545;
+}
+
+.advancedDisabled .advancedSection > summary,
+.advancedRadioRow:disabled .advancedRadios {
+  color: #aaa;
+}
+
+.advancedApply,
+.advancedAction {
+  height: 21px;
+  border: 1px solid #b8b8b8;
+  box-shadow: inset 1px 1px #fafafa;
+  background: linear-gradient(#ededed, #d7d7d7);
+  color: #5c829b;
+  font: inherit;
+  font-weight: 400;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.advancedApply {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  padding: 0 4px;
+}
+
+.advancedApply:disabled {
+  cursor: default;
+  color: #777;
+  background: #d0d0d0;
+}
+
+.advancedCheck {
+  display: inline-grid;
+  place-content: center;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid #7d9180;
+  background: #93a58f;
+  color: #f4f4f4;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.advancedAction {
+  width: 100px;
 }
 
 .advancedTabs {
@@ -74,9 +157,12 @@
 }
 
 .advancedTabs button {
-  padding: 3px 14px;
-  border: 1px solid #c7cdd2;
-  background: #e3e6e9;
+  padding: 1px 8px;
+  border: 1px solid #d3d3d3;
+  border-radius: 2px 2px 0 0;
+  background: linear-gradient(#f1f1f1, #e4e4e4);
+  color: #444;
+  font: inherit;
   cursor: pointer;
 }
 
