@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState, type ReactNode } from "react";
+import { Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { PracticeWorkspace } from "@/components/scenario/practice-workspace";
 import { Dvor1150MenuBar } from "./pmdt-menu-bar";
@@ -60,11 +60,10 @@ export function Dvor1150PmdtLayout({
   const inlineSidePanel = mode === "student" ? null : sidePanel;
   const setMode = useDvor1150PmdtStore((state) => state.setMode);
   const loginOpen = useDvor1150PmdtStore((state) => state.loginDialogOpen);
-  const apply = useDvor1150PmdtStore((state) => state.applyConfigChanges);
-  const reset = useDvor1150PmdtStore((state) => state.resetConfigDraft);
-  const next = useDvor1150PmdtStore((state) => state.nextView);
-  const close = useDvor1150PmdtStore((state) => state.closeScreen);
+  const shell = useRef<HTMLElement>(null);
+  const capsLock = useDvor1150PmdtStore((state) => state.setCapsLock);
   const refreshClock = useDvor1150PmdtStore((state) => state.refreshClock);
+  const noteActivity = useDvor1150PmdtStore((state) => state.noteActivity);
   const simulationParametersOpen = useDvor1150PmdtStore((state) => state.simulationParametersOpen);
   const scenarioParametersOpen = useDvor1150PmdtStore((state) => state.scenarioParametersOpen);
   const setScenarioParametersOpen = useDvor1150PmdtStore((state) => state.setScenarioParametersOpen);
@@ -111,14 +110,18 @@ export function Dvor1150PmdtLayout({
   }, [refreshClock]);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "F5") { event.preventDefault(); next(); }
-      if (event.key === "F6") { event.preventDefault(); close(); }
-      if (event.key === "F7") { event.preventDefault(); apply(); }
-      if (event.key === "F8") { event.preventDefault(); reset(); }
+      const { accessDialog, config, loginDialogOpen, simulationParametersOpen, scenarioParametersOpen } = useDvor1150PmdtStore.getState();
+      if (loginDialogOpen || accessDialog || scenarioParametersOpen || !config.simulation.connected || event.ctrlKey || event.altKey || event.metaKey) return;
+      if (!/^F[5-8]$/.test(event.key)) return;
+      const scope = simulationParametersOpen ? ".dvor1150-simulation-parameters-panel" : ".pmdt-toolbar-actions";
+      const button = shell.current?.querySelector<HTMLButtonElement>(`${scope} button[data-pmdt-key="${event.key}"]`);
+      if (!button) return;
+      event.preventDefault();
+      button.click();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [apply, close, next, reset]);
+  }, []);
 
   return <PracticeWorkspace
       enabled={practiceRequested}
@@ -169,7 +172,8 @@ export function Dvor1150PmdtLayout({
         {examSnapshot && scenario.definition?.diagnosis ? <button type="button" disabled={!examEvaluation?.pmdtComplete} onClick={() => runtime.setScenarioStage("hardware")}>Tiếp tục: Xác định phần cứng</button> : null}
         {canAuthorScenario && scenario.active ? <span className="dvor1150-scenario-active-badge">Scenario active: {scenario.definition?.name}</span> : null}
       </nav> : null}
-      <section className={`pmdt-classic-window dvor1150-pmdt-window ${inlineSidePanel ? "pmdt-classic-window--with-inspector" : "pmdt-classic-window--standard"}`} aria-label="DVOR 1150 PMDT Simulator">
+      <section ref={shell} className={`pmdt-classic-window dvor1150-pmdt-window ${inlineSidePanel ? "pmdt-classic-window--with-inspector" : "pmdt-classic-window--standard"}`} aria-label="DVOR 1150 PMDT Simulator"
+        onKeyDown={(event) => { noteActivity(); capsLock(event.getModifierState("CapsLock")); }} onPointerDown={noteActivity} onPointerMove={noteActivity}>
         <div className="pmdt-titlebar-row"><Dvor1150TitleBar /></div>
         <div className="pmdt-menubar-row"><Dvor1150MenuBar /></div>
         <Dvor1150Sidebar />
@@ -178,7 +182,7 @@ export function Dvor1150PmdtLayout({
         <div className="pmdt-statusbar-row"><Dvor1150StatusBar /></div>
         {simulationParametersOpen ? <Dvor1150SimulationParametersPanel /> : null}
         {canAuthorScenario && scenarioParametersOpen ? <Dvor1150ScenarioParametersPanel /> : null}
-        {loginOpen ? <Dvor1150LoginDialog /> : null}
+        <Dvor1150LoginDialog />
         {mode === "preview" && !practiceRequested ? <Dvor1150ConfigPersistenceBoundary /> : null}
       </section>
     </div>

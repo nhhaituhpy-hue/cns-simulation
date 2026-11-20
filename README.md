@@ -437,6 +437,12 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-11-20 — DVOR 1150 PMDT: giao diện và quyền truy cập
+
+- Bổ sung kết nối mô phỏng Direct/Modem, đăng nhập phân quyền và đăng xuất khi không hoạt động theo Rev. K §3.4.2.3. Không mở cổng thiết bị hay thực hiện cuộc gọi.
+- Đồng bộ menu, thanh trạng thái, phím tắt F5–F8, in PMDT và sao chép bảng RMS Logs. Cấu hình lưu/khôi phục và động cơ mô phỏng thuộc các PR tiếp theo.
+- **DEMO ASSUMPTION:** theo Bảng 3-3 và §3.4.2.7.4, chỉ Level 4 thấy Security Codes; sửa tài khoản yêu cầu Direct + Local. Tài khoản huấn luyện chỉ tồn tại trong phiên trình duyệt và không được đưa vào Config Backup ở giai đoạn này.
+
 ### 2026-11-20 — DVOR 220 Advanced Control: tinh chỉnh giao diện PR #19
 
 - Antenna Manual: tách marker USB/LSB khỏi button, đặt theo góc trên vòng

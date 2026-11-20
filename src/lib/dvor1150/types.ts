@@ -16,6 +16,7 @@ export type Dvor1150MonitorParameter = (typeof DVOR1150_MONITOR_PARAMETERS)[numb
 export type Dvor1150ConfigValue = string | number | boolean | null;
 export type Dvor1150PmdtMode = "preview" | "author" | "student";
 export type Dvor1150SecurityLevel = 0 | 1 | 2 | 3 | 4;
+export type Dvor1150ConnectionType = "direct" | "modem";
 export type Dvor1150TransmitterMode = "main" | "load" | "off";
 export type Dvor1150IndicatorColor = "green" | "yellow" | "red" | "gray";
 export type Dvor1150ParameterStatus = "normal" | "warning" | "alarm";
@@ -79,6 +80,10 @@ export type Dvor1150ViewId =
 export type Dvor1150MenuAction =
   | "open-config"
   | "open-login"
+  | "connect-direct"
+  | "connect-modem"
+  | "change-password"
+  | "open-about"
   | "logoff"
   | "config-restore"
   | "config-backup"

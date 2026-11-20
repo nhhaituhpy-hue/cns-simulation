@@ -17,6 +17,7 @@ import {
   validateDvor1150ScenarioDefinition,
   type Dvor1150Config,
   type Dvor1150ConfigValue,
+  type Dvor1150ConnectionType,
   type Dvor1150DiagnosticRun,
   type Dvor1150MonitorId,
   type Dvor1150PmdtMode,
@@ -66,7 +67,18 @@ const viewGroups: Record<Dvor1150ScreenId, readonly Dvor1150ViewId[]> = {
   disabled: ["disabled"],
 };
 
-const accounts = SELEX_DVOR_TRAINING_ACCOUNTS.map(({ userId, password, securityLevel }) => ({ id: userId, password, level: securityLevel }));
+type SecurityCode = { userId: string; level: Exclude<Dvor1150SecurityLevel, 0> };
+export type Dvor1150SecurityCodeEdit = { userId: string; level: SecurityCode["level"]; password: string };
+type Account = Dvor1150SecurityCodeEdit;
+
+const initialAccounts = (): (Account | null)[] => [
+  ...SELEX_DVOR_TRAINING_ACCOUNTS.filter(({ securityLevel }) => securityLevel !== 1).reverse()
+    .map(({ userId, password, securityLevel }): Account => ({ userId, password, level: securityLevel })),
+  ...Array<null>(8).fill(null),
+];
+const securityCodes = (accounts: readonly (Account | null)[]) =>
+  accounts.map((account): SecurityCode | null => account ? { userId: account.userId, level: account.level } : null);
+const validCode = (value: string) => /^[a-zA-Z0-9]{4,8}$/.test(value);
 
 export type Dvor1150ScenarioStage = "pmdt" | "hardware" | "complete";
 
@@ -97,6 +109,11 @@ export interface Dvor1150PmdtStoreState {
   parameterEvidence?: NativeParameterEvidence;
   derived: Dvor1150Snapshot;
   loginDialogOpen: boolean;
+  accessDialog: "modem" | "password" | "about" | null;
+  capsLock: boolean;
+  connectionType: Dvor1150ConnectionType | null;
+  pendingConnection: Dvor1150ConnectionType;
+  securityCodes: (SecurityCode | null)[];
   authenticatedUserId: string | null;
   securityLevel: Dvor1150SecurityLevel;
   loginError: string | null;
@@ -124,7 +141,16 @@ export interface Dvor1150PmdtStoreState {
 export interface Dvor1150PmdtStoreActions {
   setMode: (mode: Dvor1150PmdtMode) => void;
   initializeStudentScenario: (definition: Dvor1150ScenarioDefinition) => boolean;
-  openLogin: () => void;
+  openLogin: (connection?: Dvor1150ConnectionType) => void;
+  cancelLogin: () => void;
+  openModem: () => void;
+  openAbout: () => void;
+  setCapsLock: (on: boolean) => void;
+  openChangePassword: () => void;
+  closeAccessDialog: () => void;
+  changePassword: (current: string, next: string, confirmation: string) => string | null;
+  applySecurityCodes: (edits: readonly Dvor1150SecurityCodeEdit[]) => string | null;
+  noteActivity: () => void;
   login: (userId: string, password: string) => boolean;
   logout: () => void;
   refreshClock: () => void;
@@ -184,6 +210,11 @@ function buildInitialState(now: () => Date): Dvor1150PmdtStoreState {
     parameterEvidence: createNativeParameterEvidence("dvor-1150", null, now().getTime()),
     derived,
     loginDialogOpen: true,
+    accessDialog: null,
+    connectionType: null,
+    pendingConnection: "direct",
+    securityCodes: securityCodes(initialAccounts()),
+    capsLock: false,
     authenticatedUserId: null,
     securityLevel: 0,
     loginError: null,
@@ -207,6 +238,15 @@ function buildInitialState(now: () => Date): Dvor1150PmdtStoreState {
     diagnosticState: createIdleDvor1150DiagnosticState(),
     lastCommand: null,
   };
+}
+
+export function canChangeDvor1150Password(state: Dvor1150PmdtStoreState) {
+  return state.connectionType === "direct" && state.config.simulation.local
+    && state.securityLevel > 0 && state.authenticatedUserId !== "GUEST" && !state.scenario.active;
+}
+
+export function canEditDvor1150SecurityCodes(state: Dvor1150PmdtStoreState) {
+  return state.securityLevel === 4 && canChangeDvor1150Password(state);
 }
 
 function preserveLiveSimulation(next: Dvor1150Config, current: Dvor1150Config): Dvor1150Config {
@@ -352,6 +392,8 @@ export function createDvor1150PmdtStore(
 ): UseBoundStore<StoreApi<Dvor1150PmdtStore>> {
   const now = options.now ?? (() => new Date());
   return create<Dvor1150PmdtStore>()((set, get) => {
+    let accounts = initialAccounts();
+    let lastActivityAt = now().getTime();
     const recompute = (
       config: Dvor1150Config,
       previous?: Dvor1150Snapshot,
@@ -448,21 +490,66 @@ export function createDvor1150PmdtStore(
         });
         return true;
       },
-      openLogin: () => set({
+      openLogin: (connection) => set((state) => ({
         loginDialogOpen: true,
+        accessDialog: null,
+        pendingConnection: connection ?? state.connectionType ?? "direct",
         loginError: null,
         simulationParametersOpen: false,
         scenarioParametersOpen: false,
-      }),
+      })),
+      cancelLogin: () => set({ loginDialogOpen: false, loginError: null }),
+      openModem: () => set({ loginDialogOpen: false, accessDialog: "modem" }),
+      openAbout: () => set({ accessDialog: "about" }),
+      setCapsLock: (on) => { if (get().capsLock !== on) set({ capsLock: on }); },
+      openChangePassword: () => {
+        if (canChangeDvor1150Password(get())) set({ accessDialog: "password" });
+      },
+      closeAccessDialog: () => set({ accessDialog: null }),
+      changePassword: (current, next, confirmation) => {
+        const state = get();
+        if (!canChangeDvor1150Password(state)) return "Password change requires direct Local access.";
+        const account = accounts.find((entry) => entry?.userId === state.authenticatedUserId);
+        if (!account || account.password !== current) return "Current password is incorrect.";
+        if (!validCode(next)) return "Use 4–8 letters or digits.";
+        if (next !== confirmation) return "The new passwords do not match.";
+        account.password = next;
+        set({ accessDialog: null, lastCommand: "Password changed" });
+        return null;
+      },
+      applySecurityCodes: (edits) => {
+        if (!canEditDvor1150SecurityCodes(get())) return "Security Codes require direct Local Level 4 access.";
+        if (edits.length !== accounts.length) return "Invalid Security Codes rows.";
+        const ids = new Set(["GUEST"]);
+        const next: (Account | null)[] = [];
+        for (const [index, edit] of edits.entries()) {
+          if (index === 0 && (edit.userId !== "SEC4" || edit.level !== 4)) return "The Level 4 account is reserved.";
+          if (!edit.userId && !edit.password) { next.push(null); continue; }
+          const id = edit.userId;
+          if (!validCode(edit.userId) || ids.has(id)) return "Use distinct User IDs of 4–8 letters or digits.";
+          if (index !== 0 && ![1, 2, 3].includes(edit.level)) return "Choose Level 1, 2 or 3.";
+          const previous = accounts[index];
+          const password = edit.password || (previous?.userId === edit.userId ? previous.password : "");
+          if (!validCode(password)) return "Use 4–8 letters or digits for each new password.";
+          ids.add(id);
+          next.push({ ...edit, password });
+        }
+        accounts = next;
+        set({ securityCodes: securityCodes(accounts), lastCommand: "Security Codes applied" });
+        return null;
+      },
+      noteActivity: () => { lastActivityAt = now().getTime(); },
       login: (rawUserId, password) => {
         const state = get();
-        const currentTime = Date.now();
+        const currentTime = now().getTime();
         if (state.loginBlockedUntil && currentTime < state.loginBlockedUntil) {
           set({ loginError: "Đăng nhập đang tạm khóa sau nhiều lần sai." });
           return false;
         }
-        const userId = rawUserId.trim().toUpperCase();
-        const account = accounts.find((item) => item.id === userId && item.password === password);
+        const userId = rawUserId.trim();
+        const account = userId === "GUEST" && password === ""
+          ? { userId, level: 1 as const }
+          : accounts.find((item) => item?.userId === userId && item.password === password);
         if (!account) {
           const attempts = state.failedLoginAttempts + 1;
           set({
@@ -473,16 +560,28 @@ export function createDvor1150PmdtStore(
           return false;
         }
         const config = cloneDvor1150Config(state.config);
+        const connectionType = state.loginDialogOpen ? state.pendingConnection : state.connectionType ?? "direct";
         config.simulation.connected = true;
+        if (connectionType === "modem") {
+          config.simulation.local = false;
+          config.simulation.integralMonitorBypass = false;
+        }
         config.simulation.timestamp = formatDvor1150Timestamp(now());
+        const configDraft = cloneDvor1150Config(state.configDraft);
+        configDraft.simulation = { ...config.simulation };
         const derived = recompute(config, state.derived);
+        lastActivityAt = currentTime;
+        const securityScreenRevoked = state.activeView === "rms-config-security-codes" && account.level !== 4;
         set({
           config,
-          configDraft: cloneDvor1150Config(config),
+          configDraft,
           derived,
           loginDialogOpen: false,
-          authenticatedUserId: account.id,
+          accessDialog: null,
+          connectionType,
+          authenticatedUserId: account.userId,
           securityLevel: account.level,
+          ...(securityScreenRevoked ? { activeView: "rms-config-general", activeMenuPath: ["RMS", "Configuration"] } : {}),
           loginError: null,
           failedLoginAttempts: 0,
           loginBlockedUntil: null,
@@ -500,7 +599,10 @@ export function createDvor1150PmdtStore(
           configDraft: cloneDvor1150Config(config),
           derived: recompute(config, state.derived),
           configDirty: false,
-          loginDialogOpen: true,
+          loginDialogOpen: false,
+          accessDialog: null,
+          connectionType: null,
+          pendingConnection: "direct",
           authenticatedUserId: null,
           securityLevel: 0,
           loginError: null,
@@ -513,6 +615,10 @@ export function createDvor1150PmdtStore(
       },
       refreshClock: () => {
         const state = get();
+        if (state.securityLevel > 0 && now().getTime() - lastActivityAt >= 15 * 60 * 1000) {
+          get().logout();
+          return;
+        }
         const config = cloneDvor1150Config(state.config);
         config.simulation.timestamp = formatDvor1150Timestamp(now());
         const configDraft = cloneDvor1150Config(state.configDraft);
@@ -521,7 +627,7 @@ export function createDvor1150PmdtStore(
       },
       setLocalMode: (enabled) => {
         const state = get();
-        if (state.securityLevel < 3) return false;
+        if (state.securityLevel < 3 || state.connectionType !== "direct") return false;
         const config = cloneDvor1150Config(state.config);
         config.simulation.local = enabled;
         if (!enabled) config.simulation.integralMonitorBypass = false;
@@ -865,14 +971,18 @@ export function createDvor1150PmdtStore(
           ? [...new Set([...state.scenarioVisitedViewIds, defaultViews[screenId]])]
           : state.scenarioVisitedViewIds,
       })),
-      openView: (screenId, viewId, menuPath) => set((state) => ({
-        activeScreen: screenId,
-        activeView: viewId,
-        activeMenuPath: [...menuPath],
-        scenarioVisitedViewIds: state.mode === "student" && state.scenario.active
-          ? [...new Set([...state.scenarioVisitedViewIds, viewId])]
-          : state.scenarioVisitedViewIds,
-      })),
+      openView: (screenId, viewId, menuPath) => {
+        const state = get();
+        if (viewId === "rms-config-security-codes" && state.securityLevel !== 4) return;
+        set({
+          activeScreen: screenId,
+          activeView: viewId,
+          activeMenuPath: [...menuPath],
+          scenarioVisitedViewIds: state.mode === "student" && state.scenario.active
+            ? [...new Set([...state.scenarioVisitedViewIds, viewId])]
+            : state.scenarioVisitedViewIds,
+        });
+      },
       setSimulationParametersOpen: (open) => set((state) => ({
         simulationParametersOpen: open,
         scenarioParametersOpen: open ? false : state.scenarioParametersOpen,
@@ -959,13 +1069,17 @@ export function createDvor1150PmdtStore(
       },
       nextView: () => {
         const state = get();
-        const views = viewGroups[state.activeScreen];
+        const views = viewGroups[state.activeScreen].filter((view) => view !== "rms-config-security-codes" || state.securityLevel === 4);
         const index = views.indexOf(state.activeView);
         const next = views[(index + 1) % views.length] ?? views[0];
-        set({ activeView: next });
+        if (next !== state.activeView) get().openView(state.activeScreen, next, state.activeMenuPath);
       },
       closeScreen: () => set({ activeScreen: "home", activeView: "home", activeMenuPath: [] }),
-      reset: () => set(buildInitialState(now)),
+      reset: () => {
+        accounts = initialAccounts();
+        lastActivityAt = now().getTime();
+        set(buildInitialState(now));
+      },
     };
   });
 }
