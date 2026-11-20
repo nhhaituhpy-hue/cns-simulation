@@ -245,11 +245,11 @@ function ReadingDialog({ row, nominal, activeTransmitterId, allowed, dispatch, o
       <fieldset>
         <legend>Current Setting ({monitor ? target.monitorId.toUpperCase() : row.context})</legend>
         <dl className={styles.calibrationCurrent}>
-          <div><dt>{monitor && parameter === "bearingError" ? "Current Cal. Offset" : "Current Cal. Factor"}</dt><dd>{formatValue(row.factor, 5)}</dd></div>
+          <div><dt>{monitor && parameter === "bearingError" ? "Current Cal. Offset" : "Current Cal. Factor"}</dt><dd><span>{formatValue(row.factor, 5)}</span></dd></div>
           {row.target.kind !== "pdc" || row.target.parameter !== "carrierVswr" ? (
-            <div><dt>{nominal ? "Nominal" : "Current Setpoint"}</dt><dd>{formatValue(row.setting)}{!monitor && row.setting !== null && row.unit ? ` ${row.unit}` : ""}</dd></div>
+            <div><dt>{nominal ? "Nominal" : "Current Setpoint"}</dt><dd><span>{formatValue(row.setting)}</span>{!monitor && row.setting !== null && row.unit ? ` ${row.unit}` : ""}</dd></div>
           ) : null}
-          <div><dt>Current Reading</dt><dd>{monitor || row.unit === "W" ? formatValue(row.reading, sideband && power ? 4 : 2) : formatRowValue(row, row.reading)}</dd></div>
+          <div><dt>Current Reading</dt><dd><span>{monitor || row.unit === "W" ? formatValue(row.reading, sideband && power ? 4 : 2) : formatRowValue(row, row.reading, false)}</span></dd></div>
         </dl>
       </fieldset>
     </CalibrationDialog>

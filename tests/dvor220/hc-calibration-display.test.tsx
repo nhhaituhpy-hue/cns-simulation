@@ -63,6 +63,7 @@ describe.each(["maintenance-tx-setpoint", "maintenance-tx-reading", "maintenance
     expect(dialog.getByText("Current Setting (TX1)")).toBeInTheDocument();
     expect(dialog.getByText(setpoint ? `${inputName} (TX1)` : `${name} Power (Reading, TX1)`)).toBeInTheDocument();
     expect(value(dialog, "Current Setpoint")?.textContent).toBe(`${carrier ? "80.00" : "1.61"} W`);
+    expect(value(dialog, "Current Setpoint")?.querySelector("span")?.textContent).toBe(carrier ? "80.00" : "1.61");
     expect(value(dialog, "Current Reading")?.textContent).toBe(carrier ? (pdc ? "79.59" : "80.00") : setpoint ? "1.61" : pdc ? "1.6600" : "1.6100");
     const input = dialog.getByRole("spinbutton", { name: "Reference value" });
     expect(input).toHaveAttribute("value", carrier ? "80.0" : "1.6090");
