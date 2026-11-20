@@ -709,8 +709,54 @@ input[type="checkbox"].dvor1150-control {
 
 .dvor1150-pmdt-window .pmdt-vor-menu-item-row > .pmdt-submenu {
   top: -1px !important;
-  left: calc(100% + 1px) !important;
+  left: 100% !important;
   z-index: 120 !important;
+}
+
+.dvor1150-pmdt-window .pmdt-vor-menu-item-row > .dvor1150-expanded-submenu {
+  display: block;
+}
+
+.dvor1150-pmdt-window .dvor1150-access-dialog {
+  width: 248px;
+  max-width: calc(100vw - 24px);
+  margin: auto;
+  padding: 2px;
+  background: #c0c0c0;
+}
+
+.dvor1150-access-dialog::backdrop {
+  background: rgb(0 0 0 / 18%);
+}
+
+.dvor1150-access-dialog .pmdt-login-dialog-titlebar {
+  height: 17px;
+  background: #000080;
+  color: #fff;
+  font-weight: 700;
+}
+
+.dvor1150-access-dialog .pmdt-login-dialog-titlebar button {
+  color: #000;
+}
+
+.dvor1150-access-dialog .pmdt-login-dialog-body {
+  padding: 22px 22px 17px;
+}
+
+.dvor1150-access-dialog .pmdt-login-dialog-body label {
+  grid-template-columns: minmax(65px, 1fr) minmax(60px, 1fr);
+}
+
+.dvor1150-access-dialog .pmdt-login-dialog-body select {
+  border: 1px inset #fff;
+  background: #fff;
+  color: #000;
+}
+
+.dvor1150-pmdt-window .pmdt-statusbar-segment[data-active="true"] {
+  background: #316ac5;
+  color: #fff;
 }
 
 .dvor1150-pmdt-window .pmdt-vor-menu-item-row--depth-1 > .pmdt-submenu,
@@ -1503,6 +1549,7 @@ input[type="checkbox"].dvor1150-control {
 .dvor1150-pmdt-page .pmdt-classic-viewport {
   min-height: 625px;
   align-items: flex-start;
+  justify-content: safe center;
   overflow: auto;
 }
 
@@ -3043,6 +3090,50 @@ input[type="checkbox"].dvor1150-control {
 @media (max-width: 920px) {
   .dvor1150-pmdt-page .dvor1150-simulator-frame {
     width: 850px;
+  }
+}
+
+@media (pointer: coarse) and (max-width: 650px) {
+  .dvor1150-pmdt-window .pmdt-vor-menu-item-row > .dvor1150-expanded-submenu {
+    position: static;
+    margin-left: 12px;
+  }
+
+  .dvor1150-pmdt-window .pmdt-menu-root,
+  .dvor1150-pmdt-window .pmdt-menu-item {
+    min-height: 24px;
+  }
+
+  .dvor1150-pmdt-window .pmdt-menubar-row {
+    z-index: 2;
+  }
+
+  .dvor1150-pmdt-window {
+    grid-template-rows: 19px 25px minmax(0, 1fr) 18px;
+  }
+
+  .dvor1150-pmdt-window .pmdt-menubar {
+    height: 25px;
+  }
+}
+
+@media print {
+  body:has(.dvor1150-pmdt-window) * {
+    visibility: hidden;
+  }
+
+  body .dvor1150-pmdt-window,
+  body .dvor1150-pmdt-window * {
+    visibility: visible;
+    print-color-adjust: exact;
+  }
+
+  body .dvor1150-pmdt-window {
+    position: fixed;
+    top: 0;
+    left: 0;
+    transform: scale(0.8);
+    transform-origin: top left;
   }
 }
 

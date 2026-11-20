@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import type {
   Dvor1150Config,
   Dvor1150IndicatorColor,
@@ -10,12 +10,12 @@ import type {
   Dvor1150ViewId,
 } from "@/lib/dvor1150";
 import { getDvor1150ConfigValue } from "@/lib/dvor1150";
-import { useDvor1150PmdtStore } from "@/stores/dvor1150-pmdt-store";
+import { canEditDvor1150SecurityCodes, type Dvor1150SecurityCodeEdit, useDvor1150PmdtStore } from "@/stores/dvor1150-pmdt-store";
 import { Dvor1150ConfigControl } from "./pmdt-config-control";
 import { Dvor1150Toolbar } from "./pmdt-toolbar";
 
 const tabLabels: Record<string, string> = {
-  "rms-maintenance-alerts": "Maintenance Alerts",
+  "rms-maintenance-alerts": "Maintenance Alerts/Alarms",
   "rms-ad-data": "A/D Data",
   "rms-logs-operational-summary": "Operational Summary",
   "rms-logs-alarms": "Alarms",
@@ -95,8 +95,13 @@ function ScreenTabs({ screenId, activeView, views }: { screenId: Dvor1150ScreenI
   </div>;
 }
 
-function Screen({ title, children, tabs }: { title: string; children: ReactNode; tabs?: ReactNode }) {
-  return <section className="dvor1150-screen"><Dvor1150Toolbar title={title} />{tabs}{children}</section>;
+function Screen({ title, children, tabs, securityDraftDirty }: { title: string; children: ReactNode; tabs?: ReactNode; securityDraftDirty?: boolean }) {
+  const copyable = useDvor1150PmdtStore((state) => state.activeScreen === "rms-logs");
+  const screen = useRef<HTMLElement>(null);
+  const readCopyText = copyable ? () => Array.from(screen.current?.querySelectorAll<HTMLTableRowElement>("table tr") ?? [])
+    .map((row) => Array.from(row.cells, (cell) => cell.textContent?.trim() ?? "").join("\t")).join("\n") : undefined;
+  return <section className="dvor1150-screen" ref={screen}><Dvor1150Toolbar title={title} nextAvailable={Boolean(tabs)}
+    readCopyText={readCopyText} securityDraftDirty={securityDraftDirty} />{tabs}{children}</section>;
 }
 
 function ConfigRow({ label, fieldId, unit, type, digits, mirrorFieldIds }: { label: string; fieldId: string; unit?: string; type?: "number" | "text" | "boolean" | "select"; digits?: number; mirrorFieldIds?: readonly string[] }) {
@@ -219,9 +224,47 @@ function Dvor1150RmsAdLimits() {
   return <div className="dvor1150-content dvor1150-ad-limits-content"><DateBox value={config.simulation.timestamp} /><div className="dvor1150-ad-limit-grid">{bands("tx1")}{bands("tx2")}<fieldset className="dvor1150-panel dvor1150-temperature-limit-panel"><legend>Temperature</legend><table className="dvor1150-table"><thead><tr><th> </th><th>Lo Limit</th><th>Hi Limit</th><th> </th></tr></thead><tbody>{(["tx1", "tx2"] as const).map((id) => <tr key={id}><th>{id === "tx1" ? "Transmitter 1 Temp" : "Transmitter 2 Temp"}</th><td><Dvor1150ConfigControl fieldId={`rms.adLimits.temperature.${id}.low`} digits={0} /></td><td><Dvor1150ConfigControl fieldId={`rms.adLimits.temperature.${id}.high`} digits={0} /></td><td>°C</td></tr>)}</tbody></table></fieldset></div></div>;
 }
 
-function Dvor1150SecurityCodes() {
-  const rows = ["SEC4", "SEC3", "", "", ""];
-  return <div className="dvor1150-content dvor1150-security-codes"><button type="button" disabled className="dvor1150-security-unavailable">Unavailable</button><div className="dvor1150-security-columns"><fieldset className="dvor1150-panel"><legend>User ID</legend>{rows.map((row, index) => <StaticInput key={index} value={row} />)}</fieldset><fieldset className="dvor1150-panel"><legend>Password</legend>{rows.map((_, index) => <StaticInput key={index} value="" />)}</fieldset><fieldset className="dvor1150-panel dvor1150-security-levels"><legend>Level</legend>{rows.map((row, index) => <StaticSelect key={index} value={index === 0 ? "4" : index === 1 ? "3" : ""} />)}</fieldset><fieldset className="dvor1150-panel"><legend>User ID</legend>{rows.map((_, index) => <StaticInput key={index} value="" />)}</fieldset><fieldset className="dvor1150-panel"><legend>Password</legend>{rows.map((_, index) => <StaticInput key={index} value="" />)}</fieldset><fieldset className="dvor1150-panel dvor1150-security-levels"><legend>Level</legend>{rows.map((_, index) => <StaticSelect key={index} value="" />)}</fieldset></div></div>;
+function Dvor1150SecurityCodes({ onDirtyChange }: { onDirtyChange: (dirty: boolean) => void }) {
+  const rows = useDvor1150PmdtStore((state) => state.securityCodes);
+  const editable = useDvor1150PmdtStore(canEditDvor1150SecurityCodes);
+  const apply = useDvor1150PmdtStore((state) => state.applySecurityCodes);
+  const [error, setError] = useState<string | null>(null);
+  const [revision, setRevision] = useState(0);
+  return <form key={revision} id="dvor1150-security-codes" autoComplete="off" className="dvor1150-content dvor1150-security-codes"
+    onChange={() => onDirtyChange(true)}
+    onReset={() => { onDirtyChange(false); setError(null); }}
+    onSubmit={(event) => {
+      event.preventDefault();
+      if (!editable) return;
+      const data = new FormData(event.currentTarget);
+      const edits = rows.map((_, index): Dvor1150SecurityCodeEdit => ({
+        userId: index === 0 ? "SEC4" : String(data.get(`user-${index}`) ?? ""),
+        password: String(data.get(`password-${index}`) ?? ""),
+        level: index === 0 ? 4 : Number(data.get(`level-${index}`) || 1) as 1 | 2 | 3,
+      }));
+      const result = apply(edits);
+      setError(result);
+      if (!result) { onDirtyChange(false); setRevision(revision + 1); }
+    }}>
+    {editable ? <p>Demo accounts reset when the simulator reloads. Use training-only passwords.</p>
+      : <button type="button" disabled className="dvor1150-security-unavailable">Unavailable</button>}
+    <div className="dvor1150-security-columns">
+      {[0, 5].flatMap((start) => {
+        const indices = Array.from({ length: 5 }, (_, offset) => start + offset);
+        return [
+          <fieldset key={`users-${start}`} className="dvor1150-panel" disabled={!editable}><legend>User ID</legend>{indices.map((index) => <input className="dvor1150-control" key={index} name={`user-${index}`} aria-label={`User ID ${index + 1}`} defaultValue={rows[index]?.userId ?? ""} disabled={index === 0} maxLength={8} />)}</fieldset>,
+          <fieldset key={`passwords-${start}`} className="dvor1150-panel" disabled={!editable}><legend>Password</legend>{indices.map((index) => <input className="dvor1150-control" key={index} name={`password-${index}`} aria-label={`Password ${index + 1}`} type="password" autoComplete="new-password" maxLength={8} />)}</fieldset>,
+          <fieldset key={`levels-${start}`} className="dvor1150-panel dvor1150-security-levels" disabled={!editable}><legend>Level</legend>{indices.map((index) => <select className="dvor1150-control" key={index} name={`level-${index}`} aria-label={`Level ${index + 1}`} defaultValue={rows[index]?.level ?? ""} disabled={index === 0}><option value="" /><option value={1}>1</option><option value={2}>2</option><option value={3}>3</option>{index === 0 ? <option value={4}>4</option> : null}</select>)}</fieldset>,
+        ];
+      })}
+    </div>
+    {error ? <p role="alert">{error}</p> : null}
+  </form>;
+}
+
+function SecurityCodesScreen({ tabs }: { tabs: ReactNode }) {
+  const [dirty, setDirty] = useState(false);
+  return <Screen title="RMS Configuration" tabs={tabs} securityDraftDirty={dirty}><Dvor1150SecurityCodes onDirtyChange={setDirty} /></Screen>;
 }
 
 function dvor1150DipState(frequencyMHz: number): boolean[] {
@@ -237,13 +280,17 @@ function Dvor1150SynthesizerDipDialog({ frequencyMHz, onClose }: { frequencyMHz:
 export function Dvor1150RmsConfigScreen() {
   const activeView = useDvor1150PmdtStore((state) => state.activeView);
   const config = useDvor1150PmdtStore((state) => state.configDraft);
+  const securityLevel = useDvor1150PmdtStore((state) => state.securityLevel);
+  const editableCodes = useDvor1150PmdtStore(canEditDvor1150SecurityCodes);
   const [dipOpen, setDipOpen] = useState(false);
-  const views = ["rms-config-general", "rms-config-station", "rms-config-ad-limits", "rms-config-security-codes"] as const;
+  const views = (["rms-config-general", "rms-config-station", "rms-config-ad-limits", "rms-config-security-codes"] as const)
+    .filter((view) => view !== "rms-config-security-codes" || securityLevel === 4);
+  const tabs = <ScreenTabs screenId="rms-config" activeView={activeView} views={views} />;
+  if (activeView === "rms-config-security-codes" && securityLevel === 4) return <SecurityCodesScreen key={String(editableCodes)} tabs={tabs} />;
   let body: ReactNode = <Dvor1150RmsGeneralConfiguration />;
   if (activeView === "rms-config-station") body = <Dvor1150RmsStationConfiguration onOpenDip={() => setDipOpen(true)} />;
   if (activeView === "rms-config-ad-limits") body = <Dvor1150RmsAdLimits />;
-  if (activeView === "rms-config-security-codes") body = <Dvor1150SecurityCodes />;
-  return <><Screen title="RMS Configuration" tabs={<ScreenTabs screenId="rms-config" activeView={activeView} views={views} />}>{body}</Screen>{dipOpen ? <Dvor1150SynthesizerDipDialog frequencyMHz={config.station.frequencyMHz} onClose={() => setDipOpen(false)} /> : null}</>;
+  return <><Screen title="RMS Configuration" tabs={tabs}>{body}</Screen>{dipOpen ? <Dvor1150SynthesizerDipDialog frequencyMHz={config.station.frequencyMHz} onClose={() => setDipOpen(false)} /> : null}</>;
 }
 
 function monitorLimits(config: Dvor1150Config, monitorId: Dvor1150MonitorId, parameter: Dvor1150MonitorParameter) {

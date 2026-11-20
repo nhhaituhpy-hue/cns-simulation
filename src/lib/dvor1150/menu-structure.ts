@@ -37,9 +37,19 @@ export const dvor1150MenuStructure: readonly Dvor1150MenuGroup[] = [
     id: "system",
     label: "System",
     items: [
+      { id: "system-connect", label: "Connect", enabled: true, children: [
+        { id: "system-connect-direct", label: "Direct", enabled: true, action: "connect-direct" },
+        { id: "system-connect-modem", label: "Modem", enabled: true, action: "connect-modem" },
+      ] },
       { id: "system-logon", label: "Logon RMS", enabled: true, action: "open-login" },
       { id: "system-logoff", label: "Logoff/Disconnect", enabled: true, action: "logoff" },
+      { id: "system-configuration-save", label: "Configuration Save", enabled: false },
+      { id: "system-configuration-load", label: "Configuration Load", enabled: false },
+      { id: "system-configuration-print", label: "Configuration Print", enabled: false },
+      { id: "system-pmdt-setup", label: "PMDT Setup", enabled: false },
+      { id: "system-print-setup", label: "Print Setup", enabled: false },
       { id: "system-simulation-parameters", label: "Simulation Parameters...", enabled: true, action: "open-config" },
+      { id: "system-exit", label: "Exit PMDT", enabled: true, action: "logoff" },
     ],
   },
   {
@@ -56,7 +66,7 @@ export const dvor1150MenuStructure: readonly Dvor1150MenuGroup[] = [
         enabled: true,
         children: [
           { id: "rms-set-time", label: "Set Time and Date", enabled: true, action: "execute-command", commandId: "set-time" },
-          { id: "rms-change-password", label: "Change Password...", enabled: false },
+          { id: "rms-change-password", label: "Change Password...", enabled: true, action: "change-password" },
           { id: "rms-reset-intrusion", label: "Reset Intrusion Detector", enabled: true, action: "execute-command", commandId: "reset-intrusion" },
           { id: "rms-reset-smoke", label: "Reset Smoke Detector", enabled: true, action: "execute-command", commandId: "reset-smoke" },
           { id: "rms-reset-hardware", label: "Reset RMS Hardware", enabled: true, action: "execute-command", commandId: "reset-rms" },
@@ -125,7 +135,9 @@ export const dvor1150MenuStructure: readonly Dvor1150MenuGroup[] = [
       { id: "diagnostics-fault-isolation", label: "Fault Isolation", enabled: true, screenId: "diagnostics", viewId: "diagnostics-fault-isolation" },
     ],
   },
-  { id: "info", label: "Info", items: [] },
+  { id: "info", label: "Info", items: [
+    { id: "info-about", label: "About PMDT", enabled: true, action: "open-about" },
+  ] },
 ];
 
 export const dvor1150DisabledMenuTooltip = "Chưa khả dụng";

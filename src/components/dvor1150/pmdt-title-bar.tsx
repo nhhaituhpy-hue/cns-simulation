@@ -8,6 +8,7 @@ import { useDvor1150PmdtStore } from "@/stores/dvor1150-pmdt-store";
 
 export function Dvor1150TitleBar() {
   const config = useDvor1150PmdtStore((state) => state.config);
+  const logout = useDvor1150PmdtStore((state) => state.logout);
   const mode = config.station.transmitterConfig === "Dual Transmitters" ? "Dual" : "Single";
   return (
     <header className="pmdt-titlebar">
@@ -16,9 +17,9 @@ export function Dvor1150TitleBar() {
         {config.station.stationDescription} - Model 1150 {mode} DVOR - SELEX Sistemi Integrati Inc. PMDT
       </h1>
       <div className="pmdt-window-buttons" aria-label="Điều khiển cửa sổ mô phỏng">
-        <button type="button" className="pmdt-window-button" aria-label="Thu nhỏ" title="Chỉ mang tính mô phỏng"><Minus size={13} /></button>
-        <button type="button" className="pmdt-window-button" aria-label="Phóng to" title="Chỉ mang tính mô phỏng"><Square size={13} /></button>
-        <button type="button" className="pmdt-window-button pmdt-window-button--close" aria-label="Đóng" title="Chỉ mang tính mô phỏng"><X size={13} /></button>
+        <button type="button" className="pmdt-window-button" aria-label="Thu nhỏ" title="Chỉ mang tính mô phỏng" disabled><Minus size={13} /></button>
+        <button type="button" className="pmdt-window-button" aria-label="Phóng to" title="Chỉ mang tính mô phỏng" disabled><Square size={13} /></button>
+        <button type="button" className="pmdt-window-button pmdt-window-button--close" aria-label="Logoff/Disconnect" title="Logoff/Disconnect" onClick={logout} disabled={!config.simulation.connected}><X size={13} /></button>
       </div>
     </header>
   );

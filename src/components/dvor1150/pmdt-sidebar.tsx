@@ -29,7 +29,8 @@ export function Dvor1150Sidebar() {
   const config = useDvor1150PmdtStore((state) => state.config);
   const needBackup = useDvor1150PmdtStore((state) => state.needBackup);
   const monitorAlarm = useDvor1150PmdtStore((state) => state.derived.monitorAnnunciation.alarm);
-  const loginOpen = useDvor1150PmdtStore((state) => state.loginDialogOpen);
+  const loginOpen = useDvor1150PmdtStore((state) => state.loginDialogOpen || !state.config.simulation.connected);
+  const direct = useDvor1150PmdtStore((state) => state.connectionType === "direct");
   const security = useDvor1150PmdtStore((state) => state.securityLevel);
   const local = useDvor1150PmdtStore((state) => state.config.simulation.local);
   const setLocal = useDvor1150PmdtStore((state) => state.setLocalMode);
@@ -66,10 +67,10 @@ export function Dvor1150Sidebar() {
     >{content}</button>;
   }
 
-  const connected = loginOpen ? "" : data.connected ? "Connected" : "Disconnected";
+  const connected = data.connected ? "Connected" : "Disconnected";
   return <aside className="pmdt-sidebar">
     <section aria-label="Connection" className="pmdt-sidebar-section">
-      <span className={`pmdt-connection-badge ${loginOpen ? "pmdt-connection-badge--locked" : data.connected ? "" : "pmdt-connection-badge--offline"}`}>{connected}</span>
+      <span className={`pmdt-connection-badge ${data.connected ? "" : "pmdt-connection-badge--offline"}`}>{connected}</span>
       <div className={`dvor1150-backup-alert ${!loginOpen && (monitorAlarm || needBackup) ? "dvor1150-backup-alert--active" : ""} ${!loginOpen && monitorAlarm ? "dvor1150-backup-alert--alarm" : ""}`} role="status" aria-hidden={loginOpen || undefined}>{loginOpen ? "" : monitorAlarm ? "Alarm" : needBackup ? "Need Backup" : ""}</div>
       <div className="dvor1150-maintenance-controls" aria-hidden={loginOpen || undefined}>
         <div className={`dvor1150-maintenance-alert ${data.alert ? "dvor1150-maintenance-alert--active" : ""}`}>
@@ -79,7 +80,7 @@ export function Dvor1150Sidebar() {
           type="button"
           className={`dvor1150-maintenance-alert dvor1150-local-control ${local ? "dvor1150-local-control--active" : ""}`}
           aria-pressed={local}
-          disabled={security < 3}
+          disabled={security < 3 || !direct}
           title={security < 3 ? "Yêu cầu SEC3/SEC4" : "Local cho phép chỉnh sửa cấu hình"}
           onClick={() => setLocal(!local)}
         >
