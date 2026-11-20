@@ -429,6 +429,23 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-11-20 — DVOR 220 Advanced Controls theo TM
+
+- Thay console ba tab bằng bốn nhóm thu gọn theo TM: Monitor Certification,
+  Antenna Manual, Fault Clear, Automatic Ground Error Check; không áp dụng
+  bố cục CR mới. Certification bật/tắt alarm CH.A cả MON1/MON2 theo giới hạn
+  đang chạy, không xóa fault không liên quan; IDENT Keyer dùng Draft/Apply.
+- Antenna Manual hiển thị 48 anten, chọn cặp đối diện và đảo USB/LSB bằng
+  trạng thái cục bộ; Fault Clear gọi lệnh riêng TX. Công cụ VSWR lớp học giữ nguyên.
+- Engine chưa dùng identKeyer để tạo alarm Continuous/None; không thêm logic
+  alarm hoặc mô hình RF. Đối chiếu và giới hạn được ghi trong audit DVOR 220.
+- Bổ sung regression UI cho nhóm, certification, IDENT, latch, anten và VSWR.
+  Lint/typecheck đạt (hai warning lint sẵn có), focused DVOR 220 đạt 150/150;
+  production build đạt. Giao diện chưa được kiểm tra trực quan trên trình duyệt.
+- Full regression: 3132 pass, 213 skip, một lỗi timeout ở kiểm thử heap parser
+  AI không đổi trong nhánh này (DOCUMENT_TIMEOUT thay DOCUMENT_RESOURCE_LIMIT);
+  chạy lại riêng suite đó đạt 8/8. Không sửa parser ngoài phạm vi.
+
 ### 2026-11-19 — Đối chiếu mặt LRU DVOR 220 với manual
 
 - Vẽ lại vị trí tương đối, nhãn và loại đầu đo của các mặt LRU có hình tham chiếu; giữ nguyên ID và hành vi mở tham chiếu phép đo.

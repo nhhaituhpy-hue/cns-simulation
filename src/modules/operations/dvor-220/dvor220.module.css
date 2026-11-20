@@ -1,3 +1,70 @@
+.advancedSection {
+  border: 1px solid #9aa9b5;
+  margin-bottom: 10px;
+}
+
+.advancedSection > summary {
+  background: #d4dfe8;
+  color: #213c52;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 5px 9px;
+  list-style: none;
+}
+
+.advancedSection > summary::before {
+  content: "▶ ";
+}
+
+.advancedSection[open] > summary::before {
+  content: "▲ ";
+}
+
+.advancedSectionBody {
+  padding: 10px;
+}
+
+.antennaCircle {
+  position: relative;
+  width: 650px;
+  max-width: 100%;
+  aspect-ratio: 1;
+  margin: 12px auto;
+}
+
+.manualAntenna {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 29px;
+  height: 29px;
+  border-radius: 50%;
+  background: #777;
+  color: white;
+  border: 2px solid #bfc4c8;
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.manualAntenna[aria-pressed="true"] {
+  background: #168426;
+}
+
+.manualAntenna strong {
+  position: absolute;
+  top: 27px;
+  left: 0;
+  color: #153e8b;
+}
+
+.carrierAntenna {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #ddd;
+  padding: 12px;
+}
 .simulatorRoot {
   --dvor-blue: #3c82b5;
   --dvor-blue-dark: #175779;

@@ -32,6 +32,7 @@ import {
   type Dvor220TransmitterId,
 } from "../domain/types";
 import { CalibrationScreen, isCalibrationScreen } from "./calibration-screen";
+import { AdvancedControlsScreen } from "./advanced-controls-screen";
 import { formatDvor220Status, toneForDvor220Status } from "./main-screens";
 import type { Dvor220DialogId, Dvor220ScreenId } from "./navigation";
 import styles from "../dvor220.module.css";
@@ -298,7 +299,7 @@ function GroundCheckScreen({ device, dispatch, advanceTime }: Dvor220Maintenance
       <div className={styles.maintenanceToolbar}>
         <span>Keylock: <strong>{device.keylock}</strong></span>
         {(["LOCAL", "REM", "MAINT"] as const).map((mode) => <MopiensBeveledButton key={mode} pressed={device.keylock === mode} onClick={() => dispatch({ type: "set-keylock", mode })}>{mode}</MopiensBeveledButton>)}
-        <MopiensBeveledButton tone="primary" disabled={!canStart || running} onClick={() => dispatch({ type: "start-ground-check" })}>Run Check</MopiensBeveledButton>
+        <MopiensBeveledButton tone="primary" disabled={!canStart || running} onClick={() => dispatch({ type: "start-ground-check" })}>Run</MopiensBeveledButton>
         <MopiensBeveledButton disabled={!running} onClick={() => advanceTime(getDvor220GroundCheckDurationMs())}>Complete 5 s Test</MopiensBeveledButton>
         <MopiensStatusIndicator compact label="Result" detail={formatDvor220Status(device.groundCheck.status)} tone={device.groundCheck.status === "failed" ? "alarm" : device.groundCheck.status === "completed" ? "normal" : "pending"} />
       </div>
@@ -750,26 +751,6 @@ function ParameterChangeHistoryScreen({ device }: { device: Dvor220DeviceState }
   );
 }
 
-function AdvancedControlsScreen(props: Dvor220MaintenanceScreenProps) {
-  const [activeTool, setActiveTool] = useState<"certification" | "antenna" | "ground-check">("certification");
-  return (
-    <div className={styles.screenBody}>
-      <MaintenanceHeader
-        title="Advanced Controls"
-        detail="Maintenance tests provided by the DVOR 220 PMDT."
-      />
-      <div className={styles.maintenanceToolbar} role="tablist" aria-label="Advanced control pages">
-        <MopiensBeveledButton pressed={activeTool === "certification"} onClick={() => setActiveTool("certification")}>Monitor Certification</MopiensBeveledButton>
-        <MopiensBeveledButton pressed={activeTool === "antenna"} onClick={() => setActiveTool("antenna")}>Antenna Tests</MopiensBeveledButton>
-        <MopiensBeveledButton pressed={activeTool === "ground-check"} onClick={() => setActiveTool("ground-check")}>Automatic Ground Error Check</MopiensBeveledButton>
-      </div>
-      {activeTool === "certification" ? <CertificationScreen {...props} /> : null}
-      {activeTool === "antenna" ? <AntennaScreen {...props} /> : null}
-      {activeTool === "ground-check" ? <GroundCheckScreen {...props} /> : null}
-    </div>
-  );
-}
-
 export function Dvor220MaintenanceScreen(props: Dvor220MaintenanceScreenProps) {
   if (isCalibrationScreen(props.screenId)) return <CalibrationScreen key={props.screenId} {...props} screenId={props.screenId} />;
   if (props.screenId === "maintenance-certification") return <CertificationScreen {...props} />;
@@ -777,7 +758,7 @@ export function Dvor220MaintenanceScreen(props: Dvor220MaintenanceScreenProps) {
   if (props.screenId === "maintenance-thermal") return <ThermalTestScreen {...props} />;
   if (props.screenId === "maintenance-faults") return <FaultControlsScreen {...props} />;
   if (props.screenId === "maintenance-ground-check") return <GroundCheckScreen {...props} />;
-  if (props.screenId === "maintenance-advanced") return <AdvancedControlsScreen {...props} />;
+  if (props.screenId === "maintenance-advanced") return <AdvancedControlsScreen {...props} groundCheck={<GroundCheckScreen {...props} />} />;
   if (props.screenId === "maintenance-users") return <UserManagementScreen {...props} />;
   if (props.screenId === "maintenance-time") return <TimeScreen {...props} />;
   if (props.screenId === "maintenance-version") return <VersionScreen />;
