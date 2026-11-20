@@ -64,7 +64,8 @@ function formatValue(value: number | null, digits = 2) {
 
 function formatRowValue(row: ReadingRow, value: number | null, showUnit = true, reading = false) {
   const parameter = row.target.kind === "transmitter-reading" ? row.target.output : row.target.parameter;
-  const digits = !reading && row.unit === "W" && parameter !== "carrier" ? 3 : 2;
+  const digits = reading && parameter === "carrier" && row.target.kind !== "pdc" ? 0
+    : !reading && row.unit === "W" && parameter !== "carrier" ? 3 : 2;
   return showUnit && value !== null && row.unit ? `${formatValue(value, digits)} ${row.unit}` : formatValue(value, digits);
 }
 

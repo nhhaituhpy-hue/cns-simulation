@@ -57,7 +57,7 @@ describe.each(["maintenance-tx-setpoint", "maintenance-tx-reading", "maintenance
     const cells = within(button.closest("tr")!).getAllByRole("cell");
     const unit = setpoint ? "" : " W";
     expect(cells[2]).toHaveTextContent(`${carrier ? "80.00" : "1.609"}${unit}`);
-    expect(cells[3].textContent).toBe(`${carrier ? (pdc ? "79.59" : "80.00") : (pdc ? "1.66" : "1.61")}${unit}`);
+    expect(cells[3].textContent).toBe(`${carrier ? (pdc ? "79.59" : "80") : (pdc ? "1.66" : "1.61")}${unit}`);
     fireEvent.click(button);
     const dialog = within(screen.getByRole("dialog", { name: "Calibration" }));
     expect(dialog.getByText("Current Setting (TX1)")).toBeInTheDocument();

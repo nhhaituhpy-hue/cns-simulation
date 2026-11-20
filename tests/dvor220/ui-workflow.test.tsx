@@ -213,7 +213,7 @@ describe("MOPIENS DVOR 220 simulator UI", () => {
     fireEvent.click(dialog.getByRole("button", { name: "Close" }));
     expect(screen.queryByRole("dialog", { name: "Calibration" })).not.toBeInTheDocument();
     expect(store.getState().device.calibration.saved.transmitterReadingFactors.tx1.carrier).toBe(1.04);
-    expect(screen.getByRole("table", { name: "TX1 Power Output Readings" })).toHaveTextContent("104.00 W");
+    expect(screen.getByRole("table", { name: "TX1 Power Output Readings" })).toHaveTextContent("104 W");
   });
 
   it("renders independent TX setpoint, monitor frequency and PDC actions", () => {
