@@ -193,11 +193,11 @@ export function Dvor1150SystemDiagram({
             <g key={y}>
               <g role="img" aria-label={`Mẫu sideband ISO${index + 1} REV → RF Monitor A2`}>
                 <path d={`M906 ${y - 16}V${y - 22}H${780 + index * 20}V282`} />
-                <text x="946" y={y - 22}>REV</text>
+                <text x="950" y={y - 7}>REV</text>
               </g>
               <g role="img" aria-label={`Mẫu sideband ISO${index + 1} FWD → RF Monitor A2`}>
                 <path d={`M930 ${y + 16}V${y + 22}H${790 + index * 20}V282`} />
-                <text x="946" y={y + 28}>FWD</text>
+                <text x="950" y={y + 14}>FWD</text>
               </g>
             </g>
           ))}

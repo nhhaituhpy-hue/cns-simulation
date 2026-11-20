@@ -34,6 +34,8 @@ describe("DVOR 1150 Rev. K system diagram", () => {
           : `M930 ${y + 16}V${y + 22}H${portX + 10}V282`);
         paths.push(path.getAttribute("d"));
         expect(sample.querySelector("text")?.textContent).toBe(direction);
+        expect(sample.querySelector("text")).toHaveAttribute("x", "950");
+        expect(sample.querySelector("text")).toHaveAttribute("y", String(direction === "REV" ? y - 7 : y + 14));
       }
     }
     expect(new Set(paths).size).toBe(8);
