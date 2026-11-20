@@ -1,7 +1,12 @@
-.advancedScreen {
+:global(main):has(> .advancedScreen) {
   display: flex;
   flex-direction: column;
-  height: 100%;
+}
+
+.advancedScreen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   min-height: 0;
   background: #efefef;
   font-size: 8px;
@@ -57,7 +62,11 @@
 }
 
 .advancedWarning p {
-  margin: 0 0 6px;
+  margin: 0 0 7px;
+}
+
+.advancedWarning p:nth-child(-n + 2) {
+  font-size: 8px;
 }
 
 .advancedControlsForm {
@@ -92,7 +101,7 @@
 
 .advancedRadioRow {
   display: grid;
-  grid-template-columns: calc(36.667% - 18px) 40px;
+  grid-template-columns: calc(36.667% - 18px) 44px;
   align-items: center;
   gap: 12px;
   border: 0;
@@ -106,8 +115,12 @@
   align-items: center;
   justify-self: start;
   border: 1px solid #dedede;
-  padding: 3px;
+  padding: 4px 3px;
   color: #5c829b;
+}
+
+.advancedRadios:not(:has(label:nth-child(3))) {
+  padding-inline: 6px;
 }
 
 .advancedRadios label {
@@ -170,8 +183,8 @@
 }
 
 .advancedAction {
-  width: 54px;
-  padding: 0;
+  width: 72px;
+  padding: 0 4px;
   font-size: 7px;
   white-space: nowrap;
 }

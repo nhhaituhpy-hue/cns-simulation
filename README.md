@@ -437,6 +437,12 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ### 2026-11-20 — DVOR 220 Advanced Control: tinh chỉnh giao diện PR #19
 
+- Chốt CSS: nút Manual Control/Run đủ chỗ cho nhãn và padding (DOM cả hai
+  tab: scrollWidth = clientWidth = 71px); tăng nhẹ Apply, radio và heading
+  cảnh báo; pane flex lấp khoảng trống tới Event. Ảnh Chrome 1600×1051 và
+  side-by-side cùng chiều rộng workspace đã đối chiếu lại.
+- Kiểm tra lượt chốt: lint/typecheck đạt (hai warning sẵn có), 166 test
+  DVOR 220 đạt; production build đạt.
 - Lượt đối chiếu tiếp theo: cảnh báo hẹp hơn và dịch tâm sang phải, giảm chiều
   cao section/tab/nút, Apply về cột 22% pane với icon xám; scrollbar riêng
   dùng track/thumb thay arrow lớn. Chỉ đổi CSS của trang.
