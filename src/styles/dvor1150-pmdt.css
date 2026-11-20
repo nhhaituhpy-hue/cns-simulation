@@ -2463,6 +2463,15 @@ input[type="checkbox"].dvor1150-control {
   width: 405px;
 }
 
+.dvor1150-pmdt-window .dvor1150-fault-isolation .dvor1150-status-box {
+  width: auto;
+  height: auto;
+  padding: 1px 4px;
+  font-size: inherit;
+  line-height: inherit;
+  white-space: nowrap;
+}
+
 .dvor1150-pmdt-window .dvor1150-fault-results {
   height: 90px;
   border: 1px inset #fff;

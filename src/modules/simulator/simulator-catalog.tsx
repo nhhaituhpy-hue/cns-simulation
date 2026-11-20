@@ -4,30 +4,31 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { getSimulatorCatalogueImage } from "@/modules/core/simulator-catalogue-images";
-import { SIMULATOR_MODULES } from "@/modules/core/registry";
+import { SIMULATOR_CATALOG_ENTRIES } from "@/modules/core/registry";
 
 export function SimulatorCatalog() {
   const router = useRouter();
-  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [loadingRoute, setLoadingRoute] = useState<string | null>(null);
 
-  const handleRun = (moduleId: string, route: string) => {
-    if (loadingId) return;
-    setLoadingId(moduleId);
+  const handleRun = (route: string) => {
+    if (loadingRoute) return;
+    setLoadingRoute(route);
     router.push(route);
   };
 
-  const loadingModule = SIMULATOR_MODULES.find((m) => m.id === loadingId);
+  const loadingModule = SIMULATOR_CATALOG_ENTRIES.find((module) => module.routes.simulator === loadingRoute);
 
   return (
     <div className="w-full max-w-none px-4 py-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
       <section aria-label="Danh sách công cụ mô phỏng">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {SIMULATOR_MODULES.map((module) => {
+          {SIMULATOR_CATALOG_ENTRIES.map((module) => {
             const available = module.status === "available";
             const moduleIcon = getSimulatorCatalogueImage(module.id);
-            const isLoading = loadingId === module.id;
+            const route = module.routes.simulator;
+            const isLoading = loadingRoute === route;
             return (
-              <article key={module.id} className="rounded-xl border border-[#d1d5db] bg-[#e5e7eb] p-5 shadow-sm">
+              <article key={route} className="rounded-xl border border-[#d1d5db] bg-[#e5e7eb] p-5 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                   <span className={`inline-flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl ${available ? "bg-[var(--accent-muted)]" : "bg-[#d1d5db]"}`}>
                     <Image src={moduleIcon} alt="" width={80} height={80} sizes="80px" className="size-full object-contain p-1" />
@@ -37,8 +38,8 @@ export function SimulatorCatalog() {
                 {available ? (
                   <button
                     type="button"
-                    disabled={loadingId !== null}
-                    onClick={() => handleRun(module.id, module.routes.simulator)}
+                    disabled={loadingRoute !== null}
+                    onClick={() => handleRun(route)}
                     className="mt-4 inline-flex min-h-9 items-center justify-center gap-2 rounded-full bg-[var(--accent)] px-3.5 text-sm font-semibold text-white hover:bg-[var(--accent-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {isLoading ? (
@@ -65,7 +66,7 @@ export function SimulatorCatalog() {
       </section>
 
       {/* Loading overlay (mờ) */}
-      {loadingId ? (
+      {loadingRoute ? (
         <div
           className="fixed inset-0 z-[100] flex flex-col items-center justify-center gap-4 bg-black/40 backdrop-blur-sm"
           role="status"
