@@ -168,12 +168,15 @@ function FieldReadingBar({
   source,
   reading,
   band,
+  digits,
 }: {
   label: string;
   source: string;
   reading: Dvor220ParameterReading;
   band: Dvor220AlarmBand;
+  digits?: number;
 }) {
+  const format = (value: number) => digits === undefined ? formatEngineeringValue(value, reading.unit) : value.toFixed(digits);
   const lowerBase = band.lowerAlarm ?? band.lowerWarning ?? band.nominal;
   const upperBase = band.upperAlarm ?? band.upperWarning ?? band.nominal;
   const baseSpan = Math.max(Math.abs(upperBase - lowerBase), Math.abs(band.nominal) * 0.02, 0.01);
@@ -202,13 +205,13 @@ function FieldReadingBar({
         <strong>{source}</strong>
         <div className={styles.fieldThresholds} aria-hidden>
           {thresholdValues.map((value, index) => (
-            <span key={`${label}-${index}`}>{value === null ? "" : formatEngineeringValue(value, reading.unit)}</span>
+            <span key={`${label}-${index}`}>{value === null ? "" : format(value)}</span>
           ))}
         </div>
         <div className={styles.fieldLimitTrack} style={trackStyle} aria-hidden>
           <span className={styles.fieldLimitPointer} />
         </div>
-        <output>{formatEngineeringValue(reading.value, reading.unit)} <small>{reading.unit}</small></output>
+        <output>{format(reading.value)} <small>{reading.unit}</small></output>
       </div>
     </div>
   );
@@ -221,6 +224,7 @@ function FieldMetricBar({
   unit,
   status,
   band,
+  digits,
 }: {
   label: string;
   source: string;
@@ -228,8 +232,9 @@ function FieldMetricBar({
   unit: string;
   status: Dvor220Status;
   band: Dvor220AlarmBand;
+  digits?: number;
 }) {
-  return <FieldReadingBar label={label} source={source} reading={measurement(value, unit, status)} band={band} />;
+  return <FieldReadingBar label={label} source={source} reading={measurement(value, unit, status)} band={band} digits={digits} />;
 }
 
 function InputSignalTable({
@@ -579,6 +584,7 @@ function PdcScreen({ device, snapshot }: Dvor220MainScreenProps) {
               label={outputLabels[output]}
               source={activeTransmitterId?.toUpperCase() ?? "—"}
               value={snapshot.pdc.forwardPowerW[output]}
+              digits={2}
               unit="W"
               status={output === "carrier" ? snapshot.pdc.status : classifyDvor220Reading(snapshot.pdc.forwardPowerW[output], limits.sidebandPower)}
               band={output === "carrier" ? limits.carrierPower : limits.sidebandPower}
@@ -592,6 +598,7 @@ function PdcScreen({ device, snapshot }: Dvor220MainScreenProps) {
             label="VSWR"
             source="Antenna"
             value={snapshot.pdc.carrierVswr}
+            digits={2}
             unit=":1"
             status={snapshot.pdc.status}
             band={{
@@ -659,6 +666,7 @@ function AmplifierScreen({ device, snapshot }: Dvor220MainScreenProps) {
                 label={outputLabels[output]}
                 source={transmitterId.toUpperCase()}
                 value={transmitter.forwardPowerW[output]}
+                digits={output === "carrier" ? 0 : 2}
                 unit="W"
                 status={unitStatus}
                 band={output === "carrier" ? device.configuration.running.transmitterLimits.carrierPower : device.configuration.running.transmitterLimits.sidebandPower}
@@ -679,6 +687,7 @@ function AmplifierScreen({ device, snapshot }: Dvor220MainScreenProps) {
                 label={row.label}
                 source={transmitterId.toUpperCase()}
                 value={transmitter.temperaturesC[row.id]}
+                digits={row.id === "cma" ? 1 : undefined}
                 unit="°C"
                 status={status}
                 band={{
@@ -768,12 +777,14 @@ function MonitorScreen({ screenId, device, snapshot }: Dvor220MainScreenProps) {
                   label={label}
                   source="MON1"
                   reading={mon1Channel.readings[parameter]}
+                  digits={group.id === "system" || group.id === "modulation" ? 2 : undefined}
                   band={configuration.limits[parameter]}
                 />
                 <FieldReadingBar
                   label={label}
                   source="MON2"
                   reading={mon2Channel.readings[parameter]}
+                  digits={group.id === "system" || group.id === "modulation" ? 2 : undefined}
                   band={configuration.limits[parameter]}
                 />
               </div>

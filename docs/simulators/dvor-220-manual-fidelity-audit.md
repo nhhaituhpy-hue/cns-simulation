@@ -12,6 +12,19 @@ không đánh giá LMI như một ứng dụng riêng, DME 320, hoặc chức n�
 | CR | [Sử dụng PMDT DVOR 220 Cam Ranh](https://drive.google.com/file/d/1po4pTePLULoFY2DmQ77XXbD0XHPd-QWT/view) | 15 trang PDF; nguồn cho menu, nhãn và bố cục của bản PMDT tại Cam Ranh. |
 | HC | [Tài liệu hiệu chỉnh DVOR 220](https://docs.google.com/document/d/1at5AD7GveWcdQkCeXTQFqqY3WQmCEssu/edit) | 30 trang bản xuất PDF; nguồn cho luồng Calibrate / Save / Close và Helper. |
 
+Đối với luồng hiệu chỉnh, HC là nguồn quyết định khi khác TM. Cập nhật hiển thị:
+Current Reading sideband trong bảng 2 số lẻ, Setpoint vẫn 3 (HC PDF 1, 17,
+21); hộp thoại sideband TX Setpoint 2/2 số lẻ (5, 8, 11, 14), TX Reading/PDC
+2/4 (18–20, 22–24); Carrier 2/2, tham chiếu ban đầu 1 số lẻ (2, 17, 22),
+sideband 4 và MON 2 số lẻ, không giới hạn độ chính xác nhập liệu. Nhãn Power
+(Reading, TXn), USBCOS/USBSIN/LSBCOS/LSBSIN, Current Cal. Offset cho Bearing
+Error, AM30/AM1020/AM9960 và ngữ cảnh MON/channel/TX theo HC PDF 2, 5,
+17–29; đơn vị chỉ bên Setpoint/tham chiếu, không gắn vào Current Reading
+power hoặc Nominal/Current Reading MON. Gauge CMA: Carrier 0, sideband 2,
+nhiệt độ CMA 1 số lẻ (16); PDC power/VSWR 2 (20); MON System/Modulation 2 (25).
+Giữ dấu chấm thập phân, định dạng SYN/Frequency chưa được HC xác lập,
+factor PDC, Transmitter Setup và toàn bộ phép tính/lưu/khôi phục hiệu chỉnh.
+
 Số trang dạng `7-26` là số in trong TM; số trang PDF là vị trí đếm từ trang bìa.
 Đọc các cột dọc từ trên xuống và hàng ngang từ trái qua phải, ở hướng nhìn
 của hình. Hình tham chiếu quyết định vị trí tương đối; tài liệu không cho kích
