@@ -242,7 +242,9 @@ describe("MOPIENS DVOR 220 simulator UI", () => {
     const pdc = within(screen.getByRole("table", { name: "PDC Calibration" }));
     expect(pdc.getAllByRole("row")).toHaveLength(6);
     expect(pdc.getByRole("button", { name: "Calibrate LSB SIN (TX1)" })).toBeEnabled();
-    expect(pdc.getByRole("button", { name: "Calibrate LSB SIN VSWR" })).toBeDisabled();
+    const sidebandVswr = pdc.getAllByRole("button", { name: /^Calibrate (LSB|USB) (COS|SIN) VSWR$/ });
+    expect(sidebandVswr).toHaveLength(4);
+    for (const button of sidebandVswr) expect(button).toBeDisabled();
     expect(pdc.getByRole("button", { name: "Calibrate Carrier VSWR" })).toBeEnabled();
   });
 

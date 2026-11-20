@@ -143,13 +143,14 @@ và dùng chân đo; PDC giữ J20–J24. Các phím, LED và đầu cắm servi
 không phải mô hình trạng thái mới. Các vị trí là tỷ lệ từ hình, không phải kích
 thước cơ khí.
 
-- **Cần ảnh bên trong ASU Cam Ranh:** bản vẽ nội thất hiện có vẫn là sơ đồ:
-  mỗi SM minh họa 6 ngõ, khác 12 ngõ theo tài liệu; cụm đồng hồ công suất tùy
-  chọn cũng chưa xác minh. Mặt chi tiết ASU nay chỉ vẽ cửa đóng theo Fig. 3-68.
-- **Cần ảnh 1PD1 có nhãn:** Fig. 3-14 đủ để vẽ hàng năm BNC đo PIR. Không suy
-  thứ tự FFM1/2/3, Standby và TSG từ thứ tự trên sơ đồ Fig. 3-15, và không nối
-  cổng nào với phép đo riêng cho đến khi có xác nhận.
-- **Cần ảnh nhìn thẳng / sơ đồ chân:** chưa xác nhận bố trí đầu nối/nút của
+- **ASU tham chiếu huấn luyện:** dùng P/N 0233-7211 có Power Monitor theo
+  §3.4.2 và Figs. 3-68/3-69, phù hợp với cụm đã có trong mô phỏng. Không
+  xác nhận P/N thực tế ở Cam Ranh và không chờ ảnh ASU mở. Nội thất vẫn là
+  sơ đồ (mỗi SM minh họa 6 ngõ thay vì 12); mặt chi tiết chỉ vẽ cửa đóng.
+- **1PD1 chỉ minh họa vị trí:** Fig. 3-14 đủ để vẽ hàng năm BNC đo PIR. Không
+  suy thứ tự FFM1/2/3, Standby và TSG từ sơ đồ Fig. 3-15, và không nối
+  cổng nào với phép đo riêng.
+- **Giới hạn mặt card:** chưa xác nhận bố trí đầu nối/nút của
   EMU, MODEM và ASU-IF tại Cam Ranh. Phần tủ tổng quan không dùng để xác định
   vị trí từng chân. PMU không sinh số đo giả; VR1 của PDC vẫn là tham chiếu
   nội bộ, không phải nút trên mặt trước.
@@ -196,10 +197,12 @@ vùng chọn trên mặt tủ. Không đổi điểm đo, màn hình PMDT hoặc
 Các backplane TX và cụm terminal nguồn ở mặt sau vẫn là hình khái quát,
 không dùng làm sơ đồ đi dây của tủ.
 
-**Còn thiếu:** ảnh ASU mở và nhãn P/N; ảnh có nhãn/sơ đồ cho từng BNC 1PD1 và
-terminal IFB; hình riêng có nhãn của EMU, MODEM và ASU-IF (nếu có); bản vẽ có
-kích thước để xác nhận kích thước và khoảng cách thực. Khay trống chỉ mô tả
-cấu hình được chụp. Quy trình VSWR sideband vẫn chưa có.
+**Phạm vi mặt sau:** không yêu cầu thêm ảnh. Không gán thứ tự BNC 1PD1 hay
+định danh terminal IFB trong mô phỏng. Khi cần thay thế thiết bị thực, dùng
+quy trình của manual (ví dụ IFB 1A7, tr. 7-52), không dùng sơ đồ mô phỏng
+để đi dây. Các ảnh không xác nhận kích thước, khoảng cách thực hay vị trí
+chính xác đầu nối EMU, MODEM và ASU-IF. Khay trống chỉ mô tả cấu hình
+được chụp.
 
 ## 3. PMDT: cửa sổ, nội dung và sai khác
 
@@ -274,9 +277,9 @@ self-test độc lập không được coi là đã sửa. Bảng bên dưới g
   dùng tần số phát chung của cấu hình trạm, không giả lập độ lệch riêng
   của hai bộ SYN khi Changeover.
 - **PDC (CR 12, HC 21–24):** năm giá trị công suất PDC độc lập với số đo
-  CMA/SMA và bảng VSWR 48 anten. Giữ luồng VSWR carrier của simulator;
-  chưa bật bốn nút VSWR sideband đến khi có hình hộp thoại và quy trình
-  xác minh các đại lượng cần đọc hoặc hiệu chỉnh.
+  CMA/SMA và bảng VSWR 48 anten. Giữ luồng VSWR carrier của simulator.
+  Không mô phỏng quy trình hiệu chuẩn VSWR sideband cần máy phân tích phổ:
+  không gán điểm đo, giữ bốn nút ở trạng thái vô hiệu hóa để đối chiếu.
 - **Bộ nhớ:** Calibrate và Initialize tác động ngay trên running; Save
   ghi mục đang mở (cả hai MON đối với Frequency). Tài liệu xác nhận
   Initialize về mặc định và Save vào non-volatile nhưng không mô tả
@@ -361,13 +364,10 @@ desktop; không phải trang vận hành trong simulator web.
    PDC. TX Reading → CMA/SMA; PDC Cal → PDC Status; MON Cal → đúng MON và
    channel; TX Setpoint Cal → factor/setpoint, không làm nhảy công suất
    thực; chạy/rút lại/lưu phải phân biệt trạng thái volatile và non-volatile.
-4. **Quyết định cần xác nhận trước phần tương ứng:** giữ công cụ riêng của
-   lớp học ở khu Simulator Tools hay trong PMDT; có yêu cầu mô phỏng
-   firmware/file/print hay chỉ hiển thị; dùng biến thể ASU/AC/DC nào làm
-   mặc định nếu cần sao đúng một tủ Cam Ranh. Khuyến nghị: tách công cụ lớp
-   học khỏi cây PMDT, chỉ mô phỏng dữ liệu trong trình duyệt, giữ cấu hình
-   phần cứng hiện có cho đến khi có ảnh/bản vẽ xác nhận. Không đoán những
-   gì các tài liệu không phân biệt hoặc không đủ chi tiết.
+4. **Các quyết định đã chốt:** giữ công cụ lớp học trong Simulator Tools;
+   firmware/file/print chỉ hiển thị và dùng dữ liệu trong trình duyệt.
+   AC/DC theo ảnh Cam Ranh, ASU theo biến thể tham chiếu ở trên. Không đoán
+   những gì các nguồn không đủ chi tiết để xác nhận.
 
 Kiểm chứng giai đoạn sửa: kiểm thử SVG vị trí tương đối/loại/jack target theo
 hình; test cây menu, cấu trúc bảng và quyền; test engine cho tách hệ số,

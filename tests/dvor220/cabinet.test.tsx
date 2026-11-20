@@ -4,6 +4,18 @@ import { Dvor220BlockDiagram } from "@/modules/operations/dvor-220/dvor220-block
 
 afterEach(cleanup);
 
+it("identifies the simulated ASU as the manual variant with a Power Monitor", () => {
+  render(<Dvor220BlockDiagram />);
+  const surfaces = within(screen.getByRole("tablist", { name: "Chọn cabinet hoặc ASU" }));
+  fireEvent.click(surfaces.getByRole("tab", { name: "ASU" }));
+  const cabinet = screen.getByRole("img", { name: /Bên trong Antenna Switching Unit/ });
+  expect(within(cabinet).getByRole("button", { name: /2A1A7/ })).toBeInTheDocument();
+  fireEvent.click(within(cabinet).getByRole("button", { name: "ASU, 2A1" }));
+  const detail = within(screen.getByRole("region", { name: "Antenna Switching Unit" }));
+  expect(detail.getByText("P/N 0233-7211")).toBeInTheDocument();
+  expect(detail.getByText(/không xác nhận P\/N của tủ Cam Ranh/)).toBeInTheDocument();
+});
+
 it("shows the three Cam Ranh AC/DC converters, with blanks between them", () => {
   render(<Dvor220BlockDiagram />);
   const cabinet = screen.getByRole("img", { name: /Mặt trước cabinet/ });
@@ -42,6 +54,11 @@ it("shows the rear IFB connector groups in the photographed layout", () => {
   ]);
   const y = (port: Element) => Number(port.querySelector("rect")?.getAttribute("y"));
   expect(y(ports[0]!)).toBeLessThan(y(ports[6]!));
+  const terminals = Array.from(cabinet.querySelectorAll('[data-connector-kind="terminal-block"]'));
+  for (const terminal of terminals) {
+    expect(terminal).not.toHaveAttribute("aria-label");
+    expect(terminal.textContent).toBe("");
+  }
   const hotspot = within(cabinet).getByRole("button", { name: "IFB, 1A7" });
   fireEvent.click(hotspot);
   expect(screen.getByRole("heading", { name: "Interface Board" })).toBeInTheDocument();
@@ -59,6 +76,9 @@ it("locates the 1PD1 divider vertically on the left rail without naming its BNCs
   const bncs = Array.from(cabinet.querySelectorAll('[data-board="1pd1"] [data-connector-kind="bnc"]'));
   expect(bncs).toHaveLength(5);
   expect(new Set(bncs.map((bnc) => bnc.firstElementChild?.getAttribute("x"))).size).toBe(1);
-  expect(bncs.every((bnc) => !bnc.hasAttribute("aria-label"))).toBe(true);
+  for (const bnc of bncs) {
+    expect(bnc).not.toHaveAttribute("aria-label");
+    expect(bnc.textContent).toBe("");
+  }
   expect(screen.getByRole("group", { name: "Mặt panel QUINT 3-WAY RF DIVIDER" })).toBeInTheDocument();
 });
