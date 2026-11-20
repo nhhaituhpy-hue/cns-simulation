@@ -168,6 +168,8 @@
   font-size: 18px;
 }
 
+.lowerMeasurementGroup .sidebandId { font-size: 14px; }
+
 .powerTransistor path {
   fill: #dee3e1;
   stroke: #725135;

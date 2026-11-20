@@ -75,7 +75,7 @@
 }
 
 .systemDiagram {
-  min-width: 1040px;
+  min-width: 0;
   border: 0;
   border-radius: 0;
 }
@@ -357,6 +357,7 @@
 }
 
 @media (max-width: 620px) {
+  .systemDiagram { min-width: 1040px; }
   .page { padding-inline: 8px; }
   .surfaceTabs { width: 100%; }
   .surfaceTabs button { flex: 1; padding-inline: 5px; }
