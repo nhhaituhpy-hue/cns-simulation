@@ -484,10 +484,10 @@ export const DVOR_1150_BLOCKS: readonly Dvor1150BlockDefinition[] = [
     assemblyIds: ["1A33", "1A34"],
     description:
       "Hai nguồn dự phòng độc lập cấp DC không gián đoạn +28 V và +43/48 V, đồng thời nạp battery khi có nguồn AC.",
-    manualReference: "Section 1.2.1.15; Figure 2-44",
+    manualReference: "Sections 1.2.1.15–16; Figure 1-4 (PDF page 26, behind power panel); Figure 2-44",
     cabinetHotspots: [
-      { id: "cabinet-bcps-main", surface: "electronics", x: 306, y: 866, width: 82, height: 74, assemblyId: "1A33", shortLabel: "BCPS MAIN", kind: "power" },
-      { id: "cabinet-bcps-standby", surface: "electronics", x: 394, y: 866, width: 82, height: 74, assemblyId: "1A34", shortLabel: "BCPS STBY", kind: "power" },
+      { id: "cabinet-bcps-main", surface: "electronics", x: 332, y: 866, width: 48, height: 76, assemblyId: "1A33", shortLabel: "BCPS MAIN", kind: "power" },
+      { id: "cabinet-bcps-standby", surface: "electronics", x: 398, y: 866, width: 48, height: 76, assemblyId: "1A34", shortLabel: "BCPS STBY", kind: "power" },
     ],
     diagramOccurrences: [],
     indicators: [], controls: [],

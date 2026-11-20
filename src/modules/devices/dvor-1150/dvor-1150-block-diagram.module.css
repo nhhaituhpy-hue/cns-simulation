@@ -134,7 +134,9 @@
 .cabinetCard > rect:nth-child(2) { fill: #aab5b5; stroke: #5a686b; stroke-width: 1; }
 .cabinetCard circle { fill: #30cf60; stroke: #324144; stroke-width: 1; }
 
-.cabinetPowerModule rect:first-child { fill: #99a5a6; stroke: #435156; stroke-width: 1.4; }
+.cabinetBcps rect { fill: #aab4b3; stroke: #435156; stroke-width: 1.4; }
+.hiddenPowerLabel { fill: #c4d0d2; font-family: var(--font-geist-mono), Consolas, monospace; font-size: 7px; text-anchor: middle; }
+.cabinetPowerModule > :first-child { fill: #99a5a6; stroke: #435156; stroke-width: 1.4; }
 .cabinetPowerModule circle { fill: #253237; stroke: #dde3e1; stroke-width: 2; }
 .cabinetPowerModule rect:last-child { fill: #c8cfce; stroke: #5a676a; stroke-width: 1.2; }
 
@@ -156,7 +158,6 @@
 
 .ribbonCable rect { fill: #c1c8c7; stroke: #566467; stroke-width: 1.2; }
 .ribbonCable path { fill: none; stroke: #697679; stroke-width: 1; }
-.commutatorConnector { fill: #101c20; stroke: #b6c0bf; stroke-width: 2; }
 .controlConnector { fill: #c7cfcd; stroke: #526064; stroke-width: 1.5; }
 .controlPlate { fill: #d7dcda; stroke: #667376; stroke-width: 1.2; }
 .upgradePanel { fill: #9ba8a8; stroke: #dce3e1; stroke-width: 1.4; }
