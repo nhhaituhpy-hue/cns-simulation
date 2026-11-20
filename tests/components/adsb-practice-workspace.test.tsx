@@ -62,6 +62,7 @@ describe("scenario-bound ADS-B practice", () => {
     ui.unmount();
     render(<AdsbPracticeWorkspace scenarioId={canonicalId} />);
     await screen.findByTestId("practice-shell");
+    await waitFor(() => expect(shell.scenario?.id).toBe(canonicalId));
     expect(useRecordingStore.getState().allActions).toEqual(actions);
     expect(shell.getPayload()).toMatchObject({ allActions: actions, selectedActions: actions, authenticatedCorrectly: true });
     expect(fetcher.mock.calls.every(([, options]) => !options?.method || options.method === "GET")).toBe(true);
@@ -70,6 +71,7 @@ describe("scenario-bound ADS-B practice", () => {
     vi.spyOn(globalThis, "fetch").mockImplementation(async () => json(row()));
     const ui = render(<AdsbPracticeWorkspace scenarioId={canonicalId} />);
     await screen.findByTestId("practice-shell");
+    await waitFor(() => expect(shell.scenario?.id).toBe(canonicalId));
     fireEvent.click(screen.getByRole("button", { name: "Terminal" }));
     act(() => { useTerminalStore.getState().processInput(row().definition.targetLoginUser); useTerminalStore.getState().processInput("training-only"); useTerminalStore.getState().processInput("1"); });
     fireEvent.click(screen.getByRole("button", { name: "Chọn tất cả thao tác" }));
@@ -78,6 +80,7 @@ describe("scenario-bound ADS-B practice", () => {
     useRecordingStore.getState().resetAttempt();
     render(<AdsbPracticeWorkspace scenarioId={canonicalId} />);
     await screen.findByTestId("practice-shell");
+    await waitFor(() => expect(shell.scenario?.id).toBe(canonicalId));
     expect(shell.getPayload()).toMatchObject({ allActions: payload!.allActions, selectedActions: payload!.selectedActions, authenticatedCorrectly: true });
   });
   it("requires native terminal authentication and selected actions before saving hardware without submitting", async () => {
@@ -85,6 +88,7 @@ describe("scenario-bound ADS-B practice", () => {
     const fetcher = vi.spyOn(globalThis, "fetch").mockImplementation(async () => json(published));
     render(<AdsbPracticeWorkspace scenarioId={canonicalId} />);
     await screen.findByTestId("practice-shell");
+    await waitFor(() => expect(shell.scenario?.id).toBe(canonicalId));
     expect(screen.getByRole("button", { name: "Bước 2 · Xác định phần cứng" })).toBeDisabled();
     fireEvent.click(screen.getByRole("button", { name: /^Mở giám sát Sensor A/ }));
     expect(useRecordingStore.getState().qcmsMonitoringOpened).toBe(true);
