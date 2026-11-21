@@ -208,6 +208,9 @@ export function createDefaultDvor1150aConfig(): Dvor1150aConfig {
       stationType: "DVOR",
       transmitterConfig: "Dual Transmitters",
       monitorConfig: "Dual Monitors",
+      standbyMode: "Cold Standby",
+      automaticRestartsEnabled: false,
+      firstRestartDelay: 50,
     },
     transmitters: {
       tx1: makeTxConfig("tx1"),
@@ -261,6 +264,13 @@ export function withDvor1150aConfigExtensions(value: unknown): unknown {
   const next = structuredClone(value);
   if (!next || typeof next !== "object" || Array.isArray(next)) return next;
   const record = next as Record<string, unknown>;
+  const station = record.station;
+  if (station && typeof station === "object" && !Array.isArray(station)) {
+    const fields = station as Record<string, unknown>;
+    for (const [key, value] of Object.entries({ standbyMode: "Cold Standby", automaticRestartsEnabled: false, firstRestartDelay: 50 })) {
+      if (!Object.hasOwn(fields, key)) fields[key] = value;
+    }
+  }
   const transmitters = record.transmitters;
   if (transmitters && typeof transmitters === "object" && !Array.isArray(transmitters)) {
     for (const id of ["tx1", "tx2"]) {

@@ -422,6 +422,9 @@ export const dvorConfigFieldCatalog: readonly DvorConfigFieldDefinition[] = [
   { id: "station.stationType", label: "Station type", section: "Station", type: "select", options: ["DVOR"], description: "Loại đài được mô phỏng." },
   { id: "station.transmitterConfig", label: "Transmitter configuration", section: "Station", type: "select", options: ["Dual Transmitters", "Single Transmitter"], description: "Single Transmitter vô hiệu TX2 trong snapshot nhưng vẫn giữ cấu hình TX2 để chuyển lại dual." },
   { id: "station.monitorConfig", label: "Monitor configuration", section: "Station", type: "select", options: ["Dual Monitors", "Single Monitor"], description: "Single Monitor loại Monitor 2 khỏi health và voting nhưng vẫn giữ cấu hình của nó." },
+  { id: "station.standbyMode", label: "Training standby profile", section: "Station", type: "select", options: ["Cold Standby", "Hot Standby"], description: "Q13: cold standby. KT II.I: dự phòng Off hoặc Hot STBY vào Load. Profile đào tạo, không phải control RMS trên ảnh trạm." },
+  { id: "station.automaticRestartsEnabled", label: "Automatic Restarts Enabled", section: "Station", type: "boolean", description: "TM Table 3-3: cho phép hai lần tự động khởi động lại sau shutdown." },
+  { id: "station.firstRestartDelay", label: "First Restart Delay (seconds)", section: "Station", type: "number", min: 0, step: 1, unit: "s", description: "Ảnh trạm đặt 50 s; LCU chặn phát ít nhất 20 s. Lần thứ hai cố định 300 s theo TM." },
   ...txFields("tx1"),
   ...txFields("tx2"),
   ...alarmLimitFields,
@@ -471,7 +474,7 @@ export function getDvorConfigValue(config: Dvor1150aConfig, fieldId: string): Dv
   let current: unknown = config;
   for (const part of fieldId.split(".")) {
     if (!current || typeof current !== "object" || !(part in current)) {
-      return (fieldId.startsWith("monitor.testGeneratorCalibration.") || fieldId.startsWith("monitor.testGenerator.") || fieldId.startsWith("monitor.standbyCalibration.")
+      return (["station.standbyMode", "station.automaticRestartsEnabled", "station.firstRestartDelay"].includes(fieldId) || fieldId.startsWith("monitor.testGeneratorCalibration.") || fieldId.startsWith("monitor.testGenerator.") || fieldId.startsWith("monitor.standbyCalibration.")
         || /^transmitters\.tx[12]\.nominal\.(keyerInputLevel|windowedKeyingInput|selfKeyOnLoss|shutdownOnLoss|restartWhenResumed|externalKeying|suppressOnShutdown)$/.test(fieldId)) && config !== defaultDvor1150aConfig
         ? getDvorConfigValue(defaultDvor1150aConfig, fieldId)
         : null;

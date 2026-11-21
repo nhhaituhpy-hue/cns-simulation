@@ -20,6 +20,8 @@ vi.mock("@/components/scenario/scenario-parameters-route-loader", async () => {
       definition.startPolicy.startLocal = true;
       definition.startPolicy.startMonitorBypassed = false;
       definition.configuration.monitor.votingLogic = "OR";
+      definition.configuration.station.standbyMode = "Hot Standby";
+      definition.configuration.transmitters.tx2.load = true;
       definition.configuration.monitor.calibration.mon1.hz30ModulationScale = 70;
       onLoaded(definition, { review: true, revisionKey: "clock-fixture-v1" });
     }, [onLoaded]);

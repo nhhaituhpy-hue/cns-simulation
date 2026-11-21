@@ -26,6 +26,8 @@ const rmsConfigFieldMap: Record<string, string> = {
   "rmsConfigGeneral.monitorIntegrityTestsEnabled": "monitor.integrity.enabled",
   "rmsConfigGeneral.votingLogic": "monitor.votingLogic",
   "rmsConfigGeneral.transfer": "monitor.transfer",
+  "rmsConfigGeneral.automaticRestartsEnabled": "station.automaticRestartsEnabled",
+  "rmsConfigGeneral.firstRestartDelay": "station.firstRestartDelay",
   "rmsConfigStation.stationType": "station.stationType",
   "rmsConfigStation.transmitterConfig": "station.transmitterConfig",
   "rmsConfigStation.monitorConfig": "station.monitorConfig",
@@ -64,12 +66,14 @@ function ConfigInput({
   className?: string;
 }) {
   const overrides = useVorPmdtStore((state) => state.overrides);
+  const restartsEnabled = useVorPmdtStore((state) => state.configDraft.station.automaticRestartsEnabled ?? false);
   const configFieldId = rmsConfigFieldMap[fieldId];
   if (configFieldId) {
     return (
       <PmdtConfigControl
         displayFieldId={fieldId}
         configFieldId={configFieldId}
+        disabled={fieldId === "rmsConfigGeneral.firstRestartDelay" && !restartsEnabled}
         digits={configFieldId === "station.frequencyMHz" ? 1 : undefined}
         className={`h-7 border border-[#475569] bg-[var(--cns-surface-card)] px-2 font-mono text-[11px] text-[var(--cns-text-primary)] outline-none ${className}`}
       />

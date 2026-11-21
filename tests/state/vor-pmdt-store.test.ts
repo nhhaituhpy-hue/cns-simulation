@@ -295,7 +295,7 @@ describe("VOR PMDT store", () => {
 
     store.getState().setConfigValue("simulation.integralMonitorBypass", false);
 
-    store.getState().advanceMonitorTime(store.getState().config.monitor.timers.shutdown);
+    store.getState().advanceMonitorTime(store.getState().config.monitor.timers.shutdown + 20);
     expect(store.getState().config.transmitters.tx1.onAir).toBe(false);
     expect(store.getState().config.transmitters.tx2.onAir).toBe(true);
     expect(store.getState().configDraft.transmitters.tx2.onAir).toBe(true);
@@ -317,7 +317,7 @@ describe("VOR PMDT store", () => {
     expect(store.getState().applyConfigChanges()).toBe(true);
     store.getState().setConfigValue("simulation.integralMonitorBypass", false);
 
-    store.getState().advanceMonitorTime(store.getState().config.monitor.timers.shutdown);
+    store.getState().advanceMonitorTime(store.getState().config.monitor.timers.shutdown + 20);
     expect(store.getState().derived.monitors.mon1.parameters.deviation.status).toBe("alarm");
     expect(store.getState().config.transmitters.tx1.onAir).toBe(false);
     expect(store.getState().config.transmitters.tx2.onAir).toBe(true);
@@ -334,13 +334,13 @@ describe("VOR PMDT store", () => {
     expect(store.getState().applyConfigChanges()).toBe(true);
     store.getState().setConfigValue("simulation.integralMonitorBypass", false);
 
-    store.getState().advanceMonitorTime(store.getState().config.monitor.timers.shutdown);
+    store.getState().advanceMonitorTime(2 * store.getState().config.monitor.timers.shutdown + 20);
     expect(store.getState().derived.voting.activeTransmitter).toBe(null);
-    expect(store.getState().config.transmitters.tx1.enabled).toBe(false);
-    expect(store.getState().config.transmitters.tx2.enabled).toBe(false);
+    expect(store.getState().config.transmitters.tx1.enabled).toBe(true);
+    expect(store.getState().config.transmitters.tx2.enabled).toBe(true);
     expect(store.getState().data.transmitters.tx1.off).toBe("red");
     expect(store.getState().data.transmitters.tx2.off).toBe("red");
-    expect(store.getState().lastCommand).toBe("Automatic monitor shutdown: both transmitters off");
+    expect(store.getState().lastCommand).toBe("Automatic monitor shutdown");
   });
 
   it("keeps the active transmitter in place when no eligible standby exists", () => {

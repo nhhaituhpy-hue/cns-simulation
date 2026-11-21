@@ -43,7 +43,8 @@ Gốc ở `~/attachments/<ID>/`, không chép ảnh vào Git.
 `faceplates-closeup.jpg` là upload nhầm (ảnh bãi biển), **không dùng**;
 mô tả close-up trong file trả lời không được coi là ảnh đã kiểm tra.
 Kho ảnh PMDT 1150A trên Drive là ảnh Hoàng tự chụp ở trạm (Q9/Q10),
-nhưng **chưa đính kèm/cấp cho audit**: chưa đọc version/profile/ngưỡng.
+đã được cấp tại `/home/ubuntu/out/station/` ở Stage1c. Hai ảnh được đối chiếu
+cho G09 tại §6.1b; chưa mở rộng thành xác minh toàn bộ version/profile/ngưỡng G05/G25.
 
 Bốn PDF là bộ chủ sở hữu cung cấp, không phải tài liệu tra trên web.
 Text có dấu trang `=== p.N ===` và mục lục tại
@@ -59,8 +60,8 @@ Hình trên trang có lớp chữ vẫn cần mở ảnh, không suy bố trí t
 đọc text). Bản render lưu ngoài Git ở `/home/ubuntu/out/dvor1150a-figures/tm-pN.png`.
 Đã mở cả bốn asset cabinet/diagram thực sự được renderer dùng. Nhận xét SVG
 dựa trên hình TM và tọa độ/nhãn/props source; **phần cứng chưa render browser**,
-chưa đo cơ khí. Riêng G01 đã kiểm PMDT ở 1440/390 px, Vitest,
-lint/typecheck/build; bằng chứng ngoài Git `/home/ubuntu/out/g01/`.
+chưa đo cơ khí. G01/G02/G09 đã kiểm PMDT ở 1440/390 px, Vitest,
+lint/typecheck/build; bằng chứng ngoài Git `/home/ubuntu/out/{g01,g02,g09}/`.
 Browser dùng store cục bộ, API profile offline; chưa integration-test
 PostgreSQL thật, không mở rộng kết quả G01 sang phần cứng.
 
@@ -424,7 +425,8 @@ Alias bổ sung (đường dẫn tương đối từ repository; `screens/` bên
 | --- | --- |
 | MENU | [`src/lib/vor-menu-structure.ts`](../../src/lib/vor-menu-structure.ts)::`vorMenuStructure`, `monitorItems`, `testSignalItems`, `transmitterCommandItems`, `rmsCommandItems`, `monitorCommandItems` |
 | BAR | [`pmdt-menu-bar.tsx`](../../src/components/vor/pmdt-menu-bar.tsx)::`MenuItemRow.selectItem`; [`pmdt-toolbar.tsx`](../../src/components/vor/pmdt-toolbar.tsx)::`PmdtToolbar` |
-| STORE | [`vor-pmdt-store.ts`](../../src/stores/vor-pmdt-store.ts)::`useVorPmdtStore`, `applyAutomaticMonitorTransfer`, `monitorProtectionDelay` |
+| STORE | [`vor-pmdt-store.ts`](../../src/stores/vor-pmdt-store.ts)::`useVorPmdtStore`, `advanceMonitorTime`, `transferTransmitter` |
+| PROTECTION | [`protection.ts`](../../src/lib/dvor1150a/protection.ts)::`advanceDvorProtection`, `protectionDelay` |
 | DEF / ENG | [`defaults.ts`](../../src/lib/dvor1150a/defaults.ts)::`createDefaultDvor1150aConfig`, `alarmLimits`, `makeRouting`; [`engine.ts`](../../src/lib/dvor1150a/engine.ts)::`buildDvor1150aSnapshot`, `calibratedMeasurement`, `effectiveTransmitter` |
 | CONTROL | [`pmdt-config-control.tsx`](../../src/components/vor/pmdt-config-control.tsx)::`PmdtConfigControl`; [`config-utils.ts`](../../src/lib/dvor1150a/config-utils.ts)::`dvorConfigFieldCatalog` |
 | CLOCK | [`dvor1150a-monitor-clock.tsx`](../../src/components/vor/dvor1150a-monitor-clock.tsx)::`Dvor1150aMonitorClock` |
@@ -493,7 +495,7 @@ ghi rõ loại lựa chọn thay cho bịa giá trị số.
 | P40 Transmitters → Data → Status TX1/2 | Có System/Carrier PA/Synthesizer/Sideband alerts dạng lưới cột; một số theo derived, không đủ ROM/RAM/EEPROM/CRC và công suất phản xạ vật lý. | Một phần | TM PDF 172 / 3-54 §3.6.8.3.4/Fig. 3-49; KT PDF 19–20 / in 18–19 II.6; `tx-status.tsx::TxStatus`, ENG |
 | P41 Transmitters → Configuration → Nominal | Có Azimuth Index, Output Power, Voice/Ident/Reference Mod, SBO RF Level, keyer/code/external input; Nominal tác động hai TX qua draft/Apply như mô tả TM. Không xác nhận đáp ứng RF ngoài mô hình. | Một phần | TM PDF 173,178–179 / 3-55,60–61 §3.6.8.4.1/3.6.8.7/Fig. 3-50; KT PDF 12 / in 11 I Ident Normal; `tx-config-nominal.tsx::TxConfigNominal`, CONTROL/STORE::`applyConfigChanges`, ENG::`effectiveTransmitter` |
 | P42 Transmitters → Configuration → Offsets and Scale Factors | Có hai cột TX, coarse/fine/SB phase/scales/PLL; có hiệu lực trong mô hình, TP6/Load/đồng hồ độc lập chưa đủ (§3). | Một phần | TM PDF 174,178–179 / 3-56,60–61 §3.6.8.4.2/3.6.8.7/Fig. 3-51; KT PDF 23–25 / in 22–24 III.2–3; `tx-config-offsets.tsx::TxConfigOffsets`, ENG |
-| P43 Transmitters → Commands → Transfer; TX1/2 Antenna/Load/Off | Transfer leaf không action; TX1/2 routing có action, level≥3 (Load/Off cần Local). Có thay thế qua sidebar nhưng chọn Antenna xóa cả hai cờ Load, không tự giữ standby trên tải nóng (S04). | Một phần | TM PDF 175 / 3-57 §3.6.8.5/Fig. 3-52; KT PDF 12,21 / in 11,20 I/III; MENU/BAR, STORE::`setTransmitterMode` |
+| P43 Transmitters → Commands → Transfer; TX1/2 Antenna/Load/Off | **G09 đã sửa:** Transfer gọi `transferTransmitter`, chuyển anten nhưng giữ Main đã chọn; TX1/2 Antenna/Load/Off có guard level≥3, Load/Off cần Local. Profile cold giữ TX dự phòng Off; hot giữ TX khỏe trên Load sau chuyển tay. Lệnh tự động tắt TX đang lỗi, không giữ RF lỗi trên Load. Phần LCU riêng vẫn G03. | Một phần | TM PDF 89,175 / 2-45,3-57 §§2.3.2.14.1.9/3.6.8.5; KT PDF12/in11 I; STORE::`transferTransmitter/setTransmitterMode`, BAR; §6.1b |
 | P44 Transmitters → Commands → Ident Normal/Off/Continuous; Hold Commutator | Normal/Off không action, check Normal cố định; Continuous/Hold disabled, không Hold/Release/test antenna index dialog. Nominal keyer là đường khác, không làm menu này hoạt động. | Một phần | TM PDF 175 / 3-57 §3.6.8.5/Figs. 3-52–53; KT PDF 12 / in 11 I; MENU::`transmitterCommandItems`, BAR |
 | P45 Diagnostics → Power Up Results / Fault Isolation | Có bảng CPU/RAM/PROM/EEPROM và Full/On Air/Cancel có handler, level≥3+Local; kết quả từ mô hình/scenario, không tự test ROM/RAM phần cứng. Cảnh báo NOTAM chỉ hiện khi scenario diagnosis chọn full; không coi chẩn đoán mô hình là đã đáp ứng quy trình an toàn trạm. | Một phần | TM PDF 176–177 / 3-58–59 §3.6.8.6/Figs. 3-54–55; KT —; `diagnostics-workspace.tsx::PowerUpResults/FaultIsolation/DiagnosticsWorkspace`, STORE::`runDiagnostics/cancelDiagnostics` |
 | P46 Info → About PMDT | Menu disabled dù có About dialog trong layout; không truy cập version/date bằng đường Info của TM. Version thực trạm chưa biết (Q9). | Một phần | TM PDF 121 / 3-3 Table 3-1; KT —; MENU, `pmdt-layout.tsx::PmdtLayout` |
@@ -520,7 +522,7 @@ sim có thể tô xanh số ngoài dải bình thường KT. Ngưỡng trạm c�
 | L07 Tx Frequency Error (ppm) | TM −20/−18/0/18/20; KT ±0.002%=±20ppm | −20/−18/0/18/20; bộ số khớp hình, biên sai số KT tương đương. Không xác nhận counter độc lập. | Khớp | TM PDF 157 / 3-39 Fig. 3-35; KT PDF 10,22 / in 9,21 V.5.1a/III.1; DEF::`alarmLimits.txFrequencyError`, ENG, `MonitorAlarmLimits` |
 | L08 Ident Modulation / Status / Code | TM 2/4/5/9/10%; Status/Code hàng đọc riêng, Normal/Continuous/No Ident; KT bình thường Ident Normal | Bộ % 2/4/5/9/10 khớp hình; Status/Code còn phụ thuộc keyer/scenario, menu Normal không thi hành P44; không đủ chứng nhận mã/Morse trạm. | Một phần | TM PDF 153,157,175 / 3-35,39,57 Figs. 3-31/35/52; KT PDF 12 / in 11 I; DEF::`alarmLimits.identModulation`, ENG keyers, `MonitorIntegral`, MENU |
 | L09 Notch / Sideband VSWR | TM notch khoảng20%, hình20; VSWR số anten1, pre1.5/alarm3.0; KT kiểm mọi anten≤1.25 theo chuẩn khai thác | notch50%, VSWR số anten3, pre2.2/alarm3. **Không phải bug nếu >1.25 còn xanh (Q10)**; không đồng nhất VSWR công suất SB1–4 với anten1–48. Phần notch/limits/profile chờ ảnh PMDT Hoàng tự chụp, không ép theo ảnh manual. | Chưa xác minh | TM PDF 154–157 / 3-36–39 §§3.6.8.1.1.2–1.2.2/Figs. 3-32–35; KT PDF 13–14 / in 12–13 II.2; OWNER Q10; DEF::notchTolerance/sidebandVswr, ENG, MonitorSidebandVswr. |
-| L10 Timers / Antenna2 | TM Shutdown5s, Continuous17s, NoIdent17s; checkbox Antenna2 và attenuation/azimuth riêng | DEF 5/17/17s; second disabled, second input47/góc0; UI có checkbox, CONTROL mirror bật anten2 cả hai mon. Số timer đúng hình nhưng chưa biết setting trạm. | Một phần | TM PDF 157 / 3-39 §3.6.8.1.2.2/Fig. 3-35; KT PDF 12 / in 11 I (Special Test off); DEF::`timers/makeAntenna`, `MonitorAlarmLimits::ReadOnlyCheck`, STORE::`monitorProtectionDelay`; Q10 |
+| L10 Timers / Antenna2 | TM Shutdown5s, Continuous17s, NoIdent17s; checkbox Antenna2 và attenuation/azimuth riêng | DEF 5/17/17s; second disabled, second input47/góc0; UI có checkbox, CONTROL mirror bật anten2 cả hai mon. Số timer đúng hình nhưng chưa biết setting trạm. | Một phần | TM PDF 157 / 3-39 §3.6.8.1.2.2/Fig. 3-35; KT PDF 12 / in 11 I (Special Test off); DEF::`timers/makeAntenna`, `MonitorAlarmLimits::ReadOnlyCheck`, PROTECTION::`protectionDelay`; Q10 |
 
 ### 4.4. Kết nối, quyền, lưu cấu hình và bảo vệ máy phát
 
@@ -529,8 +531,8 @@ sim có thể tô xanh số ngoài dải bình thường KT. Ngưỡng trạm c�
 | S01 Level1–4, login sai/timeout | TM Level1 đọc, Level2 lệnh không critical, Level3 critical trừ security, Level4 tất cả. Native chỉ tài khoản GUEST/SEC3/SEC4, hầu hết edit cần ≥3+Local; không Level2/account management. `login` chỉ báo Invalid khi sai; không đếm ba lần/khóa5 phút, không timer tự logout15 phút trừ Local. Đã kiểm tra login/logout và timer layout/clock để loại khả năng có ở UI khác. | Một phần | TM PDF 124–126,148–149 / 3-6–8,30–31 Table 3-2/§3.6.6/3.6.7.4.5; KT —; `src/lib/simulator-training-accounts.ts::SELEX_DVOR_TRAINING_ACCOUNTS`, STORE::`login/logout`, CONTROL, `PmdtLayout`, CLOCK |
 | S02 Phân biệt PMDT link và RCSU link | TM đường direct/modem/RCSU khác nhau; sim dùng **cùng simulation.connected** cho Connected, Remote Control Enabled, RCSU Enabled và đảo nó cho RCSU Error. Không diễn tập được direct PC vẫn connected trong lúc mất cáp RCSU độc lập. | Sai khác | TM PDF 123–127 / 3-5–9 §3.6.5–7/Fig. 3-6; KT PDF 15–16 / in 14–15 II.4; ENG::`data.rmsStatus`, DEF::`simulation`, STORE |
 | S03 Apply / Reset F8 / Restore / Backup | **G01 đã sửa:** F8/Reset→discardConfigChanges; Restore→restoreBackupConfig; alias restoreDefaultConfig cũng lấy backup. Factory defaults (draft) là nút riêng, không áp ngay. F8 giữ applied/evidence của scenario, restart scenario chỉ qua lệnh riêng. File Save/Load/Print vẫn G15; không chứng nhận EEPROM thật. | Khớp | TM PDF 123,141 / 3-5,23 §§3.6.4/3.6.7.4; STORE, PmdtLayout/PmdtToolbar, DvorConfigPanel, BAR; fix `005bc0e`; tests/state/vor-pmdt-store.test.ts, tests/vor/pmdt-shell.test.tsx, tests/vor/g01-*.test.*. |
-| S04 Main selection, Antenna/Load/Off, hot/cold standby | Có phân biệt selectMainTransmitter và route; Antenna đặt một TX onAir và **xóa Load cả hai TX**, nên sau chuyển máy phải đặt lại tải standby; không giữ tự động hot standby. **Q13 trạm cold standby: không coi thiếu giữ tải hot là lỗi profile trạm**, vẫn giữ khả năng cấu hình theo TM. Load/Off level≥3+Local; menu Transfer không handler, không ghi lý do chuyển máy vào sổ giao ca. | Một phần | TM PDF 175,178 / 3-57,60 §3.6.8.5/7.1; KT PDF 12,21,31,34 / in 11,20,30,33 I/III/IV/V; STORE::`selectMainTransmitter/setTransmitterMode`, MENU/BAR |
-| S05 Alarm voting, delay, transfer/shutdown | ENG vote theo cùng tham số primary/secondary với OR/AND; pre-alarm không executive; bypass giữ báo nhưng chặn transfer. STORE đủ delay rồi chuyển TX dự phòng; nếu single/no healthy alternate thì shutdown. Reachable: `PmdtLayout` mount CLOCK → mỗi0.1s gọi `advanceMonitorTime` → `applyAutomaticMonitorTransfer`. Clock **dừng khi tab ẩn, login dialog mở, disconnected hoặc practice locked**; không tương đương bảo vệ phần cứng liên tục, thiếu hai automatic restart theo TM Table 3-3. | Một phần | TM PDF 143,157,175 / 3-25,39,57 Table 3-3/§3.6.8.1.2.2/5; KT PDF 12 / in 11 I; BD PDF 23 / in 22 III.3.8.1; ENG voting, STORE::`monitorProtectionDelay/advanceMonitorTime/applyAutomaticMonitorTransfer`, CLOCK |
+| S04 Main selection, Antenna/Load/Off, hot/cold standby | **G09 đã sửa:** profile mặc định cold (TX1 anten/TX2 Off); có profile hot trong Simulation Parameters, không giả đây là field RMS trạm. Main selection khác Transfer: Transfer giữ main designator; chuyển tay hot giữ TX còn lại khỏe trên Load, cold để Off. Load/Off vẫn SEC3+Local. Thiếu sổ/lý do chuyển máy vẫn G16; LCU G03 chưa sửa. | Một phần | TM PDF89,175,178,201/2-45,3-57,60,6-1 §§2.3.2.14.1.9/3.6.8.5/7.1/6.1.1.1; KT PDF12,21/in11,20 I/III; STORE::`selectMainTransmitter/transferTransmitter/setTransmitterMode`; §6.1b PHOTO-PMDT-RMS |
+| S05 Alarm voting, delay, transfer/shutdown | **G09 đã sửa native:** cùng-source OR/AND, pre-alarm/secondary, Ident+shutdown delay và bypass giữ báo vẫn được bảo toàn. CLOCK dùng elapsed monotonic, không gate tab/login/link/screen; lifecycle practice loading/submitting/submitted cố ý đóng băng model/evidence. Alarm đủ delay tắt main; cold đợi20s, hot đang Load chuyển ngay; standby được qualification mới, alarm tiếp thì shutdown. Hai restart tùy chọn: first delay, rồi300s; station default disabled/50s theo ảnh. Chọn/reset chu kỳ và giới hạn browser tại §6.1b, chưa chứng nhận firmware thực trạm. | Một phần | TM PDF89,143,157,175/2-45,3-25,39,57 §§2.3.2.14.1.9/3.6.8.1.2.2/5/Table3-3; KT PDF12/in11 I; BD PDF23/in22 III.3.8.1; CLOCK → STORE::`advanceMonitorTime` → `src/lib/dvor1150a/protection.ts::advanceDvorProtection/protectionDelay`; §6.1b PHOTO-PMDT-RMS |
 | S06 Startup/Shutdown toàn trạm | Không đủ AC/BATT/DC BUS breaker cả hai BCPS, đợi init khoảng20s, kiểm tra Local trước phát, Logoff trước tắt nguồn. Các lệnh Off PMDT có thật nhưng không thay chuỗi nguồn; LCU tách state (§2). | Một phần | TM PDF 119–120,180 / 3-1–2,62 §3.5.1–2/Table 3-4; KT PDF 12 / in 11 I; VIEW::`LcuPanel`, STORE::`setTransmitterMode`, DEF |
 
 **Thống kê §4:** 64 dòng verdict (48 menu/screen, 10 nhóm thông số,
@@ -547,13 +549,13 @@ chồng lấn, không phải 64 lỗi độc lập.
    `MonitorSidebandVswr`, DEF). L02–04 cũng chưa phân biệt chuẩn bình thường
    KT với màu/giới hạn executive.
 3. **P24/P31/P43/P44:** nhiều menu có vẻ enabled nhưng không làm gì;
-   riêng Transfer/Bypass/Ident gây hiểu sai đường thao tác (TM PDF
+   Bypass/Ident còn gây hiểu sai đường thao tác; Transfer đã sửa G09 (TM PDF
    150–152,158,175 / 3-32–34,40,57; KT PDF 12,21 / in 11,20; MENU/BAR).
 4. **P34:** lịch sử lỗi không phải sự kiện đã bắt giữ; Prior là live, Alarm
    hardcode, Older inert (TM PDF 165–166 / 3-47–48; KT PDF 20–21 / in
    19–20 II.6; `FaultIntegral`).
-5. **P02/S02/S05:** direct/modem/RCSU chưa tách, clock bảo vệ dừng theo UI;
-   học viên không diễn tập được mất RCSU độc lập/giám sát liên tục (TM PDF
+5. **P02/S02/S05:** direct/modem/RCSU chưa tách; clock đã độc lập UI ở G09,
+   nhưng học viên chưa diễn tập được mất cáp RCSU độc lập (TM PDF
    123–127,143 / 3-5–9,25; KT PDF 15–16 / in 14–15 II.4; ENG/STORE/CLOCK).
 
 ## 5. Quy trình bảo dưỡng và khai thác
@@ -597,7 +599,7 @@ native PMDT §4 trừ khi ghi khác. Danh sách đọc không lược bỏ vì m
 | K06 II.4 Kết nối VOR–RCSU | RMS Status: RCSU Communication Error không vàng; nếu có kiểm tra cáp/đường truyền | Một phần: có dòng status nhưng gộp với PMDT link và activeColor đỏ; không cáp độc lập. | Hỗn hợp / Một phần | KT PDF 15–16 / in 14–15 II.4; TM PDF 127 / 3-9 Fig. 3-6; `RmsVorStatus`, ENG::`data.rmsStatus` |
 | K07 II.5 RCSU tại trạm | Đọc chỉ thị RCSU sau khi kiểm VOR tốt, nếu Alert điều tra chi tiết | Không: không có mặt RCSU vận hành độc lập; thông tin RCSU trong RMS không thay thiết bị này. | Vật lý / Thiếu | KT PDF 16 / in 15 II.5; TM PDF 204 / 6-4 §6.2.10; `PmdtScreenRouter`, BDAT/FACE, `RmsStatusLayout` |
 | K08 II.6 Nhánh khi có cảnh báo | Maintenance Alert mặt máy/sidebar Alert vàng → RMS Maintenance Alerts → Digital I/O nguồn/TX Alerts → TX Status đúng máy → Monitor1 Fault History Integral; không có alert thì bỏ nhánh chi tiết; ghi thêm nội dung sổ giao ca | Một phần: tất cả screen có; Fault History không sự kiện thật, mặt đèn không đồng bộ, thiếu sổ. | Hỗn hợp / Một phần | KT PDF 16–21 / in 15–20 II.6; TM PDF 131,133,165–166,172 / 3-13,15,47–48,54; `RmsMaintenanceAlerts`, `RmsDigitalIo`, `TxStatus`, `FaultIntegral`, FACE |
-| K09 Tuần: thời điểm, báo cáo, đổi main | Giao ca thứ sáu; làm cả ngày; đổi TX hai tuần/lần **trước đo**, nếu không đạt thì về TX ban đầu, ghi việc/lý do, BM01 gửi TSS | Một phần: có chọn main/route, không lịch, lý do, tự đánh giá/trở lại theo phiếu; Transfer menu inert. | PMDT/Hồ sơ / Một phần | KT PDF 21–22 / in 20–21 III; TM PDF 199 / 5-1 Table 5-1; STORE::`selectMainTransmitter/setTransmitterMode`, MENU |
+| K09 Tuần: thời điểm, báo cáo, đổi main | Giao ca thứ sáu; làm cả ngày; đổi TX hai tuần/lần **trước đo**, nếu không đạt thì về TX ban đầu, ghi việc/lý do, BM01 gửi TSS | Một phần: chọn main/route và **menu Transfer đã chạy (G09)**; chuyển lại bằng lệnh tay được. Không lịch, đánh giá tự động/trở lại theo phiếu, sổ hay lý do chuyển máy. | PMDT/Hồ sơ / Một phần | KT PDF21–22/in20–21 III; TM PDF175,199/3-57,5-1 §3.6.8.5/Table5-1; STORE::`selectMainTransmitter/transferTransmitter/setTransmitterMode`, BAR |
 | K10 III.1 Carrier | Counter tại Synth J2; fc±0.002%, MHz5 số lẻ, tính sai số và báo TSS nếu vượt; không lấy PMDT thay counter | Một phần: Synth face J2/PMDT frequency có, không cắm counter độc lập/capture5 số. | Vật lý / Một phần | KT PDF 22–23 / in 21–22 III.1; TM PDF 201 / 6-1 §6.2.3; FACE::`SynthesizerFaceplate`, `TxDataMain`, ENG |
 | K11 III.2 Synthesizer TX đang anten | DMM TP1=0±0.05V, TP2=2–8V; Carrier PLL Control nếu cần, lặp/ghi cả hai | Một phần: điểm TP và PMDT PLL field có, không DMM phản hồi/chuỗi đạt đồng thời. | Hỗn hợp / Một phần | KT PDF 23–24 / in 22–23 III.2; TM PDF 193 / 3-75 Table 3-15; FACE::`SynthesizerFaceplate`, `TxConfigOffsets`, ENG |
 | K12 III.3 Sideband TX1 A1/A2 hoặc TX2 A6/A7 | TP1/7=0.900–0.950V; TP5/11=0.890–0.910V; TP4/10=2–9V, TP3/9 ghi tham chiếu; TP2/8 ảnh waveform/điện áp đỉnh, chỉnh R1/R4 khi cần | Một phần: face và trim dialog có, không đo toàn TP/waveform/ghi file; model tách PMDT (§3). | Hỗn hợp / Một phần | KT PDF 24–25,36 / in 23–24/BM01; TM PDF 191–192 / 3-73–74 Fig. 3-70/Table 3-14; FACE::`SidebandFaceplate`, `readSidebandTrim/SidebandAdjustmentDialog` |
@@ -643,7 +645,7 @@ J2 chưa chốt riêng, không tự vẽ pinout.
 | B15 III.3.6 TP1–11 bốn Sideband | TP1/7 .90–.95V, TP4/10 **2–9V**, TP5/11 **.89–.91V**, TP6 **0±.05V**; TP3/9 reference; R1/R4, PMDT SB Phase; cả bốn assembly | Một phần: nhãn/trim/PMDT có nhưng không tất cảđiểm đo; biểu khác2–8V/.9±.05 (D06), không âm thầm lấy biểu thay bước. | Hỗn hợp / Một phần | BD PDF 21–22,34–35 / in 20–21/biểuIII.3.6; TM PDF 192,215 / 3-74,6-15 Table 3-14/§6.4.24; FACE::`SidebandFaceplate`, `SidebandAdjustmentDialog`, `TxConfigOffsets` |
 | B16 III.3.6 waveform + Appendix1 | Scope TP2/TP8 đủ A1/A2/A6/A7, lưu 8 waveform; phụ lục thay1A4A1/R1/R4 rồi scale100/SB1–2 power/Backup, TP6 phụ lục±.1V khác thân±.05 | Một phần: có trim/model, không scope/waveform/sequence; câu chưa thống nhất giữ Q14, HC±.05 ở §3 ưu tiên cho thay/hiệu chỉnh. | Hỗn hợp / Một phần | BD PDF 21–22,28,35 / in 20–21,27/biểuIII.3.6; TM PDF 192,215 / 3-74,6-15; `readSidebandTrim/SidebandAdjustmentDialog`, STORE::`backupConfig` |
 | B17 III.3.7 RF Monitor | DMM TP1 CSB FWD/TP2 CSB REFL/TP3 Standby TX, cả TX1/2, ghiVDC tham chiếu lần trước; không đưa tolerance chưa có | Một phần: face nhãn có, không DMM/đối chiếu độc lập/phiếu lịch sử. | Vật lý / Một phần | BD PDF 22,35–36 / in 21/biểuIII.3.7; TM PDF 195 / 3-77 Table 3-17; FACE::`RfMonitorFaceplate`, ENG |
-| B18 III.3.8.1 RCSU | Rút/nối cáp kiểm ComFault/âm báo, Normal/Alarm; gây lỗi monitor kiểm shutdownTX1/chuyểnTX2; ghi đèn/âm | Một phần: STORE có automatic transfer; không cáp/RCSU/âm báo riêng, link gộp(S02); không tái hiện full procedure. Chỉ mô tả audit, không yêu cầu Hoàng tạo lỗi. | Hỗn hợp / Một phần | BD PDF 23,36 / in 22/biểuIII.3.8.1; TM PDF 203–204 / 6-3–4 §§6.2.7/10; STORE::`applyAutomaticMonitorTransfer`, CLOCK, ENG::`data.rmsStatus` |
+| B18 III.3.8.1 RCSU | Rút/nối cáp kiểm ComFault/âm báo, Normal/Alarm; gây lỗi monitor kiểm shutdownTX1/chuyểnTX2; ghi đèn/âm | Một phần: **G09 sửa clock/transfer/restart**, cold đợi20s sau cắt main; mất PMDT link không ngừng bảo vệ. Chưa có cáp/RCSU/âm báo riêng, link gộp(S02), không tái hiện full procedure. Không yêu cầu Hoàng tạo lỗi thực trạm. | Hỗn hợp / Một phần | BD PDF23,36/in22/biểuIII.3.8.1; TM PDF89,203–204/2-45,6-3–4 §§2.3.2.14.1.9/6.2.7/10; STORE::`advanceMonitorTime`, PROTECTION::`advanceDvorProtection`, CLOCK, ENG::`data.rmsStatus` |
 | B19 III.3.8.2 PMDT qua RCSU2238/2240 | Ngắt kết nối local rồi connect quaRCSU, ghi Connect to VOR | Không: không lựa chọn direct/remote đường truyền riêng; login không thay thế bước này. | PMDT/Vật lý / Thiếu | BD PDF 23,36 / in 22/biểuIII.3.8.2; TM PDF 123–126 / 3-5–8 §3.6.5–6; MENU/BAR, DEF::`simulation.connected` |
 | B20 III.3.9 Ắc quy | Hệ48V=4×12V, mấtAC thấy OnBattery/PowerFail/RCSU; chạy tối thiểu 20 phút, nếu xuống46V (11.5/bình) khôi phục nguồn ngay, xác nhận hết cảnh báo/ghi | Một phần: có hàng nguồn/alert, không tích phân xả/thời gian/thử tải/điện áp từng bình hay RCSU. Không chứng minh dung lượng thực bằng sim. | Vật lý / Một phần | BD PDF 23–24,36 / in 22–23/biểuIII.3.9; TM PDF 201 / 6-1 §6.2.1; `RmsPowerSupply/RmsDigitalIo`, ENG, DEF |
 | B21 III.3.10 + Appendix2 Tĩnh không | Khảo sát bán kính300m, theo sơ đồ/tiêu chuẩn EUROCAE phụ lục2, ghi có/không và mô tả/báo TSS nếu phát sinh vật cản | Không: không địa hình/vật cản/khoảng cách/biểu kiểm tra. Không chuyển thành bài chỉ nhìn blockdiagram. | Vật lý / Thiếu | BD PDF 24,29–30,37 / in 23,28–29/biểuIII.3.10; TM PDF 205 / 6-5 §6.3.1; VIEW::`DvorReferenceDiagrams`, `PmdtScreenRouter` |
@@ -732,20 +734,20 @@ toàn. **Trung bình:** thiếu thực hành hoàn chỉnh nhưng có thể khoa
 hạn. **Thấp:** chủ yếu bố cục/nhận diện vị trí, chưa có bằng chứng gây sai
 chức năng. Đây là tác động giảng dạy, không phải đánh giá an toàn trạm thật.
 Điểm nguồn chưa giải được giữ rõ ở §7, không tự biến thành default sửa.
-25 ID được giữ để truy vết: G01 đã đóng, G05 bỏ phần lỗi màu/chờ profile;
+25 ID được giữ để truy vết: G01/G02/G09 đã sửa native, G05 bỏ phần lỗi màu/chờ đối chiếu profile;
 không đếm chúng thành 25 bug còn mở.
 
 | # | Mức ưu tiên | Khoảng trống | Nguồn | Code | Gợi ý đợt sửa |
 | --- | --- | --- | --- | --- | --- |
 | G01 | Cao | **ĐÃ SỬA — PR #38 đã merge**: F8/Reset hủy draft; Restore lấy backup gần nhất, không defaults; no-backup disabled/thông báo, giữ applied/evidence và SEC3/Local. Factory defaults (draft) riêng. Gom §3 P18, §4 P08/P25/S03, §5 B25–B27. | TM PDF 123,141 / 3-5,23 §§3.6.4/3.6.7.4; BD PDF 24–25 / in 23–24 III.5 | STORE::discardConfigChanges/restoreBackupConfig/backupConfig; PmdtLayout F8; PmdtToolbar; API/persistence1150A | Stage 1a — hoàn tất code `005bc0e`; Vitest, lint/typecheck/build và browser1440/390 đã kiểm; file Save/Load không thuộc G01. |
-| G02 | Cao | **ĐÃ SỬA — Stage1b:** RF native Carrier/SB vẫn có khi Load, Off không RF; VSWR/frequency/RMS On phân biệt Load với on-air. Field Integral/Notch/48 anten không nhận RF tải. Dialog SB detached vẫn G07, không coi số minh họa là đo thật. | HC PDF13–14,17–21 / in12–13,16–20 IV.2–4; TM PDF71–72,155,169,195 / 2-27–28,3-37,51,77 §§2.3.2.7–8/3.6.8.1.1.3/3.6.8.3.1/Table3-17 | ENGINE::effectiveTransmitter/readDvorTransmitterRfPower/buildTxPower/buildTxVswr; PmdtSidebar | Hoàn tất native Stage1b; mô hình/giới hạn §6.1a; độc lập G01; chưa đóng G07/G09/G14. |
+| G02 | Cao | **ĐÃ SỬA — Stage1b:** RF native Carrier/SB vẫn có khi Load, Off không RF; VSWR/frequency/RMS On phân biệt Load với on-air. Field Integral/Notch/48 anten không nhận RF tải. Dialog SB detached vẫn G07, không coi số minh họa là đo thật. | HC PDF13–14,17–21 / in12–13,16–20 IV.2–4; TM PDF71–72,155,169,195 / 2-27–28,3-37,51,77 §§2.3.2.7–8/3.6.8.1.1.3/3.6.8.3.1/Table3-17 | ENGINE::effectiveTransmitter/readDvorTransmitterRfPower/buildTxPower/buildTxVswr; PmdtSidebar | Hoàn tất native Stage1b; mô hình/giới hạn §6.1a; độc lập G01; chưa đóng G07/G14; G09 xử lý riêng Stage1c. |
 | G03 | Cao | Q3: LCD theo manual, hàng lỗi bình thường tắt/đỏ khi lỗi (không áp cho mọi LED). LCU state riêng, gộp Main Select/Antenna, OFF mất Main; LCD thiếu MON2/PA Temps, Reset/Silence/volume/lamp test chưa đủ. Gom §2.4. | TM PDF 181–184 / 3-63–66 Figs. 3-57–63/Tables 3-5–7 | VIEW::LcuPanel/lcuScreens/transmitterButton; STORE | Stage 1d (Q3/PHOTO-F): state trạm chung; Main khác routing, Local/remote, reset/silence/alarm mới, mọi đèn. |
 | G04 | Cao | Q3/PHOTO-F phân biệt hàng lỗi với Power OK/Normal; LED card cố định: AC ON/AC FAIL cùng sáng, Monitor báo alarm bất kể điều kiện, trái PMDT. Không trùng route LCU G03. | TM PDF 185–188,190–195 / 3-67–70,72–77 Tables 3-8–11/13–17; §2.2 | FACE::IndicatorLamp/BcpsFaceplate/MonitorFaceplate và các faceplate khác | Stage 1d (Q3/PHOTO-F): bind state đã có; chưa mô hình phải ghi minh họa, không tô như chỉ thị live. |
-| G05 | Cao | **Bỏ bug VSWR>1.25 còn xanh: Q10 xác nhận đúng**; 1.25 là chuẩn Cục Hàng không, không phải giới hạn display/relay. Còn xác minh profile Mod/Deviation/notch/limits/nominal, phân biệt đọc chuẩn KT với executive alarm; ảnh TM không là default trạm. | KT PDF 10,13–15 / in 9,12–14 V.5.1/II.2–3; TM PDF 157 / 3-39 Fig. 3-35 | DEF::alarmLimits/azimuthLimits/sidebandVswr/notchTolerance; ENG; MonitorAlarmLimits | **Chờ ảnh PMDT Hoàng tự chụp trên Drive được đính kèm** (Q9/Q10), chưa có profile để sửa. Không tự hạ ngưỡng màu/relay về1.25. |
+| G05 | Cao | **Bỏ bug VSWR>1.25 còn xanh: Q10 xác nhận đúng**; 1.25 là chuẩn Cục Hàng không, không phải giới hạn display/relay. Còn xác minh profile Mod/Deviation/notch/limits/nominal, phân biệt đọc chuẩn KT với executive alarm; ảnh TM không là default trạm. | KT PDF 10,13–15 / in 9,12–14 V.5.1/II.2–3; TM PDF 157 / 3-39 Fig. 3-35 | DEF::alarmLimits/azimuthLimits/sidebandVswr/notchTolerance; ENG; MonitorAlarmLimits | **Đã nhận kho ảnh trạm, chờ đối chiếu toàn profile** (Q9/Q10); G09 mới dùng hai ảnh §6.1b. Không tự hạ ngưỡng màu/relay về1.25. |
 | G06 | Cao | TP/pha thiếu feedback/nghiệm thu: TP6±.1 thay HC±.05V, mean-phase tới10V thay2–9; PLL/scale thiếu đo độc lập. Q4: hai MON riêng, chỉnh một rồi lặp cho khối kia; không tự đặt tử số deviation. Q14 giữ số liệu HDCV. | HC PDF 15–16,24–25 / in 14–15,23–24 IV.3.1/5; TM PDF 192,215 / 3-74,6-15 | BDAT::sideband.testPoints; SBM::readSidebandTrim; TXC/MONC; ENGINE::calibratedMeasurement | Stage 3: feedback theo HC; Q6 không hồ sơ reference riêng, đích thực tế 9960 mod trong không gian28–32% khi bay hiệu chuẩn, không chứng nhận mô hình đạt bay. |
 | G07 | Cao | Trim/CAL SB không đến PMDT/store/evidence/backup, chưa hoàn thành chuỗi kiểm/ghi sau xoay. Gom §3 P08/P10, §5 K12/B12/B15–B16. | HC PDF 17–18 / in 16–17 IV.3.1 o/3.2 j,o; TM PDF 210,215 / 6-10,15 §§6.4.6/24 | VIEW::sidebandAngles; SBD::SidebandAdjustmentDialog; STORE | Stage 2: một nguồn state/provenance cho trim được hỗ trợ, backup/restore không âm thầm bỏ góc. |
-| G08 | Cao | Menu enabled nhưng không dispatch: Transfer, Ident, Bypass, RMS command, Test Signal J3; sidebar thay thế không sửa menu. Gom §4 P24/P31/P36/P43–P44. | TM PDF 150–152,158,168,175 / 3-32–34,40,50,57; KT PDF 12,21 / in 11,20 | MENU; BAR::selectItem; STORE::setTransmitterMode | Stage 2: lệnh thực thi cùng guard/state hoặc disabled có lý do; test từ menu thật. |
-| G09 | Cao | Clock bảo vệ dừng theo tab/login/link/practice, thiếu hai restart TM. Q13: trạm thường SEC3, **cold standby**; không còn lấy thiếu giữ tải hot standby làm lỗi của cấu hình trạm này. Gom §4 S04–S05, §5 K09/B18. | TM PDF 143,175 / 3-25,57 Table 3-3/§3.6.8.5; KT PDF 12,21 / in 11,20 | CLOCK; STORE::advanceMonitorTime/applyAutomaticMonitorTransfer/setTransmitterMode | Stage 1c: clock độc lập UI, cold standby/SEC3 làm profile mặc định đào tạo trạm; OR/AND/bypass/delay/mất link/no alternate. Không xóa khả năng cấu hình hot standby theo TM. |
+| G08 | Cao | Menu enabled còn không dispatch: Ident, Bypass, RMS command, Test Signal J3; **Transfer đã sửa ở G09**, không còn tính trong gap này. Gom §4 P24/P31/P36/P44. | TM PDF150–152,158,168,175/3-32–34,40,50,57; KT PDF12,21/in11,20 | MENU; BAR::selectItem; STORE::setTransmitterMode | Stage2: lệnh còn lại thực thi cùng guard/state hoặc disabled có lý do; test từ menu thật. |
+| G09 | Cao | **ĐÃ SỬA — Stage1c:** protection elapsed độc lập tab/login/PMDT link/screen; cold transfer20s, hot Load chuyển ngay; shutdown/restart có trạng thái và hai retry tùy chọn. Profile Q13 cold, SEC3 preselected nhưng vẫn phải xác thực; RMS mặc định restarts disabled/50s theo ảnh trạm. Freeze lifecycle bài làm có chủ ý, không phải clock phụ thuộc cửa sổ (§6.1b). | TM PDF89,143,175/2-45,3-25,57 §§2.3.2.14.1.9/3.6.8.5/Table3-3; KT PDF12,21/in11,20; PHOTO-PMDT-RMS/INT (§6.1b) | CLOCK; STORE::advanceMonitorTime/transferTransmitter/setTransmitterMode; PROTECTION::advanceDvorProtection | Stage1c hoàn tất native; test cold/hot, no alternate, timer/AND/OR/bypass, hai restart, UI/link và backward-compatible profile; lựa chọn/giới hạn §6.1b. |
 | G10 | Cao | Fault History Prior live, Alarm/time cố định, Older không chạy; dễ học sai nguyên nhân trước chuyển máy. Gom §4 P34, §5 K08. | TM PDF 165–166 / 3-47–48 §3.6.8.2.3; KT PDF 20–21 / in 19–20 II.6 | MonitorFaultHistory::FaultIntegral; STORE event state | Stage 3: snapshot trước tác động, ba sự kiện; kiểm lịch sử rỗng/nhiều alarm/sau transfer, không lấy live thay history. |
 | G11 | Cao | TG Completed/In Process/Updated tức thời, chưa lifecycle/snapshot; field stored-only không detector. Q7: theo SELEX TM, HC ghi lệch là typo; phân biệt thay TG Completed/3 phút với cycle TG khoảng2 phút. | HC PDF 28,44 / in 27,43 IV.7 f/15 i; TM PDF 161–164,214 / 3-43–46,6-14 | READ::MonitorTestResults/TestGenerator; ENGINE::calculateIntegrityTestValues/testGeneratorResults | Stage 3: lifecycle/fail/timeout theo đúng mode TM, không áp HC120s cho thay TG. |
 | G12 | Cao | Mã figure in như P/N; cần tách designator/assembly/figure. Q1 chốt designator theo manual; Q7 TG1A3A5/Interface1A9 theo TM, HC1A12/1A19 là typo. PHOTO-F xác nhận thứ tự A3A1…A3A11, không đủ đọc P/N/revision nhỏ. | TM PDF 24–25,185,191–192 / 1-4–5,3-67,73–74; HC PDF 4,42,45 / in 3,41,44 | FACE::PartNumber; BDAT::DVOR_BLOCKS | Stage 4: TM định danh + ảnh trạm bố cục (§2.6), không chờ lại Q1/Q7; giữ bất nhất nội bộ TM được ghi rõ. |
@@ -761,7 +763,7 @@ không đếm chúng thành 25 bug còn mở.
 | G22 | Trung bình | RF switch/bank gộp occurrence. Q2 + PHOTO-R xác nhận **5 relay ở sau**, asset backplane không thể hiện cụm này; catalog vẫn thiếu assembly/TP, raster RF không phải bị mất. | TM PDF 24–28,48–51 / 1-4–8,2-4–7 Figs. 1-3–6/2-2–3; §1.1–1.2 | BDAT::DVOR_BLOCKS/resolveDvorHardwareOccurrence; VIEW::referenceDiagrams | Stage 4: ảnh thắng vị trí/5 relay, TM giữ chức năng; không gán relay→bank/1A10/1A11 khi chưa wiring. |
 | G23 | Trung bình | Anten/VNA/battery/cáp/đo điện thật không được PMDT chứng nhận. Q8: kiểm cộng hưởng định kỳ, khoảng3 anten trở lên vượt ngưỡng thì thay mạch cộng hưởng; không phải tự thay anten theo màu PMDT. | BD PDF 13–15,23–30 / in 12–14,22–29 III.1–2/3.9–10/IV/Appendix; HC PDF 38 / in 37 IV.13 | VIEW/BDAT; MonitorSidebandVswr; READ; SCEN | Stage 5: bài theo Q8/HDCV, phân biệt tiêu chí S11/VSWR theo phép đo; Q14 không tự giải mọi bất nhất nội bộ HDCV, thực hành thật ngoài sim. |
 | G24 | Thấp | Tủ/faceplate sáng và nhãn/tỷ lệ khác PHOTO-F: mặt đen, A3A1…A3A11, nhãn5V ONLY, jack ESD GND/dây xanh, BYPASS/volume LCU; PHOTO-R có dãy5 relay sau. §2.6 ghi ảnh thắng. | TM PDF 24–26,185–195 / 1-4–6,3-67–77; §2.1–2.3 | FACE; CSS; VIEW::cabinetImages | Stage 4: sửa theo ba ảnh đã nhận + TM phần ảnh không thấy; không đợi close-up sai file, không suy đáy CB ngoài khung. |
-| G25 | Thấp | Legacy PMDT layout/row order/tab khác ảnh manual; Q9/Q10: ảnh1150A trên Drive là Hoàng tự chụp, **chưa có trong attachments**; không coi là ảnh demo/manual như1150. | TM PDF 121–123,157,173–174 / 3-3–5,39,55–56; KT PDF 12–20 / in 11–19; §4 P26/P30/P46–P48 | MonitorAlarmLimits; TxConfigLayout; PmdtLayout; MENU | Stage 4: hardware theo ảnh đã nhận; PMDT version/layout cần ảnh Drive khi được đính kèm, chưa tự đọc version/checkbox/limits trạm. |
+| G25 | Thấp | PMDT layout/row order/tab còn khác ảnh; Q9/Q10: đã nhận kho ảnh trạm `/home/ubuntu/out/station/`. Stage1c dùng RMS/Integral (§6.1b), chưa đối chiếu hết About/version/layout cho gap này. | TM PDF121–123,157,173–174/3-3–5,39,55–56; KT PDF12–20/in11–19; §4 P26/P30/P46–P48; PHOTO-PMDT-RMS/INT | MonitorAlarmLimits; TxConfigLayout; PmdtLayout; MENU | Stage4: đối chiếu từng ảnh có filename, không suy version/checkbox/limits từ contact sheet hay cabinet. |
 
 ### 6.1a. G02 — RF vào tải (Stage1b)
 
@@ -806,10 +808,103 @@ Các dòng §3 P09, §4 P37, §5 B11–B12 mô tả lỗi theo baseline trước
 Phần wattmeter/dialog detached chuyển rõ sang G07, chưa chứng nhận bài HC
 đo wattmeter/cáp/ESD thật.
 
+### 6.1b. G09 — clock, cold/hot standby và hai automatic restart (Stage1c)
+
+**Đã sửa native 1150A**, không thay domain/store/layout DVOR1150/220.
+Nhánh ban đầu từ main có G01; sau PR#39 merge, đã cập nhật origin/main để
+giữ G02, không stack code G02 chưa merge hay sửa lại mô hình Load.
+
+**Bằng chứng trạm, không suy hành vi chạy từ ảnh tĩnh:**
+
+- **PHOTO-PMDT-RMS**: `1786170303303_6845912034732552227_6845912034732552227_6f67144de6f34e8f5d21853de8755475.jpg`
+  trong `/home/ubuntu/out/station/`: RMS Configuration/General, AND,
+  Transfer on Primary Alarm; Automatic Restarts **unchecked**, first delay
+  **50 s**, Number of Automatic Restarts **2** (hai ô đang disabled);
+  sidebar TX1 Main/Antenna, TX2 Off; status **Level3 SEC3**.
+- **PHOTO-PMDT-INT**: `1786170413016_6845912034732552227_6845912034732552227_4650f78f9d8c71f4769a49faf89ee303.jpg`:
+  All Monitor Data/Integral, cùng TX1 anten/TX2 Off và **Level3 SEC3**.
+  Hai ảnh hỗ trợ Q13/các giá trị mặc định; không chứng minh countdown nội
+  bộ, cold-delay hay cho phép suy password/phiên bản firmware.
+- KT PDF12/in11, II.I cho phép **Hot STBY→Load / Cold STBY→Off**.
+  TM PDF201/6-1 §6.1.1.1 mô tả NORMAL STATE với hot standby; theo KT+Q13
+  cho profile trạm cold, không lấy đoạn NORMAL STATE làm bắt buộc hot.
+  TM PDF89/2-45 §2.3.2.14.1.9 là cơ sở phần cứng: cắt TX lỗi, hot chuyển
+  ngay, cold đợi **20 s**; standby lỗi tiếp thì cắt và chặn phát ít nhất20s.
+  KT/BD không thay bằng một thời gian khác (BD PDF23/in22 III.3.8.1).
+
+**Đường chạy và lựa chọn mô hình:**
+
+1. `Dvor1150aMonitorClock` vẫn sống trong shell native khi đổi menu/tab/screen
+   hoặc mở Login; timer100ms lấy **delta performance.now()**, không cộng cứng
+   0.1s và không gate visibility/login/`simulation.connected`. Tick trễ do
+   browser được xử lý qua các ranh giới delay/transfer/restart, không bỏ thời
+   gian giữa pha. `advanceMonitorTime` gọi domain mới
+   `src/lib/dvor1150a/protection.ts::advanceDvorProtection/protectionDelay`.
+   Clock dừng khi **kết thúc vòng đời thiết bị** (unmount/rời route); không
+   giả chạy phần cứng khi browser đã đóng. Practice loading/submitting/
+   submitted **cố ý pause model/evidence**, resume không cộng thời gian bị
+   khóa: đây là freeze bài làm, không là mất bảo vệ vì tab/Link/Login.
+2. Profile **Cold Standby** mặc định, TX1 anten/TX2 Off; `SEC3` preselected
+   ở Login, password trống và vẫn phải xác thực (Level0 trước login).
+   Không auto-elevate quyền từ Q13/ảnh, giữ guard SEC3/Local.
+   `station.standbyMode` là **Training standby profile** trong Simulation
+   Parameters, không thêm một field RMS không có trên ảnh trạm.
+3. Sau alarm executive đủ delay cũ (kể cả Ident, primary/secondary và
+   same-source OR/AND), main tắt RF. Cold đợi20s rồi lên standby; hot chỉ
+   chuyển tức thời khi standby thật sự **đang Load**, nếu Off thì phải đi
+   đường cold20s. Standby có qualification mới trước shutdown, không dùng
+   alarm cũ để cắt tức thì. Khi single/no eligible alternate thì shutdown,
+   không bỏ `enabled` của CCA khỏe chỉ vì RF Off. Bypass giữ báo, chặn/cancel
+   phản ứng tự động; Off/Apply/Restore không được vượt inhibit tối thiểu.
+4. Chuyển **tay** Main/Antenna theo profile: hot giữ TX còn lại khỏe trên
+   Load, cold để Off; vẫn cho Load bảo dưỡng riêng trong profile cold (HC).
+   Alarm tự động theo TM cắt TX lỗi, **không** duy trì RF lỗi trên Load.
+   Menu **Transfer** đã dispatch, chuyển anten nhưng giữ designator Main;
+   chọn Main qua sidebar là thao tác riêng. TM2-45 mô tả delay của **alarm
+   transfer**; không tự thêm20s cho mọi lệnh chuyển tay bình thường.
+5. RMS General cho bật/tắt Automatic Restarts, first delay chỉnh qua
+   draft/Apply. Default **disabled / 50s** lấy PHOTO-PMDT-RMS, không lấy từ
+   thời gian đoán. TM PDF143/3-25 Table3-3 nói **hai restart**, first adjustable,
+   second fixed **5 phút**: model cố định count2/read-only, second **300s**.
+   Ảnh có count2 nhưng đang disabled do checkbox off; **chưa chứng minh**
+   firmware trạm cho sửa count khi bật. Không suy thêm N-retry từ spinner.
+6. Diễn giải chuỗi: shutdown→đợi max(first delay,20s)→restart#1; nếu lại
+   shutdown→đợi300s→restart#2; vẫn lỗi→lockout chờ người vận hành. Mỗi retry
+   thử Main đã chọn, nếu không usable thì chọn TX installed/enabled còn lại;
+   dual tiếp tục cùng chuỗi main/standby. Không tự rollback thông số lỗi.
+   **Hai retry cho mỗi chu kỳ can thiệp tay/session**, không tự reset count
+   sau một khoảng “healthy” chưa được TM nêu; thao tác route tay/resetSimulation/
+   nạp profile/restore hợp lệ bắt đầu chu kỳ mới (F8 chỉ hủy draft, không reset
+   protection). Bypass trong monitoring reset chu kỳ, trong inhibit thì vẫn
+   khóa RF đủ thời gian. Thay một calibration field
+   không tự cấp thêm retry. Đây là lựa chọn bounded/stateful để không tạo
+   vòng phát lỗi vô hạn; chưa đo policy reset-count trên firmware thực trạm.
+   First delay chỉ nhận số hữu hạn không âm, không bịa dải max hãng;
+   LCU inhibit20s vẫn có ưu tiên khi nhập first delay ngắn hơn20s.
+7. Trạng thái `cold-transfer/restart-wait/lockout`/countdown ở status bar là
+   **thông báo đào tạo**, tooltip nói không phải nguyên văn firmware.
+   Hot Standby Present lấy route Load thực, không lamp false cố định.
+   Additive station fields được backfill cho profile schema1 cũ; client mới
+   dùng DTO **extensions-v2**. Server vẫn nhận **extensions-v1**, chỉ bỏ ba
+   station field mới (giữ monitor/keyer extensions); client không header nhận
+   frozen baseline cũ. Cả hai dạng client cũ ghi lại đều giữ hidden settings
+   dưới revision guard, không âm thầm đưa cold/disabled/50s vào profile đã lưu.
+   Không sửa hình thức/giá trị của DME hay DVOR1150/220.
+
+**Kiểm chứng:** focused G09 3 file/22 test; affected50 file/544 test,
+hai suite PostgreSQL/52 test skip vì không có test database URL;
+lint0error (hai warning điều hướng ở file không sửa), typecheck và build
+placeholders thành công. Browser1440/390: cold/SEC3, RMS restart controls,
+hot profile/Transfer giữ Load, countdown cold/restart vẫn chạy khi Logoff;
+ảnh và log ở `/home/ubuntu/out/g09/`. API profile được chặn offline trong
+browser; compatibility/preservation có mock test, chưa integration-test
+PostgreSQL hay timing firmware trạm. G03/G04, G05 full profile, G10 history,
+G18 account/timeout và RCSU/cáp/âm báo độc lập không thuộc G09.
+
 ### 6.2. Lộ trình chia đợt cập nhật 21/11/2026
 
-G01 đã merge qua PR #38; G02 native đã sửa ở Stage1b (§6.1a).
-Các đợt còn lại là kế hoạch, chưa sửa.
+G01 đã merge qua PR #38; G02 đã merge qua PR #39 và giữ nguyên khi cập nhật G09.
+G09 native đã sửa ở Stage1c (§6.1b); các đợt khác vẫn là kế hoạch.
 Mỗi đợt diff nhỏ, test normal/empty/error và kiểm hình bề mặt đổi.
 Q12 hành chính không bao giờ là điều kiện chặn fix.
 
@@ -817,13 +912,13 @@ Q12 hành chính không bao giờ là điều kiện chặn fix.
 | --- | --- | --- | --- |
 | Stage 1a | **G01** Reset/F8/Restore | Cancel draft khác restore backup/factory defaults; baseline backup, ±10W, chưa backup, input focus, giữ evidence/scenario và SEC3/Local. | **Đã merge qua PR #38**, code `005bc0e`; Vitest/lint/typecheck/build, browser1440/390. File Save/Load vẫn G15. |
 | Stage 1b | **G02** RF ở Load | Off/Load/Antenna phân biệt, đo RF vào tải không đòi on-air; không bịa detector. | **Đã sửa native**, code `7c840b4`; mô hình/giới hạn §6.1a, dialog SB detached vẫn G07. |
-| Stage 1c | **G09** protection clock + cold standby/SEC3 | Clock độc lập UI/login/link; voting/bypass/delay/restart/no alternate; profile trạm cold standby và SEC3 theo Q13, không xóa hot standby tùy cấu hình TM. | Chưa sửa. |
+| Stage 1c | **G09** protection clock + cold standby/SEC3 | Clock độc lập UI/login/link; voting/bypass/delay/restart/no alternate; profile Q13 cold, SEC3 preselected có xác thực; hot tùy chọn. | **Đã sửa native**, §6.1b; Vitest/lint/typecheck/build và browser1440/390; pause chỉ cho lifecycle bài làm/thiết bị kết thúc. |
 | Stage 1d | **G03 + G04** LCU/LED theo Q3 | LCU/PMDT chung state, Main khác route; LCD theo manual; hàng lỗi tắt bình thường/đỏ khi lỗi, không áp cho Power OK/Normal; đối chiếu màu/vị trí ảnh §2.6. | Chưa sửa. |
 | Stage 2 | **G07/G08/G14/G15/G18** | Trim→state/evidence/backup, menu dispatch, RF Monitor/BCPS trim có nguồn đo, file version/thiếu/sai file, guards/quyền/timeout; không xuất secrets. | Chưa sửa. |
 | Stage 3 | **G06/G10/G11/G21** | Hai khối MON chỉnh lần lượt (Q4), feedback theo HC; history snapshot/rỗng/nhiều alarm; TG theo TM (Q7), đúng mode/timing; diagnostics fail/cancel. Không tạo hồ sơ reference không có (Q6). | Chưa sửa. |
-| Stage 4 | **G12/G19/G20/G22/G24/G25**, dùng ảnh trạm | TM định danh + PHOTO-F/R/U ưu tiên chi tiết nhìn thấy; A3A1…A3A11, ESD GND, LCU, 5 relay sau, RSU từng thiết bị. Không suy pinout/CB ngoài khung; riêng PMDT version/layout đợi ảnh Q9. | Chưa sửa; đã nhận ba ảnh phần cứng, chưa nhận kho PMDT Drive. |
+| Stage 4 | **G12/G19/G20/G22/G24/G25**, dùng ảnh trạm | TM định danh + PHOTO-F/R/U ưu tiên chi tiết nhìn thấy; A3A1…A3A11, ESD GND, LCU, 5 relay sau, RSU từng thiết bị. Không suy pinout/CB ngoài khung; PMDT version/layout cần đối chiếu tiếp kho ảnh Q9. | Chưa sửa; đã nhận ba ảnh phần cứng và kho PMDT; G09 mới đối chiếu hai ảnh §6.1b. |
 | Stage 5 | **G13/G16/G17/G23** | Bài KT/BD/HC và topology RCSU2240/RSU; USB CPU/RMS mức chắc chắn vừa; cộng hưởng định kỳ/~3+ anten theo Q8; giới hạn đo thật/bay, hồ sơ hành chính tùy chọn Q12. | Chưa sửa. |
-| Chờ ảnh PMDT | **G05 phần còn lại** | Profile/ngưỡng lấy ảnh Hoàng tự chụp khi được đính kèm. **Không sửa màu VSWR>1.25 còn xanh**, đây không phải bug. | Chờ bằng chứng Q9/Q10; không chặn các đợt khác. |
+| Đối chiếu tiếp PMDT | **G05 phần còn lại** | Profile/ngưỡng phải lập mapping từng ảnh Hoàng tự chụp đã nhận. **Không sửa màu VSWR>1.25 còn xanh**, đây không phải bug. | Chờ đối chiếu chi tiết Q9/Q10; không chặn các đợt khác. |
 
 ### 6.3. Tái kiểm tra ngẫu nhiên 10 citation
 
@@ -855,18 +950,19 @@ Giữ Q1–Q14 để không phá tham chiếu; trích nguyên văn từ file OWN
 được chứng minh bằng ảnh. Không yêu cầu thử máy, tháo/nối cáp, tạo alarm,
 chạy test hay cung cấp mật khẩu chỉ để hoàn tất audit.
 
-### Q10 — Profile monitor và ngưỡng thực trạm — đã trả lời, chờ ảnh PMDT — 21/11/2026
+### Q10 — Profile monitor và ngưỡng thực trạm — đã nhận kho ảnh ở Stage1c — 21/11/2026
 
 > “Trong kho ảnh trên drive là ảnh chụp pmdt đài tôi đó”
 
 > VSWR: vượt 1,25 vẫn hiển thị xanh là ĐÚNG, không phải lỗi — ngưỡng 1,25 là quy định của Cục Hàng không; hiển thị/trạng thái theo ngưỡng quy định đó, Bot không tự đổi màu theo ngưỡng riêng.
 
 **Tác động:** kho 1150A là ảnh Hoàng tự chụp tại trạm, không phải ảnh mẫu
-manual/demo như kho DVOR1150. Chưa được đính kèm nên chưa đọc profile,
-thresholds hay version. **Bỏ bug >1.25 còn xanh** ở §4 P28/L09, §5 K04/D02,
+manual/demo như kho DVOR1150. **Stage1c đã nhận kho tại
+`/home/ubuntu/out/station/`**: RMS/Integral được đối chiếu cho G09 (§6.1b);
+chưa mapping hết profile/thresholds/version cho G05/G25. **Bỏ bug >1.25 còn xanh** ở §4 P28/L09, §5 K04/D02,
 G05; 1.25 là chuẩn quản lý, không tự biến thành display/relay limit.
-G05 phần profile còn lại chờ ảnh này; §4 L01–L10/S05 và G09 không được
-sửa mặc định theo ảnh TM. Nguồn: OWNER Q10; KT PDF13–14/in12–13 II.2;
+G05 phần profile còn lại chờ đối chiếu toàn bộ ảnh; §4 L01–L10 không được
+sửa mặc định theo ảnh TM. S05/G09 dùng hai ảnh có filename ở §6.1b. Nguồn: OWNER Q10; KT PDF13–14/in12–13 II.2;
 TM PDF155,157/3-37,39; DEF/ENG/MonitorSidebandVswr.
 
 ### Q14 — Khi số liệu mâu thuẫn — đã chốt quy tắc, không tự giải nội bộ HDCV — 21/11/2026
@@ -931,7 +1027,9 @@ TM PDF212/6-12 §6.4.13; ENGINE/READ/BDAT.
 > Thường dùng mức SEC3; cấu hình cold standby.
 
 **Tác động:** Stage1c/G09 dùng cold standby và SEC3 cho profile đào tạo trạm,
-không coi không giữ tải hot standby là lỗi riêng của trạm này. Không xóa
+**đã triển khai native**, preselect SEC3 nhưng không tự cấp Level3 hay điền password;
+ảnh PHOTO-PMDT-RMS/INT xác nhận Level3 SEC3, TX2 Off (§6.1b). Không coi
+không giữ tải hot standby là lỗi riêng của profile trạm. Không xóa
 hot standby khỏi model tổng quát theo TM; câu trả lời không xác nhận toàn bộ
 chính sách Level2/4/lockout/idle. Liên quan §4 P01/P21–P23/P43/S01/S04,
 §5 K01/K09, G18/Stage2. Không xin mật khẩu thật.
@@ -988,12 +1086,13 @@ Cập nhật §3 P17/C9 và G11, không áp HC120s cho mọi mode.
 Nguồn: OWNER Q7; HC PDF4,28,42–45/in3,27,41–44;
 TM PDF24–25,164,194,214/1-4–5,3-46,76,6-14; BDAT/FACE/READ.
 
-### Q9 — PMDT version/layout — chờ ảnh, không tự đọc từ cabinet — 21/11/2026
+### Q9 — PMDT version/layout — đã nhận ảnh, chưa đối chiếu toàn bộ — 21/11/2026
 
 > “Có trong ảnh”
 
 **Tác động:** version/bố cục lấy kho ảnh PMDT 1150A **Hoàng tự chụp** trên Drive;
-chưa đính kèm nên version/build/checkbox/stacking/tab còn **Chưa xác minh**.
+đã nhận tại `/home/ubuntu/out/station/`. Stage1c chỉ dùng RMS/Integral (§6.1b);
+version/build và đối chiếu đầy đủ checkbox/stacking/tab vẫn **Chưa xác minh**.
 Ba ảnh phần cứng không thay ảnh About/PMDT. Không tự dùng serial/version mẫu
 để ghi trạm. Liên quan §4 P01/P05/P11/P26/P30/P37/P46/P48, G16/G25;
 phần profile G05 chờ Q10, không chặn sửa phần có nguồn.

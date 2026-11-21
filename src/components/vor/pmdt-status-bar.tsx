@@ -10,6 +10,10 @@ function formatPmdtDateTime(date: Date): string {
 
 export function PmdtStatusBar() {
   const alert = useVorPmdtStore((state) => state.data.alert);
+  const protection = useVorPmdtStore((state) => state.protectionState);
+  const protectionLabel = protection.phase === "cold-transfer" ? `Cold standby: ${protection.remaining.toFixed(1)} s`
+    : protection.phase === "restart-wait" ? `Restart ${protection.restartAttempts + 1}: ${protection.remaining.toFixed(1)} s`
+      : protection.phase === "lockout" ? "Monitor lockout" : null;
   const securityLevel = useVorPmdtStore((state) => state.securityLevel);
   const authenticatedUserId = useVorPmdtStore((state) => state.authenticatedUserId);
   const configuredTimestamp = useVorPmdtStore((state) => state.data.timestamp);
@@ -24,8 +28,8 @@ export function PmdtStatusBar() {
 
   return (
     <footer className="pmdt-statusbar">
-      <span className={`pmdt-statusbar-path ${alert ? "pmdt-status-alarm" : "pmdt-status-ok"}`}>
-        {alert ? "Alert" : "Ready"}
+      <span title={protectionLabel ? "Simulator protection state — not firmware message text" : undefined} className={`pmdt-statusbar-path ${alert ? "pmdt-status-alarm" : "pmdt-status-ok"}`}>
+        {protectionLabel ?? (alert ? "Alert" : "Ready")}
       </span>
       <span className="pmdt-statusbar-segment">CAP</span>
       <span className="pmdt-statusbar-segment">NUM</span>

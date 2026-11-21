@@ -11,6 +11,7 @@ it('advances the real mounted PMDT protection clock and stops it after unmount',
   store.getState().reset();
   expect(store.getState().login('SEC3','THREE')).toBe(true);
   store.getState().setConfigValue('simulation.local',true);
+  store.getState().setConfigValue('station.standbyMode','Hot Standby');
   store.getState().setConfigValue('monitor.votingLogic','OR');
   store.getState().setConfigValue('monitor.calibration.mon1.hz30ModulationScale',70);
   expect(store.getState().applyConfigChanges()).toBe(true);

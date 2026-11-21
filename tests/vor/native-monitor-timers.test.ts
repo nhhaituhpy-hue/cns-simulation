@@ -6,6 +6,7 @@ function timed() {
   const store = createVorPmdtStore();
   store.getState().login("SEC3", "THREE");
   store.getState().setConfigValue("simulation.local", true);
+  store.getState().setConfigValue("station.standbyMode", "Hot Standby");
   // A single CCA's fault must request transfer only under OR voting.
   store.getState().setConfigValue("monitor.votingLogic", "OR");
   return store;
