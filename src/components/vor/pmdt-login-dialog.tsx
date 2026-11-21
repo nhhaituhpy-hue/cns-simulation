@@ -6,6 +6,7 @@ import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
 export function PmdtLoginDialog() {
   const login = useVorPmdtStore((state) => state.login);
   const loginError = useVorPmdtStore((state) => state.loginError);
+  const remaining = useVorPmdtStore(state => state.loginLockRemaining);
   const [userId, setUserId] = useState("SEC3");
   const [password, setPassword] = useState("");
 
@@ -56,9 +57,10 @@ export function PmdtLoginDialog() {
             />
           </label>
           {loginError ? <p className="pmdt-login-error" role="alert">{loginError}</p> : null}
+          {remaining > 0 && <p role="status">Retry in {Math.ceil(remaining)} s</p>}
         </div>
         <footer className="pmdt-login-dialog-actions">
-          <button type="submit" className="pmdt-login-primary">OK</button>
+          <button type="submit" className="pmdt-login-primary" disabled={remaining > 0}>OK</button>
           <button type="button" onClick={cancel}>Cancel</button>
         </footer>
       </form>

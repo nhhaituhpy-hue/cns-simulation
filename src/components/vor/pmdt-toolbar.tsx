@@ -14,7 +14,11 @@ export function PmdtToolbar({ title }: { title: string }) {
   const securityLevel = useVorPmdtStore((state) => state.securityLevel);
   const local = useVorPmdtStore((state) => state.config.simulation.local);
   const configDirty = useVorPmdtStore((state) => state.configDirty);
-  const canApply = configDirty && securityLevel >= 3 && local;
+  const securityView = useVorPmdtStore(state => state.activeView === "rms-config-security");
+  const securityDirty = useVorPmdtStore(state => state.securityDraftDirty);
+  const securityAllowed = useVorPmdtStore(state => state.securityLevel === 4 && state.config.simulation.connected && !state.scenario.active);
+  const dirty = securityView ? securityDirty : configDirty;
+  const canApply = dirty && local && (securityView ? securityAllowed : securityLevel >= 3);
   const canCopy = useVorPmdtStore(state => state.activeScreen === "rms-logs" && state.activeView !== "rms-logs-operational-summary");
 
   return (
@@ -26,7 +30,7 @@ export function PmdtToolbar({ title }: { title: string }) {
         <button type="button" title="Next (F5)">Next (F5)</button>
         <button type="button" title="Close (F6)"><X aria-hidden size={12} /> Close (F6)</button>
         <button type="button" title="Apply (F7)" disabled={!canApply} onClick={applyConfigChanges}><Check aria-hidden size={12} /> Apply (F7)</button>
-        <button type="button" title="Reset (F8): cancel pending changes" disabled={!configDirty} onClick={discardConfigChanges}><ArrowCounterClockwise aria-hidden size={12} /> Reset (F8)</button>
+        <button type="button" title="Reset (F8): cancel pending changes" disabled={!dirty} onClick={discardConfigChanges}><ArrowCounterClockwise aria-hidden size={12} /> Reset (F8)</button>
       </div>
     </div>
   );
