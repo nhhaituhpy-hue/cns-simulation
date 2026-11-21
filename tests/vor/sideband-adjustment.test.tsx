@@ -1,10 +1,25 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StrictMode } from "react";
 import { DvorBlockDiagram } from "@/modules/devices/dvor-1150a/dvor-block-diagram";
+import { createDefaultDvor1150aConfig } from "@/lib/dvor1150a";
+import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
+import { TxDataMain } from "@/components/vor/screens/tx-data-main";
+import { TxConfigOffsets } from "@/components/vor/screens/tx-config-offsets";
+import { DvorConfigPanel } from "@/components/vor/dvor-config-panel";
+
+vi.mock("@/components/simulator/simulator-config-persistence", () => ({ SimulatorConfigPersistence: () => null }));
 
 // JSDOM does not implement native modal lifecycle/focus. Browser QA covers it.
 beforeEach(() => {
+  useVorPmdtStore.getState().reset();
+  const config = createDefaultDvor1150aConfig();
+  for (const tx of Object.values(config.transmitters)) {
+    tx.onAir = false;
+    tx.load = true;
+    tx.offsets.txSidebandRfLevelScale = 2.5 * 41 / tx.nominal.sboRfLevel * 100;
+  }
+  useVorPmdtStore.getState().replaceConfig(config);
   Object.defineProperties(HTMLDialogElement.prototype, {
     showModal: { configurable: true, value: function (this: HTMLDialogElement) { this.setAttribute("open", ""); } },
     close: { configurable: true, value: function (this: HTMLDialogElement) {
@@ -24,6 +39,32 @@ function turnClockwise(dialog: HTMLElement) {
 }
 
 describe("Sideband adjustment on the real block diagram", () => {
+  it("updates the actual Transmitter Data screen and restores dialog readings without changing the authentic Offsets table", () => {
+    const { container } = render(<><DvorBlockDiagram /><TxDataMain /><TxConfigOffsets /><DvorConfigPanel /></>);
+    fireEvent.click(screen.getByRole("button", { name: "Chọn 1A4A1" }));
+    let dialog = openTrim("R3");
+    fireEvent.change(within(dialog).getByLabelText("Bước xoay"), { target: { value: "360" } });
+    turnClockwise(dialog);
+    expect(container.querySelector('[data-vor-field-id="txPower.1.tx1"]')).toHaveTextContent("3.000");
+    fireEvent.click(within(dialog).getByRole("button", { name: "Đóng" }));
+    dialog = openTrim("R2");
+    for (let i = 0; i < 6; i++) turnClockwise(dialog);
+    expect(container.querySelector('[data-vor-field-id="txPower.1.tx1"]')).toHaveTextContent("3.300");
+    expect(within(dialog).getByLabelText("Công suất tham chiếu")).toHaveTextContent("3.00 W");
+    expect(screen.getByLabelText("txOffsets.13.tx1")).toHaveValue("100.0");
+    expect(screen.getByLabelText("txOffsets.8.tx1")).toHaveValue("-1.0");
+    expect(container.querySelector('[data-vor-config-field-id^="sidebandTrims."]')).toBeNull();
+    expect(container.querySelector('[aria-label="Transmitter offsets and scale factors"]')).not.toHaveTextContent(/R[1-6]|physical trim|pot positions/i);
+    act(() => {
+      const store = useVorPmdtStore.getState();
+      store.login("SEC3", "THREE");
+      store.setConfigValue("simulation.local", true);
+      expect(store.backupConfig()).toBe(true);
+      store.turnSidebandTrim("sideband-1a4a1", "R2", -90);
+      expect(store.restoreBackupConfig()).toBe(true);
+    });
+    expect(within(dialog).getByLabelText("PMDT Tx #1 SB1")).toHaveTextContent("3.30 W");
+  });
   it("stays open through StrictMode effect replay", () => {
     render(<StrictMode><DvorBlockDiagram /></StrictMode>);
     fireEvent.click(screen.getByRole("button", { name: "Chọn 1A4A1" }));
@@ -61,7 +102,8 @@ describe("Sideband adjustment on the real block diagram", () => {
       fireEvent.keyDown(trigger, { key: id === "R1" ? "Enter" : " " });
       const dialog = screen.getByRole("dialog");
       expect(within(dialog).getByLabelText("Điện áp điều khiển pha")).toHaveTextContent(`${tp} · 6.00 VDC`);
-      expect(within(dialog).queryByText(/WATTMETER|PMDT/)).not.toBeInTheDocument();
+      expect(within(dialog).queryByLabelText("Công suất mô phỏng")).not.toBeInTheDocument();
+      expect(within(dialog).queryByLabelText("Công suất tham chiếu")).not.toBeInTheDocument();
       turnClockwise(dialog);
       expect(within(dialog).getByLabelText("Điện áp điều khiển pha")).toHaveTextContent("6.33 VDC");
       expect(dialog).toHaveTextContent("Quy ước đào tạo");

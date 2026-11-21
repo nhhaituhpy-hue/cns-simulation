@@ -57,3 +57,22 @@ it("hydrates the saved backup only when the profile records an explicit backup",
   expect(useVorPmdtStore.getState().config.transmitters.tx1.nominal.outputPower).toBe(80);
   await waitFor(() => expect(client.apply).toHaveBeenCalledWith(expect.objectContaining({ action: "restore" })));
 });
+
+it("persists immediate physical sideband calibration without F7, including its explicit backup and restore", async () => {
+  const config = createDefaultDvor1150aConfig();
+  client.load.mockResolvedValue({ appliedConfig: config, backupConfig: config, preferences: {}, persisted: true, revision: 1, history: [] });
+  client.apply.mockResolvedValue({ revision: 2 });
+  render(<SimulatorConfigPersistence simulatorId="dvor-1150a" />);
+  await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("saved"));
+  act(() => { useVorPmdtStore.getState().turnSidebandTrim("sideband-1a4a1", "R3", 360); });
+  await waitFor(() => expect(client.apply).toHaveBeenCalledTimes(1));
+  expect(client.apply.mock.calls[0][0]).toMatchObject({ action: "apply", changedFields: ["sidebandTrims.1a4a1.R3"], config: { sidebandTrims: { "1a4a1": { R3: 360 } } } });
+  act(() => { const store = useVorPmdtStore.getState(); store.login("SEC3", "THREE"); store.setConfigValue("simulation.local", true); store.backupConfig(); });
+  await waitFor(() => expect(client.apply).toHaveBeenCalledTimes(2));
+  expect(client.apply.mock.calls[1][0]).toMatchObject({ action: "backup", backupConfig: { sidebandTrims: { "1a4a1": { R3: 360 } } } });
+  act(() => { useVorPmdtStore.getState().turnSidebandTrim("sideband-1a4a1", "R3", 360); });
+  await waitFor(() => expect(client.apply).toHaveBeenCalledTimes(3));
+  act(() => { useVorPmdtStore.getState().restoreBackupConfig(); });
+  await waitFor(() => expect(client.apply).toHaveBeenCalledTimes(4));
+  expect(client.apply.mock.calls[3][0]).toMatchObject({ action: "restore", config: { sidebandTrims: { "1a4a1": { R3: 360 } } } });
+});

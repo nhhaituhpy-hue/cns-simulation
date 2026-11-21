@@ -1,5 +1,6 @@
 import type { VorIndicatorColor, VorMonitorAntennaConfig, VorMonitorOffsetRow, VorParameterStatus } from "@/lib/vor-types";
 import type { DvorKeyerConfiguration, DvorKeyerContext, DvorKeyerProjection } from "./keyer";
+import type { DvorSidebandTrims } from "./sideband";
 
 /** Session-only instructor observations, separate from station settings and RF. */
 export type DvorKeyerObservations = Partial<Record<DvorTransmitterId, Omit<DvorKeyerContext, "role">>>;
@@ -171,6 +172,7 @@ export interface DvorTransmitterConfig {
 }
 
 export interface Dvor1150aConfig {
+  sidebandTrims?: DvorSidebandTrims;
   station: {
     stationDescription: string;
     frequencyMHz: number;
@@ -206,6 +208,7 @@ export interface DvorEffectiveTransmitter {
   identCode: string;
   carrierFrequencyMHz: number;
   sidebandPower: number[];
+  indicatedSidebandPower: number[];
   carrierVswr: number;
   sidebandVswr: number[];
   status: VorIndicatorColor;

@@ -6,6 +6,7 @@ import type {
 } from "./config-types";
 import { DVOR_MONITOR_PARAMETERS as dvorMonitorParameters } from "./config-types";
 import { testGeneratorDvor1150aCalibration, defaultDvor1150aConfig } from "./defaults";
+import { DVOR_SIDEBAND_ASSEMBLIES, DVOR_SIDEBAND_TRIM_IDS } from "./sideband";
 
 export type DvorConfigFieldType = "number" | "text" | "boolean" | "select";
 
@@ -417,6 +418,14 @@ const routingFields: DvorConfigFieldDefinition[] = dvorMonitorParameters.flatMap
 ]);
 
 export const dvorConfigFieldCatalog: readonly DvorConfigFieldDefinition[] = [
+  ...Object.entries(DVOR_SIDEBAND_ASSEMBLIES).flatMap(([assembly, { tx }]) => DVOR_SIDEBAND_TRIM_IDS.map(trim => ({
+    id: `sidebandTrims.${assembly}.${trim}`,
+    label: `${assembly.toUpperCase()} ${trim} physical trim`,
+    section: tx === "tx1" ? "Transmitter 1" as const : "Transmitter 2" as const,
+    type: "number" as const, unit: "°", min: trim === "R3" || trim === "R6" ? -1800 : -180,
+    max: trim === "R3" || trim === "R6" ? 1800 : 180, step: 15,
+    description: "Vị trí vít vật lý mô phỏng; không phải trường cấu hình trên màn PMDT hay đặc tính hãng.",
+  }))),
   { id: "station.stationDescription", label: "Station description", section: "Station", type: "text", description: "Tên trạm hiển thị trên title bar và RMS station config." },
   { id: "station.frequencyMHz", label: "Transmitter frequency", section: "Station", type: "number", unit: "MHz", min: 108, max: 118, step: 0.0001, description: "Tần số VOR; engine tính carrier và sideband frequency." },
   { id: "station.stationType", label: "Station type", section: "Station", type: "select", options: ["DVOR"], description: "Loại đài được mô phỏng." },
@@ -474,7 +483,7 @@ export function getDvorConfigValue(config: Dvor1150aConfig, fieldId: string): Dv
   let current: unknown = config;
   for (const part of fieldId.split(".")) {
     if (!current || typeof current !== "object" || !(part in current)) {
-      return (["station.standbyMode", "station.automaticRestartsEnabled", "station.firstRestartDelay"].includes(fieldId) || fieldId.startsWith("monitor.testGeneratorCalibration.") || fieldId.startsWith("monitor.testGenerator.") || fieldId.startsWith("monitor.standbyCalibration.")
+      return (["station.standbyMode", "station.automaticRestartsEnabled", "station.firstRestartDelay"].includes(fieldId) || fieldId.startsWith("sidebandTrims.") || fieldId.startsWith("monitor.testGeneratorCalibration.") || fieldId.startsWith("monitor.testGenerator.") || fieldId.startsWith("monitor.standbyCalibration.")
         || /^transmitters\.tx[12]\.nominal\.(keyerInputLevel|windowedKeyingInput|selfKeyOnLoss|shutdownOnLoss|restartWhenResumed|externalKeying|suppressOnShutdown)$/.test(fieldId)) && config !== defaultDvor1150aConfig
         ? getDvorConfigValue(defaultDvor1150aConfig, fieldId)
         : null;

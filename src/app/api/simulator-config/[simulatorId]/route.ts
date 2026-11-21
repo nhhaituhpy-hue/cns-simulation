@@ -6,6 +6,7 @@ import { parseDvor1150aConfig } from "@/lib/simulator-config/dvor-1150a";
 import { parseDme1119aConfig } from "@/lib/simulator-config/dme-1119a";
 import {
   DVOR1150A_CONFIG_DTO_VERSION,
+  DVOR1150A_CONFIG_DTO_V2,
   DVOR1150A_CONFIG_DTO_PREVIOUS_VERSION,
   DME1119A_CONFIG_DTO_VERSION,
   preserveMissingDme1119aExtensions,
@@ -40,7 +41,8 @@ function configResponse<T extends SimulatorConfigResponse>(request: Request, bod
 function unsupportedDto(request: Request, simulatorId: string) {
   const dto = request.headers.get(SIMULATOR_CONFIG_DTO_HEADER);
   const version = simulatorId === "dvor-1150a" ? DVOR1150A_CONFIG_DTO_VERSION : simulatorId === "dme-1119a" ? DME1119A_CONFIG_DTO_VERSION : null;
-  const previousDvor = simulatorId === "dvor-1150a" && dto === DVOR1150A_CONFIG_DTO_PREVIOUS_VERSION;
+  const previousDvor = simulatorId === "dvor-1150a"
+    && [DVOR1150A_CONFIG_DTO_PREVIOUS_VERSION, DVOR1150A_CONFIG_DTO_V2].includes(dto ?? "");
   if (version && dto !== null && dto !== version && !previousDvor) {
     return NextResponse.json(
       { error: "Unsupported simulator configuration representation." },

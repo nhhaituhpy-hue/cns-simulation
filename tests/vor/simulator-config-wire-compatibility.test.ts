@@ -17,7 +17,7 @@ vi.mock("@/lib/db", () => ({
 import { GET, POST, PUT } from "@/app/api/simulator-config/[simulatorId]/route";
 
 const header = "X-CNS-Simulator-Config-DTO";
-const version = "dvor-1150a-extensions-v2";
+const version = "dvor-1150a-extensions-v3";
 const context = () => ({ params: Promise.resolve({ simulatorId: "dvor-1150a" }) });
 function request(method = "GET", extended = false, payload?: unknown) {
   return new Request("http://localhost/api/simulator-config/dvor-1150a", {
@@ -194,6 +194,23 @@ describe("1150A extension-preserving saves", () => {
 });
 
 describe("1150A authorization, revision and payload guards", () => {
+  it("preserves physical calibration when a v2 client writes a profile without it", async () => {
+    const stored = record();
+    stored.applied_config.sidebandTrims!["1a4a1"].R3 = 360;
+    const incoming = getDefaultDvor1150aConfig();
+    delete incoming.sidebandTrims;
+    mocks.query.mockImplementation(async (sql: string, args: unknown[]) => ({ rows: [
+      sql.includes("save_user_simulator_config") ? { ...stored, applied_config: args[3], revision: 5 } : stored,
+    ] }));
+    const response = await PUT(new Request("http://localhost/api/simulator-config/dvor-1150a", { method: "PUT",
+      headers: { [header]: "dvor-1150a-extensions-v2", "Content-Type": "application/json" },
+      body: JSON.stringify({ config: incoming, expectedRevision: 4 }),
+    }), context());
+    expect(response.status).toBe(200);
+    expect((await response.json()).appliedConfig.sidebandTrims).toBeUndefined();
+    const saved = mocks.query.mock.calls.find(([sql]) => sql.includes("save_user_simulator_config"))![1][3];
+    expect(saved.sidebandTrims["1a4a1"].R3).toBe(360);
+  });
   it.each(["GET", "POST", "PUT"])("requires authentication on %s", async (method) => {
     mocks.profile.mockResolvedValue(null);
     const response = await ({ GET, POST, PUT }[method]!)(request(method), context());
@@ -275,6 +292,7 @@ describe("1150A consumer projection", () => {
     config.station.firstRestartDelay = 75;
     config.monitor.testGenerator!.audioFrequency = 850;
     const previous = structuredClone(config);
+    delete previous.sidebandTrims;
     delete previous.station.standbyMode;
     delete previous.station.automaticRestartsEnabled;
     delete previous.station.firstRestartDelay;

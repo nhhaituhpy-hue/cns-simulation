@@ -4,6 +4,7 @@ import {
   withDvor1150aConfigExtensions,
 } from "@/lib/dvor1150a/defaults";
 import type { Dvor1150aConfig } from "@/lib/dvor1150a/config-types";
+import { dvorConfigFieldCatalog, getDvorConfigValue, validateDvorConfigField } from "@/lib/dvor1150a/config-utils";
 import { hasSameJsonShape } from "./shape";
 import {
   SIMULATOR_CONFIG_SCHEMA_VERSION,
@@ -33,6 +34,8 @@ export function parseDvor1150aConfig(value: unknown): Dvor1150aPersistedConfig |
   const compatible = withDvor1150aConfigExtensions(value);
   if (!hasSameJsonShape(compatible, reference)) return null;
   const config = compatible as Dvor1150aConfig;
+  if (dvorConfigFieldCatalog.some(field => field.id.startsWith("sidebandTrims.")
+    && validateDvorConfigField(field, getDvorConfigValue(config, field.id)))) return null;
   if (!["Cold Standby", "Hot Standby"].includes(config.station.standbyMode!)
     || !Number.isFinite(config.station.firstRestartDelay)
     || config.station.firstRestartDelay! < 0) return null;

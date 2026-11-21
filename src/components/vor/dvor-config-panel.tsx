@@ -104,9 +104,8 @@ export function DvorConfigPanel() {
   const derived = useVorPmdtStore((state) => state.derived);
   const scenario = useVorPmdtStore((state) => state.scenario);
 
-  const visibleFields = scenario.active
-    ? dvorConfigFieldCatalog.filter((field) => isDvor1150aScenarioStudentEditable(scenario.definition, field.id))
-    : dvorConfigFieldCatalog;
+  const visibleFields = dvorConfigFieldCatalog.filter(field => !field.id.startsWith("sidebandTrims.")
+    && (!scenario.active || isDvor1150aScenarioStudentEditable(scenario.definition, field.id)));
   const sections = Array.from(new Set(visibleFields.map((field) => field.section)));
 
   return (
