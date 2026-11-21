@@ -91,7 +91,7 @@ const transmitterCommandItems: readonly VorMenuItem[] = [
 ];
 
 const rmsCommandItems: readonly VorMenuItem[] = [
-  { id: "rms-command-change-password", label: "Change Password...", enabled: false },
+  { id: "rms-command-change-password", label: "Change Password...", enabled: true },
   {
     id: "rms-command-select-audio",
     label: "Select Audio",

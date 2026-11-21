@@ -1,4 +1,4 @@
-import { SELEX_DVOR_TRAINING_ACCOUNTS } from "@/lib/simulator-training-accounts";
+import { createDvorSecuritySession, type SecurityField, type SecurityUser } from "@/lib/dvor1150a/security";
 import { dvorSidebandAssembly, DVOR_SIDEBAND_TRIM_IDS, type DvorSidebandTrimId } from "@/lib/dvor1150a/sideband";
 import { HARDWARE_TRIMS, type HardwareAssembly, type HardwareTrim } from "@/lib/dvor1150a/hardware-calibration";
 import type {
@@ -138,6 +138,12 @@ export interface VorPmdtStoreState {
   authenticatedUserId: string | null;
   securityLevel: VorSecurityLevel;
   loginError: string | null;
+  loginLockRemaining: number;
+  securityRevision: number;
+  securityDraftDirty: boolean;
+  securityNeedsBackup: boolean;
+  securityError: string | null;
+  changePasswordDialogOpen: boolean;
   data: VorPmdtData;
   derived: Dvor1150aSnapshot;
   /** Instructor stimulus; never persisted as a station setting/profile. */
@@ -196,6 +202,13 @@ export interface VorPmdtStoreActions {
   openLogin: () => void;
   login: (userId: string, password: string) => boolean;
   logout: () => void;
+  advanceSecurityTime: (seconds: number) => void;
+  noteSecurityActivity: () => void;
+  getSecurityRows: () => SecurityUser[];
+  stageSecurityField: (index: number, field: SecurityField, value: string | number) => boolean;
+  applySecurityUsers: () => boolean;
+  setChangePasswordDialogOpen: (open: boolean) => void;
+  changeOwnPassword: (current: string, password: string, confirmation: string) => boolean;
   setConfigValue: (fieldId: string, value: DvorConfigValue, mirrorFieldIds?: readonly string[]) => void;
   applyConfigChanges: () => boolean;
   /** Explicit deterministic clock used by the native PMDT ticker and tests. */
@@ -304,6 +317,12 @@ function initialState(): VorPmdtStoreState {
     authenticatedUserId: null,
     securityLevel: 0,
     loginError: null,
+    loginLockRemaining: 0,
+    securityRevision: 0,
+    securityDraftDirty: false,
+    securityNeedsBackup: false,
+    securityError: null,
+    changePasswordDialogOpen: false,
     data: derived.data,
     derived,
     keyerObservations: undefined,
@@ -421,6 +440,7 @@ export function createVorPmdtStore(
 ): UseBoundStore<StoreApi<VorPmdtStore>> {
   const now = options.now ?? (() => new Date());
   const generateId = options.generateId ?? defaultId;
+  const security = createDvorSecuritySession();
 
   return create<VorPmdtStore>()((setState, get) => {
     // Decorate only digital keyer results on every native snapshot update.
@@ -684,6 +704,7 @@ export function createVorPmdtStore(
         } else if (command === "bypass") {
           config.simulation.integralMonitorBypass = !config.simulation.integralMonitorBypass;
         } else if (command === "reset") {
+          security.restore();
           config.simulation.local = false;
           config.simulation.integralMonitorBypass = false;
           for (const id of DVOR_TRANSMITTER_IDS) {
@@ -720,6 +741,7 @@ export function createVorPmdtStore(
           ...(["main", "antenna", "load", "off"].includes(command) ? { protectionState: command === "off" && state.protectionState.phase !== "monitoring"
             ? { ...state.protectionState, phase: "lockout", remaining: Math.min(20, state.protectionState.remaining), target: null } : initialDvorProtectionState() } : {}),
           ...(command === "reset" ? { lcu: { ...state.lcu, lampTest: false, silencedAlarms: [], alarmElapsed: {}, initializing: true }, configDirty: false,
+            securityDraftDirty: false, securityNeedsBackup: false, securityError: null, changePasswordDialogOpen: false, securityRevision: state.securityRevision + 1,
             protectionState: { ...initialDvorProtectionState(), phase: "cold-transfer", remaining: 20, target: main },
             loginDialogOpen: true, securityLevel: 0, authenticatedUserId: null } : {}),
         });
@@ -1025,21 +1047,23 @@ export function createVorPmdtStore(
 
       setAboutDialogOpen: (open) => set({ aboutDialogOpen: open }),
 
-      openLogin: () => set({
+      openLogin: () => { security.discard(); set({
         loginDialogOpen: true,
         authenticatedUserId: null,
         securityLevel: 0,
         loginError: null,
-      }),
+        securityDraftDirty: false, securityError: null, changePasswordDialogOpen: false, securityRevision: get().securityRevision + 1,
+        ...(get().activeView === "rms-config-security" ? { activeView: "rms-config-general" as const } : {}),
+      }); },
 
       login: (userId, password) => {
         const before = vorEvidenceSnapshot(get());
-        const credentials = SELEX_DVOR_TRAINING_ACCOUNTS;
-        const identity = credentials.find(
-          (item) => item.userId === userId.trim() && item.password === password,
-        );
+        security.discard();
+        const identity = security.login(userId.trim(), password);
         if (!identity) {
-          set({ loginError: "Invalid User ID or Password." });
+          get().logout();
+          const remaining = security.remaining();
+          set({ loginLockRemaining: remaining, loginError: remaining > 0 ? "Logon blocked for 5 minutes after 3 failed attempts." : "Invalid User ID or Password." });
           recordAction({
             kind: "authentication",
             controlId: "pmdt-login",
@@ -1056,6 +1080,9 @@ export function createVorPmdtStore(
           authenticatedUserId: identity.userId,
           securityLevel: identity.securityLevel,
           loginError: null,
+          loginLockRemaining: 0,
+          securityDraftDirty: false, securityError: null, changePasswordDialogOpen: false, securityRevision: get().securityRevision + 1,
+          ...(identity.securityLevel !== 4 && get().activeView === "rms-config-security" ? { activeView: "rms-config-general" as const } : {}),
         });
         recordAction({
           kind: "authentication",
@@ -1068,14 +1095,70 @@ export function createVorPmdtStore(
         return true;
       },
 
-      logout: () => set({
+      logout: () => { security.discard(); set({
         loginDialogOpen: true,
         authenticatedUserId: null,
         securityLevel: 0,
         loginError: null,
         configPanelOpen: false,
         aboutDialogOpen: false,
-      }),
+        securityDraftDirty: false, securityError: null, changePasswordDialogOpen: false, securityRevision: get().securityRevision + 1,
+        ...(get().activeView === "rms-config-security" ? { activeView: "rms-config-general" as const } : {}),
+      }); },
+
+      noteSecurityActivity: () => security.activity(),
+      advanceSecurityTime: (seconds) => {
+        if (!Number.isFinite(seconds) || seconds <= 0) return;
+        const state = get();
+        if (security.advance(seconds, state.securityLevel > 0, state.config.simulation.local)) {
+          const before = vorEvidenceSnapshot(state);
+          get().logout();
+          set({ loginError: "Logged off after 15 minutes of inactivity." });
+          recordAction({ kind: "authentication", controlId: "pmdt-idle-logoff", label: "PMDT inactivity logoff", accepted: true, before });
+        }
+        const remaining = security.remaining();
+        if (remaining !== get().loginLockRemaining) set({ loginLockRemaining: remaining,
+          ...(remaining === 0 && state.loginLockRemaining > 0 ? { loginError: null } : {}) });
+      },
+      getSecurityRows: () => get().securityLevel === 4 ? security.rows() : [],
+      stageSecurityField: (index, field, value) => {
+        const state = get();
+        if (state.securityLevel !== 4 || !state.config.simulation.local || !state.config.simulation.connected || state.scenario.active) return false;
+        if (!security.edit(index, field, value)) return false;
+        set({ securityDraftDirty: true, securityError: null });
+        return true;
+      },
+      applySecurityUsers: () => {
+        const state = get(), before = vorEvidenceSnapshot(state);
+        let error: string | undefined;
+        if (state.securityLevel !== 4 || !state.config.simulation.local || !state.config.simulation.connected || state.scenario.active) error = "Requires Level 4, Local and a direct maintenance connection, outside scenarios.";
+        if (!state.securityDraftDirty && !error) return false;
+        const result = error ? { error, identity: null } : security.apply(state.authenticatedUserId);
+        if (result.error) set({ securityError: result.error });
+        else {
+          if (!result.identity) get().logout();
+          set({ ...(result.identity ? { authenticatedUserId: result.identity.userId, securityLevel: result.identity.securityLevel } : {}),
+            securityRevision: state.securityRevision + 1, securityDraftDirty: false, securityNeedsBackup: true, securityError: null,
+            ...(result.identity?.securityLevel !== 4 && state.activeView === "rms-config-security" ? { activeView: "rms-config-general" as const } : {}),
+            lastCommand: "Security Codes Apply" });
+        }
+        recordAction({ kind: "authentication", controlId: "security-codes-apply", label: "Security Codes Apply", accepted: !result.error, reason: result.error, before });
+        return !result.error;
+      },
+      setChangePasswordDialogOpen: (open) => {
+        const state = get();
+        if (open && (state.securityLevel < 1 || state.authenticatedUserId === "GUEST" || !state.config.simulation.local || !state.config.simulation.connected || state.scenario.active)) return;
+        set({ changePasswordDialogOpen: open, securityError: null });
+      },
+      changeOwnPassword: (current, password, confirmation) => {
+        const state = get(), before = vorEvidenceSnapshot(state);
+        const error = state.securityLevel < 1 || !state.authenticatedUserId || !state.config.simulation.local || !state.config.simulation.connected || state.scenario.active
+          ? "Requires an authenticated user and a direct Local maintenance connection, outside scenarios."
+          : security.changePassword(state.authenticatedUserId, current, password, confirmation);
+        set({ securityError: error, ...(!error ? { securityNeedsBackup: true, changePasswordDialogOpen: false, lastCommand: "Password changed" } : {}) });
+        recordAction({ kind: "authentication", controlId: "change-own-password", label: "Change own password", accepted: !error, reason: error ?? undefined, before });
+        return !error;
+      },
 
       setConfigValue: (fieldId, value, mirrorFieldIds = []) => {
         const state = get();
@@ -1083,7 +1166,7 @@ export function createVorPmdtStore(
         const isBypassField = fieldId === "simulation.integralMonitorBypass";
         const before = vorEvidenceSnapshot(state);
 
-        if (state.securityLevel < 3) {
+        if (state.securityLevel < (isLocalModeField ? 2 : 3)) {
           recordAction({ kind: "configuration", controlId: fieldId, label: `Set ${fieldId}`, input: { fieldId, value: String(value) }, accepted: false, reason: "Security level is insufficient.", before });
           return;
         }
@@ -1157,6 +1240,7 @@ export function createVorPmdtStore(
       },
 
       applyConfigChanges: () => {
+        if (get().activeView === "rms-config-security") return get().applySecurityUsers();
         const state = get();
         const before = vorEvidenceSnapshot(state);
         if (
@@ -1268,6 +1352,11 @@ export function createVorPmdtStore(
       },
 
       discardConfigChanges: () => {
+        if (get().activeView === "rms-config-security") {
+          security.discard();
+          set({ securityDraftDirty: false, securityError: null, securityRevision: get().securityRevision + 1 });
+          return;
+        }
         const state = get();
         set({ configDraft: cloneDvor1150aConfig(state.config), configDirty: false });
       },
@@ -1330,7 +1419,8 @@ export function createVorPmdtStore(
 
       backupConfig: () => {
         const state = get();
-        if (state.securityLevel < 3 || (state.hasConfigurationBackup && !state.needBackup) || state.scenario.active) return false;
+        if (state.securityLevel < 3 || (state.hasConfigurationBackup && !state.needBackup && !state.securityNeedsBackup) || state.scenario.active) return false;
+        security.backup();
         const changedFields = collectChangedConfigFields(
           extractDvor1150aConfig(state.configurationBackup),
           extractDvor1150aConfig(state.config),
@@ -1348,6 +1438,7 @@ export function createVorPmdtStore(
           parameterChangeLogs: prependParameterChangeLogEntries(state.parameterChangeLogs, nextLogs),
           needBackup: false,
           lastCommand: "RMS Config Backup",
+          securityNeedsBackup: false,
         });
         return true;
       },
@@ -1386,7 +1477,7 @@ export function createVorPmdtStore(
           recordAction({ kind: "control", controlId: `transmitter-${transmitterId}-${mode}`, label: "Remote interlock is active", accepted: false, before });
           return false;
         }
-        if (state.securityLevel < 3) {
+        if (state.securityLevel < 2) {
           recordAction({ kind: "control", controlId: `transmitter-${transmitterId}-${mode}`, label: `TX ${transmitterId.toUpperCase()} ${mode}`, accepted: false, reason: "Security level is insufficient.", before });
           return false;
         }
@@ -1462,6 +1553,7 @@ export function createVorPmdtStore(
       },
 
       openView: (screenId, viewId, menuPath, title) => {
+        if (viewId === "rms-config-security" && get().securityLevel !== 4) return;
         const before = vorEvidenceSnapshot(get());
         set({
           activeScreen: screenId,
@@ -1607,7 +1699,7 @@ export function createVorPmdtStore(
       updateAnswer: (changes) =>
         set((state) => ({ answer: { ...state.answer, ...changes } })),
 
-      reset: () => { nativeEvidenceScope = undefined; set(initialState()); },
+      reset: () => { nativeEvidenceScope = undefined; security.reset(); set(initialState()); },
     };
   });
 }

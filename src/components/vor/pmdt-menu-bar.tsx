@@ -38,11 +38,15 @@ function MenuItemRow({
   const needBackup = useVorPmdtStore((state) => state.needBackup);
   const hasConfigurationBackup = useVorPmdtStore((state) => state.hasConfigurationBackup);
   const scenarioActive = useVorPmdtStore((state) => state.scenario.active);
+  const securityNeedsBackup = useVorPmdtStore(state => state.securityNeedsBackup);
+  const connected = useVorPmdtStore(state => state.config.simulation.connected);
+  const userId = useVorPmdtStore(state => state.authenticatedUserId);
+  const isPasswordCommand = item.id === "rms-command-change-password";
   const isTransferCommand = item.id === "tx-command-transfer";
   const isTransmitterCommand = item.action === "set-transmitter-mode" || isTransferCommand;
   const isMainTransmitterCommand = isTransferCommand || (isTransmitterCommand && item.transmitterMode === "main");
   const isMaintenanceTransmitterCommand = isTransmitterCommand && !isMainTransmitterCommand;
-  const canOperateTransmitter = securityLevel >= 3
+  const canOperateTransmitter = securityLevel >= 2
     && (isMainTransmitterCommand || local);
   const isRestoreCommand = item.action === "config-restore";
   const isBackupCommand = item.action === "config-backup";
@@ -51,14 +55,19 @@ function MenuItemRow({
   const unavailableReason = unavailableVorCommandReason(item.id);
   const unavailable = !item.enabled
     || Boolean(unavailableReason)
+    || (isPasswordCommand && (securityLevel < 1 || userId === "GUEST" || !local || !connected || scenarioActive))
     || (isIntegralBypassCommand && (securityLevel < 3 || (bypassValue && !local)))
     || (isTransmitterCommand && !canOperateTransmitter)
     || (isRestoreCommand && (securityLevel < 3 || !local || !hasConfigurationBackup || scenarioActive))
-    || (isBackupCommand && (securityLevel < 3 || (hasConfigurationBackup && !needBackup) || scenarioActive));
+    || (isBackupCommand && (securityLevel < 3 || (hasConfigurationBackup && !needBackup && !securityNeedsBackup) || scenarioActive));
   const hasChildren = Boolean(item.children?.length);
 
   function selectItem() {
     if (unavailable || hasChildren) return;
+    if (isPasswordCommand) {
+      useVorPmdtStore.getState().setChangePasswordDialogOpen(true);
+      closeMenu(); return;
+    }
     if (isIntegralBypassCommand) {
       setConfigValue("simulation.integralMonitorBypass", bypassValue);
       closeMenu();
@@ -121,7 +130,7 @@ function MenuItemRow({
         aria-disabled={unavailable || undefined}
         aria-haspopup={hasChildren ? "menu" : undefined}
         title={
-          unavailableReason ?? (!item.enabled
+          (isPasswordCommand && unavailable ? "Requires an authenticated account, Local and a direct maintenance connection, outside scenarios (TM §3.6.7.4.5)." : undefined) ?? unavailableReason ?? (!item.enabled
             ? disabledMenuTooltip
             : isIntegralBypassCommand && securityLevel < 3
               ? "Yêu cầu đăng nhập SEC3 hoặc SEC4"
@@ -137,9 +146,9 @@ function MenuItemRow({
                 ? "Bật Local để khôi phục cấu hình"
             : isBackupCommand && securityLevel < 3
               ? "Yêu cầu đăng nhập SEC3 hoặc SEC4"
-              : isBackupCommand && hasConfigurationBackup && !needBackup
+              : isBackupCommand && hasConfigurationBackup && !needBackup && !securityNeedsBackup
                 ? "Chưa có cấu hình cần backup"
-                : isTransmitterCommand && securityLevel < 3
+                : isTransmitterCommand && securityLevel < 2
                   ? "GUEST chỉ được xem tham số"
                   : isMaintenanceTransmitterCommand && !local
                     ? "Bật Local để điều khiển transmitter"

@@ -6,7 +6,7 @@ import { useDvor1150PmdtStore } from "@/stores/dvor1150-pmdt-store";
 describe("native training login facts, never application credentials",()=>{
  it("uses the same source of truth as both native DVOR login handlers",()=>{
   const account=trainingLoginFor("dvor-1150a","Tài khoản login PMDT là gì?");
-  expect(account).toMatchObject({kind:"fixed-default",userId:"SEC3",securityLevel:3,mutable:false});
+  expect(account).toMatchObject({kind:"fixed-default",userId:"SEC3",securityLevel:3,mutable:true});
   if(account.kind!=="fixed-default")throw Error("Missing simulation account");
   expect(useVorPmdtStore.getState().login(account.userId,account.password)).toBe(true);
   expect(useDvor1150PmdtStore.getState().login(account.userId,account.password)).toBe(true);
@@ -34,7 +34,8 @@ describe("native training login facts, never application credentials",()=>{
   expect(trainingLoginFor(moduleId,`Tài khoản ${role} simulator là gì?`).kind).toBe("unsupported-account");
  });
  it("does not silently substitute a requested unsupported account",()=>{
-  expect(trainingLoginFor("dvor-1150a","Tài khoản SEC2 PMDT là gì?")).toEqual({kind:"unsupported-account"});
+  expect(trainingLoginFor("dvor-1150a","Tài khoản SEC2 PMDT là gì?")).toMatchObject({kind:"fixed-default",userId:"SEC2",password:"TWO2",mutable:true});
+  expect(trainingLoginFor("dvor-1150","Tài khoản SEC2 PMDT là gì?")).toEqual({kind:"unsupported-account"});
   expect(trainingLoginFor("dme-1119a","Tài khoản SEC2 PMDT là gì?")).toMatchObject({kind:"fixed-default",userId:"SEC2",mutable:true});
  });
 });
