@@ -604,14 +604,14 @@
   background: #c9cece;
 }
 
-.lcuSquareButton[aria-pressed="true"] i,
-.monitorBypass[aria-pressed="true"] i,
-.systemButtons button[aria-pressed="true"] i {
+.lcuSquareButton i[data-lit="true"],
+.monitorBypass i[data-lit="true"],
+.systemButtons button i[data-lit="true"] {
   background: #65e87d;
   box-shadow: 0 0 5px #25c64d;
 }
 
-.lcuSquareButton[aria-pressed="true"] .lcuOffIndicator {
+.lcuSquareButton .lcuOffIndicator[data-lit="true"] {
   background: #ef4848;
   box-shadow: 0 0 5px #cf2028;
 }
@@ -702,6 +702,11 @@
 
 .lcuLampOff {
   background: #747e80;
+}
+
+.lcuPanel i[data-lit="false"] {
+  background: #394448;
+  box-shadow: none;
 }
 
 .monitorBypass {

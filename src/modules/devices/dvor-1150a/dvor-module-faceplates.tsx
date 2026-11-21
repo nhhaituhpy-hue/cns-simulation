@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import type { DvorBlockId } from "./block-diagram-data";
+import { createContext, useContext, useState } from "react";
+import { DVOR_BLOCK_BY_ID, type DvorBlockId } from "./block-diagram-data";
+import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
+import { hardwareReading, projectDvorHardware } from "@/lib/dvor1150a/hardware";
 import { SidebandAdjustmentDialog } from "./sideband-adjustment";
 import { type SidebandAdjustmentControl, type SidebandTrimId } from "./sideband-adjustment-model";
 import styles from "./dvor-module-faceplates.module.css";
@@ -15,6 +17,7 @@ interface FaceplateRow {
 }
 
 type LampColor = "green" | "amber" | "red" | "off";
+const FaceplateLamps = createContext<Record<string, LampColor>>({});
 
 interface LabelLinesProps {
   x: number;
@@ -209,7 +212,8 @@ function TrimPot({ x, y, angle = 0 }: { x: number; y: number; angle?: number }) 
   );
 }
 
-function IndicatorLamp({ x, y, color = "green", size = 11 }: { x: number; y: number; color?: LampColor; size?: number }) {
+function IndicatorLamp({ x, y, label, size = 11 }: { x: number; y: number; label: string; size?: number }) {
+  const color = useContext(FaceplateLamps)[label] ?? "off";
   const fill = color === "green"
     ? "url(#sideband-led-green)"
     : color === "amber"
@@ -227,7 +231,7 @@ function IndicatorLamp({ x, y, color = "green", size = 11 }: { x: number; y: num
         : undefined;
 
   return (
-    <g transform={`translate(${x} ${y})`} aria-hidden>
+    <g transform={`translate(${x} ${y})`} role="img" aria-label={`${label}: ${color}`} data-led={label} data-color={color}>
       <circle r={size} fill="#273236" stroke="#657176" strokeWidth="1.5" />
       <circle r={size - 4} fill={fill} stroke={stroke} strokeWidth="1" filter={filter} />
       <circle cx={-size * 0.22} cy={-size * 0.24} r={size * 0.18} fill="#f4fffa" opacity="0.82" />
@@ -313,14 +317,14 @@ function FaceplateRow({ row }: { row: FaceplateRow }) {
 }
 
 function BcpsFaceplate() {
-  const statusRows: readonly { lines: readonly string[]; y: number; color: LampColor }[] = [
-    { lines: ["AC ON"], y: 222, color: "green" },
-    { lines: ["DC ON"], y: 273, color: "green" },
-    { lines: ["AC FAIL"], y: 324, color: "red" },
-    { lines: ["BATTERY", "FAULT"], y: 376, color: "red" },
-    { lines: ["ON", "BATTERY"], y: 432, color: "amber" },
-    { lines: ["FAST", "CHARGE"], y: 488, color: "amber" },
-    { lines: ["TRICKLE", "CHARGE"], y: 547, color: "green" },
+  const statusRows: readonly { lines: readonly string[]; y: number }[] = [
+    { lines: ["AC ON"], y: 222 },
+    { lines: ["DC ON"], y: 273 },
+    { lines: ["AC FAIL"], y: 324 },
+    { lines: ["BATTERY", "FAULT"], y: 376 },
+    { lines: ["ON", "BATTERY"], y: 432 },
+    { lines: ["FAST", "CHARGE"], y: 488 },
+    { lines: ["TRICKLE", "CHARGE"], y: 547 },
   ];
 
   return (
@@ -335,13 +339,13 @@ function BcpsFaceplate() {
         {statusRows.map((row) => (
           <g key={row.lines.join("-")}>
             <LabelLines x={176} y={row.y} lines={row.lines} anchor="end" lineHeight={17} />
-            <IndicatorLamp x={200} y={row.y} color={row.color} />
+            <IndicatorLamp x={200} y={row.y} label={row.lines.join(" ")} />
           </g>
         ))}
         <path d="M236 202H258V344L239 365L258 386V544L237 565" fill="none" stroke="#556164" strokeWidth="2" />
         <LabelLines x={280} y={284} lines={["POWER", "STATUS"]} className={styles.groupLabel} lineHeight={22} />
         <LabelLines x={280} y={450} lines={["CHARGER", "STATUS"]} className={styles.groupLabel} lineHeight={22} />
-        <IndicatorLamp x={326} y={520} color="green" size={15} />
+        <IndicatorLamp x={326} y={520} label="Unverified charger mark (not simulated)" size={15} />
       </g>
 
       <g>
@@ -358,7 +362,7 @@ function BcpsFaceplate() {
       <LabelLines x={176} y={1278} lines={["S1", "CHARGER RESET"]} anchor="end" lineHeight={18} />
       <PushButton x={200} y={1278} />
       <text x="176" y="1366" textAnchor="end" dominantBaseline="middle" className={styles.controlLabel}>CPU OK</text>
-      <IndicatorLamp x={200} y={1366} color="green" />
+      <IndicatorLamp x={200} y={1366} label="CPU OK" />
 
       <ExtractionHandle bottom width={540} />
       <PartNumber width={540} value="571150A-0002-046" />
@@ -399,7 +403,7 @@ function CarrierAmplifierFaceplate() {
       <text x="340" y="1360" textAnchor="end" dominantBaseline="middle" className={styles.powerLabel}>DETECTED CSB</text>
       <RoundConnector x={414} y={1360} radius={28} />
       <text x="340" y="1450" textAnchor="end" dominantBaseline="middle" className={styles.powerLabel}>DC POWER OK</text>
-      <IndicatorLamp x={386} y={1450} color="green" size={12} />
+      <IndicatorLamp x={386} y={1450} label="DC POWER OK" size={12} />
 
       <g aria-hidden>
         <circle cx="420" cy="1541" r="40" fill="url(#sideband-handle-metal)" stroke="#4c575a" strokeWidth="2.5" />
@@ -412,7 +416,7 @@ function CarrierAmplifierFaceplate() {
   );
 }
 
-function AlarmGroup({ x, y, heading, colors }: { x: number; y: number; heading: string; colors: readonly LampColor[] }) {
+function AlarmGroup({ x, y, heading }: { x: number; y: number; heading: string }) {
   const rows = ["PRIMARY", "SECONDARY", "PRE ALARM"];
   return (
     <g>
@@ -422,7 +426,7 @@ function AlarmGroup({ x, y, heading, colors }: { x: number; y: number; heading: 
         const rowY = y + 43 + index * 45;
         return (
           <g key={row}>
-            <IndicatorLamp x={x + 2} y={rowY} color={colors[index]} size={10} />
+            <IndicatorLamp x={x + 2} y={rowY} label={`${heading} ${row}`} size={10} />
             <LabelLines x={x + 28} y={rowY} lines={row === "PRE ALARM" ? ["PRE ALARM"] : [row, "ALARM"]} lineHeight={17} />
           </g>
         );
@@ -440,8 +444,8 @@ function MonitorFaceplate() {
       <PanelFrame width={360} />
       <ExtractionHandle />
 
-      <AlarmGroup x={92} y={226} heading="INTEGRAL" colors={["red", "amber", "amber"]} />
-      <AlarmGroup x={92} y={430} heading="STANDBY" colors={["off", "off", "off"]} />
+      <AlarmGroup x={92} y={226} heading="INTEGRAL" />
+      <AlarmGroup x={92} y={430} heading="STANDBY" />
 
       <text x="180" y="804" textAnchor="middle" className={styles.connectorLabel}>TEST</text>
       <RoundConnector x={180} y={850} radius={30} />
@@ -450,7 +454,7 @@ function MonitorFaceplate() {
       <RoundConnector x={180} y={1018} radius={30} />
       <text x="230" y="1026" className={styles.controlId}>J2</text>
 
-      <IndicatorLamp x={132} y={1165} color="green" />
+      <IndicatorLamp x={132} y={1165} label="CPU OK" />
       <text x="157" y="1171" className={styles.controlLabel}>CPU OK</text>
 
       <ExtractionHandle bottom />
@@ -478,9 +482,9 @@ function RmsFaceplate() {
       <UsbConnector x={130} y={1303} width={75} height={69} />
       <text x="178" y="1312" className={styles.controlId}>J1</text>
 
-      <IndicatorLamp x={104} y={1388} color="green" />
+      <IndicatorLamp x={104} y={1388} label="CPU OK" />
       <text x="130" y="1394" className={styles.controlLabel}>CPU OK</text>
-      <IndicatorLamp x={104} y={1443} color="green" />
+      <IndicatorLamp x={104} y={1443} label="PWR OK" />
       <text x="130" y="1449" className={styles.controlLabel}>PWR OK</text>
 
       <ExtractionHandle bottom width={440} />
@@ -519,7 +523,7 @@ function SynthesizerFaceplate() {
       <PanelScrew x={290} y={970} size={13} angle={0} />
 
       <text x="220" y="1414" textAnchor="end" dominantBaseline="middle" className={styles.controlLabel}>PWR OK</text>
-      <IndicatorLamp x={246} y={1414} color="green" />
+      <IndicatorLamp x={246} y={1414} label="PWR OK" />
 
       <ExtractionHandle bottom width={420} />
       <PartNumber width={420} value="571150A-0002-051" />
@@ -553,7 +557,7 @@ function AudioGeneratorFaceplate() {
       <PanelScrew x={135} y={760} size={13} angle={0} />
       <PanelScrew x={135} y={930} size={13} angle={0} />
 
-      <IndicatorLamp x={130} y={1384} color="green" />
+      <IndicatorLamp x={130} y={1384} label="CPU OK" />
       <text x="156" y="1390" className={styles.controlLabel}>CPU OK</text>
 
       <ExtractionHandle bottom width={340} />
@@ -592,7 +596,7 @@ function RfMonitorFaceplate() {
       <PanelScrew x={238} y={905} size={13} angle={0} />
 
       <text x="212" y="1400" textAnchor="end" dominantBaseline="middle" className={styles.controlLabel}>DC PWR OK</text>
-      <IndicatorLamp x={238} y={1400} color="green" />
+      <IndicatorLamp x={238} y={1400} label="DC PWR OK" />
 
       <ExtractionHandle bottom width={390} />
       <PartNumber width={390} value="571150A-0002-055" />
@@ -650,7 +654,7 @@ function SidebandFaceplate({ adjustment }: { adjustment?: SidebandAdjustmentCont
       <PanelScrew x={229} y={920} size={13} />
 
       <text x="205" y="1440" textAnchor="end" dominantBaseline="middle" className={styles.controlLabel}>DC PWR OK</text>
-      <IndicatorLamp x={229} y={1440} />
+      <IndicatorLamp x={229} y={1440} label="DC PWR OK" />
 
       <ExtractionHandle bottom />
       <rect x="72" y="1574" width="216" height="29" rx="3" fill="#26343a" opacity="0.94" />
@@ -668,7 +672,34 @@ export function hasRebuiltModuleFaceplate(blockId: DvorBlockId): boolean {
   return rebuiltModuleIds.has(blockId);
 }
 
-export function DvorModuleFaceplate({ blockId, sidebandAdjustment }: { blockId: DvorBlockId; sidebandAdjustment?: SidebandAdjustmentControl }) {
+export function DvorModuleFaceplate({ blockId, sidebandAdjustment, occurrenceId }: { blockId: DvorBlockId; sidebandAdjustment?: SidebandAdjustmentControl; occurrenceId?: string }) {
+  const state = useVorPmdtStore();
+  const hardware = projectDvorHardware(state);
+  const block = DVOR_BLOCK_BY_ID.get(blockId);
+  const occurrenceIndex = Math.max(0, block?.cabinetHotspots.findIndex(item => item.id === (occurrenceId ?? sidebandAdjustment?.occurrenceId)) ?? 0);
+  const index = blockId === "sideband" ? (occurrenceIndex >= 2 ? 1 : 0) : Math.min(occurrenceIndex, 1);
+  const supply = hardware.supplies[index];
+  const monitor = hardware.monitors[index];
+  const powerRow = blockId === "rms" ? "RMS" : null;
+  const rowIndex = state.data.systemPowerStatus.findIndex(row => row.name === powerRow);
+  const key = index === 0 ? "tx1" : "tx2";
+  const moduleOk = rowIndex < 0 || hardwareReading(state, `systemPowerStatus.${rowIndex}.${key}`, state.data.systemPowerStatus[rowIndex][key]) === "green";
+  const power = moduleOk && (blockId === "carrier-amplifier" || blockId === "sideband" ? supply.dc : hardware.logicPower)
+    && (blockId === "rms" || blockId === "rf-monitor" || supply.installed);
+  const green = (active: boolean): LampColor => active ? "green" : "off";
+  const lamps: Record<string, LampColor> = {
+    "CPU OK": green(blockId === "bcps" ? supply.cpu : blockId === "monitor-cca" ? monitor.enabled : power),
+    "PWR OK": green(power), "DC PWR OK": green(power), "DC POWER OK": green(power),
+    "AC ON": green(supply.ac), "DC ON": green(supply.dc), "AC FAIL": supply.powered && !supply.ac ? "red" : "off",
+    "BATTERY FAULT": supply.powered && supply.batteryFault ? "red" : "off", "ON BATTERY": supply.onBattery ? "amber" : "off",
+    "FAST CHARGE": supply.fastCharge ? "amber" : "off", "TRICKLE CHARGE": green(supply.trickleCharge),
+    "INTEGRAL PRIMARY": monitor.primary ? "red" : "off", "INTEGRAL SECONDARY": monitor.secondary ? "amber" : "off",
+    "INTEGRAL PRE ALARM": monitor.preAlarm ? "amber" : "off",
+  };
+  return <FaceplateLamps.Provider value={lamps}>{renderFaceplate(blockId, sidebandAdjustment)}</FaceplateLamps.Provider>;
+}
+
+function renderFaceplate(blockId: DvorBlockId, sidebandAdjustment?: SidebandAdjustmentControl) {
   switch (blockId) {
     case "audio-generator":
       return <AudioGeneratorFaceplate />;
