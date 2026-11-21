@@ -305,6 +305,34 @@ Các nội dung thiếu ảnh dưới đây giữ TODO; **không phát sinh dòn
   các ảnh đơn không xác lập đủ state/điều kiện. DEMO 6 giữ phần chưa rõ mở;
   không suy rule máy thật từ checkbox hay disabled control.
 
+### 4.6 Phạm vi bản DEMO PMDT
+
+Mục **Phần mềm khai thác DVOR 1150** trong Simulator chuyển từ
+`/simulator/software/dvor-1150` đến PMDT gốc `/simulator/dvor-1150`.
+Không tạo store, hồ sơ cấu hình hay luồng Kịch bản/Ôn tập thứ hai.
+§4.1–4.5 là ảnh chụp baseline trước chuỗi PR; bảng dưới cập nhật phạm vi
+theo ảnh mẫu Rev. K, không xác nhận tương đương từng pixel hoặc thiết bị thật.
+
+| Ảnh tham chiếu | Màn hình DEMO / giới hạn còn lại |
+| --- | --- |
+| S113042, S113057 (Fig. 3-4, 3-7) | PMDT Login, shell/sidebar và RMS Data → A/D; rail −12 V có số đo và giới hạn riêng. Direct/Modem mô phỏng, không mở kết nối thiết bị. |
+| S113102, S113106, S113110, S113115, S113119 (Fig. 3-8–12) | RMS Logs: Operational Summary theo thời gian định tuyến; Alarm, Maintenance Alerts, Command Activity và Parameter Change tách riêng. |
+| S113123, S113130, S113137, S113142, S113146 (Fig. 3-13–17) | RMS Configuration: General, Station, DIP S1, A/D Limits, Security Codes; không mô phỏng đường I/O, modem hay cấp quyền phần cứng ngoài contract DEMO. |
+| S113151, S113156 (Fig. 3-18–19) | RMS Commands và Config Backup/Restore; DME terminal và điều khiển thiết bị ngoại vi không thuộc DEMO DVOR độc lập. |
+| S113200, S113204, S113208, S113212 (Fig. 3-20–23) | Alarm Limits, Offsets/Scale Factors, Monitor Commands và Integrity; Standby chỉ hiển thị đường TX, không suy số đo thiếu nguồn. |
+| S113215, S113220 (Fig. 3-24–25) | Monitor Test Data và Certification có thời gian chạy và kết quả riêng mỗi MON; chuẩn hiệu chuẩn/chứng nhận phần cứng vẫn để mở. |
+| S113224, S113228 (Fig. 3-26–27) | Notch Monitor và Sideband VSWR; chưa coi checkbox Notch Executive hoặc Record Baseline là bằng chứng hành vi trạm thật. |
+| S113233, S113236 (Fig. 3-28–29) | Ground Check và Advanced: 16 mẫu, harmonic và tùy chọn đồ thị; DEMO không thay đổi tín hiệu RF. |
+| S113241, S113244 (Fig. 3-30–31) | Fault History: Monitor Data và System Status dùng chung snapshot PreAlarm/Alarm theo sự kiện. |
+| S113248, S113252, S113255, S113258, S113302, S113305 (Fig. 3-32–37) | TX Data, Offsets, Nominal, Commands, Antenna/Load/Off và Ident; Hold Commutator vẫn không khả dụng. |
+| S113309, S113312 (Fig. 3-38–39) | Diagnostics Power Up và Fault Isolation; tiến trình và Cancel mô phỏng, không xác nhận chuỗi BITE thật. |
+| S112809, S112858, S113326, S113339 (Fig. 1-4, 1-5, 3-40, 3-41) | Hình cabinet hoặc mặt module; không áp dụng cho PMDT (§3). |
+
+**DEMO ASSUMPTION:** walkthrough dùng dual TX/dual MON Hot Standby, dữ
+liệu tính toán và mật khẩu huấn luyện, không dùng giá trị đo từ ảnh mẫu.
+Backup trong browser media mode chỉ kiểm trong phiên; tích hợp phản hồi
+server có test riêng. **TODO trạm thật:** giữ các câu hỏi §4.5 và §6 mở.
+
 ## 5. Test, tài liệu liên quan và giới hạn kiểm chứng
 
 Đã rà tham chiếu `dvor-1150` (tách khỏi `dvor-1150a`):

@@ -437,6 +437,11 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-11-20 — DVOR 1150 PMDT: phát hành DEMO
+
+- Mục phần mềm khai thác trong Simulator mở cùng PMDT tại `/simulator/dvor-1150`; đường thiết bị và mục Kịch bản/Ôn tập hiện tại không đổi.
+- Bảng đối chiếu ảnh, phạm vi DEMO và nội dung cần xác minh tại trạm thật nằm trong [fidelity audit](docs/simulators/dvor-1150-fidelity-audit.md).
+
 ### 2026-11-20 — DVOR 1150 PMDT: bảo trì
 
 - Monitor Test và Certification lưu kết quả riêng cho từng monitor sau khi hoàn thành; Abort không thay kết quả trước. Ground Check tạo 16 mẫu, đồ thị FFT, và xuất mẫu CSV; đây là phép thử DEMO, không phát lệnh RF.

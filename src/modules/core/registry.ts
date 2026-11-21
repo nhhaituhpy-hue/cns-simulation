@@ -3,6 +3,7 @@ import { DME_1119A_MODULE } from "@/modules/devices/dme-1119a/manifest";
 import { DVOR_1150_MODULE } from "@/modules/devices/dvor-1150/manifest";
 import { DVOR_1150A_MODULE } from "@/modules/devices/dvor-1150a/manifest";
 import { DME_320_SOFTWARE_MODULE } from "@/modules/operations/dme-320/manifest";
+import { DVOR_1150_SOFTWARE_MODULE } from "@/modules/operations/dvor-1150/manifest";
 import { DVOR_220_SOFTWARE_MODULE } from "@/modules/operations/dvor-220/manifest";
 import { VHF_SOFTWARE_MODULE } from "@/modules/operations/vhf/manifest";
 import { VSAT_SOFTWARE_MODULE } from "@/modules/operations/vsat/manifest";
@@ -22,6 +23,7 @@ export const DEVICE_SIMULATOR_MODULES = [
 ] as const;
 
 export const OPERATIONS_SOFTWARE_MODULES = [
+  DVOR_1150_SOFTWARE_MODULE,
   DVOR_220_SOFTWARE_MODULE,
   DME_320_SOFTWARE_MODULE,
   VHF_SOFTWARE_MODULE,
@@ -39,8 +41,12 @@ export const SIMULATOR_MODULES = [
   VSAT_SOFTWARE_MODULE,
 ] as const;
 
-/** Keep Simulator, Kịch bản and Ôn tập in the same module order. */
+/** Keep one canonical entry per model for training and navigation. */
 export const TRAINING_MODULES = SIMULATOR_MODULES;
+
+export const SIMULATOR_CATALOG_ENTRIES = SIMULATOR_MODULES.flatMap<SimulatorModuleDefinition>((module) =>
+  module.id === DVOR_1150_MODULE.id ? [module, DVOR_1150_SOFTWARE_MODULE] : [module],
+);
 
 const modulesById = new Map<SimulatorModuleId, SimulatorModuleDefinition>(
   SIMULATOR_MODULES.map((module) => [module.id, module] as const),

@@ -1,17 +1,15 @@
 import type { SimulatorModuleDefinition } from "@/modules/core/types";
+import { DVOR_1150_MODULE } from "@/modules/devices/dvor-1150/manifest";
 
 export const DVOR_1150_SOFTWARE_MODULE = {
   id: "dvor-1150",
   category: "operations-software",
-  status: "planned",
+  status: "available",
   name: "Phần mềm khai thác DVOR 1150",
   shortName: "DVOR 1150",
-  description: "Khung mô phỏng phần mềm vận hành và bảo dưỡng DVOR 1150.",
+  description: "Mô phỏng DEMO PMDT vận hành và bảo dưỡng DVOR 1150.",
   routes: {
-    admin: "/admin/software/dvor-1150",
-    student: "/student/software/dvor-1150",
+    ...DVOR_1150_MODULE.routes,
     simulator: "/simulator/software/dvor-1150",
-    authoring: "/authoring/dvor-1150",
-    review: "/review/dvor-1150",
   },
 } as const satisfies SimulatorModuleDefinition<"dvor-1150">;
