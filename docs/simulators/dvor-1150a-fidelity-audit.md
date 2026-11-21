@@ -4,7 +4,9 @@ Phạm vi đã viết: **§1 sơ đồ khối, §2 tủ/mặt module, §3 điề
 §4 PMDT và §5 khai thác/bảo dưỡng**, gồm native PMDT, LCU và phần cứng
 trong `src/modules/devices/dvor-1150a`. Baseline mã nguồn là `main`
 [`db77de365a0ebba2413bc03c389507067c26ea5a`](https://github.com/nhhaituhpy-hue/cns-simulation/commit/db77de365a0ebba2413bc03c389507067c26ea5a).
-Chỉ kiểm toán tài liệu, chưa sửa simulator. §6 tổng hợp gap/lộ trình đề xuất;
+Bản gốc là kiểm toán tài liệu; **G02 native RF ở Load đã sửa trong PR Stage1b**
+(xem §6.1a), độc lập G01 chưa merge. Các nhận định baseline khác giữ nguyên.
+§6 tổng hợp gap/lộ trình đề xuất;
 §7 là câu hỏi khảo sát còn mở, không phải giả định cấu hình đã được chấp nhận.
 
 **Thứ tự ưu tiên:** phần cứng lấy TM làm nền. Khi HDCV mâu thuẫn TM về
@@ -689,7 +691,7 @@ chức năng. Đây là tác động giảng dạy, không phải đánh giá an
 | # | Mức ưu tiên | Khoảng trống | Nguồn | Code | Gợi ý đợt sửa |
 | --- | --- | --- | --- | --- | --- |
 | G01 | Cao | Reset/F8/Restore nhầm ý nghĩa: Restore lấy defaults thay backup, phá phép thử trở về baseline. Gom §3 P18, §4 P08/P25/S03, §5 B25–B27. | TM PDF 123,141 / 3-5,23 §§3.6.4/3.6.7.4; BD PDF 24–25 / in 23–24 III.5 | STORE::restoreDefaultConfig/backupConfig/applyConfigChanges; PmdtLayout F8; PmdtToolbar | Stage 1: tách cancel draft/restore backup/factory reset; kiểm backup khác defaults, chưa backup, draft lỗi. |
-| G02 | Cao | RF native về0 khi Load, HC cần đo vào tải; dialog SB vẫn đổi số khi cả TX Off. Gom §3 P09, §4 P37, §5 B11–B12. | HC PDF 13–14,17–21 / in 12–13,16–20 IV.2–4; TM PDF 195 / 3-77 Table 3-17 | ENGINE::effectiveTransmitter/buildTxPower; SBM::readSidebandTransmitter | Stage 1: tách RF được cấp/Load/on-air; kiểm Off/Load/Antenna, không bịa detector thực. |
+| G02 | Cao | **ĐÃ SỬA — Stage1b:** RF native Carrier/SB vẫn có khi Load, Off không RF; VSWR/frequency/RMS On phân biệt Load với on-air. Field Integral/Notch/48 anten không nhận RF tải. Dialog SB detached vẫn G07, không coi số minh họa là đo thật. | HC PDF13–14,17–21 / in12–13,16–20 IV.2–4; TM PDF71–72,155,169,195 / 2-27–28,3-37,51,77 §§2.3.2.7–8/3.6.8.1.1.3/3.6.8.3.1/Table3-17 | ENGINE::effectiveTransmitter/readDvorTransmitterRfPower/buildTxPower/buildTxVswr; PmdtSidebar | Hoàn tất native Stage1b; mô hình/giới hạn §6.1a; không stack hoặc đóng G01/G07/G09/G14. |
 | G03 | Cao | LCU state riêng, gộp Main Select/Antenna, OFF mất Main; LCD thiếu MON2/PA Temps, Reset/Silence/volume/lamp test chưa đủ. Gom §2.4. | TM PDF 181–184 / 3-63–66 Figs. 3-57–63/Tables 3-5–7 | VIEW::LcuPanel/lcuScreens/transmitterButton; STORE | Stage 1: state trạm chung; Main khác routing, Local/remote, reset/silence/alarm mới, mọi đèn. |
 | G04 | Cao | LED card cố định: AC ON/AC FAIL cùng sáng, Monitor báo alarm bất kể điều kiện, trái PMDT. Không trùng route LCU G03. | TM PDF 185–188,190–195 / 3-67–70,72–77 Tables 3-8–11/13–17; §2.2 | FACE::IndicatorLamp/BcpsFaceplate/MonitorFaceplate và các faceplate khác | Stage 1: bind state đã có; chưa mô hình phải ghi minh họa, không tô như chỉ thị live. |
 | G05 | Cao | Dễ học màu/limits thành chuẩn: VSWR xanh có thể >1.25; Mod/Deviation khác KT; ảnh TM không phải default trạm. Gom §4 L01–L10, §5 K04/D02–D03. | KT PDF 10,13–15 / in 9,12–14 V.5.1/II.2–3; TM PDF 157 / 3-39 Fig. 3-35 | DEF::alarmLimits/azimuthLimits/sidebandVswr/notchTolerance; ENG; MonitorAlarmLimits | Stage 0/1: Q10, tách kiểm đọc KT khỏi relay executive; profile minh họa ghi nguồn, không tự ép relay theo dải bình thường. |
@@ -714,16 +716,59 @@ chức năng. Đây là tác động giảng dạy, không phải đánh giá an
 | G24 | Thấp | Tỷ lệ/nhãn/vị trí mặt SVG/cabinet khác hình: tay kéo/heading/khoảng cách/view hông; hình đẹp không chứng minh cơ khí đúng. | TM PDF 24–26,185–195 / 1-4–6,3-67–77; §2.1–2.3 | FACE; CSS; VIEW::cabinetImages | Stage 4: đối chiếu ảnh duyệt/cùng viewport; chưa có nguồn giữ mở. |
 | G25 | Thấp | Legacy PMDT layout/row order/đường mở tab khác; About/Integral Monitor Data disabled; extra training cần phân biệt. | TM PDF 121–123,157,173–174 / 3-3–5,39,55–56; KT PDF 12–20 / in 11–19; §4 P26/P30/P46–P48 | MonitorAlarmLimits; TxConfigLayout; PmdtLayout; MENU | Stage 4: Q9 chốt version; kiểm hình vị trí/checkbox/stacking, không chỉ trang load/DOM; không xóa extra hữu ích. |
 
+### 6.1a. G02 — RF vào tải (Stage1b)
+
+**Phạm vi:** native1150A, không thay domain/store DVOR1150/220, không phụ thuộc
+G01. Q13: dùng SEC3, cold standby (TX2 Off); HC yêu cầu Local/Bypass khi hiệu
+chỉnh (PDF13–14/in12–13 IV.2 e–j; PDF17–18/in16–17 IV.3.2 d–s;
+PDF19–21/in18–20 IV.4 f–j). Load vẫn tạo RF ở máy phát, không phát ra anten.
+TM PDF71–72/2-27–28 §§2.3.2.7–8/Fig.2-11 có tải50Ω carrier và4 tải SB;
+TP3 đo standby load, TP1/TP2 đo đường forward/reflected anten (PDF195/3-77).
+Không thêm bảng reflected power hoặc số volt TP không có trong màn Fig.3-46.
+
+**Số liệu và lựa chọn mô hình:**
+
+- Giữ nguyên scale/calibration baseline: Carrier PMDT =
+  `70.8 × effectiveOutputPower / (70 × .84)`; SB giữ scale điện áp bình
+  phương và hệ số `/41`. Đây là reference đào tạo sẵn có, không phải nominal
+  hãng mới. Trial nominal70→80W hiện70.8→80.914W (~80.9 trên UI), nominal60W
+  hiện60.686W. Output Power Scale và scale từng SB vẫn tác động trong Load.
+- Chọn **tải khỏe lý tưởng VSWR1:1**, reflected0W, vì Fig.2-11 ghi50Ω nhưng
+  không cho mismatch/tolerance tải; không dùng VSWR anten làm VSWR tải.
+  Reflected quy đổi từ forward và VSWR theo `Pᵣ=P𝒇((S−1)/(S+1))²`, không
+  là detector đo độc lập. Fault VSWR explicit vẫn giữ3:1 (mô hình cũ) và
+  reflected=P𝒇/4; không xóa fault/overtemperature chỉ vì đang Load.
+- Power/VSWR theo TX là đường đo Audio Generator (TM PDF169/3-51
+  §3.6.8.3.1). API `readDvorTransmitterRfPower` trả forward/reflected;
+  PMDT giữ đúng bảng Power/VSWR, không thêm row thiết bị không có.
+  Frequency dùng trace baseline cũ cả khi Load, không tạo tần số mới.
+- Không có TX on-air: giữ no-signal floor **−60dB** của mô hình cũ và field
+  power0W; azimuth/modulation/deviation/frequency/notch/VSWR không đo được
+  hiển thị **“—”/gray** thay số reference. Đây là quy ước unavailable của
+  simulator, không khẳng định firmware thật hiện dấu này. Không bịa góc0°
+  hoặc VSWR0. Bảng48 anten không có dữ liệu khi không on-air, đúng TM
+  PDF155/3-37 §3.6.8.1.1.3; Notch cũng không tạo pattern khi không có field
+  (TM PDF154/3-36 §3.6.8.1.1.2).
+- Loss-of-field RF/TxPower/NoIdent vẫn có alarm; Bypass giữ báo nhưng chặn
+  transfer. Nếu TX khác vẫn on-air, field/48anten/notch theo TX đó, không
+  đổi vì trim TX Load. Không sửa clock/restart (G09), trình tự Restore(G01),
+  detector RF trim(G14), hay dialog SB minh họa detached(G07).
+
+Các dòng §3 P09, §4 P37, §5 B11–B12 mô tả lỗi theo baseline trước sửa;
+**G02 native đã đóng bởi cập nhật này**, không còn kết luận native Load=0.
+Phần wattmeter/dialog detached chuyển rõ sang G07, chưa chứng nhận bài HC
+đo wattmeter/cáp/ESD thật.
+
 ### 6.2. Lộ trình chia đợt đề xuất
 
-**Chỉ đề xuất; chưa có Stage nào được triển khai trong audit này.** Stage0
+**Ngoại lệ: G02 native Stage1b đã triển khai (§6.1a); các gap khác vẫn đề xuất.** Stage0
 có thể chạy song song phần sửa được bốn PDF quyết định rõ. Mỗi Stage cần
 diff nhỏ, test normal/empty/error liên quan và kiểm hình đúng bề mặt đổi.
 
 | Đợt | Phạm vi / gap | Điều kiện nghiệm thu đề xuất | Tình trạng |
 | --- | --- | --- | --- |
 | Stage 0 | Profile/errata/reference/baseline ảnh: G05/G06/G12/G13/G17/G23 | Q1–Q14 có nguồn/phiên bản/quyền dùng; chưa trả lời giữ Chưa xác minh, không hỏi password/thử máy. | Đề xuất; chưa sửa. |
-| Stage 1 | State/RF/nguồn/phục hồi: G01–G05/G09/G19 | Reset khác Restore; backup khác defaults; Load không on-air, Off đúng; LCU/LED/PMDT đồng bộ; hot/cold/bypass/mất link/no alternate. G05 theo Q10 hoặc profile ghi minh họa. | Đề xuất; chưa sửa. |
+| Stage 1 | State/RF/nguồn/phục hồi: G01–G05/G09/G19 | Reset khác Restore; backup khác defaults; Load không on-air, Off đúng; LCU/LED/PMDT đồng bộ; hot/cold/bypass/mất link/no alternate. G05 theo Q10 hoặc profile ghi minh họa. | G02 native đã sửa Stage1b (§6.1a); phần còn lại chưa sửa trên branch này, G01 PR riêng chưa merge. |
 | Stage 2 | Native command/config/calibration bridge/file: G07/G08/G14/G15/G18 | Menu→guard→state/evidence; quyền/Local; disabled có lý do; thiếu/sai version file; trim được đặc tả có backup. Model G14 tiếp Stage3. | Đề xuất; chưa sửa. |
 | Stage 3 | Feedback/lịch sử/test: G06/G10/G11/G14/G21 | Reference độc lập; history rỗng/ba sự kiện/transfer; TG pending/completed/fail/timeout; diagnostics cancel/ground-check export. Q4 chưa chốt không tự thêm công thức. | Đề xuất; chưa sửa. |
 | Stage 4 | Identity/sơ đồ/mặt/bố cục: G12/G19/G20/G22/G24/G25 | Đúng designator/assembly/figure/hotspot; ảnh so sánh và tương tác thực, label/checkbox/stacking; không thêm connector thiếu nguồn. | Đề xuất; chưa sửa. |

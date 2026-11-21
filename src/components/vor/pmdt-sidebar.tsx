@@ -92,6 +92,7 @@ const parameterRows = [
 ] as const;
 
 export function PmdtSidebar() {
+  const fieldSignalAvailable = useVorPmdtStore((state) => state.derived.voting.activeTransmitter !== null);
   const data = useVorPmdtStore((state) => state.data);
   const mode = useVorPmdtStore((state) => state.mode);
   const overrides = useVorPmdtStore((state) => state.overrides);
@@ -329,11 +330,11 @@ export function PmdtSidebar() {
           {parameterRows.map((row) => {
             const fieldId = `sidebarParams.${row.key}.value`;
             const parameter = data.sidebarParams[row.key];
-            const value = resolveVorField(parameter.value, fieldId, overrides);
+            const value = fieldSignalAvailable ? resolveVorField(parameter.value, fieldId, overrides) : "—";
             const status = resolveVorStatus(parameter.status, fieldId, overrides);
             return (
               <div key={row.key} {...fieldMetadata(fieldId, row.label, value, status)} className={`pmdt-parameter ${parameterClasses[status]}`}>
-                <dt>{row.label}</dt><dd className="font-mono font-semibold tabular-nums">{loginDialogOpen ? "" : value.toFixed(row.digits)}</dd>
+                <dt>{row.label}</dt><dd className="font-mono font-semibold tabular-nums">{loginDialogOpen ? "" : typeof value === "number" ? value.toFixed(row.digits) : value}</dd>
               </div>
             );
           })}
