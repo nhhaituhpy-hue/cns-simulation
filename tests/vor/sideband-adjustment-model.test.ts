@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { createDefaultDvor1150aConfig, buildDvor1150aSnapshot } from "@/lib/dvor1150a";
 import { readSidebandTransmitter, readSidebandTrim, turnSidebandTrim, type SidebandAngles } from "@/modules/devices/dvor-1150a/sideband-adjustment-model";
 
 // User-approved detached training conventions; no manufacturer transfer function.
@@ -38,7 +39,7 @@ describe("detached sideband training model", () => {
     expect(readSidebandTrim(low, power).power).toBe(3.5);
   });
   it("does not map an unknown occurrence to a real transmitter", () => {
-    expect(readSidebandTransmitter({}, "unknown")).toBeNull();
+    expect(readSidebandTransmitter(buildDvor1150aSnapshot(createDefaultDvor1150aConfig()), "unknown")).toBeNull();
   });
   it.each(["R1", "R4"] as const)("%s controls only the illustrative mean-phase voltage", (id) => {
     const high = turnSidebandTrim({}, id, 9999);

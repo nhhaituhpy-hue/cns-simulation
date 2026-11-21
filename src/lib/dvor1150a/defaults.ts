@@ -1,4 +1,5 @@
 import { cloneDefaultVorPmdtData } from "@/lib/vor-pmdt-defaults";
+import { initialDvorSidebandTrims } from "./sideband";
 import type {
   Dvor1150aConfig,
   DvorMonitorCalibration,
@@ -202,6 +203,7 @@ function makeCalibration() {
 
 export function createDefaultDvor1150aConfig(): Dvor1150aConfig {
   return {
+    sidebandTrims: initialDvorSidebandTrims(),
     station: {
       stationDescription: "TST",
       frequencyMHz: 117,
@@ -264,6 +266,7 @@ export function withDvor1150aConfigExtensions(value: unknown): unknown {
   const next = structuredClone(value);
   if (!next || typeof next !== "object" || Array.isArray(next)) return next;
   const record = next as Record<string, unknown>;
+  if (!Object.hasOwn(record, "sidebandTrims")) record.sidebandTrims = initialDvorSidebandTrims();
   const station = record.station;
   if (station && typeof station === "object" && !Array.isArray(station)) {
     const fields = station as Record<string, unknown>;

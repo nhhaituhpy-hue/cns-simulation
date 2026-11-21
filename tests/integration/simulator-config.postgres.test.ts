@@ -16,7 +16,7 @@ vi.mock("@/lib/auth/profile", () => ({ getCurrentProfile: auth.profile }));
 const owner = "11111111-1111-4111-8111-111111111111";
 const foreign = "22222222-2222-4222-8222-222222222222";
 const header = "X-CNS-Simulator-Config-DTO";
-const version = "dvor-1150a-extensions-v2";
+const version = "dvor-1150a-extensions-v3";
 const testUrl = process.env.SCENARIO_EXAM_TEST_DATABASE_URL;
 const context = () => ({ params: Promise.resolve({ simulatorId: "dvor-1150a" }) });
 function request(method = "GET", payload?: unknown, extended = true) {
@@ -113,6 +113,32 @@ describe.skipIf(!testUrl)("simulator config actual routes with isolated PostgreS
     expect(result.rows[0].fields).toEqual(["monitor.timers.shutdown"]);
   });
 
+  it("persists physical sideband calibration and preserves it when a v2 client updates applied and backup profiles", async () => {
+    await initialize();
+    const applied = getDefaultDvor1150aConfig();
+    applied.sidebandTrims!["1a4a1"].R3 = 360;
+    applied.sidebandTrims!["1a4a7"].R5 = 90;
+    const backup = structuredClone(applied);
+    backup.sidebandTrims!["1a4a1"].R3 = 720;
+    expect((await route.PUT(request("PUT", { config: applied, backupConfig: backup, expectedRevision: 1 }), context())).status).toBe(200);
+    const previous = request("GET");
+    previous.headers.set(header, "dvor-1150a-extensions-v2");
+    const projected = await (await route.GET(previous, context())).json();
+    expect(projected.appliedConfig.sidebandTrims).toBeUndefined();
+    expect(projected.backupConfig.sidebandTrims).toBeUndefined();
+    projected.appliedConfig.station.stationDescription = "Older PMDT client";
+    const write = request("PUT", { config: projected.appliedConfig, backupConfig: projected.backupConfig, expectedRevision: 2 });
+    write.headers.set(header, "dvor-1150a-extensions-v2");
+    expect((await route.PUT(write, context())).status).toBe(200);
+    const current = await (await route.GET(request(), context())).json();
+    expect(current.appliedConfig.sidebandTrims).toEqual(applied.sidebandTrims);
+    expect(current.backupConfig.sidebandTrims).toEqual(backup.sidebandTrims);
+    expect(current.appliedConfig.station.stationDescription).toBe("Older PMDT client");
+    const stored = (await pool.query("select applied_config, backup_config from public.user_simulator_configs where user_id=$1", [owner])).rows[0];
+    expect(stored.applied_config.sidebandTrims).toEqual(applied.sidebandTrims);
+    expect(stored.backup_config.sidebandTrims).toEqual(backup.sidebandTrims);
+  });
+
   it("other simulator adapters use the same single-execution JSONB save without negotiating the 1150A DTO", async () => {
     const otherContext = { params: Promise.resolve({ simulatorId: "dvor-1150" }) };
     const initialResponse = await route.POST(request("POST", undefined, false), otherContext);
@@ -176,12 +202,14 @@ describe.skipIf(!testUrl)("simulator config actual routes with isolated PostgreS
     applied.monitor.standbyCalibration!.mon2.txPowerScale = 88;
     applied.transmitters.tx1.nominal.selfKeyOnLoss = true;
     applied.transmitters.tx2.nominal.externalKeying = "Windowed";
+    applied.sidebandTrims!["1a4a1"].R1 = 45;
     const backup = getDefaultDvor1150aConfig();
     backup.monitor.testGenerator!.audioFrequency = 600;
     backup.monitor.testGeneratorCalibration!.mon1.azimuthOffset = 0.5;
     backup.monitor.standbyCalibration!.mon2.txPowerScale = 92;
     backup.transmitters.tx1.nominal.shutdownOnLoss = true;
     backup.transmitters.tx2.nominal.externalKeying = "Enabled";
+    backup.sidebandTrims!["1a4a7"].R6 = 360;
     expect((await route.PUT(request("PUT", { config: applied, backupConfig: backup, expectedRevision: 1 }), context())).status).toBe(200);
     const incoming = legacyDefault();
     incoming.station.stationDescription = "Legacy edit";

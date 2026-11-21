@@ -1,4 +1,5 @@
 import { cloneDefaultVorPmdtData } from "@/lib/vor-pmdt-defaults";
+import { dvorSidebandFactors } from "./sideband";
 import type {
   VorAlarmLimitRow,
   VorIndicatorColor,
@@ -208,13 +209,13 @@ function effectiveTransmitter(
     offsets.sideband4RfLevelScale,
   ];
   const sidebandPower = onAir || load
-    ? sidebandScale.map((scale) => {
+    ? sidebandScale.map((scale, index) => {
         // The individual sideband RF level settings are voltage scale
         // factors: 70.7% therefore produces approximately 50% power.
         const voltageScale = scale / 100;
         return effectiveSboRfLevel
           * voltageScale ** 2
-          / 41;
+          / 41 * dvorSidebandFactors(config.sidebandTrims, transmitterId, index).power;
       })
     : [0, 0, 0, 0];
   const carrierFrequencyMHz = config.station.frequencyMHz * (1 + tx.frequencyErrorPpm / 1_000_000);
@@ -241,6 +242,7 @@ function effectiveTransmitter(
     identCode: effectiveIdentCode(config, transmitterId),
     carrierFrequencyMHz,
     sidebandPower,
+    indicatedSidebandPower: sidebandPower.map((power, index) => power * dvorSidebandFactors(config.sidebandTrims, transmitterId, index).indication),
     // Figure 2-11 terminates Load RF in 50 ohms. Use an ideal match until
     // a load-mismatch model is supplied; retain explicit injected TX faults.
     carrierVswr: tx.faults.carrierVswr ? 3 : load ? 1 : Math.max(1, tx.vswr.carrier),
@@ -670,8 +672,8 @@ function buildTxPower(
     { parameter: "Carrier", tx1: tx1.carrier.forward, tx2: tx2.carrier.forward, unit: "Watts" },
     ...[0, 1, 2, 3].map((index) => ({
       parameter: `Sideband #${index + 1}`,
-      tx1: tx1.sidebands[index].forward,
-      tx2: tx2.sidebands[index].forward,
+      tx1: transmitters.tx1.indicatedSidebandPower[index],
+      tx2: transmitters.tx2.indicatedSidebandPower[index],
       unit: "Watts",
     })),
   ];
