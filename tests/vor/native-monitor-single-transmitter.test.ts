@@ -22,7 +22,7 @@ describe("monitor protection without a usable standby", () => {
     expect(store.getState().derived.voting.activeTransmitter).toBe("tx1");
     store.getState().advanceMonitorTime(0.1);
     expect(store.getState().derived.voting.activeTransmitter).toBeNull();
-    expect(store.getState().config.transmitters.tx1.enabled).toBe(false);
+    expect(store.getState().config.transmitters.tx1.enabled).toBe(true);
     expect(store.getState().lastCommand).toContain("shutdown");
   });
 

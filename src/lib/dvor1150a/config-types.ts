@@ -177,6 +177,9 @@ export interface Dvor1150aConfig {
     stationType: "DVOR";
     transmitterConfig: "Dual Transmitters" | "Single Transmitter";
     monitorConfig: "Dual Monitors" | "Single Monitor";
+    standbyMode?: "Cold Standby" | "Hot Standby";
+    automaticRestartsEnabled?: boolean;
+    firstRestartDelay?: number;
   };
   transmitters: Record<DvorTransmitterId, DvorTransmitterConfig>;
   monitor: DvorMonitorConfig;

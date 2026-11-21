@@ -33,6 +33,9 @@ export function parseDvor1150aConfig(value: unknown): Dvor1150aPersistedConfig |
   const compatible = withDvor1150aConfigExtensions(value);
   if (!hasSameJsonShape(compatible, reference)) return null;
   const config = compatible as Dvor1150aConfig;
+  if (!["Cold Standby", "Hot Standby"].includes(config.station.standbyMode!)
+    || !Number.isFinite(config.station.firstRestartDelay)
+    || config.station.firstRestartDelay! < 0) return null;
   // Exact structure alone only checks primitive types, not enum membership.
   for (const id of ["tx1", "tx2"] as const) {
     const nominal = config.transmitters[id].nominal;

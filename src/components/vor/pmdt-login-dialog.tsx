@@ -6,7 +6,7 @@ import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
 export function PmdtLoginDialog() {
   const login = useVorPmdtStore((state) => state.login);
   const loginError = useVorPmdtStore((state) => state.loginError);
-  const [userId, setUserId] = useState("");
+  const [userId, setUserId] = useState("SEC3");
   const [password, setPassword] = useState("");
 
   function submit() {

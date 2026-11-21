@@ -16,15 +16,15 @@ function enterInvalidCredentials() {
   fireEvent.change(screen.getByLabelText("Password"), { target: { value: "privacy-test-invalid" } });
 }
 
-function expectEmptyFields() {
-  expect(screen.getByLabelText("User ID")).toHaveValue("");
+function expectEmptyFields(userId = "") {
+  expect(screen.getByLabelText("User ID")).toHaveValue(userId);
   expect(screen.getByLabelText("Password")).toHaveValue("");
 }
 
 describe("native PMDT login credential privacy", () => {
-  it("starts blank and opts the native dialog out of web credential autofill", () => {
+  it("preselects station SEC3 with a blank password and opts out of web credential autofill", () => {
     render(<LoginHost />);
-    expectEmptyFields();
+    expectEmptyFields("SEC3");
     expect(screen.getByRole("form", { name: "Login" })).toHaveAttribute("autocomplete", "off");
     expect(screen.getByLabelText("User ID")).toHaveAttribute("autocomplete", "off");
     expect(screen.getByLabelText("Password")).toHaveAttribute("autocomplete", "new-password");
@@ -49,7 +49,7 @@ describe("native PMDT login credential privacy", () => {
     expect(useVorPmdtStore.getState().securityLevel).toBe(0);
   });
 
-  it("opens empty again after a successful native login and logout", () => {
+  it("opens with the station account and no password after native login and logout", () => {
     const account = SELEX_DVOR_TRAINING_ACCOUNTS.find((item) => item.securityLevel === 3)!;
     render(<LoginHost />);
     fireEvent.change(screen.getByLabelText("User ID"), { target: { value: account.userId } });
@@ -58,7 +58,7 @@ describe("native PMDT login credential privacy", () => {
     expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
     expect(useVorPmdtStore.getState().securityLevel).toBe(3);
     act(() => useVorPmdtStore.getState().logout());
-    expectEmptyFields();
+    expectEmptyFields("SEC3");
     expect(useVorPmdtStore.getState().securityLevel).toBe(0);
   });
 
@@ -67,6 +67,6 @@ describe("native PMDT login credential privacy", () => {
     enterInvalidCredentials();
     mounted.unmount();
     render(<LoginHost />);
-    expectEmptyFields();
+    expectEmptyFields("SEC3");
   });
 });

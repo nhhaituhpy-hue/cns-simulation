@@ -17,7 +17,7 @@ vi.mock("@/lib/db", () => ({
 import { GET, POST, PUT } from "@/app/api/simulator-config/[simulatorId]/route";
 
 const header = "X-CNS-Simulator-Config-DTO";
-const version = "dvor-1150a-extensions-v1";
+const version = "dvor-1150a-extensions-v2";
 const context = () => ({ params: Promise.resolve({ simulatorId: "dvor-1150a" }) });
 function request(method = "GET", extended = false, payload?: unknown) {
   return new Request("http://localhost/api/simulator-config/dvor-1150a", {
@@ -54,7 +54,8 @@ describe("frozen 28527a strict consumer", () => {
     };
     const body = projectSimulatorConfigResponse(response, null);
     const expected = legacyDefault();
-    expected.station = { ...config.station };
+    expected.station.stationDescription = config.station.stationDescription;
+    expected.station.frequencyMHz = config.station.frequencyMHz;
     expected.transmitters.tx1.nominal.mainIdentCode = "CNS";
     expected.monitor.calibration.mon2.azimuthOffset = 0.25;
     expect(body.appliedConfig).toEqual(expected);
@@ -102,6 +103,10 @@ describe("frozen 28527a strict consumer", () => {
 describe("1150A extension-preserving saves", () => {
   it.each(["apply", "restore", "backup", "flash-save"])("legacy %s preserves hidden applied and backup extensions under the existing revision guard", async (action) => {
     const stored = record();
+    stored.applied_config.station.standbyMode = "Hot Standby";
+    stored.applied_config.station.automaticRestartsEnabled = true;
+    stored.applied_config.station.firstRestartDelay = 75;
+    stored.backup_config.station.firstRestartDelay = 60;
     stored.applied_config.monitor.testGenerator!.audioFrequency = 850;
     stored.applied_config.monitor.testGeneratorCalibration!.mon1.azimuthOffset = 1.25;
     stored.applied_config.monitor.standbyCalibration!.mon2.txPowerScale = 88;
@@ -130,7 +135,7 @@ describe("1150A extension-preserving saves", () => {
     expect(args.slice(0, 3)).toEqual(["owner-id", "dvor-1150a", 1]);
     expect(args.slice(4, 9)).toEqual([4, action, JSON.stringify(["station.stationDescription"]), "SEC3", "20000000-0000-4000-8000-000000000001"]);
     expect(args[3]).toMatchObject({
-      station: { stationDescription: "Legacy edited" },
+      station: { stationDescription: "Legacy edited", standbyMode: "Hot Standby", automaticRestartsEnabled: true, firstRestartDelay: 75 },
       monitor: {
         testGenerator: { audioFrequency: 850 },
         testGeneratorCalibration: { mon1: { azimuthOffset: 1.25 } },
@@ -139,6 +144,7 @@ describe("1150A extension-preserving saves", () => {
       transmitters: { tx1: { nominal: { selfKeyOnLoss: true } }, tx2: { nominal: { externalKeying: "Windowed" } } },
     });
     expect(args[9]).toMatchObject({
+      station: { firstRestartDelay: 60 },
       monitor: { testGenerator: { audioFrequency: 600 } },
       transmitters: { tx1: { nominal: { outputPower: 66 } }, tx2: { nominal: { shutdownOnLoss: true } } },
     });
@@ -262,6 +268,43 @@ describe("1150A consumer negotiation guards", () => {
 });
 
 describe("1150A consumer projection", () => {
+  it.each(["GET", "POST", "PUT"])("keeps negotiated v1 shapes and hidden protection settings on %s", async (method) => {
+    const config = getDefaultDvor1150aConfig();
+    config.station.standbyMode = "Hot Standby";
+    config.station.automaticRestartsEnabled = true;
+    config.station.firstRestartDelay = 75;
+    config.monitor.testGenerator!.audioFrequency = 850;
+    const previous = structuredClone(config);
+    delete previous.station.standbyMode;
+    delete previous.station.automaticRestartsEnabled;
+    delete previous.station.firstRestartDelay;
+    const req = request(method, true, method === "PUT" ? { config: previous, expectedRevision: 4 } : undefined);
+    req.headers.set(header, "dvor-1150a-extensions-v1");
+    mocks.query.mockResolvedValue({ rows: [record(config)] });
+    const response = await ({ GET, POST, PUT }[method]!)(req, context());
+    const body = await response.json();
+    expect(response.status).toBe(method === "POST" ? 201 : 200);
+    expect(response.headers.get("Vary")).toContain(header);
+    for (const field of ["initialConfig", "appliedConfig", "backupConfig"]) {
+      expect(body[field]).toEqual(previous);
+      expect(parseDvor1150aConfig(body[field])).not.toBeNull();
+    }
+    if (method === "PUT") expect(mocks.query.mock.calls[1][1][3].station).toEqual(config.station);
+  });
+
+  it("keeps an empty v1 profile free of new station fields", async () => {
+    mocks.query.mockResolvedValue({ rows: [] });
+    const req = request("GET", true);
+    req.headers.set(header, "dvor-1150a-extensions-v1");
+    const response = await GET(req, context());
+    const body = await response.json();
+    expect(response.status).toBe(200);
+    for (const field of ["initialConfig", "appliedConfig", "backupConfig"]) {
+      expect(body[field].station).toEqual(legacyDefault().station);
+      expect(body[field].monitor.testGenerator).toBeDefined();
+    }
+  });
+
   it.each([false, true])("GET empty profile returns the negotiated representation (extended=%s)", async (extended) => {
     mocks.query.mockResolvedValue({ rows: [] });
     const response = await GET(request("GET", extended), context());

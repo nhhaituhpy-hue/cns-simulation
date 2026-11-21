@@ -1080,6 +1080,9 @@ export function buildDvor1150aSnapshot(
     monitorIntegrityTestsEnabled: config.monitor.integrity.enabled,
     votingLogic: config.monitor.votingLogic,
     transfer: config.monitor.transfer,
+    automaticRestartsEnabled: config.station.automaticRestartsEnabled ?? false,
+    firstRestartDelay: config.station.firstRestartDelay ?? 50,
+    numberOfAutomaticRestarts: 2,
   };
   data.rmsConfigStation = {
     stationType: config.station.stationType,

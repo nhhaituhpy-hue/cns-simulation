@@ -19,6 +19,7 @@ it("does not carry a previous alarm's qualification into a loaded applied profil
   store.getState().advanceMonitorTime(0.1);
   expect(store.getState().derived.voting.activeTransmitter).toBe("tx1");
   store.getState().advanceMonitorTime(4.9);
+  store.getState().advanceMonitorTime(20);
   expect(store.getState().derived.voting.activeTransmitter).toBe("tx2");
 });
 
@@ -34,7 +35,7 @@ it("does not replace same-source AND voting with unrelated post-transfer monitor
   expect(store.getState().config.monitor.votingLogic).toBe("AND");
   store.getState().setConfigValue("simulation.integralMonitorBypass", false);
   expect(store.getState().derived.voting.transferRequested).toBe(true);
-  store.getState().advanceMonitorTime(5);
+  store.getState().advanceMonitorTime(25);
   expect(store.getState().derived.voting.activeTransmitter).toBe("tx2");
   expect(store.getState().derived.monitors.mon1.primaryAlarm).toBe(true);
   expect(store.getState().derived.monitors.mon2.primaryAlarm).toBe(true);

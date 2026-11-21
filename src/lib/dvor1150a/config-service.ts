@@ -32,12 +32,14 @@ function normalizeTransmitterRoute(
     false,
   );
 
-  // Main is a station-wide selection: moving it to one transmitter leaves
-  // the other transmitter in the explicit Off state, never in Load.
+  // The configured standby profile governs the non-radiating healthy TX.
   if (route === "onAir") {
     const otherTransmitterId = transmitterId === "tx1" ? "tx2" : "tx1";
     next = setDvorConfigValue(next, `transmitters.${otherTransmitterId}.onAir`, false);
-    next = setDvorConfigValue(next, `transmitters.${otherTransmitterId}.load`, false);
+    const other = next.transmitters[otherTransmitterId];
+    next = setDvorConfigValue(next, `transmitters.${otherTransmitterId}.load`,
+      config.station.standbyMode === "Hot Standby" && other.enabled && !other.faults.disabled
+      && config.station.transmitterConfig === "Dual Transmitters");
   }
 
   return next;
@@ -92,6 +94,10 @@ export function applyDvorConfigPatches(
 
     config = setDvorConfigValue(config, patch.fieldId, patch.value);
     config = normalizeTransmitterRoute(config, patch.fieldId, patch.value);
+    if (patch.fieldId === "station.standbyMode" && baseConfig.station.standbyMode !== patch.value) {
+      const active = (["tx1", "tx2"] as const).find(id => config.transmitters[id].onAir);
+      if (active) config = normalizeTransmitterRoute(config, `transmitters.${active}.onAir`, true);
+    }
     const routing = /^monitor\.routing\.[^.]+\.(primary|secondary)$/.exec(patch.fieldId);
     if (routing && patch.value === true) {
       const other = routing[1] === "primary" ? "secondary" : "primary";

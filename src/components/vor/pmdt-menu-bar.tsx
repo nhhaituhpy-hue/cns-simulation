@@ -29,13 +29,15 @@ function MenuItemRow({
   const restoreBackupConfig = useVorPmdtStore((state) => state.restoreBackupConfig);
   const backupConfig = useVorPmdtStore((state) => state.backupConfig);
   const setTransmitterMode = useVorPmdtStore((state) => state.setTransmitterMode);
+  const transferTransmitter = useVorPmdtStore((state) => state.transferTransmitter);
   const securityLevel = useVorPmdtStore((state) => state.securityLevel);
   const local = useVorPmdtStore((state) => state.config.simulation.local);
   const needBackup = useVorPmdtStore((state) => state.needBackup);
   const hasConfigurationBackup = useVorPmdtStore((state) => state.hasConfigurationBackup);
   const scenarioActive = useVorPmdtStore((state) => state.scenario.active);
-  const isTransmitterCommand = item.action === "set-transmitter-mode";
-  const isMainTransmitterCommand = isTransmitterCommand && item.transmitterMode === "main";
+  const isTransferCommand = item.id === "tx-command-transfer";
+  const isTransmitterCommand = item.action === "set-transmitter-mode" || isTransferCommand;
+  const isMainTransmitterCommand = isTransferCommand || (isTransmitterCommand && item.transmitterMode === "main");
   const isMaintenanceTransmitterCommand = isTransmitterCommand && !isMainTransmitterCommand;
   const canOperateTransmitter = securityLevel >= 3
     && (isMainTransmitterCommand || local);
@@ -49,6 +51,11 @@ function MenuItemRow({
 
   function selectItem() {
     if (unavailable || hasChildren) return;
+    if (isTransferCommand) {
+      transferTransmitter();
+      closeMenu();
+      return;
+    }
     if (item.action === "open-config") {
       setAboutDialogOpen(false);
       setConfigPanelOpen(true);
