@@ -48,7 +48,8 @@ export function advanceDvorProtection(
   let state = { ...previous };
   let snapshot = buildDvor1150aSnapshot(config, undefined, mainTransmitter ?? undefined);
   const events: string[] = [];
-  const result = () => ({ config, state, snapshot, events });
+  const faults: { config: Dvor1150aConfig; snapshot: Dvor1150aSnapshot; elapsed: number }[] = [];
+  const result = () => ({ config, state, snapshot, events, faults });
   if (!Number.isFinite(seconds) || seconds <= 0) return result();
   if (config.simulation.integralMonitorBypass) {
     state = state.phase === "monitoring" ? initialDvorProtectionState()
@@ -117,6 +118,7 @@ export function advanceDvorProtection(
     const required = Math.max(0, protectionDelay(config, snapshot) - state.alarmElapsed);
     if (budget + 1e-9 < required) { state.alarmElapsed += budget; break; }
     budget = Math.max(0, budget - required);
+    faults.push({ config: structuredClone(config), snapshot: structuredClone(snapshot), elapsed: seconds - budget });
     const target = active === "tx1" ? "tx2" : "tx1";
     if (config.station.transmitterConfig === "Dual Transmitters"
       && active === (mainTransmitter ?? active) && available(target)) {
