@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { AC_REFERENCE, COMMON_AC_INPUT_BCPS, HARDWARE_TRIMS, indicatedAc, type HardwareAssembly } from "@/lib/dvor1150a/hardware-calibration";
+import { HARDWARE_TRIMS, indicatedAc, type HardwareAssembly } from "@/lib/dvor1150a/hardware-calibration";
+import { AC_REFERENCE } from "@/lib/dvor1150a/ac-monitor";
 import { readDvorTransmitterRfPower } from "@/lib/dvor1150a/engine";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
 import styles from "./sideband-adjustment.module.css";
@@ -34,9 +35,9 @@ export function HardwareCalibrationDialog({ assembly, onClose }: { assembly: Har
       </section> : <section aria-label="DVM và ampe kìm AC độc lập">
         <p>DVM AC · 1A6 TB3-1/2 (Line–Neutral): <output aria-label="DVM AC">{AC_REFERENCE.volts.toFixed(1)} VAC</output></p>
         <p>Ampe kìm AC · dây Line 1A6 TB3-1: <output aria-label="Ampe kìm AC">{AC_REFERENCE.amps.toFixed(2)} A</output></p>
-        <p>Chỉ thị {assembly.toUpperCase()}: <output aria-label="Chỉ thị AC">{ac!.volts.toFixed(1)} VAC / {ac!.amps.toFixed(2)} A</output></p>
+        <p>Detector nội bộ {assembly.toUpperCase()} · hardware-only: <output aria-label="Detector AC nội bộ">{ac!.volts.toFixed(1)} VAC / {ac!.amps.toFixed(2)} A</output></p>
         <p>Sai số HC: ≤1 VAC · ≤0,3 A. <output aria-label="Kết quả so sánh AC">{Math.abs(ac!.volts - AC_REFERENCE.volts) <= 1 + 1e-9 && Math.abs(ac!.amps - AC_REFERENCE.amps) <= 0.3 + 1e-9 ? "Trong dung sai" : "Ngoài dung sai"}</output></p>
-        <p className={styles.note}>AC Input chung trên PMDT tạm lấy {COMMON_AC_INPUT_BCPS.toUpperCase()}: quy tắc simulator chưa xác minh tại trạm. Hai BCPS lưu trim riêng. Reference AC giữ baseline 232,3 V / 2,3 A; chưa có mô hình tải điện.</p>
+        <p className={styles.note}>Theo chủ sở hữu: AC Input trên PMDT lấy AC Monitor riêng, không đổi theo trim BCPS. Giá trị detector trên chỉ minh họa hardware-only, không phải màn số BCPS đã xác minh. TM mô tả tín hiệu AC Monitor đi qua BCPS; chưa xác nhận đường PMDT độc lập trong TM. Không có trim AC Monitor được tài liệu xác định nên không tạo thêm.</p>
       </section>}
       {HARDWARE_TRIMS[assembly].map(trim => {
         const angle = Number((calibration[assembly] as Record<string, number>)[trim]);

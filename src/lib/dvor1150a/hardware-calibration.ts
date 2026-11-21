@@ -1,4 +1,4 @@
-export const COMMON_AC_INPUT_BCPS = "bcps1" as const;
+import { AC_REFERENCE } from "./ac-monitor";
 
 export const HARDWARE_TRIMS = {
   rf: ["R1", "R2", "R3"],
@@ -13,8 +13,6 @@ export interface HardwareCalibration {
   bcps2: { R30: number; R56: number };
 }
 
-export const AC_REFERENCE = { volts: 232.3, amps: 2.3 } as const;
-
 export function initialHardwareCalibration(): HardwareCalibration {
   return { rf: { R1: 0, R2: 0, R3: 0 }, bcps1: { R30: 0, R56: 0 }, bcps2: { R30: 0, R56: 0 } };
 }
@@ -27,6 +25,7 @@ export function indicatedCarrierVswr(vswr: number, calibration?: HardwareCalibra
   const forwardGain = 1 + (calibration?.rf.R1 ?? 0) / 180;
   if (forwardGain <= 0) return null;
   const reflectedGain = 1 + (calibration?.rf.R2 ?? 0) / 180;
+  if (forwardGain === reflectedGain) return vswr;
   const rho = Math.min(0.999, (vswr - 1) / (vswr + 1) * Math.sqrt(reflectedGain / forwardGain));
   return (1 + rho) / (1 - rho);
 }

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { buildDvor1150aSnapshot, createDefaultDvor1150aConfig } from "@/lib/dvor1150a";
 import { readDvorTransmitterRfPower } from "@/lib/dvor1150a/engine";
-import { AC_REFERENCE, COMMON_AC_INPUT_BCPS } from "@/lib/dvor1150a/hardware-calibration";
+import { indicatedAc, indicatedCarrierVswr, initialHardwareCalibration } from "@/lib/dvor1150a/hardware-calibration";
+import { AC_REFERENCE, readDvorAcMonitor } from "@/lib/dvor1150a/ac-monitor";
 import { getDefaultDvor1150aConfig, parseDvor1150aConfig } from "@/lib/simulator-config/dvor-1150a";
 import { preserveMissingDvor1150aExtensions, projectSimulatorConfigResponse } from "@/lib/simulator-config/wire";
 import { createVorPmdtStore } from "@/stores/vor-pmdt-store";
@@ -19,6 +20,15 @@ function station() {
 }
 
 describe("G14 native detector calibration", () => {
+  it("preserves VSWR exactly with neutral or equal forward/reflected calibration gains", () => {
+    const calibration = initialHardwareCalibration();
+    for (const vswr of [1, 1.01, 1.25, 5, 10]) {
+      expect(indicatedCarrierVswr(vswr)).toBe(vswr);
+      calibration.rf.R1 = calibration.rf.R2 = 90;
+      expect(indicatedCarrierVswr(vswr, calibration)).toBe(vswr);
+    }
+  });
+
   it("keeps RF physical power/matching, field monitors and software offsets independent of R1/R2/R3", () => {
     const store = station();
     const before = store.getState();
@@ -72,20 +82,23 @@ describe("G14 native detector calibration", () => {
     expect(store.getState().config.transmitters.tx1.faults.carrierVswr).toBe(true);
   });
 
-  it("isolates BCPS2 and R30/R56, preserving independent physical AC references", () => {
+  it("keeps AC Input sourced by AC Monitor independently of both BCPS detector calibrations", () => {
     const store = station();
     const ac = () => [store.getState().data.rmsVoltageData.find(row => row.parameter === "AC Input")!.volts,
       store.getState().data.rmsCurrentData.find(row => row.parameter === "AC Input")!.amps];
-    expect(COMMON_AC_INPUT_BCPS).toBe("bcps1");
+    expect(readDvorAcMonitor()).toEqual(AC_REFERENCE);
     expect(ac()).toEqual([AC_REFERENCE.volts, AC_REFERENCE.amps]);
     store.getState().turnHardwareTrim("bcps2", "R30", 90);
     store.getState().turnHardwareTrim("bcps2", "R56", -90);
     expect(ac()).toEqual([AC_REFERENCE.volts, AC_REFERENCE.amps]);
     store.getState().turnHardwareTrim("bcps1", "R30", 15);
-    expect(ac()[0]).toBeCloseTo(AC_REFERENCE.volts * (1 + 15 / 900));
-    expect(ac()[1]).toBe(AC_REFERENCE.amps);
+    expect(ac()).toEqual([AC_REFERENCE.volts, AC_REFERENCE.amps]);
+    expect(indicatedAc("bcps1", store.getState().config.hardwareCalibration).volts).toBeCloseTo(AC_REFERENCE.volts * (1 + 15 / 900));
     store.getState().turnHardwareTrim("bcps1", "R56", 180);
-    expect(ac()[1]).toBeCloseTo(AC_REFERENCE.amps * 1.2);
+    expect(ac()).toEqual([AC_REFERENCE.volts, AC_REFERENCE.amps]);
+    expect(indicatedAc("bcps1", store.getState().config.hardwareCalibration).amps).toBeCloseTo(AC_REFERENCE.amps * 1.2);
+    expect(indicatedAc("bcps2", store.getState().config.hardwareCalibration)).toEqual({ volts: AC_REFERENCE.volts * 1.1, amps: AC_REFERENCE.amps * 0.9 });
+    expect(readDvorAcMonitor()).toEqual(AC_REFERENCE);
     expect(AC_REFERENCE).toEqual({ volts: 232.3, amps: 2.3 });
   });
 

@@ -52,13 +52,16 @@ it("uses the actual BCPS occurrences, independent DVM/clamp readings and HC tole
   expect(within(dialog).getByLabelText("DVM AC")).toHaveTextContent("232.3 VAC");
   expect(within(dialog).getByLabelText("Ampe kìm AC")).toHaveTextContent("2.30 A");
   expect(within(dialog).getByLabelText("Kết quả so sánh AC")).toHaveTextContent("Ngoài dung sai");
-  expect(container.querySelector('[data-vor-field-id="rmsVoltageData.9.volts"]')).toHaveTextContent("236.2");
+  expect(container.querySelector('[data-vor-field-id="rmsVoltageData.9.volts"]')).toHaveTextContent("232.3");
+  fireEvent.click(within(dialog).getByRole("button", { name: "Tăng R56" }));
+  expect(container.querySelector('[data-vor-field-id="rmsCurrentData.0.amps"]')).toHaveTextContent("2.3");
+  expect(within(dialog).getByText(/AC Input trên PMDT lấy AC Monitor riêng/)).toBeVisible();
   fireEvent.click(within(dialog).getByRole("button", { name: "Giảm R30" }));
   expect(within(dialog).getByLabelText("Kết quả so sánh AC")).toHaveTextContent("Trong dung sai");
   close();
   dialog = bcps(2);
   fireEvent.click(within(dialog).getByRole("button", { name: "Tăng R30" }));
-  expect(within(dialog).getByLabelText("Chỉ thị AC")).toHaveTextContent("236.2 VAC");
+  expect(within(dialog).getByLabelText("Detector AC nội bộ")).toHaveTextContent("236.2 VAC");
   expect(container.querySelector('[data-vor-field-id="rmsVoltageData.9.volts"]')).toHaveTextContent("232.3");
   expect(screen.getAllByRole("columnheader", { name: "Parameter" })).toHaveLength(2);
   expect(screen.queryByRole("combobox", { name: /BCPS/ })).toBeNull();

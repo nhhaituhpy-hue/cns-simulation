@@ -313,7 +313,7 @@ lần, IV.3 gồm cả 3.1/3.2. Kết quả: **0 đủ / 14 một phần / 2 ch�
 | IV.8 RMS: System Configuration Load file tốt gần nhất, RMS Config Backup; kiểm cả TX; PMDT | STORE có backup/restore và READ dữ liệu; `System > Configuration Load` disabled trong `vor-menu-structure.ts`, không file-load theo HC; backup bị chặn trong scenario. | Một phần | HC PDF 29–32 / in 28–31, IV.8 a–n; TM PDF 188 / 3-70 Fig. 3-67; PDF 214 / 6-14 §6.4.19. |
 | IV.9 Facilities: RMS Digital I/O “Facilities” G/xanh; không định lượng, PMDT | READ `RmsDigitalIo` có Facilities; BDAT/FACE không face riêng, STORE không thay card/CB. | Một phần | HC PDF 32 / in 31, IV.9 a–g; TM PDF 189 / 3-71 Fig. 3-68/Table 3-12; PDF 214 / 6-14 §6.4.20. |
 | IV.10 RF Monitor: R1 công suất lịch sử tốt; R2 Carrier VSWR <1,25; R3 standby công suất lịch sử; PMDT | **G14:** R1/R2 hiệu chỉnh detector tuyến anten, R3 tuyến Load, chung STORE/PMDT/evidence/backup; wattmeter mô phỏng độc lập. Không tạo hồ sơ lịch sử tốt được duyệt; chỉ thị VSWR thấp không chứng nhận anten đã sửa. | Một phần | HC PDF 33–35 / in 32–34, IV.10 a–j; TM PDF 195 / 3-77 Fig. 3-73/Table 3-17; PDF 214 / 6-14 §6.4.21; §6.1f. |
-| IV.11 BCPS: E3 45–52 V, E1 51–55 V; AC reading ±1 V/±0,3 A; R30/R56, DVM/ampe kìm | **G14:** R30/R56 native riêng hai BCPS, dialog phần cứng có DVM/ampe kìm mô phỏng độc lập và so dung sai HC; không vẽ pot nội bộ lên mặt trước hay thêm control PMDT. E1/E3, tháo card/cắt điện/cấp điện thực vẫn chưa mô phỏng đầy đủ. | Một phần | HC PDF 35–37 / in 34–36, IV.11 a–i và hai tiểu mục AC; TM PDF 185,206–207,214–215 / 3-67,6-6–7,14–15; §6.1f (quy tắc BCPS1 chưa xác minh). |
+| IV.11 BCPS: E3 45–52 V, E1 51–55 V; AC reading ±1 V/±0,3 A; R30/R56, DVM/ampe kìm | **G14:** R30/R56 native riêng hai BCPS, detector hardware-only trong dialog, có reference DVM/ampe kìm và so dung sai HC. Theo trả lời chủ sở hữu, PMDT AC Input lấy AC Monitor riêng, không đổi theo BCPS. Không thêm control PMDT; vòng hiệu chỉnh PMDT theo HC và E1/E3/cắt điện thực chưa được tái hiện đầy đủ. | Một phần | HC PDF35–37/in34–36 IV.11; TM PDF85,104,106,185,206/in2-41,2-60,2-62,3-67,6-6; khác biệt owner/manual ghi §6.1f. |
 | IV.12 LCU: LCD/đèn/phím/chuyển TX tốt; không giá trị chuẩn riêng/dụng cụ ngoài | VIEW `LcuPanel` có phím/đèn nhưng detached, LCD thiếu trang, nhiều phím chưa hoạt động (§2.4); không nghiệm thu chuyển máy thật. | Một phần | HC PDF 37 / in 36, IV.12 a–i; TM PDF 180–184 / 3-62–66 Figs. 3-56–63/Tables 3-5–7. |
 | IV.13 Sideband Antenna: hai tụ CCA; VNA S11 Log Mag 108–118 MHz, marker tần số đài, ≤−30 dB (HC ghi tương ứng VSWR <1,05); tải 5 W lân cận | BDAT `antenna-bank` là bank commutator, không antenna CCA/tụ; ENGINE có VSWR/READ monitor nhưng không S11 sweep, VNA zero hay chỉnh cộng hưởng. | Thiếu | HC PDF 37–39 / in 36–38, IV.13 a–m; TM PDF 49 / 2-5 Fig. 2-3; PDF 212 / 6-12 §6.4.13 chỉ kiểm carrier/đổi tần, không cung cấp quy trình VNA antenna SB tương đương. Không dùng carrier VSWR thay S11. |
 | IV.14 Rơ le RF 1K1: thay/ghi dây, Narda→“Tenedyne” theo hình HC; kiểm công suất/monitor/alerts, hai TX; không trim/danh định mới | BDAT/VIEW có mạng switch; SCEN không thay relay hay đấu dây; READ chỉ xem kết quả chung. Chưa bao phủ thao tác đặc thù relay. | Thiếu | HC PDF 39–42 / in 38–41, IV.14 a–l; TM PDF 49–50 / 2-5–6 Fig. 2-3/§2.3.1.1 (năm relay sau RF Monitor). Không xác nhận wiring từ hình khối. |
@@ -348,8 +348,8 @@ có hồ sơ trạm; không thay bằng default TST/117 MHz/2,5 W của simulato
 | P18 — IV.8 f,g,n và III.1 | Configuration Load file tốt; RMS Config Backup, bản lưu máy tính/bộ nhớ ngoài | Khôi phục đúng hồ sơ và lưu, không dùng defaults thay hồ sơ | PMDT/lưu trữ ngoài | `vor-menu-structure.ts` config-load disabled; STORE backup có thật, G01 Restore lấy backup thật nhưng restore/profile hydrate không phải chọn file HC; scenario chặn backup. Không có bằng chứng workflow xuất hai bản/khôi phục sau thay RMS. Không nói toàn bộ persistence absent. | Một phần | HC PDF 5/29/32 / in 4/28/31; TM PDF 214 / 6-14 §6.4.19 g–h; PDF 210 / 6-10 §6.4.7 h–i. |
 | P19 — IV.10 g–j | RF Monitor R1 FWD/R2 RFL/R3 STANDBY | R1/R3 khớp lịch sử tốt; chỉnh R2 nếu ≥1,25 tới **<1,25**; HC không tolerance công suất | PMDT; TM nền còn mô tả so dụng cụ ngoài | **G14:** pot→native detector→Transmitter Data/evidence/backup, wattmeter độc lập theo RF thật của engine. Giữ riêng MONC scale/fault/physical VSWR; không tạo lịch sử tốt hay chứng nhận anten. | Một phần | HC PDF 33–35 / in 32–34; TM PDF 195 / 3-77 Table 3-17; PDF 209–210 / 6-9–10 §6.4.6; §6.1f. |
 | P20 — IV.11 e,g | BCPS E3/GND bus; E1/GND charger | **45–52 VDC**, **51–55 VDC**; sai thì gửi khối lỗi về Trung tâm | DMM | READ power có số hiển thị và SCEN lỗi supply; FACE không E1/E3 terminal hoặc đo độc lập, không mô phỏng trình tự bật AC/DC trước BUSS hay quyết định gửi sửa. Giới hạn đo điện thật tách với thiếu bài đối chiếu số đọc. | Một phần | HC PDF 35 / in 34; TM PDF 185 / 3-67 Fig. 3-64/Table 3-8; PDF 214–215 / 6-14–15 §6.4.22. |
-| P21 — IV.11 hiệu chỉnh áp AC | BCPS R30; AC Monitor 1A6 TB3-1/2; AC Input Volt | Sai số PMDT so DVM trong **1 VAC** | DVM AC; điện lưới thật ngoài khả năng sim | **G14:** R30 thay chỉ thị AC, không thay reference DVM mô phỏng; so sai số HC. Hai BCPS lưu riêng; PMDT AC Input chung tạm lấy BCPS1, quy tắc chưa xác minh (§6.1f). Không dùng display override làm dụng cụ chuẩn. | Một phần | HC PDF 36 / in 35, IV.11 i/Hiệu chỉnh điện áp AC; TM PDF 206 / 6-6 §6.4.1.1 cho 5 VAC. |
-| P22 — IV.11 hiệu chỉnh dòng AC | BCPS R56; dây Line ở 1A6 TB3-1; AC Input Amp | Sai số trong **0,3 A** | **Ampe kìm AC** theo HC; không mắc nối tiếp theo TM | **G14:** R56 thay chỉ thị, reference ampe kìm mô phỏng độc lập; so sai số HC. Không mô phỏng cô lập/cấp điện hay an toàn điện; không trộn cách mắc nối tiếp TM vào bài HC. | Một phần | HC PDF 36–37 / in 35–36; TM PDF 206–207 / 6-6–7 §6.4.1.2; §6.1f. |
+| P21 — IV.11 hiệu chỉnh áp AC | BCPS R30; AC Monitor 1A6 TB3-1/2; AC Input Volt | Sai số PMDT so DVM trong **1 VAC** | DVM AC; điện lưới thật ngoài khả năng sim | **G14:** R30 đổi detector BCPS hardware-only, không đổi reference DVM hay PMDT AC Input. AC Monitor riêng cấp hàng chung theo trả lời chủ sở hữu; đây không phải tái hiện đầy đủ vòng PMDT/R30 mà HC/TM mô tả (§6.1f). | Một phần | HC PDF36/in35 IV.11; TM PDF206/in6-6 §6.4.1.1 cho5VAC; owner answer PR#44. |
+| P22 — IV.11 hiệu chỉnh dòng AC | BCPS R56; dây Line ở 1A6 TB3-1; AC Input Amp | Sai số trong **0,3 A** | **Ampe kìm AC** theo HC; không mắc nối tiếp theo TM | **G14:** R56 đổi detector BCPS hardware-only, không đổi reference ampe kìm hay PMDT AC Input. Không mô phỏng cô lập/cấp điện, an toàn điện hay vòng PMDT/R56 đầy đủ; không trộn cách mắc nối tiếp TM vào bài HC. | Một phần | HC PDF36–37/in35–36; TM PDF206–207/in6-6–7 §6.4.1.2; §6.1f. |
 | P23 — IV.6/9 và kiểm tra sau thay | RMS Power/Digital I/O, TX Status, Monitor Integral/VSWR, Maintenance Alerts | Theo dải/normal/green của từng mục; HC không ghi số cho mọi tham số | PMDT | READ có các renderer cụ thể; ENGINE có fault-driven kết quả chứ không phải toàn bộ ảnh tĩnh. Tuy nhiên SCEN `evaluateDvor1150aScenario` dùng view visits/config/task/action/selection, không mặc định kiểm mọi bước HC, không đánh giá ảnh đo hoặc thao tác CB. | Một phần | HC PDF 25–27/32/39 / in 24–26/31/38, IV.6 e–h/9 g/13 k–m; TM PDF 213–214 / 6-13–14 §6.4.17/20. |
 
 ### 3.4. Chênh lệch HC–TM và quy tắc được audit dùng
@@ -402,7 +402,8 @@ sửa thành J25/J26 và không dựng pinout từ ảnh relay.
    mean meter cho tới 10 V mà không phân định ngoài chuẩn 9 V.
 4. **K4 — G14 đã nối detector calibration native:** P19/P21/P22;
    R1–3/R30/R56 có state/evidence/backup, reference mô phỏng độc lập.
-   Thao tác điện thực, TP VDC và firmware chọn nguồn AC vẫn chưa xác minh (§6.1f).
+   AC Input lấy AC Monitor riêng theo trả lời chủ sở hữu; khác biệt đường
+   đo trong TM, thao tác điện thực và TP VDC ghi rõ ở §6.1f.
 5. **K5 — chưa có workflow đo chuẩn/ghi tham chiếu/nghiệm thu:** P01/P05/
    P07/P10/P17/P18; thiếu reference SB3/lịch sử tốt, mô hình scope/counter,
    thời gian TG, tải/cáp/CB và file-load HC. Các phần thật phải thực hiện với
@@ -760,7 +761,7 @@ không đếm chúng thành 25 bug còn mở.
 | G11 | Cao | TG Completed/In Process/Updated tức thời, chưa lifecycle/snapshot; field stored-only không detector. Q7: theo SELEX TM, HC ghi lệch là typo; phân biệt thay TG Completed/3 phút với cycle TG khoảng2 phút. | HC PDF 28,44 / in 27,43 IV.7 f/15 i; TM PDF 161–164,214 / 3-43–46,6-14 | READ::MonitorTestResults/TestGenerator; ENGINE::calculateIntegrityTestValues/testGeneratorResults | Stage 3: lifecycle/fail/timeout theo đúng mode TM, không áp HC120s cho thay TG. |
 | G12 | Cao | Mã figure in như P/N; cần tách designator/assembly/figure. Q1 chốt designator theo manual; Q7 TG1A3A5/Interface1A9 theo TM, HC1A12/1A19 là typo. PHOTO-F xác nhận thứ tự A3A1…A3A11, không đủ đọc P/N/revision nhỏ. | TM PDF 24–25,185,191–192 / 1-4–5,3-67,73–74; HC PDF 4,42,45 / in 3,41,44 | FACE::PartNumber; BDAT::DVOR_BLOCKS | Stage 4: TM định danh + ảnh trạm bố cục (§2.6), không chờ lại Q1/Q7; giữ bất nhất nội bộ TM được ghi rõ. |
 | G13 | Cao | Thiếu chuỗi điều kiện–dụng cụ–nghiệm thu; click chọn module không phải thay card. Q5: J25/J26 là đường LSB/USB, không bài chọn connector. Q6: không hồ sơ reference riêng; tiêu chí thực tế 9960 mod không gian28–32% khi bay. | HC PDF 5–7,15–18 / in 4–6,14–17 III/IV.3; BD PDF 5–13 / in 4–12 Phần1/2 | SBD; SCEN::evaluateDvor1150aScenario; STORE evidence | Stage 5: checklist/guard/evidence theo HDCV, không bịa hồ sơ reference, không dùng meter mô hình để chứng nhận bay/ESD/an toàn; J2 chưa chốt riêng. |
-| G14 | **Đã sửa native** | R1–3/R30/R56 là trim detector native, không còn chỉ hình/display override; PMDT đọc chỉ thị đã hiệu chỉnh, RF/AC reference độc lập. Hai BCPS lưu riêng, evidence/backup và guard chung. Gom §3 P19/P21–P22. | HC PDF 33–37 / in 32–36 IV.10–11; TM PDF 195,206–207 / 3-77,6-6–7; ảnh8 | hardware-calibration.ts; STORE::turnHardwareTrim; HardwareCalibrationDialog; ENG; DTOv4 | Stage 2/G14 hoàn tất trong phạm vi mô phỏng (§6.1f); HC1VAC/.3A/ampe kìm; nguồn AC chung tạm BCPS1, chưa xác minh tại trạm. Không chứng nhận đo/cắt điện thực. |
+| G14 | **Đã sửa native** | R1–3/R30/R56 có state/evidence/backup và guard chung. RF trim đổi chỉ thị PMDT, BCPS trim chỉ đổi detector hardware-only; AC Input lấy AC Monitor riêng theo trả lời chủ sở hữu, không theo BCPS nào. Gom §3 P19/P21–P22. | HC PDF33–37/in32–36 IV.10–11; TM PDF84–86,104,106,185,195,206,221; owner answer PR#44; ảnh8 | ac-monitor.ts; hardware-calibration.ts; STORE::turnHardwareTrim; HardwareCalibrationDialog; ENG; DTOv4 | Hoàn tất trong phạm vi mô phỏng (§6.1f); không thêm màn/control PMDT hay trim AC Monitor chưa có tài liệu. TM xác nhận block AC Monitor nhưng không xác nhận đường PMDT bỏ qua BCPS; giới hạn vòng BCPS/HC giữ Một phần. |
 | G15 | Trung bình | Save/Load/Print/Copy/Set Time chưa thành workflow, chặn lưu ngoài/khôi phục sau thay RMS/pin. Khác G01 về ý nghĩa restore. | BD PDF 24,26–27 / in 23,25–26 III.4/IV.3; HC PDF 29,32 / in 28,31 IV.8; TM PDF 123,141,150 / 3-5,23,32 | MENU/BAR::PmdtToolbar; STORE::backupConfig | Stage 2: file training có version; thiếu/sai file, xuất hai bản/in; không xuất password. |
 | G16 | Trung bình | Thiếu so ca trước/precision/provenance và phiếu theo tài liệu; logs không là hồ sơ thật. **Q12 chủ sở hữu bỏ qua phần hành chính**, không dùng phiếu/hồ sơ chưa cung cấp chặn fix. | KT PDF 13–15,35–44 / in 12–14/BM01–03; BD PDF 31–39 / biểuI–IV; TM PDF 199 / 5-1 §5.3 | TxDataMain/MonitorIntegral; STORE::parameterChangeLogs/evidence | Stage 5: phần hành chính tùy chọn/được hoãn; giữ giới hạn nguồn đo/số lẻ, không yêu cầu chủ sở hữu gửi phiếu trước khi sửa mô phỏng. |
 | G17 | Trung bình | PMDT/direct/RCSU link gộp. Q11 xác nhận RCSU2240 + RSU Tower, đèn VOR/DME riêng (PHOTO-U); bảo dưỡng direct USB CPU/RMS chỉ chắc chắn vừa (“thì phải”). | TM PDF 123–127,204 / 3-5–9,6-4; KT PDF 15–16,31,34 / in 14–15,30,33; BD PDF 23 / in 22 III.3.8 | DEF::simulation.connected; ENG::data.rmsStatus; MENU/BAR | Stage 5: link/RSU độc lập theo topology này, không lấy Connected làm RCSU OK; USB là giả thiết có mức chắc chắn, không tự chốt pinout/radio. |
@@ -1045,7 +1046,7 @@ changed-file lint, typecheck và build placeholders pass; browser1440/390 và su
 **Đã sửa native**, độc lập G08/PR#43: nhánh từ `origin/main` sau G07/PR#42.
 Sau PR#43 merge đã tích hợp `origin/main`, giữ cả G08 và G14.
 Không sửa domain/store/layout DVOR1150/220. PMDT giữ nguyên màn, bảng và
-cột theo ảnh trạm; chỉ số chỉ thị đổi từ state detector. Điều khiển và
+cột theo ảnh trạm; RF đổi từ state detector, AC Input đọc AC Monitor riêng. Điều khiển và
 dụng cụ mô phỏng đặt trong **dialog phần cứng**, không thêm pot nội bộ lên
 mặt trước BCPS hay bịa vị trí R30/R56 trên PMDT.
 
@@ -1083,18 +1084,46 @@ mặt trước BCPS hay bịa vị trí R30/R56 trên PMDT.
   malformed/thiếu nhánh/range sai bị từ chối. Chỉ template authoring1150A
   đổi, thêm7 baseline fields; schema lưu vẫn1, không migration database.
 
-**Quy tắc simulator chưa xác minh — câu hỏi trạm còn mở:** ảnh8
+**Nguồn AC Input — trả lời chủ sở hữu:** ảnh8
 `1786170250728_6845912034732552227_6845912034732552227_c2adacf5f6bc1a6225debd42c4667269.jpg`
-chỉ có **một AC Input** chung, không selector/cột TX riêng. TM PDF106
-§2.3.2.20 cho biết hai BCPS đo/gửi RMS, chưa xác định firmware chọn nguồn.
-Theo chủ sở hữu chấp thuận cho G14, tạm lấy **BCPS1** qua hằng duy nhất
-`COMMON_AC_INPUT_BCPS` trong `hardware-calibration.ts`; đổi nguồn chỉ cần
-đổi một dòng. BCPS2 vẫn giữ R30/R56 và chỉ thị riêng trong dialog phần
-cứng, không ghi đè BCPS1. **Cần xác minh tại trạm:** AC Input lấy BCPS1
-cố định, theo Main, hay theo trạng thái/fallback? Chưa gọi quy tắc tạm này
-là hành vi firmware đã xác nhận; không thêm selector hay cột trên PMDT.
+chỉ có **một AC Input** chung, không selector/cột TX riêng. Hoàng chuyển
+trả lời chủ sở hữu trong vòng PR#44: hàng này lấy từ **khối AC Monitor
+riêng**, không từ BCPS1 hoặc BCPS2. Đã bỏ hằng chọn BCPS tạm. Hàm
+`readDvorAcMonitor` trong `ac-monitor.ts` cấp baseline trạm232,3V/2,3A;
+mọi R30/R56 chỉ thay detector BCPS hardware-only, không di chuyển hàng
+AC Input. Không đổi DTOv4/config đã lưu, không thêm selector/cột PMDT.
 
-Kiểm chứng G14: focused **2 file/14 test**, affected **16 file/168 test**;
+**Đối chiếu TM — xác nhận block, không xác nhận toàn bộ mapping owner:**
+- PDF84/in2-40 §2.3.2.13: “The AC Power Monitor CCA provides a means
+  for the VOR system to measure the AC current and voltage levels”.
+- PDF85/in2-41 §2.3.2.13.1: “The AC Monitor provides a method of
+  measuring the AC voltage for the Transmitter and obstruction light
+  circuits individually.” Cùng đoạn còn nói “The resultant AC voltage
+  is provided to the BCPS CCA for rectification and current to voltage
+  conversion.” Fig2-15 nằm PDF86/in2-42.
+- RMS/Facilities đã kiểm PDF74–81/in2-30–37 §§2.3.2.9–10; RMS có serial
+  BCPS, Facilities có ADC nguồn DC/spare/temperature. Không tìm được mô
+  tả hàng PMDT AC Input lấy thẳng một ADC AC Monitor bỏ qua BCPS ở đó.
+- PDF104/in2-60 mô tả “The calibrated signals pass to analog multiplexer
+  U11 before analog-to-digital conversion by microcontroller U8.”
+  PDF106/in2-62 mô tả R30 scale SYS_VAC và R56 gain SYS_IAC trong BCPS.
+  PDF206/in6-6 §6.4.1.1–2 còn hướng dẫn so PMDT AC Input rồi chỉnh BCPS
+  R30/R56. **Không dùng các trang này làm bằng chứng BCPS không ảnh hưởng
+  hàng PMDT**; chúng mô tả chuỗi qua BCPS, khác cách tách hàng theo owner.
+- Parts Table8-1 PDF221/in8-1 liệt kê riêng “012186-0001 AC Monitor CCA
+  1A6” và BCPS1A5A1/1A5A2; Table11-1 PDF247/in11-1 có schematic
+  AC Monitor012186-9001/Fig11-9, RMS và Facilities riêng.
+- Không tìm thấy trim/calibration riêng **trên AC Monitor** trong các
+  mục này; calibration AC được nêu là BCPS. Vì vậy không tạo trim AC
+  Monitor. PDF185/in3-67 Table3-8 chỉ có LED/switch BCPS, chưa tìm được
+  màn số/row PMDT riêng cho mỗi BCPS trong phần đã kiểm. Dialog ghi rõ
+  detector hardware-only là số minh họa, không giả là màn hãng.
+
+Áp dụng trả lời chủ sở hữu cho **mapping simulator**, ghi riêng khác biệt
+với chuỗi điện/hiệu chỉnh TM và HC. Không tuyên bố manual xác nhận đường
+PMDT độc lập; không tuyên bố P21/P22 đã tái hiện nghiệm thu BCPS đầy đủ.
+
+Kiểm chứng G14 ban đầu (trước cập nhật nguồn AC Monitor): focused **2 file/14 test**, affected **16 file/168 test**;
 persistence sau sửa hook riêng detector chạy lại **1 file/4 test** (có
 overlap affected). PostgreSQL cô lập thật **1 file/32 test**, gồm giữ
 calibration applied/backup độc lập qua DTOv3/v2/v1/no-header. Lint0error
@@ -1104,7 +1133,19 @@ pass. Browser1440/390 có fixture API thành công,14 ảnh và console sạch t
 riêng và PMDT AC Input chung. Browser phát hiện thiếu hook autosave detector,
 đã sửa và thêm regression persistence/backup/restore. API fixture browser
 không phải kết nối PostgreSQL trực tiếp; test database là suite độc lập.
-Chưa kiểm phần cứng, firmware chọn nguồn AC, dụng cụ hay hồ sơ lịch sử trạm.
+Chưa kiểm phần cứng, dụng cụ hay hồ sơ lịch sử trạm.
+
+Vòng PR#44 sau merge PR#43 và trả lời AC Monitor: focused/CI regression
+**3 file/26 test**, affected **17 file/181 test**, RMS/Load UI/config
+coverage **3 file/56 test**. Lint0error/hai warning điều hướng cũ,
+typecheck và build placeholders pass. Không đổi config/schema/DTO, không
+chạy lại PG chỉ vì mapping engine đổi. CI ban đầu phát hiện neutral VSWR5
+bị tính lại thành4,999999999999999; đã giữ nguyên giá trị khi hai detector
+gain bằng nhau, thêm regression và giữ test G02 nguyên vẹn.
+Ảnh mới **1440/390-ac-monitor-rms-power.png** và BCPS hardware-only cùng
+prefix `ac-monitor-` tại `/home/ubuntu/out/g14/`: BCPS1 detector236,2V/2,76A,
+BCPS2 detector240,0V/2,30A nhưng PMDT vẫn232,3V/2,3A. Fixture API thành
+công, lưu trim qua reload, không thêm selector/cột/màn PMDT; console sạch.
 
 ### 6.1e. G08 — menu thi hành thật hoặc khóa có lý do (Stage 2)
 

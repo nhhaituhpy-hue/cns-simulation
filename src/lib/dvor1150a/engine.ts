@@ -1,6 +1,7 @@
 import { cloneDefaultVorPmdtData } from "@/lib/vor-pmdt-defaults";
 import { dvorSidebandFactors } from "./sideband";
-import { COMMON_AC_INPUT_BCPS, indicatedAc, indicatedCarrier, indicatedCarrierVswr } from "./hardware-calibration";
+import { indicatedCarrier, indicatedCarrierVswr } from "./hardware-calibration";
+import { readDvorAcMonitor } from "./ac-monitor";
 import type {
   VorAlarmLimitRow,
   VorIndicatorColor,
@@ -1077,7 +1078,7 @@ export function buildDvor1150aSnapshot(
   data.txPower = buildTxPower(effectiveTransmitters, config);
   data.txFrequency = buildTxFrequency(effectiveTransmitters);
   data.txVswr = buildTxVswr(effectiveTransmitters, config);
-  const ac = indicatedAc(COMMON_AC_INPUT_BCPS, config.hardwareCalibration);
+  const ac = readDvorAcMonitor();
   data.rmsVoltageData = data.rmsVoltageData.map(row => row.parameter === "AC Input" ? { ...row, volts: ac.volts } : row);
   data.rmsCurrentData = data.rmsCurrentData.map(row => row.parameter === "AC Input" ? { ...row, amps: ac.amps } : row);
   data.txConfigNominal = buildTxNominal(config, "tx1");
