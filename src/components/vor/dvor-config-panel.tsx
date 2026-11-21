@@ -138,7 +138,7 @@ export function DvorConfigPanel() {
         ))}
       </div>
       <footer className="pmdt-config-panel-footer">
-        <button type="button" disabled={securityLevel < 3 || !local} onClick={resetConfigDraft}>Reset defaults</button>
+        <button type="button" disabled={securityLevel < 3 || !local || scenario.active} onClick={resetConfigDraft}>Factory defaults (draft)</button>
         <button type="button" disabled={!configDirty} onClick={discardConfigChanges}>Discard</button>
         <span>{configDirty ? "Apply (F7) to commit" : "Changes are staged"}</span>
       </footer>

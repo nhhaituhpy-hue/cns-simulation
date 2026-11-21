@@ -121,6 +121,7 @@ export interface VorPmdtStoreState {
   config: Dvor1150aConfig;
   configDraft: Dvor1150aConfig;
   configurationBackup: Dvor1150aConfig;
+  hasConfigurationBackup: boolean;
   configDirty: boolean;
   needBackup: boolean;
   parameterChangeLogs: SimulatorParameterChangeLogEntry[];
@@ -189,6 +190,7 @@ export interface VorPmdtStoreActions {
   advanceMonitorTime: (seconds: number) => void;
   discardConfigChanges: () => void;
   resetConfigDraft: () => boolean;
+  restoreBackupConfig: () => boolean;
   restoreDefaultConfig: () => boolean;
   backupConfig: () => boolean;
   replaceConfig: (
@@ -270,6 +272,7 @@ function initialState(): VorPmdtStoreState {
     config,
     configDraft: cloneDvor1150aConfig(config),
     configurationBackup: cloneDvor1150aConfig(config),
+    hasConfigurationBackup: false,
     configDirty: false,
     needBackup: false,
     parameterChangeLogs: derived.data.rmsParameterLogs.map((entry, index) => ({
@@ -628,6 +631,7 @@ export function createVorPmdtStore(
         config,
         configDraft: cloneDvor1150aConfig(config),
         configurationBackup: cloneDvor1150aConfig(config),
+        hasConfigurationBackup: false,
         configDirty: false,
         needBackup: false,
         monitorElapsed: 0,
@@ -936,6 +940,7 @@ export function createVorPmdtStore(
           config,
           configDraft: cloneDvor1150aConfig(config),
           configurationBackup: cloneDvor1150aConfig(config),
+          hasConfigurationBackup: false,
           configDirty: false,
           needBackup: false,
           data: derived.data,
@@ -1224,7 +1229,7 @@ export function createVorPmdtStore(
 
       resetConfigDraft: () => {
         const state = get();
-        if (state.scenario.active) return get().restoreScenario();
+        if (state.scenario.active) return false;
         if (
           state.securityLevel < 3
           || !state.config.simulation.local
@@ -1240,9 +1245,11 @@ export function createVorPmdtStore(
         return true;
       },
 
-      restoreDefaultConfig: () => {
+      restoreDefaultConfig: () => get().restoreBackupConfig(),
+
+      restoreBackupConfig: () => {
         const state = get();
-        if (state.scenario.active) return get().restoreScenario();
+        if (state.scenario.active) return false;
         if (
           state.securityLevel < 3
           || !state.config.simulation.local
@@ -1250,11 +1257,13 @@ export function createVorPmdtStore(
           return false;
         }
 
-        // Restore persistent station/transmitter/monitor parameters while
-        // keeping the live maintenance session available for the operator.
-        const defaults = createDefaultDvor1150aConfig();
-        defaults.simulation = { ...state.config.simulation };
-        const result = applyDvorConfigPatches(defaults);
+        if (!state.hasConfigurationBackup) {
+          set({ lastCommand: "RMS Config Restore unavailable: no backup. Use Config Backup first." });
+          return false;
+        }
+        const backup = cloneDvor1150aConfig(state.configurationBackup);
+        backup.simulation = { ...state.config.simulation };
+        const result = applyDvorConfigPatches(backup);
         if (!result.ok) return false;
         set({
           config: result.config,
@@ -1270,7 +1279,7 @@ export function createVorPmdtStore(
 
       backupConfig: () => {
         const state = get();
-        if (state.securityLevel < 3 || !state.needBackup || state.scenario.active) return false;
+        if (state.securityLevel < 3 || (state.hasConfigurationBackup && !state.needBackup) || state.scenario.active) return false;
         const changedFields = collectChangedConfigFields(
           extractDvor1150aConfig(state.configurationBackup),
           extractDvor1150aConfig(state.config),
@@ -1284,6 +1293,7 @@ export function createVorPmdtStore(
         });
         set({
           configurationBackup: cloneDvor1150aConfig(state.config),
+          hasConfigurationBackup: true,
           parameterChangeLogs: prependParameterChangeLogEntries(state.parameterChangeLogs, nextLogs),
           needBackup: false,
           lastCommand: "RMS Config Backup",
@@ -1291,17 +1301,18 @@ export function createVorPmdtStore(
         return true;
       },
 
-      replaceConfig: (config, backupConfig = config, parameterChangeLogs) => {
+      replaceConfig: (config, backupConfig, parameterChangeLogs) => {
         // A delayed user-profile hydration must never overwrite a loaded
         // examiner scenario or a student's recovery attempt.
         if (get().scenario.active) return;
         const nextConfig = cloneDvor1150aConfig(config);
-        const nextBackupConfig = cloneDvor1150aConfig(backupConfig);
+        const nextBackupConfig = cloneDvor1150aConfig(backupConfig ?? config);
         const derived = buildDvor1150aSnapshot(nextConfig);
         set({
           config: nextConfig,
           configDraft: cloneDvor1150aConfig(nextConfig),
           configurationBackup: nextBackupConfig,
+          hasConfigurationBackup: backupConfig !== undefined,
           configDirty: false,
           monitorElapsed: 0,
           needBackup: JSON.stringify(extractDvor1150aConfig(nextConfig)) !== JSON.stringify(extractDvor1150aConfig(nextBackupConfig)),

@@ -70,7 +70,8 @@ function Dvor1150aConfigPersistence() {
         const backupConfig = dvor1150aConfigAdapter.parseConfig(response.backupConfig ?? response.appliedConfig);
         if (!config || !backupConfig) throw new Error("Cấu hình DVOR 1150A từ server không hợp lệ.");
         if (cancelled) return;
-        replaceConfig(config, backupConfig, parameterChangesFromHistory(response.history, "RMS"));
+        replaceConfig(config, response.preferences.dvor1150aHasBackup === true ? backupConfig : undefined,
+          parameterChangesFromHistory(response.history, "RMS"));
         revisionRef.current = response.revision;
         readyRef.current = true;
         setStatus("saved");
@@ -99,7 +100,8 @@ function Dvor1150aConfigPersistence() {
       const previousConfig = extractDvor1150aConfig(previousState.config);
       const previousBackupConfig = extractDvor1150aConfig(previousState.configurationBackup);
       const configChanged = !areJsonEqual(nextConfig, previousConfig);
-      const backupChanged = !areJsonEqual(state.configurationBackup, previousState.configurationBackup);
+      const backupChanged = state.hasConfigurationBackup !== previousState.hasConfigurationBackup
+        || !areJsonEqual(state.configurationBackup, previousState.configurationBackup);
       let action: "apply" | "restore" | "backup" | null = null;
       if (state.lastCommand === "Configuration Apply" && previousState.configDirty && !state.configDirty && configChanged) {
         action = "apply";
