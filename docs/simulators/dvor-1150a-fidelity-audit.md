@@ -165,6 +165,12 @@ hiệu chỉnh của nó để §3. Các mặt module TM này không có đồng
 hợp: wattmeter/PMDT-style meter của dialog SB là dụng cụ phụ trợ, không phải
 chi tiết trên Fig. 3-70.
 
+**Cập nhật Stage1d:** các mô tả LED cố định trong bảng này là baseline trước
+sửa. G04 đã đóng phần hành vi: `hardware.ts::projectDvorHardware` và FACE
+đọc nguồn/CPU/monitor/AC/battery từ native STORE theo từng occurrence; xem
+§6.1c. Trạng thái “Một phần” còn lại nói về hình học/nhãn/chi tiết và các
+nút card chưa thực thi, không phải LED còn dùng màu cố định.
+
 | Module / nguồn chuẩn đã mở hình | Simulator / citation code | Trạng thái | Khoảng trống / nguồn |
 | --- | --- | --- | --- |
 | BCPS — cột AC ON/DC ON/AC FAIL/BATTERY FAULT/ON BATTERY/FAST CHARGE/TRICKLE CHARGE ở phần trên; S1 CHARGER RESET và CPU OK gần đáy; warning trên phải | FACE `BcpsFaceplate` đủ tên, S1/CPU, kéo cột LED tới y547/1640; warning trên phải. Dùng `ExtractionHandle` cả hai đầu, `PushButton` không handler. | Một phần | Giữ thứ tự chính nhưng dàn lại tỷ lệ nhãn/cột LED. Code tô AC ON, DC ON, AC FAIL, BATTERY FAULT, ON BATTERY, FAST và TRICKLE cùng sáng. Có đèn xanh cạnh CHARGER STATUS tương ứng dấu tròn không nhãn trên hình; Table 3-8 chỉ định CPU xanh và ý nghĩa trạng thái, không xác nhận bộ màu/chức năng dấu tròn đó. Cần phân biệt hình học và trạng thái (Q3); Charger Reset chưa thực thi. TM PDF 185 / 3-67 Fig. 3-64/Table 3-8. |
@@ -187,10 +193,11 @@ chi tiết trên Fig. 3-70.
 
 ### 2.4. LCU: bố cục, màn hình và điều khiển tại chỗ
 
-VIEW `LcuPanel` được mở từ hotspot LCU, không phải cửa sổ PMDT. State của
-nó là `useState` trong VIEW; không nhận input/store của PMDT. Các kết luận
-hành vi dưới đây là kiểm tra handler/props có thể đi tới từ panel này,
-**chưa chạy browser**; chuyển máy PMDT được đối chiếu riêng ở §4.
+VIEW `LcuPanel` được mở từ hotspot LCU, không phải cửa sổ PMDT.
+**Stage1d đã sửa G03:** mọi control thiết bị gọi native STORE::lcuCommand,
+volume và trạng thái đèn/LCD cùng nguồn PMDT; chỉ navigation trang LCD là
+view state. Bảng dưới lưu baseline phát hiện ban đầu để giữ citation;
+phần hành vi đã thay được đối chiếu và kiểm chứng ở §6.1c. Hình học chưa sửa.
 
 | Hạng mục / nguồn chuẩn | Simulator / citation code | Trạng thái | Khoảng trống / nguồn |
 | --- | --- | --- | --- |
@@ -209,9 +216,9 @@ hành vi dưới đây là kiểm tra handler/props có thể đi tới từ pan
 - **H2 — nhãn mã hình thành P/N:** tám mặt in mã figure lên bảng tên; thiếu mã
   assembly đúng nguồn trong catalog (§1.3). Cần ảnh nhãn thật trước khi chốt
   P/N/revision của trạm.
-- **H3 — panel LCU không phải trạng thái trạm:** LCD thiếu trang/dòng, state
+- **H3 — đã sửa hành vi ở Stage1d (§6.1c), baseline:** LCD thiếu trang/dòng, state
   tách PMDT, MAIN/ANTENNA gộp, RESET/SILENCE/volume chưa có tác dụng (§2.4).
-- **H4 — đèn dạy sai ý nghĩa nếu coi là live:** MON integral luôn alarm;
+- **H4 — đã sửa hành vi ở Stage1d (§6.1c), baseline:** MON integral luôn alarm;
   BCPS tô đồng thời AC ON/AC FAIL và các trạng thái sạc; các LED khác cố định
   không theo nguồn/CPU (§2.2). Hình tĩnh có thể dùng minh họa vị trí nhưng cần
   ghi rõ không phải trạng thái máy bình thường.
@@ -742,8 +749,8 @@ không đếm chúng thành 25 bug còn mở.
 | --- | --- | --- | --- | --- | --- |
 | G01 | Cao | **ĐÃ SỬA — PR #38 đã merge**: F8/Reset hủy draft; Restore lấy backup gần nhất, không defaults; no-backup disabled/thông báo, giữ applied/evidence và SEC3/Local. Factory defaults (draft) riêng. Gom §3 P18, §4 P08/P25/S03, §5 B25–B27. | TM PDF 123,141 / 3-5,23 §§3.6.4/3.6.7.4; BD PDF 24–25 / in 23–24 III.5 | STORE::discardConfigChanges/restoreBackupConfig/backupConfig; PmdtLayout F8; PmdtToolbar; API/persistence1150A | Stage 1a — hoàn tất code `005bc0e`; Vitest, lint/typecheck/build và browser1440/390 đã kiểm; file Save/Load không thuộc G01. |
 | G02 | Cao | **ĐÃ SỬA — Stage1b:** RF native Carrier/SB vẫn có khi Load, Off không RF; VSWR/frequency/RMS On phân biệt Load với on-air. Field Integral/Notch/48 anten không nhận RF tải. Dialog SB detached vẫn G07, không coi số minh họa là đo thật. | HC PDF13–14,17–21 / in12–13,16–20 IV.2–4; TM PDF71–72,155,169,195 / 2-27–28,3-37,51,77 §§2.3.2.7–8/3.6.8.1.1.3/3.6.8.3.1/Table3-17 | ENGINE::effectiveTransmitter/readDvorTransmitterRfPower/buildTxPower/buildTxVswr; PmdtSidebar | Hoàn tất native Stage1b; mô hình/giới hạn §6.1a; độc lập G01; chưa đóng G07/G14; G09 xử lý riêng Stage1c. |
-| G03 | Cao | Q3: LCD theo manual, hàng lỗi bình thường tắt/đỏ khi lỗi (không áp cho mọi LED). LCU state riêng, gộp Main Select/Antenna, OFF mất Main; LCD thiếu MON2/PA Temps, Reset/Silence/volume/lamp test chưa đủ. Gom §2.4. | TM PDF 181–184 / 3-63–66 Figs. 3-57–63/Tables 3-5–7 | VIEW::LcuPanel/lcuScreens/transmitterButton; STORE | Stage 1d (Q3/PHOTO-F): state trạm chung; Main khác routing, Local/remote, reset/silence/alarm mới, mọi đèn. |
-| G04 | Cao | Q3/PHOTO-F phân biệt hàng lỗi với Power OK/Normal; LED card cố định: AC ON/AC FAIL cùng sáng, Monitor báo alarm bất kể điều kiện, trái PMDT. Không trùng route LCU G03. | TM PDF 185–188,190–195 / 3-67–70,72–77 Tables 3-8–11/13–17; §2.2 | FACE::IndicatorLamp/BcpsFaceplate/MonitorFaceplate và các faceplate khác | Stage 1d (Q3/PHOTO-F): bind state đã có; chưa mô hình phải ghi minh họa, không tô như chỉ thị live. |
+| G03 | Cao | **Đã sửa native Stage1d:** LCU dùng chung PMDT; Main khác Antenna, Off giữ Main/relay; đủ năm trang LCD live; Local, Bypass, Reset, Silence, volume và toàn bộ Lamp Test. Q3: hàng lỗi bình thường tắt/đỏ khi lỗi; không áp cho Power OK/Normal. Gom §2.4. | TM PDF 181–184 / 3-63–66 Figs. 3-57–63/Tables 3-5–7; Q3; PHOTO-C | VIEW::LcuPanel; STORE::lcuCommand; hardware.ts | **Đã sửa**; §6.1c ghi lựa chọn mô hình/kiểm chứng. Hình học G24 vẫn Stage4. |
+| G04 | Cao | **Đã sửa native Stage1d:** LED đọc live theo occurrence; AC ON/AC FAIL, Fast/Trickle loại trừ nhau, monitor theo alarm thật; Standby không dùng tắt. Không trùng route LCU G03. | TM PDF 185–188,190–195 / 3-67–70,72–77 Tables 3-8–11/13–17; Q3; PHOTO-C; §2.2 | FACE::IndicatorLamp; hardware.ts::projectDvorHardware; STORE | **Đã sửa**; CPU/power là mô hình dựa nguồn hiện có, không tuyên bố watchdog/đo rail độc lập; §6.1c. |
 | G05 | Cao | **Bỏ bug VSWR>1.25 còn xanh: Q10 xác nhận đúng**; 1.25 là chuẩn Cục Hàng không, không phải giới hạn display/relay. Còn xác minh profile Mod/Deviation/notch/limits/nominal, phân biệt đọc chuẩn KT với executive alarm; ảnh TM không là default trạm. | KT PDF 10,13–15 / in 9,12–14 V.5.1/II.2–3; TM PDF 157 / 3-39 Fig. 3-35 | DEF::alarmLimits/azimuthLimits/sidebandVswr/notchTolerance; ENG; MonitorAlarmLimits | **Đã nhận kho ảnh trạm, chờ đối chiếu toàn profile** (Q9/Q10); G09 mới dùng hai ảnh §6.1b. Không tự hạ ngưỡng màu/relay về1.25. |
 | G06 | Cao | TP/pha thiếu feedback/nghiệm thu: TP6±.1 thay HC±.05V, mean-phase tới10V thay2–9; PLL/scale thiếu đo độc lập. Q4: hai MON riêng, chỉnh một rồi lặp cho khối kia; không tự đặt tử số deviation. Q14 giữ số liệu HDCV. | HC PDF 15–16,24–25 / in 14–15,23–24 IV.3.1/5; TM PDF 192,215 / 3-74,6-15 | BDAT::sideband.testPoints; SBM::readSidebandTrim; TXC/MONC; ENGINE::calibratedMeasurement | Stage 3: feedback theo HC; Q6 không hồ sơ reference riêng, đích thực tế 9960 mod trong không gian28–32% khi bay hiệu chuẩn, không chứng nhận mô hình đạt bay. |
 | G07 | **Đã sửa native** | Trim/CAL SB chung config/PMDT/evidence/backup; giữ tách vị trí vít, RF vật lý, chỉ thị và software offsets. Gom §3 P08/P10, §5 K12/B12/B15–B16; giới hạn đo thật còn Một phần. | HC PDF 17–18 / in 16–17 IV.3.1 o/3.2 j,o; TM PDF 210,215 / 6-10,15 §§6.4.6/24 | SBD → STORE::turnSidebandTrim → config.sidebandTrims → ENGINE/Transmitter Data; §6.1d | Stage 2/G07 hoàn thành; không thêm vị trí vít vào màn PMDT, chưa mô phỏng nghiệm thu TP/cáp/dụng cụ. |
@@ -961,6 +968,78 @@ trong khi wattmeter giữ 1,82 W; Transmitter Data native 1,999 W, SB2 giữ
 1,514 W; Offsets không thêm vít. Ảnh/log `/home/ubuntu/out/g07/`, không issue
 badge hay console error/warning. Chưa integration-test PostgreSQL thật.
 
+### 6.1c. G03/G04 — LCU và LED live (Stage1d)
+
+**Đã sửa native1150A**, không đổi domain/store/layout DVOR1150/220.
+Nhánh từ origin/main; đã merge G09 sau khi PR#40 vào main, giữ G01/G02/G09
+đã sửa, không tái triển khai clock/protection của G09.
+
+**PHOTO-C** là ảnh đúng `faceplates-closeup.jpg` trong attachment
+`85b41cbf-4565-446d-bcdf-97f73104dc1a`, khác file beach đã loại trước đây.
+Đối chiếu thứ tự/nhãn A3A1…A3A11, CPU OK/PWR OK và ESD GND với PHOTO-F,
+TM Fig.1-3 và Figs.3-64–73. Không phát hiện khác biệt chữ LED đủ rõ để
+đổi tên LED so với manual ở phạm vi sửa này; ảnh không chứng minh nội dung
+LCD hay state máy bình thường. Khác biệt vị trí/tỷ lệ/mặt đen, ESD GND,
+5V ONLY và vị trí Bypass/volume đã ghi §2.6 vẫn theo ảnh, để Stage4; không
+dời vị trí, kích thước hay hình học SVG trong Stage1d.
+
+- `lcuCommand` tách Local/Main/Antenna/Load/Off/Bypass/Reset/Silence/Lamp
+  Test; control RF/Bypass yêu cầu Local, không yêu cầu login PMDT cho nút
+  vật lý. Main chọn designator và nối anten; Antenna chỉ đổi đường RF.
+  Off cắt RF nhưng giữ relay/designator, kể cả RMS Antenna Select; đèn
+  Antenna hoặc Load có thể sáng cùng Off (TM Table3-5), **không** được coi
+  là hai nguồn RF cùng phát. Profile cold/hot và inhibit20s G09 được giữ.
+- Reset vật lý khác F8 của G01: LCU/RMS/MON trở lại runtime power-on,
+  logout PMDT, hủy draft, Local/Bypass off; giữ thông số applied, backup,
+  fault vật lý và Main. Chọn khoảng initialization **20s** theo TM
+  PDF120/3-2 §3.5, dùng protected timer G09, RF off trong thời gian này.
+  Status mô phỏng ghi **LCU initialization**, event hoàn tất riêng, không
+  ghi Reset thành monitor alarm transfer; LCD quay về trang đầu.
+  Sau initialization giữ cold/hot profile: standby Off/Load tương ứng;
+  qualification monitor bắt đầu lại, không cộng thời gian processor boot.
+  Đây là mô hình reboot, không phải factory defaults hay restore backup.
+- Đủ năm trang Fig.3-57–61: Integral MON1/2, RMS/Facilities Power,
+  VOR Temps, VOR PA Temps. Số đọc từ native monitor/RMS, không chép các số
+  minh họa trong ảnh manual thành nominal. Độ chính xác text chọn theo
+  trường theo Fig.3-57–61 (azimuth/AC Power2, RF/mod/các nguồn khác1,
+  nhiệt độ0 chữ số thập phân); thiếu số
+  đọc dùng “—”, chưa khẳng định định dạng khi mất card của firmware thật.
+  TXn48V/Current lấy trực tiếp row `Tx n 48 V PS 1` có sẵn trong RMS,
+  không tự cộng dòng PS1/PS2; mapping firmware chính xác khi có nguồn phụ
+  chưa được xác minh tại trạm.
+- Lamp Test sáng **mọi LED LCU**, kể cả route/TX Off/Bypass/System và
+  standby vốn không dùng; không giả lập Lamp Test LCU thành test LED mọi
+  card. Primary/Secondary LCU chờ timeout của **từng monitor/parameter**,
+  kể cả AND chưa đủ vote hoặc Bypass; mặt MON phản ánh alarm trước delay.
+  Routing, no-ident/continuous-ident delay dùng native config. Normal
+  không sáng đồng thời qualified alarm; monitor standby thường luôn tắt.
+- Hàng System fault đỏ chỉ khi có fault, bình thường tắt theo Q3; Power
+  OK/Normal/route là nhóm chức năng riêng. Silence ack các fault đang có,
+  fault mới hoặc clear rồi lặp lại làm âm báo trở lại. Volume0–100 điều
+  chỉnh gain của **âm tổng hợp mô phỏng 1000Hz**, không phải bản ghi âm hay
+  tần số buzzer hãng. Web Audio tùy quyền/chính sách trình duyệt; có trạng
+  thái tone text khi không có audio. Volume mặc định45 giữ UI cũ.
+- BCPS lấy AC input/AC fail, rail48V, battery voltage/current và charger
+  status có sẵn trong RMS; Fast khi **>1.5A** (Table3-8), Trickle phía còn
+  lại khi đang sạc, không bật cả hai. AC ON/FAIL dùng cùng predicate nên
+  không sáng đồng thời. Các ngưỡng rail/battery giữ bảng RMS hiện tại,
+  không bịa thêm setpoint của BCPS. Dấu tròn CHARGER STATUS chưa được bảng
+  định nghĩa là LED vẫn OFF, không tự gán chức năng mới.
+- CPU OK mô hình hóa processor bình thường khi module installed và có
+  nguồn; **chưa có watchdog/firmware-crash độc lập**. BCPS CPU còn nguồn
+  khi AC hoặc battery hiện diện; module khác theo logic rails và nguồn
+  module. DC Power OK theo nguồn, không đồng nhất TX Off hay VSWR/PLL
+  alarm với mất DC. LCU còn đọc riêng row nguồn LCU của RMS, không biến
+  lỗi nguồn riêng LCU thành mất nguồn MON. Fail nguồn đi theo cùng RMS/overlay state, không dùng
+  status xanh cố định. Remote/interlocked fault có input store; chưa phải
+  thiết bị RCSU/RSU độc lập (G17), không suy pinout/hành vi cáp thực.
+
+Kiểm chứng: hai suite focused; final affected **44 file/365 test pass**,
+gồm17 test G03/G04; lint0error (hai warning điều hướng ở file không sửa),
+changed-file lint, typecheck và build placeholders pass; browser1440/390 và successful config-API fixture,
+ảnh/log `/home/ubuntu/out/g03g04/`. Không xác minh watchdog, tiếng buzzer,
+độ trễ reboot firmware hay PostgreSQL trực tiếp tại trạm.
+
 ### 6.2. Lộ trình chia đợt cập nhật 21/11/2026
 
 G01 đã merge qua PR #38; G02 đã merge qua PR #39 và giữ nguyên khi cập nhật G09.
@@ -973,7 +1052,7 @@ Q12 hành chính không bao giờ là điều kiện chặn fix.
 | Stage 1a | **G01** Reset/F8/Restore | Cancel draft khác restore backup/factory defaults; baseline backup, ±10W, chưa backup, input focus, giữ evidence/scenario và SEC3/Local. | **Đã merge qua PR #38**, code `005bc0e`; Vitest/lint/typecheck/build, browser1440/390. File Save/Load vẫn G15. |
 | Stage 1b | **G02** RF ở Load | Off/Load/Antenna phân biệt, đo RF vào tải không đòi on-air; không bịa detector. | **Đã sửa native**, code `7c840b4`; mô hình/giới hạn §6.1a; G07 nay nối dialog SB native (§6.1d). |
 | Stage 1c | **G09** protection clock + cold standby/SEC3 | Clock độc lập UI/login/link; voting/bypass/delay/restart/no alternate; profile Q13 cold, SEC3 preselected có xác thực; hot tùy chọn. | **Đã sửa native**, §6.1b; Vitest/lint/typecheck/build và browser1440/390; pause chỉ cho lifecycle bài làm/thiết bị kết thúc. |
-| Stage 1d | **G03 + G04** LCU/LED theo Q3 | LCU/PMDT chung state, Main khác route; LCD theo manual; hàng lỗi tắt bình thường/đỏ khi lỗi, không áp cho Power OK/Normal; đối chiếu màu/vị trí ảnh §2.6. | Chưa sửa. |
+| Stage 1d | **G03 + G04** LCU/LED theo Q3 | LCU/PMDT chung state, Main khác route; LCD theo manual; hàng lỗi tắt bình thường/đỏ khi lỗi, không áp cho Power OK/Normal; PHOTO-C bổ sung ảnh đúng, hình học giữ Stage4. | **Đã sửa native qua PR #41**, §6.1c; đã tích hợp G09 sau PR#40 merge. |
 | Stage 2 | **G07/G08/G14/G15/G18**, mỗi gap một PR | Trim→state/evidence/backup, menu dispatch, RF Monitor/BCPS trim có nguồn đo, file version/thiếu/sai file, guards/quyền/timeout; không xuất secrets. | **G07 đã sửa native (§6.1d)**; G08/G14/G15/G18 chưa sửa. |
 | Stage 3 | **G06/G10/G11/G21** | Hai khối MON chỉnh lần lượt (Q4), feedback theo HC; history snapshot/rỗng/nhiều alarm; TG theo TM (Q7), đúng mode/timing; diagnostics fail/cancel. Không tạo hồ sơ reference không có (Q6). | Chưa sửa. |
 | Stage 4 | **G12/G19/G20/G22/G24/G25**, dùng ảnh trạm | TM định danh + PHOTO-F/R/U ưu tiên chi tiết nhìn thấy; A3A1…A3A11, ESD GND, LCU, 5 relay sau, RSU từng thiết bị. Không suy pinout/CB ngoài khung; PMDT version/layout cần đối chiếu tiếp kho ảnh Q9. | Chưa sửa; đã nhận ba ảnh phần cứng và kho PMDT; G09 mới đối chiếu hai ảnh §6.1b. |

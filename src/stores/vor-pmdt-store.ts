@@ -62,6 +62,7 @@ import {
   createScenarioEvidenceStats,
 } from "@/lib/scenario-evidence";
 import { create, type StoreApi, type UseBoundStore } from "zustand";
+import { advanceDvorLcuTime, initialDvorLcuState, projectDvorHardware, type DvorLcuState } from "@/lib/dvor1150a/hardware";
 
 const emptyAnswer: VorStudentAnswer = {
   suspectedFault: "",
@@ -116,6 +117,7 @@ export interface VorDiagnosticState {
 }
 
 export interface VorPmdtStoreState {
+  lcu: DvorLcuState;
   mode: VorPmdtMode;
   configPanelOpen: boolean;
   scenarioParametersOpen: boolean;
@@ -167,6 +169,9 @@ export interface VorPmdtStoreState {
 
 export interface VorPmdtStoreActions {
   turnSidebandTrim: (occurrenceId: string, trim: DvorSidebandTrimId, delta: number) => boolean;
+  lcuCommand: (command: "local" | "bypass" | "main" | "antenna" | "load" | "off" | "reset" | "silence" | "lamp-test", transmitterId?: DvorTransmitterId) => boolean;
+  setLcuVolume: (volume: number) => void;
+  setLcuInterlockedOff: (interlocked: boolean) => void;
   initializeSession: (initialization: VorSessionInitialization) => void;
   setMode: (mode: VorPmdtMode) => void;
   setConfigPanelOpen: (open: boolean) => void;
@@ -292,6 +297,7 @@ function initialState(): VorPmdtStoreState {
     lastCommand: null,
     monitorElapsed: 0,
     protectionState: initialDvorProtectionState(),
+    lcu: initialDvorLcuState(),
     loginDialogOpen: true,
     authenticatedUserId: null,
     securityLevel: 0,
@@ -420,10 +426,28 @@ export function createVorPmdtStore(
     const set = (update: Partial<VorPmdtStore> | ((state: VorPmdtStore) => Partial<VorPmdtStore>)) => {
       setState(state => {
         const next = typeof update === "function" ? update(state) : update;
+        const merged = { ...state, ...next };
+        const relayRoutes = { ...merged.lcu.relayRoutes };
+        for (const id of DVOR_TRANSMITTER_IDS) {
+          if (merged.config.transmitters[id].onAir) {
+            relayRoutes[id] = "antenna";
+            relayRoutes[id === "tx1" ? "tx2" : "tx1"] = "load";
+          } else if (merged.config.transmitters[id].load) relayRoutes[id] = "load";
+        }
+        const projection = projectDvorHardware(merged);
+        const alarms = projection.alarms;
+        const alarmElapsed = Object.fromEntries(Object.entries(merged.lcu.alarmElapsed).filter(([key]) => projection.detectors.some(detector => detector.key === key)));
+        const silencedAlarms = merged.lcu.silencedAlarms.filter(alarm => alarms.includes(alarm));
+        if (DVOR_TRANSMITTER_IDS.some(id => relayRoutes[id] !== merged.lcu.relayRoutes[id]) || silencedAlarms.length !== merged.lcu.silencedAlarms.length || Object.keys(alarmElapsed).length !== Object.keys(merged.lcu.alarmElapsed).length) {
+          next.lcu = { ...merged.lcu, relayRoutes, silencedAlarms, alarmElapsed };
+        }
         if (!next.derived && !("keyerObservations" in next)) return next;
         const derived = next.derived ?? state.derived;
         const observations = "keyerObservations" in next ? next.keyerObservations : state.keyerObservations;
-        return { ...next, derived: { ...derived, keyers: projectDvor1150aKeyers(
+        const antennaSelect: 1 | 2 = relayRoutes.tx1 === "antenna" ? 1 : relayRoutes.tx2 === "antenna" ? 2 : derived.data.rmsMonitorTransmitterStatus.antennaSelect;
+        const data = derived.data.rmsMonitorTransmitterStatus.antennaSelect === antennaSelect ? derived.data
+          : { ...derived.data, rmsMonitorTransmitterStatus: { ...derived.data.rmsMonitorTransmitterStatus, antennaSelect } };
+        return { ...next, ...(next.derived ? { data } : {}), derived: { ...derived, data, keyers: projectDvor1150aKeyers(
           next.config ?? state.config, derived.mainTransmitter, observations,
         ) } };
       });
@@ -578,6 +602,95 @@ export function createVorPmdtStore(
         recordAction({ kind: "configuration", controlId: fieldId, label: "Physical sideband trim", accepted: true, before,
           input: { occurrenceId, trim, delta }, parameterChanges: dvorParameterChanges(state.config, result.config, [fieldId], "apply") });
         return true;
+      },
+
+      setLcuVolume: (volume) => {
+        if (Number.isFinite(volume)) set({ lcu: { ...get().lcu, volume: Math.min(100, Math.max(0, volume)) } });
+      },
+
+      setLcuInterlockedOff: (interlocked) => {
+        if (typeof interlocked !== "boolean") return;
+        const state = get();
+        const config = cloneDvor1150aConfig(state.config);
+        if (interlocked) for (const id of DVOR_TRANSMITTER_IDS) {
+          config.transmitters[id].onAir = false;
+          config.transmitters[id].load = false;
+        }
+        const snapshot = buildDvor1150aSnapshot(config, undefined, state.derived.mainTransmitter ?? undefined);
+        const draft = cloneDvor1150aConfig(state.configDraft);
+        if (interlocked) for (const id of DVOR_TRANSMITTER_IDS) {
+          draft.transmitters[id].onAir = false;
+          draft.transmitters[id].load = false;
+        }
+        set({ lcu: { ...state.lcu, interlockedOff: interlocked, ...(interlocked ? { initializing: false } : {}) }, config, configDraft: draft, derived: snapshot, data: snapshot.data,
+          ...(interlocked ? { protectionState: { ...initialDvorProtectionState(), phase: "lockout", remaining: 0 }, monitorElapsed: 0 } : {}) });
+      },
+
+      lcuCommand: (command, transmitterId) => {
+        const state = get();
+        const before = vorEvidenceSnapshot(state);
+        const finish = (accepted: boolean, reason?: string) => {
+          recordAction({ kind: "control", controlId: `lcu-${command}${transmitterId ? `-${transmitterId}` : ""}`,
+            label: `LCU ${command}${transmitterId ? ` ${transmitterId}` : ""}`, accepted, reason, before });
+          return accepted;
+        };
+        if (!projectDvorHardware(state).lcuPower) return finish(false, "LCU power is unavailable.");
+        if (state.lcu.interlockedOff && ["main", "antenna", "load", "reset"].includes(command)) return finish(false, "Remote interlock is active.");
+        if (["main", "antenna", "load"].includes(command) && state.protectionState.phase !== "monitoring" && state.protectionState.remaining > 0) return finish(false, "RF is inhibited by protection delay.");
+        if (command === "lamp-test" || command === "silence") {
+          set({ lcu: { ...state.lcu, ...(command === "lamp-test" ? { lampTest: !state.lcu.lampTest }
+            : { silencedAlarms: projectDvorHardware(state).alarms }) } });
+          return finish(true);
+        }
+        if (!["local", "reset"].includes(command) && !state.config.simulation.local) return finish(false, "Local control is required.");
+        const config = cloneDvor1150aConfig(state.config);
+        let main = state.derived.mainTransmitter;
+        if (command === "local") {
+          config.simulation.local = !config.simulation.local;
+          if (!config.simulation.local) config.simulation.integralMonitorBypass = false;
+        } else if (command === "bypass") {
+          config.simulation.integralMonitorBypass = !config.simulation.integralMonitorBypass;
+        } else if (command === "reset") {
+          config.simulation.local = false;
+          config.simulation.integralMonitorBypass = false;
+          for (const id of DVOR_TRANSMITTER_IDS) {
+            config.transmitters[id].onAir = false;
+            config.transmitters[id].load = false;
+          }
+        } else {
+          if (!transmitterId || (transmitterId === "tx2" && config.station.transmitterConfig === "Single Transmitter")) return finish(false, "Transmitter is not installed.");
+          const target = config.transmitters[transmitterId];
+          if (command !== "off" && (!target.enabled || target.faults.disabled)) return finish(false, "Transmitter is unavailable.");
+          if (command === "main" || command === "antenna") {
+            const previous = transmitterId === "tx1" ? "tx2" : "tx1";
+            config.transmitters[previous].onAir = false;
+            config.transmitters[previous].load = config.station.standbyMode === "Hot Standby"
+              && config.transmitters[previous].enabled && !config.transmitters[previous].faults.disabled;
+            target.onAir = true;
+            target.load = false;
+            if (command === "main") main = transmitterId;
+          } else {
+            target.onAir = false;
+            target.load = command === "load";
+          }
+        }
+        const draft = command === "reset" ? cloneDvor1150aConfig(config) : cloneDvor1150aConfig(state.configDraft);
+        draft.simulation.local = config.simulation.local;
+        draft.simulation.integralMonitorBypass = config.simulation.integralMonitorBypass;
+        for (const id of DVOR_TRANSMITTER_IDS) {
+          draft.transmitters[id].onAir = config.transmitters[id].onAir;
+          draft.transmitters[id].load = config.transmitters[id].load;
+        }
+        const snapshot = buildDvor1150aSnapshot(config, undefined, main ?? undefined);
+        set({ config, configDraft: draft, derived: snapshot, data: snapshot.data, monitorElapsed: 0,
+          lastCommand: `LCU ${command}`,
+          ...(["main", "antenna", "load", "off"].includes(command) ? { protectionState: command === "off" && state.protectionState.phase !== "monitoring"
+            ? { ...state.protectionState, phase: "lockout", remaining: Math.min(20, state.protectionState.remaining), target: null } : initialDvorProtectionState() } : {}),
+          ...(command === "reset" ? { lcu: { ...state.lcu, lampTest: false, silencedAlarms: [], alarmElapsed: {}, initializing: true }, configDirty: false,
+            protectionState: { ...initialDvorProtectionState(), phase: "cold-transfer", remaining: 20, target: main },
+            loginDialogOpen: true, securityLevel: 0, authenticatedUserId: null } : {}),
+        });
+        return finish(true);
       },
 
       initializeSession: (initialization) => {
@@ -1074,8 +1187,31 @@ export function createVorPmdtStore(
       advanceMonitorTime: (seconds) => {
         if (!Number.isFinite(seconds) || seconds <= 0) return;
         const state = get();
-        const next = advanceDvorProtection(state.config, { ...state.protectionState, alarmElapsed: state.monitorElapsed },
-          seconds, state.derived.mainTransmitter);
+        const initializing = state.lcu.initializing && state.protectionState.phase === "cold-transfer";
+        const bootSeconds = initializing ? Math.min(seconds, state.protectionState.remaining) : seconds;
+        let next = advanceDvorProtection(state.config, { ...state.protectionState, alarmElapsed: state.monitorElapsed },
+          bootSeconds, state.derived.mainTransmitter);
+        let lcu = initializing ? { ...state.lcu, alarmElapsed: {} } : advanceDvorLcuTime(state, seconds);
+        if (initializing && next.events.length) {
+          const config = cloneDvor1150aConfig(next.config);
+          if (next.state.phase === "monitoring") for (const id of DVOR_TRANSMITTER_IDS) {
+            if (id !== next.snapshot.voting.activeTransmitter) config.transmitters[id].load = config.station.standbyMode === "Hot Standby"
+              && config.transmitters[id].enabled && !config.transmitters[id].faults.disabled
+              && !(id === "tx2" && config.station.transmitterConfig === "Single Transmitter");
+          }
+          const snapshot = buildDvor1150aSnapshot(config, undefined, state.derived.mainTransmitter ?? undefined);
+          lcu = { ...lcu, initializing: false };
+          const remaining = seconds - bootSeconds;
+          if (remaining > 0) {
+            lcu = advanceDvorLcuTime({ ...state, config, derived: snapshot, data: snapshot.data, lcu }, remaining);
+            const continued = advanceDvorProtection(config, next.state, remaining, state.derived.mainTransmitter);
+            next = { ...continued, events: [...next.events, ...continued.events] };
+          } else next = { ...next, config, snapshot };
+        }
+        const events = next.events.map((label, index) => initializing && index === 0
+          ? label.startsWith("Automatic monitor transfer") ? "LCU/RMS/MON initialization complete" : "LCU initialization: transmitter unavailable"
+          : label);
+        if (lcu.initializing && next.state.phase !== "cold-transfer") lcu = { ...lcu, initializing: false };
         const before = vorEvidenceSnapshot(state);
         const draft = next.config === state.config ? state.configDraft : cloneDvor1150aConfig(state.configDraft);
         if (next.config !== state.config) for (const id of DVOR_TRANSMITTER_IDS) {
@@ -1083,16 +1219,17 @@ export function createVorPmdtStore(
           draft.transmitters[id].load = next.config.transmitters[id].load;
         }
         set({
+          lcu,
           ...(next.config !== state.config ? {
             config: next.config, configDraft: draft,
             derived: next.snapshot, data: next.snapshot.data,
           } : {}),
           protectionState: next.state,
           monitorElapsed: next.state.alarmElapsed,
-          ...(next.events.length ? { lastCommand: next.events[next.events.length - 1] } : {}),
+          ...(events.length ? { lastCommand: events[events.length - 1] } : {}),
         });
-        for (const label of next.events) recordAction({
-          actor: "system", kind: "system", controlId: "automatic-monitor-transfer",
+        for (const [index, label] of events.entries()) recordAction({
+          actor: "system", kind: "system", controlId: initializing && index === 0 ? "lcu-initialization" : "automatic-monitor-transfer",
           label, accepted: true, before,
         });
       },
@@ -1210,6 +1347,10 @@ export function createVorPmdtStore(
         const before = vorEvidenceSnapshot(state);
         if (mode !== "off" && state.protectionState.phase !== "monitoring" && state.protectionState.remaining > 0) {
           recordAction({ kind: "control", controlId: `transmitter-${transmitterId}-${mode}`, label: "RF inhibited by protection delay", accepted: false, before });
+          return false;
+        }
+        if (state.lcu.interlockedOff && mode !== "off") {
+          recordAction({ kind: "control", controlId: `transmitter-${transmitterId}-${mode}`, label: "Remote interlock is active", accepted: false, before });
           return false;
         }
         if (state.securityLevel < 3) {
