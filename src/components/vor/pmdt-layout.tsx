@@ -21,6 +21,8 @@ import { AboutPmdtDialog } from "./about-pmdt-dialog";
 import { PmdtLoginDialog } from "./pmdt-login-dialog";
 import { Dvor1150aScenarioParametersPanel } from "./dvor1150a-scenario-parameters";
 import { Dvor1150aMonitorClock } from "./dvor1150a-monitor-clock";
+import { Dvor1150aSecurityClock } from "./dvor1150a-security-clock";
+import { ChangePasswordDialog } from "./change-password-dialog";
 import { Dvor1150aTrainingHud } from "./dvor1150a-training-hud";
 import { Dvor1150aHardwareStage } from "./dvor1150a-hardware-stage";
 import { evaluateDvor1150aScenario } from "@/lib/dvor1150a";
@@ -167,6 +169,7 @@ export function PmdtLayout({
   const startReviewScenario = useVorPmdtStore((state) => state.startReviewScenario);
   const aboutDialogOpen = useVorPmdtStore((state) => state.aboutDialogOpen);
   const loginDialogOpen = useVorPmdtStore((state) => state.loginDialogOpen);
+  const changePasswordDialogOpen = useVorPmdtStore(state => state.changePasswordDialogOpen);
   const applyConfigChanges = useVorPmdtStore((state) => state.applyConfigChanges);
   const discardConfigChanges = useVorPmdtStore((state) => state.discardConfigChanges);
 
@@ -209,6 +212,7 @@ export function PmdtLayout({
       }}
     ><div className={`pmdt-classic-viewport ${hasExternalPanels ? "pmdt-classic-viewport--with-external-inspector" : ""}`}>
       <Dvor1150aMonitorClock />
+      <Dvor1150aSecurityClock />
       <Suspense fallback={null}>
         <ScenarioParametersRouteLoader
           moduleId="dvor-1150a"
@@ -291,6 +295,7 @@ export function PmdtLayout({
         {canAuthorScenario && scenarioParametersOpen ? <Dvor1150aScenarioParametersPanel /> : null}
         {aboutDialogOpen ? <AboutPmdtDialog /> : null}
         {loginDialogOpen ? <PmdtLoginDialog /> : null}
+        {changePasswordDialogOpen && !loginDialogOpen ? <ChangePasswordDialog /> : null}
         {mode === "preview" && !practiceRequested && simulatorId ? <SimulatorConfigPersistence simulatorId={simulatorId} /> : null}
         <VorScenarioSessionPersistence />
       </section>

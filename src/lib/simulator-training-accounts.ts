@@ -13,6 +13,10 @@ export const SELEX_DME_TRAINING_ACCOUNTS = Object.freeze([
   Object.freeze({ userId: "SEC2", password: "TWO", securityLevel: 2 as const }),
   ...SELEX_DVOR_TRAINING_ACCOUNTS.slice(1),
 ]);
+export const SELEX_DVOR1150A_TRAINING_ACCOUNTS = Object.freeze([
+  ...SELEX_DVOR_TRAINING_ACCOUNTS,
+  Object.freeze({ userId: "SEC2", password: "TWO2", securityLevel: 2 as const }),
+]);
 export const MOPIENS_ADMIN_TRAINING_ACCOUNT = Object.freeze({ userId: "Administrator", password: "1234", level: 3 as const });
 export const MOPIENS_DME_TRAINING_ACCOUNTS = Object.freeze([
   Object.freeze({ userId: "observer", password: "observer", level: 1 as const }),
@@ -36,9 +40,10 @@ export function trainingLoginFor(moduleId: ScenarioParametersModuleId, question:
   if (moduleId === "ads-b") return !requested || requested === "sysadmin" || requested === "maintenance"
     ? { kind: "no-fixed-password" } : { kind: "unsupported-account" };
   if (moduleId === "dvor-1150" || moduleId === "dvor-1150a" || moduleId === "dme-1119a") {
-    const accounts = moduleId === "dme-1119a" ? SELEX_DME_TRAINING_ACCOUNTS : SELEX_DVOR_TRAINING_ACCOUNTS;
+    const accounts = moduleId === "dme-1119a" ? SELEX_DME_TRAINING_ACCOUNTS
+      : moduleId === "dvor-1150a" ? SELEX_DVOR1150A_TRAINING_ACCOUNTS : SELEX_DVOR_TRAINING_ACCOUNTS;
     const account = accounts.find(x => x.userId === (requested?.toUpperCase() ?? "SEC3"));
-    return account ? { kind: "fixed-default", ...account, mutable: moduleId === "dme-1119a" } : { kind: "unsupported-account" };
+    return account ? { kind: "fixed-default", ...account, mutable: moduleId !== "dvor-1150" } : { kind: "unsupported-account" };
   }
   const accounts = moduleId === "dme-320" ? MOPIENS_DME_TRAINING_ACCOUNTS : [MOPIENS_ADMIN_TRAINING_ACCOUNT];
   const account = accounts.find(x => x.userId.toLowerCase() === (requested ?? "Administrator").toLowerCase());

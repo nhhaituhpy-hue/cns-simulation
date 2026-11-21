@@ -8,7 +8,7 @@ export const VOR_PARAMETER_STATUSES = ["normal", "warning", "alarm"] as const;
 export type VorParameterStatus = (typeof VOR_PARAMETER_STATUSES)[number];
 
 export type VorPmdtMode = "preview" | "author" | "student";
-export type VorSecurityLevel = 0 | 1 | 3 | 4;
+export type VorSecurityLevel = 0 | 1 | 2 | 3 | 4;
 export type VorEditableValue = string | number | boolean | null;
 export type VorSubmissionStatus = "draft" | "submitted" | "reviewed";
 
@@ -49,6 +49,7 @@ export type VorViewId =
   | "rms-config-station"
   | "rms-config-power-limits"
   | "rms-config-ad-limits"
+  | "rms-config-security"
   | "monitor-integral"
   | "monitor-status"
   | "monitor-sideband-vswr"

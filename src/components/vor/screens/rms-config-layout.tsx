@@ -4,6 +4,7 @@ import { resolveVorField, resolveVorStatus, useVorPmdtStore } from "@/stores/vor
 import type { VorIndicatorColor } from "@/lib/vor-types";
 import { PmdtToolbar } from "../pmdt-toolbar";
 import { PmdtConfigControl } from "../pmdt-config-control";
+import { RmsSecurityCodes } from "./rms-security-codes";
 
 const accentClasses: Record<VorIndicatorColor, string> = {
   green: "accent-[#22c55e]",
@@ -605,6 +606,7 @@ function RmsConfigAdLimitsTab() {
 }
 
 export function RmsConfigLayout() {
+  const securityLevel = useVorPmdtStore(state => state.securityLevel);
   const activeView = useVorPmdtStore((state) => state.activeView);
   const openView = useVorPmdtStore((state) => state.openView);
 
@@ -613,6 +615,7 @@ export function RmsConfigLayout() {
     { id: "station", label: "Station", viewId: "rms-config-station", menuLabel: "Station" },
     { id: "power", label: "Power Supply Limits", viewId: "rms-config-power-limits", menuLabel: "Power Supply Limits" },
     { id: "ad", label: "A/D Limits", viewId: "rms-config-ad-limits", menuLabel: "A/D Limits" },
+    ...(securityLevel === 4 ? [{ id: "security", label: "Security Codes", viewId: "rms-config-security", menuLabel: "Security Codes" } as const] : []),
   ] as const;
   const activeTab = tabs.find((tab) => tab.viewId === activeView)?.id ?? "general";
 
@@ -646,6 +649,7 @@ export function RmsConfigLayout() {
         {activeTab === "station" && <RmsConfigStationTab />}
         {activeTab === "power" && <RmsConfigPowerLimitsTab />}
         {activeTab === "ad" && <RmsConfigAdLimitsTab />}
+        {activeTab === "security" && <RmsSecurityCodes />}
         {activeTab === "general" && <RmsConfigGeneralTab />}
       </div>
     </section>

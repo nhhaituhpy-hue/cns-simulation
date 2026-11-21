@@ -98,7 +98,7 @@ export function PmdtSidebar() {
   const overrides = useVorPmdtStore((state) => state.overrides);
   const studentFieldStates = useVorPmdtStore((state) => state.studentFieldStates);
   const securityLevel = useVorPmdtStore((state) => state.securityLevel);
-  const needBackup = useVorPmdtStore((state) => state.needBackup);
+  const needBackup = useVorPmdtStore((state) => state.needBackup || state.securityNeedsBackup);
   const monitorAlarm = useVorPmdtStore((state) => state.derived.monitorAnnunciation.alarm);
   const loginDialogOpen = useVorPmdtStore((state) => state.loginDialogOpen);
   const interactWithSidebar = useVorPmdtStore((state) => state.interactWithSidebar);
@@ -131,7 +131,7 @@ export function PmdtSidebar() {
     currentStatus: VorIndicatorColor,
     activeColor: VorIndicatorColor,
   ) => {
-    if (securityLevel < 3) return;
+    if (securityLevel < (fieldId === "local" ? 2 : 3)) return;
     const target = overrides.find((item) => item.fieldId === fieldId);
     const targetValue = target ? Boolean(target.value) : true;
     const targetStatus = (target?.status ?? activeColor) as VorIndicatorColor;
@@ -163,8 +163,8 @@ export function PmdtSidebar() {
   const alertColor = resolveVorStatus(alert ? "yellow" : "gray", "alert", overrides);
   const localState = displayInteractiveField("local", data.local, "yellow");
   // Main selection is a transmitter transfer command. It is available to
-  // SEC3/SEC4 without forcing the maintenance Local/Bypass state first.
-  const canOperate = securityLevel >= 3;
+  // Level 2+ without forcing the maintenance Local/Bypass state first.
+  const canOperate = securityLevel >= 2;
 
   return (
     <aside className="pmdt-sidebar">
@@ -217,8 +217,8 @@ export function PmdtSidebar() {
             {...fieldMetadata("local", "Local", localState.value, localState.status)}
             onClick={() => toggleInteractiveField("local", "Local", localState.value, localState.status, "yellow")}
             aria-pressed={localState.value}
-            disabled={securityLevel < 3}
-            title={securityLevel < 3 ? "GUEST chỉ được xem tham số" : mode === "student" ? "Ghi nhận thao tác Local" : undefined}
+            disabled={securityLevel < 2}
+            title={securityLevel < 2 ? "GUEST chỉ được xem tham số" : mode === "student" ? "Ghi nhận thao tác Local" : undefined}
             className={`pmdt-sidebar-state ${
               "pmdt-sidebar-state--interactive"
             }`}
@@ -253,7 +253,7 @@ export function PmdtSidebar() {
                     key={transmitter}
                     {...metadata}
                     disabled={!canOperate}
-                    title={canOperate ? `Chọn ${transmitter.toUpperCase()} làm máy phát chính` : "Yêu cầu SEC3 hoặc SEC4 để chuyển máy phát"}
+                    title={canOperate ? `Chọn ${transmitter.toUpperCase()} làm máy phát chính` : "Yêu cầu Level 2 trở lên để chuyển máy phát"}
                     onClick={() => {
                       if (selectMainTransmitter(transmitter) && mode === "student") {
                         interactWithSidebar(fieldId, `${row.label} ${transmitter.toUpperCase()}`, true, "green");
