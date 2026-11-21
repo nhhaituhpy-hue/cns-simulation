@@ -26,12 +26,14 @@ function MenuItemRow({
   const setAboutDialogOpen = useVorPmdtStore((state) => state.setAboutDialogOpen);
   const openLogin = useVorPmdtStore((state) => state.openLogin);
   const logout = useVorPmdtStore((state) => state.logout);
-  const restoreDefaultConfig = useVorPmdtStore((state) => state.restoreDefaultConfig);
+  const restoreBackupConfig = useVorPmdtStore((state) => state.restoreBackupConfig);
   const backupConfig = useVorPmdtStore((state) => state.backupConfig);
   const setTransmitterMode = useVorPmdtStore((state) => state.setTransmitterMode);
   const securityLevel = useVorPmdtStore((state) => state.securityLevel);
   const local = useVorPmdtStore((state) => state.config.simulation.local);
   const needBackup = useVorPmdtStore((state) => state.needBackup);
+  const hasConfigurationBackup = useVorPmdtStore((state) => state.hasConfigurationBackup);
+  const scenarioActive = useVorPmdtStore((state) => state.scenario.active);
   const isTransmitterCommand = item.action === "set-transmitter-mode";
   const isMainTransmitterCommand = isTransmitterCommand && item.transmitterMode === "main";
   const isMaintenanceTransmitterCommand = isTransmitterCommand && !isMainTransmitterCommand;
@@ -41,8 +43,8 @@ function MenuItemRow({
   const isBackupCommand = item.action === "config-backup";
   const unavailable = !item.enabled
     || (isTransmitterCommand && !canOperateTransmitter)
-    || (isRestoreCommand && (securityLevel < 3 || !local))
-    || (isBackupCommand && (securityLevel < 3 || !needBackup));
+    || (isRestoreCommand && (securityLevel < 3 || !local || !hasConfigurationBackup || scenarioActive))
+    || (isBackupCommand && (securityLevel < 3 || (hasConfigurationBackup && !needBackup) || scenarioActive));
   const hasChildren = Boolean(item.children?.length);
 
   function selectItem() {
@@ -70,7 +72,7 @@ function MenuItemRow({
       return;
     }
     if (item.action === "config-restore") {
-      if (restoreDefaultConfig()) closeMenu();
+      if (restoreBackupConfig()) closeMenu();
       return;
     }
     if (item.action === "config-backup") {
@@ -101,13 +103,17 @@ function MenuItemRow({
         title={
           !item.enabled
             ? disabledMenuTooltip
+            : (isRestoreCommand || isBackupCommand) && scenarioActive
+              ? "Không dùng backup/restore profile trong scenario"
+            : isRestoreCommand && !hasConfigurationBackup
+              ? "Chưa có backup — hãy dùng Config Backup trước"
             : isRestoreCommand && securityLevel < 3
               ? "Yêu cầu đăng nhập SEC3 hoặc SEC4"
               : isRestoreCommand && !local
                 ? "Bật Local để khôi phục cấu hình"
             : isBackupCommand && securityLevel < 3
               ? "Yêu cầu đăng nhập SEC3 hoặc SEC4"
-              : isBackupCommand && !needBackup
+              : isBackupCommand && hasConfigurationBackup && !needBackup
                 ? "Chưa có cấu hình cần backup"
                 : isTransmitterCommand && securityLevel < 3
                   ? "GUEST chỉ được xem tham số"

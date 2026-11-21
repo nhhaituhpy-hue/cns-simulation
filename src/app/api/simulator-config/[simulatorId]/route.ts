@@ -132,8 +132,18 @@ export async function GET(request: Request, context: RouteContext) {
   if (dtoError) return dtoError;
 
   try {
-    const configResult = await queryDatabase<SimulatorConfigRecord>(
-      `select * from public.user_simulator_configs
+    const configResult = await queryDatabase<SimulatorConfigRecord & { has_configuration_backup?: boolean }>(
+      simulatorId === "dvor-1150a"
+        ? `select config.*, exists (
+             select 1 from public.user_simulator_config_history history
+             where history.user_id = config.user_id
+               and history.simulator_id = config.simulator_id
+               and history.action = 'backup'
+           ) as has_configuration_backup
+           from public.user_simulator_configs config
+           where config.user_id = $1 and config.simulator_id = $2
+           limit 1`
+        : `select * from public.user_simulator_configs
        where user_id = $1 and simulator_id = $2
        limit 1`,
       [profile.id, simulatorId],
@@ -166,6 +176,9 @@ export async function GET(request: Request, context: RouteContext) {
 
     return configResponse(request, {
       ...responseFromRecord(unwrapRecord(data), simulatorId as SupportedSimulatorConfigId, adapter),
+      ...(simulatorId === "dvor-1150a" ? {
+        preferences: { ...data.preferences, dvor1150aHasBackup: data.has_configuration_backup === true },
+      } : {}),
       history: parseHistoryRows(historyResult.rows),
     });
   } catch (error) {

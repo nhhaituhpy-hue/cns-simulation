@@ -17,6 +17,93 @@ import {
   resolveVorStatus,
 } from "@/stores/vor-pmdt-store";
 
+describe("DVOR 1150A configuration reset and backup", () => {
+  function maintenance() {
+    const store = createVorPmdtStore();
+    store.getState().login("SEC3", "THREE");
+    store.getState().setConfigValue("simulation.local", true);
+    store.getState().setConfigValue("simulation.integralMonitorBypass", true);
+    return store;
+  }
+
+  it.each([-10, 10])("restores the last explicit backup after a %s W trial", (delta) => {
+    const store = maintenance();
+    const state = () => store.getState();
+    expect(state().hasConfigurationBackup).toBe(false);
+    expect(state().backupConfig()).toBe(true);
+    state().setConfigValue("transmitters.tx1.nominal.outputPower", 80);
+    expect(state().applyConfigChanges()).toBe(true);
+    expect(state().backupConfig()).toBe(true);
+    const backup = structuredClone(state().configurationBackup);
+    state().setConfigValue("transmitters.tx1.nominal.outputPower", 80 + delta);
+    expect(state().applyConfigChanges()).toBe(true);
+    state().setConfigValue("transmitters.tx1.nominal.outputPower", 75);
+    const simulation = structuredClone(state().config.simulation);
+    expect(state().restoreBackupConfig()).toBe(true);
+    expect(state().config).toEqual({ ...backup, simulation });
+    expect(state().configDraft).toEqual(state().config);
+    expect(state().configurationBackup).toEqual(backup);
+    expect(state().configDirty).toBe(false);
+    expect(state().needBackup).toBe(false);
+  });
+
+  it("leaves applied and pending non-default data unchanged without a backup", () => {
+    const store = maintenance();
+    store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 80);
+    expect(store.getState().applyConfigChanges()).toBe(true);
+    store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 90);
+    const before = store.getState();
+    expect(before.restoreBackupConfig()).toBe(false);
+    expect(store.getState().restoreDefaultConfig()).toBe(false);
+    expect(store.getState().config).toBe(before.config);
+    expect(store.getState().configDraft).toBe(before.configDraft);
+    expect(store.getState().configDirty).toBe(true);
+    expect(store.getState().needBackup).toBe(true);
+    expect(store.getState().lastCommand).toContain("no backup");
+  });
+
+  it("requires SEC3 and Local to restore a backup", () => {
+    const store = maintenance();
+    expect(store.getState().backupConfig()).toBe(true);
+    store.getState().setConfigValue("simulation.local", false);
+    const before = store.getState().config;
+    expect(store.getState().restoreBackupConfig()).toBe(false);
+    expect(store.getState().config).toBe(before);
+    store.getState().setConfigValue("simulation.local", true);
+    store.getState().logout();
+    expect(store.getState().restoreBackupConfig()).toBe(false);
+  });
+
+  it("keeps factory defaults staged and distinct from the explicit backup", () => {
+    const store = maintenance();
+    store.getState().setConfigValue("transmitters.tx1.nominal.outputPower", 80);
+    expect(store.getState().applyConfigChanges()).toBe(true);
+    expect(store.getState().backupConfig()).toBe(true);
+    const before = store.getState();
+    expect(before.resetConfigDraft()).toBe(true);
+    expect(store.getState().config).toBe(before.config);
+    expect(store.getState().configurationBackup).toBe(before.configurationBackup);
+    expect(store.getState().configDraft.transmitters.tx1.nominal.outputPower).toBe(70);
+    store.getState().discardConfigChanges();
+    expect(store.getState().configDraft).toEqual(before.config);
+  });
+
+  it("only marks an explicitly supplied hydrated backup as available", () => {
+    const store = maintenance();
+    const config = structuredClone(store.getState().config);
+    config.transmitters.tx1.nominal.outputPower = 90;
+    store.getState().replaceConfig(config);
+    expect(store.getState().hasConfigurationBackup).toBe(false);
+    const backup = structuredClone(config);
+    backup.transmitters.tx1.nominal.outputPower = 80;
+    store.getState().replaceConfig(config, backup);
+    expect(store.getState().restoreBackupConfig()).toBe(true);
+    expect(store.getState().config.transmitters.tx1.nominal.outputPower).toBe(80);
+    store.getState().reset();
+    expect(store.getState().hasConfigurationBackup).toBe(false);
+  });
+});
+
 describe("VOR PMDT defaults", () => {
   it("starts a published review scenario without examiner authoring rights", () => {
     const store = createVorPmdtStore();
@@ -313,7 +400,7 @@ describe("VOR PMDT store", () => {
     expect(previewDvor1150aScenario(scenarios[2]).snapshot.monitors.mon1.parameters.sidebandVswr.status).toBe("alarm");
   });
 
-  it("keeps a DVOR 1150A scenario session-only and restores its baseline with F8 semantics", () => {
+  it("keeps a DVOR 1150A scenario session-only and restores its baseline explicitly", () => {
     const store = createVorPmdtStore({ now: () => new Date("2026-08-26T09:00:00.000Z") });
     const scenario = createLowCarrierAnd9960Scenario();
 
@@ -336,7 +423,9 @@ describe("VOR PMDT store", () => {
     state = store.getState();
     expect(evaluateDvor1150aScenario(state.scenario, state.derived, state.config).solved).toBe(true);
 
-    expect(state.restoreDefaultConfig()).toBe(true);
+    expect(state.restoreBackupConfig()).toBe(false);
+    expect(state.resetConfigDraft()).toBe(false);
+    expect(state.restoreScenario()).toBe(true);
     state = store.getState();
     expect(state.config.transmitters.tx1.nominal.outputPower).toBe(10);
     expect(state.config.simulation.integralMonitorBypass).toBe(true);

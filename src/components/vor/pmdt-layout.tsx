@@ -168,7 +168,7 @@ export function PmdtLayout({
   const aboutDialogOpen = useVorPmdtStore((state) => state.aboutDialogOpen);
   const loginDialogOpen = useVorPmdtStore((state) => state.loginDialogOpen);
   const applyConfigChanges = useVorPmdtStore((state) => state.applyConfigChanges);
-  const restoreDefaultConfig = useVorPmdtStore((state) => state.restoreDefaultConfig);
+  const discardConfigChanges = useVorPmdtStore((state) => state.discardConfigChanges);
 
   useEffect(() => {
     setMode(mode);
@@ -185,13 +185,14 @@ export function PmdtLayout({
         applyConfigChanges();
       } else if (event.key === "F8") {
         event.preventDefault();
-        restoreDefaultConfig();
+        if (document.activeElement instanceof HTMLInputElement) document.activeElement.blur();
+        discardConfigChanges();
       }
     }
 
     document.addEventListener("keydown", handleFunctionKey);
     return () => document.removeEventListener("keydown", handleFunctionKey);
-  }, [applyConfigChanges, restoreDefaultConfig]);
+  }, [applyConfigChanges, discardConfigChanges]);
 
   return (
     <PracticeWorkspace
