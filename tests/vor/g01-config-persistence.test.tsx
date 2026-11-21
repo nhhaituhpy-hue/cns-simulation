@@ -3,6 +3,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { SimulatorConfigPersistence } from "@/components/simulator/simulator-config-persistence";
 import { createDefaultDvor1150aConfig } from "@/lib/dvor1150a";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
+import { serializeDvorConfiguration } from "@/lib/dvor1150a/configuration-file";
 
 const client = vi.hoisted(() => ({ load: vi.fn(), initialize: vi.fn(), apply: vi.fn() }));
 vi.mock("@/lib/simulator-config/client", () => ({
@@ -75,4 +76,27 @@ it("persists immediate physical sideband calibration without F7, including its e
   act(() => { useVorPmdtStore.getState().restoreBackupConfig(); });
   await waitFor(() => expect(client.apply).toHaveBeenCalledTimes(4));
   expect(client.apply.mock.calls[3][0]).toMatchObject({ action: "restore", config: { sidebandTrims: { "1a4a1": { R3: 360 } } } });
+});
+
+it("persists a loaded training file as applied state without replacing the explicit backup", async () => {
+  const config = createDefaultDvor1150aConfig();
+  client.load.mockResolvedValue({ appliedConfig: config, backupConfig: config, preferences: {}, persisted: true, revision: 1, history: [] });
+  client.apply.mockResolvedValue({ revision: 2 });
+  render(<SimulatorConfigPersistence simulatorId="dvor-1150a" />);
+  await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("saved"));
+  const fileConfig = structuredClone(config);
+  fileConfig.transmitters.tx1.nominal.outputPower = 80;
+  act(() => {
+    const state = useVorPmdtStore.getState();
+    state.login("SEC3", "THREE");
+    state.setConfigValue("simulation.local", true);
+    state.setConfigValue("simulation.integralMonitorBypass", true);
+    state.setTransmitterMode("tx1", "off");
+    state.setTransmitterMode("tx2", "off");
+    expect(useVorPmdtStore.getState().loadConfigurationFile(serializeDvorConfiguration(fileConfig))).toBe(true);
+  });
+  await waitFor(() => expect(client.apply).toHaveBeenCalledOnce());
+  expect(client.apply.mock.calls[0][0]).toMatchObject({ action: "apply", config: { transmitters: { tx1: { nominal: { outputPower: 80 } } } }, backupConfig: undefined });
+  expect(useVorPmdtStore.getState().configurationBackup.transmitters.tx1.nominal.outputPower).toBe(70);
+  expect(useVorPmdtStore.getState().hasConfigurationBackup).toBe(false);
 });

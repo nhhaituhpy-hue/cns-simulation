@@ -1,4 +1,5 @@
 import { SELEX_DVOR_TRAINING_ACCOUNTS } from "@/lib/simulator-training-accounts";
+import { dvorConfigurationLoadBlock, parseDvorConfigurationFile } from "@/lib/dvor1150a/configuration-file";
 import { dvorSidebandAssembly, DVOR_SIDEBAND_TRIM_IDS, type DvorSidebandTrimId } from "@/lib/dvor1150a/sideband";
 import type {
   VorAttemptEvent,
@@ -203,6 +204,7 @@ export interface VorPmdtStoreActions {
   restoreBackupConfig: () => boolean;
   restoreDefaultConfig: () => boolean;
   backupConfig: () => boolean;
+  loadConfigurationFile: (text: string) => boolean;
   replaceConfig: (
     config: Dvor1150aConfig,
     backupConfig?: Dvor1150aConfig,
@@ -1292,6 +1294,39 @@ export function createVorPmdtStore(
           protectionState: initialDvorProtectionState(),
           monitorElapsed: 0,
         });
+        return true;
+      },
+
+      loadConfigurationFile: (text) => {
+        const state = get();
+        const before = vorEvidenceSnapshot(state);
+        let reason = dvorConfigurationLoadBlock(state);
+        let config: Dvor1150aConfig | undefined;
+        if (!reason) {
+          try { config = parseDvorConfigurationFile(text); }
+          catch (error) { reason = error instanceof Error ? error.message : "Invalid configuration file."; }
+        }
+        if (reason || !config) {
+          set({ lastCommand: reason ?? "Invalid configuration file." });
+          recordAction({ kind: "configuration", controlId: "configuration-file-load", label: "Configuration Load", accepted: false, reason, before });
+          return false;
+        }
+        config.simulation = { ...state.config.simulation };
+        for (const id of DVOR_TRANSMITTER_IDS) {
+          config.transmitters[id].onAir = false;
+          config.transmitters[id].load = false;
+        }
+        const result = applyDvorConfigPatches(config);
+        if (!result.ok) { set({ lastCommand: "Configuration Load: validation failed." }); return false; }
+        const changedFields = collectChangedConfigFields(extractDvor1150aConfig(state.config), extractDvor1150aConfig(config));
+        const logs = createParameterChangeLogEntries({ changedFields, timeTag: state.data.timestamp,
+          userName: state.authenticatedUserId, file: "RMS", actionLabel: "Configuration Load" });
+        set({ config: result.config, configDraft: cloneDvor1150aConfig(result.config), configDirty: false,
+          data: result.snapshot.data, derived: result.snapshot, needBackup: true, monitorElapsed: 0,
+          lastCommand: "Configuration Load",
+          parameterChangeLogs: prependParameterChangeLogEntries(logs, state.parameterChangeLogs) });
+        recordAction({ kind: "configuration", controlId: "configuration-file-load", label: "Configuration Load", accepted: true,
+          before, parameterChanges: dvorParameterChanges(state.config, result.config, changedFields, "apply") });
         return true;
       },
 
