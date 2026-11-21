@@ -968,6 +968,7 @@ export function buildDvor1150aSnapshot(
   baseline = cloneDefaultVorPmdtData(),
   mainTransmitter?: DvorTransmitterId,
   keyerObservations?: import("./config-types").DvorKeyerObservations,
+  excludedMonitors: readonly import("./config-types").DvorMonitorId[] = [],
 ): Dvor1150aSnapshot {
   const data = structuredClone(baseline);
   const effectiveTransmitters = {
@@ -1013,7 +1014,7 @@ export function buildDvor1150aSnapshot(
   // An absent second monitor is excluded from voting; represent it as healthy
   // in the aggregate result while preserving `monitors.mon2.enabled = false`.
   const secondaryHealthy = hasSecondaryMonitor ? monitors.mon2.healthy : true;
-  const votingMonitors = hasSecondaryMonitor ? [monitors.mon1, monitors.mon2] : [monitors.mon1];
+  const votingMonitors = DVOR_MONITOR_IDS.filter(id => (id === "mon1" || hasSecondaryMonitor) && !excludedMonitors.includes(id)).map(id => monitors[id]);
   const votedSourceAlarm = (severity: "primary" | "secondary") => DVOR_MONITOR_PARAMETERS.some(parameter => {
     const route = config.monitor.routing[parameter];
     if (!route[severity] || (severity === "secondary" && route.primary)) return false;
@@ -1022,7 +1023,7 @@ export function buildDvor1150aSnapshot(
     const votes = votingMonitors.map(monitor => !monitor.enabled || monitor.parameters[parameter].executiveAlarm === true);
     return config.monitor.votingLogic === "AND" ? votes.every(Boolean) : votes.some(Boolean);
   });
-  const primarySourceAlarm = votedSourceAlarm("primary");
+  const primarySourceAlarm = votingMonitors.length === 0 || votedSourceAlarm("primary");
   const systemHealthy = !primarySourceAlarm;
   const alarmRequestsTransfer = config.monitor.transfer === "on Any Alarm"
     ? primarySourceAlarm || votedSourceAlarm("secondary")
@@ -1111,8 +1112,8 @@ export function buildDvor1150aSnapshot(
     ...data.rmsMonitorTransmitterStatus,
     monitorAlarmShutdown: !systemHealthy,
     enabledMonitors: {
-      monitor1: monitors.mon1.enabled,
-      monitor2: monitors.mon2.enabled,
+      monitor1: monitors.mon1.enabled && !excludedMonitors.includes("mon1"),
+      monitor2: monitors.mon2.enabled && !excludedMonitors.includes("mon2"),
     },
     monitors: data.rmsMonitorTransmitterStatus.monitors.map((row, index) => ({
       ...row,

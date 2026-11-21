@@ -5649,6 +5649,12 @@
   margin-bottom: 15px;
 }
 
+.pmdt-classic-window .pmdt-monitor-test-generator .pmdt-monitor-test-updated {
+  height: 20px;
+  margin-bottom: 15px;
+  border: 1px solid #d0d0d0;
+}
+
 .pmdt-classic-window .pmdt-monitor-test-generator fieldset:first-child table {
   table-layout: fixed;
 }
@@ -5684,17 +5690,14 @@
 }
 
 .pmdt-classic-window .pmdt-monitor-test-generator fieldset:nth-child(2) table {
-  width: 127px;
+  width: 100%;
   min-width: 0;
   table-layout: fixed;
 }
 
-.pmdt-classic-window .pmdt-monitor-test-generator fieldset:nth-child(2) table th {
-  width: 72px;
-}
-
-.pmdt-classic-window .pmdt-monitor-test-generator fieldset:nth-child(2) table td:nth-child(2) {
-  width: 35px;
+.pmdt-classic-window .pmdt-monitor-test-generator fieldset:nth-child(2) table td:first-child {
+  width: 60px;
+  text-align: right;
 }
 
 .pmdt-classic-window .pmdt-monitor-test-generator fieldset:nth-child(2) table td:last-child {

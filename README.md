@@ -936,3 +936,8 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 - Thêm regression test cho hydrate cấu hình đã lưu khác mặc định → đăng nhập → Restart → PUT thành công, kiểm tra operator được lưu là `null`.
 - Kiểm thử: regression test thất bại trước bản sửa và đạt sau bản sửa; 3 file focused Vitest (13 tests) đạt, `npm run lint`, `npm run typecheck` và production build (93/93 pages) đạt.
 - Mở rộng bỏ operator `null` tại 5 caller persistence khác; tái hiện DME 320 Reboot trả 400 sau Apply chưa lưu Flash, thêm 5 regression tests (đỏ trước/sáng sau), 77 focused tests và lint/typecheck/build đạt; giữ nguyên API, gates và revision behavior.
+
+### 2026-11-21 — DVOR 1150A G11 Monitor Integrity / Test Generator
+- Snapshot riêng từng MON cho Completed/In Process/TG; Updated không còn cố định, Apply giữ sample cũ đến lần đo mới. TG120s; initial Completed180s rồi cycle120s theo Q7/TM, có mặc định3-fail/voting/recovery và watchdog600s; không thêm control PMDT.
+- Source/giới hạn tại [audit §6.1k](docs/simulators/dvor-1150a-fidelity-audit.md#61k-g11--monitor-integrity--test-generator-theo-chu-kỳ): startup60s, slot6s và neutral detector là quy ước đào tạo, không firmware/certification. Runtime chỉ trong RAM; config/API/DTO/schema và DVOR1150/220 không đổi. Nhánh độc lập G10/PR#48.
+- Focused18/affected294 tests đạt; lint0error/hai warning navigation cũ, typecheck và build94/94 đạt. Đã sửa CSS làm cell rỗng vẫn xanh và label TG đè số; successful API fixture, ảnh1440/390 và log tại `/home/ubuntu/out/g11/`; PG không chạy vì persistence không đổi.
