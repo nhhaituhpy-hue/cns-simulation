@@ -101,11 +101,11 @@ describe("Sideband adjustment on the real block diagram", () => {
       const trigger = screen.getByRole("button", { name: new RegExp(`^Điều chỉnh ${id} `) });
       fireEvent.keyDown(trigger, { key: id === "R1" ? "Enter" : " " });
       const dialog = screen.getByRole("dialog");
-      expect(within(dialog).getByLabelText("Điện áp điều khiển pha")).toHaveTextContent(`${tp} · 6.00 VDC`);
+      expect(within(dialog).getByLabelText(`${tp} đo mô phỏng`)).toHaveTextContent("6.000 VDC");
       expect(within(dialog).queryByLabelText("Công suất mô phỏng")).not.toBeInTheDocument();
       expect(within(dialog).queryByLabelText("Công suất tham chiếu")).not.toBeInTheDocument();
       turnClockwise(dialog);
-      expect(within(dialog).getByLabelText("Điện áp điều khiển pha")).toHaveTextContent("6.33 VDC");
+      expect(within(dialog).getByLabelText(`${tp} đo mô phỏng`)).toHaveTextContent("6.333 VDC");
       expect(dialog).toHaveTextContent("Quy ước đào tạo");
       fireEvent.click(within(dialog).getByRole("button", { name: "Đóng" }));
     }
