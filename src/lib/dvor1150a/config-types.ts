@@ -1,6 +1,7 @@
 import type { VorIndicatorColor, VorMonitorAntennaConfig, VorMonitorOffsetRow, VorParameterStatus } from "@/lib/vor-types";
 import type { DvorKeyerConfiguration, DvorKeyerContext, DvorKeyerProjection } from "./keyer";
 import type { DvorSidebandTrims } from "./sideband";
+import type { HardwareCalibration } from "./hardware-calibration";
 
 /** Session-only instructor observations, separate from station settings and RF. */
 export type DvorKeyerObservations = Partial<Record<DvorTransmitterId, Omit<DvorKeyerContext, "role">>>;
@@ -172,6 +173,7 @@ export interface DvorTransmitterConfig {
 }
 
 export interface Dvor1150aConfig {
+  hardwareCalibration?: HardwareCalibration;
   sidebandTrims?: DvorSidebandTrims;
   station: {
     stationDescription: string;

@@ -100,3 +100,28 @@ it("persists a loaded training file as applied state without replacing the expli
   expect(useVorPmdtStore.getState().configurationBackup.transmitters.tx1.nominal.outputPower).toBe(70);
   expect(useVorPmdtStore.getState().hasConfigurationBackup).toBe(false);
 });
+
+it("persists G14 detector calibration without F7 and includes it in explicit backup and restore", async () => {
+  const config = createDefaultDvor1150aConfig();
+  client.load.mockResolvedValue({ appliedConfig: config, backupConfig: config, preferences: {}, persisted: true, revision: 1, history: [] });
+  client.apply.mockResolvedValue({ revision: 2 });
+  render(<SimulatorConfigPersistence simulatorId="dvor-1150a" />);
+  await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("saved"));
+  act(() => {
+    const store = useVorPmdtStore.getState();
+    store.login("SEC3", "THREE");
+    store.setConfigValue("simulation.local", true);
+    store.setConfigValue("simulation.integralMonitorBypass", true);
+    expect(store.turnHardwareTrim("bcps1", "R30", 15)).toBe(true);
+  });
+  await waitFor(() => expect(client.apply).toHaveBeenCalledTimes(1));
+  expect(client.apply.mock.calls[0][0]).toMatchObject({ action: "apply", changedFields: ["hardwareCalibration.bcps1.R30"], config: { hardwareCalibration: { bcps1: { R30: 15 } } } });
+  act(() => { expect(useVorPmdtStore.getState().backupConfig()).toBe(true); });
+  await waitFor(() => expect(client.apply).toHaveBeenCalledTimes(2));
+  expect(client.apply.mock.calls[1][0]).toMatchObject({ action: "backup", backupConfig: { hardwareCalibration: { bcps1: { R30: 15 } } } });
+  act(() => { useVorPmdtStore.getState().turnHardwareTrim("bcps1", "R30", 15); });
+  await waitFor(() => expect(client.apply).toHaveBeenCalledTimes(3));
+  act(() => { expect(useVorPmdtStore.getState().restoreBackupConfig()).toBe(true); });
+  await waitFor(() => expect(client.apply).toHaveBeenCalledTimes(4));
+  expect(client.apply.mock.calls[3][0]).toMatchObject({ action: "restore", config: { hardwareCalibration: { bcps1: { R30: 15 } } } });
+});

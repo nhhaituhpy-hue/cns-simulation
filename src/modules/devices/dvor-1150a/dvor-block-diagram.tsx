@@ -23,6 +23,7 @@ import { SimulatorConfigPersistence } from "@/components/simulator/simulator-con
 import styles from "./dvor-block-diagram.module.css";
 import { dvorLcuScreens, projectDvorHardware } from "@/lib/dvor1150a/hardware";
 import { Dvor1150aMonitorClock } from "@/components/vor/dvor1150a-monitor-clock";
+import { HardwareCalibrationDialog } from "./hardware-calibration-dialog";
 
 const cabinetImages: Record<CabinetFace, { src: string; alt: string; label: string; horizontalScale?: number }> = {
   front: {
@@ -360,6 +361,8 @@ function ModulePanel({ blockId, sidebandAdjustment, occurrenceId }: { blockId: E
   const hasRebuiltFaceplate = hasRebuiltModuleFaceplate(blockId);
   const [activeWaveform, setActiveWaveform] = useState<DvorWaveformReference | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const [calibrationOpen, setCalibrationOpen] = useState(false);
+  const assembly = blockId === "rf-monitor" ? "rf" : occurrenceId === "bcps-1a5a2" ? "bcps2" : "bcps1";
 
   useEffect(() => {
     if (!activeWaveform) return;
@@ -385,7 +388,7 @@ function ModulePanel({ blockId, sidebandAdjustment, occurrenceId }: { blockId: E
     <div className={styles.modulePanel}>
       {hasRebuiltFaceplate ? (
         <figure className={`${styles.moduleFigure} ${styles.moduleFigureRebuilt}`}>
-          <DvorModuleFaceplate blockId={blockId} sidebandAdjustment={sidebandAdjustment} occurrenceId={occurrenceId} />
+          <DvorModuleFaceplate blockId={blockId} sidebandAdjustment={sidebandAdjustment} occurrenceId={occurrenceId} onCalibration={() => setCalibrationOpen(true)} />
           <figcaption>{block.faceImage?.figure}</figcaption>
         </figure>
       ) : block.faceImage ? (
@@ -407,6 +410,10 @@ function ModulePanel({ blockId, sidebandAdjustment, occurrenceId }: { blockId: E
         </div>
       )}
       <div className={styles.manualDescription}>
+        {blockId === "rf-monitor" || blockId === "bcps" ? <>
+          <button type="button" onClick={() => setCalibrationOpen(true)}>Hiệu chỉnh detector {assembly.toUpperCase()} · mô phỏng phần cứng</button>
+          {calibrationOpen ? <HardwareCalibrationDialog key={assembly} assembly={assembly} onClose={() => setCalibrationOpen(false)} /> : null}
+        </> : null}
         <p className={styles.manualDescriptionTitle}>Mô tả theo tài liệu manual</p>
         <p className={styles.manualFunction}>{block.description}</p>
 

@@ -103,7 +103,7 @@ function Dvor1150aConfigPersistence() {
       const backupChanged = state.hasConfigurationBackup !== previousState.hasConfigurationBackup
         || !areJsonEqual(state.configurationBackup, previousState.configurationBackup);
       let action: "apply" | "restore" | "backup" | null = null;
-      if ((state.lastCommand === "Physical sideband trim" || state.lastCommand === "Configuration Load") && configChanged) {
+      if ((state.lastCommand === "Physical sideband trim" || state.lastCommand === "Physical detector trim" || state.lastCommand === "Configuration Load") && configChanged) {
         action = "apply";
       } else if (state.lastCommand === "Configuration Apply" && previousState.configDirty && !state.configDirty && configChanged) {
         action = "apply";
