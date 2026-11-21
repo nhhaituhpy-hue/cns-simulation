@@ -1,4 +1,5 @@
 import { createDvorSecuritySession, type SecurityField, type SecurityUser } from "@/lib/dvor1150a/security";
+import { appendDvorFault, initialDvorFaultHistory, sampleDvorFaultHistory, type DvorFaultHistory } from "@/lib/dvor1150a/fault-history";
 import { dvorConfigurationLoadBlock, parseDvorConfigurationFile } from "@/lib/dvor1150a/configuration-file";
 import { dvorSidebandAssembly, DVOR_SIDEBAND_TRIM_IDS, type DvorSidebandTrimId } from "@/lib/dvor1150a/sideband";
 import { HARDWARE_TRIMS, type HardwareAssembly, type HardwareTrim } from "@/lib/dvor1150a/hardware-calibration";
@@ -147,6 +148,7 @@ export interface VorPmdtStoreState {
   changePasswordDialogOpen: boolean;
   data: VorPmdtData;
   derived: Dvor1150aSnapshot;
+  faultHistory: DvorFaultHistory;
   /** Instructor stimulus; never persisted as a station setting/profile. */
   keyerObservations?: DvorKeyerObservations;
   activeScreen: VorScreenId;
@@ -288,11 +290,12 @@ function defaultId(): string {
   return `vor-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function initialState(): VorPmdtStoreState {
+function initialState(timestamp: string): VorPmdtStoreState {
   const config = createDefaultDvor1150aConfig();
   const derived = buildDvor1150aSnapshot(config);
   return {
     mode: "preview",
+    faultHistory: sampleDvorFaultHistory(initialDvorFaultHistory(), config, derived, timestamp),
     configPanelOpen: false,
     scenarioParametersOpen: false,
     scenarioAuthoringEnabled: false,
@@ -450,6 +453,9 @@ export function createVorPmdtStore(
     const set = (update: Partial<VorPmdtStore> | ((state: VorPmdtStore) => Partial<VorPmdtStore>)) => {
       setState(state => {
         const next = typeof update === "function" ? update(state) : update;
+        if (next.derived && !next.faultHistory) {
+          next.faultHistory = sampleDvorFaultHistory(state.faultHistory, next.config ?? state.config, next.derived, now().toISOString());
+        }
         const merged = { ...state, ...next };
         const relayRoutes = { ...merged.lcu.relayRoutes };
         for (const id of DVOR_TRANSMITTER_IDS) {
@@ -555,6 +561,7 @@ export function createVorPmdtStore(
       const derived = buildDvor1150aSnapshot(config);
       nativeEvidenceScope = { moduleId: "dvor-1150a", scenarioId: definition.id, runId: defaultId(), startedAt: startedAt ?? now().toISOString() };
       set({
+        faultHistory: sampleDvorFaultHistory(initialDvorFaultHistory(), config, derived, now().toISOString()),
         config,
         configDraft: cloneDvor1150aConfig(config),
         configurationBackup: cloneDvor1150aConfig(config),
@@ -594,7 +601,7 @@ export function createVorPmdtStore(
     };
 
     return {
-      ...initialState(),
+      ...initialState(now().toISOString()),
 
       turnSidebandTrim: (occurrenceId, trim, delta) => {
         const state = get();
@@ -755,7 +762,7 @@ export function createVorPmdtStore(
         const config = createDefaultDvor1150aConfig();
         const derived = buildDvor1150aSnapshot(config);
         set({
-          ...initialState(),
+          ...initialState(now().toISOString()),
           config,
           data: derived.data,
           derived,
@@ -1019,6 +1026,7 @@ export function createVorPmdtStore(
         };
         const derived = buildDvor1150aSnapshot(config);
         set({
+          faultHistory: sampleDvorFaultHistory(initialDvorFaultHistory(), config, derived, now().toISOString()),
           config,
           configDraft: cloneDvor1150aConfig(config),
           configurationBackup: cloneDvor1150aConfig(config),
@@ -1324,7 +1332,7 @@ export function createVorPmdtStore(
           if (remaining > 0) {
             lcu = advanceDvorLcuTime({ ...state, config, derived: snapshot, data: snapshot.data, lcu }, remaining);
             const continued = advanceDvorProtection(config, next.state, remaining, state.derived.mainTransmitter);
-            next = { ...continued, events: [...next.events, ...continued.events] };
+            next = { ...continued, events: [...next.events, ...continued.events], faults: [...next.faults, ...continued.faults.map(fault => ({ ...fault, elapsed: bootSeconds + fault.elapsed }))] };
           } else next = { ...next, config, snapshot };
         }
         const events = next.events.map((label, index) => initializing && index === 0
@@ -1339,6 +1347,8 @@ export function createVorPmdtStore(
         }
         set({
           lcu,
+          faultHistory: sampleDvorFaultHistory(next.faults.reduce((history, fault) => appendDvorFault(history, fault.config, fault.snapshot,
+            new Date(now().getTime() - (seconds - fault.elapsed) * 1000).toISOString()), state.faultHistory), next.config, next.snapshot, now().toISOString()),
           ...(next.config !== state.config ? {
             config: next.config, configDraft: draft,
             derived: next.snapshot, data: next.snapshot.data,
@@ -1486,6 +1496,7 @@ export function createVorPmdtStore(
         const nextBackupConfig = cloneDvor1150aConfig(backupConfig ?? config);
         const derived = buildDvor1150aSnapshot(nextConfig);
         set({
+          faultHistory: sampleDvorFaultHistory(initialDvorFaultHistory(), nextConfig, derived, now().toISOString()),
           config: nextConfig,
           configDraft: cloneDvor1150aConfig(nextConfig),
           configurationBackup: nextBackupConfig,
@@ -1734,7 +1745,7 @@ export function createVorPmdtStore(
       updateAnswer: (changes) =>
         set((state) => ({ answer: { ...state.answer, ...changes } })),
 
-      reset: () => { nativeEvidenceScope = undefined; security.reset(); set(initialState()); },
+      reset: () => { nativeEvidenceScope = undefined; security.reset(); set(initialState(now().toISOString())); },
     };
   });
 }

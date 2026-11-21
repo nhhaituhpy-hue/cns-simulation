@@ -495,7 +495,7 @@ ghi rõ loại lựa chọn thay cho bịa giá trị số.
 | P31 Monitors → Commands → Integral Bypass On-Off / Standby Bypass On-Off | **G08:** Integral On/Off gọi cùng `setConfigValue` như sidebar; checkmark đọc config live, cập nhật snapshot/LCU/evidence, không Apply nháp khác. SEC≥3; On cần Local, Off cho phép bỏ bypass an toàn như store hiện có. Standby chưa có mô hình độc lập: disabled/có lý do, không dùng Integral thay thế. | Một phần | TM PDF 158 / 3-40 §3.6.8.1.3/Fig. 3-36; KT PDF 12 / in 11 I; MENU::`monitorCommandItems`, BAR, STORE::`setConfigValue`, `pmdt-sidebar.tsx`; §6.1e |
 | P32 Monitor1/2 → Data → Integral / Status (Integral, Standby, Maintenance theo Table 3-1) | Có limit/current hai bên, status faults/alerts; single-monitor Integral còn trình bày standby values, không phải đủ ba screen độc lập theo cây Table 3-1. | Một phần | TM PDF 121,159–160 / 3-3,41–42 Table 3-1/§3.6.8.2.1/Figs. 3-37–38; KT PDF 14–15 / in 13–14 II.3; `monitor-data-layout.tsx`, `monitor-integral.tsx::MonitorIntegralSingle`, `monitor-status.tsx::MonitorStatus` |
 | P33 Monitor1/2 → Test Results → Completed / In Process / Test Generator | Cả ba tab có; TG Setup gồm Azimuth/30Mod/9960Mod/Deviation/IdentMod và Ident Control/Audio Modulation/Audio Frequency; ba trường cuối có note chỉ lưu config, không detector/certification, nhãn Updated cố định. Completed/In Process có sáu cột LowTest/LowLimit/HighTest × low/high, Azimuth/30/9960/Deviation/Ident. Derived tính target/đánh giá chứ không snapshot chu kỳ TG thật hai phút và ba lần lỗi; không coi xem Completed là chạy phép đo đã lưu. | Một phần | TM PDF 161–164 / 3-43–46 §3.6.8.2.2/Figs. 3-39–41; KT PDF 31–33 / in 30–32 IV.1–2; `monitor-test-results.tsx::MonitorTestResults/buildTestRows`, ENG::`calculateIntegrityTestValues` (import từ domain) |
-| P34 Monitor1/2 → Fault History → Integral / Local Control Unit | Có hai tab, Prior/Alarm và Older; Integral Prior lấy **số hiện tại**, Alarm/time hardcode, Older không handler; không lưu ba sự kiện cuối như TM. | Sai khác | TM PDF 165–166 / 3-47–48 §3.6.8.2.3/Figs. 3-42–43; KT PDF 20–21 / in 19–20 II.6; `monitor-fault-history.tsx::FaultIntegral/MonitorFaultHistory` |
+| P34 Monitor1/2 → Fault History → Integral / Local Control Unit | **G10 đã sửa:** last-good riêng từng MON, snapshot alarm và LCU trước transfer/shutdown; giữ ba sự kiện, Older chạy, không lấy số live. Integral MON1 theo ảnh trạm33; MON2 **chưa xác minh bằng ảnh**. RAM/session và mismatch chưa mô hình giữ giới hạn §6.1j. | Một phần | TM PDF 165–166 / 3-47–48 §3.6.8.2.3/Figs. 3-42–43; KT PDF 20–21 / in 19–20 II.6; ảnh33; `fault-history.ts`, `MonitorFaultHistory`, STORE::advanceMonitorTime |
 | P35 Monitor1/2 → Offsets & Scale Factors | Có Integral/Standby/TG certification, azimuth/scale/RF/TX power/frequency/notch/return loss; hai offset ghi chỉ lưu, không tác động đo (§3); bố trí/đơn vị không đồng nghĩa hiệu chuẩn vật lý. | Một phần | TM PDF 167 / 3-49 §3.6.8.2.4/Fig. 3-44; KT —; `monitor-offsets.tsx::MonitorOffsets`, ENG::`calibratedMeasurement` |
 | P36 Monitor1/2 → Test Signal Output J3 → Integral/Standby Composite, Test Generator, Carrier Forward/Reflected, Ground Check, SB1/2 Reflected | **G08:** giữ tám nhãn, disabled từng lá/có lý do thiếu đường đo J3; bỏ check Integral Composite cố định để không khẳng định đã nối BNC. TM nói lựa chọn J3 không đổi monitoring; không thay raw monitor hoặc bịa dạng sóng để giả lệnh đã chạy. | Một phần | TM PDF 168 / 3-50 §3.6.8.2.5/Fig. 3-45; KT PDF 25–27 / in 24–26 III.4; MENU::`testSignalItems`, BAR::`selectItem`; §6.1e |
 | P37 Transmitters → Data → Transmitter Data | Có Power/Frequency/VSWR, cột TX1/TX2, SB1–4; **không có chọn TX#1/TX#2 riêng như đường KT ghi**. RF MHz hiển thị bốn số lẻ, thiếu số thứ năm để ghi phiếu KT; Load mất RF (§3 K1). | Một phần | TM PDF 169 / 3-51 §3.6.8.3.1/Fig. 3-46; KT PDF 12–13,22 / in 11–12,21 II.2/III.1; `tx-data-main.tsx::TxDataMain`, ENG::`buildTxPower/effectiveTransmitter` |
@@ -545,7 +545,7 @@ sim có thể tô xanh số ngoài dải bình thường KT. Ngưỡng trạm c�
 | S06 Startup/Shutdown toàn trạm | Không đủ AC/BATT/DC BUS breaker cả hai BCPS, đợi init khoảng20s, kiểm tra Local trước phát, Logoff trước tắt nguồn. Các lệnh Off PMDT có thật nhưng không thay chuỗi nguồn; LCU tách state (§2). | Một phần | TM PDF 119–120,180 / 3-1–2,62 §3.5.1–2/Table 3-4; KT PDF 12 / in 11 I; VIEW::`LcuPanel`, STORE::`setTransmitterMode`, DEF |
 
 **Thống kê §4:** 64 dòng verdict (48 menu/screen, 10 nhóm thông số,
-6 luồng hành vi). Khớp: 3; Một phần: 48; Sai khác: 3; Thiếu: 6; Chưa xác minh: 4. Đây là các góc nhìn
+6 luồng hành vi). Khớp: 3; Một phần: 49; Sai khác: 2; Thiếu: 6; Chưa xác minh: 4. Đây là các góc nhìn
 chồng lấn, không phải 64 lỗi độc lập.
 
 ### 4.5. Năm khoảng trống PMDT ưu tiên
@@ -560,9 +560,9 @@ chồng lấn, không phải 64 lỗi độc lập.
 3. **P24/P31/P43/P44:** nhiều menu có vẻ enabled nhưng không làm gì;
    Bypass/Ident còn gây hiểu sai đường thao tác; Transfer đã sửa G09 (TM PDF
    150–152,158,175 / 3-32–34,40,57; KT PDF 12,21 / in 11,20; MENU/BAR).
-4. **P34:** lịch sử lỗi không phải sự kiện đã bắt giữ; Prior là live, Alarm
-   hardcode, Older inert (TM PDF 165–166 / 3-47–48; KT PDF 20–21 / in
-   19–20 II.6; `FaultIntegral`).
+4. **P34 — G10 đã sửa:** ba sự kiện bắt giữ trước tác động; last-good từng
+   MON, alarm/time và Older thực. RAM/session, mismatch và MON2 thiếu ảnh
+   còn giới hạn (§6.1j; TM PDF165–166; KT PDF20–21; ảnh trạm33).
 5. **P02/S02/S05:** direct/modem/RCSU chưa tách; clock đã độc lập UI ở G09,
    nhưng học viên chưa diễn tập được mất cáp RCSU độc lập (TM PDF
    123–127,143 / 3-5–9,25; KT PDF 15–16 / in 14–15 II.4; ENG/STORE/CLOCK).
@@ -607,7 +607,7 @@ native PMDT §4 trừ khi ghi khác. Danh sách đọc không lược bỏ vì m
 | K05 II.3 Monitor | Monitor1/2: Azimuth, 30HzMod, 9960HzMod, Deviation, RF Level, trạng thái Ident; màn còn IdentMod/Code, TxPower/Freq/Error; ghi **đủ mọi chữ số thập phân hiển thị**, trong giới hạn KT V.5.1 | Một phần: đọc Integral hai cột; không biểu mẫu/ca trước, ngưỡng §4.3 chưa bảo đảm pass chuẩn KT. | PMDT/Hồ sơ / Một phần | KT PDF 10–11,14–15,35 / in 9–10,13–14/BM01; TM PDF 153,159 / 3-35,41; `MonitorIntegral`, DEF/ENG |
 | K06 II.4 Kết nối VOR–RCSU | RMS Status: RCSU Communication Error không vàng; nếu có kiểm tra cáp/đường truyền | Một phần: có dòng status nhưng gộp với PMDT link và activeColor đỏ; không cáp độc lập. | Hỗn hợp / Một phần | KT PDF 15–16 / in 14–15 II.4; TM PDF 127 / 3-9 Fig. 3-6; `RmsVorStatus`, ENG::`data.rmsStatus` |
 | K07 II.5 RCSU tại trạm | Đọc chỉ thị RCSU sau khi kiểm VOR tốt, nếu Alert điều tra chi tiết | Không: không có mặt RCSU vận hành độc lập; thông tin RCSU trong RMS không thay thiết bị này. | Vật lý / Thiếu | KT PDF 16 / in 15 II.5; TM PDF 204 / 6-4 §6.2.10; `PmdtScreenRouter`, BDAT/FACE, `RmsStatusLayout` |
-| K08 II.6 Nhánh khi có cảnh báo | Maintenance Alert mặt máy/sidebar Alert vàng → RMS Maintenance Alerts → Digital I/O nguồn/TX Alerts → TX Status đúng máy → Monitor1 Fault History Integral; không có alert thì bỏ nhánh chi tiết; ghi thêm nội dung sổ giao ca | Một phần: tất cả screen có; Fault History không sự kiện thật, mặt đèn không đồng bộ, thiếu sổ. | Hỗn hợp / Một phần | KT PDF 16–21 / in 15–20 II.6; TM PDF 131,133,165–166,172 / 3-13,15,47–48,54; `RmsMaintenanceAlerts`, `RmsDigitalIo`, `TxStatus`, `FaultIntegral`, FACE |
+| K08 II.6 Nhánh khi có cảnh báo | Maintenance Alert mặt máy/sidebar Alert vàng → RMS Maintenance Alerts → Digital I/O nguồn/TX Alerts → TX Status đúng máy → Monitor1 Fault History Integral; không có alert thì bỏ nhánh chi tiết; ghi thêm nội dung sổ giao ca | **G10:** Fault History giữ sự kiện thực của model trước tác động, không phải số live; LCU/LED native G03/G04. Không thay sổ giao ca/đo trạm; giới hạn RAM và mismatch §6.1j. | Hỗn hợp / Một phần | KT PDF 16–21 / in 15–20 II.6; TM PDF 131,133,165–166,172 / 3-13,15,47–48,54; `RmsMaintenanceAlerts`, `RmsDigitalIo`, `TxStatus`, `FaultIntegral`, FACE |
 | K09 Tuần: thời điểm, báo cáo, đổi main | Giao ca thứ sáu; làm cả ngày; đổi TX hai tuần/lần **trước đo**, nếu không đạt thì về TX ban đầu, ghi việc/lý do, BM01 gửi TSS | Một phần: chọn main/route và **menu Transfer đã chạy (G09)**; chuyển lại bằng lệnh tay được. Không lịch, đánh giá tự động/trở lại theo phiếu, sổ hay lý do chuyển máy. | PMDT/Hồ sơ / Một phần | KT PDF21–22/in20–21 III; TM PDF175,199/3-57,5-1 §3.6.8.5/Table5-1; STORE::`selectMainTransmitter/transferTransmitter/setTransmitterMode`, BAR |
 | K10 III.1 Carrier | Counter tại Synth J2; fc±0.002%, MHz5 số lẻ, tính sai số và báo TSS nếu vượt; không lấy PMDT thay counter | Một phần: Synth face J2/PMDT frequency có, không cắm counter độc lập/capture5 số. | Vật lý / Một phần | KT PDF 22–23 / in 21–22 III.1; TM PDF 201 / 6-1 §6.2.3; FACE::`SynthesizerFaceplate`, `TxDataMain`, ENG |
 | K11 III.2 Synthesizer TX đang anten | DMM TP1=0±0.05V, TP2=2–8V; Carrier PLL Control nếu cần, lặp/ghi cả hai | Một phần: điểm TP và PMDT PLL field có, không DMM phản hồi/chuỗi đạt đồng thời. | Hỗn hợp / Một phần | KT PDF 23–24 / in 22–23 III.2; TM PDF 193 / 3-75 Table 3-15; FACE::`SynthesizerFaceplate`, `TxConfigOffsets`, ENG |
@@ -757,7 +757,7 @@ không đếm chúng thành 25 bug còn mở.
 | G07 | **Đã sửa native** | Trim/CAL SB chung config/PMDT/evidence/backup; giữ tách vị trí vít, RF vật lý, chỉ thị và software offsets. Gom §3 P08/P10, §5 K12/B12/B15–B16; giới hạn đo thật còn Một phần. | HC PDF 17–18 / in 16–17 IV.3.1 o/3.2 j,o; TM PDF 210,215 / 6-10,15 §§6.4.6/24 | SBD → STORE::turnSidebandTrim → config.sidebandTrims → ENGINE/Transmitter Data; §6.1d | Stage 2/G07 hoàn thành; không thêm vị trí vít vào màn PMDT, chưa mô phỏng nghiệm thu TP/cáp/dụng cụ. |
 | G08 | **Đã sửa native** | Không còn lá enabled/no-op: Integral Bypass dùng store/guard/evidence chung; Ident, Standby Bypass, RMS và J3 chưa có mô hình thì disabled với lý do cụ thể; bỏ check giả. RMS Audio/Spare/BCPS sửa nhãn theo TM. **Không tuyên bố đã mô phỏng mọi lệnh**; Transfer giữ fix G09. Gom §4 P24/P31/P36/P44. | TM PDF150–152,158,168,175/3-32–34,40,50,57; KT PDF12,21/in11,20; ảnh46 | MENU::unavailableVorCommandReason; BAR::selectItem; STORE::setConfigValue | Stage2/G08 hoàn tất theo tiêu chí dispatch cùng guard/state **hoặc disabled có lý do**; §6.1e ghi rõ giới hạn và kiểm từ menu thật. |
 | G09 | Cao | **ĐÃ SỬA — Stage1c:** protection elapsed độc lập tab/login/PMDT link/screen; cold transfer20s, hot Load chuyển ngay; shutdown/restart có trạng thái và hai retry tùy chọn. Profile Q13 cold, SEC3 preselected nhưng vẫn phải xác thực; RMS mặc định restarts disabled/50s theo ảnh trạm. Freeze lifecycle bài làm có chủ ý, không phải clock phụ thuộc cửa sổ (§6.1b). | TM PDF89,143,175/2-45,3-25,57 §§2.3.2.14.1.9/3.6.8.5/Table3-3; KT PDF12,21/in11,20; PHOTO-PMDT-RMS/INT (§6.1b) | CLOCK; STORE::advanceMonitorTime/transferTransmitter/setTransmitterMode; PROTECTION::advanceDvorProtection | Stage1c hoàn tất native; test cold/hot, no alternate, timer/AND/OR/bypass, hai restart, UI/link và backward-compatible profile; lựa chọn/giới hạn §6.1b. |
-| G10 | Cao | Fault History Prior live, Alarm/time cố định, Older không chạy; dễ học sai nguyên nhân trước chuyển máy. Gom §4 P34, §5 K08. | TM PDF 165–166 / 3-47–48 §3.6.8.2.3; KT PDF 20–21 / in 19–20 II.6 | MonitorFaultHistory::FaultIntegral; STORE event state | Stage 3: snapshot trước tác động, ba sự kiện; kiểm lịch sử rỗng/nhiều alarm/sau transfer, không lấy live thay history. |
+| G10 | **Đã sửa native** | Prior last-good từng MON; alarm/time và LCU/route bắt giữ trước transfer/shutdown, giữ ba sự kiện; Older duyệt thực. MON1 theo ảnh33; MON2 **chưa xác minh bằng ảnh**. Gom §4 P34, §5 K08. | TM PDF165–166 / 3-47–48 §3.6.8.2.3; KT PDF20–21 / in19–20 II.6; ảnh33; OWNER Q10/Q13 | fault-history.ts; PROTECTION::advanceDvorProtection; STORE::advanceMonitorTime; MonitorFaultHistory | Stage3/G10 hoàn tất trong phạm vi runtime/session (§6.1j); không tuyên bố NVRAM qua reload hoặc các mismatch chưa có nguồn. |
 | G11 | Cao | TG Completed/In Process/Updated tức thời, chưa lifecycle/snapshot; field stored-only không detector. Q7: theo SELEX TM, HC ghi lệch là typo; phân biệt thay TG Completed/3 phút với cycle TG khoảng2 phút. | HC PDF 28,44 / in 27,43 IV.7 f/15 i; TM PDF 161–164,214 / 3-43–46,6-14 | READ::MonitorTestResults/TestGenerator; ENGINE::calculateIntegrityTestValues/testGeneratorResults | Stage 3: lifecycle/fail/timeout theo đúng mode TM, không áp HC120s cho thay TG. |
 | G12 | Cao | Mã figure in như P/N; cần tách designator/assembly/figure. Q1 chốt designator theo manual; Q7 TG1A3A5/Interface1A9 theo TM, HC1A12/1A19 là typo. PHOTO-F xác nhận thứ tự A3A1…A3A11, không đủ đọc P/N/revision nhỏ. | TM PDF 24–25,185,191–192 / 1-4–5,3-67,73–74; HC PDF 4,42,45 / in 3,41,44 | FACE::PartNumber; BDAT::DVOR_BLOCKS | Stage 4: TM định danh + ảnh trạm bố cục (§2.6), không chờ lại Q1/Q7; giữ bất nhất nội bộ TM được ghi rõ. |
 | G13 | Cao | Thiếu chuỗi điều kiện–dụng cụ–nghiệm thu; click chọn module không phải thay card. Q5: J25/J26 là đường LSB/USB, không bài chọn connector. Q6: không hồ sơ reference riêng; tiêu chí thực tế 9960 mod không gian28–32% khi bay. | HC PDF 5–7,15–18 / in 4–6,14–17 III/IV.3; BD PDF 5–13 / in 4–12 Phần1/2 | SBD; SCEN::evaluateDvor1150aScenario; STORE evidence | Stage 5: checklist/guard/evidence theo HDCV, không bịa hồ sơ reference, không dùng meter mô hình để chứng nhận bay/ESD/an toàn; J2 chưa chốt riêng. |
@@ -1286,6 +1286,67 @@ Affected16file/219test và PostgreSQL cô lập1file/33test pass; typecheck,
 ESLint hai file conflict code/test và build placeholders pass. Không chụp
 lại UI trong lần merge này; ảnh G15 phía trên là trước merge G14.
 
+### 6.1j. G10 — Fault History bắt giữ trước tác động
+
+Nhánh G10 từ fresh origin/main sau PR#46, không cần code G06/PR#47.
+Sau PR#47 merge, đã tích hợp origin/main, giữ cả G06 (§6.1i) và G10.
+Ưu tiên HDCV cho thao tác: KT PDF20–21/in19–20 II.6 yêu cầu mở
+Monitor1 > Fault History > Integral khi truy nguyên cảnh báo. Đã tìm trong
+SELEX/HDCV khai thác, bảo dưỡng và hiệu chỉnh; không thấy quy tắc HDCV
+thay thế retention của TM. TM PDF165/in3-47 §3.6.8.2.3 ghi “last three
+alarm condition events”, Prior là “last good measurements” trước alarm gây
+shutdown, Alarm là “snapshot” khi out-of-tolerance. PDF166/in3-48,
+§3.6.8.2.3.2/Fig3-43 yêu cầu LCU status/antenna configuration lúc lỗi.
+OWNER Q10 ưu tiên ảnh PMDT trạm; Q13 xác nhận cold standby, không thay
+semantics history. Không cần hỏi thêm. Integral MON1 đối chiếu **ảnh33**;
+**MON2 Fault History chưa xác minh bằng ảnh** (không có ảnh MON2).
+
+- Store chỉ cập nhật last-good của từng MON enabled, không primary/secondary
+  alarm và có TX trên anten. Không lấy default station làm prior của profile
+  đã lỗi ngay khi load; prior chưa đo hoặc CCA disabled hiển thị `—`.
+- Protection phát snapshot ngay trước thay route/shutdown. Một sự kiện cho
+  một lần alarm executive đủ qualification/delay, không phải mỗi detector/
+  mỗi tick; capture tất cả phép đo đồng thời. Timestamp là thời điểm alarm
+  qualified của model, không giả chứng cứ thời điểm analog vượt ngưỡng đầu
+  tiên giữa hai mẫu. Clock tick dài vẫn giữ từng mốc và thời gian boot LCU.
+- Lưu ba sự kiện mới nhất; Integral mở newest #1, Older quay #2/#3 rồi #1
+  (quy tắc duyệt simulator vì không có nút Newer trong ảnh). Một/không có
+  sự kiện thì Older disabled; bảng rỗng giữ nhãn/đơn vị, `—`, không tô xanh
+  dữ liệu giả. MON1/MON2 dùng cùng executive event nhưng prior/giá trị đúng
+  card. VSWR lấy số anten vượt alarm limit đang cấu hình, không đổi về1.25.
+- LCU giữ logic, enabled, Primary/Secondary, Bypass, Main, On Antenna/On
+  trước tác động, không đọc live sau chuyển máy. Ba cột LCU xếp thời gian
+  tăng dần trái→phải theo Fig3-43; cách đánh số cột LCU không phải thứ hạng
+  newest #1 của Integral. Sửa nhãn ByPass Mismatch cũ thành Bypass như TM;
+  Primary/Secondary Mismatch chưa có đường tín hiệu so sánh độc lập nên
+  giữ `—`, không bịa trạng thái normal/healthy.
+- Lựa chọn runtime: thời gian UTC từ clock browser/injected `now`, format
+  hai số năm theo bố cục ảnh; không khẳng định RTC/RCSU thật. RAM/session,
+  không NVRAM/EEPROM qua reload, không ghi profile/API/file training/evidence
+  checkpoint. Backup/Restore/LCU Reset không xóa history đang có; full reset,
+  session/profile mới và apply/restore/end scenario bắt đầu history mới.
+  Không thêm control/cột PMDT. DVOR1150/220, config/schema/DTO/API không đổi;
+  PG không cần chạy vì không thay serialization/persistence.
+
+Kiểm chứng: focused2file/12test; final focused+affected18file/250test,
+gồm G09, native store/config/persistence và DVOR1150 regression. Lint0error/
+hai warning navigation cũ; typecheck/build với placeholders thành công.
+Browser successful API fixture (MEDIA_CAPTURE_MODE, không production DB),
+1440/390: rỗng, last-good/alarm trước cold transfer, event sau chuyển máy,
+Older, ba event qua restart, LCU TX1→TX2→TX1 và history sau sửa số live.
+Ảnh tại `/home/ubuntu/out/g10/`, có thêm alarm-pane390 vì màn PMDT vẫn
+horizontal-scroll như trước. MON2 chỉ kiểm behavior, **không xác minh layout
+bằng ảnh**. Không console error/warning hoặc issue badge, history không lọt
+API writes. Review ảnh phát hiện đơn vị lặp ở cột spacer Prior: đã bỏ,
+thêm regression và chụp lại đúng ảnh33 (đơn vị chỉ bên Alarm). Fixture ban
+đầu thiếu MEDIA_CAPTURE_MODE nên gặp trang login;
+đã sửa environment capture, không thay auth hoặc thêm đường tắt production.
+
+Sau tích hợp main/PR#47: chỉ conflict bảng Stage3, giữ cả G06/G10 đã sửa;
+G10 đổi số mục thành §6.1j để không trùng G06 §6.1i, sửa link README.
+Affected21file/276test và typecheck pass trên code merge; không đổi logic
+để giải conflict và không chụp lại UI trong lần merge này.
+
 ### 6.2. Lộ trình chia đợt cập nhật 21/11/2026
 
 G01 đã merge qua PR #38; G02 đã merge qua PR #39 và giữ nguyên khi cập nhật G09.
@@ -1300,7 +1361,7 @@ Q12 hành chính không bao giờ là điều kiện chặn fix.
 | Stage 1c | **G09** protection clock + cold standby/SEC3 | Clock độc lập UI/login/link; voting/bypass/delay/restart/no alternate; profile Q13 cold, SEC3 preselected có xác thực; hot tùy chọn. | **Đã sửa native**, §6.1b; Vitest/lint/typecheck/build và browser1440/390; pause chỉ cho lifecycle bài làm/thiết bị kết thúc. |
 | Stage 1d | **G03 + G04** LCU/LED theo Q3 | LCU/PMDT chung state, Main khác route; LCD theo manual; hàng lỗi tắt bình thường/đỏ khi lỗi, không áp cho Power OK/Normal; PHOTO-C bổ sung ảnh đúng, hình học giữ Stage4. | **Đã sửa native qua PR #41**, §6.1c; đã tích hợp G09 sau PR#40 merge. |
 | Stage 2 | **G07/G08/G14/G15/G18**, mỗi gap một PR | Trim→state/evidence/backup, menu dispatch hoặc disabled có lý do, RF Monitor/BCPS trim có nguồn đo, file version/thiếu/sai file, guards/quyền/timeout; không xuất secrets. | **G07/G08/G14/G15/G18 đã sửa native (§6.1d–h)**; đã tích hợp main sau PR#45 vào nhánh G18; accounts/backup G18 chỉ trong RAM. |
-| Stage 3 | **G06/G10/G11/G21** | G06 có feedback HC và hai MON riêng (§6.1i). Còn history snapshot/rỗng/nhiều alarm; TG theo TM (Q7), đúng mode/timing; diagnostics fail/cancel. Không tạo hồ sơ reference không có (Q6). | **G06 đã sửa trong phạm vi đào tạo**; G10/G11/G21 chưa sửa. |
+| Stage 3 | **G06/G10/G11/G21** | Feedback HC/hai MON riêng (§6.1i); history snapshot/rỗng/nhiều alarm (§6.1j); TG theo TM (Q7), đúng mode/timing; diagnostics fail/cancel. Không tạo hồ sơ reference không có (Q6). | **G06 và G10 đã sửa trong phạm vi đào tạo/runtime**, đã tích hợp PR#47 vào G10; G11/G21 còn lại. |
 | Stage 4 | **G12/G19/G20/G22/G24/G25**, dùng ảnh trạm | TM định danh + PHOTO-F/R/U ưu tiên chi tiết nhìn thấy; A3A1…A3A11, ESD GND, LCU, 5 relay sau, RSU từng thiết bị. Không suy pinout/CB ngoài khung; PMDT version/layout cần đối chiếu tiếp kho ảnh Q9. | Chưa sửa; đã nhận ba ảnh phần cứng và kho PMDT; G09 mới đối chiếu hai ảnh §6.1b. |
 | Stage 5 | **G13/G16/G17/G23** | Bài KT/BD/HC và topology RCSU2240/RSU; USB CPU/RMS mức chắc chắn vừa; cộng hưởng định kỳ/~3+ anten theo Q8; giới hạn đo thật/bay, hồ sơ hành chính tùy chọn Q12. | Chưa sửa. |
 | Đối chiếu tiếp PMDT | **G05 phần còn lại** | Profile/ngưỡng phải lập mapping từng ảnh Hoàng tự chụp đã nhận. **Không sửa màu VSWR>1.25 còn xanh**, đây không phải bug. | Chờ đối chiếu chi tiết Q9/Q10; không chặn các đợt khác. |
