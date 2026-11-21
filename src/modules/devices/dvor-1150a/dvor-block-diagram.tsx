@@ -17,6 +17,8 @@ import {
 } from "./block-diagram-data";
 import { DvorModuleFaceplate, hasRebuiltModuleFaceplate } from "./dvor-module-faceplates";
 import { readSidebandTransmitter, type SidebandAdjustmentControl } from "./sideband-adjustment-model";
+import { DvorAlignmentFeedback } from "./alignment-feedback";
+import { readSidebandAlignment } from "@/lib/dvor1150a/alignment";
 import { dvorSidebandAssembly } from "@/lib/dvor1150a/sideband";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
 import { SimulatorConfigPersistence } from "@/components/simulator/simulator-config-persistence";
@@ -410,6 +412,7 @@ function ModulePanel({ blockId, sidebandAdjustment, occurrenceId }: { blockId: E
         </div>
       )}
       <div className={styles.manualDescription}>
+        <DvorAlignmentFeedback blockId={blockId} occurrenceId={occurrenceId ?? sidebandAdjustment?.occurrenceId} />
         {blockId === "rf-monitor" || blockId === "bcps" ? <>
           <button type="button" onClick={() => setCalibrationOpen(true)}>Hiệu chỉnh detector {assembly.toUpperCase()} · mô phỏng phần cứng</button>
           {calibrationOpen ? <HardwareCalibrationDialog key={assembly} assembly={assembly} onClose={() => setCalibrationOpen(false)} /> : null}
@@ -692,6 +695,7 @@ export function DvorBlockDiagram() {
         occurrenceId: selectedCabinetHotspotId,
         angles: config.sidebandTrims?.[dvorSidebandAssembly(selectedCabinetHotspotId)!.id] ?? {},
         transmitterData: readSidebandTransmitter(snapshot, selectedCabinetHotspotId),
+        alignment: readSidebandAlignment(config, snapshot, selectedCabinetHotspotId),
         onTurn: (id, delta) => { turnTrim(selectedCabinetHotspotId, id, delta); },
       } : undefined} /> : null}
     </main>

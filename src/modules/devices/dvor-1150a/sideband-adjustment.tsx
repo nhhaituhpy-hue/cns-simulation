@@ -2,6 +2,8 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import styles from "./sideband-adjustment.module.css";
+import { AlignmentReadings } from "./alignment-feedback";
+import type { DvorAlignmentReading } from "@/lib/dvor1150a/alignment";
 import { readSidebandTrim, SIDEBAND_TRIMS, SIDEBAND_TRAINING, SIDEBAND_SCALES, type SidebandAngles, type SidebandTrimId, type SidebandTransmitterData } from "./sideband-adjustment-model";
 
 interface AdjustmentDialogProps {
@@ -11,9 +13,10 @@ interface AdjustmentDialogProps {
   transmitterData: SidebandTransmitterData | null;
   onTurn: (delta: number) => void;
   onClose: () => void;
+  alignment?: DvorAlignmentReading[];
 }
 
-export function SidebandAdjustmentDialog({ trimId, angles, occurrenceId, transmitterData, onTurn, onClose }: AdjustmentDialogProps) {
+export function SidebandAdjustmentDialog({ trimId, angles, occurrenceId, transmitterData, alignment, onTurn, onClose }: AdjustmentDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const metalId = useId();
@@ -62,7 +65,8 @@ export function SidebandAdjustmentDialog({ trimId, angles, occurrenceId, transmi
             <output aria-label="Công suất mô phỏng">{power.toFixed(2)} W</output>
             <meter aria-label="Thang công suất đào tạo" min={SIDEBAND_TRAINING.minPower} max={SIDEBAND_TRAINING.maxPower} value={power} />
             <div className={styles.ticks} aria-hidden="true">{[0, 1, 2, 3, 4, 5].map((tick) => <span key={tick}>{tick}</span>)}</div>
-          </> : <output aria-label="Điện áp điều khiển pha">{trim.point} · {controlVoltage.toFixed(2)} VDC</output>}
+          </> : alignment ? <AlignmentReadings readings={alignment.filter(reading => (trimId === "R1" ? ["TP1", "TP4", "TP5"] : ["TP7", "TP10", "TP11"]).includes(reading.id))} />
+            : <output aria-label="Điện áp điều khiển pha">{trim.point} · {controlVoltage.toFixed(2)} VDC (minh họa, chưa xác minh RF)</output>}
         </div>}
         <svg viewBox="0 0 200 200" className={styles.tool} aria-hidden="true">
           <defs>
@@ -92,7 +96,7 @@ export function SidebandAdjustmentDialog({ trimId, angles, occurrenceId, transmi
           <button type="button" aria-label="Ngược chiều kim đồng hồ" disabled={angle <= scale.minAngle} onClick={() => onTurn(-step)}><span aria-hidden="true">↶</span> Ngược chiều</button>
           <button type="button" aria-label="Thuận chiều kim đồng hồ" disabled={angle >= scale.maxAngle} onClick={() => onTurn(step)}><span aria-hidden="true">↷</span> Thuận chiều</button>
         </div>
-        <p className={styles.note}>Quy ước đào tạo · {trim.kind === "power" ? "10 vòng: 0–2 lần RF tham chiếu native; 0° giữ mức tham chiếu, mỗi vòng đổi 20% mức đó. Thang wattmeter 5 W, không giới hạn công suất phát. Không phải đặc tính hãng." : trim.kind === "calibration" ? "CAL chỉ đổi số đọc PMDT, không đổi công suất thực. Chiều xoay và tỷ lệ không phải đặc tính hãng." : "R1/R4 vật lý độc lập Sideband Phase Offset trên PMDT; điện áp minh họa, chưa mô phỏng nghiệm thu TP. Chiều xoay và tỷ lệ không phải đặc tính hãng."}</p>
+        <p className={styles.note}>Quy ước đào tạo · {trim.kind === "power" ? "10 vòng: 0–2 lần RF tham chiếu native; 0° giữ mức tham chiếu, mỗi vòng đổi 20% mức đó. Thang wattmeter 5 W, không giới hạn công suất phát. Không phải đặc tính hãng." : trim.kind === "calibration" ? "CAL chỉ đổi số đọc PMDT, không đổi công suất thực. Chiều xoay và tỷ lệ không phải đặc tính hãng." : "R1/R4 vật lý độc lập Sideband Phase Offset trên PMDT. HC: detector 0,90–0,95 V; mean 2–9 V; error 0,89–0,91 V. Gain/chiều xoay minh họa, không phải đặc tính hãng; không thay đo nghiệm thu thật."}</p>
       </div>
     </dialog>
   );

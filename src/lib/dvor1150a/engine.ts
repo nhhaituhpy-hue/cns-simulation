@@ -306,7 +306,7 @@ function sidebandModulationValue(
   return Math.max(0, baselineModulation + phaseAdjustment) * amplitudeRatio;
 }
 
-function sourceMeasurement(
+export function buildDvorMonitorCalibrationInput(
   config: Dvor1150aConfig,
   monitorId: DvorMonitorId,
   transmitter: DvorEffectiveTransmitter | null,
@@ -410,7 +410,7 @@ function monitorResult(
 ): DvorMonitorResult {
   const antenna = config.monitor.antennas[monitorId];
   const enabled = antenna.enabled && isInstalledMonitor(config, monitorId);
-  const calibrated = calibratedMeasurement(config, monitorId, sourceMeasurement(config, monitorId, transmitter));
+  const calibrated = calibratedMeasurement(config, monitorId, buildDvorMonitorCalibrationInput(config, monitorId, transmitter));
   const nominalAzimuth = antenna.secondAntennaEnabled
     ? (antenna.azimuthAngle + antenna.secondAzimuthAngle) / 2
     : antenna.azimuthAngle;

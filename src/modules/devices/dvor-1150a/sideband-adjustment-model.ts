@@ -5,6 +5,7 @@
  */
 import { DVOR_BLOCK_BY_ID } from "./block-diagram-data";
 import type { Dvor1150aSnapshot } from "@/lib/dvor1150a";
+import { DVOR_ALIGNMENT_TRAINING, type DvorAlignmentReading } from "@/lib/dvor1150a/alignment";
 
 export type SidebandTrimId = "R1" | "R2" | "R3" | "R4" | "R5" | "R6";
 export type SidebandAngles = Partial<Record<SidebandTrimId, number>>;
@@ -13,6 +14,7 @@ export interface SidebandAdjustmentControl {
   angles: SidebandAngles;
   transmitterData: SidebandTransmitterData | null;
   onTurn: (id: SidebandTrimId, delta: number) => void;
+  alignment?: DvorAlignmentReading[];
 }
 export const SIDEBAND_TRIMS = {
   R1: { label: "PHS OFFSET", kind: "phase", powerTrim: "R3", point: "TP4" },
@@ -52,7 +54,7 @@ export const SIDEBAND_TRAINING = { minPower: 0, maxPower: 5, defaultPower: 2.5, 
 export const SIDEBAND_SCALES = {
   power: { minAngle: -1800, maxAngle: 1800, degreesPerWatt: 720, coarseStep: 360 },
   calibration: { minAngle: -180, maxAngle: 180, degreesPerFactor: 900 },
-  phase: { minAngle: -180, maxAngle: 180, defaultVoltage: 6, degreesPerVolt: 45 },
+  phase: { minAngle: -180, maxAngle: 180, defaultVoltage: DVOR_ALIGNMENT_TRAINING.meanNeutral, degreesPerVolt: DVOR_ALIGNMENT_TRAINING.meanDegreesPerVolt },
 } as const;
 function clampAngle(angle: number, id: SidebandTrimId) {
   const scale = SIDEBAND_SCALES[SIDEBAND_TRIMS[id].kind];
