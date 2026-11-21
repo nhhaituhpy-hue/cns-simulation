@@ -437,6 +437,11 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ## 6. Nhật ký phiên làm việc
 
+### 2026-11-20 — DVOR 1150 PMDT: bảo trì
+
+- Monitor Test và Certification lưu kết quả riêng cho từng monitor sau khi hoàn thành; Abort không thay kết quả trước. Ground Check tạo 16 mẫu, đồ thị FFT, và xuất mẫu CSV; đây là phép thử DEMO, không phát lệnh RF.
+- Fault Isolation phân biệt On Air với Off Air, có tiến trình và Cancel; Power Up hiển thị kết quả DEMO độc lập. RMS ghi riêng Alarm, Maintenance, Command và Parameter Change; Operational Summary dùng thời gian đường phát trong phiên.
+
 ### 2026-11-20 — DVOR 1150 PMDT: vận hành TX và monitor
 
 - Theo Rev. K §2.3.6 và Bảng 3-4, AND cần cả hai monitor báo lỗi, OR cần một; Startup Delay và Shutdown Delay là hai bộ đếm riêng. Bypass vẫn hiện báo động nhưng ngắt đếm; bỏ Bypass bắt đầu đếm mới. Main, Antenna, Load và Off hiển thị riêng; chuyển do lỗi giữ Main, lỗi tiếp ở bộ phát dự phòng đưa cả hai về Off.

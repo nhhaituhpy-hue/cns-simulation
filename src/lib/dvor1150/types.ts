@@ -322,6 +322,7 @@ export interface Dvor1150GroundCheckRow {
 
 export interface Dvor1150GroundCheckData {
   rows: Dvor1150GroundCheckRow[];
+  duantal: { amplitude: number; phase: number };
   quadrantal: { amplitude: number; phase: number };
   octantal: { amplitude: number; phase: number };
   bias: number;
@@ -341,6 +342,7 @@ export interface Dvor1150CertificationRow {
   highLimit: number;
   highData: number;
   unit: string;
+  tolerance?: number;
 }
 
 export interface Dvor1150NotchRow {
@@ -398,6 +400,8 @@ export interface Dvor1150TxVswrRow {
 }
 
 export interface Dvor1150LogEntry {
+  kind?: "alarm" | "maintenance" | "command";
+  state?: string;
   timeTag: string;
   user: string;
   message: string;

@@ -17,6 +17,7 @@ import {
 } from "./types";
 import { formatDvor1150Timestamp } from "./defaults";
 import { getDvor1150SynthesizerSwitches } from "./config-utils";
+import { analyzeGroundCheck } from "./maintenance";
 
 const DVOR1150_REFERENCE_NOMINAL_OUTPUT_POWER = 100;
 
@@ -353,14 +354,7 @@ function buildGroundCheck(config: Dvor1150Config, active: Dvor1150EffectiveTrans
         + octantal.amplitude * Math.cos((4 * azimuth + octantal.phase) * radians),
     };
   });
-  const values = rows.map((row) => row.stationError);
-  return {
-    rows,
-    quadrantal,
-    octantal,
-    bias,
-    errorSpread: Math.max(...values) - Math.min(...values),
-  };
+  return analyzeGroundCheck(rows);
 }
 
 function buildMonitorTestResults(config: Dvor1150Config): Dvor1150Snapshot["data"]["monitorTestResults"] {
@@ -377,7 +371,7 @@ function buildMonitorTestResults(config: Dvor1150Config): Dvor1150Snapshot["data
   };
   return {
     mon1: { available: true, values: calibrated("mon1"), status: "green" },
-    mon2: { available: true, values: calibrated("mon2"), status: "green" },
+    mon2: { available: config.station.monitorConfig === "Dual Monitors", values: calibrated("mon2"), status: "green" },
   };
 }
 

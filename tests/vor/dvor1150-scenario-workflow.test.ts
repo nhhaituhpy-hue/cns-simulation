@@ -55,13 +55,17 @@ describe("DVOR 1150 two-stage scenario workflow", () => {
 
   it("records diagnostics, transfer and hardware selection in the PMDT store", () => {
     const scenario = createTx1FaultScenario();
-    const store = createDvor1150PmdtStore();
+    let time = 0;
+    const store = createDvor1150PmdtStore({ now: () => new Date(time) });
     expect(store.getState().initializeStudentScenario(scenario)).toBe(true);
     expect(store.getState().login("SEC3", "THREE")).toBe(true);
     store.getState().openView("tx-data", "tx-data-tx1", ["Transmitters", "Data", "Transmitter 1"]);
     store.getState().openView("monitor-data", "monitor-integrity", ["Monitors", "Data", "Integrity"]);
     store.getState().openView("diagnostics", "diagnostics-fault-isolation", ["Diagnostics", "Fault Isolation"]);
     expect(store.getState().runDiagnostics("full")).toBe(true);
+    expect(store.getState().scenarioAcceptedActionControlIds).not.toContain("diagnostics-run-full");
+    time = 8000;
+    store.getState().refreshClock();
     expect(store.getState().setTransmitterMode("tx2", "main")).toBe(true);
 
     const target = scenario.diagnosis?.expectedHardware[0];

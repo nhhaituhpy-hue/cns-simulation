@@ -219,6 +219,22 @@
   overflow-wrap: anywhere;
 }
 
+.dvor1150-pmdt-window .dvor1150-log-scroll {
+  max-height: 20rem;
+  overflow: auto;
+  background: #fff;
+}
+
+.dvor1150-pmdt-window .dvor1150-ground-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.dvor1150-pmdt-window .dvor1150-fault-isolation progress {
+  width: 65px;
+}
+
 .dvor1150-pmdt-window .dvor1150-dme-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 14px 14px;
