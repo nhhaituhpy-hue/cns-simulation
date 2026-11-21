@@ -1,5 +1,6 @@
 import { SELEX_DVOR_TRAINING_ACCOUNTS } from "@/lib/simulator-training-accounts";
 import { dvorSidebandAssembly, DVOR_SIDEBAND_TRIM_IDS, type DvorSidebandTrimId } from "@/lib/dvor1150a/sideband";
+import { HARDWARE_TRIMS, type HardwareAssembly, type HardwareTrim } from "@/lib/dvor1150a/hardware-calibration";
 import type {
   VorAttemptEvent,
   VorEditableValue,
@@ -169,6 +170,7 @@ export interface VorPmdtStoreState {
 
 export interface VorPmdtStoreActions {
   turnSidebandTrim: (occurrenceId: string, trim: DvorSidebandTrimId, delta: number) => boolean;
+  turnHardwareTrim: (assembly: HardwareAssembly, trim: HardwareTrim, delta: number) => boolean;
   lcuCommand: (command: "local" | "bypass" | "main" | "antenna" | "load" | "off" | "reset" | "silence" | "lamp-test", transmitterId?: DvorTransmitterId) => boolean;
   setLcuVolume: (volume: number) => void;
   setLcuInterlockedOff: (interlocked: boolean) => void;
@@ -601,6 +603,37 @@ export function createVorPmdtStore(
           parameterChangeLogs: prependParameterChangeLogEntries(state.parameterChangeLogs, logs) });
         recordAction({ kind: "configuration", controlId: fieldId, label: "Physical sideband trim", accepted: true, before,
           input: { occurrenceId, trim, delta }, parameterChanges: dvorParameterChanges(state.config, result.config, [fieldId], "apply") });
+        return true;
+      },
+
+      turnHardwareTrim: (assembly, trim, delta) => {
+        const state = get();
+        const before = vorEvidenceSnapshot(state);
+        const fieldId = `hardwareCalibration.${assembly}.${trim}`;
+        const reject = (reason: string) => {
+          set({ lastCommand: `Hardware trim rejected: ${reason}` });
+          recordAction({ kind: "configuration", controlId: fieldId, label: "Physical detector trim", accepted: false, reason, before });
+          return false;
+        };
+        if (!Object.hasOwn(HARDWARE_TRIMS, assembly) || !(HARDWARE_TRIMS[assembly] as readonly string[]).includes(trim) || !Number.isFinite(delta)) return reject("Invalid assembly, trim or angle.");
+        if (assembly === "bcps2" && state.config.station.transmitterConfig === "Single Transmitter") return reject("BCPS2 is not installed.");
+        if (!state.config.simulation.local || !state.config.simulation.integralMonitorBypass) return reject("Local and Monitor Bypass are required for calibration.");
+        if (state.scenario.active && !isDvor1150aScenarioStudentEditable(state.scenario.definition, fieldId)) return reject("Protected scenario field.");
+        const angle = Number(getDvorConfigValue(state.config, fieldId));
+        const value = Math.max(-180, Math.min(180, angle + delta));
+        if (value === angle) return reject("Trim limit or unchanged angle.");
+        const patch = [{ fieldId, value }];
+        const result = applyDvorConfigPatches(state.config, patch);
+        const draft = applyDvorConfigPatches(state.configDraft, patch);
+        if (!result.ok || !draft.ok) return reject("Invalid calibration configuration.");
+        const snapshot = buildDvor1150aSnapshot(result.config, undefined, state.derived.mainTransmitter ?? undefined);
+        const logs = createParameterChangeLogEntries({ changedFields: [fieldId], timeTag: state.data.timestamp,
+          userName: state.authenticatedUserId || state.studentName || "LOCAL", actionLabel: "Physical detector trim", idPrefix: generateId() });
+        set({ config: result.config, configDraft: draft.config, derived: snapshot, data: snapshot.data,
+          needBackup: !state.scenario.active, lastCommand: "Physical detector trim",
+          parameterChangeLogs: prependParameterChangeLogEntries(state.parameterChangeLogs, logs) });
+        recordAction({ kind: "configuration", controlId: fieldId, label: "Physical detector trim", accepted: true, before,
+          input: { assembly, trim, delta }, parameterChanges: dvorParameterChanges(state.config, result.config, [fieldId], "apply") });
         return true;
       },
 

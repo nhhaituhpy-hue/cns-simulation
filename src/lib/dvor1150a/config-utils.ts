@@ -7,6 +7,7 @@ import type {
 import { DVOR_MONITOR_PARAMETERS as dvorMonitorParameters } from "./config-types";
 import { testGeneratorDvor1150aCalibration, defaultDvor1150aConfig } from "./defaults";
 import { DVOR_SIDEBAND_ASSEMBLIES, DVOR_SIDEBAND_TRIM_IDS } from "./sideband";
+import { HARDWARE_TRIMS } from "./hardware-calibration";
 
 export type DvorConfigFieldType = "number" | "text" | "boolean" | "select";
 
@@ -418,6 +419,11 @@ const routingFields: DvorConfigFieldDefinition[] = dvorMonitorParameters.flatMap
 ]);
 
 export const dvorConfigFieldCatalog: readonly DvorConfigFieldDefinition[] = [
+  ...Object.entries(HARDWARE_TRIMS).flatMap(([assembly, trims]) => trims.map(trim => ({
+    id: `hardwareCalibration.${assembly}.${trim}`, label: `${assembly.toUpperCase()} ${trim} detector trim`,
+    section: "Simulation" as const, type: "number" as const, unit: "°", min: -180, max: 180, step: 15,
+    description: "Vị trí hiệu chỉnh detector mô phỏng; không đổi RF/nguồn vật lý, không phải trường PMDT.",
+  }))),
   ...Object.entries(DVOR_SIDEBAND_ASSEMBLIES).flatMap(([assembly, { tx }]) => DVOR_SIDEBAND_TRIM_IDS.map(trim => ({
     id: `sidebandTrims.${assembly}.${trim}`,
     label: `${assembly.toUpperCase()} ${trim} physical trim`,
@@ -483,7 +489,7 @@ export function getDvorConfigValue(config: Dvor1150aConfig, fieldId: string): Dv
   let current: unknown = config;
   for (const part of fieldId.split(".")) {
     if (!current || typeof current !== "object" || !(part in current)) {
-      return (["station.standbyMode", "station.automaticRestartsEnabled", "station.firstRestartDelay"].includes(fieldId) || fieldId.startsWith("sidebandTrims.") || fieldId.startsWith("monitor.testGeneratorCalibration.") || fieldId.startsWith("monitor.testGenerator.") || fieldId.startsWith("monitor.standbyCalibration.")
+      return (["station.standbyMode", "station.automaticRestartsEnabled", "station.firstRestartDelay"].includes(fieldId) || fieldId.startsWith("hardwareCalibration.") || fieldId.startsWith("sidebandTrims.") || fieldId.startsWith("monitor.testGeneratorCalibration.") || fieldId.startsWith("monitor.testGenerator.") || fieldId.startsWith("monitor.standbyCalibration.")
         || /^transmitters\.tx[12]\.nominal\.(keyerInputLevel|windowedKeyingInput|selfKeyOnLoss|shutdownOnLoss|restartWhenResumed|externalKeying|suppressOnShutdown)$/.test(fieldId)) && config !== defaultDvor1150aConfig
         ? getDvorConfigValue(defaultDvor1150aConfig, fieldId)
         : null;

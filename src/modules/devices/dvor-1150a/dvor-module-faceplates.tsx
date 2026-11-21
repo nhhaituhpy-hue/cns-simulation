@@ -566,7 +566,8 @@ function AudioGeneratorFaceplate() {
   );
 }
 
-function RfMonitorFaceplate() {
+function RfMonitorFaceplate({ onCalibration }: { onCalibration?: () => void }) {
+  const angles = useVorPmdtStore(state => state.config.hardwareCalibration?.rf);
   const controls: readonly FaceplateRow[] = [
     { label: "CSB FWD ADJ", id: "R1", y: 280, kind: "trim", trimAngle: -24 },
     { label: "CSB RFL ADJ", id: "R2", y: 335, kind: "trim", trimAngle: 18 },
@@ -587,7 +588,13 @@ function RfMonitorFaceplate() {
       {controls.map((row) => (
         <g key={row.id}>
           <text x="212" y={row.y} textAnchor="end" dominantBaseline="middle" className={styles.controlLabel}>{row.label}</text>
-          {row.kind === "trim" ? <TrimPot x={238} y={row.y} angle={row.trimAngle} /> : <TestPoint x={238} y={row.y} />}
+          {row.kind === "trim" ? <>
+            <TrimPot x={238} y={row.y} angle={angles?.[row.id as "R1" | "R2" | "R3"] ?? 0} />
+            {onCalibration ? <g role="button" tabIndex={0} aria-label={`Điều chỉnh RF Monitor ${row.id}`} onClick={onCalibration}
+              onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onCalibration(); } }}>
+              <rect x="215" y={row.y - 23} width="46" height="46" fill="transparent" />
+            </g> : null}
+          </> : <TestPoint x={238} y={row.y} />}
           <text x="268" y={row.y} dominantBaseline="middle" className={styles.controlId}>{row.id}</text>
         </g>
       ))}
@@ -672,7 +679,7 @@ export function hasRebuiltModuleFaceplate(blockId: DvorBlockId): boolean {
   return rebuiltModuleIds.has(blockId);
 }
 
-export function DvorModuleFaceplate({ blockId, sidebandAdjustment, occurrenceId }: { blockId: DvorBlockId; sidebandAdjustment?: SidebandAdjustmentControl; occurrenceId?: string }) {
+export function DvorModuleFaceplate({ blockId, sidebandAdjustment, occurrenceId, onCalibration }: { blockId: DvorBlockId; sidebandAdjustment?: SidebandAdjustmentControl; occurrenceId?: string; onCalibration?: () => void }) {
   const state = useVorPmdtStore();
   const hardware = projectDvorHardware(state);
   const block = DVOR_BLOCK_BY_ID.get(blockId);
@@ -696,10 +703,10 @@ export function DvorModuleFaceplate({ blockId, sidebandAdjustment, occurrenceId 
     "INTEGRAL PRIMARY": monitor.primary ? "red" : "off", "INTEGRAL SECONDARY": monitor.secondary ? "amber" : "off",
     "INTEGRAL PRE ALARM": monitor.preAlarm ? "amber" : "off",
   };
-  return <FaceplateLamps.Provider value={lamps}>{renderFaceplate(blockId, sidebandAdjustment)}</FaceplateLamps.Provider>;
+  return <FaceplateLamps.Provider value={lamps}>{renderFaceplate(blockId, sidebandAdjustment, onCalibration)}</FaceplateLamps.Provider>;
 }
 
-function renderFaceplate(blockId: DvorBlockId, sidebandAdjustment?: SidebandAdjustmentControl) {
+function renderFaceplate(blockId: DvorBlockId, sidebandAdjustment?: SidebandAdjustmentControl, onCalibration?: () => void) {
   switch (blockId) {
     case "audio-generator":
       return <AudioGeneratorFaceplate />;
@@ -710,7 +717,7 @@ function renderFaceplate(blockId: DvorBlockId, sidebandAdjustment?: SidebandAdju
     case "monitor-cca":
       return <MonitorFaceplate />;
     case "rf-monitor":
-      return <RfMonitorFaceplate />;
+      return <RfMonitorFaceplate onCalibration={onCalibration} />;
     case "rms":
       return <RmsFaceplate />;
     case "sideband":

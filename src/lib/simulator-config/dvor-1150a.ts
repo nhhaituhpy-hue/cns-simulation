@@ -34,7 +34,7 @@ export function parseDvor1150aConfig(value: unknown): Dvor1150aPersistedConfig |
   const compatible = withDvor1150aConfigExtensions(value);
   if (!hasSameJsonShape(compatible, reference)) return null;
   const config = compatible as Dvor1150aConfig;
-  if (dvorConfigFieldCatalog.some(field => field.id.startsWith("sidebandTrims.")
+  if (dvorConfigFieldCatalog.some(field => (field.id.startsWith("sidebandTrims.") || field.id.startsWith("hardwareCalibration."))
     && validateDvorConfigField(field, getDvorConfigValue(config, field.id)))) return null;
   if (!["Cold Standby", "Hot Standby"].includes(config.station.standbyMode!)
     || !Number.isFinite(config.station.firstRestartDelay)

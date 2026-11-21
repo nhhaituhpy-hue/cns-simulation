@@ -3,7 +3,8 @@ import { DME1119A_CONFIG_EXTENSIONS } from "./dme-1119a";
 
 // A consumer representation, not a persisted schema revision.
 export const SIMULATOR_CONFIG_DTO_HEADER = "X-CNS-Simulator-Config-DTO";
-export const DVOR1150A_CONFIG_DTO_VERSION = "dvor-1150a-extensions-v3";
+export const DVOR1150A_CONFIG_DTO_VERSION = "dvor-1150a-extensions-v4";
+export const DVOR1150A_CONFIG_DTO_V3 = "dvor-1150a-extensions-v3";
 export const DVOR1150A_CONFIG_DTO_V2 = "dvor-1150a-extensions-v2";
 export const DVOR1150A_CONFIG_DTO_PREVIOUS_VERSION = "dvor-1150a-extensions-v1";
 export const DME1119A_CONFIG_DTO_VERSION = "dme-1119a-extensions-v1";
@@ -29,8 +30,14 @@ const keyerExtensions = [
   "restartWhenResumed", "externalKeying", "suppressOnShutdown",
 ] as const;
 
-function v2Dvor1150aConfig(value: unknown): Dvor1150aPersistedConfig {
+function v3Dvor1150aConfig(value: unknown): Dvor1150aPersistedConfig {
   const config = structuredClone(value) as Dvor1150aPersistedConfig;
+  delete config.hardwareCalibration;
+  return config;
+}
+
+function v2Dvor1150aConfig(value: unknown): Dvor1150aPersistedConfig {
+  const config = v3Dvor1150aConfig(value);
   delete config.sidebandTrims;
   return config;
 }
@@ -59,6 +66,7 @@ export function preserveMissingDvor1150aExtensions(
 ): Dvor1150aPersistedConfig {
   const raw = source as Dvor1150aPersistedConfig;
   const next = structuredClone(parsed);
+  if (!Object.hasOwn(raw, "hardwareCalibration")) next.hardwareCalibration = structuredClone(stored.hardwareCalibration);
   if (!Object.hasOwn(raw, "sidebandTrims")) next.sidebandTrims = structuredClone(stored.sidebandTrims);
   for (const field of stationExtensions) {
     if (!Object.hasOwn(raw.station, field)) Object.assign(next.station, { [field]: stored.station[field] });
@@ -90,7 +98,7 @@ export function projectSimulatorConfigResponse<T extends SimulatorConfigResponse
     backupConfig: legacyDme1119aConfig(response.backupConfig),
   };
   if (response.simulatorId !== "dvor-1150a" || dto === DVOR1150A_CONFIG_DTO_VERSION) return response;
-  const project = dto === DVOR1150A_CONFIG_DTO_V2 ? v2Dvor1150aConfig
+  const project = dto === DVOR1150A_CONFIG_DTO_V3 ? v3Dvor1150aConfig : dto === DVOR1150A_CONFIG_DTO_V2 ? v2Dvor1150aConfig
     : dto === DVOR1150A_CONFIG_DTO_PREVIOUS_VERSION ? previousDvor1150aConfig : legacyDvor1150aConfig;
   return {
     ...response,

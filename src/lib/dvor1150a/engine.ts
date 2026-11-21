@@ -1,5 +1,6 @@
 import { cloneDefaultVorPmdtData } from "@/lib/vor-pmdt-defaults";
 import { dvorSidebandFactors } from "./sideband";
+import { COMMON_AC_INPUT_BCPS, indicatedAc, indicatedCarrier, indicatedCarrierVswr } from "./hardware-calibration";
 import type {
   VorAlarmLimitRow,
   VorIndicatorColor,
@@ -665,11 +666,12 @@ export function readDvorTransmitterRfPower(transmitter: DvorEffectiveTransmitter
 
 function buildTxPower(
   transmitters: Record<DvorTransmitterId, DvorEffectiveTransmitter>,
+  config: Dvor1150aConfig,
 ): VorTxDualValueRow[] {
   const tx1 = readDvorTransmitterRfPower(transmitters.tx1);
   const tx2 = readDvorTransmitterRfPower(transmitters.tx2);
   return [
-    { parameter: "Carrier", tx1: tx1.carrier.forward, tx2: tx2.carrier.forward, unit: "Watts" },
+    { parameter: "Carrier", tx1: indicatedCarrier(tx1.carrier.forward, transmitters.tx1.load, config.hardwareCalibration), tx2: indicatedCarrier(tx2.carrier.forward, transmitters.tx2.load, config.hardwareCalibration), unit: "Watts" },
     ...[0, 1, 2, 3].map((index) => ({
       parameter: `Sideband #${index + 1}`,
       tx1: transmitters.tx1.indicatedSidebandPower[index],
@@ -692,14 +694,14 @@ function buildTxFrequency(transmitters: Record<DvorTransmitterId, DvorEffectiveT
   ];
 }
 
-function buildTxVswr(transmitters: Record<DvorTransmitterId, DvorEffectiveTransmitter>): VorTxVswrRow[] {
+function buildTxVswr(transmitters: Record<DvorTransmitterId, DvorEffectiveTransmitter>, config: Dvor1150aConfig): VorTxVswrRow[] {
   const tx1 = transmitters.tx1.onAir || transmitters.tx1.load ? transmitters.tx1 : null;
   const tx2 = transmitters.tx2.onAir || transmitters.tx2.load ? transmitters.tx2 : null;
   return [
     {
       parameter: "Carrier",
-      value1: tx1?.carrierVswr ?? null,
-      value2: tx2?.carrierVswr ?? null,
+      value1: tx1 ? tx1.load ? tx1.carrierVswr : indicatedCarrierVswr(tx1.carrierVswr, config.hardwareCalibration) : null,
+      value2: tx2 ? tx2.load ? tx2.carrierVswr : indicatedCarrierVswr(tx2.carrierVswr, config.hardwareCalibration) : null,
     },
     ...[0, 1, 2, 3].map((index) => ({
       parameter: `Sideband #${index + 1}`,
@@ -1072,9 +1074,12 @@ export function buildDvor1150aSnapshot(
   data.systemPowerStatus = buildSystemPowerRows(data.systemPowerStatus, config, effectiveTransmitters);
   data.txAlerts = buildTransmitterAlertRows(data.txAlerts, config, effectiveTransmitters);
   applyActiveTransmitterAlerts(data, config, effectiveTransmitters, groundChecks);
-  data.txPower = buildTxPower(effectiveTransmitters);
+  data.txPower = buildTxPower(effectiveTransmitters, config);
   data.txFrequency = buildTxFrequency(effectiveTransmitters);
-  data.txVswr = buildTxVswr(effectiveTransmitters);
+  data.txVswr = buildTxVswr(effectiveTransmitters, config);
+  const ac = indicatedAc(COMMON_AC_INPUT_BCPS, config.hardwareCalibration);
+  data.rmsVoltageData = data.rmsVoltageData.map(row => row.parameter === "AC Input" ? { ...row, volts: ac.volts } : row);
+  data.rmsCurrentData = data.rmsCurrentData.map(row => row.parameter === "AC Input" ? { ...row, amps: ac.amps } : row);
   data.txConfigNominal = buildTxNominal(config, "tx1");
   data.txOffsets = buildTxOffsets(config);
   data.rmsConfigGeneral = {

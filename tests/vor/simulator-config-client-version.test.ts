@@ -12,7 +12,7 @@ it.each(["GET", "POST", "PUT"])("new 1150A client opts in on %s without changing
   if (method === "PUT") await applySimulatorConfig({ simulatorId: "dvor-1150a", config, expectedRevision: 1 });
   const [url, options] = fetch.mock.calls[0];
   expect(url).toBe("/api/simulator-config/dvor-1150a");
-  expect(new Headers(options.headers).get("X-CNS-Simulator-Config-DTO")).toBe("dvor-1150a-extensions-v3");
+  expect(new Headers(options.headers).get("X-CNS-Simulator-Config-DTO")).toBe("dvor-1150a-extensions-v4");
   if (method !== "GET") expect(new Headers(options.headers).get("Content-Type")).toBe("application/json");
   if (method === "GET") expect(options.cache).toBe("no-store");
   if (method === "POST") expect(JSON.parse(options.body)).toEqual({});
