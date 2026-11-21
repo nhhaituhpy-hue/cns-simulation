@@ -1,9 +1,10 @@
-/** UI-only training model. Never writes to the RF engine, evidence or server.
+/** Training angle conventions, not manufacturer transfer functions.
  * Manual: Model 1150A Rev. E, Table 3-14 (3-74 / PDF 192): R3/R6
  * clockwise increases power. Other trims' direction/rates are NOT specified.
  * All angle scales below are educational conventions, not hardware transfer functions.
  */
 import { DVOR_BLOCK_BY_ID } from "./block-diagram-data";
+import type { Dvor1150aSnapshot } from "@/lib/dvor1150a";
 
 export type SidebandTrimId = "R1" | "R2" | "R3" | "R4" | "R5" | "R6";
 export type SidebandAngles = Partial<Record<SidebandTrimId, number>>;
@@ -31,15 +32,15 @@ export interface SidebandTransmitterData {
 /** Project both assemblies of the selected TX from the schematic catalog.
  * Unknown occurrences never fall back to TX1; no RF/store/global PMDT writes.
  */
-export function readSidebandTransmitter(states: Record<string, SidebandAngles>, occurrenceId: string): SidebandTransmitterData | null {
+export function readSidebandTransmitter(snapshot: Dvor1150aSnapshot, occurrenceId: string): SidebandTransmitterData | null {
   const assemblies = DVOR_BLOCK_BY_ID.get("sideband")!.diagramHotspots;
   const selected = assemblies.find((entry) => entry.targetCabinetHotspotId === occurrenceId)?.sidebandChannels;
   if (!selected) return null;
   const readings = assemblies.filter((entry) => entry.sidebandChannels?.tx === selected.tx).flatMap((entry) => {
-    const angles = states[entry.targetCabinetHotspotId!] ?? {};
-    return (["R2", "R5"] as const).map((id, offset) => {
-      const reading = readSidebandTrim(angles, id);
-      return { sideband: entry.sidebandChannels!.upper + offset, power: reading.power, indicatedPower: reading.calibratedPower };
+    const tx = snapshot.effectiveTransmitters[selected.tx === 1 ? "tx1" : "tx2"];
+    return [0, 1].map(offset => {
+      const sideband = entry.sidebandChannels!.upper + offset;
+      return { sideband, power: tx.sidebandPower[sideband - 1], indicatedPower: tx.indicatedSidebandPower[sideband - 1] };
     });
   }).sort((a, b) => a.sideband - b.sideband);
   return { ...selected, readings };

@@ -22,8 +22,9 @@ export function SidebandAdjustmentDialog({ trimId, angles, occurrenceId, transmi
   const scale = SIDEBAND_SCALES[trim.kind];
   const [powerStep, setPowerStep] = useState<number>(SIDEBAND_TRAINING.step);
   const step = trim.kind === "power" ? powerStep : SIDEBAND_TRAINING.step;
-  const { angle, power, controlVoltage } = readSidebandTrim(angles, trimId);
+  const { angle, controlVoltage } = readSidebandTrim(angles, trimId);
   const activeSideband = transmitterData ? transmitterData.upper + (trim.powerTrim === "R6" ? 1 : 0) : null;
+  const power = transmitterData?.readings.find(reading => reading.sideband === activeSideband)?.power ?? 0;
   useEffect(() => {
     // Removing the dialog removes it from the native top layer. Do not close
     // in cleanup: StrictMode replays effects and close would dismiss the UI.
@@ -91,7 +92,7 @@ export function SidebandAdjustmentDialog({ trimId, angles, occurrenceId, transmi
           <button type="button" aria-label="Ngược chiều kim đồng hồ" disabled={angle <= scale.minAngle} onClick={() => onTurn(-step)}><span aria-hidden="true">↶</span> Ngược chiều</button>
           <button type="button" aria-label="Thuận chiều kim đồng hồ" disabled={angle >= scale.maxAngle} onClick={() => onTurn(step)}><span aria-hidden="true">↷</span> Thuận chiều</button>
         </div>
-        <p className={styles.note}>Quy ước đào tạo · {trim.kind === "power" ? "0–5 W qua 10 vòng; 0,5 W/vòng, 0° = 2,5 W. Không phải đặc tính hãng." : trim.kind === "calibration" ? "CAL chỉ đổi số đọc PMDT, không đổi công suất thực. Chiều xoay và tỷ lệ không phải đặc tính hãng." : "Chiều xoay và tỷ lệ số đo không phải đặc tính hãng."}</p>
+        <p className={styles.note}>Quy ước đào tạo · {trim.kind === "power" ? "10 vòng: 0–2 lần RF tham chiếu native; 0° giữ mức tham chiếu, mỗi vòng đổi 20% mức đó. Thang wattmeter 5 W, không giới hạn công suất phát. Không phải đặc tính hãng." : trim.kind === "calibration" ? "CAL chỉ đổi số đọc PMDT, không đổi công suất thực. Chiều xoay và tỷ lệ không phải đặc tính hãng." : "R1/R4 vật lý độc lập Sideband Phase Offset trên PMDT; điện áp minh họa, chưa mô phỏng nghiệm thu TP. Chiều xoay và tỷ lệ không phải đặc tính hãng."}</p>
       </div>
     </dialog>
   );

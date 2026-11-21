@@ -16,12 +16,13 @@ import {
   type DvorWaveformReference,
 } from "./block-diagram-data";
 import { DvorModuleFaceplate, hasRebuiltModuleFaceplate } from "./dvor-module-faceplates";
-import { readSidebandTransmitter, turnSidebandTrim, type SidebandAngles, type SidebandAdjustmentControl } from "./sideband-adjustment-model";
-import styles from "./dvor-block-diagram.module.css";
+import { readSidebandTransmitter, type SidebandAdjustmentControl } from "./sideband-adjustment-model";
+import { dvorSidebandAssembly } from "@/lib/dvor1150a/sideband";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
+import { SimulatorConfigPersistence } from "@/components/simulator/simulator-config-persistence";
+import styles from "./dvor-block-diagram.module.css";
 import { dvorLcuScreens, projectDvorHardware } from "@/lib/dvor1150a/hardware";
 import { Dvor1150aMonitorClock } from "@/components/vor/dvor1150a-monitor-clock";
-import { SimulatorConfigPersistence } from "@/components/simulator/simulator-config-persistence";
 
 const cabinetImages: Record<CabinetFace, { src: string; alt: string; label: string; horizontalScale?: number }> = {
   front: {
@@ -625,8 +626,9 @@ export function DvorHardwareSelector({
 }
 
 export function DvorBlockDiagram() {
-  // Detached, page-lifetime training state; never enters simulator/exam stores.
-  const [sidebandAngles, setSidebandAngles] = useState<Record<string, SidebandAngles>>({});
+  const config = useVorPmdtStore(state => state.config);
+  const snapshot = useVorPmdtStore(state => state.derived);
+  const turnTrim = useVorPmdtStore(state => state.turnSidebandTrim);
   const [selectedBlockId, setSelectedBlockId] = useState<DvorBlockId | null>(null);
   const [selectedDiagramHotspotId, setSelectedDiagramHotspotId] = useState<string | null>(null);
   const [selectedCabinetHotspotId, setSelectedCabinetHotspotId] = useState<string | null>(null);
@@ -681,11 +683,9 @@ export function DvorBlockDiagram() {
 
       {selectedBlockId ? <DetailPanel blockId={selectedBlockId} occurrenceId={selectedCabinetHotspotId ?? undefined} sidebandAdjustment={selectedBlockId === "sideband" && selectedCabinetHotspotId ? {
         occurrenceId: selectedCabinetHotspotId,
-        angles: sidebandAngles[selectedCabinetHotspotId] ?? {},
-        transmitterData: readSidebandTransmitter(sidebandAngles, selectedCabinetHotspotId),
-        onTurn: (id, delta) => setSidebandAngles((current) => ({
-          ...current, [selectedCabinetHotspotId]: turnSidebandTrim(current[selectedCabinetHotspotId] ?? {}, id, delta),
-        })),
+        angles: config.sidebandTrims?.[dvorSidebandAssembly(selectedCabinetHotspotId)!.id] ?? {},
+        transmitterData: readSidebandTransmitter(snapshot, selectedCabinetHotspotId),
+        onTurn: (id, delta) => { turnTrim(selectedCabinetHotspotId, id, delta); },
       } : undefined} /> : null}
     </main>
   );

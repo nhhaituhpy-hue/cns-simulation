@@ -103,7 +103,9 @@ function Dvor1150aConfigPersistence() {
       const backupChanged = state.hasConfigurationBackup !== previousState.hasConfigurationBackup
         || !areJsonEqual(state.configurationBackup, previousState.configurationBackup);
       let action: "apply" | "restore" | "backup" | null = null;
-      if (state.lastCommand === "Configuration Apply" && previousState.configDirty && !state.configDirty && configChanged) {
+      if (state.lastCommand === "Physical sideband trim" && configChanged) {
+        action = "apply";
+      } else if (state.lastCommand === "Configuration Apply" && previousState.configDirty && !state.configDirty && configChanged) {
         action = "apply";
       } else if (state.lastCommand === "RMS Config Restore" && configChanged) {
         action = "restore";

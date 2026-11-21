@@ -1,4 +1,5 @@
 import { SELEX_DVOR_TRAINING_ACCOUNTS } from "@/lib/simulator-training-accounts";
+import { dvorSidebandAssembly, DVOR_SIDEBAND_TRIM_IDS, type DvorSidebandTrimId } from "@/lib/dvor1150a/sideband";
 import type {
   VorAttemptEvent,
   VorEditableValue,
@@ -167,6 +168,7 @@ export interface VorPmdtStoreState {
 }
 
 export interface VorPmdtStoreActions {
+  turnSidebandTrim: (occurrenceId: string, trim: DvorSidebandTrimId, delta: number) => boolean;
   lcuCommand: (command: "local" | "bypass" | "main" | "antenna" | "load" | "off" | "reset" | "silence" | "lamp-test", transmitterId?: DvorTransmitterId) => boolean;
   setLcuVolume: (volume: number) => void;
   setLcuInterlockedOff: (interlocked: boolean) => void;
@@ -569,6 +571,38 @@ export function createVorPmdtStore(
 
     return {
       ...initialState(),
+
+      turnSidebandTrim: (occurrenceId, trim, delta) => {
+        const state = get();
+        const before = vorEvidenceSnapshot(state);
+        const assembly = dvorSidebandAssembly(occurrenceId);
+        const fieldId = assembly ? `sidebandTrims.${assembly.id}.${trim}` : "sideband-trim";
+        const reject = (reason: string) => {
+          set({ lastCommand: `Sideband trim rejected: ${reason}` });
+          recordAction({ kind: "configuration", controlId: fieldId, label: "Physical sideband trim", accepted: false, reason, before });
+          return false;
+        };
+        if (!assembly || !DVOR_SIDEBAND_TRIM_IDS.includes(trim) || !Number.isFinite(delta)) return reject("Invalid assembly, trim or angle.");
+        if (assembly.tx === "tx2" && state.config.station.transmitterConfig === "Single Transmitter") return reject("TX2 is not installed.");
+        if (state.scenario.active && !isDvor1150aScenarioStudentEditable(state.scenario.definition, fieldId)) return reject("Protected scenario field.");
+        const limit = trim === "R3" || trim === "R6" ? 1800 : 180;
+        const angle = Number(getDvorConfigValue(state.config, fieldId));
+        const value = Math.max(-limit, Math.min(limit, angle + delta));
+        if (value === angle) return reject("Trim limit or unchanged angle.");
+        const patch = [{ fieldId, value }];
+        const result = applyDvorConfigPatches(state.config, patch);
+        const draft = applyDvorConfigPatches(state.configDraft, patch);
+        if (!result.ok || !draft.ok) return reject("Invalid calibration configuration.");
+        const snapshot = buildDvor1150aSnapshot(result.config, undefined, state.derived.mainTransmitter ?? undefined);
+        const logs = createParameterChangeLogEntries({ changedFields: [fieldId], timeTag: state.data.timestamp,
+          userName: state.authenticatedUserId || state.studentName || "LOCAL", actionLabel: "Physical sideband trim", idPrefix: generateId() });
+        set({ config: result.config, configDraft: draft.config, derived: snapshot, data: snapshot.data,
+          needBackup: !state.scenario.active, lastCommand: "Physical sideband trim",
+          parameterChangeLogs: prependParameterChangeLogEntries(state.parameterChangeLogs, logs) });
+        recordAction({ kind: "configuration", controlId: fieldId, label: "Physical sideband trim", accepted: true, before,
+          input: { occurrenceId, trim, delta }, parameterChanges: dvorParameterChanges(state.config, result.config, [fieldId], "apply") });
+        return true;
+      },
 
       setLcuVolume: (volume) => {
         if (Number.isFinite(volume)) set({ lcu: { ...get().lcu, volume: Math.min(100, Math.max(0, volume)) } });
