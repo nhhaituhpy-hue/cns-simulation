@@ -218,7 +218,7 @@ export const DVOR_BLOCKS: readonly DvorBlockDefinition[] = [
       { id: "TP3 / TP9", label: "Manual Phase Control Voltage", nominal: "Điện áp DC điều khiển pha; manual không quy định giá trị danh định" },
       { id: "TP4 / TP10", label: "Mean Phase Control Voltage", nominal: "2-9 VDC khi alignment (Table 3-14 nêu dải chung 2-10 VDC)" },
       { id: "TP5 / TP11", label: "Phase Error Voltage", nominal: "0.89-0.91 VDC khi vòng khóa" },
-      { id: "TP6", label: "Sideband-to-Sideband Phase Error Voltage", nominal: "0.0 ± 0.1 VDC khi cân chỉnh về 0°" },
+      { id: "TP6", label: "Sideband-to-Sideband Phase Error Voltage", nominal: "HC IV.3.1: 0.0 ± 0.05 VDC (±50 mV); TM nêu ±0.1 VDC, ưu tiên HC theo Q14" },
     ],
     faceImage: { src: "/equipment/dvor-1150a/modules/sideband-generator.png", width: 476, height: 2266, figure: "Figure 3-70" },
   },

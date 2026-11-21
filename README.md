@@ -939,5 +939,5 @@ Chi tiết về công thức toán học, ma trận ảnh hưởng Config ↔ Da
 
 ### 2026-11-21 — DVOR 1150A G10 Fault History
 - Giữ ba executive-alarm events với last-good từng MON và LCU/route trước transfer/shutdown; Older hoạt động, không còn số live/hardcode trong history. Bố cục Integral MON1 theo ảnh trạm33; MON2 chưa xác minh bằng ảnh.
-- History chỉ trong session RAM, không đổi config/API/DTO hay DVOR1150/220. Chi tiết nguồn TM/HDCV, cách đánh số Integral/LCU, UTC/qualification timestamp, mismatch chưa mô hình và giới hạn reload: [audit §6.1i](docs/simulators/dvor-1150a-fidelity-audit.md#61i-g10--fault-history-bắt-giữ-trước-tác-động).
+- History chỉ trong session RAM, không đổi config/API/DTO hay DVOR1150/220. Chi tiết nguồn TM/HDCV, cách đánh số Integral/LCU, UTC/qualification timestamp, mismatch chưa mô hình và giới hạn reload: [audit §6.1j](docs/simulators/dvor-1150a-fidelity-audit.md#61j-g10--fault-history-bắt-giữ-trước-tác-động).
 - Focused12 tests; focused+affected250 tests đạt. Review ảnh bắt lỗi đơn vị lặp ở spacer Prior, đã sửa, thêm regression và kiểm lại UI4 tests. Lint0error/hai warning navigation cũ, typecheck và build94/94 đạt. Successful API fixture/browser1440/390, ảnh/log `/home/ubuntu/out/g10/`; bổ sung ảnh alarm-pane390 cho horizontal scroll. PG không chạy vì persistence không đổi.
