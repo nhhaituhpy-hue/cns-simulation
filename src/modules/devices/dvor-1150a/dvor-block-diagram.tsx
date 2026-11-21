@@ -334,7 +334,7 @@ export function LcuPanel() {
               <button type="button" aria-label="LOCAL CONTROL" aria-pressed={local} onClick={() => state.lcuCommand("local")}><i aria-hidden data-lit={hardware.lcuPower && (lampTest || local)} />LOCAL<br />CONTROL</button>
               <button type="button" aria-label="LAMP TEST" aria-pressed={lampTest} onClick={() => state.lcuCommand("lamp-test")}>LAMP<br />TEST</button>
               <button type="button" aria-label="ALARM SILENCE" onClick={() => state.lcuCommand("silence")}>ALARM<br />SILENCE</button>
-              <button type="button" onClick={() => state.lcuCommand("reset")}>RESET</button>
+              <button type="button" onClick={() => { if (state.lcuCommand("reset")) setScreenIndex(0); }}>RESET</button>
             </div>
             <div className={styles.lcuSystemIndicators}>
               {systemIndicators.map((indicator) => (

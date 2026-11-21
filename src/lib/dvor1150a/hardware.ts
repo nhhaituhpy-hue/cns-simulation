@@ -8,10 +8,11 @@ export interface DvorLcuState {
   relayRoutes: Record<DvorTransmitterId, "antenna" | "load">;
   interlockedOff: boolean;
   alarmElapsed: Record<string, number>;
+  initializing: boolean;
 }
 
 export const initialDvorLcuState = (): DvorLcuState => ({
-  lampTest: false, volume: 45, silencedAlarms: [], relayRoutes: { tx1: "antenna", tx2: "load" }, interlockedOff: false, alarmElapsed: {},
+  lampTest: false, volume: 45, silencedAlarms: [], relayRoutes: { tx1: "antenna", tx2: "load" }, interlockedOff: false, alarmElapsed: {}, initializing: false,
 });
 
 export interface DvorHardwareSource {

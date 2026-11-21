@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { LcuPanel } from "@/modules/devices/dvor-1150a/dvor-block-diagram";
 import { DvorModuleFaceplate } from "@/modules/devices/dvor-1150a/dvor-module-faceplates";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
+import { PmdtStatusBar } from "@/components/vor/pmdt-status-bar";
 
 beforeEach(() => useVorPmdtStore.getState().reset());
 afterEach(() => { cleanup(); useVorPmdtStore.getState().reset(); });
@@ -45,7 +46,7 @@ describe("live LCU", () => {
   });
 
   it("tests every LCU indicator, keeps normal fault lamps off, and connects silence, volume and Reset", () => {
-    const { container } = render(<LcuPanel />);
+    const { container } = render(<><LcuPanel /><PmdtStatusBar /></>);
     for (const label of ["REMOTE CONTROL FAULT", "ON BATTERY", "MAINTENANCE ALERT", "INTERLOCKED OFF"]) {
       expect(screen.getByLabelText(label)).toHaveAttribute("data-lit", "false");
     }
@@ -61,6 +62,8 @@ describe("live LCU", () => {
     expect(useVorPmdtStore.getState().lcu.volume).toBe(23);
     fireEvent.click(screen.getByRole("button", { name: "RESET" }));
     expect(useVorPmdtStore.getState().protectionState.remaining).toBe(20);
+    expect(screen.getByText("LCU initialization: 20.0 s")).toBeInTheDocument();
+    expect(screen.queryByText(/Cold standby:/)).not.toBeInTheDocument();
   });
 });
 

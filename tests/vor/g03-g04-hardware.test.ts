@@ -64,9 +64,20 @@ describe("G03 physical LCU on the native PMDT store", () => {
     expect(store.getState().config.simulation).toMatchObject({ local: false, integralMonitorBypass: false });
     expect(store.getState().securityLevel).toBe(0);
     expect(store.getState().protectionState).toMatchObject({ phase: "cold-transfer", remaining: 20 });
+    expect(store.getState().lcu.initializing).toBe(true);
     expect(store.getState().derived.voting.activeTransmitter).toBeNull();
     store.getState().advanceMonitorTime(20);
     expect(store.getState().derived.voting.activeTransmitter).toBe("tx1");
+    expect(store.getState().lcu.initializing).toBe(false);
+    expect(store.getState().lastCommand).toBe("LCU/RMS/MON initialization complete");
+    store.getState().login("SEC3", "THREE");
+    store.getState().lcuCommand("local");
+    store.getState().setConfigValue("station.standbyMode", "Hot Standby");
+    store.getState().applyConfigChanges();
+    store.getState().lcuCommand("reset");
+    store.getState().advanceMonitorTime(25);
+    expect(store.getState().config.transmitters.tx2.load).toBe(true);
+    expect(store.getState().lastCommand).toBe("LCU/RMS/MON initialization complete");
   });
 
   it("rejects absent/disabled targets, power loss and protected RF starts", () => {

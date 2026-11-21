@@ -933,6 +933,10 @@ dời vị trí, kích thước hay hình học SVG trong Stage1d.
   logout PMDT, hủy draft, Local/Bypass off; giữ thông số applied, backup,
   fault vật lý và Main. Chọn khoảng initialization **20s** theo TM
   PDF120/3-2 §3.5, dùng protected timer G09, RF off trong thời gian này.
+  Status mô phỏng ghi **LCU initialization**, event hoàn tất riêng, không
+  ghi Reset thành monitor alarm transfer; LCD quay về trang đầu.
+  Sau initialization giữ cold/hot profile: standby Off/Load tương ứng;
+  qualification monitor bắt đầu lại, không cộng thời gian processor boot.
   Đây là mô hình reboot, không phải factory defaults hay restore backup.
 - Đủ năm trang Fig.3-57–61: Integral MON1/2, RMS/Facilities Power,
   VOR Temps, VOR PA Temps. Số đọc từ native monitor/RMS, không chép các số

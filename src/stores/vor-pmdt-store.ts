@@ -588,7 +588,7 @@ export function createVorPmdtStore(
           draft.transmitters[id].onAir = false;
           draft.transmitters[id].load = false;
         }
-        set({ lcu: { ...state.lcu, interlockedOff: interlocked }, config, configDraft: draft, derived: snapshot, data: snapshot.data,
+        set({ lcu: { ...state.lcu, interlockedOff: interlocked, ...(interlocked ? { initializing: false } : {}) }, config, configDraft: draft, derived: snapshot, data: snapshot.data,
           ...(interlocked ? { protectionState: { ...initialDvorProtectionState(), phase: "lockout", remaining: 0 }, monitorElapsed: 0 } : {}) });
       },
 
@@ -652,7 +652,7 @@ export function createVorPmdtStore(
           lastCommand: `LCU ${command}`,
           ...(["main", "antenna", "load", "off"].includes(command) ? { protectionState: command === "off" && state.protectionState.phase !== "monitoring"
             ? { ...state.protectionState, phase: "lockout", remaining: Math.min(20, state.protectionState.remaining), target: null } : initialDvorProtectionState() } : {}),
-          ...(command === "reset" ? { lcu: { ...state.lcu, lampTest: false, silencedAlarms: [], alarmElapsed: {} }, configDirty: false,
+          ...(command === "reset" ? { lcu: { ...state.lcu, lampTest: false, silencedAlarms: [], alarmElapsed: {}, initializing: true }, configDirty: false,
             protectionState: { ...initialDvorProtectionState(), phase: "cold-transfer", remaining: 20, target: main },
             loginDialogOpen: true, securityLevel: 0, authenticatedUserId: null } : {}),
         });
@@ -1153,8 +1153,31 @@ export function createVorPmdtStore(
       advanceMonitorTime: (seconds) => {
         if (!Number.isFinite(seconds) || seconds <= 0) return;
         const state = get();
-        const next = advanceDvorProtection(state.config, { ...state.protectionState, alarmElapsed: state.monitorElapsed },
-          seconds, state.derived.mainTransmitter);
+        const initializing = state.lcu.initializing && state.protectionState.phase === "cold-transfer";
+        const bootSeconds = initializing ? Math.min(seconds, state.protectionState.remaining) : seconds;
+        let next = advanceDvorProtection(state.config, { ...state.protectionState, alarmElapsed: state.monitorElapsed },
+          bootSeconds, state.derived.mainTransmitter);
+        let lcu = initializing ? { ...state.lcu, alarmElapsed: {} } : advanceDvorLcuTime(state, seconds);
+        if (initializing && next.events.length) {
+          const config = cloneDvor1150aConfig(next.config);
+          if (next.state.phase === "monitoring") for (const id of DVOR_TRANSMITTER_IDS) {
+            if (id !== next.snapshot.voting.activeTransmitter) config.transmitters[id].load = config.station.standbyMode === "Hot Standby"
+              && config.transmitters[id].enabled && !config.transmitters[id].faults.disabled
+              && !(id === "tx2" && config.station.transmitterConfig === "Single Transmitter");
+          }
+          const snapshot = buildDvor1150aSnapshot(config, undefined, state.derived.mainTransmitter ?? undefined);
+          lcu = { ...lcu, initializing: false };
+          const remaining = seconds - bootSeconds;
+          if (remaining > 0) {
+            lcu = advanceDvorLcuTime({ ...state, config, derived: snapshot, data: snapshot.data, lcu }, remaining);
+            const continued = advanceDvorProtection(config, next.state, remaining, state.derived.mainTransmitter);
+            next = { ...continued, events: [...next.events, ...continued.events] };
+          } else next = { ...next, config, snapshot };
+        }
+        const events = next.events.map((label, index) => initializing && index === 0
+          ? label.startsWith("Automatic monitor transfer") ? "LCU/RMS/MON initialization complete" : "LCU initialization: transmitter unavailable"
+          : label);
+        if (lcu.initializing && next.state.phase !== "cold-transfer") lcu = { ...lcu, initializing: false };
         const before = vorEvidenceSnapshot(state);
         const draft = next.config === state.config ? state.configDraft : cloneDvor1150aConfig(state.configDraft);
         if (next.config !== state.config) for (const id of DVOR_TRANSMITTER_IDS) {
@@ -1162,17 +1185,17 @@ export function createVorPmdtStore(
           draft.transmitters[id].load = next.config.transmitters[id].load;
         }
         set({
-          lcu: advanceDvorLcuTime(state, seconds),
+          lcu,
           ...(next.config !== state.config ? {
             config: next.config, configDraft: draft,
             derived: next.snapshot, data: next.snapshot.data,
           } : {}),
           protectionState: next.state,
           monitorElapsed: next.state.alarmElapsed,
-          ...(next.events.length ? { lastCommand: next.events[next.events.length - 1] } : {}),
+          ...(events.length ? { lastCommand: events[events.length - 1] } : {}),
         });
-        for (const label of next.events) recordAction({
-          actor: "system", kind: "system", controlId: "automatic-monitor-transfer",
+        for (const [index, label] of events.entries()) recordAction({
+          actor: "system", kind: "system", controlId: initializing && index === 0 ? "lcu-initialization" : "automatic-monitor-transfer",
           label, accepted: true, before,
         });
       },

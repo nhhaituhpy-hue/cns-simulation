@@ -11,7 +11,8 @@ function formatPmdtDateTime(date: Date): string {
 export function PmdtStatusBar() {
   const alert = useVorPmdtStore((state) => state.data.alert);
   const protection = useVorPmdtStore((state) => state.protectionState);
-  const protectionLabel = protection.phase === "cold-transfer" ? `Cold standby: ${protection.remaining.toFixed(1)} s`
+  const initializing = useVorPmdtStore((state) => state.lcu.initializing);
+  const protectionLabel = protection.phase === "cold-transfer" ? `${initializing ? "LCU initialization" : "Cold standby"}: ${protection.remaining.toFixed(1)} s`
     : protection.phase === "restart-wait" ? `Restart ${protection.restartAttempts + 1}: ${protection.remaining.toFixed(1)} s`
       : protection.phase === "lockout" ? "Monitor lockout" : null;
   const securityLevel = useVorPmdtStore((state) => state.securityLevel);
