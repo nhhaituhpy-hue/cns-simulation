@@ -18,6 +18,10 @@ import {
 import { DvorModuleFaceplate, hasRebuiltModuleFaceplate } from "./dvor-module-faceplates";
 import { readSidebandTransmitter, turnSidebandTrim, type SidebandAngles, type SidebandAdjustmentControl } from "./sideband-adjustment-model";
 import styles from "./dvor-block-diagram.module.css";
+import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
+import { dvorLcuScreens, projectDvorHardware } from "@/lib/dvor1150a/hardware";
+import { Dvor1150aMonitorClock } from "@/components/vor/dvor1150a-monitor-clock";
+import { SimulatorConfigPersistence } from "@/components/simulator/simulator-config-persistence";
 
 const cabinetImages: Record<CabinetFace, { src: string; alt: string; label: string; horizontalScale?: number }> = {
   front: {
@@ -218,78 +222,67 @@ function DvorReferenceDiagrams({
   );
 }
 
-const lcuScreens = [
-  { title: "Integral Monitor 1", rows: ["Az Angle 0.00°", "30 Hz Mod 30.0%", "9960 Hz Mod 30.0%", "Deviation 16.0", "RF Level 100.0%"] },
-  { title: "RMS / Facilities Power", rows: ["AC Power 230.0 V", "AC Current 2.4 A", "TX 1 48 V 48.1 V", "TX 2 48 V 48.0 V"] },
-  { title: "VOR Temperatures", rows: ["Interior 28 °C", "Exterior 31 °C", "RF Monitor 34 °C", "Carrier Amp 1 39 °C"] },
-] as const;
-
-function LcuPanel() {
+export function LcuPanel() {
   const [screenIndex, setScreenIndex] = useState(0);
-  const [local, setLocal] = useState(false);
-  const [bypass, setBypass] = useState(false);
-  const [lampTest, setLampTest] = useState(false);
-  const [mainTransmitter, setMainTransmitter] = useState<1 | 2>(1);
-  const [routes, setRoutes] = useState<Record<1 | 2, "ANTENNA" | "LOAD" | "OFF">>({ 1: "ANTENNA", 2: "OFF" });
+  const state = useVorPmdtStore();
+  const hardware = projectDvorHardware(state);
+  const { lampTest, volume } = state.lcu;
+  const local = state.config.simulation.local;
+  const bypass = state.config.simulation.integralMonitorBypass;
+  const lcuScreens = dvorLcuScreens(state);
   const screen = lcuScreens[screenIndex];
-
-  function toggleLocal() {
-    setLocal((current) => {
-      if (current) setBypass(false);
-      return !current;
-    });
-  }
-
-  function selectMain(transmitter: 1 | 2) {
-    const standbyTransmitter = transmitter === 1 ? 2 : 1;
-    setMainTransmitter(transmitter);
-    setRoutes({
-      [transmitter]: "ANTENNA",
-      [standbyTransmitter]: "OFF",
-    } as Record<1 | 2, "ANTENNA" | "LOAD" | "OFF">);
-  }
+  useEffect(() => {
+    if (!hardware.audible || volume === 0 || !window.AudioContext) return;
+    const context = new AudioContext();
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.frequency.value = 1000;
+    gain.gain.value = volume / 1000;
+    oscillator.connect(gain).connect(context.destination);
+    oscillator.start();
+    void context.resume().catch(() => {});
+    return () => { oscillator.stop(); void context.close(); };
+  }, [hardware.audible, volume]);
 
   function transmitterButton(
     transmitter: 1 | 2,
     action: "MAIN SELECT" | "ANTENNA" | "LOAD" | "OFF",
   ) {
-    const active = action === "MAIN SELECT"
-      ? mainTransmitter === transmitter && routes[transmitter] !== "OFF"
-      : routes[transmitter] === action;
+    const id = transmitter === 1 ? "tx1" : "tx2";
+    const target = state.config.transmitters[id];
+    const active = action === "MAIN SELECT" ? state.derived.mainTransmitter === id
+      : action === "ANTENNA" ? state.lcu.relayRoutes[id] === "antenna" : action === "LOAD" ? state.lcu.relayRoutes[id] === "load" : !target.onAir && !target.load;
+    const lit = hardware.lcuPower && (lampTest || active);
 
     return (
       <button
         type="button"
-        aria-label={`Transmitter ${transmitter} ${action}`}
+        aria-label={`${action} ${transmitter}`}
         aria-pressed={active}
-        disabled={!local}
-        onClick={() => action === "MAIN SELECT"
-          ? selectMain(transmitter)
-          : action === "ANTENNA"
-            ? selectMain(transmitter)
-            : setRoutes((current) => ({ ...current, [transmitter]: action }))}
+        disabled={!local || !hardware.lcuPower || (transmitter === 2 && state.config.station.transmitterConfig === "Single Transmitter")}
+        onClick={() => state.lcuCommand(action === "MAIN SELECT" ? "main" : action === "ANTENNA" ? "antenna" : action === "LOAD" ? "load" : "off", id)}
         className={styles.lcuSquareButton}
       >
-        <i aria-hidden className={active && action === "OFF" ? styles.lcuOffIndicator : undefined} />
+        <i aria-hidden data-lit={lit} className={action === "OFF" ? styles.lcuOffIndicator : undefined} />
         {transmitter}
       </button>
     );
   }
 
   const systemIndicators = [
-    { label: "MAINTENANCE ALERT", active: lampTest },
-    { label: "REMOTE CONTROL FAULT", active: lampTest },
-    { label: "BATTERY FAULT", active: lampTest },
-    { label: "ON BATTERY", active: lampTest },
-    { label: "INTERLOCKED OFF", active: lampTest },
-    { label: "LCU POWER OK", active: true },
+    { label: "MAINTENANCE ALERT", active: hardware.maintenance },
+    { label: "REMOTE CONTROL FAULT", active: hardware.remoteFault },
+    { label: "BATTERY FAULT", active: hardware.supplies.some(s => s.batteryFault) },
+    { label: "ON BATTERY", active: hardware.supplies.some(s => s.onBattery) },
+    { label: "INTERLOCKED OFF", active: state.lcu.interlockedOff },
+    { label: "LCU POWER OK", active: hardware.lcuPower },
   ] as const;
 
   return (
     <div className={styles.lcuPanel}>
-      <div className={styles.lcuDisplay}>
+      <div className={styles.lcuDisplay} role="region" aria-label="Màn hình LCU">
         <strong>{screen.title}</strong>
-        {screen.rows.map((row) => <span key={row}>{row}</span>)}
+        {screen.rows.map((row) => <span key={row}>{hardware.lcuPower ? row : "—"}</span>)}
         <div className={styles.displayControls}>
           <button type="button" onClick={() => setScreenIndex((screenIndex + lcuScreens.length - 1) % lcuScreens.length)}>Prev</button>
           <button type="button" onClick={() => setScreenIndex(0)}>Main</button>
@@ -318,18 +311,19 @@ function LcuPanel() {
                 {[1, 2].map((monitor) => (
                   <div key={monitor} className={styles.monitorRow}>
                     <b>{monitor}</b>
-                    <i className={channel === "INTEGRAL" || lampTest ? styles.lcuLampNormal : styles.lcuLampOff} />
-                    <i className={lampTest ? styles.lcuLampAlarm : styles.lcuLampOff} />
-                    <i className={lampTest ? styles.lcuLampAlarm : styles.lcuLampOff} />
+                    <i aria-label={`${channel} ${monitor} Normal`} data-lit={hardware.lcuPower && (lampTest || (channel === "INTEGRAL" && hardware.monitors[monitor - 1].enabled && !hardware.monitors[monitor - 1].qualifiedPrimary && !hardware.monitors[monitor - 1].qualifiedSecondary))} className={styles.lcuLampNormal} />
+                    <i aria-label={`${channel} ${monitor} Primary`} data-lit={hardware.lcuPower && (lampTest || (channel === "INTEGRAL" && hardware.monitors[monitor - 1].qualifiedPrimary))} className={styles.lcuLampAlarm} />
+                    <i aria-label={`${channel} ${monitor} Secondary`} data-lit={hardware.lcuPower && (lampTest || (channel === "INTEGRAL" && hardware.monitors[monitor - 1].qualifiedSecondary))} className={styles.lcuLampAlarm} />
                   </div>
                 ))}
                 <button
                   type="button"
+                  aria-label={`${channel} bypass`}
                   aria-pressed={channel === "INTEGRAL" && bypass}
-                  disabled={!local || channel === "STANDBY"}
-                  onClick={() => channel === "INTEGRAL" && setBypass((value) => !value)}
+                  disabled={!local || !hardware.lcuPower || channel === "STANDBY"}
+                  onClick={() => state.lcuCommand("bypass")}
                   className={styles.monitorBypass}
-                ><i aria-hidden />BYPASS</button>
+                ><i aria-hidden data-lit={hardware.lcuPower && (lampTest || (channel === "INTEGRAL" && bypass))} />BYPASS</button>
               </div>
             ))}
           </fieldset>
@@ -337,21 +331,22 @@ function LcuPanel() {
           <fieldset className={styles.systemPanel}>
             <legend>SYSTEM</legend>
             <div className={styles.systemButtons}>
-              <button type="button" aria-pressed={local} onClick={toggleLocal}><i aria-hidden />LOCAL<br />CONTROL</button>
-              <button type="button" aria-pressed={lampTest} onClick={() => setLampTest((value) => !value)}>LAMP<br />TEST</button>
-              <button type="button">ALARM<br />SILENCE</button>
-              <button type="button">RESET</button>
+              <button type="button" aria-label="LOCAL CONTROL" aria-pressed={local} onClick={() => state.lcuCommand("local")}><i aria-hidden data-lit={hardware.lcuPower && (lampTest || local)} />LOCAL<br />CONTROL</button>
+              <button type="button" aria-label="LAMP TEST" aria-pressed={lampTest} onClick={() => state.lcuCommand("lamp-test")}>LAMP<br />TEST</button>
+              <button type="button" aria-label="ALARM SILENCE" onClick={() => state.lcuCommand("silence")}>ALARM<br />SILENCE</button>
+              <button type="button" onClick={() => { if (state.lcuCommand("reset")) setScreenIndex(0); }}>RESET</button>
             </div>
             <div className={styles.lcuSystemIndicators}>
               {systemIndicators.map((indicator) => (
-                <span key={indicator.label}><i className={indicator.active ? styles.lcuLampOn : styles.lcuLampOff} />{indicator.label}</span>
+                <span key={indicator.label}><i aria-label={indicator.label} data-lit={hardware.lcuPower && (lampTest || indicator.active)} className={indicator.label === "LCU POWER OK" ? styles.lcuLampOn : styles.lcuLampAlarm} />{indicator.label}</span>
               ))}
             </div>
             <label className={styles.volumeControl}>
-              <input aria-label="LCU alarm volume" type="range" min="0" max="100" defaultValue="45" />
+              <input aria-label="LCU alarm volume" type="range" min="0" max="100" value={volume} onChange={event => state.setLcuVolume(Number(event.target.value))} />
               <span className={styles.volumeKnob} aria-hidden />
               <span>VOLUME</span>
             </label>
+            <output className="sr-only" aria-label="LCU simulated alarm tone" data-audible={hardware.audible && volume > 0}>{hardware.audible && volume > 0 ? "Âm báo mô phỏng" : "Im lặng"}</output>
           </fieldset>
         </div>
       </div>
@@ -359,7 +354,7 @@ function LcuPanel() {
   );
 }
 
-function ModulePanel({ blockId, sidebandAdjustment }: { blockId: Exclude<DvorBlockId, "lcu">; sidebandAdjustment?: SidebandAdjustmentControl }) {
+function ModulePanel({ blockId, sidebandAdjustment, occurrenceId }: { blockId: Exclude<DvorBlockId, "lcu">; sidebandAdjustment?: SidebandAdjustmentControl; occurrenceId?: string }) {
   const block = DVOR_BLOCK_BY_ID.get(blockId)!;
   const hasRebuiltFaceplate = hasRebuiltModuleFaceplate(blockId);
   const [activeWaveform, setActiveWaveform] = useState<DvorWaveformReference | null>(null);
@@ -389,7 +384,7 @@ function ModulePanel({ blockId, sidebandAdjustment }: { blockId: Exclude<DvorBlo
     <div className={styles.modulePanel}>
       {hasRebuiltFaceplate ? (
         <figure className={`${styles.moduleFigure} ${styles.moduleFigureRebuilt}`}>
-          <DvorModuleFaceplate blockId={blockId} sidebandAdjustment={sidebandAdjustment} />
+          <DvorModuleFaceplate blockId={blockId} sidebandAdjustment={sidebandAdjustment} occurrenceId={occurrenceId} />
           <figcaption>{block.faceImage?.figure}</figcaption>
         </figure>
       ) : block.faceImage ? (
@@ -507,7 +502,7 @@ function ModulePanel({ blockId, sidebandAdjustment }: { blockId: Exclude<DvorBlo
   );
 }
 
-function DetailPanel({ blockId, sidebandAdjustment }: { blockId: DvorBlockId; sidebandAdjustment?: SidebandAdjustmentControl }) {
+function DetailPanel({ blockId, sidebandAdjustment, occurrenceId }: { blockId: DvorBlockId; sidebandAdjustment?: SidebandAdjustmentControl; occurrenceId?: string }) {
   const block = DVOR_BLOCK_BY_ID.get(blockId)!;
   return (
     <section className={styles.detailPanel} aria-labelledby="selected-block-title">
@@ -519,7 +514,7 @@ function DetailPanel({ blockId, sidebandAdjustment }: { blockId: DvorBlockId; si
         <div className={styles.assemblyList}>{block.assemblyIds.map((id) => <span key={id}>{id}</span>)}</div>
       </div>
       <p className={styles.description}>{block.description}</p>
-      {block.id === "lcu" ? <LcuPanel /> : block.assemblyIds.length > 0 ? <ModulePanel blockId={block.id} sidebandAdjustment={sidebandAdjustment} /> : null}
+      {block.id === "lcu" ? <LcuPanel /> : block.assemblyIds.length > 0 ? <ModulePanel blockId={block.id} sidebandAdjustment={sidebandAdjustment} occurrenceId={occurrenceId} /> : null}
       <div className={styles.referenceGrid}>
         <div><strong>Tham chiếu manual</strong><span>{block.manualReference}</span></div>
         {block.testPoints.map((point) => <div key={point.id}><strong>{point.id} · {point.label}</strong><span>{point.nominal}</span></div>)}
@@ -661,6 +656,8 @@ export function DvorBlockDiagram() {
 
   return (
     <main className={styles.page}>
+      <Dvor1150aMonitorClock />
+      <SimulatorConfigPersistence simulatorId="dvor-1150a" />
       <div className={styles.workspace}>
         <section className={styles.viewerPanel} aria-labelledby="cabinet-heading">
           <div className={styles.panelHeading}>
@@ -682,7 +679,7 @@ export function DvorBlockDiagram() {
         </section>
       </div>
 
-      {selectedBlockId ? <DetailPanel blockId={selectedBlockId} sidebandAdjustment={selectedBlockId === "sideband" && selectedCabinetHotspotId ? {
+      {selectedBlockId ? <DetailPanel blockId={selectedBlockId} occurrenceId={selectedCabinetHotspotId ?? undefined} sidebandAdjustment={selectedBlockId === "sideband" && selectedCabinetHotspotId ? {
         occurrenceId: selectedCabinetHotspotId,
         angles: sidebandAngles[selectedCabinetHotspotId] ?? {},
         transmitterData: readSidebandTransmitter(sidebandAngles, selectedCabinetHotspotId),
