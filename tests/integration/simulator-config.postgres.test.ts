@@ -16,7 +16,7 @@ vi.mock("@/lib/auth/profile", () => ({ getCurrentProfile: auth.profile }));
 const owner = "11111111-1111-4111-8111-111111111111";
 const foreign = "22222222-2222-4222-8222-222222222222";
 const header = "X-CNS-Simulator-Config-DTO";
-const version = "dvor-1150a-extensions-v1";
+const version = "dvor-1150a-extensions-v2";
 const testUrl = process.env.SCENARIO_EXAM_TEST_DATABASE_URL;
 const context = () => ({ params: Promise.resolve({ simulatorId: "dvor-1150a" }) });
 function request(method = "GET", payload?: unknown, extended = true) {

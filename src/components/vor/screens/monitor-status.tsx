@@ -30,7 +30,7 @@ export function MonitorStatus({ monitorNumber }: { monitorNumber: 1 | 2 }) {
           <fieldset>
             <legend>Status</legend>
             <div className="pmdt-monitor-status-row pmdt-monitor-status-row--split"><StatusMark active={!data.local} /><span>Remote Mode</span><StatusMark active={data.local} color="yellow" /><span>Local Mode</span></div>
-            <div className="pmdt-monitor-status-row"><StatusMark active={false} /><span>Hot Standby Present</span></div>
+            <div className="pmdt-monitor-status-row"><StatusMark active={Object.values(derived.effectiveTransmitters).some(tx => tx.load)} /><span>Hot Standby Present</span></div>
             <div className="pmdt-monitor-status-row pmdt-monitor-status-row--value"><span /> <span>CPU Shutdown</span><span>Normal</span></div>
           </fieldset>
         </div>
