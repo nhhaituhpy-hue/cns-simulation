@@ -4,6 +4,7 @@ import { CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { useEffect, useRef, useState } from "react";
 import {
   disabledMenuTooltip,
+  unavailableVorCommandReason,
   vorMenuStructure,
 } from "@/lib/vor-menu-structure";
 import type { VorMenuGroup, VorMenuItem } from "@/lib/vor-types";
@@ -30,6 +31,8 @@ function MenuItemRow({
   const backupConfig = useVorPmdtStore((state) => state.backupConfig);
   const setTransmitterMode = useVorPmdtStore((state) => state.setTransmitterMode);
   const transferTransmitter = useVorPmdtStore((state) => state.transferTransmitter);
+  const setConfigValue = useVorPmdtStore((state) => state.setConfigValue);
+  const integralBypass = useVorPmdtStore((state) => state.config.simulation.integralMonitorBypass);
   const securityLevel = useVorPmdtStore((state) => state.securityLevel);
   const local = useVorPmdtStore((state) => state.config.simulation.local);
   const needBackup = useVorPmdtStore((state) => state.needBackup);
@@ -43,7 +46,12 @@ function MenuItemRow({
     && (isMainTransmitterCommand || local);
   const isRestoreCommand = item.action === "config-restore";
   const isBackupCommand = item.action === "config-backup";
+  const isIntegralBypassCommand = item.id === "monitor-command-integral-bypass-on" || item.id === "monitor-command-integral-bypass-off";
+  const bypassValue = item.id === "monitor-command-integral-bypass-on";
+  const unavailableReason = unavailableVorCommandReason(item.id);
   const unavailable = !item.enabled
+    || Boolean(unavailableReason)
+    || (isIntegralBypassCommand && (securityLevel < 3 || (bypassValue && !local)))
     || (isTransmitterCommand && !canOperateTransmitter)
     || (isRestoreCommand && (securityLevel < 3 || !local || !hasConfigurationBackup || scenarioActive))
     || (isBackupCommand && (securityLevel < 3 || (hasConfigurationBackup && !needBackup) || scenarioActive));
@@ -51,6 +59,11 @@ function MenuItemRow({
 
   function selectItem() {
     if (unavailable || hasChildren) return;
+    if (isIntegralBypassCommand) {
+      setConfigValue("simulation.integralMonitorBypass", bypassValue);
+      closeMenu();
+      return;
+    }
     if (isTransferCommand) {
       transferTransmitter();
       closeMenu();
@@ -108,8 +121,12 @@ function MenuItemRow({
         aria-disabled={unavailable || undefined}
         aria-haspopup={hasChildren ? "menu" : undefined}
         title={
-          !item.enabled
+          unavailableReason ?? (!item.enabled
             ? disabledMenuTooltip
+            : isIntegralBypassCommand && securityLevel < 3
+              ? "Yêu cầu đăng nhập SEC3 hoặc SEC4"
+            : isIntegralBypassCommand && bypassValue && !local
+              ? "Bật Local trước khi bật Integral Monitor Bypass"
             : (isRestoreCommand || isBackupCommand) && scenarioActive
               ? "Không dùng backup/restore profile trong scenario"
             : isRestoreCommand && !hasConfigurationBackup
@@ -126,7 +143,7 @@ function MenuItemRow({
                   ? "GUEST chỉ được xem tham số"
                   : isMaintenanceTransmitterCommand && !local
                     ? "Bật Local để điều khiển transmitter"
-              : undefined
+              : undefined)
         }
         onClick={selectItem}
         className={`pmdt-menu-item ${
@@ -135,7 +152,7 @@ function MenuItemRow({
             : "pmdt-menu-item--enabled"
         }`}
       >
-        <span className="pmdt-menu-check" aria-hidden>{item.checked ? "•" : ""}</span>
+        <span className="pmdt-menu-check" aria-hidden>{(isIntegralBypassCommand ? integralBypass === bypassValue : item.checked) ? "•" : ""}</span>
         <span className="min-w-0 flex-1 truncate">{item.label}</span>
         {hasChildren ? <CaretRight aria-hidden size={12} /> : null}
       </button>

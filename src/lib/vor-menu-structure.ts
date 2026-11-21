@@ -1,7 +1,27 @@
 import type { VorMenuGroup, VorMenuItem } from "./vor-types";
 
+export function unavailableVorCommandReason(id: string): string | undefined {
+  if (/^monitor-[12]-(integral-composite|standby-composite|test-generator|carrier-.*-power|ground-check|sideband-[12]-reflected-power)$/.test(id)) {
+    return "Chưa mô phỏng đường tín hiệu đo tại J3; không thay đổi dữ liệu giám sát.";
+  }
+  if (id.startsWith("tx-command-ident-")) return "Chưa mô phỏng lệnh Normal/Off/Continuous của bộ phát Ident; cấu hình keyer không thay thế lệnh này.";
+  if (id === "tx-command-hold-commutator") return "Chưa mô phỏng Hold/Release Commutator và chọn anten phát thử.";
+  if (id.startsWith("monitor-command-standby-bypass-")) return "Chưa mô phỏng bypass giám sát Standby độc lập; không dùng thay Integral Bypass.";
+  if (id.startsWith("rms-command-select-audio-")) return "Chưa mô phỏng đường nghe Ident của Monitor 1/2 tại RMS.";
+  if (id.startsWith("rms-command-fan-")) return "Chưa mô phỏng điều khiển quạt Automatic/On/Off và phản hồi quạt.";
+  if (/^rms-command-spare-output-[1-4]-(high|low)$/.test(id)) return "Chưa mô phỏng mức điện High/Low tại ngõ ra số dự phòng.";
+  if (/^rms-command-bcps-[12]-(enable|disable)$/.test(id)) return "Chưa mô phỏng điều khiển Enable/Disable Charger của BCPS; không phải Reset.";
+  if (id === "rms-command-reset-intrusion" || id === "rms-command-reset-smoke") return "Chưa mô phỏng cảm biến và chốt báo động Intrusion/Smoke để reset.";
+  if (id === "rms-command-enable-mode" || id === "rms-command-disable-mode") return "Chưa mô phỏng Command Mode của RMS; không đồng nhất với Local hoặc mức SEC.";
+  return undefined;
+}
+
+function unavailableCommand(id: string, label: string): VorMenuItem {
+  return { id, label, enabled: false };
+}
+
 const testSignalItems: readonly VorMenuItem[] = [
-  { id: "integral-composite", label: "Integral Composite", enabled: true, checked: true },
+  { id: "integral-composite", label: "Integral Composite", enabled: true },
   { id: "standby-composite", label: "Standby Composite", enabled: true },
   { id: "test-generator", label: "Test Generator", enabled: true },
   { id: "carrier-forward-power", label: "Carrier Forward Power", enabled: true },
@@ -29,6 +49,7 @@ function monitorItems(monitorNumber: 1 | 2): readonly VorMenuItem[] {
       children: testSignalItems.map((item) => ({
         ...item,
         id: `monitor-${monitorNumber}-${item.id}`,
+        enabled: false,
       })),
     },
   ];
@@ -61,8 +82,8 @@ const transmitterCommandItems: readonly VorMenuItem[] = [
     label: "Transmitter Ident",
     enabled: true,
     children: [
-      { id: "tx-command-ident-normal", label: "Normal", enabled: true, checked: true },
-      { id: "tx-command-ident-off", label: "Off", enabled: true },
+      { id: "tx-command-ident-normal", label: "Normal", enabled: false },
+      { id: "tx-command-ident-off", label: "Off", enabled: false },
       { id: "tx-command-ident-continuous", label: "Continuous", enabled: false },
     ],
   },
@@ -76,8 +97,9 @@ const rmsCommandItems: readonly VorMenuItem[] = [
     label: "Select Audio",
     enabled: true,
     children: [
-      { id: "rms-command-select-audio-tx1", label: "Transmitter 1", enabled: true },
-      { id: "rms-command-select-audio-tx2", label: "Transmitter 2", enabled: true },
+      unavailableCommand("rms-command-select-audio-none", "No Audio"),
+      unavailableCommand("rms-command-select-audio-mon1", "Monitor #1 Ident"),
+      unavailableCommand("rms-command-select-audio-mon2", "Monitor #2 Ident"),
     ],
   },
   {
@@ -85,9 +107,9 @@ const rmsCommandItems: readonly VorMenuItem[] = [
     label: "System Fan Control",
     enabled: true,
     children: [
-      { id: "rms-command-fan-auto", label: "Automatic", enabled: true },
-      { id: "rms-command-fan-on", label: "On", enabled: true },
-      { id: "rms-command-fan-off", label: "Off", enabled: true },
+      unavailableCommand("rms-command-fan-auto", "Automatic"),
+      unavailableCommand("rms-command-fan-on", "On"),
+      unavailableCommand("rms-command-fan-off", "Off"),
     ],
   },
   {
@@ -95,18 +117,20 @@ const rmsCommandItems: readonly VorMenuItem[] = [
     label: "Set Spare Digital Output",
     enabled: true,
     children: [
-      { id: "rms-command-spare-output-1", label: "Spare Output 1", enabled: true },
-      { id: "rms-command-spare-output-2", label: "Spare Output 2", enabled: true },
-      { id: "rms-command-spare-output-3", label: "Spare Output 3", enabled: true },
-      { id: "rms-command-spare-output-4", label: "Spare Output 4", enabled: true },
+      ...[1, 2, 3, 4].map(number => ({
+        id: `rms-command-spare-output-${number}`, label: `Output #${number}`, enabled: true,
+        children: [unavailableCommand(`rms-command-spare-output-${number}-high`, "High"), unavailableCommand(`rms-command-spare-output-${number}-low`, "Low")],
+      })),
     ],
   },
-  { id: "rms-command-bcps-1", label: "BCPS 1", enabled: true, children: [{ id: "rms-command-bcps-1-reset", label: "Reset", enabled: true }] },
-  { id: "rms-command-bcps-2", label: "BCPS 2", enabled: true, children: [{ id: "rms-command-bcps-2-reset", label: "Reset", enabled: true }] },
-  { id: "rms-command-reset-intrusion", label: "Reset Intrusion Detector", enabled: true },
-  { id: "rms-command-reset-smoke", label: "Reset Smoke Detector", enabled: true },
-  { id: "rms-command-enable-mode", label: "Enable Command Mode", enabled: true },
-  { id: "rms-command-disable-mode", label: "Disable Command Mode", enabled: true },
+  ...[1, 2].map(number => ({
+    id: `rms-command-bcps-${number}`, label: `BCPS ${number}`, enabled: true,
+    children: [unavailableCommand(`rms-command-bcps-${number}-enable`, "Enable Charger"), unavailableCommand(`rms-command-bcps-${number}-disable`, "Disable Charger")],
+  })),
+  unavailableCommand("rms-command-reset-intrusion", "Reset Intrusion Detector"),
+  unavailableCommand("rms-command-reset-smoke", "Reset Smoke Detector"),
+  unavailableCommand("rms-command-enable-mode", "Enable Command Mode"),
+  unavailableCommand("rms-command-disable-mode", "Disable Command Mode"),
 ];
 
 const monitorCommandItems: readonly VorMenuItem[] = [
@@ -124,8 +148,8 @@ const monitorCommandItems: readonly VorMenuItem[] = [
     label: "Standby Monitor Bypass",
     enabled: true,
     children: [
-      { id: "monitor-command-standby-bypass-on", label: "On", enabled: true },
-      { id: "monitor-command-standby-bypass-off", label: "Off", enabled: true },
+      { id: "monitor-command-standby-bypass-on", label: "On", enabled: false },
+      { id: "monitor-command-standby-bypass-off", label: "Off", enabled: false },
     ],
   },
 ];
