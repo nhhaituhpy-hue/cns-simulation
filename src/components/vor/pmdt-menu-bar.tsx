@@ -9,6 +9,8 @@ import {
 } from "@/lib/vor-menu-structure";
 import type { VorMenuGroup, VorMenuItem } from "@/lib/vor-types";
 import { useVorPmdtStore } from "@/stores/vor-pmdt-store";
+import { dvorConfigurationLoadBlock } from "@/lib/dvor1150a/configuration-file";
+import { choosePmdtConfiguration, printPmdtConfiguration, savePmdtConfiguration } from "./pmdt-file-commands";
 
 interface MenuItemRowProps {
   group: VorMenuGroup;
@@ -21,6 +23,7 @@ function MenuItemRow({
   item,
   closeMenu,
 }: MenuItemRowProps) {
+  const loadBlock = useVorPmdtStore(dvorConfigurationLoadBlock);
   const openScreen = useVorPmdtStore((state) => state.openScreen);
   const openView = useVorPmdtStore((state) => state.openView);
   const setConfigPanelOpen = useVorPmdtStore((state) => state.setConfigPanelOpen);
@@ -38,6 +41,10 @@ function MenuItemRow({
   const needBackup = useVorPmdtStore((state) => state.needBackup);
   const hasConfigurationBackup = useVorPmdtStore((state) => state.hasConfigurationBackup);
   const scenarioActive = useVorPmdtStore((state) => state.scenario.active);
+  const isFileLoad = item.id === "system-config-load";
+  const isFileRead = item.id === "system-config-save" || item.id === "system-config-print";
+  const fileReason = isFileLoad ? loadBlock : isFileRead && (scenarioActive || securityLevel < 1)
+    ? "Đăng nhập để xuất cấu hình; không xuất cấu hình trong scenario." : undefined;
   const isTransferCommand = item.id === "tx-command-transfer";
   const isTransmitterCommand = item.action === "set-transmitter-mode" || isTransferCommand;
   const isMainTransmitterCommand = isTransferCommand || (isTransmitterCommand && item.transmitterMode === "main");
@@ -49,7 +56,7 @@ function MenuItemRow({
   const isIntegralBypassCommand = item.id === "monitor-command-integral-bypass-on" || item.id === "monitor-command-integral-bypass-off";
   const bypassValue = item.id === "monitor-command-integral-bypass-on";
   const unavailableReason = unavailableVorCommandReason(item.id);
-  const unavailable = !item.enabled
+  const unavailable = !item.enabled || Boolean(fileReason)
     || Boolean(unavailableReason)
     || (isIntegralBypassCommand && (securityLevel < 3 || (bypassValue && !local)))
     || (isTransmitterCommand && !canOperateTransmitter)
@@ -59,6 +66,12 @@ function MenuItemRow({
 
   function selectItem() {
     if (unavailable || hasChildren) return;
+    if (isFileLoad) { choosePmdtConfiguration(); closeMenu(); return; }
+    if (item.id === "system-config-save") {
+      if (window.confirm("Lưu cấu hình applied bằng file training JSON (không phải file SELEX). Nháp chưa Apply không được lưu. Theo HDCV, lưu hai bản tại ổ máy tính và bộ nhớ ngoài.")) savePmdtConfiguration();
+      closeMenu(); return;
+    }
+    if (item.id === "system-config-print") { printPmdtConfiguration(); closeMenu(); return; }
     if (isIntegralBypassCommand) {
       setConfigValue("simulation.integralMonitorBypass", bypassValue);
       closeMenu();
@@ -121,7 +134,7 @@ function MenuItemRow({
         aria-disabled={unavailable || undefined}
         aria-haspopup={hasChildren ? "menu" : undefined}
         title={
-          unavailableReason ?? (!item.enabled
+          fileReason ?? unavailableReason ?? (!item.enabled
             ? disabledMenuTooltip
             : isIntegralBypassCommand && securityLevel < 3
               ? "Yêu cầu đăng nhập SEC3 hoặc SEC4"

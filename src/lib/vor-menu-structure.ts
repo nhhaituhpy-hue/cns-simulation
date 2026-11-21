@@ -1,6 +1,7 @@
 import type { VorMenuGroup, VorMenuItem } from "./vor-types";
 
 export function unavailableVorCommandReason(id: string): string | undefined {
+  if (id === "rms-command-set-time-date") return "TM §3.6.7.5: trạm dùng RCSU 2240 làm master clock; đặt ngày giờ tại RCSU. Chưa mô phỏng đồng hồ RCSU/standalone.";
   if (/^monitor-[12]-(integral-composite|standby-composite|test-generator|carrier-.*-power|ground-check|sideband-[12]-reflected-power)$/.test(id)) {
     return "Chưa mô phỏng đường tín hiệu đo tại J3; không thay đổi dữ liệu giám sát.";
   }
@@ -91,6 +92,7 @@ const transmitterCommandItems: readonly VorMenuItem[] = [
 ];
 
 const rmsCommandItems: readonly VorMenuItem[] = [
+  { id: "rms-command-set-time-date", label: "Set Time and Date", enabled: false },
   { id: "rms-command-change-password", label: "Change Password...", enabled: false },
   {
     id: "rms-command-select-audio",
@@ -161,9 +163,9 @@ export const vorMenuStructure: readonly VorMenuGroup[] = [
     items: [
       { id: "system-logon", label: "Logon RMS", enabled: true, action: "open-login" },
       { id: "system-logoff", label: "Logoff/Disconnect", enabled: true, action: "logoff" },
-      { id: "system-config-save", label: "Configuration Save", enabled: false },
-      { id: "system-config-load", label: "Configuration Load", enabled: false },
-      { id: "system-config-print", label: "Configuration Print", enabled: false },
+      { id: "system-config-save", label: "Configuration Save", enabled: true },
+      { id: "system-config-load", label: "Configuration Load", enabled: true },
+      { id: "system-config-print", label: "Configuration Print", enabled: true },
       { id: "system-pmdt-setup", label: "PMDT Setup", enabled: false },
       { id: "system-simulation-parameters", label: "Simulation Parameters...", enabled: true, action: "open-config" },
       { id: "system-print-setup", label: "Print Setup", enabled: false },

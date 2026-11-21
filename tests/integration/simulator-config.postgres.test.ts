@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { Client, Pool } from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { getDefaultDvor1150aConfig } from "@/lib/simulator-config/dvor-1150a";
+import { parseDvorConfigurationFile, serializeDvorConfiguration } from "@/lib/dvor1150a/configuration-file";
 import {
   getDefaultDvor1150aConfig as legacyDefault,
   parseDvor1150aConfig as legacyParse,
@@ -362,6 +363,21 @@ describe.skipIf(!testUrl)("simulator config actual routes with isolated PostgreS
     expect(response.status).toBe(400);
     expect((await pool.query("select * from public.user_simulator_configs where user_id=$1", [owner])).rows[0]).toEqual(original);
     expect((await pool.query("select count(*) n from public.user_simulator_config_history")).rows[0].n).toBe("1");
+  });
+
+  it("persists a training-file load through Apply separately from the explicit backup", async () => {
+    await initialize();
+    const config = getDefaultDvor1150aConfig();
+    config.transmitters.tx1.nominal.outputPower = 80;
+    const loaded = parseDvorConfigurationFile(serializeDvorConfiguration(config));
+    const response = await route.PUT(request("PUT", { config: loaded, action: "apply", expectedRevision: 1 }), context());
+    expect(response.status).toBe(200);
+    const body = await (await route.GET(request(), context())).json();
+    expect(body.appliedConfig.transmitters.tx1.nominal.outputPower).toBe(80);
+    expect(body.backupConfig.transmitters.tx1.nominal.outputPower).toBe(70);
+    expect((await route.PUT(request("PUT", { config: loaded, backupConfig: loaded, action: "backup", expectedRevision: 2 }), context())).status).toBe(200);
+    const backed = await (await route.GET(request(), context())).json();
+    expect(backed.backupConfig.transmitters.tx1.nominal.outputPower).toBe(80);
   });
 
   it.each(["GET", "POST", "PUT"] as const)("unknown DTO on %s returns 400 without writes", async method => {
