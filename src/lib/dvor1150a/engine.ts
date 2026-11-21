@@ -207,7 +207,7 @@ function effectiveTransmitter(
     offsets.sideband3RfLevelScale,
     offsets.sideband4RfLevelScale,
   ];
-  const sidebandPower = onAir
+  const sidebandPower = onAir || load
     ? sidebandScale.map((scale) => {
         // The individual sideband RF level settings are voltage scale
         // factors: 70.7% therefore produces approximately 50% power.
@@ -241,10 +241,12 @@ function effectiveTransmitter(
     identCode: effectiveIdentCode(config, transmitterId),
     carrierFrequencyMHz,
     sidebandPower,
-    carrierVswr: tx.faults.carrierVswr ? 3 : Math.max(1, tx.vswr.carrier),
+    // Figure 2-11 terminates Load RF in 50 ohms. Use an ideal match until
+    // a load-mismatch model is supplied; retain explicit injected TX faults.
+    carrierVswr: tx.faults.carrierVswr ? 3 : load ? 1 : Math.max(1, tx.vswr.carrier),
     sidebandVswr: tx.faults.carrierVswr
       ? tx.vswr.sidebands.map((value) => Math.max(value, 3))
-      : tx.vswr.sidebands.map((value, index) => Math.max(1, value + sidebandVswrOffsets[index])),
+      : tx.vswr.sidebands.map((value, index) => load ? 1 : Math.max(1, value + sidebandVswrOffsets[index])),
     status,
   };
 }
@@ -452,7 +454,7 @@ function monitorResult(
     status: identCodeState,
     indicator: dvorAlarmToIndicator(identCodeState),
   };
-  const notchAlarmState = statusForNotchMonitor(config, monitorId, notchBaselineRows);
+  const notchAlarmState = transmitter ? statusForNotchMonitor(config, monitorId, notchBaselineRows) : "normal";
   const notchRoute = config.monitor.routing.notchMonitor;
   const notchState: DvorAlarmState = notchAlarmState === "alarm"
     ? notchRoute.primary
@@ -466,13 +468,26 @@ function monitorResult(
     status: notchState,
     indicator: dvorAlarmToIndicator(notchState),
   };
-  const sidebandValues = calibrated.sidebandVswr as number[];
+  const sidebandValues = transmitter ? calibrated.sidebandVswr as number[] : [];
   const sidebandState = statusForVswr(sidebandValues, config.monitor.sidebandVswr);
   statuses.sidebandVswr = {
     ...statuses.sidebandVswr,
     status: sidebandState,
     indicator: dvorAlarmToIndicator(sidebandState),
   };
+
+  if (!transmitter) {
+    // No on-air source: do not present stored field profiles as measurements.
+    for (const parameter of DVOR_MONITOR_PARAMETERS) {
+      if (parameter === "rfLevel" || parameter === "txPower" || parameter === "identStatus") continue;
+      statuses[parameter] = { ...statuses[parameter], value: "—", status: "normal", indicator: "gray" };
+    }
+    for (const [parameter, value] of [["rfLevel", -60], ["txPower", 0]] as const) {
+      const state = statusForValue(value, config.monitor.alarmLimits[parameter]);
+      statuses[parameter] = { ...statuses[parameter], value, status: state, indicator: dvorAlarmToIndicator(state) };
+    }
+    statuses.identStatus = { ...statuses.identStatus, value: "No Ident", status: "alarm", indicator: "red" };
+  }
 
   // Figure 3-34 Primary/Secondary classifies alarm severity, not MON1/MON2.
   // A stored legacy both=true keeps Primary precedence; neither disables the
@@ -531,10 +546,10 @@ function buildIntegralData(
   });
   const txFrequencyRow: VorIntegralDataRow = {
     label: "Tx Frequency",
-    mon1Value: activeTransmitter ? formatValue(activeTransmitter.carrierFrequencyMHz, 4) : "0.0000",
-    mon1Status: activeTransmitter ? "green" : "red",
-    mon2Value: activeTransmitter ? formatValue(activeTransmitter.carrierFrequencyMHz, 4) : "0.0000",
-    mon2Status: activeTransmitter ? "green" : "red",
+    mon1Value: activeTransmitter ? formatValue(activeTransmitter.carrierFrequencyMHz, 4) : "—",
+    mon1Status: activeTransmitter ? "green" : "gray",
+    mon2Value: activeTransmitter ? formatValue(activeTransmitter.carrierFrequencyMHz, 4) : "—",
+    mon2Status: activeTransmitter ? "green" : "gray",
     unit: "MHz",
   };
   return [...rows.slice(0, 9), txFrequencyRow, rows[9]];
@@ -632,28 +647,39 @@ function buildTxOffsets(config: Dvor1150aConfig): VorTxDualValueRow[] {
   }));
 }
 
+export function readDvorTransmitterRfPower(transmitter: DvorEffectiveTransmitter) {
+  const powered = transmitter.onAir || transmitter.load;
+  const power = (forward: number, vswr: number) => ({
+    forward: powered ? forward : 0,
+    reflected: powered ? forward * ((vswr - 1) / (vswr + 1)) ** 2 : 0,
+  });
+  return {
+    // Retain the Audio Generator/RF Monitor reference calibration, distinct
+    // from Integral and Standby monitor CCA scale factors.
+    carrier: power(70.8 * transmitter.effectiveOutputPower / (70 * 84 / 100), transmitter.carrierVswr),
+    sidebands: transmitter.sidebandPower.map((forward, index) => power(forward, transmitter.sidebandVswr[index])),
+  };
+}
+
 function buildTxPower(
   transmitters: Record<DvorTransmitterId, DvorEffectiveTransmitter>,
 ): VorTxDualValueRow[] {
-  // RF Monitor assembly calibration (§9.7.12.2g) is separate from either
-  // monitor CCA's Integral calibration. Retain the existing TX reference.
-  const measuredCarrier = (tx: DvorTransmitterId) => transmitters[tx].onAir
-    ? 70.8 * transmitters[tx].effectiveOutputPower / (70 * 84 / 100)
-    : 0;
+  const tx1 = readDvorTransmitterRfPower(transmitters.tx1);
+  const tx2 = readDvorTransmitterRfPower(transmitters.tx2);
   return [
-    { parameter: "Carrier", tx1: measuredCarrier("tx1"), tx2: measuredCarrier("tx2"), unit: "Watts" },
+    { parameter: "Carrier", tx1: tx1.carrier.forward, tx2: tx2.carrier.forward, unit: "Watts" },
     ...[0, 1, 2, 3].map((index) => ({
       parameter: `Sideband #${index + 1}`,
-      tx1: transmitters.tx1.sidebandPower[index],
-      tx2: transmitters.tx2.sidebandPower[index],
+      tx1: tx1.sidebands[index].forward,
+      tx2: tx2.sidebands[index].forward,
       unit: "Watts",
     })),
   ];
 }
 
 function buildTxFrequency(transmitters: Record<DvorTransmitterId, DvorEffectiveTransmitter>): VorTxFrequencyRow[] {
-  const tx1 = transmitters.tx1.onAir ? transmitters.tx1 : null;
-  const tx2 = transmitters.tx2.onAir ? transmitters.tx2 : null;
+  const tx1 = transmitters.tx1.onAir || transmitters.tx1.load ? transmitters.tx1 : null;
+  const tx2 = transmitters.tx2.onAir || transmitters.tx2.load ? transmitters.tx2 : null;
   return [
     { parameter: "Carrier Frequency", value1: tx1?.carrierFrequencyMHz ?? null, value2: tx2?.carrierFrequencyMHz ?? null, unit: "MHz" },
     { parameter: "Tx Lower Sideband", value1: tx1 ? tx1.carrierFrequencyMHz - 0.0099 : null, value2: tx2 ? tx2.carrierFrequencyMHz - 0.0099 : null, unit: "MHz" },
@@ -665,18 +691,18 @@ function buildTxFrequency(transmitters: Record<DvorTransmitterId, DvorEffectiveT
 }
 
 function buildTxVswr(transmitters: Record<DvorTransmitterId, DvorEffectiveTransmitter>): VorTxVswrRow[] {
-  const activeId = chooseActiveTransmitter(transmitters);
-  const active = activeId ? transmitters[activeId] : null;
+  const tx1 = transmitters.tx1.onAir || transmitters.tx1.load ? transmitters.tx1 : null;
+  const tx2 = transmitters.tx2.onAir || transmitters.tx2.load ? transmitters.tx2 : null;
   return [
     {
       parameter: "Carrier",
-      value1: activeId === "tx1" ? active?.carrierVswr ?? null : null,
-      value2: activeId === "tx2" ? active?.carrierVswr ?? null : null,
+      value1: tx1?.carrierVswr ?? null,
+      value2: tx2?.carrierVswr ?? null,
     },
     ...[0, 1, 2, 3].map((index) => ({
       parameter: `Sideband #${index + 1}`,
-      value1: activeId === "tx1" ? active?.sidebandVswr[index] ?? null : null,
-      value2: activeId === "tx2" ? active?.sidebandVswr[index] ?? null : null,
+      value1: tx1?.sidebandVswr[index] ?? null,
+      value2: tx2?.sidebandVswr[index] ?? null,
     })),
   ];
 }
@@ -778,7 +804,7 @@ function applyActiveTransmitterAlerts(
     const sidebandFault = sidebandIndex >= 0 && transmitter.sidebandVswr[sidebandIndex] >= sidebandAlarm;
     const phaseOrForwardFault = sidebandIndex >= 0 && (
       (alert.label.endsWith("Phase") && phaseFault)
-      || (alert.label.endsWith("Forward Power") && transmitter.onAir && transmitter.sidebandPower[sidebandIndex] <= 0)
+      || (alert.label.endsWith("Forward Power") && (transmitter.onAir || transmitter.load) && transmitter.sidebandPower[sidebandIndex] <= 0)
     );
     return {
       ...alert,
@@ -1022,7 +1048,7 @@ export function buildDvor1150aSnapshot(
     };
   });
   data.monitorOffsets = monitorOffsets.mon1;
-  data.notchData = data.notchData.map((row) => ({
+  data.notchData = active ? data.notchData.map((row) => ({
     ...row,
     // Raw notch is a normalized detector level (100% is the reference
     // detector gain); calibration is then applied per monitor CCA.
@@ -1032,7 +1058,7 @@ export function buildDvor1150aSnapshot(
     mon2: row.mon2
       * config.monitor.rawMeasurements.mon2.notchMonitor / 100
       * config.monitor.calibration.mon2.notchScale / 100,
-  }));
+  })) : [];
   data.monitorConfigGeneral = Object.entries(config.monitor.routing)
     .filter(([parameter]) => parameter !== "azimuth")
     .map(([parameter, routing]) => ({
@@ -1085,8 +1111,8 @@ export function buildDvor1150aSnapshot(
     antennaSelect: activeId === "tx2" ? 2 : 1,
     mainSelect: mainId === "tx2" ? 2 : 1,
     transmitterOn: {
-      tx1: effectiveTransmitters.tx1.onAir,
-      tx2: effectiveTransmitters.tx2.onAir,
+      tx1: effectiveTransmitters.tx1.onAir || effectiveTransmitters.tx1.load,
+      tx2: effectiveTransmitters.tx2.onAir || effectiveTransmitters.tx2.load,
     },
   };
 
