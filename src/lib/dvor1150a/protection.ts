@@ -1,4 +1,4 @@
-import type { Dvor1150aConfig, Dvor1150aSnapshot, DvorTransmitterId } from "./config-types";
+import type { Dvor1150aConfig, Dvor1150aSnapshot, DvorTransmitterId, DvorMonitorId } from "./config-types";
 import { DVOR_MONITOR_IDS, DVOR_TRANSMITTER_IDS } from "./config-types";
 import { buildDvor1150aSnapshot } from "./engine";
 
@@ -14,8 +14,9 @@ export function initialDvorProtectionState(): DvorProtectionState {
   return { phase: "monitoring", remaining: 0, alarmElapsed: 0, restartAttempts: 0, target: null };
 }
 
-function protectionDelay(config: Dvor1150aConfig, snapshot: Dvor1150aSnapshot): number {
-  const installed = config.station.monitorConfig === "Dual Monitors" ? DVOR_MONITOR_IDS : ["mon1"] as const;
+function protectionDelay(config: Dvor1150aConfig, snapshot: Dvor1150aSnapshot, excluded: readonly DvorMonitorId[]): number {
+  const installed = DVOR_MONITOR_IDS.filter(id => (id === "mon1" || config.station.monitorConfig === "Dual Monitors") && !excluded.includes(id));
+  if (!installed.length) return config.monitor.timers.shutdown;
   let earliest = Number.POSITIVE_INFINITY;
   for (const [parameter, route] of Object.entries(config.monitor.routing)) {
     if (!route.primary && !(config.monitor.transfer === "on Any Alarm" && route.secondary)) continue;
@@ -43,10 +44,11 @@ export function advanceDvorProtection(
   previous: DvorProtectionState,
   seconds: number,
   mainTransmitter: DvorTransmitterId | null,
+  excludedMonitors: readonly DvorMonitorId[] = [],
 ) {
   let config = original;
   let state = { ...previous };
-  let snapshot = buildDvor1150aSnapshot(config, undefined, mainTransmitter ?? undefined);
+  let snapshot = buildDvor1150aSnapshot(config, undefined, mainTransmitter ?? undefined, undefined, excludedMonitors);
   const events: string[] = [];
   const faults: { config: Dvor1150aConfig; snapshot: Dvor1150aSnapshot; elapsed: number }[] = [];
   const result = () => ({ config, state, snapshot, events, faults });
@@ -67,7 +69,7 @@ export function advanceDvorProtection(
       config.transmitters[id].load = restoreStandby && target !== null && id !== target
         && config.station.standbyMode === "Hot Standby" && available(id);
     }
-    snapshot = buildDvor1150aSnapshot(config, undefined, mainTransmitter ?? undefined);
+    snapshot = buildDvor1150aSnapshot(config, undefined, mainTransmitter ?? undefined, undefined, excludedMonitors);
     state.alarmElapsed = 0;
   };
   const shutdown = () => {
@@ -115,7 +117,7 @@ export function advanceDvorProtection(
     }
     const active = snapshot.voting.activeTransmitter;
     if (!active || !snapshot.voting.transferRequested) { state.alarmElapsed = 0; break; }
-    const required = Math.max(0, protectionDelay(config, snapshot) - state.alarmElapsed);
+    const required = Math.max(0, protectionDelay(config, snapshot, excludedMonitors) - state.alarmElapsed);
     if (budget + 1e-9 < required) { state.alarmElapsed += budget; break; }
     budget = Math.max(0, budget - required);
     faults.push({ config: structuredClone(config), snapshot: structuredClone(snapshot), elapsed: seconds - budget });

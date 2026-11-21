@@ -40,6 +40,7 @@ describe("1150A test-generator certification", () => {
     act(() => { expect(store.getState().applyConfigChanges()).toBe(true); });
     expect(store.getState().derived.monitors).toEqual(before.derived.monitors);
     expect(store.getState().derived.effectiveTransmitters).toEqual(before.derived.effectiveTransmitters);
+    act(() => store.getState().advanceMonitorTime(120));
     unmount();
     act(() => store.getState().openScreen("monitor-test-results", [`Monitor ${mon}`, "Test Results"], "Test Results"));
     const { unmount: unmountResults } = render(<MonitorTestResults />);
@@ -61,6 +62,7 @@ describe("1150A test-generator certification", () => {
   it("stages test-generator setup and applies the common source without changing on-air monitor data", () => {
     const store = maintenance();
     const before = store.getState();
+    act(() => store.getState().advanceMonitorTime(120));
     render(<MonitorTestResults />);
     fireEvent.click(screen.getByRole("tab", { name: "Test Generator" }));
     const setup = screen.getByLabelText("30 Hz Modulation setup");
@@ -68,6 +70,8 @@ describe("1150A test-generator certification", () => {
     fireEvent.change(setup, { target: { value: "35" } });
     expect(document.querySelector('[data-vor-field-id="testGeneratorResults.mon1.hz30Modulation"]')).toHaveTextContent("30.0");
     act(() => { expect(store.getState().applyConfigChanges()).toBe(true); });
+    expect(document.querySelector('[data-vor-field-id="testGeneratorResults.mon1.hz30Modulation"]')).toHaveTextContent("30.0");
+    act(() => store.getState().advanceMonitorTime(120));
     expect(document.querySelector('[data-vor-field-id="testGeneratorResults.mon1.hz30Modulation"]')).toHaveTextContent("35.0");
     expect(store.getState().derived.monitors).toEqual(before.derived.monitors);
   });

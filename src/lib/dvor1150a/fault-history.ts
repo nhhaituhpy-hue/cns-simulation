@@ -41,7 +41,7 @@ export function sampleDvorFaultHistory(history: DvorFaultHistory, config: Dvor11
   const good = { ...history.good };
   const sample = faultSample(config, snapshot, timestamp);
   for (const id of ["mon1", "mon2"] as const) {
-    if (snapshot.monitors[id].enabled && !snapshot.monitors[id].primaryAlarm && !snapshot.monitors[id].secondaryAlarm) {
+    if (snapshot.data.rmsMonitorTransmitterStatus.enabledMonitors[id === "mon1" ? "monitor1" : "monitor2"] && !snapshot.monitors[id].primaryAlarm && !snapshot.monitors[id].secondaryAlarm) {
       good[id] = sample;
     }
   }
@@ -50,9 +50,11 @@ export function sampleDvorFaultHistory(history: DvorFaultHistory, config: Dvor11
 
 export function appendDvorFault(history: DvorFaultHistory, config: Dvor1150aConfig, snapshot: Dvor1150aSnapshot, timestamp: string): DvorFaultHistory {
   const installed = config.station.monitorConfig === "Dual Monitors" ? ["mon1", "mon2"] as const : ["mon1"] as const;
-  const voted = (severity: "primary" | "secondary") => Object.entries(config.monitor.routing).some(([parameter, route]) => {
+  const enabled = snapshot.data.rmsMonitorTransmitterStatus.enabledMonitors;
+  const voting = installed.filter(id => !snapshot.monitors[id].enabled || enabled[id === "mon1" ? "monitor1" : "monitor2"]);
+  const voted = (severity: "primary" | "secondary") => voting.length === 0 ? severity === "primary" : Object.entries(config.monitor.routing).some(([parameter, route]) => {
     if (!route[severity] || (severity === "secondary" && route.primary)) return false;
-    const votes = installed.map(id => !snapshot.monitors[id].enabled || snapshot.monitors[id].parameters[parameter as keyof typeof snapshot.monitors.mon1.parameters].executiveAlarm === true);
+    const votes = voting.map(id => !snapshot.monitors[id].enabled || snapshot.monitors[id].parameters[parameter as keyof typeof snapshot.monitors.mon1.parameters].executiveAlarm === true);
     return config.monitor.votingLogic === "AND" ? votes.every(Boolean) : votes.some(Boolean);
   });
   const event: DvorFaultEvent = {
@@ -60,7 +62,7 @@ export function appendDvorFault(history: DvorFaultHistory, config: Dvor1150aConf
     prior: structuredClone(history.good),
     lcu: {
       logic: config.monitor.votingLogic,
-      enabled: { mon1: snapshot.monitors.mon1.enabled, mon2: snapshot.monitors.mon2.enabled },
+      enabled: { mon1: enabled.monitor1, mon2: enabled.monitor2 },
       primaryAlarm: voted("primary"), secondaryAlarm: voted("secondary"),
       bypass: config.simulation.integralMonitorBypass,
       main: snapshot.mainTransmitter, antenna: snapshot.voting.activeTransmitter,

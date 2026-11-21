@@ -1,4 +1,5 @@
 import { createDvorSecuritySession, type SecurityField, type SecurityUser } from "@/lib/dvor1150a/security";
+import { advanceDvorMonitorTests, initialDvorMonitorTests, projectDvorMonitorTests, MONITOR_TEST_STEP_SECONDS, type DvorMonitorTests } from "@/lib/dvor1150a/monitor-tests";
 import { appendDvorFault, initialDvorFaultHistory, sampleDvorFaultHistory, type DvorFaultHistory } from "@/lib/dvor1150a/fault-history";
 import { dvorConfigurationLoadBlock, parseDvorConfigurationFile } from "@/lib/dvor1150a/configuration-file";
 import { dvorSidebandAssembly, DVOR_SIDEBAND_TRIM_IDS, type DvorSidebandTrimId } from "@/lib/dvor1150a/sideband";
@@ -135,6 +136,7 @@ export interface VorPmdtStoreState {
   parameterChangeLogs: SimulatorParameterChangeLogEntry[];
   lastCommand: string | null;
   monitorElapsed: number;
+  monitorTests: DvorMonitorTests;
   protectionState: DvorProtectionState;
   loginDialogOpen: boolean;
   authenticatedUserId: string | null;
@@ -215,7 +217,8 @@ export interface VorPmdtStoreActions {
   setConfigValue: (fieldId: string, value: DvorConfigValue, mirrorFieldIds?: readonly string[]) => void;
   applyConfigChanges: () => boolean;
   /** Explicit deterministic clock used by the native PMDT ticker and tests. */
-  advanceMonitorTime: (seconds: number) => void;
+  advanceMonitorTime: (seconds: number, endTime?: Date) => void;
+  setMonitorTestResponse: (monitor: "mon1" | "mon2", responding: boolean) => boolean;
   discardConfigChanges: () => void;
   resetConfigDraft: () => boolean;
   restoreBackupConfig: () => boolean;
@@ -292,7 +295,8 @@ function defaultId(): string {
 
 function initialState(timestamp: string): VorPmdtStoreState {
   const config = createDefaultDvor1150aConfig();
-  const derived = buildDvor1150aSnapshot(config);
+  const monitorTests = initialDvorMonitorTests(config, timestamp);
+  const derived = projectDvorMonitorTests(buildDvor1150aSnapshot(config), monitorTests);
   return {
     mode: "preview",
     faultHistory: sampleDvorFaultHistory(initialDvorFaultHistory(), config, derived, timestamp),
@@ -316,6 +320,7 @@ function initialState(timestamp: string): VorPmdtStoreState {
     })),
     lastCommand: null,
     monitorElapsed: 0,
+    monitorTests,
     protectionState: initialDvorProtectionState(),
     lcu: initialDvorLcuState(),
     loginDialogOpen: true,
@@ -457,6 +462,23 @@ export function createVorPmdtStore(
           next.faultHistory = sampleDvorFaultHistory(state.faultHistory, next.config ?? state.config, next.derived, now().toISOString());
         }
         const merged = { ...state, ...next };
+        if (next.derived || next.monitorTests) {
+          const tests = next.monitorTests ?? state.monitorTests;
+          let snapshot = next.derived ?? state.derived;
+          if (tests.excluded.length || state.monitorTests.excluded.length) snapshot = buildDvor1150aSnapshot(
+            merged.config, undefined, snapshot.mainTransmitter ?? undefined, undefined, tests.excluded,
+          );
+          const projected = projectDvorMonitorTests(snapshot, tests);
+          if (next.derived || projected !== state.derived) {
+            next.derived = projected;
+            next.data = projected.data;
+            merged.derived = projected;
+            merged.data = projected.data;
+          }
+        }
+        if (next.config && JSON.stringify(next.config.monitor.testGenerator) !== JSON.stringify(state.config.monitor.testGenerator)) {
+          next.monitorTests = { ...(next.monitorTests ?? state.monitorTests), setupTimestamp: now().toISOString() };
+        }
         const relayRoutes = { ...merged.lcu.relayRoutes };
         for (const id of DVOR_TRANSMITTER_IDS) {
           if (merged.config.transmitters[id].onAir) {
@@ -569,6 +591,7 @@ export function createVorPmdtStore(
         configDirty: false,
         needBackup: false,
         monitorElapsed: 0,
+        monitorTests: initialDvorMonitorTests(config, now().toISOString()),
         protectionState: initialDvorProtectionState(),
         keyerObservations: undefined,
         actionHistory: [],
@@ -750,6 +773,7 @@ export function createVorPmdtStore(
           ...(["main", "antenna", "load", "off"].includes(command) ? { protectionState: command === "off" && state.protectionState.phase !== "monitoring"
             ? { ...state.protectionState, phase: "lockout", remaining: Math.min(20, state.protectionState.remaining), target: null } : initialDvorProtectionState() } : {}),
           ...(command === "reset" ? { lcu: { ...state.lcu, lampTest: false, silencedAlarms: [], alarmElapsed: {}, initializing: true }, configDirty: false,
+            monitorTests: initialDvorMonitorTests(config, now().toISOString()),
             securityDraftDirty: false, securityNeedsBackup: false, securityError: null, changePasswordDialogOpen: false, securityRevision: state.securityRevision + 1,
             protectionState: { ...initialDvorProtectionState(), phase: "cold-transfer", remaining: 20, target: main },
             loginDialogOpen: true, securityLevel: 0, authenticatedUserId: null } : {}),
@@ -1038,6 +1062,7 @@ export function createVorPmdtStore(
           scenario: { active: false, definition: null, startedAt: null },
           protectionState: initialDvorProtectionState(),
           monitorElapsed: 0,
+          monitorTests: initialDvorMonitorTests(config, now().toISOString()),
           scenarioDraft: createDefaultDvor1150aScenarioDefinition(),
           scenarioStage: "pmdt",
           scenarioHardwareSelection: [],
@@ -1311,13 +1336,32 @@ export function createVorPmdtStore(
         return true;
       },
 
-      advanceMonitorTime: (seconds) => {
-        if (!Number.isFinite(seconds) || seconds <= 0) return;
+      setMonitorTestResponse: (monitor, responding) => {
         const state = get();
+        if (state.scenario.active || !["mon1", "mon2"].includes(monitor) || typeof responding !== "boolean") return false;
+        set({ monitorTests: { ...state.monitorTests, responding: { ...state.monitorTests.responding, [monitor]: responding } } });
+        return true;
+      },
+
+      advanceMonitorTime: (seconds, endTime) => {
+        if (!Number.isFinite(seconds) || seconds <= 0) return;
+        const tickTime = endTime ?? now();
+        const state = get();
+        const untilTestStep = MONITOR_TEST_STEP_SECONDS - ((state.monitorTests.phase % MONITOR_TEST_STEP_SECONDS + MONITOR_TEST_STEP_SECONDS) % MONITOR_TEST_STEP_SECONDS);
+        if (seconds > untilTestStep) {
+          let remaining = seconds;
+          while (remaining > 0) {
+            const phase = get().monitorTests.phase;
+            const step = Math.min(remaining, MONITOR_TEST_STEP_SECONDS - ((phase % MONITOR_TEST_STEP_SECONDS + MONITOR_TEST_STEP_SECONDS) % MONITOR_TEST_STEP_SECONDS));
+            remaining -= step;
+            get().advanceMonitorTime(step, new Date(tickTime.getTime() - remaining * 1000));
+          }
+          return;
+        }
         const initializing = state.lcu.initializing && state.protectionState.phase === "cold-transfer";
         const bootSeconds = initializing ? Math.min(seconds, state.protectionState.remaining) : seconds;
         let next = advanceDvorProtection(state.config, { ...state.protectionState, alarmElapsed: state.monitorElapsed },
-          bootSeconds, state.derived.mainTransmitter);
+          bootSeconds, state.derived.mainTransmitter, state.monitorTests.excluded);
         let lcu = initializing ? { ...state.lcu, alarmElapsed: {} } : advanceDvorLcuTime(state, seconds);
         if (initializing && next.events.length) {
           const config = cloneDvor1150aConfig(next.config);
@@ -1326,12 +1370,12 @@ export function createVorPmdtStore(
               && config.transmitters[id].enabled && !config.transmitters[id].faults.disabled
               && !(id === "tx2" && config.station.transmitterConfig === "Single Transmitter");
           }
-          const snapshot = buildDvor1150aSnapshot(config, undefined, state.derived.mainTransmitter ?? undefined);
+          const snapshot = buildDvor1150aSnapshot(config, undefined, state.derived.mainTransmitter ?? undefined, undefined, state.monitorTests.excluded);
           lcu = { ...lcu, initializing: false };
           const remaining = seconds - bootSeconds;
           if (remaining > 0) {
             lcu = advanceDvorLcuTime({ ...state, config, derived: snapshot, data: snapshot.data, lcu }, remaining);
-            const continued = advanceDvorProtection(config, next.state, remaining, state.derived.mainTransmitter);
+            const continued = advanceDvorProtection(config, next.state, remaining, state.derived.mainTransmitter, state.monitorTests.excluded);
             next = { ...continued, events: [...next.events, ...continued.events], faults: [...next.faults, ...continued.faults.map(fault => ({ ...fault, elapsed: bootSeconds + fault.elapsed }))] };
           } else next = { ...next, config, snapshot };
         }
@@ -1347,8 +1391,9 @@ export function createVorPmdtStore(
         }
         set({
           lcu,
+          monitorTests: advanceDvorMonitorTests(state.monitorTests, state.config, seconds),
           faultHistory: sampleDvorFaultHistory(next.faults.reduce((history, fault) => appendDvorFault(history, fault.config, fault.snapshot,
-            new Date(now().getTime() - (seconds - fault.elapsed) * 1000).toISOString()), state.faultHistory), next.config, next.snapshot, now().toISOString()),
+            new Date(tickTime.getTime() - (seconds - fault.elapsed) * 1000).toISOString()), state.faultHistory), next.config, next.snapshot, tickTime.toISOString()),
           ...(next.config !== state.config ? {
             config: next.config, configDraft: draft,
             derived: next.snapshot, data: next.snapshot.data,
@@ -1503,6 +1548,7 @@ export function createVorPmdtStore(
           hasConfigurationBackup: backupConfig !== undefined,
           configDirty: false,
           monitorElapsed: 0,
+          monitorTests: initialDvorMonitorTests(nextConfig, now().toISOString()),
           needBackup: JSON.stringify(extractDvor1150aConfig(nextConfig)) !== JSON.stringify(extractDvor1150aConfig(nextBackupConfig)),
           parameterChangeLogs: parameterChangeLogs ? [...parameterChangeLogs] : get().parameterChangeLogs,
           data: derived.data,

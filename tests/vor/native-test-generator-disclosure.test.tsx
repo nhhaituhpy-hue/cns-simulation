@@ -11,6 +11,7 @@ function openGenerator(monitor: 1 | 2) {
   expect(store.getState().login("SEC3", "THREE")).toBe(true);
   store.getState().setConfigValue("simulation.local", true);
   store.getState().setConfigValue("simulation.integralMonitorBypass", true);
+  store.getState().advanceMonitorTime(120);
   store.getState().openScreen("monitor-test-results", [`Monitor ${monitor}`, "Test Results"], "Test Results");
   const view = render(<MonitorTestResults />);
   fireEvent.click(screen.getByRole("tab", { name: "Test Generator" }));
