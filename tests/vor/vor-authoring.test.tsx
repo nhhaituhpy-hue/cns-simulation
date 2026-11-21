@@ -135,6 +135,7 @@ describe("VOR scenario authoring", () => {
 });
 
 async function loginAs(user: ReturnType<typeof userEvent.setup>) {
+  await user.clear(screen.getByLabelText("User ID"));
   await user.type(screen.getByLabelText("User ID"), "SEC3");
   await user.type(screen.getByLabelText("Password"), "THREE");
   await user.click(screen.getByRole("button", { name: "OK" }));

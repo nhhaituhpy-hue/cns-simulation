@@ -189,11 +189,17 @@ describe("G09 native 1150A cold/hot protection", () => {
     for (const elapsed of [NaN, Infinity, -1, 0]) store.getState().advanceMonitorTime(elapsed);
     expect(store.getState().monitorElapsed).toBe(0);
     store.getState().setConfigValue("simulation.integralMonitorBypass", true);
+    const bypassed = store.getState();
     store.getState().advanceMonitorTime(1000);
+    expect(store.getState().derived).toBe(bypassed.derived);
+    expect(store.getState().data).toBe(bypassed.data);
     expect(store.getState().derived.voting.activeTransmitter).toBe("tx1");
     expect(store.getState().derived.monitors.mon1.parameters.hz30Modulation.status).toBe("alarm");
     const normal = createVorPmdtStore();
+    const idle = normal.getState();
     normal.getState().advanceMonitorTime(1000);
+    expect(normal.getState().derived).toBe(idle.derived);
+    expect(normal.getState().data).toBe(idle.data);
     expect(normal.getState().protectionState.phase).toBe("monitoring");
     expect(normal.getState().derived.voting.activeTransmitter).toBe("tx1");
   });

@@ -1049,9 +1049,10 @@ export function createVorPmdtStore(
           draft.transmitters[id].load = next.config.transmitters[id].load;
         }
         set({
-          config: next.config, configDraft: draft,
-          derived: next.config === state.config ? state.derived : next.snapshot,
-          data: next.config === state.config ? state.data : next.snapshot.data,
+          ...(next.config !== state.config ? {
+            config: next.config, configDraft: draft,
+            derived: next.snapshot, data: next.snapshot.data,
+          } : {}),
           protectionState: next.state,
           monitorElapsed: next.state.alarmElapsed,
           ...(next.events.length ? { lastCommand: next.events[next.events.length - 1] } : {}),
