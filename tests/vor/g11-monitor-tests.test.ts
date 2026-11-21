@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createVorPmdtStore } from "@/stores/vor-pmdt-store";
 import { advanceDvorMonitorTests, initialDvorMonitorTests } from "@/lib/dvor1150a/monitor-tests";
-import { createDefaultDvor1150aConfig } from "@/lib/dvor1150a";
+import { buildDvor1150aSnapshot, createDefaultDvor1150aConfig } from "@/lib/dvor1150a";
 
 const start = "2026-11-21T10:00:00.000Z";
 function station() {
@@ -17,6 +17,22 @@ function rowStatuses(store: ReturnType<typeof createVorPmdtStore>, id: "mon1" | 
 }
 
 describe("G11 timed native monitor tests", () => {
+  it("normalizes legacy demo monitor faults in pure native snapshots before runtime projection", () => {
+    const { s } = station();
+    const snapshot = buildDvor1150aSnapshot(s().config, undefined, s().derived.mainTransmitter ?? undefined);
+    expect(s().derived).toEqual(snapshot);
+    const baseline = structuredClone(snapshot.data);
+    const labels = ["RMS Comm Link Failed", "Integrity Test Failed"];
+    for (const row of baseline.monitorAgenAlerts) if (labels.includes(row.label)) {
+      row.mon1 = true;
+      row.mon2 = true;
+    }
+    const native = buildDvor1150aSnapshot(s().config, baseline);
+    expect(native.data.monitorAgenAlerts.filter(row => labels.includes(row.label)))
+      .toEqual(labels.map(label => ({ label, mon1: false, mon2: false, agen1: false, agen2: false })));
+    expect(baseline.monitorAgenAlerts.filter(row => labels.includes(row.label)).every(row => row.mon1 && row.mon2)).toBe(true);
+  });
+
   it("starts empty, snapshots TG at 120s and completes initial integrity at 180s, then every 120s", () => {
     const { store, s } = station();
     expect(s().monitorTests.completed.mon1).toBeNull();

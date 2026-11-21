@@ -1074,6 +1074,8 @@ export function buildDvor1150aSnapshot(
     ...(parameter === "notchMonitor" || parameter === "sidebandVswr" ? { isCheckbox: true, checked: routing.primary || routing.secondary } : {}),
     }));
   data.systemPowerStatus = buildSystemPowerRows(data.systemPowerStatus, config, effectiveTransmitters);
+  data.monitorAgenAlerts = data.monitorAgenAlerts.map(row => row.label === "RMS Comm Link Failed" || row.label === "Integrity Test Failed"
+    ? { ...row, mon1: false, mon2: false } : row);
   data.txAlerts = buildTransmitterAlertRows(data.txAlerts, config, effectiveTransmitters);
   applyActiveTransmitterAlerts(data, config, effectiveTransmitters, groundChecks);
   data.txPower = buildTxPower(effectiveTransmitters, config);
