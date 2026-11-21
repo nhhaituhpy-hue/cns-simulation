@@ -183,6 +183,7 @@ describe("G11 timed native monitor tests", () => {
     s().setConfigValue("simulation.integralMonitorBypass", false);
     s().advanceMonitorTime(5);
     expect(s().protectionState.phase).toBe("cold-transfer");
+    expect(s().faultHistory.events[0].lcu).toMatchObject({ enabled: { mon1: false, mon2: false }, primaryAlarm: true });
   });
 
   it("samples correctly with the native ticker's fractional 100ms intervals", () => {

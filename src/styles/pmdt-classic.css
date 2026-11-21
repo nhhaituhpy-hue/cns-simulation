@@ -5615,6 +5615,14 @@
   background: #ff0000;
 }
 
+.pmdt-classic-window .pmdt-monitor-fault-live--yellow > span {
+  background: #ffff00;
+}
+
+.pmdt-classic-window .pmdt-monitor-fault-live--gray > span {
+  background: transparent;
+}
+
 .pmdt-classic-window .pmdt-monitor-fault-table th,
 .pmdt-classic-window .pmdt-monitor-fault-table td {
   box-sizing: border-box;

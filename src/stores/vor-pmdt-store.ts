@@ -1,5 +1,6 @@
 import { createDvorSecuritySession, type SecurityField, type SecurityUser } from "@/lib/dvor1150a/security";
 import { advanceDvorMonitorTests, initialDvorMonitorTests, projectDvorMonitorTests, MONITOR_TEST_STEP_SECONDS, type DvorMonitorTests } from "@/lib/dvor1150a/monitor-tests";
+import { appendDvorFault, initialDvorFaultHistory, sampleDvorFaultHistory, type DvorFaultHistory } from "@/lib/dvor1150a/fault-history";
 import { dvorConfigurationLoadBlock, parseDvorConfigurationFile } from "@/lib/dvor1150a/configuration-file";
 import { dvorSidebandAssembly, DVOR_SIDEBAND_TRIM_IDS, type DvorSidebandTrimId } from "@/lib/dvor1150a/sideband";
 import { HARDWARE_TRIMS, type HardwareAssembly, type HardwareTrim } from "@/lib/dvor1150a/hardware-calibration";
@@ -149,6 +150,7 @@ export interface VorPmdtStoreState {
   changePasswordDialogOpen: boolean;
   data: VorPmdtData;
   derived: Dvor1150aSnapshot;
+  faultHistory: DvorFaultHistory;
   /** Instructor stimulus; never persisted as a station setting/profile. */
   keyerObservations?: DvorKeyerObservations;
   activeScreen: VorScreenId;
@@ -215,7 +217,7 @@ export interface VorPmdtStoreActions {
   setConfigValue: (fieldId: string, value: DvorConfigValue, mirrorFieldIds?: readonly string[]) => void;
   applyConfigChanges: () => boolean;
   /** Explicit deterministic clock used by the native PMDT ticker and tests. */
-  advanceMonitorTime: (seconds: number) => void;
+  advanceMonitorTime: (seconds: number, endTime?: Date) => void;
   setMonitorTestResponse: (monitor: "mon1" | "mon2", responding: boolean) => boolean;
   discardConfigChanges: () => void;
   resetConfigDraft: () => boolean;
@@ -297,6 +299,7 @@ function initialState(timestamp: string): VorPmdtStoreState {
   const derived = projectDvorMonitorTests(buildDvor1150aSnapshot(config), monitorTests);
   return {
     mode: "preview",
+    faultHistory: sampleDvorFaultHistory(initialDvorFaultHistory(), config, derived, timestamp),
     configPanelOpen: false,
     scenarioParametersOpen: false,
     scenarioAuthoringEnabled: false,
@@ -455,6 +458,9 @@ export function createVorPmdtStore(
     const set = (update: Partial<VorPmdtStore> | ((state: VorPmdtStore) => Partial<VorPmdtStore>)) => {
       setState(state => {
         const next = typeof update === "function" ? update(state) : update;
+        if (next.derived && !next.faultHistory) {
+          next.faultHistory = sampleDvorFaultHistory(state.faultHistory, next.config ?? state.config, next.derived, now().toISOString());
+        }
         const merged = { ...state, ...next };
         if (next.derived || next.monitorTests) {
           const tests = next.monitorTests ?? state.monitorTests;
@@ -577,6 +583,7 @@ export function createVorPmdtStore(
       const derived = buildDvor1150aSnapshot(config);
       nativeEvidenceScope = { moduleId: "dvor-1150a", scenarioId: definition.id, runId: defaultId(), startedAt: startedAt ?? now().toISOString() };
       set({
+        faultHistory: sampleDvorFaultHistory(initialDvorFaultHistory(), config, derived, now().toISOString()),
         config,
         configDraft: cloneDvor1150aConfig(config),
         configurationBackup: cloneDvor1150aConfig(config),
@@ -1043,6 +1050,7 @@ export function createVorPmdtStore(
         };
         const derived = buildDvor1150aSnapshot(config);
         set({
+          faultHistory: sampleDvorFaultHistory(initialDvorFaultHistory(), config, derived, now().toISOString()),
           config,
           configDraft: cloneDvor1150aConfig(config),
           configurationBackup: cloneDvor1150aConfig(config),
@@ -1335,8 +1343,9 @@ export function createVorPmdtStore(
         return true;
       },
 
-      advanceMonitorTime: (seconds) => {
+      advanceMonitorTime: (seconds, endTime) => {
         if (!Number.isFinite(seconds) || seconds <= 0) return;
+        const tickTime = endTime ?? now();
         const state = get();
         const untilTestStep = MONITOR_TEST_STEP_SECONDS - ((state.monitorTests.phase % MONITOR_TEST_STEP_SECONDS + MONITOR_TEST_STEP_SECONDS) % MONITOR_TEST_STEP_SECONDS);
         if (seconds > untilTestStep) {
@@ -1344,8 +1353,8 @@ export function createVorPmdtStore(
           while (remaining > 0) {
             const phase = get().monitorTests.phase;
             const step = Math.min(remaining, MONITOR_TEST_STEP_SECONDS - ((phase % MONITOR_TEST_STEP_SECONDS + MONITOR_TEST_STEP_SECONDS) % MONITOR_TEST_STEP_SECONDS));
-            get().advanceMonitorTime(step);
             remaining -= step;
+            get().advanceMonitorTime(step, new Date(tickTime.getTime() - remaining * 1000));
           }
           return;
         }
@@ -1367,7 +1376,7 @@ export function createVorPmdtStore(
           if (remaining > 0) {
             lcu = advanceDvorLcuTime({ ...state, config, derived: snapshot, data: snapshot.data, lcu }, remaining);
             const continued = advanceDvorProtection(config, next.state, remaining, state.derived.mainTransmitter, state.monitorTests.excluded);
-            next = { ...continued, events: [...next.events, ...continued.events] };
+            next = { ...continued, events: [...next.events, ...continued.events], faults: [...next.faults, ...continued.faults.map(fault => ({ ...fault, elapsed: bootSeconds + fault.elapsed }))] };
           } else next = { ...next, config, snapshot };
         }
         const events = next.events.map((label, index) => initializing && index === 0
@@ -1383,6 +1392,8 @@ export function createVorPmdtStore(
         set({
           lcu,
           monitorTests: advanceDvorMonitorTests(state.monitorTests, state.config, seconds),
+          faultHistory: sampleDvorFaultHistory(next.faults.reduce((history, fault) => appendDvorFault(history, fault.config, fault.snapshot,
+            new Date(tickTime.getTime() - (seconds - fault.elapsed) * 1000).toISOString()), state.faultHistory), next.config, next.snapshot, tickTime.toISOString()),
           ...(next.config !== state.config ? {
             config: next.config, configDraft: draft,
             derived: next.snapshot, data: next.snapshot.data,
@@ -1530,6 +1541,7 @@ export function createVorPmdtStore(
         const nextBackupConfig = cloneDvor1150aConfig(backupConfig ?? config);
         const derived = buildDvor1150aSnapshot(nextConfig);
         set({
+          faultHistory: sampleDvorFaultHistory(initialDvorFaultHistory(), nextConfig, derived, now().toISOString()),
           config: nextConfig,
           configDraft: cloneDvor1150aConfig(nextConfig),
           configurationBackup: nextBackupConfig,
