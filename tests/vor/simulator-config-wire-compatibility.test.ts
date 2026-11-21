@@ -17,7 +17,7 @@ vi.mock("@/lib/db", () => ({
 import { GET, POST, PUT } from "@/app/api/simulator-config/[simulatorId]/route";
 
 const header = "X-CNS-Simulator-Config-DTO";
-const version = "dvor-1150a-extensions-v3";
+const version = "dvor-1150a-extensions-v4";
 const context = () => ({ params: Promise.resolve({ simulatorId: "dvor-1150a" }) });
 function request(method = "GET", extended = false, payload?: unknown) {
   return new Request("http://localhost/api/simulator-config/dvor-1150a", {
@@ -293,6 +293,7 @@ describe("1150A consumer projection", () => {
     config.monitor.testGenerator!.audioFrequency = 850;
     const previous = structuredClone(config);
     delete previous.sidebandTrims;
+    delete previous.hardwareCalibration;
     delete previous.station.standbyMode;
     delete previous.station.automaticRestartsEnabled;
     delete previous.station.firstRestartDelay;

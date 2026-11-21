@@ -16,7 +16,7 @@ vi.mock("@/lib/auth/profile", () => ({ getCurrentProfile: auth.profile }));
 const owner = "11111111-1111-4111-8111-111111111111";
 const foreign = "22222222-2222-4222-8222-222222222222";
 const header = "X-CNS-Simulator-Config-DTO";
-const version = "dvor-1150a-extensions-v3";
+const version = "dvor-1150a-extensions-v4";
 const testUrl = process.env.SCENARIO_EXAM_TEST_DATABASE_URL;
 const context = () => ({ params: Promise.resolve({ simulatorId: "dvor-1150a" }) });
 function request(method = "GET", payload?: unknown, extended = true) {
@@ -105,6 +105,32 @@ describe.skipIf(!testUrl)("simulator config actual routes with isolated PostgreS
     const stored = (await pool.query("select changed_fields, next_config from public.user_simulator_config_history where revision=2")).rows[0];
     expect(stored.changed_fields).toEqual(["monitor.timers.shutdown"]);
     expect(stored.next_config).toEqual(config);
+  });
+
+  it.each([null, "dvor-1150a-extensions-v1", "dvor-1150a-extensions-v2", "dvor-1150a-extensions-v3"])("persists G14 detector calibration independently through older client %s writes", async dto => {
+    await initialize();
+    const applied = getDefaultDvor1150aConfig();
+    applied.hardwareCalibration!.rf.R2 = -45;
+    applied.hardwareCalibration!.bcps1.R30 = 15;
+    applied.hardwareCalibration!.bcps2.R56 = 90;
+    const backup = structuredClone(applied);
+    backup.hardwareCalibration!.rf.R2 = 30;
+    expect((await route.PUT(request("PUT", { config: applied, backupConfig: backup, expectedRevision: 1 }), context())).status).toBe(200);
+    const older = request();
+    if (dto) older.headers.set(header, dto); else older.headers.delete(header);
+    const projected = await (await route.GET(older, context())).json();
+    expect(projected.appliedConfig.hardwareCalibration).toBeUndefined();
+    expect(projected.backupConfig.hardwareCalibration).toBeUndefined();
+    projected.appliedConfig.station.stationDescription = "Older client edit";
+    const write = request("PUT", { config: projected.appliedConfig, backupConfig: projected.backupConfig, expectedRevision: 2 });
+    if (dto) write.headers.set(header, dto); else write.headers.delete(header);
+    expect((await route.PUT(write, context())).status).toBe(200);
+    const current = await (await route.GET(request(), context())).json();
+    expect(current.appliedConfig.hardwareCalibration).toEqual(applied.hardwareCalibration);
+    expect(current.backupConfig.hardwareCalibration).toEqual(backup.hardwareCalibration);
+    const stored = (await pool.query("select applied_config, backup_config from public.user_simulator_configs where user_id=$1", [owner])).rows[0];
+    expect(stored.applied_config.hardwareCalibration).toEqual(applied.hardwareCalibration);
+    expect(stored.backup_config.hardwareCalibration).toEqual(backup.hardwareCalibration);
   });
 
   it("keeps native PostgreSQL array parameters intact through the real database helper", async () => {
