@@ -25,7 +25,7 @@ describe("G08 native command menus", () => {
     expect(flatten([])).toEqual([]);
     for (const item of flatten(vorMenuStructure.flatMap(group => group.items))) {
       if (item.children?.length || !item.enabled) continue;
-      expect(Boolean(item.action || item.screenId || ["tx-command-transfer", "monitor-command-integral-bypass-on", "monitor-command-integral-bypass-off", "rms-command-change-password"].includes(item.id)), item.id).toBe(true);
+      expect(Boolean(item.action || item.screenId || ["tx-command-transfer", "monitor-command-integral-bypass-on", "monitor-command-integral-bypass-off", "rms-command-change-password", "system-config-save", "system-config-load", "system-config-print"].includes(item.id)), item.id).toBe(true);
       expect(unavailableVorCommandReason(item.id), item.id).toBeUndefined();
     }
     expect(unavailableVorCommandReason("unknown-command")).toBeUndefined();

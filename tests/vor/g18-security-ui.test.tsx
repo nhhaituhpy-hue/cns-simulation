@@ -6,6 +6,7 @@ import { PmdtMenuBar } from "@/components/vor/pmdt-menu-bar";
 import { PmdtLoginDialog } from "@/components/vor/pmdt-login-dialog";
 import { ChangePasswordDialog } from "@/components/vor/change-password-dialog";
 import { Dvor1150aSecurityClock } from "@/components/vor/dvor1150a-security-clock";
+import { serializeDvorConfiguration } from "@/lib/dvor1150a/configuration-file";
 
 beforeEach(() => store.getState().reset());
 afterEach(() => { cleanup();store.getState().reset();vi.useRealTimers();vi.restoreAllMocks(); });
@@ -18,6 +19,25 @@ function security() { fireEvent.click(screen.getByRole("tab", { name: "Security 
 function change(label: string, value: string) { fireEvent.change(screen.getByLabelText(label), { target: { value } }); }
 
 describe("G18 authentic security controls and session clock", () => {
+  it("keeps staged and applied credentials out of G15 files and Security Codes screen prints", () => {
+    login();
+    const doc = document.implementation.createHTMLDocument();
+    const popup = { document: doc, opener: window, addEventListener: vi.fn(), focus: vi.fn(), print: vi.fn() };
+    vi.spyOn(window, "open").mockReturnValue(popup as unknown as Window);
+    render(<div className="pmdt-classic-window"><aside className="pmdt-sidebar">Main TX1</aside><main className="pmdt-classic-main"><RmsConfigLayout /></main></div>);
+    security();change("User ID row 4", "TECH");change("Password row 4", "NeverExport987");change("Level row 4", "2");
+    for (const applied of [false, true]) {
+      if (applied) fireEvent.click(screen.getByRole("button", { name: "Apply (F7)" }));
+      fireEvent.click(screen.getByRole("button", { name: "Print" }));
+      expect(popup.print).toHaveBeenCalled();
+      expect(doc.body.textContent).toContain("Main TX1");
+      expect(doc.body.textContent).toContain("User ID");
+      expect(doc.body.textContent).not.toContain("NeverExport987");
+      expect(serializeDvorConfiguration(store.getState().config)).not.toContain("NeverExport987");
+      expect(JSON.stringify(store.getState())).not.toContain("NeverExport987");
+    }
+  });
+
   it("excludes Security Codes for SEC3 and enforces Local for Level4 editing", () => {
     login("SEC3", "THREE");const view = render(<RmsConfigLayout />);
     expect(screen.queryByRole("tab", { name: "Security Codes" })).not.toBeInTheDocument();
