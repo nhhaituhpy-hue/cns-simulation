@@ -333,8 +333,19 @@ export function Dme1119aScenarioParametersPanel() {
   }
 
   function handleApply() {
-    if (applyScenario()) setMessage(`Scenario applied: ${scenarioDraft.name}`);
+    if (applyScenario()) {
+      setMessage(`Scenario applied: ${scenarioDraft.name}`);
+    } else {
+      // The store records every refusal reason in lastCommand (validation
+      // failure, already-solved start, or a guard such as security level);
+      // surface it here instead of leaving the click unexplained.
+      setMessage(useDmePmdtStore.getState().lastCommand ?? "Scenario could not be applied.");
+    }
   }
+
+  const messageIsError = validationIssues.length > 0
+    || Boolean(previewEvaluation?.solved)
+    || (message !== null && (message.includes("refused") || message.includes("failed")));
 
   return <aside className="pmdt-config-panel dme1119a-scenario-parameters-panel selex-scenario-parameters-panel" aria-label="DME 1119A scenario parameters">
     <header className="pmdt-config-panel-header">
@@ -413,7 +424,7 @@ export function Dme1119aScenarioParametersPanel() {
         {previewEvaluation && !previewEvaluation.correctable ? <span className="pmdt-config-summary-warning">Scenario may be uncorrectable with the configured student controls.</span> : null}
       </ScenarioParametersSection>
     </div>
-    <p className={validationIssues.length > 0 || Boolean(previewEvaluation?.solved) ? "dme1119a-scenario-message dme1119a-scenario-message--error" : "dme1119a-scenario-message"} role={validationIssues.length > 0 || Boolean(previewEvaluation?.solved) ? "alert" : "status"}>{message ?? (validationIssues[0] ?? (previewEvaluation?.solved ? "Starting state is already solved; add a fault or change the success criteria before Apply." : "Scenario is structurally valid. Review the preview, then Apply Scenario."))}</p>
+    <p className={messageIsError ? "dme1119a-scenario-message dme1119a-scenario-message--error" : "dme1119a-scenario-message"} role={messageIsError ? "alert" : "status"}>{message ?? (validationIssues[0] ?? (previewEvaluation?.solved ? "Starting state is already solved; add a fault or change the success criteria before Apply." : "Scenario is structurally valid. Review the preview, then Apply Scenario."))}</p>
     <footer className="pmdt-config-panel-footer dme1119a-scenario-footer">
       <button type="button" disabled={!scenario.active} onClick={() => restoreScenario()}>Restore Scenario</button>
       <button type="button" disabled={!scenario.active} onClick={() => endScenario()}>End / Restore TST</button>
