@@ -1148,7 +1148,7 @@
 .pmdt-sidebar {
   min-height: 0;
   overflow-y: auto;
-  padding: 7px 2px 4px 12px;
+  padding: 7px 7px 4px;
   border-right: 1px solid #808080;
   background: #f0f0f0;
   color: #000;
@@ -3144,6 +3144,14 @@
 /* Status cells in the reference client use saturated traffic-light fills. */
 .pmdt-classic-window [class~="bg-[var(--cns-surface-card)]"] {
   background: #00ff00 !important;
+  color: #000 !important;
+}
+
+/* Tab strips keep the plain window background; the saturated status-cell
+ * fill above must not leak onto them (it painted the whole strip green). */
+.pmdt-classic-window [role="tablist"][class~="bg-[var(--cns-surface-card)]"],
+.pmdt-classic-window .pmdt-rms-tabbar {
+  background: #f0f0f0 !important;
   color: #000 !important;
 }
 
