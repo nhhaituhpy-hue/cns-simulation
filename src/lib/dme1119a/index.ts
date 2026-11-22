@@ -1,3 +1,4 @@
+export * from "./cabinet-leds";
 export * from "./calibration";
 export * from "./channel-allocation";
 export * from "./config";
