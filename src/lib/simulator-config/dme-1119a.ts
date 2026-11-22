@@ -39,6 +39,30 @@ export function getDefaultDme1119aConfig(): Dme1119aPersistedConfig {
   return extractDme1119aConfig(cloneDefaultDmePmdtData());
 }
 
+/**
+ * Stage 4 G12 migration: configurations persisted before the per-path
+ * classification carried one shared primary/secondary pair per row. Map
+ * the shared pair onto both monitor paths, except ERP whose standby pair
+ * is unselected at the station.
+ */
+function migrateLegacyMonitorRoutingRows(rows: unknown): void {
+  if (!Array.isArray(rows)) return;
+  for (const row of rows) {
+    if (!row || typeof row !== "object" || Array.isArray(row)) continue;
+    const record = row as Record<string, unknown>;
+    if (Object.hasOwn(record, "integralPrimary") || !Object.hasOwn(record, "primary")) continue;
+    const primary = record.primary === true;
+    const secondary = record.secondary === true;
+    const erp = record.parameter === "ERP";
+    record.integralPrimary = primary;
+    record.integralSecondary = secondary;
+    record.standbyPrimary = erp ? false : primary;
+    record.standbySecondary = erp ? false : secondary;
+    delete record.primary;
+    delete record.secondary;
+  }
+}
+
 export function parseDme1119aConfig(value: unknown): Dme1119aPersistedConfig | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const reference = getDefaultDme1119aConfig();
@@ -46,6 +70,7 @@ export function parseDme1119aConfig(value: unknown): Dme1119aPersistedConfig | n
   for (const key of DME1119A_CONFIG_EXTENSIONS) {
     if (!Object.hasOwn(compatible, key)) compatible[key] = structuredClone(reference[key]);
   }
+  migrateLegacyMonitorRoutingRows(compatible.monitorConfigGeneral);
   if (!hasSameJsonShape(compatible, reference)) return null;
   const config = compatible as Dme1119aPersistedConfig;
   // Row identities and N/A cells are native schema, not editable labels.
@@ -71,7 +96,9 @@ export function hydrateDme1119aData(
   data.alarmLimits = structuredClone(persistedConfig.alarmLimits);
   data.delayControl = structuredClone(persistedConfig.delayControl);
   data.monitorCalibrationData = structuredClone(persistedConfig.monitorCalibrationData);
-  data.monitorConfigGeneral = structuredClone(persistedConfig.monitorConfigGeneral);
+  const monitorConfigGeneral = structuredClone(persistedConfig.monitorConfigGeneral) as unknown;
+  migrateLegacyMonitorRoutingRows(monitorConfigGeneral);
+  data.monitorConfigGeneral = monitorConfigGeneral as DmePmdtData["monitorConfigGeneral"];
   data.monitorSystemSettings = structuredClone(persistedConfig.monitorSystemSettings);
   data.monitorTimers = structuredClone(persistedConfig.monitorTimers);
   data.monitorTransmitterStatus = structuredClone(persistedConfig.monitorTransmitterStatus);

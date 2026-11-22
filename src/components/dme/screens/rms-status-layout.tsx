@@ -1,6 +1,14 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { DmeIndicatorColor } from "@/lib/dme-types";
+import {
+  DME_FLASH_WRITE_BUSY_MS,
+  deriveDmeRmsResourceUtilization,
+  deriveDmeUserSessions,
+  dmeFlashWriteBusy,
+  type DmeRmsResourceKey,
+} from "@/lib/dme1119a/rms-resources";
 import {
   resolveDmeField,
   resolveDmeStatus,
@@ -36,18 +44,63 @@ function StatusFlag({
   );
 }
 
+const NO_SPECIAL_TEST_TARGETS: readonly (1 | 2)[] = [];
+
 function RmsStatusMain() {
   const data = useDmePmdtStore((state) => state.data);
-  const revisionRows = [
-    ["RMS", data.revisionLevels.rms, "5", "46", "21"],
-    ["Monitor 1", data.revisionLevels.monitor1, "1", "27", "1"],
-    ["Monitor 2", data.revisionLevels.monitor2, "1", "27", "1"],
-    ["RTC 1", data.revisionLevels.rtc1, "1", "20", "1"],
-    ["RTC 2", data.revisionLevels.rtc2, "1", "20", "1"],
-    ["BCPS 1", data.revisionLevels.bcps1, "86", "56", "0"],
-    ["BCPS 2", data.revisionLevels.bcps2, "86", "56", "0"],
-    ["LCU", data.revisionLevels.lcu, "", "", ""],
-  ] as const;
+  const faultHistory = useDmePmdtStore((state) => state.faultHistory);
+  const diagnosticsActive = useDmePmdtStore((state) => state.diagnosticsRunning || state.diagnosticsRunState !== null);
+  const specialTestTargets = useDmePmdtStore((state) => state.specialTestRun?.targets ?? NO_SPECIAL_TEST_TARGETS);
+  const selfCalibrationRuns = useDmePmdtStore((state) => state.selfCalibrationRuns);
+  const hasSavedConfiguration = useDmePmdtStore((state) => state.savedConfiguration !== null);
+  const hasBackupConfiguration = useDmePmdtStore((state) => state.configurationBackup !== null);
+  const configDirty = useDmePmdtStore((state) => state.configDirty);
+  const flashWriteAtMs = useDmePmdtStore((state) => state.flashWriteAtMs);
+  // Stage 4 G19: utilization, sessions and flash-busy are derived from
+  // live state (see src/lib/dme1119a/rms-resources.ts), never literals.
+  const utilization = deriveDmeRmsResourceUtilization({
+    alarmLogEntries: data.alarmLogs.length,
+    maintenanceLogEntries: data.maintenanceLogs.length,
+    faultSnapshotsByMonitor: {
+      monitor1: faultHistory.filter((snapshot) => snapshot.monitor === 1).length,
+      monitor2: faultHistory.filter((snapshot) => snapshot.monitor === 2).length,
+    },
+    diagnosticsActive,
+    specialTestTargets,
+    selfCalibrationMonitors: ([1, 2] as const).filter((monitor) => selfCalibrationRuns[monitor === 1 ? "monitor1" : "monitor2"].running),
+    hasSavedConfiguration,
+    hasBackupConfiguration,
+    configDirty,
+    onBattery: data.rmsStatus.onBattery,
+  });
+  const userSessions = deriveDmeUserSessions({
+    connected: data.connected,
+    logonLevel: data.rmsStatus.logonLevel,
+    rcsuConnectionEnabled: data.rmsStatus.rcsuConnectionEnabled,
+  });
+  // Tick while a flash write is recent so the busy flag clears on its own.
+  const [nowMs, setNowMs] = useState(0);
+  useEffect(() => {
+    if (flashWriteAtMs === null) return;
+    setNowMs(Date.now());
+    const timer = window.setInterval(() => setNowMs(Date.now()), 500);
+    const stop = window.setTimeout(() => window.clearInterval(timer), DME_FLASH_WRITE_BUSY_MS + 1000);
+    return () => {
+      window.clearInterval(timer);
+      window.clearTimeout(stop);
+    };
+  }, [flashWriteAtMs]);
+  const flashBusy = dmeFlashWriteBusy(nowMs, flashWriteAtMs);
+  const revisionRows: Array<[string, string, DmeRmsResourceKey]> = [
+    ["RMS", data.revisionLevels.rms, "rms"],
+    ["Monitor 1", data.revisionLevels.monitor1, "monitor1"],
+    ["Monitor 2", data.revisionLevels.monitor2, "monitor2"],
+    ["RTC 1", data.revisionLevels.rtc1, "rtc1"],
+    ["RTC 2", data.revisionLevels.rtc2, "rtc2"],
+    ["BCPS 1", data.revisionLevels.bcps1, "bcps1"],
+    ["BCPS 2", data.revisionLevels.bcps2, "bcps2"],
+    ["LCU", data.revisionLevels.lcu, "lcu"],
+  ];
 
   return (
     <div className="dme-pmdt-rms-status-content">
@@ -57,7 +110,7 @@ function RmsStatusMain() {
           <fieldset>
             <legend>System</legend>
             <div className="dme-pmdt-rms-readout"><span>PMDT Logon Level</span><DmeValueCell fieldId="rmsStatus.logonLevel" label="PMDT Logon Level" value={data.rmsStatus.logonLevel} status="gray" /></div>
-            <div className="dme-pmdt-rms-readout"><span>User Sessions</span><output>1</output></div>
+            <div className="dme-pmdt-rms-readout"><span>User Sessions</span><output>{userSessions}</output></div>
             <div className="dme-pmdt-rms-readout"><span>Audio Select</span><output>TX{data.rmsStatus.audioSelect === "tx1" ? "1" : "2"}</output></div>
             <div className="dme-pmdt-rms-readout"><span>System Fan</span><output>{data.rmsStatus.fanControl}</output></div>
             <StatusFlag fieldId="rmsStatus.localControlMode" label="Local Control Mode" value={data.rmsStatus.localControlMode} />
@@ -66,7 +119,7 @@ function RmsStatusMain() {
             <StatusFlag fieldId="rmsStatus.acFailure" label="AC Failure" value={data.rmsStatus.acFailure} activeColor="red" />
             <StatusFlag fieldId="rmsStatus.remoteControlEnabled" label="Remote Control Enabled" value={data.rmsStatus.remoteControlEnabled} />
             <StatusFlag fieldId="rmsStatus.interlocked" label="Interlocked Off" value={data.rmsStatus.interlocked} activeColor="red" />
-            <StatusFlag fieldId="rmsStatus.trendDataFlashBusy" label="Trend Data Flash Busy" value={false} activeColor="yellow" />
+            <StatusFlag fieldId="rmsStatus.trendDataFlashBusy" label="Trend Data Flash Busy" value={flashBusy} activeColor="yellow" />
           </fieldset>
           <fieldset>
             <legend>RCSU Connection</legend>
@@ -82,7 +135,7 @@ function RmsStatusMain() {
             <tr className="dme-pmdt-rms-resource-heading"><th /><th /><th colSpan={3}>Resource Utilization (%)</th></tr>
             <tr><th /><th>Revision</th><th>RAM</th><th>Flash</th><th>NVRAM</th></tr>
           </thead>
-          <tbody>{revisionRows.map(([name, revision, ram, flash, nvram]) => <tr key={name}><th scope="row">{name}</th><td>{revision}</td><td>{ram}</td><td>{flash}</td><td>{nvram}</td></tr>)}</tbody>
+          <tbody>{revisionRows.map(([name, revision, key]) => { const usage = utilization[key]; return <tr key={name}><th scope="row">{name}</th><td>{revision}</td><td>{usage.ram ?? ""}</td><td>{usage.flash ?? ""}</td><td>{usage.nvram ?? ""}</td></tr>; })}</tbody>
         </table>
       </div>
     </div>

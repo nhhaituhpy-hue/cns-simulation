@@ -173,7 +173,7 @@ const rmsLimitEnableFields: readonly DmeParameterFieldDefinition[] = [
 ];
 
 const monitorRoutingFields: readonly DmeParameterFieldDefinition[] = Array.from({ length: 10 }, (_, index) =>
-  (["primary", "secondary"] as const).map((role) => ({
+  (["integralPrimary", "integralSecondary", "standbyPrimary", "standbySecondary"] as const).map((role) => ({
     id: `monitorConfigGeneral.${index}.${role}`,
     label: `Monitor ${index + 1} ${role}`,
     section: "Monitor executive alarms",

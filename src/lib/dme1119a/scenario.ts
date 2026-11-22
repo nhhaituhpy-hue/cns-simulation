@@ -520,41 +520,44 @@ export function validateDme1119aScenarioDefinition(
 
   if (parseDme1119aConfig(definition.configuration)) {
     const runtime = hydrateDme1119aData(definition.configuration);
-    const routingTargets = new Map<string, Partial<Record<"primary" | "secondary", boolean>>>();
+    // Routing radios are per monitor path (Stage 4 G12): each path
+    // (integral/standby) is an independent Primary/Secondary pair.
+    const routingTargets = new Map<string, Partial<Record<"Primary" | "Secondary", boolean>>>();
     for (const criterion of Array.isArray(definition.successCriteria) ? definition.successCriteria : []) {
       if (!isCriterion(criterion) || criterion.kind !== "configuration-values") continue;
       for (const target of criterion.targets) {
         if (!Object.is(getDmeParameterValue(runtime, target.fieldId), target.value) && !isDme1119aScenarioStudentEditable(definition, target.fieldId)) {
           issues.push(`Configuration target requires an allowed student field: ${target.fieldId}.`);
         }
-        const routing = target.fieldId.match(/^(monitorConfigGeneral\.\d+)\.(primary|secondary)$/);
+        const routing = target.fieldId.match(/^(monitorConfigGeneral\.\d+)\.(integral|standby)(Primary|Secondary)$/);
         if (routing) {
-          const targets = routingTargets.get(routing[1]) ?? {};
-          targets[routing[2] as "primary" | "secondary"] = target.value as boolean;
-          routingTargets.set(routing[1], targets);
+          const pairId = `${routing[1]}.${routing[2]}`;
+          const targets = routingTargets.get(pairId) ?? {};
+          targets[routing[3] as "Primary" | "Secondary"] = target.value as boolean;
+          routingTargets.set(pairId, targets);
         }
       }
     }
-    for (const [rowId, targets] of routingTargets) {
+    for (const [pairId, targets] of routingTargets) {
       const baseline = {
-        primary: getDmeParameterValue(runtime, `${rowId}.primary`),
-        secondary: getDmeParameterValue(runtime, `${rowId}.secondary`),
+        Primary: getDmeParameterValue(runtime, `${pairId}Primary`),
+        Secondary: getDmeParameterValue(runtime, `${pairId}Secondary`),
       };
-      const matches = (pair: typeof baseline) => (targets.primary === undefined || targets.primary === pair.primary)
-        && (targets.secondary === undefined || targets.secondary === pair.secondary);
+      const matches = (pair: typeof baseline) => (targets.Primary === undefined || targets.Primary === pair.Primary)
+        && (targets.Secondary === undefined || targets.Secondary === pair.Secondary);
       // No action is required for satisfied targets, including locked legacy baselines.
       if (matches(baseline)) continue;
       // Native radios only select true; selecting one clears the other in the
       // store. False targets therefore require selecting the companion radio.
-      const selections = (["primary", "secondary"] as const).filter(selected => matches({
-        primary: selected === "primary", secondary: selected === "secondary",
+      const selections = (["Primary", "Secondary"] as const).filter(selected => matches({
+        Primary: selected === "Primary", Secondary: selected === "Secondary",
       }));
       if (selections.length === 0) {
-        issues.push(`Configuration targets require incompatible native monitor routing: ${rowId}.`);
-      } else if (!selections.some(selected => isDme1119aScenarioStudentEditable(definition, `${rowId}.${selected}`)
-        && (["primary", "secondary"] as const).every(field => baseline[field] === (field === selected)
-          || isDme1119aScenarioStudentEditable(definition, `${rowId}.${field}`)))) {
-        issues.push(`Configuration target requires allowed native routing and companion fields: ${rowId}.`);
+        issues.push(`Configuration targets require incompatible native monitor routing: ${pairId}.`);
+      } else if (!selections.some(selected => isDme1119aScenarioStudentEditable(definition, `${pairId}${selected}`)
+        && (["Primary", "Secondary"] as const).every(field => baseline[field] === (field === selected)
+          || isDme1119aScenarioStudentEditable(definition, `${pairId}${field}`)))) {
+        issues.push(`Configuration target requires allowed native routing and companion fields: ${pairId}.`);
       }
     }
     for (const field of dmeParameterFieldCatalog) {

@@ -7,9 +7,9 @@ import { createDmePmdtStore } from "@/stores/dme-pmdt-store";
 const editable = dmeParameterFieldCatalog.filter(field => !field.readOnly && !field.id.startsWith("simulation.") && !field.id.startsWith("securityAccounts.") && !["connected", "local", "alert", "timestamp"].includes(field.id));
 
 describe("DME authoring configuration roundtrip", () => {
-  it("keeps coverage of all 213 editable configuration fields", () => {
-    expect(editable).toHaveLength(213);
-    expect(new Set(editable.map(field => field.id)).size).toBe(213);
+  it("keeps coverage of all 233 editable configuration fields", () => {
+    expect(editable).toHaveLength(233);
+    expect(new Set(editable.map(field => field.id)).size).toBe(233);
   });
 
   it.each(editable.map(field => [field.id, field] as const))("retains %s through the exact baseline edit boundary", (_id, field) => {

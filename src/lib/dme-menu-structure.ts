@@ -1,4 +1,4 @@
-import type { DmeMenuGroup, DmeMenuItem } from "./dme-types";
+import type { DmeMenuGroup, DmeMenuItem, DmePmdtData } from "./dme-types";
 
 const bypassCommandItems: readonly DmeMenuItem[] = [
   {
@@ -193,10 +193,18 @@ export const dmeMenuStructure: readonly DmeMenuGroup[] = [
       { id: "system-config-save", label: "Configuration Save...", enabled: true, action: "config-save" },
       { id: "system-config-load", label: "Configuration Load...", enabled: true, action: "config-load" },
       { id: "system-config-print", label: "Configuration Print...", enabled: true, action: "config-print" },
-      { id: "system-pmdt-setup", label: "PMDT Setup...", enabled: false },
+      {
+        id: "system-pmdt-setup",
+        label: "PMDT Setup...",
+        enabled: false,
+        // Stage 4 G20: on the real terminal this configures the PMDT's own
+        // communication ports; the simulation has no physical port, so the
+        // item stays disabled with this specific reason (not a generic stub).
+        disabledReason: "PMDT Setup cấu hình cổng truyền thông của terminal thật; bản mô phỏng không có cổng vật lý để cấu hình",
+      },
       { id: "system-simulation-parameters", label: "Simulation Parameters...", enabled: true, action: "open-config" },
-      { id: "system-print-setup", label: "Print Setup...", enabled: false },
-      { id: "system-exit", label: "Exit PMDT", enabled: false },
+      { id: "system-print-setup", label: "Print Setup...", enabled: true, action: "open-print-setup" },
+      { id: "system-exit", label: "Exit PMDT", enabled: true, action: "exit-pmdt" },
     ],
   },
   {
@@ -249,3 +257,94 @@ export const dmeMenuStructure: readonly DmeMenuGroup[] = [
 ];
 
 export const disabledMenuTooltip = "Chưa khả dụng";
+
+/**
+ * Stage 4 G16: menu checkmarks follow the live station state instead of
+ * the hard-coded ticks in the static structure above. The trigger source
+ * strings mirror resolveMonitorTriggerCommand in the PMDT store.
+ */
+const triggerDelaySuffixes: Record<string, string> = {
+  normal: "",
+  "first-pulse-delay": "1st Pulse Delay",
+  "second-pulse-delay": "2nd Pulse Delay",
+  "interrogation-spacing": "Interrogation Spacing",
+  "reply-spacing": "Reply Spacing",
+};
+
+function triggerChecked(itemId: string, data: DmePmdtData): boolean | undefined {
+  const delay = itemId.match(/^monitor-([12])-(integral|standby)-(normal|first-pulse-delay|second-pulse-delay|interrogation-spacing|reply-spacing)$/);
+  if (delay) {
+    const monitor = delay[1] === "1" ? "monitor1" : "monitor2";
+    const base = delay[2] === "integral" ? "Integral Delay" : "Standby Delay";
+    const suffix = triggerDelaySuffixes[delay[3]];
+    return data.monitorTrigger[monitor] === (suffix ? `${base} - ${suffix}` : base);
+  }
+  const direct = itemId.match(/^monitor-([12])-trigger-(integral-efficiency|reflected-power|forward-power)$/);
+  if (direct) {
+    const monitor = direct[1] === "1" ? "monitor1" : "monitor2";
+    const expected = direct[2] === "integral-efficiency"
+      ? "Integral Efficiency"
+      : direct[2] === "reflected-power"
+        ? "Reflected Power"
+        : "Forward Power";
+    return data.monitorTrigger[monitor] === expected;
+  }
+  return undefined;
+}
+
+function menuItemChecked(item: DmeMenuItem, data: DmePmdtData): boolean | undefined {
+  const trigger = triggerChecked(item.id, data);
+  if (trigger !== undefined) return trigger;
+  switch (item.id) {
+    case "rms-command-fan-auto": return data.rmsStatus.fanControl === "Automatic";
+    case "rms-command-fan-on": return data.rmsStatus.fanControl === "On";
+    case "rms-command-fan-off": return data.rmsStatus.fanControl === "Off";
+    case "tx-command-ident-normal": return data.identMode === "normal";
+    case "tx-command-ident-off": return data.identMode === "off";
+    case "tx-command-ident-continuous": return data.identMode === "continuous";
+    case "rms-command-select-audio-tx1": return data.rmsStatus.audioSelect === "tx1";
+    case "rms-command-select-audio-tx2": return data.rmsStatus.audioSelect === "tx2";
+    case "rms-command-enable-mode": return data.local;
+    case "rms-command-disable-mode": return !data.local;
+    case "rms-command-bcps-1-enable": return data.bcpsChargerEnabled.bcps1;
+    case "rms-command-bcps-1-disable": return !data.bcpsChargerEnabled.bcps1;
+    case "rms-command-bcps-2-enable": return data.bcpsChargerEnabled.bcps2;
+    case "rms-command-bcps-2-disable": return !data.bcpsChargerEnabled.bcps2;
+    default: break;
+  }
+  const spare = item.id.match(/^rms-command-spare-output-(\d+)-(high|low)$/);
+  if (spare) {
+    const row = data.digitalOutputs.find((output) => output.name === `Spare Output ${spare[1]}`);
+    return row ? row.status === (spare[2] === "high" ? "High" : "Low") : false;
+  }
+  if (item.action === "set-transmitter-mode" && item.transmitterId && item.transmitterMode) {
+    const tx = item.transmitterId;
+    const route = !data.monitorTransmitterStatus.transmitterOn[tx]
+      ? "off"
+      : data.monitorTransmitterStatus.antennaSelect === (tx === "tx1" ? 1 : 2)
+        ? "antenna"
+        : "load";
+    return route === item.transmitterMode;
+  }
+  if (item.action === "set-delay-mode" && item.transmitterId && item.delayMode) {
+    const fixed = item.transmitterId === "tx1" ? data.delayControl.rtc1.fixed : data.delayControl.rtc2.fixed;
+    return (fixed ? "fixed" : "automatic") === item.delayMode;
+  }
+  if (item.action === "set-monitor-bypass" && item.monitorId && item.bypassEnabled !== undefined) {
+    return data.monitors[item.monitorId].bypass === item.bypassEnabled;
+  }
+  return undefined;
+}
+
+/** The static structure with every checkmark recomputed from live state. */
+export function buildDmeMenuStructure(data: DmePmdtData): readonly DmeMenuGroup[] {
+  const annotate = (item: DmeMenuItem): DmeMenuItem => {
+    const checked = menuItemChecked(item, data);
+    return {
+      ...item,
+      ...(checked !== undefined ? { checked } : {}),
+      ...(item.children ? { children: item.children.map(annotate) } : {}),
+    };
+  };
+  return dmeMenuStructure.map((group) => ({ ...group, items: group.items.map(annotate) }));
+}

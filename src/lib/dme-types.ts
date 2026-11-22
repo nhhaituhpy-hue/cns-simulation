@@ -137,6 +137,8 @@ export interface DmeMenuItem {
   id: string;
   label: string;
   enabled: boolean;
+  /** Specific reason shown when this item is disabled (Stage 4 G20); falls back to the generic tooltip. */
+  disabledReason?: string;
   screenId?: DmeScreenId;
   viewId?: DmeViewId;
   action?:
@@ -150,6 +152,8 @@ export interface DmeMenuItem {
     | "config-print"
     | "config-backup"
     | "config-restore"
+    | "open-print-setup"
+    | "exit-pmdt"
     | "set-transmitter-mode"
     | "set-delay-mode"
     | "set-monitor-bypass"
@@ -466,8 +470,16 @@ export interface DmeSecurityAccount {
 
 export interface DmeMonitorConfigGeneralRow {
   parameter: string;
-  primary: boolean;
-  secondary: boolean;
+  /**
+   * Executive-alarm classification is per monitor path (station photo of
+   * Monitors >> Configuration >> General, Stage 4 G12): the Integral
+   * Monitor and the Standby Monitor each carry their own Primary/Secondary
+   * radio pair. Monitor 1 is the integral monitor, Monitor 2 the standby.
+   */
+  integralPrimary: boolean;
+  integralSecondary: boolean;
+  standbyPrimary: boolean;
+  standbySecondary: boolean;
   isCheckbox?: boolean;
   checked?: boolean;
 }

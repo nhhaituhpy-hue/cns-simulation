@@ -666,25 +666,63 @@ function deriveTrafficLoad(data: DmePmdtData): DmePmdtData["trafficLoad"] {
 
 function derivePaStatus(data: DmePmdtData): DmePmdtData["paStatus"] {
   const parameters = data.txConfigNominal.powerAmplifiers;
+  const vswrLimit = data.alarmLimits.find((limit) => limit.parameter === "VSWR");
   return data.paStatus.map((row) => {
     const isHpa = row.name.startsWith("HPA");
     const amplifierNumber = row.name.endsWith("#2") ? 2 : 1;
     const tx: TransmitterId = amplifierNumber === 1 ? "tx1" : "tx2";
     const available = transmitterAvailable(data, tx);
     const enabled = isHpa ? (amplifierNumber === 1 ? parameters.hpa1Enabled : parameters.hpa2Enabled) : true;
-    const lowPower = paOutputBelowAlertLimit(data, tx);
     const notApplicable = isHpa && data.rmsConfigStation.powerLevel === "Low Power";
-    const stateColor: DmeIndicatorColor = !available || notApplicable ? "gray" : !enabled || lowPower ? "red" : "green";
+    if (!available || notApplicable) {
+      return {
+        ...row,
+        vswr: "gray" as DmeIndicatorColor,
+        longPulseFault: "gray" as DmeIndicatorColor,
+        powerSupply: "gray" as DmeIndicatorColor,
+        outputPower: "gray" as DmeIndicatorColor,
+        rmsTemperature: "gray" as DmeIndicatorColor,
+        userEnabled: "gray" as DmeIndicatorColor,
+        rmsRtcEnabled: "gray" as DmeIndicatorColor,
+        control: "Off" as const,
+      };
+    }
+    // Stage 4 G14: judge every column on its own measurement and limits so
+    // one bad stage no longer paints the whole amplifier (and a bad stage
+    // is no longer hidden by good neighbours).
+    const valueKey = tx === "tx1" ? "mon1Value" : "mon2Value";
+    const vswrRow = data.integralData.find((candidate) => candidate.label === "VSWR");
+    const vswrValue = vswrRow ? Number.parseFloat(vswrRow[valueKey]) : Number.NaN;
+    const vswr: DmeIndicatorColor = !Number.isFinite(vswrValue)
+      ? "gray"
+      : vswrLimit?.alarmHigh != null && vswrValue >= vswrLimit.alarmHigh
+        ? "red"
+        : vswrLimit?.preAlarmHigh != null && vswrValue >= vswrLimit.preAlarmHigh
+          ? "yellow"
+          : "green";
+    const temperatureRow = data.rmsTemperatureData.find((candidate) => candidate.parameter === `${row.name} Temperature`);
+    const rmsTemperature: DmeIndicatorColor = !temperatureRow
+      ? "gray"
+      : typeof temperatureRow.high === "number" && temperatureRow.value >= temperatureRow.high
+        ? "red"
+        : typeof temperatureRow.preHigh === "number" && temperatureRow.value >= temperatureRow.preHigh
+          ? "yellow"
+          : "green";
+    const lvpsRow = data.systemPowerStatus.find((candidate) => candidate.name === "LVPS");
+    const powerSupply: DmeIndicatorColor = lvpsRow ? (tx === "tx1" ? lvpsRow.tx1 : lvpsRow.tx2) : "gray";
     return {
       ...row,
-      vswr: stateColor,
-      longPulseFault: stateColor,
-      powerSupply: stateColor,
-      outputPower: stateColor,
-      rmsTemperature: stateColor,
-      userEnabled: stateColor,
-      rmsRtcEnabled: stateColor,
-      control: available && enabled ? "On" : "Off",
+      vswr,
+      // The sim models no pulse-width measurement; the per-TX injected HPA
+      // fault is the only amplifier fault source, so it drives this column
+      // on HPA rows. LPA rows have no source and stay green.
+      longPulseFault: (isHpa && simulationFaultFor(data, tx).hpaFault ? "red" : "green") as DmeIndicatorColor,
+      powerSupply,
+      outputPower: (paOutputBelowAlertLimit(data, tx) ? "red" : "green") as DmeIndicatorColor,
+      rmsTemperature,
+      userEnabled: (isHpa && !enabled ? "gray" : "green") as DmeIndicatorColor,
+      rmsRtcEnabled: "green" as DmeIndicatorColor,
+      control: enabled ? "On" : "Off",
     };
   });
 }
@@ -755,7 +793,12 @@ function deriveMonitorStates(data: DmePmdtData, integralData: DmeDualValueRow[],
   const stateFor = (kind: MeasurementKind, rows: DmeDualValueRow[], key: "integral" | "standby") => {
     const availableIndexes = ([1, 2] as const).filter((monitorNumber) => monitorAvailable(data, kind, monitorNumber));
     const alarmsFor = (role: "primary" | "secondary") => {
-      const configured = data.monitorConfigGeneral.filter((item) => item[role]).map((item) => item.parameter);
+      // Classification is per monitor path (Stage 4 G12): this state's own
+      // Primary/Secondary column pair decides which parameters count.
+      const field = key === "integral"
+        ? (role === "primary" ? "integralPrimary" : "integralSecondary")
+        : (role === "primary" ? "standbyPrimary" : "standbySecondary");
+      const configured = data.monitorConfigGeneral.filter((item) => item[field]).map((item) => item.parameter);
       const values = availableIndexes.map((monitorNumber) => {
         const statusKey = monitorNumber === 1 ? "mon1Status" : "mon2Status";
         return rows.some((row) => configured.includes(row.label) && row[statusKey] === "alarm");
@@ -970,9 +1013,16 @@ export function recomputeDmeDerivedData(source: DmePmdtData): DmePmdtData {
   data.standbyData = deriveRows(data, "standby", allocation);
   const detailLabels = new Set(["Delay", "Spacing", "Tx Power", "ERP", "Efficiency", "PRF"]);
   const detailRows = data.integralData.filter((row) => detailLabels.has(row.label));
+  // Stage 4 G21: each monitor's detail rows carry that monitor's own
+  // measured column (previously Monitor 2 was a shallow copy of Monitor 1).
+  const detailFor = (monitor: 1 | 2): DmeDualValueRow[] => detailRows.map((row) => {
+    const value = monitor === 1 ? row.mon1Value : row.mon2Value;
+    const status = monitor === 1 ? row.mon1Status : row.mon2Status;
+    return { ...row, mon1Value: value, mon1Status: status, mon2Value: value, mon2Status: status };
+  });
   data.monitorDetailData = {
-    monitor1: detailRows,
-    monitor2: detailRows.map((row) => ({ ...row })),
+    monitor1: detailFor(1),
+    monitor2: detailFor(2),
   };
   data.decoderResults = deriveDecoderResults(data, allocation);
   data.delayControl = deriveDelayControl(data);

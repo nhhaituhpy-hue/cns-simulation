@@ -27,8 +27,15 @@ type MonitorColumn = "monitor1" | "monitor2" | "rtc1" | "rtc2";
 
 function monitorSeverity(data: DmePmdtData, rows: DmeDualValueRow[], monitor: 1 | 2, role?: "primary" | "secondary"): 0 | 1 | 2 {
   const statusKey = monitor === 1 ? "mon1Status" : "mon2Status";
-  const configured = role
-    ? new Set(data.monitorConfigGeneral.filter((item) => item[role]).map((item) => item.parameter))
+  // Classification is per monitor path (Stage 4 G12): Monitor 1 reads the
+  // integral pair, Monitor 2 the standby pair.
+  const field = role === undefined
+    ? null
+    : monitor === 1
+      ? (role === "primary" ? "integralPrimary" : "integralSecondary")
+      : (role === "primary" ? "standbyPrimary" : "standbySecondary");
+  const configured = field
+    ? new Set(data.monitorConfigGeneral.filter((item) => item[field]).map((item) => item.parameter))
     : null;
   let severity: 0 | 1 | 2 = 0;
   for (const row of rows) {

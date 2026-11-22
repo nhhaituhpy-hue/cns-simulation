@@ -9,7 +9,7 @@ import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
 
 export function PmdtToolbar({ title }: { title: string }) {
   const applyConfigChanges = useDmePmdtStore((state) => state.applyConfigChanges);
-  const restoreDefaultConfig = useDmePmdtStore((state) => state.restoreDefaultConfig);
+  const resetConfigDraft = useDmePmdtStore((state) => state.resetConfigDraft);
   const configDirty = useDmePmdtStore((state) => state.configDirty);
   const securityLevel = useDmePmdtStore((state) => state.securityLevel);
   const loginDialogOpen = useDmePmdtStore((state) => state.loginDialogOpen);
@@ -42,7 +42,7 @@ export function PmdtToolbar({ title }: { title: string }) {
         <button type="button" title="Next (F5)" onClick={nextView}>Next (F5)</button>
         <button type="button" title="Close (F6)" onClick={closeScreen}><X aria-hidden size={12} /> Close (F6)</button>
         <button type="button" title="Apply (F7)" disabled={!canApply} onClick={applyConfigChanges}><Check aria-hidden size={12} /> Apply (F7)</button>
-        <button type="button" title="Reset (F8)" disabled={!canRestore} onClick={restoreDefaultConfig}><ArrowCounterClockwise aria-hidden size={12} /> Reset (F8)</button>
+        <button type="button" title="Reset (F8)" disabled={!canRestore} onClick={resetConfigDraft}><ArrowCounterClockwise aria-hidden size={12} /> Reset (F8)</button>
       </div>
     </div>
   );

@@ -35,7 +35,9 @@ it("allows the advanced authoring form to read and edit exact targets", () => {
 });
 
 it("exposes newly persisted settings when the authoring form opens an old scenario", () => {
-  const definition = { ...createDefaultDme1119aScenarioDefinition(), configuration: legacyConfig() } as Dme1119aScenarioDefinition;
+  // The legacy fixture's configuration intentionally predates the Stage 4
+  // per-path routing shape, so it crosses the type boundary via unknown.
+  const definition = { ...createDefaultDme1119aScenarioDefinition(), configuration: legacyConfig() } as unknown as Dme1119aScenarioDefinition;
   const adapter = authoringAdapterFor("dme-1119a");
   const form = adapter.form(definition);
   expect(form.fields.some(field => field.id === "configuration.monitorOffsets.monitor1.0.integral")).toBe(true);
@@ -96,16 +98,16 @@ function routingStore(definition: Dme1119aScenarioDefinition) {
 }
 
 it("rejects a routing target whose native selection changes a locked companion", () => {
-  const primary = "monitorConfigGeneral.1.primary";
-  const secondary = "monitorConfigGeneral.1.secondary";
+  const primary = "monitorConfigGeneral.1.integralPrimary";
+  const secondary = "monitorConfigGeneral.1.integralSecondary";
   const definition = routingScenario([secondary], [{ fieldId: secondary, value: true }]);
   const store = routingStore(definition);
-  expect(store.getState().data.monitorConfigGeneral[1]).toMatchObject({ primary: true, secondary: false });
+  expect(store.getState().data.monitorConfigGeneral[1]).toMatchObject({ integralPrimary: true, integralSecondary: false });
   store.getState().setParameterValue(secondary, true);
-  expect(store.getState().configDraft.monitorConfigGeneral[1]).toMatchObject({ primary: false, secondary: true });
+  expect(store.getState().configDraft.monitorConfigGeneral[1]).toMatchObject({ integralPrimary: false, integralSecondary: true });
   expect(store.getState().applyConfigChanges()).toBe(false);
   expect(store.getState().lastCommand).toContain("Scenario protected field blocked:");
-  expect(store.getState().data.monitorConfigGeneral[1]).toMatchObject({ primary: true, secondary: false });
+  expect(store.getState().data.monitorConfigGeneral[1]).toMatchObject({ integralPrimary: true, integralSecondary: false });
   expect(validateDme1119aScenarioDefinition(definition).length).toBeGreaterThan(0);
   expect(parseDme1119aScenarioDefinition(definition) === null).toBe(true);
   expect(definition.editPolicy).toEqual({ mode: "restricted", allowedFieldIds: [secondary] });
@@ -113,8 +115,8 @@ it("rejects a routing target whose native selection changes a locked companion",
 });
 
 it.each([true, false])("rejects incompatible routing pair targets (%s), including across criteria", value => {
-  const primary = "monitorConfigGeneral.1.primary";
-  const secondary = "monitorConfigGeneral.1.secondary";
+  const primary = "monitorConfigGeneral.1.integralPrimary";
+  const secondary = "monitorConfigGeneral.1.integralSecondary";
   const definition = routingScenario([], [{ fieldId: primary, value }, { fieldId: secondary, value }]);
   definition.editPolicy = { mode: "open" };
   const store = routingStore(definition);
@@ -123,7 +125,7 @@ it.each([true, false])("rejects incompatible routing pair targets (%s), includin
     store.getState().setParameterValue(fieldId, true);
     expect(store.getState().applyConfigChanges()).toBe(true);
     const row = store.getState().data.monitorConfigGeneral[1];
-    expect(row.primary === value && row.secondary === value).toBe(false);
+    expect(row.integralPrimary === value && row.integralSecondary === value).toBe(false);
   }
   expect(parseDme1119aScenarioDefinition(definition) === null).toBe(true);
   definition.successCriteria = [
@@ -133,8 +135,8 @@ it.each([true, false])("rejects incompatible routing pair targets (%s), includin
   expect(parseDme1119aScenarioDefinition(definition) === null).toBe(true);
 });
 
-it.each(["primary", "secondary"] as const)("rejects a false %s target without permission to select its companion", selected => {
-  const companion = selected === "primary" ? "secondary" : "primary";
+it.each(["integralPrimary", "integralSecondary"] as const)("rejects a false %s target without permission to select its companion", selected => {
+  const companion = selected === "integralPrimary" ? "integralSecondary" : "integralPrimary";
   const fieldId = `monitorConfigGeneral.1.${selected}`;
   const companionId = `monitorConfigGeneral.1.${companion}`;
   const definition = routingScenario([fieldId], [{ fieldId, value: false }]);
@@ -147,8 +149,8 @@ it.each(["primary", "secondary"] as const)("rejects a false %s target without pe
   expect(definition.editPolicy).toEqual({ mode: "restricted", allowedFieldIds: [fieldId] });
 });
 
-it.each(["primary", "secondary"] as const)("accepts a coupled transition to %s only with both changed fields allowed", selected => {
-  const companion = selected === "primary" ? "secondary" : "primary";
+it.each(["integralPrimary", "integralSecondary"] as const)("accepts a coupled transition to %s only with both changed fields allowed", selected => {
+  const companion = selected === "integralPrimary" ? "integralSecondary" : "integralPrimary";
   const fieldId = `monitorConfigGeneral.1.${selected}`;
   const companionId = `monitorConfigGeneral.1.${companion}`;
   const definition = routingScenario([fieldId, companionId], [{ fieldId, value: true }, { fieldId: companionId, value: false }]);
@@ -166,8 +168,8 @@ it.each(["primary", "secondary"] as const)("accepts a coupled transition to %s o
 });
 
 it.each([true, false])("allows a single %s routing target through the permitted native companion route", value => {
-  const primary = "monitorConfigGeneral.1.primary";
-  const secondary = "monitorConfigGeneral.1.secondary";
+  const primary = "monitorConfigGeneral.1.integralPrimary";
+  const secondary = "monitorConfigGeneral.1.integralSecondary";
   const definition = routingScenario([primary, secondary], [{ fieldId: value ? secondary : primary, value }]);
   const store = createDmePmdtStore();
   const account = store.getState().data.securityAccounts.find(item => item.securityLevel === 3)!;
@@ -183,10 +185,10 @@ it.each([true, false])("allows a single %s routing target through the permitted 
 });
 
 it("does not require permission for an unchanged companion or already-satisfied legacy pair", () => {
-  const primary = "monitorConfigGeneral.1.primary";
-  const secondary = "monitorConfigGeneral.1.secondary";
+  const primary = "monitorConfigGeneral.1.integralPrimary";
+  const secondary = "monitorConfigGeneral.1.integralSecondary";
   const definition = routingScenario([secondary], [{ fieldId: secondary, value: true }]);
-  Object.assign(definition.configuration.monitorConfigGeneral[1], { primary: false, secondary: false });
+  Object.assign(definition.configuration.monitorConfigGeneral[1], { integralPrimary: false, integralSecondary: false });
   expect(validateDme1119aScenarioDefinition(definition)).toEqual([]);
   const store = routingStore(definition);
   store.getState().setParameterValue(secondary, true);
@@ -200,19 +202,19 @@ it("does not require permission for an unchanged companion or already-satisfied 
 });
 
 it("keeps satisfied locked routing values and old scenarios valid without widening permissions", () => {
-  const primary = "monitorConfigGeneral.1.primary";
-  const secondary = "monitorConfigGeneral.1.secondary";
+  const primary = "monitorConfigGeneral.1.integralPrimary";
+  const secondary = "monitorConfigGeneral.1.integralSecondary";
   const definition = routingScenario([], [{ fieldId: primary, value: true }, { fieldId: secondary, value: false }]);
   expect(validateDme1119aScenarioDefinition(definition)).toEqual([]);
   expect(parseDme1119aScenarioDefinition(definition) !== null).toBe(true);
   const store = routingStore(definition);
   expect(evaluateDme1119aScenario(store.getState().scenario, store.getState().data).solved).toBe(true);
   store.getState().setParameterValue(secondary, true);
-  expect(store.getState().configDraft.monitorConfigGeneral[1].secondary).toBe(false);
+  expect(store.getState().configDraft.monitorConfigGeneral[1].integralSecondary).toBe(false);
   delete definition.editPolicy;
   expect(parseDme1119aScenarioDefinition(definition) !== null).toBe(true);
   definition.successCriteria = createDefaultDme1119aScenarioDefinition().successCriteria;
-  Object.assign(definition.configuration.monitorConfigGeneral[1], { primary: false, secondary: false });
+  Object.assign(definition.configuration.monitorConfigGeneral[1], { integralPrimary: false, integralSecondary: false });
   expect(validateDme1119aScenarioDefinition(definition)).toEqual([]);
 });
 

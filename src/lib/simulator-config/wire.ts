@@ -20,6 +20,19 @@ export function preserveMissingDme1119aExtensions(source: unknown, parsed: Dme11
 export function legacyDme1119aConfig(value: unknown): unknown {
   const next = structuredClone(value) as Dme1119aPersistedConfig;
   for (const key of DME1119A_CONFIG_EXTENSIONS) delete next[key];
+  // Stage 4 G12: legacy consumers know one shared Primary/Secondary pair
+  // per monitor-routing row. Project the per-path classification back
+  // down, using the integral pair as the legacy representative (the
+  // modern parser migrates the shared pair back onto both paths).
+  next.monitorConfigGeneral = next.monitorConfigGeneral.map((row) => {
+    const record = row as unknown as Record<string, unknown>;
+    if (!Object.hasOwn(record, "integralPrimary")) return row;
+    return {
+      parameter: row.parameter,
+      primary: row.integralPrimary,
+      secondary: row.integralSecondary,
+    } as unknown as Dme1119aPersistedConfig["monitorConfigGeneral"][number];
+  });
   return next;
 }
 

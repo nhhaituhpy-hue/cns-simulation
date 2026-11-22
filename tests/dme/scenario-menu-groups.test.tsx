@@ -97,7 +97,7 @@ it("uses DME-specific menu locations and separates fields without native editing
     "monitorOffsets.monitor2.0.standby": ["Monitor 2", "Offsets and Scale Factors", "Standby"],
   };
   for (const [id, expected] of Object.entries(groups)) expect(dme1119aScenarioGroupPath(dmeParameterFieldCatalog.find((field) => field.id === id)!)).toEqual(expected);
-  for (const id of ["rmsTemperatureData.3.enabled", "rmsConfigGeneral.spiFilterType", "alarmLimits.0.alarmLow", "monitorConfigGeneral.0.primary", "txConfigNominal.ident.selfKeyOnLoss", "monitorTransmitterStatus.mainSelect"]) {
+  for (const id of ["rmsTemperatureData.3.enabled", "rmsConfigGeneral.spiFilterType", "alarmLimits.0.alarmLow", "monitorConfigGeneral.0.integralPrimary", "txConfigNominal.ident.selfKeyOnLoss", "monitorTransmitterStatus.mainSelect"]) {
     expect(dme1119aScenarioGroupPath(dmeParameterFieldCatalog.find((field) => field.id === id)!)[0]).toBe("Tham số mô phỏng");
   }
 });
