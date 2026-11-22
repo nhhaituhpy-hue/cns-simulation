@@ -402,14 +402,23 @@ export function createDefaultDmeSpecialTestParameters(): DmeSpecialTestParameter
   };
 }
 
-function baselineMeasuredDecoderResults(data: DmePmdtData): DmePmdtStoreState["measuredDecoderResults"] {
+function baselineMeasuredDecoderResults(
+  data: DmePmdtData,
+  measuredAt: string,
+): DmePmdtStoreState["measuredDecoderResults"] {
+  // The baseline snapshot is taken from the data as the session (re)starts
+  // it, so its "Measured:" footer must carry the live session clock — never
+  // data.timestamp, which for fresh default data is still the seeded
+  // "08/09/26 09:10:05" (same seed family as the Operational Summary Start
+  // Time defect fixed in PR #61). A completed Special Test run overwrites
+  // this with the real run time.
   return {
-    monitor1: { rows: structuredClone(data.decoderResults.monitor1), measuredAt: data.timestamp },
-    monitor2: { rows: structuredClone(data.decoderResults.monitor2), measuredAt: data.timestamp },
+    monitor1: { rows: structuredClone(data.decoderResults.monitor1), measuredAt },
+    monitor2: { rows: structuredClone(data.decoderResults.monitor2), measuredAt },
   };
 }
 
-function initialState(): DmePmdtStoreState {
+function initialState(sessionStartTimestamp: string): DmePmdtStoreState {
   const data = cloneDefaultDmePmdtData();
   data.rmsStatus.logonLevel = 0;
   return {
@@ -443,7 +452,7 @@ function initialState(): DmePmdtStoreState {
     },
     specialTestSelection: "monitor1",
     specialTestRun: null,
-    measuredDecoderResults: baselineMeasuredDecoderResults(data),
+    measuredDecoderResults: baselineMeasuredDecoderResults(data, sessionStartTimestamp),
     diagnosticsRunState: null,
     diagnosticsOutcome: null,
     identShutdownLatched: false,
@@ -1066,7 +1075,7 @@ export function createDmePmdtStore(
         scenarioHardwareDispositionConfirmed: false,
         scenarioDiagnosticState: { run: null, completed: false, subsystem: null, result: null },
         scenarioParametersOpen: false,
-        measuredDecoderResults: baselineMeasuredDecoderResults(data),
+        measuredDecoderResults: baselineMeasuredDecoderResults(data, formatDmeTimestamp(now())),
         diagnosticsRunState: null,
         diagnosticsOutcome: null,
         lastCommand: `${mode === "student" ? "Review scenario started" : "Scenario Apply"}: ${definition.name}`,
@@ -1075,7 +1084,7 @@ export function createDmePmdtStore(
     };
 
     return {
-      ...initialState(),
+      ...initialState(formatDmeTimestamp(now())),
 
       initializeSession: (initialization) => {
         identLatchTx = null;
@@ -1085,7 +1094,7 @@ export function createDmePmdtStore(
         // from a tick of the previous session (same pattern as
         // resetOperationalSummary).
         lastClockMs = null;
-        const fresh = initialState();
+        const fresh = initialState(formatDmeTimestamp(now()));
         set({
           ...fresh,
           mode: initialization.mode,
@@ -1125,7 +1134,7 @@ export function createDmePmdtStore(
           configurationBackup: backupData,
           parameterChangeLogs: parameterChangeLogs ? [...parameterChangeLogs] : state.parameterChangeLogs,
           savedConfiguration: structuredClone(data),
-          measuredDecoderResults: baselineMeasuredDecoderResults(data),
+          measuredDecoderResults: baselineMeasuredDecoderResults(data, formatDmeTimestamp(now())),
           diagnosticsRunState: null,
           diagnosticsOutcome: null,
           lastCommand: "User configuration loaded",
@@ -1235,7 +1244,7 @@ export function createDmePmdtStore(
           configDraft: structuredClone(data),
           configDirty: false,
           needBackup: false,
-          measuredDecoderResults: baselineMeasuredDecoderResults(data),
+          measuredDecoderResults: baselineMeasuredDecoderResults(data, formatDmeTimestamp(now())),
           diagnosticsRunState: null,
           diagnosticsOutcome: null,
           lastCommand: `Scenario Restore: ${state.scenario.definition.name}`,
@@ -1262,7 +1271,7 @@ export function createDmePmdtStore(
           scenarioHardwareDispositionConfirmed: false,
           scenarioDiagnosticState: { run: null, completed: false, subsystem: null, result: null },
           scenarioParametersOpen: false,
-          measuredDecoderResults: baselineMeasuredDecoderResults(data),
+          measuredDecoderResults: baselineMeasuredDecoderResults(data, formatDmeTimestamp(now())),
           diagnosticsRunState: null,
           diagnosticsOutcome: null,
           lastCommand: "Scenario End - Restore TST",
@@ -2429,7 +2438,7 @@ export function createDmePmdtStore(
         identLatchTx = null;
         latchedAlarms.clear();
         lastClockMs = null;
-        set(initialState());
+        set(initialState(formatDmeTimestamp(now())));
       },
     };
   });
