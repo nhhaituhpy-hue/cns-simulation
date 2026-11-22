@@ -125,6 +125,7 @@
 .cabinetScrew path { fill: none; stroke: #4f5c60; stroke-width: 0.9; }
 .cabinetLedOn { fill: #36d96b; stroke: #1f6239; stroke-width: 1; filter: drop-shadow(0 0 3px #42e77a); }
 .cabinetLedAlarm { fill: #ef4d46; stroke: #7d211d; stroke-width: 1; filter: drop-shadow(0 0 3px #ff625b); }
+.cabinetLedWarning { fill: #f0b23e; stroke: #7a5514; stroke-width: 1; filter: drop-shadow(0 0 3px #ffc95e); }
 .cabinetLedOff { fill: #566267; stroke: #26353a; stroke-width: 1; }
 
 .rearComponent { fill: #d3d9d7; stroke: #46565b; stroke-width: 0.9; }

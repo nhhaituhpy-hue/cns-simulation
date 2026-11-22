@@ -9,6 +9,11 @@ import {
   DME_1119A_BLOCKS,
   DME_1119A_HOTSPOT_TO_BLOCK,
 } from "./block-diagram-data";
+import {
+  deriveDmeCabinetLedState,
+  type DmeCabinetLedState,
+} from "@/lib/dme1119a/cabinet-leds";
+import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
 import styles from "./dme-1119a-block-diagram.module.css";
 
 interface Dme1119aCabinetProps {
@@ -35,23 +40,47 @@ function Handle({ x, y, height, width = 8 }: { x: number; y: number; height: num
   );
 }
 
+type LedTone = "green" | "red" | "amber";
+
+interface LedState {
+  on: boolean;
+  tone: LedTone;
+  ledId: string;
+}
+
 function Led({
   x,
   y,
   on = false,
   radius = 2,
   tone = "green",
+  ledId,
 }: {
   x: number;
   y: number;
   on?: boolean;
   radius?: number;
-  tone?: "green" | "red";
+  tone?: LedTone;
+  ledId?: string;
 }) {
   const className = on
-    ? tone === "red" ? styles.cabinetLedAlarm : styles.cabinetLedOn
+    ? tone === "red" ? styles.cabinetLedAlarm : tone === "amber" ? styles.cabinetLedWarning : styles.cabinetLedOn
     : styles.cabinetLedOff;
-  return <circle className={className} cx={x} cy={y} r={radius} aria-hidden />;
+  return (
+    <circle
+      className={className}
+      cx={x}
+      cy={y}
+      r={radius}
+      aria-hidden
+      data-led={ledId}
+      data-on={ledId ? (on ? "true" : "false") : undefined}
+    />
+  );
+}
+
+function ledProps(state: LedState | undefined): { on: boolean; tone: LedTone; ledId?: string } {
+  return state ? { on: state.on, tone: state.tone, ledId: state.ledId } : { on: false, tone: "green" };
 }
 
 function RailFasteners({ left, right, ys }: { left: number; right: number; ys: readonly number[] }) {
@@ -73,12 +102,14 @@ function LowPowerCard({
   assemblyId,
   shortLabel,
   variant,
+  leds,
 }: {
   x: number;
   width: number;
   assemblyId: string;
   shortLabel: string;
   variant: LowPowerCardVariant;
+  leds?: readonly LedState[];
 }) {
   const center = x + width / 2;
   const compact = width < 28;
@@ -95,7 +126,7 @@ function LowPowerCard({
         <>
           <circle className={styles.cardPullRing} cx={x + (x < 220 ? width - 9 : 9)} cy="361" r="7" />
           <circle className={styles.cardPullRing} cx={x + (x < 220 ? width - 9 : 9)} cy="514" r="7" />
-          <Led x={center} y={405} on />
+          <Led x={center} y={405} {...ledProps(leds?.[0])} />
           <circle className={styles.cardControl} cx={center - 7} cy="438" r="4" />
           <circle className={styles.cardControl} cx={center + 7} cy="438" r="4" />
           <circle className={styles.cardControl} cx={center - 7} cy="460" r="3.4" />
@@ -107,7 +138,7 @@ function LowPowerCard({
       {variant === "rtc" ? (
         <>
           <rect className={styles.cabinetConnector} x={center - 8} y="354" width="16" height="10" rx="1" />
-          {[0, 1, 2, 3].map((row) => <Led key={row} x={center} y={399 + row * 9} on={row === 2} radius={1.7} />)}
+          {[0, 1, 2, 3].map((row) => <Led key={row} x={center} y={399 + row * 9} radius={1.7} {...ledProps(leds?.[row])} />)}
           <circle className={styles.cardControl} cx={center - 5} cy="447" r="3.4" />
           <circle className={styles.cardControl} cx={center + 5} cy="447" r="3.4" />
           <circle className={styles.cardControl} cx={center} cy="469" r="3.4" />
@@ -118,7 +149,7 @@ function LowPowerCard({
       {variant === "monitor" ? (
         <>
           <rect className={styles.cabinetConnector} x={center - 8} y="354" width="16" height="10" rx="1" />
-          {[0, 1, 2, 3, 4].map((row) => <Led key={row} x={center - 5 + (row % 2) * 10} y={398 + Math.floor(row / 2) * 10} on={row === 0} radius={1.7} />)}
+          {[0, 1, 2, 3, 4].map((row) => <Led key={row} x={center - 5 + (row % 2) * 10} y={398 + Math.floor(row / 2) * 10} radius={1.7} {...ledProps(leds?.[row])} />)}
           <circle className={styles.cardControl} cx={center - 6} cy="444" r="3.4" />
           <circle className={styles.cardControl} cx={center + 6} cy="444" r="3.4" />
           <circle className={styles.cardControl} cx={center - 6} cy="464" r="3.4" />
@@ -132,7 +163,7 @@ function LowPowerCard({
           <path className={styles.cardDivider} d={`M${x + width / 2} 350v176`} />
           <rect className={styles.cabinetConnector} x={x + 5} y="355" width={Math.max(8, width / 2 - 8)} height="10" rx="1" />
           <rect className={styles.cabinetConnector} x={center + 3} y="355" width={Math.max(8, width / 2 - 8)} height="10" rx="1" />
-          {[0, 1, 2, 3, 4].map((row) => <Led key={row} x={center - 4 + (row % 2) * 8} y={410 + Math.floor(row / 2) * 8} on={row === 4} radius={1.5} />)}
+          {[0, 1, 2, 3, 4].map((row) => <Led key={row} x={center - 4 + (row % 2) * 8} y={410 + Math.floor(row / 2) * 8} radius={1.5} {...ledProps(leds?.[row])} />)}
           <rect className={styles.cabinetConnector} x={x + 5} y="507" width={Math.max(8, width / 2 - 8)} height="11" rx="1" />
           <rect className={styles.cabinetConnector} x={center + 3} y="507" width={Math.max(8, width / 2 - 8)} height="11" rx="1" />
         </>
@@ -140,7 +171,7 @@ function LowPowerCard({
 
       {variant === "facilities" ? (
         <>
-          {[0, 1, 2, 3].map((row) => <Led key={row} x={center} y={401 + row * 9} on={row === 3} radius={1.5} />)}
+          {[0, 1, 2, 3].map((row) => <Led key={row} x={center} y={401 + row * 9} radius={1.5} {...ledProps(leds?.[row])} />)}
           <rect className={styles.cabinetConnector} x={center - 5} y="455" width="10" height="15" rx="1" />
           <rect className={styles.cabinetConnector} x={center - 6} y="507" width="12" height="11" rx="1" />
         </>
@@ -149,13 +180,13 @@ function LowPowerCard({
   );
 }
 
-function HpaModule({ x, assemblyId, label }: { x: number; assemblyId: string; label: string }) {
+function HpaModule({ x, assemblyId, label, led }: { x: number; assemblyId: string; label: string; led?: LedState }) {
   return (
     <g className={styles.hpaModule} aria-hidden>
       <rect className={styles.cabinetPanel} x={x} y="169" width="55" height="180" />
       <Screw x={x + 8} y={177} radius={2.2} />
       <Screw x={x + 47} y={341} radius={2.2} />
-      <Led x={x + 43} y={198} on radius={1.7} />
+      <Led x={x + 43} y={198} radius={1.7} {...ledProps(led)} />
       <circle className={styles.cardControl} cx={x + 43} cy="211" r="5" />
       <Handle x={x + 27.5} y={224} height={72} width={8} />
       <text x={x + 27.5} y="319">{assemblyId}</text>
@@ -184,13 +215,15 @@ function CabinetLcuButton({
   height = 39,
   lines,
   lamp = "off",
+  lampId,
 }: {
   x: number;
   y: number;
   width?: number;
   height?: number;
   lines: readonly string[];
-  lamp?: "green" | "red" | "off";
+  lamp?: "green" | "red" | "amber" | "off";
+  lampId?: string;
 }) {
   return (
     <g className={styles.lcuButton}>
@@ -199,8 +232,9 @@ function CabinetLcuButton({
         x={x + width - 10}
         y={y + 10}
         on={lamp !== "off"}
-        tone={lamp === "red" ? "red" : "green"}
+        tone={lamp === "off" ? "green" : lamp}
         radius={7}
+        ledId={lampId}
       />
       <text x={x + width / 2} y={y + height / 2 - ((lines.length - 1) * 6)}>
         {lines.map((line, index) => (
@@ -211,7 +245,7 @@ function CabinetLcuButton({
   );
 }
 
-function CabinetLcuFaceplate() {
+function CabinetLcuFaceplate({ leds }: { leds: DmeCabinetLedState }) {
   const displayRows = [
     ["Delay", "50.00 µs"],
     ["Spacing", "12.00 µs"],
@@ -220,15 +254,43 @@ function CabinetLcuFaceplate() {
     ["Eff", "99.6 %"],
     ["PRF", "2700"],
   ] as const;
-  const transmitterRows = ["MAIN SELECT", "ANTENNA", "LOAD", "OFF"] as const;
-  const systemIndicators = [
-    "MAINTENANCE ALERT",
-    "REMOTE CONTROL FAULT",
-    "BATTERY FAULT",
-    "ON BATTERY",
-    "INTERLOCKED OFF",
-    "LCU POWER ON",
+  const transmitterRows = [
+    { key: "main", label: "MAIN SELECT" },
+    { key: "antenna", label: "ANTENNA" },
+    { key: "load", label: "LOAD" },
+    { key: "off", label: "OFF" },
   ] as const;
+  const systemIndicators = [
+    { label: "MAINTENANCE ALERT", on: leds.lcu.maintenanceAlert, tone: "red" },
+    { label: "REMOTE CONTROL FAULT", on: leds.lcu.remoteControlFault, tone: "red" },
+    { label: "BATTERY FAULT", on: leds.lcu.batteryFault, tone: "red" },
+    { label: "ON BATTERY", on: leds.lcu.onBattery, tone: "amber" },
+    { label: "INTERLOCKED OFF", on: leds.lcu.interlockedOff, tone: "red" },
+    { label: "LCU POWER ON", on: leds.lcu.powerOn, tone: "green" },
+  ] as const;
+
+  const monitorLed = (
+    path: "integral" | "standby",
+    monitor: 1 | 2,
+    kind: "normal" | "primary" | "secondary",
+    x: number,
+    y: number,
+  ) => {
+    const state = leds.lcu.monitors[path][monitor];
+    const on = (kind === "normal" && state === "normal")
+      || (kind === "primary" && state === "primary-alarm")
+      || (kind === "secondary" && state === "secondary-alarm");
+    return (
+      <Led
+        x={x}
+        y={y}
+        on={on}
+        tone={kind === "normal" ? "green" : "red"}
+        radius={7}
+        ledId={`lcu-monitor-${path}-${monitor}-${kind}`}
+      />
+    );
+  };
 
   return (
     <svg
@@ -267,13 +329,13 @@ function CabinetLcuFaceplate() {
       <g className={styles.lcuGroup}>
         <rect x="446" y="44" width="204" height="264" rx="3" />
         <text className={styles.lcuGroupTitle} x="548" y="67">TRANSMITTER</text>
-        {transmitterRows.map((label, index) => {
+        {transmitterRows.map((row, index) => {
           const y = 88 + index * 55;
           return (
-            <g key={label}>
-              <CabinetLcuButton x={464} y={y} lines={["1"]} lamp={index < 2 ? "green" : "off"} />
-              <text className={styles.lcuRowLabel} x="548" y={y + 24}>{label}</text>
-              <CabinetLcuButton x={584} y={y} lines={["2"]} lamp={index === 3 ? "red" : "off"} />
+            <g key={row.key}>
+              <CabinetLcuButton x={464} y={y} lines={["1"]} lamp={leds.lcu.transmitters[1][row.key]} lampId={`lcu-tx1-${row.key}`} />
+              <text className={styles.lcuRowLabel} x="548" y={y + 24}>{row.label}</text>
+              <CabinetLcuButton x={584} y={y} lines={["2"]} lamp={leds.lcu.transmitters[2][row.key]} lampId={`lcu-tx2-${row.key}`} />
             </g>
           );
         })}
@@ -285,36 +347,39 @@ function CabinetLcuFaceplate() {
         <path className={styles.lcuGroupDivider} d="M909 73v88" />
         <text className={styles.lcuSubTitle} x="792" y="84">INTEGRAL</text>
         <text className={styles.lcuSubTitle} x="1024" y="84">STANDBY</text>
-        {[0, 1].map((row) => (
-          <g key={row}>
-            <text className={styles.lcuMonitorNumber} x="700" y={112 + row * 31}>{row + 1}</text>
-            <Led x={728} y={108 + row * 31} on radius={7} />
-            <Led x={777} y={108 + row * 31} radius={7} />
-            <Led x={826} y={108 + row * 31} radius={7} />
-            <text className={styles.lcuMonitorNumber} x="932" y={112 + row * 31}>{row + 1}</text>
-            <Led x={960} y={108 + row * 31} on radius={7} />
-            <Led x={1009} y={108 + row * 31} radius={7} />
-            <Led x={1058} y={108 + row * 31} radius={7} />
-          </g>
-        ))}
+        {([1, 2] as const).map((monitor) => {
+          const row = monitor - 1;
+          return (
+            <g key={monitor}>
+              <text className={styles.lcuMonitorNumber} x="700" y={112 + row * 31}>{monitor}</text>
+              {monitorLed("integral", monitor, "normal", 728, 108 + row * 31)}
+              {monitorLed("integral", monitor, "primary", 777, 108 + row * 31)}
+              {monitorLed("integral", monitor, "secondary", 826, 108 + row * 31)}
+              <text className={styles.lcuMonitorNumber} x="932" y={112 + row * 31}>{monitor}</text>
+              {monitorLed("standby", monitor, "normal", 960, 108 + row * 31)}
+              {monitorLed("standby", monitor, "primary", 1009, 108 + row * 31)}
+              {monitorLed("standby", monitor, "secondary", 1058, 108 + row * 31)}
+            </g>
+          );
+        })}
         {[728, 960].map((x) => <text className={styles.lcuTinyLabel} key={`normal-${x}`} x={x} y="98">NORMAL</text>)}
         {[777, 1009].map((x) => <text className={styles.lcuTinyLabel} key={`primary-${x}`} x={x} y="98">PRIMARY</text>)}
         {[826, 1058].map((x) => <text className={styles.lcuTinyLabel} key={`secondary-${x}`} x={x} y="98">SECONDARY</text>)}
-        <CabinetLcuButton x={846} y={101} lines={["BYPASS"]} />
-        <CabinetLcuButton x={1078} y={101} lines={["BYPASS"]} />
+        <CabinetLcuButton x={846} y={101} lines={["BYPASS"]} lamp={leds.lcu.bypass.integral ? "amber" : "off"} lampId="lcu-bypass-integral" />
+        <CabinetLcuButton x={1078} y={101} lines={["BYPASS"]} lamp={leds.lcu.bypass.standby ? "amber" : "off"} lampId="lcu-bypass-standby" />
       </g>
 
       <g className={styles.lcuGroup}>
         <rect x="674" y="184" width="470" height="124" rx="3" />
         <text className={styles.lcuGroupTitle} x="909" y="205">SYSTEM</text>
-        <CabinetLcuButton x={700} y={220} width={62} height={36} lines={["LOCAL", "CONTROL"]} lamp="green" />
+        <CabinetLcuButton x={700} y={220} width={62} height={36} lines={["LOCAL", "CONTROL"]} lamp={leds.lcu.localControl ? "green" : "off"} lampId="lcu-local-control" />
         <CabinetLcuButton x={780} y={220} width={62} height={36} lines={["LAMP", "TEST"]} />
         <CabinetLcuButton x={700} y={264} width={62} height={36} lines={["ALARM", "SILENCE"]} />
         <CabinetLcuButton x={780} y={264} width={62} height={36} lines={["RESET"]} />
-        {systemIndicators.map((label, index) => (
-          <g key={label}>
-            <Led x={877} y={225 + index * 14} on={index === 5} radius={6} />
-            <text className={styles.lcuSystemLabel} x="892" y={229 + index * 14}>{label}</text>
+        {systemIndicators.map((indicator, index) => (
+          <g key={indicator.label}>
+            <Led x={877} y={225 + index * 14} on={indicator.on} tone={indicator.tone} radius={6} ledId={`lcu-system-${indicator.label.toLowerCase().replaceAll(" ", "-")}`} />
+            <text className={styles.lcuSystemLabel} x="892" y={229 + index * 14}>{indicator.label}</text>
           </g>
         ))}
         <g className={styles.lcuVolumePot}>
@@ -328,7 +393,66 @@ function CabinetLcuFaceplate() {
   );
 }
 
-function FrontCabinet() {
+function FrontCabinet({ leds }: { leds: DmeCabinetLedState }) {
+  const txLed = (tx: 1 | 2): LedState => {
+    const state = leds.transmitters[tx];
+    return {
+      on: state.paFault || state.on,
+      tone: state.paFault ? "red" : "green",
+      ledId: "",
+    };
+  };
+  const monitorCardLeds = (monitor: 1 | 2): LedState[] => {
+    const card = leds.monitorCards[monitor];
+    return [
+      { on: card.state === "normal", tone: "green", ledId: `monitor-${monitor}-normal` },
+      { on: card.state === "pre-alarm", tone: "amber", ledId: `monitor-${monitor}-pre-alarm` },
+      { on: card.state === "primary-alarm", tone: "red", ledId: `monitor-${monitor}-primary-alarm` },
+      { on: card.state === "secondary-alarm", tone: "red", ledId: `monitor-${monitor}-secondary-alarm` },
+      { on: card.power, tone: "green", ledId: `monitor-${monitor}-power` },
+    ];
+  };
+  const rtcCardLeds = (tx: 1 | 2): LedState[] => {
+    const state = leds.transmitters[tx];
+    return [
+      { on: state.rtcCpuOk, tone: "green", ledId: `rtc-${tx}-cpu` },
+      { on: state.rtcCommFault, tone: "red", ledId: `rtc-${tx}-comm-fault` },
+      { on: state.rtcOverload, tone: "red", ledId: `rtc-${tx}-overload` },
+      { on: state.onAir, tone: "green", ledId: `rtc-${tx}-on-air` },
+    ];
+  };
+  const cardLedsByAssembly: Record<string, LedState[]> = {
+    "1A9": [{ ...txLed(1), ledId: "lpa-1" }],
+    "1A10": rtcCardLeds(1),
+    "1A11": monitorCardLeds(1),
+    "1A13": [
+      { on: leds.rms.power, tone: "green", ledId: "rms-power" },
+      { on: leds.rms.alarm, tone: "red", ledId: "rms-alarm" },
+      { on: leds.rms.maintenanceAlert, tone: "amber", ledId: "rms-maintenance-alert" },
+      { on: leds.rms.onBattery, tone: "amber", ledId: "rms-on-battery" },
+      { on: leds.rms.localControl, tone: "green", ledId: "rms-local-control" },
+    ],
+    "1A14": [
+      { on: leds.facilities.power, tone: "green", ledId: "facilities-power" },
+      { on: leds.facilities.interlocked, tone: "red", ledId: "facilities-interlocked" },
+      { on: leds.facilities.remoteControlFault, tone: "red", ledId: "facilities-remote-fault" },
+      { on: leds.facilities.acFailure, tone: "red", ledId: "facilities-ac-fail" },
+    ],
+    "1A15": monitorCardLeds(2),
+    "1A16": rtcCardLeds(2),
+    "1A17": [{ ...txLed(2), ledId: "lpa-2" }],
+  };
+  const statusPanelLeds = (tx: 1 | 2): LedState[] => {
+    const state = leds.transmitters[tx];
+    return [
+      { on: state.onAir, tone: "green", ledId: `status-tx${tx}-on-air` },
+      { on: state.on && !state.onAir, tone: "green", ledId: `status-tx${tx}-load` },
+      { on: state.maintenanceAlert, tone: "amber", ledId: `status-tx${tx}-maintenance` },
+      { on: state.chainFault, tone: "red", ledId: `status-tx${tx}-fault` },
+      { on: leds.rms.power, tone: "green", ledId: `status-tx${tx}-power` },
+    ];
+  };
+
   const lowPowerCards = [
     { x: 54, width: 63, assemblyId: "1A9", shortLabel: "LPA 1", variant: "lpa" },
     { x: 117, width: 34, assemblyId: "1A10", shortLabel: "RTC 1", variant: "rtc" },
@@ -362,18 +486,18 @@ function FrontCabinet() {
         <path d="M54 77h324M105 48v29" />
       </g>
 
-      <g className={styles.lcuAssembly}><CabinetLcuFaceplate /></g>
+      <g className={styles.lcuAssembly}><CabinetLcuFaceplate leds={leds} /></g>
 
       <g aria-hidden>
         <rect className={styles.rackBay} x="54" y="169" width="324" height="180" />
-        <HpaModule x={80} assemblyId="1A3" label="HPA 1" />
-        <HpaModule x={298} assemblyId="1A7" label="HPA 2" />
+        <HpaModule x={80} assemblyId="1A3" label="HPA 1" led={{ ...txLed(1), ledId: "hpa-1" }} />
+        <HpaModule x={298} assemblyId="1A7" label="HPA 2" led={{ ...txLed(2), ledId: "hpa-2" }} />
         <path className={styles.cabinetFineLine} d="M135 169v180M298 169v180" />
       </g>
 
       <g aria-hidden>
         <rect className={styles.rackBay} x="54" y="349" width="324" height="178" />
-        {lowPowerCards.map((card) => <LowPowerCard key={card.assemblyId} {...card} />)}
+        {lowPowerCards.map((card) => <LowPowerCard key={card.assemblyId} {...card} leds={cardLedsByAssembly[card.assemblyId]} />)}
       </g>
 
       <g aria-hidden>
@@ -410,14 +534,17 @@ function FrontCabinet() {
             <path className={styles.breakerToggle} d={`M${78 + column * 24} 1115h8v14h-8z`} />
           </g>
         ))}
-        {[184, 239].map((x, index) => (
-          <g key={x}>
-            <rect x={x} y="1099" width="47" height="47" rx="1" />
-            <text x={x + 23.5} y="1108">TX {index + 1}</text>
-            {[0, 1, 2, 3, 4].map((row) => <Led key={row} x={x + 8} y={1116 + row * 6} on={row === 4} radius={1.4} />)}
-            <rect className={styles.cabinetConnector} x={x + 31} y="1114" width="10" height="10" rx="1" />
-          </g>
-        ))}
+        {[184, 239].map((x, index) => {
+          const panelLeds = statusPanelLeds((index + 1) as 1 | 2);
+          return (
+            <g key={x}>
+              <rect x={x} y="1099" width="47" height="47" rx="1" />
+              <text x={x + 23.5} y="1108">TX {index + 1}</text>
+              {[0, 1, 2, 3, 4].map((row) => <Led key={row} x={x + 8} y={1116 + row * 6} radius={1.4} {...ledProps(panelLeds[row])} />)}
+              <rect className={styles.cabinetConnector} x={x + 31} y="1114" width="10" height="10" rx="1" />
+            </g>
+          );
+        })}
         <rect className={styles.convenienceOutlet} x="319" y="1097" width="27" height="51" rx="2" />
         <circle cx="332.5" cy="1112" r="3" /><circle cx="332.5" cy="1131" r="3" />
       </g>
@@ -582,6 +709,8 @@ function CabinetHotspot({
 }
 
 export function Dme1119aCabinet({ surface, selectedHotspotIds, onSelect }: Dme1119aCabinetProps) {
+  const data = useDmePmdtStore((state) => state.data);
+  const ledState = deriveDmeCabinetLedState(data);
   const hotspots = DME_1119A_BLOCKS.flatMap((block) => block.cabinetHotspots).filter((item) => item.surface === surface);
   const label = surface === "front" ? "Mặt trước cabinet DME 1119A" : "Mặt sau cabinet DME 1119A";
 
@@ -596,7 +725,7 @@ export function Dme1119aCabinet({ surface, selectedHotspotIds, onSelect }: Dme11
         </linearGradient>
         <filter id="dme1119a-hotspot-glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="6" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
       </defs>
-      {surface === "front" ? <FrontCabinet /> : <RearCabinet />}
+      {surface === "front" ? <FrontCabinet leds={ledState} /> : <RearCabinet />}
       {hotspots.map((item) => <CabinetHotspot key={item.id} hotspot={item} selected={selectedHotspotIds.has(item.id)} onSelect={onSelect} />)}
     </svg>
   );
