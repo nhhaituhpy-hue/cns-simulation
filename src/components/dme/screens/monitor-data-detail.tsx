@@ -142,13 +142,36 @@ function MonitorMeasurements({
   );
 }
 
-function MonitorMaintenanceAlerts({ timestamp }: { timestamp: string }) {
+/**
+ * Monitor n >> Data >> Maintenance Alerts (manual §3.6.9.1.3), wired to
+ * this monitor's derived state (Stage 1 G09). Conditions the simulator
+ * does not model stay gray (unknown), never lit.
+ */
+function MonitorMaintenanceAlerts({ monitorNumber, timestamp }: { monitorNumber: 1 | 2; timestamp: string }) {
+  const data = useDmePmdtStore((state) => state.data);
+  const specialTestRunning = useDmePmdtStore((state) => state.specialTestRunning);
+  const tx = monitorNumber === 1 ? "tx1" : "tx2";
+  const statusKey = monitorNumber === 1 ? "mon1Status" : "mon2Status";
+  const synthUnlock = data.rtcMaintenanceAlerts.some((row) => (
+    (row.label === "RTC Rx Synth Unlock" || row.label === "RTC Tx Synth Unlock") && row[tx] === "red"
+  ));
+  const synthFrequencyError = [...data.integralData, ...data.standbyData].some((row) => (
+    row.label === "Tx Frequency Error" && row[statusKey] === "alarm"
+  ));
+  const psRow = data.rmsVoltageData.find((row) => row.parameter === (monitorNumber === 1 ? "Tx 1 48 V PS" : "Tx 2 48 V PS"));
+  const colors: Partial<Record<(typeof maintenanceAlerts)[number], DmeIndicatorColor>> = {
+    "RTC Comm Fault": data.rtcStatus.commFault[tx] ? "red" : "gray",
+    "Power Supply Fault": psRow && (psRow.volts < psRow.low || psRow.volts > psRow.high) ? "red" : "gray",
+    "Interrogator Synth Unlock": synthUnlock ? "red" : "gray",
+    "Interrogator Synth Frequency Error": synthFrequencyError ? "red" : "gray",
+    "Special Test Mode Enabled": specialTestRunning ? "yellow" : "gray",
+  };
   return (
     <div className="dme-pmdt-detail-alerts">
       <time>{timestamp}</time>
       <div>
         {maintenanceAlerts.map((label) => (
-          <div key={label}><DmeIndicator color="gray" /><span>{label}</span></div>
+          <div key={label}><DmeIndicator color={colors[label] ?? "gray"} /><span>{label}</span></div>
         ))}
       </div>
     </div>
@@ -276,7 +299,7 @@ export function MonitorDetailData({ monitorNumber }: { monitorNumber: 1 | 2 }) {
       <div className="min-h-0 flex-1 overflow-auto">
         {activeTab === "integral" ? <MonitorMeasurements monitorNumber={monitorNumber} kind="integral" /> : null}
         {activeTab === "standby" ? <MonitorMeasurements monitorNumber={monitorNumber} kind="standby" /> : null}
-        {activeTab === "maintenance" ? <MonitorMaintenanceAlerts timestamp={timestamp} /> : null}
+        {activeTab === "maintenance" ? <MonitorMaintenanceAlerts monitorNumber={monitorNumber} timestamp={timestamp} /> : null}
         {activeTab === "status" ? <MonitorStatus monitorNumber={monitorNumber} timestamp={timestamp} /> : null}
       </div>
     </section>

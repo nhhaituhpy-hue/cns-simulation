@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import type { DmeIndicatorColor } from "@/lib/dme-types";
 import { resolveDmeField, resolveDmeStatus, useDmePmdtStore } from "@/stores/dme-pmdt-store";
 import { DmeIndicator, DmeValueCell, dmeFieldMetadata } from "./screen-primitives";
 
@@ -14,20 +13,12 @@ export function RmsDigitalIo() {
   const overrides = useDmePmdtStore((state) => state.overrides);
   const fanOutputIndex = data.digitalOutputs.findIndex((row) => row.name === "Fan Control");
   const fanOutput = fanOutputIndex >= 0 ? data.digitalOutputs[fanOutputIndex] : undefined;
-  const systemRows: Array<{ label: string; tx1: DmeIndicatorColor | "Trickle"; tx2: DmeIndicatorColor | "Trickle" }> = [
-    { label: "Battery Fault", tx1: "green", tx2: "green" },
-    { label: "On Battery", tx1: "green", tx2: "green" },
-    { label: "Monitor Power", tx1: "green", tx2: "green" },
-    { label: "RTC Power", tx1: "green", tx2: "green" },
-    { label: "RMS Power", tx1: "green", tx2: "gray" },
-    { label: "Facilities Power", tx1: "green", tx2: "gray" },
-    { label: "LCU Power", tx1: "green", tx2: "gray" },
-    { label: "Battery Charger", tx1: "Trickle", tx2: "Trickle" },
-    { label: "48 V PS", tx1: "green", tx2: "green" },
-    { label: "BCPS PS", tx1: "green", tx2: "green" },
-    { label: "BCPS DC/DC", tx1: "green", tx2: "green" },
-  ];
-  const centeredSystemRows = new Set(["RMS Power", "Facilities Power", "LCU Power"]);
+  // System Power Status renders the engine-maintained data.systemPowerStatus
+  // (Stage 1 G13) so facility faults such as an AC failure are visible here.
+  // Rows whose second column is gray are station-shared resources and are
+  // shown as one centred indicator.
+  const centeredSystemRows = new Set(["RMS", "Facilities", "Test Generator", "LCU"]);
+  const batteryCharger = data.digitalOutputs.find((row) => row.name === "Battery Charger");
 
   return (
     <div className="dme-pmdt-digital-io">
@@ -43,8 +34,8 @@ export function RmsDigitalIo() {
                   <td {...dmeFieldMetadata(`digitalInputs.${index}.status`, `${row.name} Status`, row.status)}><DmeIndicator color={row.status === "Alarm" ? "red" : row.status ? "green" : "gray"} /></td>
                 </tr>
               ))}
-              <tr><th scope="row">SPI Bus Fault</th><td /><td><DmeIndicator color="green" /></td></tr>
-              <tr><th scope="row">System Fan Fault</th><td /><td><DmeIndicator color="green" /></td></tr>
+              <tr><th scope="row">SPI Bus Fault</th><td /><td><DmeIndicator color="gray" /></td></tr>
+              <tr><th scope="row">System Fan Fault</th><td /><td><DmeIndicator color="gray" /></td></tr>
             </tbody>
           </table>
         </DataPanel>
@@ -87,18 +78,32 @@ export function RmsDigitalIo() {
         <table>
           <thead><tr><th /><th>Tx 1</th><th>Tx 2</th></tr></thead>
           <tbody>
-            {systemRows.map((row, index) => (
-              <tr key={row.label}>
-                <th scope="row">{row.label}</th>
-                {centeredSystemRows.has(row.label) ? (
-                  <td colSpan={2} className="dme-pmdt-system-centered"><DmeIndicator color="green" /></td>
+            {data.systemPowerStatus.map((row, index) => (
+              <tr key={row.name}>
+                <th scope="row">{row.name}</th>
+                {centeredSystemRows.has(row.name) && row.tx2 === "gray" ? (
+                  <td colSpan={2} className="dme-pmdt-system-centered"><DmeIndicator color={resolveDmeStatus(row.tx1, `systemPowerStatus.${index}.tx1`, overrides)} /></td>
                 ) : ([row.tx1, row.tx2] as const).map((status, txIndex) => (
-                    <td key={txIndex}>
-                      {status === "Trickle" ? <DmeValueCell fieldId={`systemPowerStatus.${index}.tx${txIndex + 1}`} label={`${row.label} Tx ${txIndex + 1}`} value="Trickle" /> : <DmeIndicator color={status} />}
+                    <td key={txIndex} {...dmeFieldMetadata(`systemPowerStatus.${index}.tx${txIndex + 1}`, `${row.name} Tx ${txIndex + 1}`, status, status)}>
+                      <DmeIndicator color={resolveDmeStatus(status, `systemPowerStatus.${index}.tx${txIndex + 1}`, overrides)} />
                     </td>
                   ))}
               </tr>
             ))}
+            {batteryCharger ? (
+              <tr>
+                <th scope="row">Battery Charger</th>
+                {([0, 1] as const).map((txIndex) => (
+                  <td key={txIndex}>
+                    <DmeValueCell
+                      fieldId={`digitalOutputs.0.status`}
+                      label={`Battery Charger Tx ${txIndex + 1}`}
+                      value={batteryCharger.status === "On" ? "On" : batteryCharger.altStatus ?? batteryCharger.status}
+                    />
+                  </td>
+                ))}
+              </tr>
+            ) : null}
           </tbody>
         </table>
       </DataPanel>

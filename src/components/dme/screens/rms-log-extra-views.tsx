@@ -1,50 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { dmeOperationalAvailability } from "@/lib/dme1119a";
+import type { DmeOperationalSummaryState } from "@/lib/dme-types";
 import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
-
-const operationalRows = [
-  ["Normal Operation", "26846.52", "28121.55"],
-  ["Monitor Bypass", "0.32", "0.37"],
-  ["Transmitter Off", "42.37", "41.46"],
-  ["Monitor/RTC Comm Fault", "0.07", "0.07"],
-  ["Hot Standby", "28121.00", "26846.84"],
-] as const;
-
-const commandRows = [
-  ["08/09/26 09:09:42", "RCSU", "Remote RMS Logon"],
-  ["08/09/26 06:49:40", "RCSU", "RMS Logoff"],
-  ["08/09/26 06:30:24", "RCSU", "Remote RMS Logon"],
-  ["08/08/26 18:48:07", "RCSU", "RMS Logoff"],
-  ["08/08/26 18:33:00", "RCSU", "Remote RMS Logon"],
-  ["08/08/26 13:20:15", "RCSU", "RMS Logoff"],
-  ["08/08/26 13:19:04", "RCSU", "Remote RMS Logon"],
-  ["08/08/26 08:00:48", "RCSU", "RMS Logoff"],
-  ["08/08/26 07:45:33", "RCSU", "Remote RMS Logon"],
-  ["08/08/26 07:44:58", "RCSU", "RMS Logoff"],
-  ["08/08/26 07:42:16", "RCSU", "Remote RMS Logon"],
-  ["08/08/26 07:19:23", "RCSU", "RMS Logoff"],
-  ["08/06/26 18:29:23", "RCSU", "Remote RMS Logon"],
-  ["08/06/26 18:23:26", "RCSU", "RMS Logoff"],
-] as const;
-
-const parameterRows = [
-  ["04/28/25 20:20:55", "SEC3", "RMS Configuration"],
-  ["04/28/25 16:46:31", "SEC3", "RMS Configuration"],
-  ["04/27/25 23:04:31", "SEC3", "RMS Configuration"],
-  ["04/27/25 13:35:58", "SEC3", "RMS Configuration"],
-  ["04/26/25 21:43:13", "SEC3", "RMS Configuration"],
-  ["04/26/25 16:21:22", "SEC3", "RMS Configuration"],
-  ["02/05/25 06:51:58", "RCSU", "Nominal Monitor Limits"],
-  ["02/05/25 06:51:57", "RCSU", "Monitor Configuration"],
-  ["08/24/23 16:38:49", "RCSU", "Monitor #2 Offsets and Scale Factors"],
-  ["08/24/23 16:38:12", "RCSU", "Monitor #1 Offsets and Scale Factors"],
-  ["08/02/23 18:51:01", "RCSU", "Monitor #1 Offsets and Scale Factors"],
-  ["06/01/21 15:48:03", "RCSU", "RTC #2 Offsets and Scale Factors"],
-  ["06/01/21 15:48:02", "RCSU", "RTC #1 Offsets and Scale Factors"],
-  ["06/01/21 15:47:59", "RCSU", "Monitor Configuration"],
-  ["06/01/21 15:47:58", "RCSU", "RMS A/D Limits"],
-] as const;
 
 function ActivityTable({
   rows,
@@ -78,18 +36,39 @@ function ActivityTable({
   );
 }
 
+const summaryRows: Array<{
+  label: string;
+  pick: (tx: DmeOperationalSummaryState["tx1"]) => number;
+}> = [
+  { label: "Normal Operation", pick: (tx) => tx.normalSeconds },
+  { label: "Monitor Bypass", pick: (tx) => tx.bypassSeconds },
+  { label: "Transmitter Off", pick: (tx) => tx.offSeconds },
+  { label: "Monitor/RTC Comm Fault", pick: (tx) => tx.commFaultSeconds },
+  { label: "Hot Standby", pick: (tx) => tx.standbySeconds },
+];
+
+function hours(seconds: number): string {
+  return (seconds / 3600).toFixed(2);
+}
+
+/**
+ * RMS >> Logs >> Operational Summary (manual §3.6.7.3.1). Values are the
+ * real accumulators advanced by the PMDT clock tick (Stage 1 G10); Reset
+ * zeroes them in the store, and Download exports the same live values.
+ */
 export function RmsOperationalSummary() {
-  const [reset, setReset] = useState(false);
-  const displayedRows = reset
-    ? operationalRows.map(([label]) => [label, "0.00", "0.00"] as const)
-    : operationalRows;
+  const summary = useDmePmdtStore((state) => state.operationalSummary);
+  const timestamp = useDmePmdtStore((state) => state.data.timestamp);
+  const resetOperationalSummary = useDmePmdtStore((state) => state.resetOperationalSummary);
+  const availability1 = dmeOperationalAvailability(summary, "tx1").toFixed(4);
+  const availability2 = dmeOperationalAvailability(summary, "tx2").toFixed(4);
 
   function downloadTrendData() {
     if (typeof window === "undefined") return;
     const lines = [
       ["Parameter", "Transmitter 1", "Transmitter 2", "Unit"],
-      ...displayedRows.map(([label, tx1, tx2]) => [label, tx1, tx2, "Hours"]),
-      ["Availability", reset ? "0.0000" : "99.7907", reset ? "0.0000" : "99.7923", "%"],
+      ...summaryRows.map(({ label, pick }) => [label, hours(pick(summary.tx1)), hours(pick(summary.tx2)), "Hours"]),
+      ["Availability", availability1, availability2, "%"],
     ];
     const csv = lines.map((row) => row.map((value) => `"${value.replaceAll('"', '""')}"`).join(",")).join("\n");
     const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
@@ -108,21 +87,21 @@ export function RmsOperationalSummary() {
           <tr><th /><th>Transmitter 1</th><th>Transmitter 2</th><th /></tr>
         </thead>
         <tbody>
-          {displayedRows.map(([label, tx1, tx2]) => (
-            <tr key={label}><th scope="row">{label}</th><td>{tx1}</td><td>{tx2}</td><td>Hours</td></tr>
+          {summaryRows.map(({ label, pick }) => (
+            <tr key={label}><th scope="row">{label}</th><td>{hours(pick(summary.tx1))}</td><td>{hours(pick(summary.tx2))}</td><td>Hours</td></tr>
           ))}
           <tr className="dme-pmdt-summary-spacer"><td colSpan={4} /></tr>
-          <tr><th scope="row">Availability</th><td>{reset ? "0.0000" : "99.7907"}</td><td>{reset ? "0.0000" : "99.7923"}</td><td>%</td></tr>
+          <tr><th scope="row">Availability</th><td>{availability1}</td><td>{availability2}</td><td>%</td></tr>
         </tbody>
       </table>
 
       <div className="dme-pmdt-summary-period">
         <dl>
-          <div><dt>Start Time</dt><dd>04/27/20 06:23:09</dd></div>
-          <div><dt>End Time</dt><dd>08/09/26 09:11:15</dd></div>
-          <div><dt>Hours Elapsed</dt><dd>55082.8017</dd></div>
+          <div><dt>Start Time</dt><dd>{summary.startedAt ?? "—"}</dd></div>
+          <div><dt>End Time</dt><dd>{timestamp}</dd></div>
+          <div><dt>Hours Elapsed</dt><dd>{(summary.elapsedSeconds / 3600).toFixed(4)}</dd></div>
         </dl>
-        <button type="button" onClick={() => setReset(true)} disabled={reset}>Reset Operational Summary</button>
+        <button type="button" onClick={resetOperationalSummary} disabled={summary.elapsedSeconds <= 0}>Reset Operational Summary</button>
       </div>
 
       <button type="button" className="dme-pmdt-download-button" onClick={downloadTrendData}>Download Trend Data</button>
@@ -130,22 +109,14 @@ export function RmsOperationalSummary() {
   );
 }
 
+/** RMS >> Logs >> Command Activity (manual §3.6.7.3.4): the store's recorded command history, newest first. */
 export function RmsCommandActivity() {
-  return <ActivityTable rows={commandRows} thirdColumn="Command" />;
+  const logs = useDmePmdtStore((state) => state.commandActivityLogs);
+  return <ActivityTable rows={logs.map((entry) => [entry.timeTag, entry.userName, entry.command] as const)} thirdColumn="Command" />;
 }
 
 export function RmsParameterChange() {
-  const storedLogs = useDmePmdtStore((state) => state.parameterChangeLogs);
-  const rows = storedLogs.length
-    ? storedLogs
-    : parameterRows.map(([timeTag, userName, file], index) => ({
-        id: `default-dme-parameter-${index}`,
-        timeTag,
-        userName,
-        file,
-        parameter: file,
-        state: "normal" as const,
-      }));
+  const rows = useDmePmdtStore((state) => state.parameterChangeLogs);
 
   return (
     <div className="dme-pmdt-log-scroll">

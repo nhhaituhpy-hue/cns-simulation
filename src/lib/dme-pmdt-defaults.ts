@@ -45,59 +45,14 @@ export function createDefaultDme1119aSimulationFaults(): Dme1119aSimulationFault
   };
 }
 
-const alarmTrendRecords = [
-  ["07/29/26 00:18:35", "Monitor 1"], ["07/28/26 23:21:39", "Monitor 2"],
-  ["07/27/26 19:21:23", "Monitor 2"], ["07/27/26 18:13:34", "Monitor 2"],
-  ["07/26/26 03:40:32", "Monitor 2"], ["07/26/26 04:39:58", "Monitor 1"],
-  ["07/25/26 18:46:06", "Monitor 2"], ["07/24/26 03:40:14", "Monitor 1"],
-  ["07/23/26 17:02:43", "Monitor 1"], ["07/21/26 01:44:04", "Monitor 1"],
-  ["07/20/26 21:23:06", "Monitor 2"], ["07/19/26 16:59:17", "Monitor 1"],
-  ["07/18/26 01:24:07", "Monitor 2"], ["07/14/26 10:47:50", "Monitor 2"],
-  ["07/12/26 23:28:46", "Monitor 1"], ["07/12/26 09:24:02", "Monitor 2"],
-  ["07/10/26 14:31:51", "Monitor 1"], ["05/26/26 23:32:56", "Monitor 1"],
-  ["05/26/26 21:45:11", "Monitor 2"], ["05/26/26 03:00:36", "Monitor 1"],
-  ["05/24/26 01:59:09", "Monitor 1"], ["05/22/26 11:18:49", "Monitor 2"],
-  ["05/19/26 23:57:48", "Monitor 2"], ["05/19/26 11:26:54", "Monitor 1"],
-  ["05/18/26 11:47:48", "Monitor 2"], ["05/18/26 06:55:00", "Monitor 2"],
-] as const;
+/**
+ * RMS logs start empty. Entries are appended live by the store's runtime
+ * log engine from real derived-state transitions (manual §3.6.7.3); the
+ * simulator must never ship fabricated log history.
+ */
+export const defaultDmeAlarmLogs: DmeAlarmLogEntry[] = [];
 
-export const defaultDmeAlarmLogs: DmeAlarmLogEntry[] = Array.from({ length: 151 }, (_, index) => {
-  const [timeTag, type] = alarmTrendRecords[index % alarmTrendRecords.length];
-  return { timeTag, type, alarm: "Integral Tx Power", state: "Primary Alarm Low" };
-});
-
-const maintenanceTrendRecords = [
-  ["05/02/24 21:22:17", "Transmitter Data", "Unknown: 129", "Normal"],
-  ["05/02/24 21:22:02", "Transmitter Data", "Unknown: 142", "Alert"],
-  ["05/02/24 21:22:01", "Digital Input", "Unknown: 132", "Alert"],
-  ["05/02/24 21:22:00", "Transmitter Data", "Unknown: 128", "Alert"],
-  ["05/02/24 21:21:58", "Digital Input", "Unknown: 128", "Alert"],
-  ["05/02/24 21:21:57", "Transmitter Data", "Unknown: 130", "Alert"],
-  ["05/02/24 21:21:57", "General", "AC Failure", "Alert"],
-  ["04/05/24 16:44:43", "Transmitter Data", "Unknown: 130", "Alert"],
-  ["04/04/24 18:08:48", "Transmitter Data", "Unknown: 130", "Alert"],
-  ["04/03/24 22:44:40", "Transmitter Data", "Unknown: 130", "Alert"],
-  ["04/02/24 17:18:35", "Digital Input", "Unknown: 130", "Alert"],
-  ["04/03/24 04:57:58", "Digital Input", "Unknown: 130", "Alert"],
-  ["03/28/24 06:17:39", "Transmitter Data", "Unknown: 130", "Alert"],
-  ["03/27/24 03:22:12", "Transmitter Data", "Unknown: 130", "Alert"],
-  ["03/27/24 21:31:35", "Transmitter Data", "Unknown: 130", "Alert"],
-  ["03/25/24 10:45:13", "Transmitter Data", "Unknown: 130", "Alert"],
-  ["03/25/24 10:00:52", "Digital Input", "Unknown: 130", "Alert"],
-  ["03/22/24 04:54:29", "Digital Input", "Unknown: 130", "Alert"],
-  ["03/18/24 09:14:47", "Digital Input", "Unknown: 130", "Alert"],
-  ["03/18/24 06:55:21", "Transmitter Data", "Unknown: 130", "Alert"],
-  ["03/17/24 18:21:33", "Digital Input", "Unknown: 130", "Alert"],
-  ["03/17/24 03:57:56", "Transmitter Data", "Unknown: 130", "Alert"],
-  ["03/17/24 03:04:35", "Transmitter Data", "Unknown: 130", "Alert"],
-  ["03/16/24 13:44:26", "Digital Input", "Unknown: 130", "Alert"],
-  ["03/16/24 06:09:53", "Transmitter Data", "Unknown: 130", "Alert"],
-] as const;
-
-export const defaultDmeMaintenanceLogs: DmeMaintenanceLogEntry[] = Array.from({ length: 81 }, (_, index) => {
-  const [timeTag, type, alert, state] = maintenanceTrendRecords[index % maintenanceTrendRecords.length];
-  return { timeTag, type, alert, state };
-});
+export const defaultDmeMaintenanceLogs: DmeMaintenanceLogEntry[] = [];
 
 export const defaultDmeDigitalInputs: DmeDigitalInput[] = [
   { name: "Smoke Detector", configuration: "Disabled", status: "" },

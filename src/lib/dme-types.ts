@@ -212,6 +212,69 @@ export interface DmeMaintenanceLogEntry {
   state: "Normal" | "Pre-Alert" | "Alert";
 }
 
+/**
+ * One recorded fault for Monitor >> Fault History (manual §3.6.9.3).
+ * Runtime/session state: it is deliberately kept out of DmePmdtData so it
+ * never enters the persisted simulator configuration or the scenario
+ * configuration wire shape.
+ */
+export interface DmeFaultHistorySnapshot {
+  id: string;
+  monitor: 1 | 2;
+  path: "integral" | "standby";
+  timeTag: string;
+  /** Labels of the parameters that entered alarm in this fault. */
+  parameters: string[];
+  /** Last-good (pre-alarm) measurement rows for the path. */
+  preAlarmRows: DmeDualValueRow[];
+  /** Measurement rows captured at the fault. */
+  alarmRows: DmeDualValueRow[];
+  /** LCU / station routing state captured at the fault. */
+  lcu: {
+    votingLogic: string;
+    monitor1Enabled: boolean;
+    monitor2Enabled: boolean;
+    integral: DmeMonitorSidebarState;
+    standby: DmeMonitorSidebarState;
+    mainSelect: 1 | 2;
+    antennaSelect: 1 | 2;
+    transmitterOn: { tx1: boolean; tx2: boolean };
+  };
+}
+
+/** One row of the RMS >> Logs >> Command Activity screen (manual §3.6.7.3.4). */
+export interface DmeCommandActivityEntry {
+  id: string;
+  timeTag: string;
+  userName: string;
+  command: string;
+}
+
+export interface DmeTxOperationalAccumulator {
+  /** Seconds on the antenna path without a transmitter maintenance alert. */
+  normalSeconds: number;
+  /** Seconds while any monitor was bypassed (station-level, shown per TX). */
+  bypassSeconds: number;
+  /** Seconds the transmitter was off. */
+  offSeconds: number;
+  /** Seconds with an RTC communication fault. */
+  commFaultSeconds: number;
+  /** Seconds powered on the dummy load (hot standby). */
+  standbySeconds: number;
+}
+
+/**
+ * Operational Summary accumulators (manual §3.6.7.3.1). Runtime/session
+ * state advanced by the PMDT clock tick; kept out of DmePmdtData for the
+ * same persistence reason as DmeFaultHistorySnapshot.
+ */
+export interface DmeOperationalSummaryState {
+  startedAt: string | null;
+  elapsedSeconds: number;
+  tx1: DmeTxOperationalAccumulator;
+  tx2: DmeTxOperationalAccumulator;
+}
+
 export interface DmeAlarmLimitRow {
   parameter: string;
   alarmLow: number | null;
