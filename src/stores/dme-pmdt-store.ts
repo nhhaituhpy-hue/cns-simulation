@@ -21,9 +21,16 @@ import {
   getDme1119aScenarioProtectedFieldChanges,
   previewDme1119aScenario,
   validateDme1119aScenarioDefinition,
+  accumulateDmeOperationalSummary,
+  capDmeFaultHistory,
+  createEmptyDmeOperationalSummary,
+  deriveDmeRuntimeTransitions,
   getDmeParameterValue,
   isDme1119aScenarioStudentEditable,
+  prependDmeLogEntries,
   recomputeDmeDerivedData,
+  updateDmeLastGoodRows,
+  type DmeLastGoodRows,
   setDmeParameterValue,
   validateDmeParameterField,
   type DmeParameterValue,
@@ -32,12 +39,15 @@ import {
 } from "@/lib/dme1119a";
 import type {
   DmeAttemptEvent,
+  DmeCommandActivityEntry,
   DmeEditableValue,
   DmeExpectedCheckpoint,
   DmeFanControlMode,
+  DmeFaultHistorySnapshot,
   DmeFieldOverride,
   DmeIndicatorColor,
   DmeMonitorTriggerSource,
+  DmeOperationalSummaryState,
   DmeParameterStatus,
   DmePmdtData,
   DmePmdtMode,
@@ -131,6 +141,10 @@ export interface DmePmdtStoreState {
   needBackup: boolean;
   configurationBackup: DmePmdtData | null;
   parameterChangeLogs: SimulatorParameterChangeLogEntry[];
+  /** Runtime/session records (Stage 1 G01/G02/G10); never persisted as configuration. */
+  faultHistory: DmeFaultHistorySnapshot[];
+  commandActivityLogs: DmeCommandActivityEntry[];
+  operationalSummary: DmeOperationalSummaryState;
   savedConfiguration: DmePmdtData | null;
   specialTestRunning: boolean;
   diagnosticsRunning: boolean;
@@ -219,6 +233,7 @@ export interface DmePmdtStoreActions {
   executeRmsCommand: (commandId: string) => boolean;
   refreshLogs: () => boolean;
   resetLog: (kind: "alarms" | "maintenance") => boolean;
+  resetOperationalSummary: () => void;
   setSpecialTestRunning: (running: boolean) => boolean;
   runDiagnostics: (mode: "full" | "on-air") => boolean;
   cancelDiagnostics: () => void;
@@ -343,6 +358,9 @@ function initialState(): DmePmdtStoreState {
     needBackup: false,
     configurationBackup: structuredClone(data),
     parameterChangeLogs: [],
+    faultHistory: [],
+    commandActivityLogs: [],
+    operationalSummary: createEmptyDmeOperationalSummary(),
     specialTestRunning: false,
     diagnosticsRunning: false,
     diagnosticsMode: null,
@@ -692,7 +710,26 @@ export function createDmePmdtStore(
   const now = options.now ?? (() => new Date());
   const generateId = options.generateId ?? defaultId;
 
-  return create<DmePmdtStore>()((set, get) => {
+  // Runtime log engine tracking (Stage 1 G01/G02): the last-good row cache
+  // feeds Fault History pre-alarm columns; the flag prevents the log-append
+  // setState from re-entering the transition subscriber.
+  const lastGoodRows: DmeLastGoodRows = {};
+  let applyingRuntimeTransitions = false;
+
+  const store = create<DmePmdtStore>()((set, get) => {
+    let lastClockMs: number | null = null;
+
+    const appendCommandActivity = (command: string, userName?: string | null) => {
+      const state = get();
+      const entry: DmeCommandActivityEntry = {
+        id: generateId(),
+        timeTag: state.data.timestamp,
+        userName: userName?.trim() || state.authenticatedUserId || "Local User",
+        command,
+      };
+      set({ commandActivityLogs: prependDmeLogEntries(state.commandActivityLogs, [entry]) });
+    };
+
     const recordAction = (input: {
       actor?: ScenarioActionEvent["actor"];
       kind: ScenarioActionEvent["kind"];
@@ -705,6 +742,20 @@ export function createDmePmdtStore(
       before?: ScenarioEvidenceSnapshot;
       parameterChanges?: readonly ScenarioParameterChange[];
     }) => {
+      // The Command Activity log is the equipment's own record (manual
+      // §3.6.7.3.4) and is kept in every mode, unlike scenario evidence.
+      // Draft staging ("Stage …") is not a command; the Apply is logged
+      // separately and also feeds the Parameter Change log.
+      if (input.kind !== "view" && !input.label.startsWith("Stage ")) {
+        const inputUser = input.input && typeof input.input === "object" && !Array.isArray(input.input)
+          && typeof (input.input as Record<string, unknown>).userId === "string"
+          ? (input.input as Record<string, unknown>).userId as string
+          : null;
+        appendCommandActivity(
+          input.accepted ? input.label : `${input.label} (rejected)`,
+          input.actor === "system" ? "Op System" : inputUser,
+        );
+      }
       const state = get();
       if (state.mode !== "student" && input.actor !== "system") return;
       const draftOnly = input.accepted
@@ -1040,6 +1091,7 @@ export function createDmePmdtStore(
 
       logout: () => {
         const state = get();
+        if (state.authenticatedUserId !== null) appendCommandActivity("RMS Logoff");
         const data = setLogonLevel(state.data, 0);
         set({
           loginDialogOpen: true,
@@ -1203,13 +1255,26 @@ export function createDmePmdtStore(
 
       refreshClock: () => {
         const state = get();
+        const currentMs = now().getTime();
+        const deltaSeconds = lastClockMs === null
+          ? 0
+          : Math.min(Math.max((currentMs - lastClockMs) / 1000, 0), 3600);
+        lastClockMs = currentMs;
+        // Operational Summary (manual §3.6.7.3.1) accumulates from the same
+        // 1 s clock tick, using the state that held during the interval.
+        const operationalSummary = deltaSeconds > 0
+          ? accumulateDmeOperationalSummary(state.operationalSummary, state.data, deltaSeconds)
+          : state.operationalSummary;
         const timestamp = formatDmeTimestamp(now());
-        if (state.data.timestamp === timestamp && state.configDraft.timestamp === timestamp) return;
+        if (state.data.timestamp === timestamp && state.configDraft.timestamp === timestamp) {
+          if (operationalSummary !== state.operationalSummary) set({ operationalSummary });
+          return;
+        }
         const data = structuredClone(state.data);
         const configDraft = structuredClone(state.configDraft);
         data.timestamp = timestamp;
         configDraft.timestamp = timestamp;
-        set({ data, configDraft });
+        set({ data, configDraft, operationalSummary });
       },
 
       setParameterValue: (fieldId, value) => {
@@ -1339,6 +1404,20 @@ export function createDmePmdtStore(
           before,
           parameterChanges: dmeParameterChanges(state.data, data, appliedFields, "apply"),
         });
+        // Parameter Change log (manual §3.6.7.3.5): an Apply records the
+        // fields it actually changed, not just the later Config Backup.
+        const parameterChangeEntries = createParameterChangeLogEntries({
+          changedFields: appliedFields,
+          timeTag: data.timestamp,
+          userName: state.authenticatedUserId,
+          file: "RMS",
+          actionLabel: "Configuration Apply",
+        });
+        if (parameterChangeEntries.length > 0) {
+          set({
+            parameterChangeLogs: prependParameterChangeLogEntries(get().parameterChangeLogs, parameterChangeEntries),
+          });
+        }
         if (automaticTransfer.action) {
           recordAction({ actor: "system", kind: "system", controlId: "automatic-monitor-transfer", label: automaticTransfer.action === "transfer" && automaticTransfer.target ? `Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}` : "Automatic monitor shutdown", accepted: true, reason: "PMDT automatic protection response.", before });
         }
@@ -1687,6 +1766,11 @@ export function createDmePmdtStore(
         return true;
       },
 
+      resetOperationalSummary: () => {
+        lastClockMs = null;
+        set({ operationalSummary: createEmptyDmeOperationalSummary(), lastCommand: "Operational Summary Reset" });
+      },
+
       setSpecialTestRunning: (running) => {
         const state = get();
         if (state.securityLevel < 3 || state.loginDialogOpen || !state.data.local) return false;
@@ -1917,6 +2001,42 @@ export function createDmePmdtStore(
       reset: () => set(initialState()),
     };
   });
+
+  // Runtime log engine (Stage 1 G01/G02): every action that replaces
+  // `data` passes through here exactly once, so alarm/maintenance log
+  // entries and Fault History snapshots are derived from real transitions
+  // instead of being instrumented (or forgotten) per action.
+  store.subscribe((state, prevState) => {
+    if (applyingRuntimeTransitions || state.data === prevState.data) return;
+    updateDmeLastGoodRows(lastGoodRows, prevState.data);
+    const transitions = deriveDmeRuntimeTransitions(prevState.data, state.data, lastGoodRows);
+    updateDmeLastGoodRows(lastGoodRows, state.data);
+    if (transitions.alarmEntries.length === 0
+      && transitions.maintenanceEntries.length === 0
+      && transitions.snapshots.length === 0) return;
+    applyingRuntimeTransitions = true;
+    try {
+      store.setState({
+        data: {
+          ...state.data,
+          alarmLogs: prependDmeLogEntries(state.data.alarmLogs, transitions.alarmEntries),
+          maintenanceLogs: prependDmeLogEntries(state.data.maintenanceLogs, transitions.maintenanceEntries),
+        },
+        ...(transitions.snapshots.length > 0
+          ? {
+            faultHistory: capDmeFaultHistory([
+              ...transitions.snapshots.map((snapshot) => ({ ...snapshot, id: generateId() })),
+              ...state.faultHistory,
+            ]),
+          }
+          : {}),
+      });
+    } finally {
+      applyingRuntimeTransitions = false;
+    }
+  });
+
+  return store;
 }
 
 export const useDmePmdtStore = createDmePmdtStore();

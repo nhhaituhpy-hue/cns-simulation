@@ -76,6 +76,14 @@ describe("DME PMDT shell", () => {
   it("shows scenario-specific alarm text in RMS Logs", async () => {
     const user = userEvent.setup();
     login();
+    // Stage 1 G02: logs start empty, so seed one real entry for the
+    // override-driven rendering this test covers.
+    useDmePmdtStore.setState((state) => ({
+      data: {
+        ...state.data,
+        alarmLogs: [{ timeTag: "", type: "", alarm: "", state: "Normal" as const }],
+      },
+    }));
     useDmePmdtStore.getState().setOverride("alarmLogs.0.timeTag", "18/07/2026 09:10:11");
     useDmePmdtStore.getState().setOverride("alarmLogs.0.type", "Monitor 1 + 2");
     useDmePmdtStore.getState().setOverride("alarmLogs.0.alarm", "Custom DME alarm");

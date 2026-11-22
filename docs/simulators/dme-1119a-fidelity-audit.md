@@ -109,3 +109,9 @@ Each stage = one PR, merged when CI is green; QA on the real production site aft
 - **Q3 — Revision levels.** The sim shows RMS 3.1, Monitor 1/2 3.0.0.5, RTC 1/2 3.1, BCPS 1/2 1.6, LCU 1.1 (`dme-pmdt-defaults.ts:248`) with no traceable source. Do these match the station's RMS >> Status >> Revision Levels screen? (A photo of that screen settles it.)
 - **Q4 — Monitor Configuration >> General.** On the real PMDT, are the Primary/Secondary classifications for Integral and Standby set independently per monitor, or is it one shared classification table? (A photo of Monitors >> Configuration >> General settles it; decides G12.)
 - **Q5 — Diagnostics durations.** The manual gives no run durations for Full / On-Air diagnostics. The DVOR 1150A fix used trainer-model durations (60 s / 30 s) with a standing model note. Same approach here?
+
+## 6. Owner answers (22/11/2026)
+
+- **Q1: Keep "TST"** — the free-run default profile stays TST. G23 closed, no change.
+- **Sensitivity (re G08): "−87 dBm is the minimum, −94 is better"** — the configured −94 dBm default complies and exceeds the HDCV minimum. G08 closed, no change.
+- **"Fix the rest"** — all remaining gaps proceed per §4. Unanswered questions resolved by the audit's stated defaults: Q2 → Interrogator Nominal Power baseline −13.2 dBm (station photo); Q3 → revision levels unchanged; Q4 → decided at Stage 4 from any further station photo of Monitors >> Configuration >> General, else the current model stands with a note; Q5 → trainer-model durations 60 s / 30 s with a standing model note (the DVOR 1150A G21 pattern).

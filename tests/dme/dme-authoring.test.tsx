@@ -25,6 +25,14 @@ describe("DME scenario authoring", () => {
     const user = userEvent.setup();
     render(<DmeScenarioAuthor />);
     await loginAs(user);
+    // Stage 1 G02: logs start empty, so seed one real entry to edit
+    // (after mount, because the authoring session hydrates data on mount).
+    useDmePmdtStore.setState((state) => ({
+      data: {
+        ...state.data,
+        alarmLogs: [{ timeTag: "18/07/2026 09:10:11", type: "Monitor 1", alarm: "Integral Tx Power", state: "Primary Alarm Low" as const }],
+      },
+    }));
 
     expect(screen.getByRole("complementary", { name: "Bảng xây dựng kịch bản" })).toHaveClass(
       "pmdt-classic-inspector",
