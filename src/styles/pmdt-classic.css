@@ -6827,6 +6827,15 @@
   border-color: #000;
 }
 
+/* The Advanced dialog reuses the graph element but must stay in flow:
+   the absolute placement above belongs to the main screen only. */
+.pmdt-classic-window .pmdt-ground-graph--advanced {
+  position: static;
+  width: 100%;
+  height: 380px;
+  margin: 4px 0 0;
+}
+
 .pmdt-classic-window .pmdt-ground-graph svg {
   overflow: visible;
 }
