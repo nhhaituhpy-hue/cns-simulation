@@ -95,7 +95,7 @@ const alarmLimitParameters: readonly NumericLimitParameter[] = [
 // explicit preserves the screenshot defaults while still making the screens
 // respond to transmitter configuration changes.
 const referenceTransmitterSidebandVswr = (1.11 + 1.17 + 1.08 + 1.11) / 4;
-const groundCheckAzimuths = [0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5];
+export const groundCheckAzimuths = [0, 22.5, 45, 67.5, 90, 112.5, 135, 157.5, 180, 202.5, 225, 247.5, 270, 292.5, 315, 337.5];
 
 function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value));

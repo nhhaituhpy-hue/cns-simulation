@@ -1,5 +1,7 @@
 import { createDvorSecuritySession, type SecurityField, type SecurityUser } from "@/lib/dvor1150a/security";
 import { advanceDvorMonitorTests, initialDvorMonitorTests, projectDvorMonitorTests, MONITOR_TEST_STEP_SECONDS, type DvorMonitorTests } from "@/lib/dvor1150a/monitor-tests";
+import { advanceDvorGroundCheckRuns, cancelDvorGroundCheckRun, groundCheckTransmitterUnavailable, initialDvorGroundCheckRuns, startDvorGroundCheckRun, type DvorGroundCheckRuns } from "@/lib/dvor1150a/ground-check";
+import type { DvorMonitorId } from "@/lib/dvor1150a/config-types";
 import { appendDvorFault, initialDvorFaultHistory, sampleDvorFaultHistory, type DvorFaultHistory } from "@/lib/dvor1150a/fault-history";
 import { dvorConfigurationLoadBlock, parseDvorConfigurationFile } from "@/lib/dvor1150a/configuration-file";
 import { dvorSidebandAssembly, DVOR_SIDEBAND_TRIM_IDS, type DvorSidebandTrimId } from "@/lib/dvor1150a/sideband";
@@ -112,12 +114,44 @@ export interface VorReviewSessionContext {
 
 export type DvorScenarioStage = "pmdt" | "hardware" | "complete";
 export type DvorDiagnosticRun = "full" | "on-air";
+export type DvorDiagnosticRunStatus = "idle" | "running" | "completed" | "failed" | "canceled";
+
+/** Trainer model durations in simulated seconds; the manual states none. */
+export const DVOR_DIAGNOSTICS_DURATION_SECONDS: Record<DvorDiagnosticRun, number> = {
+  full: 60,
+  "on-air": 30,
+};
 
 export interface VorDiagnosticState {
   run: DvorDiagnosticRun | null;
   completed: boolean;
   subsystem: string | null;
   result: string | null;
+  status: DvorDiagnosticRunStatus;
+  elapsed: number;
+  duration: number;
+}
+
+export function initialVorDiagnosticState(): VorDiagnosticState {
+  return {
+    run: null,
+    completed: false,
+    subsystem: null,
+    result: null,
+    status: "idle",
+    elapsed: 0,
+    duration: 0,
+  };
+}
+
+function normalizeVorDiagnosticState(value: VorDiagnosticState): VorDiagnosticState {
+  return {
+    ...initialVorDiagnosticState(),
+    ...value,
+    status: value.status ?? (value.completed ? "completed" : "idle"),
+    elapsed: value.elapsed ?? 0,
+    duration: value.duration ?? 0,
+  };
 }
 
 export interface VorPmdtStoreState {
@@ -137,6 +171,7 @@ export interface VorPmdtStoreState {
   lastCommand: string | null;
   monitorElapsed: number;
   monitorTests: DvorMonitorTests;
+  groundChecks: DvorGroundCheckRuns;
   protectionState: DvorProtectionState;
   loginDialogOpen: boolean;
   authenticatedUserId: string | null;
@@ -201,6 +236,8 @@ export interface VorPmdtStoreActions {
   confirmScenarioSoftwareResolution: () => void;
   runDiagnostics: (run: DvorDiagnosticRun) => boolean;
   cancelDiagnostics: () => void;
+  runGroundCheck: (transmitterId: DvorTransmitterId, source: DvorMonitorId) => boolean;
+  cancelGroundCheck: (transmitterId: DvorTransmitterId) => void;
   restoreScenario: () => boolean;
   endScenario: () => boolean;
   setAboutDialogOpen: (open: boolean) => void;
@@ -321,6 +358,7 @@ function initialState(timestamp: string): VorPmdtStoreState {
     lastCommand: null,
     monitorElapsed: 0,
     monitorTests,
+    groundChecks: initialDvorGroundCheckRuns(),
     protectionState: initialDvorProtectionState(),
     lcu: initialDvorLcuState(),
     loginDialogOpen: true,
@@ -359,12 +397,7 @@ function initialState(timestamp: string): VorPmdtStoreState {
     scenarioHardwareInspected: [],
     scenarioHardwareReasoning: "",
     scenarioHardwareDispositionConfirmed: false,
-    diagnosticState: {
-      run: null,
-      completed: false,
-      subsystem: null,
-      result: null,
-    },
+    diagnosticState: initialVorDiagnosticState(),
   };
 }
 
@@ -612,12 +645,8 @@ export function createVorPmdtStore(
         scenarioHardwareInspected: [],
         scenarioHardwareReasoning: "",
         scenarioHardwareDispositionConfirmed: false,
-        diagnosticState: {
-          run: null,
-          completed: false,
-          subsystem: null,
-          result: null,
-        },
+        diagnosticState: initialVorDiagnosticState(),
+        groundChecks: initialDvorGroundCheckRuns(),
         lastCommand: message,
       });
       return true;
@@ -990,14 +1019,28 @@ export function createVorPmdtStore(
           });
           return false;
         }
+        if (state.diagnosticState.status === "running") {
+          recordAction({
+            kind: "control",
+            controlId: `diagnostics-run-${run}`,
+            label: `Run ${run} diagnostics`,
+            accepted: false,
+            reason: "Diagnostics are already in progress.",
+            before,
+          });
+          return false;
+        }
         set({
           diagnosticState: {
             run,
-            completed: true,
+            completed: false,
             subsystem: diagnosis.diagnosticSubsystem,
-            result: diagnosis.diagnosticResult,
+            result: null,
+            status: "running",
+            elapsed: 0,
+            duration: DVOR_DIAGNOSTICS_DURATION_SECONDS[run],
           },
-          lastCommand: `${run === "full" ? "Full" : "On-Air"} Diagnostics completed`,
+          lastCommand: `${run === "full" ? "Full" : "On-Air"} Diagnostics running`,
         });
         recordAction({
           kind: "control",
@@ -1013,14 +1056,89 @@ export function createVorPmdtStore(
       cancelDiagnostics: () => {
         const state = get();
         if (!state.diagnosticState.run) return;
+        if (state.diagnosticState.status === "running") {
+          set({
+            diagnosticState: {
+              ...state.diagnosticState,
+              completed: false,
+              result: null,
+              status: "canceled",
+            },
+            lastCommand: "Diagnostics canceled",
+          });
+          return;
+        }
         set({
-          diagnosticState: {
-            run: null,
-            completed: false,
-            subsystem: null,
-            result: null,
-          },
+          diagnosticState: initialVorDiagnosticState(),
           lastCommand: "Diagnostics canceled",
+        });
+      },
+
+      runGroundCheck: (transmitterId, source) => {
+        const state = get();
+        const before = vorEvidenceSnapshot(state);
+        const controlId = `ground-check-run-${transmitterId}`;
+        const label = `Run Ground Check ${transmitterId === "tx1" ? "Tx 1" : "Tx 2"}`;
+        if (state.groundChecks[transmitterId].status === "running") {
+          recordAction({
+            kind: "control",
+            controlId,
+            label,
+            accepted: false,
+            reason: "A ground check is already in progress for this transmitter.",
+            before,
+          });
+          return false;
+        }
+        if (groundCheckTransmitterUnavailable(state.config, transmitterId)) {
+          recordAction({
+            kind: "control",
+            controlId,
+            label,
+            accepted: false,
+            reason: "The transmitter is disabled or faulted off.",
+            before,
+          });
+          return false;
+        }
+        if (!state.monitorTests.responding[source]) {
+          recordAction({
+            kind: "control",
+            controlId,
+            label,
+            accepted: false,
+            reason: `${source === "mon1" ? "Monitor 1" : "Monitor 2"} is not responding.`,
+            before,
+          });
+          return false;
+        }
+        set({
+          groundChecks: {
+            ...state.groundChecks,
+            [transmitterId]: startDvorGroundCheckRun(state.groundChecks[transmitterId], source, now().toISOString()),
+          },
+          lastCommand: `Ground Check ${transmitterId === "tx1" ? "Tx 1" : "Tx 2"} running`,
+        });
+        recordAction({
+          kind: "control",
+          controlId,
+          label,
+          accepted: true,
+          input: { transmitterId, source },
+          before,
+        });
+        return true;
+      },
+
+      cancelGroundCheck: (transmitterId) => {
+        const state = get();
+        if (state.groundChecks[transmitterId].status !== "running") return;
+        set({
+          groundChecks: {
+            ...state.groundChecks,
+            [transmitterId]: cancelDvorGroundCheckRun(state.groundChecks[transmitterId]),
+          },
+          lastCommand: `Ground Check ${transmitterId === "tx1" ? "Tx 1" : "Tx 2"} canceled`,
         });
       },
 
@@ -1069,12 +1187,8 @@ export function createVorPmdtStore(
           scenarioHardwareInspected: [],
           scenarioHardwareReasoning: "",
           scenarioHardwareDispositionConfirmed: false,
-          diagnosticState: {
-            run: null,
-            completed: false,
-            subsystem: null,
-            result: null,
-          },
+          diagnosticState: initialVorDiagnosticState(),
+          groundChecks: initialDvorGroundCheckRuns(),
           lastCommand: "Scenario ended; Đài TEST/TST defaults restored",
         });
         return true;
@@ -1389,9 +1503,37 @@ export function createVorPmdtStore(
           draft.transmitters[id].onAir = next.config.transmitters[id].onAir;
           draft.transmitters[id].load = next.config.transmitters[id].load;
         }
+        let diagnosticState = state.diagnosticState;
+        if (diagnosticState.status === "running") {
+          const elapsed = diagnosticState.elapsed + seconds;
+          const guardsHold = state.securityLevel >= 3 && state.config.simulation.local;
+          if (!guardsHold) {
+            diagnosticState = {
+              ...diagnosticState,
+              status: "failed",
+              completed: false,
+              result: "Diagnostics aborted: Local mode or Security Level 3 access was lost during the run.",
+              elapsed,
+            };
+          } else if (elapsed >= diagnosticState.duration) {
+            const diagnosis = state.scenario.definition?.diagnosis;
+            diagnosticState = {
+              ...diagnosticState,
+              status: "completed",
+              completed: true,
+              result: diagnosis?.diagnosticResult ?? diagnosticState.result,
+              subsystem: diagnosis?.diagnosticSubsystem ?? diagnosticState.subsystem,
+              elapsed: diagnosticState.duration,
+            };
+          } else {
+            diagnosticState = { ...diagnosticState, elapsed };
+          }
+        }
         set({
           lcu,
           monitorTests: advanceDvorMonitorTests(state.monitorTests, state.config, seconds),
+          groundChecks: advanceDvorGroundCheckRuns(state.groundChecks, state.config, state.monitorTests.responding, seconds),
+          ...(diagnosticState !== state.diagnosticState ? { diagnosticState } : {}),
           faultHistory: sampleDvorFaultHistory(next.faults.reduce((history, fault) => appendDvorFault(history, fault.config, fault.snapshot,
             new Date(tickTime.getTime() - (seconds - fault.elapsed) * 1000).toISOString()), state.faultHistory), next.config, next.snapshot, tickTime.toISOString()),
           ...(next.config !== state.config ? {
@@ -1781,7 +1923,7 @@ export function createVorPmdtStore(
             configDirty: evidence.checkpoint.configDirty,
             needBackup: evidence.checkpoint.needBackup,
             scenarioStage: evidence.checkpoint.scenarioStage,
-            diagnosticState: structuredClone(evidence.checkpoint.diagnosticState),
+            diagnosticState: normalizeVorDiagnosticState(structuredClone(evidence.checkpoint.diagnosticState)),
             data: checkpointSnapshot.data,
             derived: checkpointSnapshot,
           } : {}),

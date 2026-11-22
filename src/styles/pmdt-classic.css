@@ -639,6 +639,24 @@
   line-height: 1.4;
 }
 
+.pmdt-diagnostics-run-status {
+  width: min(520px, 100%);
+  margin: 8px 0 0 15px;
+  line-height: 1.4;
+}
+
+.pmdt-diagnostics-model-note {
+  margin: 8px 0 0;
+  color: #404040;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.pmdt-diagnostics-power-up .pmdt-diagnostics-model-note {
+  width: min(520px, 100%);
+  margin-left: 15px;
+}
+
 .pmdt-diagnostics-power-table {
   width: 365px;
   margin: 67px 0 0 123px;
@@ -2580,6 +2598,20 @@
   opacity: 1;
 }
 
+.pmdt-ground-status {
+  width: 694px;
+  margin: 6px 0 0;
+  line-height: 1.4;
+}
+
+.pmdt-ground-note {
+  width: 694px;
+  margin: 8px 0 0;
+  color: #404040;
+  font-style: italic;
+  line-height: 1.4;
+}
+
 .pmdt-ground-check-top {
   display: grid;
   width: 694px;
@@ -2740,6 +2772,97 @@
 .pmdt-ground-source select {
   border-left: 1px solid #c5c5c5;
   background: #fff;
+}
+
+.pmdt-ground-trace--quadrantal {
+  stroke: #6c6;
+}
+
+.pmdt-ground-trace--octantal {
+  stroke: #66c;
+}
+
+.pmdt-ground-trace--bias {
+  stroke: #f0c;
+}
+
+.pmdt-ground-advanced-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 45%);
+}
+
+.pmdt-ground-advanced {
+  width: min(860px, 94vw);
+  max-height: 92vh;
+  overflow: auto;
+  padding: 12px 14px;
+  border: 1px solid #404040;
+  background: #f0f0f0;
+  color: #000;
+  font-size: 10px;
+  box-shadow: 4px 4px 12px rgb(0 0 0 / 40%);
+}
+
+.pmdt-ground-advanced-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 6px;
+}
+
+.pmdt-ground-advanced .pmdt-ground-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.pmdt-ground-graph--advanced {
+  width: 100%;
+  height: 380px;
+  margin: 4px 0 0;
+}
+
+.pmdt-ground-advanced-text {
+  max-height: 220px;
+  overflow: auto;
+  margin: 10px 0 0;
+  padding: 8px;
+  border: 1px solid #808080;
+  background: #fff;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 10px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.pmdt-ground-advanced-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.pmdt-ground-advanced-actions button {
+  height: 22px;
+  padding: 1px 12px;
+  border: 1px solid #fff;
+  background: #d4d0c8;
+  color: #000;
+  box-shadow: inset -1px -1px #808080, inset 1px 1px #fff;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  font-size: 10px;
+}
+
+.pmdt-ground-advanced-actions button:disabled {
+  color: #808080;
 }
 
 /* The existing screens already contain the data layout. These scoped color

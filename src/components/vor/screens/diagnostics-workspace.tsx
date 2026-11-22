@@ -22,6 +22,13 @@ function DiagnosticMark({ good }: { good: boolean }) {
   return <span className={`pmdt-diagnostics-mark ${good ? "pmdt-diagnostics-mark--good" : "pmdt-diagnostics-mark--fault"}`}>{good ? "G" : "R"}</span>;
 }
 
+const DIAGNOSTICS_MODEL_NOTE =
+  "Trainer model: these diagnostics simulate the equipment self-test. A model result is not a built-in test (BITE) result and does not replace the station's real test and safety procedures.";
+
+function DiagnosticsModelNote() {
+  return <p className="pmdt-diagnostics-model-note">{DIAGNOSTICS_MODEL_NOTE}</p>;
+}
+
 function PowerUpResults() {
   const timestamp = useVorPmdtStore((state) => state.data.timestamp);
   const healthy = useVorPmdtStore((state) => state.derived.voting.systemHealthy);
@@ -45,6 +52,16 @@ function PowerUpResults() {
           <strong>{diagnosticState.subsystem ?? "Diagnostics"}:</strong> {diagnosticState.result}
         </p>
       ) : null}
+      {diagnosticState.status === "running" ? (
+        <p className="pmdt-diagnostics-run-status" role="status">Diagnostics in process…</p>
+      ) : null}
+      {diagnosticState.status === "failed" ? (
+        <p className="pmdt-diagnostics-run-status" role="alert">{diagnosticState.result}</p>
+      ) : null}
+      {diagnosticState.status === "canceled" ? (
+        <p className="pmdt-diagnostics-run-status" role="status">Diagnostics canceled before completion.</p>
+      ) : null}
+      <DiagnosticsModelNote />
       <table className="pmdt-diagnostics-power-table">
         <thead>
           <tr>
@@ -89,6 +106,14 @@ function FaultIsolation() {
 
   const fullAllowed = securityLevel >= 3 && local && (!diagnosis || diagnosis.diagnosticRun === "full");
   const onAirAllowed = securityLevel >= 3 && local && (!diagnosis || diagnosis.diagnosticRun === "on-air");
+  const running = diagnosticState.status === "running";
+
+  function rowProgress(index: number): number {
+    if (diagnosticState.completed) return 1;
+    if (!running || diagnosticState.duration <= 0) return 0;
+    const share = (diagnosticState.elapsed / diagnosticState.duration) * faultIsolationRows.length - index;
+    return Math.max(0, Math.min(1, share));
+  }
 
   return (
     <div className="pmdt-diagnostics-fault-isolation">
@@ -97,13 +122,23 @@ function FaultIsolation() {
           <tr><th scope="col">Sub System</th><th scope="col">Progress</th><th scope="col">Results</th></tr>
         </thead>
         <tbody>
-          {faultIsolationRows.map((row) => (
-            <tr key={row}>
-              <th scope="row">{row}</th>
-              <td><span className={`pmdt-diagnostics-progress ${diagnosticState.completed ? "pmdt-diagnostics-progress--complete" : ""}`} /></td>
-              <td>{diagnosticState.completed ? <DiagnosticMark good={row !== faultRow} /> : null}</td>
-            </tr>
-          ))}
+          {faultIsolationRows.map((row, index) => {
+            const progress = rowProgress(index);
+            return (
+              <tr key={row}>
+                <th scope="row">{row}</th>
+                <td>
+                  <span
+                    className={`pmdt-diagnostics-progress ${diagnosticState.completed ? "pmdt-diagnostics-progress--complete" : ""}`}
+                    style={!diagnosticState.completed && progress > 0
+                      ? { background: `linear-gradient(90deg, #5bd55b ${Math.round(progress * 100)}%, #dedede ${Math.round(progress * 100)}%)` }
+                      : undefined}
+                  />
+                </td>
+                <td>{diagnosticState.completed ? <DiagnosticMark good={row !== faultRow} /> : null}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
       <div className="pmdt-diagnostics-fault-results">
@@ -111,18 +146,25 @@ function FaultIsolation() {
         <div className="pmdt-diagnostics-results-box" role="status">
           {diagnosticState.completed
             ? diagnosticState.result ?? "NO FAULT FOUND"
-            : "Run a diagnostic to populate the result."}
+            : diagnosticState.status === "running"
+              ? "Diagnostics in process…"
+              : diagnosticState.status === "canceled"
+                ? "Diagnostics canceled before completion."
+                : diagnosticState.status === "failed"
+                  ? diagnosticState.result ?? "Diagnostics failed."
+                  : "Run a diagnostic to populate the result."}
         </div>
       </div>
-      {diagnosis?.diagnosticRun === "full" ? (
+      {diagnosis?.diagnosticRun === "full" || diagnosticState.run === "full" ? (
         <p className="pmdt-diagnostics-notam-warning">
           Full Diagnostics changes the radiated signal. Issue a NOTAM before running this test.
         </p>
       ) : null}
+      <DiagnosticsModelNote />
       <div className="pmdt-diagnostics-fault-actions">
-        <button type="button" disabled={!fullAllowed} onClick={() => runDiagnostics("full")}>Run Full<br />Diagnostics</button>
+        <button type="button" disabled={!fullAllowed || running} onClick={() => runDiagnostics("full")}>Run Full<br />Diagnostics</button>
         <button type="button" disabled={!diagnosticState.run} onClick={cancelDiagnostics}>Cancel</button>
-        <button type="button" disabled={!onAirAllowed} onClick={() => runDiagnostics("on-air")}>Run On Air<br />Diagnostics</button>
+        <button type="button" disabled={!onAirAllowed || running} onClick={() => runDiagnostics("on-air")}>Run On Air<br />Diagnostics</button>
       </div>
     </div>
   );
