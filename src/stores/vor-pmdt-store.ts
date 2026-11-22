@@ -994,7 +994,56 @@ export function createVorPmdtStore(
         const state = get();
         const before = vorEvidenceSnapshot(state);
         const diagnosis = state.scenario.definition?.diagnosis;
-        if (!state.scenario.active || !diagnosis) return false;
+        if (state.scenario.active && !diagnosis) return false;
+        if (!state.scenario.active) {
+          // Free mode (no practice scenario): the station self-test runs on
+          // demand, under the same Local + Security Level 3 guards as the
+          // scenario contract. A healthy station completes NO FAULT FOUND.
+          if (state.securityLevel < 3 || !state.config.simulation.local) {
+            const reason = run === "full"
+              ? "Full diagnostics require Local mode and Security Level 3 or higher."
+              : "On-Air diagnostics require an authenticated maintenance account.";
+            set({
+              diagnosticState: {
+                run,
+                completed: false,
+                subsystem: null,
+                result: reason,
+                status: "failed",
+                elapsed: 0,
+                duration: DVOR_DIAGNOSTICS_DURATION_SECONDS[run],
+              },
+              lastCommand: reason,
+            });
+            return false;
+          }
+          if (state.diagnosticState.status === "running") {
+            set({ lastCommand: "Diagnostics are already in progress." });
+            return false;
+          }
+          set({
+            diagnosticState: {
+              run,
+              completed: false,
+              subsystem: null,
+              result: null,
+              status: "running",
+              elapsed: 0,
+              duration: DVOR_DIAGNOSTICS_DURATION_SECONDS[run],
+            },
+            lastCommand: `${run === "full" ? "Full" : "On-Air"} Diagnostics running`,
+          });
+          recordAction({
+            kind: "control",
+            controlId: `diagnostics-run-${run}`,
+            label: `Run ${run} diagnostics`,
+            accepted: true,
+            input: { run },
+            before,
+          });
+          return true;
+        }
+        if (!diagnosis) return false;
         if (diagnosis.diagnosticRun !== run) {
           recordAction({
             kind: "control",
@@ -1521,7 +1570,7 @@ export function createVorPmdtStore(
               ...diagnosticState,
               status: "completed",
               completed: true,
-              result: diagnosis?.diagnosticResult ?? diagnosticState.result,
+              result: diagnosis ? (diagnosis.diagnosticResult ?? diagnosticState.result) : "NO FAULT FOUND",
               subsystem: diagnosis?.diagnosticSubsystem ?? diagnosticState.subsystem,
               elapsed: diagnosticState.duration,
             };
