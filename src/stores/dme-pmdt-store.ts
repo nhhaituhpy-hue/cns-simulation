@@ -35,6 +35,7 @@ import {
   recomputeDmeDerivedData,
   updateDmeLastGoodRows,
   type DmeLastGoodRows,
+  type DmeLatchedAlarms,
   setDmeParameterValue,
   validateDmeParameterField,
   type DmeParameterValue,
@@ -799,6 +800,7 @@ export function createDmePmdtStore(
   // feeds Fault History pre-alarm columns; the flag prevents the log-append
   // setState from re-entering the transition subscriber.
   const lastGoodRows: DmeLastGoodRows = {};
+  const latchedAlarms: DmeLatchedAlarms = new Map();
   let applyingRuntimeTransitions = false;
 
   // Ident Shutdown on Loss latch (Stage 2 G17): remembers which transmitter
@@ -998,6 +1000,29 @@ export function createDmePmdtStore(
       return { partial, data, configDraft };
     };
 
+    /**
+     * Commit the alarmed (pre-transfer) state on its own before the caller
+     * commits the protection response, then carry the log entries the
+     * runtime-log subscription recorded for it into the caller's final
+     * objects.  Committing only the post-transfer state would mask the
+     * alarm entirely: after a shutdown the monitor rows read 0/"gray", so
+     * the log engine's diff sees no transition and the RMS alarm log, the
+     * maintenance log and the Fault History all stay empty (Stage 5 QA,
+     * 22/11/2026).  The subscription merges its entries into state.data
+     * synchronously during set(), so they can be read straight back.
+     */
+    const commitAlarmedStateBeforeTransfer = (
+      observed: DmePmdtData,
+      targets: DmePmdtData[],
+    ): void => {
+      set({ data: observed });
+      const recorded = get().data;
+      for (const target of targets) {
+        target.alarmLogs = recorded.alarmLogs;
+        target.maintenanceLogs = recorded.maintenanceLogs;
+      }
+    };
+
     const applyScenarioDefinition = (
       definitionInput: Dme1119aScenarioDefinition,
       mode?: DmePmdtMode,
@@ -1054,6 +1079,7 @@ export function createDmePmdtStore(
 
       initializeSession: (initialization) => {
         identLatchTx = null;
+        latchedAlarms.clear();
         const fresh = initialState();
         set({
           ...fresh,
@@ -1122,7 +1148,22 @@ export function createDmePmdtStore(
 
       applyScenario: () => {
         const state = get();
-        if (!state.scenarioAuthoringEnabled || state.securityLevel < 3 || state.loginDialogOpen || !state.data.local) {
+        // Local mode is deliberately NOT a precondition: the scenario
+        // definition carries its own start policy (startLocal) and applying
+        // it is what sets the station's Local/Remote state.  Gating Apply on
+        // the current Local state made a loaded preset silently do nothing
+        // in Remote mode (Stage 5 QA, 22/11/2026).  Every remaining refusal
+        // names its reason in lastCommand instead of returning in silence.
+        if (!state.scenarioAuthoringEnabled) {
+          set({ lastCommand: "Scenario Apply refused: scenario authoring is not enabled for this session." });
+          return false;
+        }
+        if (state.loginDialogOpen) {
+          set({ lastCommand: "Scenario Apply refused: complete PMDT logon first." });
+          return false;
+        }
+        if (state.securityLevel < 3) {
+          set({ lastCommand: "Scenario Apply refused: Security Level 3 or higher is required." });
           return false;
         }
         return applyScenarioDefinition(state.scenarioDraft);
@@ -1422,6 +1463,7 @@ export function createDmePmdtStore(
         // behavior outside a scenario, but must not immediately undo a
         // scenario's explicit TX selection because the injected fault is
         // still present on the standby path.
+        const observedData = data;
         const automaticTransfer = !enabled && !state.scenario.active ? applyAutomaticDmeTransfer(data) : null;
         data = automaticTransfer?.data ?? data;
         let configDraft = structuredClone(state.configDraft);
@@ -1433,6 +1475,7 @@ export function createDmePmdtStore(
         }
         configDraft = recomputeDmeDerivedData(configDraft);
         if (automaticTransfer?.action) configDraft = copyDmeTransmitterRoute(data, configDraft);
+        if (automaticTransfer?.action) commitAlarmedStateBeforeTransfer(observedData, [data, configDraft]);
         syncMaintenanceAlert(data);
         syncMaintenanceAlert(configDraft);
         set({
@@ -1601,6 +1644,11 @@ export function createDmePmdtStore(
         const automaticTransfer = applyAutomaticDmeTransfer(state.configDraft);
         const data = automaticTransfer.data;
         data.rmsStatus.logonLevel = state.securityLevel;
+        if (automaticTransfer.action) {
+          const observed = recomputeDmeDerivedData(state.configDraft);
+          observed.rmsStatus.logonLevel = state.securityLevel;
+          commitAlarmedStateBeforeTransfer(observed, [data]);
+        }
         set({
           data,
           configDraft: structuredClone(data),
@@ -1767,12 +1815,14 @@ export function createDmePmdtStore(
         let data = structuredClone(state.data);
         data.monitors[monitor].bypass = enabled;
         data = recomputeDmeDerivedData(data);
+        const observedData = data;
         const automaticTransfer = !enabled && !state.scenario.active ? applyAutomaticDmeTransfer(data) : null;
         data = automaticTransfer?.data ?? data;
         let configDraft = structuredClone(state.configDraft);
         configDraft.monitors[monitor].bypass = enabled;
         configDraft = recomputeDmeDerivedData(configDraft);
         if (automaticTransfer?.action) configDraft = copyDmeTransmitterRoute(data, configDraft);
+        if (automaticTransfer?.action) commitAlarmedStateBeforeTransfer(observedData, [data, configDraft]);
         set({
           data,
           configDraft,
@@ -2368,6 +2418,7 @@ export function createDmePmdtStore(
 
       reset: () => {
         identLatchTx = null;
+        latchedAlarms.clear();
         set(initialState());
       },
     };
@@ -2380,7 +2431,7 @@ export function createDmePmdtStore(
   store.subscribe((state, prevState) => {
     if (applyingRuntimeTransitions || state.data === prevState.data) return;
     updateDmeLastGoodRows(lastGoodRows, prevState.data);
-    const transitions = deriveDmeRuntimeTransitions(prevState.data, state.data, lastGoodRows);
+    const transitions = deriveDmeRuntimeTransitions(prevState.data, state.data, lastGoodRows, latchedAlarms);
     updateDmeLastGoodRows(lastGoodRows, state.data);
     if (transitions.alarmEntries.length === 0
       && transitions.maintenanceEntries.length === 0

@@ -24,6 +24,16 @@ export const DME_FAULT_HISTORY_PER_GROUP = 3;
 export type DmeMonitorPath = "integral" | "standby";
 export type DmeLastGoodRows = Partial<Record<`${DmeMonitorPath}:${1 | 2}`, DmeDualValueRow[]>>;
 
+/**
+ * Strongest measured severity per monitor row (`${path}:${monitor}:${label}`)
+ * whose alarm has not yet been closed by a live reading.  Held by the store
+ * across commits so an alarm that is masked by a gray (unavailable) row —
+ * classically the automatic shutdown that ends the alarm condition in the
+ * same commit — still gets its return-to-Normal entry once the row measures
+ * live and normal again.
+ */
+export type DmeLatchedAlarms = Map<string, 0 | 1 | 2>;
+
 type RowStatus = DmeIndicatorColor | DmeParameterStatus;
 
 /** 0 = normal, 1 = pre-alarm/warning, 2 = alarm. Colours and statuses share one scale. */
@@ -107,6 +117,7 @@ export function deriveDmeRuntimeTransitions(
   previous: DmePmdtData,
   next: DmePmdtData,
   lastGoodRows: DmeLastGoodRows,
+  latchedAlarms?: DmeLatchedAlarms,
 ): DmeRuntimeTransitions {
   const alarmEntries: DmeAlarmLogEntry[] = [];
   const maintenanceEntries: DmeMaintenanceLogEntry[] = [];
@@ -120,8 +131,27 @@ export function deriveDmeRuntimeTransitions(
       const newlyAlarmed: string[] = [];
       for (const row of rowsForPath(next, path)) {
         const previousRow = previousRows.get(row.label);
-        const before = previousRow ? dmeRowSeverity(statusOf(previousRow, monitor)) : 0;
+        const measuredBefore = previousRow ? dmeRowSeverity(statusOf(previousRow, monitor)) : 0;
+        const latchKey = `${path}:${monitor}:${row.label}`;
+        if (statusOf(row, monitor) === "gray") {
+          // A gray row is an unavailable measurement (the monitor is
+          // unavailable or the measured transmitter is off), not a reading:
+          // it neither raises a new state nor clears a latched one.
+          // Remember the strongest measured severity so a later live
+          // reading can still close the alarm; without this, a commit that
+          // ends in an automatic shutdown would log a spurious "Normal"
+          // for the very alarm that caused the shutdown.
+          if (latchedAlarms && measuredBefore > (latchedAlarms.get(latchKey) ?? 0)) {
+            latchedAlarms.set(latchKey, measuredBefore);
+          }
+          continue;
+        }
         const after = dmeRowSeverity(statusOf(row, monitor));
+        const before = Math.max(measuredBefore, latchedAlarms?.get(latchKey) ?? 0);
+        if (latchedAlarms) {
+          if (after === 0) latchedAlarms.delete(latchKey);
+          else latchedAlarms.set(latchKey, after);
+        }
         if (after === before) continue;
         const alarm = `${pathLabel} ${row.label}`;
         const type = `Monitor ${monitor}`;
