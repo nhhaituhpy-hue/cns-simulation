@@ -60,7 +60,7 @@ function GroundCheckGraph({ txNumber, mode, markers, legend }: { txNumber: 1 | 2
   const result = run.result;
   const series = result ? groundCheckGraphSeries(result, mode) : [];
   return (
-    <svg viewBox="0 0 540 320" preserveAspectRatio="none" aria-hidden="true">
+    <svg viewBox="-32 -4 578 360" preserveAspectRatio="none" aria-hidden="true">
       <g className="pmdt-ground-grid-lines">
         {[40, 80, 120, 160, 200, 240, 280].map((y) => <line key={`h-${y}`} x1="0" x2="540" y1={y} y2={y} />)}
         {[0, 67.5, 135, 202.5, 270, 337.5, 405, 472.5, 540].map((x) => <line key={`v-${x}`} x1={x} x2={x} y1="0" y2="285" />)}
