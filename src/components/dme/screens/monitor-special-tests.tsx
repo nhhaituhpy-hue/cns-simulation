@@ -2,7 +2,7 @@
 
 import type { DmeSpecialTestParameters } from "@/lib/dme-types";
 import { PmdtToolbar } from "../pmdt-toolbar";
-import { getDmeStationChannelAllocation } from "@/lib/dme1119a";
+import { formatDmeNumericDisplay, getDmeStationChannelAllocation } from "@/lib/dme1119a";
 import { DME_SPECIAL_TEST_DURATION_SECONDS, useDmePmdtStore } from "@/stores/dme-pmdt-store";
 
 function NumberField({
@@ -38,7 +38,7 @@ function NumberField({
         min={min}
         max={max}
         disabled={disabled}
-        value={Number.isFinite(value) ? value : ""}
+        value={Number.isFinite(value) ? formatDmeNumericDisplay(value, step !== undefined && step !== "any" && Number.isFinite(Number(step)) ? Number(step) : undefined) : ""}
         onChange={(event) => {
           const next = Number(event.target.value);
           if (Number.isFinite(next)) onChange(Math.min(max, Math.max(min, next)));

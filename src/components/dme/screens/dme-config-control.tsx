@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   canEditDmeScenarioField,
   dmeParameterFieldCatalog,
+  formatDmeNumericDisplay,
   getDmeParameterValue,
   parseDmeParameterInput,
   type DmeParameterFieldType,
@@ -19,9 +20,12 @@ interface DmeConfigControlProps {
   disabled?: boolean;
 }
 
-function formatValue(value: string | number | boolean | null, digits?: number): string {
+function formatValue(value: string | number | boolean | null, digits?: number, step?: number): string {
   if (value === null) return "";
   if (typeof value === "number" && digits !== undefined) return value.toFixed(digits);
+  // No fixed precision: still hide persisted float32 noise (0.32 stored as
+  // 0.3199999928474426) on the field's step grid.
+  if (typeof value === "number") return formatDmeNumericDisplay(value, step);
   return String(value);
 }
 
@@ -54,7 +58,7 @@ export function DmeConfigControl({
   const field = dmeParameterFieldCatalog.find((item) => item.id === fieldId);
   const value = getDmeParameterValue(configDraft, fieldId);
   const controlType = type ?? field?.type ?? "text";
-  const [draftValue, setDraftValue] = useState(formatValue(value, digits ?? field?.precision));
+  const [draftValue, setDraftValue] = useState(formatValue(value, digits ?? field?.precision, field?.step));
   const [isEditing, setIsEditing] = useState(false);
   const canEdit = !disabled
     && Boolean(field)
@@ -72,8 +76,8 @@ export function DmeConfigControl({
 
   useEffect(() => {
     // Keep the editable text buffer in sync with an external Apply/Restore.
-    if (!isEditing) setDraftValue(formatValue(value, digits ?? field?.precision));
-  }, [value, digits, field?.precision, isEditing]);
+    if (!isEditing) setDraftValue(formatValue(value, digits ?? field?.precision, field?.step));
+  }, [value, digits, field?.precision, field?.step, isEditing]);
 
   function update(rawValue: string | boolean) {
     setDraftValue(typeof rawValue === "boolean" ? String(rawValue) : rawValue);

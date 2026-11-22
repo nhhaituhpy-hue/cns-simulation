@@ -804,6 +804,24 @@ export function setDmeParameterValue(
   return recomputeDmeDerivedData(nextData);
 }
 
+/**
+ * Display-only cleanup for numeric PMDT fields. Values that round-tripped
+ * through persisted storage can carry binary32 quantization noise (0.32
+ * comes back as 0.3199999928474426). When a value sits within that noise
+ * of the grid implied by the field step, display the clean grid value;
+ * genuine off-grid values are shown untouched. Stored values are never
+ * modified — this only formats what an input shows.
+ */
+export function formatDmeNumericDisplay(value: number, step?: number): string {
+  if (!Number.isFinite(value)) return String(value);
+  const decimals = step !== undefined && Number.isFinite(step) && step > 0
+    ? Math.min(10, Math.max(0, Math.ceil(-Math.log10(step))))
+    : 6;
+  const rounded = Number(value.toFixed(decimals));
+  const tolerance = Math.max(1e-9, Math.abs(value) * 1e-6);
+  return String(Math.abs(value - rounded) <= tolerance ? rounded : value);
+}
+
 export function parseDmeParameterInput(
   field: DmeParameterFieldDefinition,
   rawValue: string | boolean,

@@ -544,9 +544,14 @@ function deriveDecoderResults(data: DmePmdtData, allocation: DmeChannelAllocatio
     monitorNumber: 1 | 2,
   ): DmeDecoderResultRow[] => rows.map((row, index): DmeDecoderResultRow => {
     const tx = transmitterForMonitorNumber(data, monitorNumber);
-    const sensitivity = data.txConfigNominal.rtcParameters.rxSensitivity
-      + transmitterOffset(data, "Rx Sensitivity Offset", tx)
-      - 0.1;
+    // The configured RTC sensitivity (nominal + Table 3-12 offset) is what
+    // the usable −94..−72 dBm range applies to; the derived reading sits a
+    // further 0.1 dB below it. Gating on the reading made the factory
+    // default (configured −94 dBm) report "In Process" forever, although
+    // the row's data lies inside its displayed ±3 dB limits.
+    const configuredSensitivity = data.txConfigNominal.rtcParameters.rxSensitivity
+      + transmitterOffset(data, "Rx Sensitivity Offset", tx);
+    const sensitivity = configuredSensitivity - 0.1;
     if (index === 0) {
       const referenceRow = defaultDmePmdtData.decoderResults.monitor1[0];
       const lowLimit = round(sensitivity - 3, 1);
@@ -557,7 +562,7 @@ function deriveDecoderResults(data: DmePmdtData, allocation: DmeChannelAllocatio
         lowLimit,
         data: round(sensitivity, 1),
         highLimit,
-        result: sensitivity >= -94 && sensitivity <= -72 && sensitivity >= lowLimit && sensitivity <= highLimit
+        result: configuredSensitivity >= -94 && configuredSensitivity <= -72 && sensitivity >= lowLimit && sensitivity <= highLimit
           ? "Updated"
           : "In Process",
         unit: referenceRow.unit,
