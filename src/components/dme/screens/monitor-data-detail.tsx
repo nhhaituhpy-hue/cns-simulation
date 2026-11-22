@@ -198,7 +198,11 @@ function MonitorStatus({ monitorNumber, timestamp }: { monitorNumber: 1 | 2; tim
   const statusKey = monitorNumber === 1 ? "mon1Status" : "mon2Status";
   const monitorRows = [...data.integralData, ...data.standbyData];
   const hasConfiguredStatus = (target: "alarm" | "warning", role: "primary" | "secondary") => {
-    const configured = new Set(data.monitorConfigGeneral.filter((item) => item[role]).map((item) => item.parameter));
+    // Classification is per monitor path (Stage 4 G12).
+    const field = monitorNumber === 1
+      ? (role === "primary" ? "integralPrimary" : "integralSecondary")
+      : (role === "primary" ? "standbyPrimary" : "standbySecondary");
+    const configured = new Set(data.monitorConfigGeneral.filter((item) => item[field]).map((item) => item.parameter));
     return monitorRows.some((row) => configured.has(row.label) && row[statusKey] === target);
   };
   const primaryAlarm = hasConfiguredStatus("alarm", "primary");

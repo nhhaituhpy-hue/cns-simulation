@@ -107,7 +107,8 @@ function monitorStateFor(
     if (severity === 2) {
       anyAlarm = true;
       const classification = data.monitorConfigGeneral.find((item) => item.parameter === row.label);
-      if (classification?.primary) primaryAlarm = true;
+      // Classification is per monitor path (Stage 4 G12).
+      if (classification && (monitor === 1 ? classification.integralPrimary : classification.standbyPrimary)) primaryAlarm = true;
     } else if (severity === 1) {
       anyWarning = true;
     }

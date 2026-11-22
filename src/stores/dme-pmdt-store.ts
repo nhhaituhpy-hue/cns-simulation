@@ -167,6 +167,11 @@ export interface DmePmdtStoreState {
   diagnosticsRunState: { mode: "full" | "on-air"; elapsedSeconds: number } | null;
   diagnosticsOutcome: { mode: "full" | "on-air"; result: string; faultedSubsystems: string[]; completedAt: string } | null;
   identShutdownLatched: boolean;
+  /** Stage 4 G19: epoch ms of the last flash write (Apply/Save/Load/Backup/Restore). */
+  flashWriteAtMs: number | null;
+  /** Stage 4 G20: PMDT Print Setup choices, honoured by the print actions via @page. */
+  printSetup: { paperSize: "A4" | "Letter"; orientation: "portrait" | "landscape" };
+  printSetupDialogOpen: boolean;
   loginDialogOpen: boolean;
   passwordDialogOpen: boolean;
   authenticatedUserId: string | null;
@@ -249,6 +254,9 @@ export interface DmePmdtStoreActions {
   setMonitorBypass: (monitor: "integral" | "standby", enabled: boolean) => boolean;
   setDelayMode: (transmitterId: DmeTransmitterId, mode: "automatic" | "fixed") => boolean;
   executeRmsCommand: (commandId: string) => boolean;
+  resetFacilityDetector: (kind: "intrusion" | "smoke") => boolean;
+  setPrintSetup: (setup: { paperSize: "A4" | "Letter"; orientation: "portrait" | "landscape" }) => void;
+  setPrintSetupDialogOpen: (open: boolean) => void;
   refreshLogs: () => boolean;
   resetLog: (kind: "alarms" | "maintenance") => boolean;
   resetOperationalSummary: () => void;
@@ -438,6 +446,9 @@ function initialState(): DmePmdtStoreState {
     diagnosticsRunState: null,
     diagnosticsOutcome: null,
     identShutdownLatched: false,
+    flashWriteAtMs: null,
+    printSetup: { paperSize: "A4", orientation: "portrait" },
+    printSetupDialogOpen: false,
     loginDialogOpen: true,
     passwordDialogOpen: false,
     authenticatedUserId: null,
@@ -1507,12 +1518,18 @@ export function createDmePmdtStore(
           return;
         }
         let nextDraft = setDmeParameterValue(state.configDraft, fieldId, value);
-        const monitorRoutingMatch = fieldId.match(/^monitorConfigGeneral\.(\d+)\.(primary|secondary)$/);
+        const monitorRoutingMatch = fieldId.match(/^monitorConfigGeneral\.(\d+)\.(integralPrimary|integralSecondary|standbyPrimary|standbySecondary)$/);
         if (monitorRoutingMatch && value === true) {
           const row = nextDraft.monitorConfigGeneral[Number(monitorRoutingMatch[1])];
           if (row) {
-            row.primary = monitorRoutingMatch[2] === "primary";
-            row.secondary = monitorRoutingMatch[2] === "secondary";
+            // Radio behaviour is per monitor path (Stage 4 G12): selecting
+            // Primary on one path clears only that path's Secondary.
+            const field = monitorRoutingMatch[2] as "integralPrimary" | "integralSecondary" | "standbyPrimary" | "standbySecondary";
+            if (field === "integralPrimary") row.integralSecondary = false;
+            else if (field === "integralSecondary") row.integralPrimary = false;
+            else if (field === "standbyPrimary") row.standbySecondary = false;
+            else row.standbyPrimary = false;
+            row[field] = true;
           }
         }
         if (fieldId === "rmsConfigStation.transmitterConfig") {
@@ -1588,6 +1605,7 @@ export function createDmePmdtStore(
           data,
           configDraft: structuredClone(data),
           configDirty: false,
+          flashWriteAtMs: now().getTime(),
           needBackup: state.scenario.active ? false : true,
           lastCommand: automaticTransfer.action === "transfer" && automaticTransfer.target
             ? `Configuration Apply: Automatic monitor transfer to ${automaticTransfer.target.toUpperCase()}`
@@ -1676,6 +1694,7 @@ export function createDmePmdtStore(
           configurationBackup: structuredClone(state.data),
           parameterChangeLogs: prependParameterChangeLogEntries(state.parameterChangeLogs, nextLogs),
           needBackup: false,
+          flashWriteAtMs: now().getTime(),
           lastCommand: "RMS Config Backup",
         });
         return true;
@@ -1685,7 +1704,7 @@ export function createDmePmdtStore(
         const state = get();
         if (state.scenario.active) return false;
         if (state.securityLevel < 1 || state.loginDialogOpen) return false;
-        set({ savedConfiguration: structuredClone(state.data), lastCommand: "System Configuration Save" });
+        set({ savedConfiguration: structuredClone(state.data), flashWriteAtMs: now().getTime(), lastCommand: "System Configuration Save" });
         return true;
       },
 
@@ -1694,7 +1713,7 @@ export function createDmePmdtStore(
         if (state.scenario.active) return false;
         if (state.securityLevel < 3 || state.loginDialogOpen || !state.data.local || !state.savedConfiguration) return false;
         const data = restoreConfigForSession(state.savedConfiguration, state);
-        set({ data, configDraft: structuredClone(data), configDirty: false, needBackup: true, lastCommand: "System Configuration Load" });
+        set({ data, configDraft: structuredClone(data), configDirty: false, needBackup: true, flashWriteAtMs: now().getTime(), lastCommand: "System Configuration Load" });
         return true;
       },
 
@@ -1704,7 +1723,7 @@ export function createDmePmdtStore(
         if (state.securityLevel < 3 || state.loginDialogOpen || !state.data.local) return false;
         const source = state.configurationBackup ?? cloneDefaultDmePmdtData();
         const data = restoreConfigForSession(source, state);
-        set({ data, configDraft: structuredClone(data), configDirty: false, needBackup: false, lastCommand: "RMS Config Restore" });
+        set({ data, configDraft: structuredClone(data), configDirty: false, needBackup: false, flashWriteAtMs: now().getTime(), lastCommand: "RMS Config Restore" });
         return true;
       },
 
@@ -1863,6 +1882,10 @@ export function createDmePmdtStore(
         if (spareOutputMatch) {
           const outputNumber = Number(spareOutputMatch[1]);
           const outputState = spareOutputMatch[2] === "high" ? "High" : "Low";
+          if (!state.data.digitalOutputs.some((row) => row.name === `Spare Output ${outputNumber}`)) {
+            recordAction({ kind: "control", controlId: commandId, label: commandId, accepted: false, reason: `Spare Output ${outputNumber} does not exist.`, before });
+            return false;
+          }
           return updateOperationalState((data) => {
             const output = data.digitalOutputs.find((row) => row.name === `Spare Output ${outputNumber}`);
             if (output) output.status = outputState;
@@ -1906,11 +1929,9 @@ export function createDmePmdtStore(
           return true;
         }
         if (commandId === "rms-command-reset-intrusion" || commandId === "rms-command-reset-smoke") {
-          const data = structuredClone(state.data);
-          data.alert = false;
-          set({ data, configDraft: structuredClone(data), lastCommand: commandId });
-          recordAction({ kind: "control", controlId: commandId, label: commandId, accepted: true, before });
-          return true;
+          // Stage 4 G22: route through the store action so the reset clears
+          // the source latch and the derived alert/logs follow.
+          return state.resetFacilityDetector(commandId === "rms-command-reset-intrusion" ? "intrusion" : "smoke");
         }
         if (commandId === "rms-command-reset-rms"
           || commandId === "rms-command-reset-rms-cpu"
@@ -1947,10 +1968,42 @@ export function createDmePmdtStore(
           recordAction({ kind: "control", controlId: commandId, label: commandId === "rms-command-reset-rms-cpu" ? "Reset RMS CPU" : commandId === "rms-command-reset-station-hardware" ? "Reset Station Hardware" : "Reset RMS Hardware", accepted: true, before });
           return true;
         }
-        set({ lastCommand: commandId });
-        recordAction({ kind: "control", controlId: commandId, label: commandId, accepted: true, before });
+        // Stage 4 G15: an unrecognised command id is rejected, never
+        // recorded as executed (Stage 1 logs it as "(rejected)").
+        recordAction({ kind: "control", controlId: commandId, label: commandId, accepted: false, reason: `Unknown RMS command: ${commandId}.`, before });
+        return false;
+      },
+
+      resetFacilityDetector: (kind) => {
+        const state = get();
+        const before = dmeEvidenceSnapshot(state);
+        const label = kind === "intrusion" ? "Reset Intrusion Detector" : "Reset Smoke Detector";
+        if (state.securityLevel < 2 || state.loginDialogOpen || !state.data.local) {
+          recordAction({ kind: "control", controlId: `rms-command-reset-${kind}`, label, accepted: false, reason: "Security level, login or Local requirement is not satisfied.", before });
+          return false;
+        }
+        // Clear the source latch on the live data and on the draft
+        // independently (the previous implementation overwrote data.alert
+        // directly and cloned data over the draft, discarding unrelated
+        // draft edits). The derived alert is then recomputed, so the
+        // sidebar, the digital inputs and the Stage 1 runtime-log
+        // transition (which diffs manualAlertOverride) all agree.
+        const clearLatch = (data: DmePmdtData) => {
+          data.manualAlertOverride = false;
+          return recomputeDmeDerivedData(data);
+        };
+        set({
+          data: clearLatch(structuredClone(state.data)),
+          configDraft: clearLatch(structuredClone(state.configDraft)),
+          lastCommand: label,
+        });
+        recordAction({ kind: "control", controlId: `rms-command-reset-${kind}`, label, accepted: true, before });
         return true;
       },
+
+      setPrintSetup: (setup) => set({ printSetup: { ...setup } }),
+
+      setPrintSetupDialogOpen: (open) => set({ printSetupDialogOpen: open }),
 
       refreshLogs: () => {
         const state = get();
@@ -2014,6 +2067,7 @@ export function createDmePmdtStore(
         const state = get();
         set({
           savedCalibrationSnapshot: structuredClone(state.data.monitorCalibrationSettings),
+          flashWriteAtMs: now().getTime(),
           lastCommand: "Monitor Calibration Save",
         });
       },
@@ -2029,6 +2083,7 @@ export function createDmePmdtStore(
           data: next,
           configDraft: structuredClone(next),
           configDirty: false,
+          flashWriteAtMs: now().getTime(),
           lastCommand: "Monitor Calibration Load",
         });
         return true;

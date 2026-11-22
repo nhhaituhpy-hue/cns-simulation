@@ -22,6 +22,7 @@ import { Dme1119aTrainingHud } from "./dme1119a-training-hud";
 import { Dme1119aHardwareStage } from "./dme1119a-hardware-stage";
 import { evaluateDme1119aScenario } from "@/lib/dme1119a";
 import { AboutPmdtDialog } from "./about-pmdt-dialog";
+import { PmdtPrintSetupDialog } from "./pmdt-print-setup-dialog";
 import { DmePmdtLoginDialog } from "./pmdt-login-dialog";
 import { DmePmdtPasswordDialog } from "./pmdt-password-dialog";
 import { DiagnosticsWorkspace } from "./screens/diagnostics-workspace";
@@ -166,8 +167,10 @@ export function PmdtLayout({
   const aboutDialogOpen = useDmePmdtStore((state) => state.aboutDialogOpen);
   const loginDialogOpen = useDmePmdtStore((state) => state.loginDialogOpen);
   const passwordDialogOpen = useDmePmdtStore((state) => state.passwordDialogOpen);
+  const printSetupDialogOpen = useDmePmdtStore((state) => state.printSetupDialogOpen);
+  const printSetup = useDmePmdtStore((state) => state.printSetup);
   const applyConfigChanges = useDmePmdtStore((state) => state.applyConfigChanges);
-  const restoreDefaultConfig = useDmePmdtStore((state) => state.restoreDefaultConfig);
+  const resetConfigDraft = useDmePmdtStore((state) => state.resetConfigDraft);
   const nextView = useDmePmdtStore((state) => state.nextView);
   const closeScreen = useDmePmdtStore((state) => state.closeScreen);
   const recordActivity = useDmePmdtStore((state) => state.recordActivity);
@@ -202,13 +205,15 @@ export function PmdtLayout({
         event.preventDefault();
         applyConfigChanges();
       } else if (event.key === "F8") {
+        // Manual §3.6.5.2: F8 Reset discards the configuration draft; it
+        // must never restore factory defaults (Stage 4 G07).
         event.preventDefault();
-        restoreDefaultConfig();
+        resetConfigDraft();
       }
     }
     document.addEventListener("keydown", handleFunctionKey);
     return () => document.removeEventListener("keydown", handleFunctionKey);
-  }, [applyConfigChanges, restoreDefaultConfig, nextView, closeScreen]);
+  }, [applyConfigChanges, resetConfigDraft, nextView, closeScreen]);
 
   useEffect(() => {
     const handleActivity = () => recordActivity();
@@ -312,6 +317,10 @@ export function PmdtLayout({
         {canAuthorScenario && scenarioParametersOpen ? <Dme1119aScenarioParametersPanel /> : null}
         {aboutDialogOpen ? <AboutPmdtDialog /> : null}
         {passwordDialogOpen ? <DmePmdtPasswordDialog /> : null}
+        {printSetupDialogOpen ? <PmdtPrintSetupDialog /> : null}
+        {/* Stage 4 G20: Print Setup drives the page size/orientation the
+            browser applies to the PMDT's Print actions. */}
+        <style>{`@page { size: ${printSetup.paperSize} ${printSetup.orientation}; }`}</style>
         {loginDialogOpen ? <DmePmdtLoginDialog /> : null}
         {mode === "preview" && !practiceRequested && simulatorId ? <SimulatorConfigPersistence simulatorId={simulatorId} /> : null}
         <DmeScenarioSessionPersistence />

@@ -117,6 +117,7 @@ export function DmeConfigPanel() {
   const scenario = useDmePmdtStore((state) => state.scenario);
   const setConfigPanelOpen = useDmePmdtStore((state) => state.setConfigPanelOpen);
   const restoreDefaultConfig = useDmePmdtStore((state) => state.restoreDefaultConfig);
+  const resetConfigDraft = useDmePmdtStore((state) => state.resetConfigDraft);
   const applyConfigChanges = useDmePmdtStore((state) => state.applyConfigChanges);
   const configDirty = useDmePmdtStore((state) => state.configDirty);
   const needBackup = useDmePmdtStore((state) => state.needBackup);
@@ -190,7 +191,7 @@ export function DmeConfigPanel() {
       </div>
       <footer className="pmdt-config-panel-footer">
         <button type="button" disabled={securityLevel < 3 || loginDialogOpen || !local} onClick={restoreDefaultConfig}>Reset defaults</button>
-        <button type="button" disabled={securityLevel < 3 || loginDialogOpen || !local} onClick={restoreDefaultConfig}>Reset (F8)</button>
+        <button type="button" disabled={securityLevel < 3 || loginDialogOpen || !local} onClick={resetConfigDraft}>Reset (F8)</button>
         <button type="button" disabled={!canApply} onClick={applyConfigChanges}>Apply (F7)</button>
         <span>{configDirty ? "Apply (F7) to commit" : "Channel drives RX, TX, INT, RX LO and delay"}</span>
       </footer>

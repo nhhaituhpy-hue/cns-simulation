@@ -2,7 +2,7 @@
 
 import { CaretRight } from "@phosphor-icons/react/dist/csr/CaretRight";
 import { useEffect, useRef, useState } from "react";
-import { disabledMenuTooltip, dmeMenuStructure } from "@/lib/dme-menu-structure";
+import { buildDmeMenuStructure, disabledMenuTooltip } from "@/lib/dme-menu-structure";
 import type { DmeMenuGroup, DmeMenuItem } from "@/lib/dme-types";
 import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
 
@@ -19,6 +19,7 @@ function MenuItemRow({ group, item, closeMenu }: MenuItemRowProps) {
   const setScenarioParametersOpen = useDmePmdtStore((state) => state.setScenarioParametersOpen);
   const setAboutDialogOpen = useDmePmdtStore((state) => state.setAboutDialogOpen);
   const setPasswordDialogOpen = useDmePmdtStore((state) => state.setPasswordDialogOpen);
+  const setPrintSetupDialogOpen = useDmePmdtStore((state) => state.setPrintSetupDialogOpen);
   const openLogin = useDmePmdtStore((state) => state.openLogin);
   const logout = useDmePmdtStore((state) => state.logout);
   const backupConfig = useDmePmdtStore((state) => state.backupConfig);
@@ -66,7 +67,7 @@ function MenuItemRow({ group, item, closeMenu }: MenuItemRowProps) {
   );
 
   const disabledReason = !item.enabled
-    ? disabledMenuTooltip
+    ? (item.disabledReason ?? disabledMenuTooltip)
       : scenarioActive && (item.action === "config-save" || item.action === "config-load" || item.action === "config-backup" || item.action === "config-restore")
       ? "Persistent configuration actions are disabled while a Scenario is active"
       : loginDialogOpen
@@ -120,6 +121,18 @@ function MenuItemRow({ group, item, closeMenu }: MenuItemRowProps) {
     }
     if (item.action === "open-password-dialog") {
       setPasswordDialogOpen(true);
+      closeMenu();
+      return;
+    }
+    if (item.action === "open-print-setup") {
+      setPrintSetupDialogOpen(true);
+      closeMenu();
+      return;
+    }
+    if (item.action === "exit-pmdt") {
+      // Stage 4 G20: Exit leaves the PMDT for the device home view, the
+      // same target as the simulator toolbar's back button.
+      if (typeof window !== "undefined") window.location.assign("/");
       closeMenu();
       return;
     }
@@ -224,6 +237,9 @@ function MenuItemRow({ group, item, closeMenu }: MenuItemRowProps) {
 export function PmdtMenuBar() {
   const [openGroupId, setOpenGroupId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  // Stage 4 G16: checkmarks are computed from the live station state.
+  const data = useDmePmdtStore((state) => state.data);
+  const menuStructure = buildDmeMenuStructure(data);
 
   useEffect(() => {
     function closeOnOutsidePointer(event: MouseEvent) {
@@ -247,7 +263,7 @@ export function PmdtMenuBar() {
   return (
     <div ref={containerRef} className="pmdt-menubar">
       <nav aria-label="Menu PMDT" className="flex items-stretch">
-        {dmeMenuStructure.map((group) => {
+        {menuStructure.map((group) => {
           const open = openGroupId === group.id;
           return (
             <div

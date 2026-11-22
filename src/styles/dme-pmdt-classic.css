@@ -247,6 +247,38 @@
   transform: none;
 }
 
+/* Stage 4 G18: text wordmark replacing the borrowed DVOR 1150A logo image. */
+.dme-pmdt-home-screen .pmdt-selex-logo-text {
+  position: absolute;
+  top: 230px;
+  left: 156px;
+  width: 313px;
+  font-family: Tahoma, "MS Sans Serif", Arial, sans-serif;
+  color: #1d3f5e;
+}
+
+.pmdt-selex-logo-text-brand {
+  display: block;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.pmdt-selex-logo-text-model {
+  display: block;
+  margin-top: 10px;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.pmdt-selex-logo-text-sub {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #444;
+}
+
 .dme-pmdt-window .pmdt-statusbar {
   padding-inline: 1px;
 }

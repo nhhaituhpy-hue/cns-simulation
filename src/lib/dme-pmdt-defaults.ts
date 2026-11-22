@@ -348,17 +348,21 @@ export const defaultDmePmdtData: DmePmdtData = {
     stationDescription: "TST",
   },
   securityAccounts: defaultDmeSecurityAccounts,
+  // Per-path classification per the station's Monitors >> Configuration >>
+  // General screen (Stage 4 G12): the Integral and Standby monitors carry
+  // the same selections except ERP, whose standby pair is unselected at
+  // the station (the standby path does not classify ERP).
   monitorConfigGeneral: [
-    { parameter: "Delay", primary: true, secondary: false },
-    { parameter: "Spacing", primary: true, secondary: false },
-    { parameter: "Tx Power", primary: true, secondary: false },
-    { parameter: "ERP", primary: true, secondary: false },
-    { parameter: "Efficiency", primary: true, secondary: false },
-    { parameter: "PRF", primary: true, secondary: false },
-    { parameter: "Ident Status", primary: true, secondary: false },
-    { parameter: "Ident Code", primary: true, secondary: false },
-    { parameter: "Tx Frequency Error", primary: false, secondary: true },
-    { parameter: "Rx Frequency Error", primary: false, secondary: true },
+    { parameter: "Delay", integralPrimary: true, integralSecondary: false, standbyPrimary: true, standbySecondary: false },
+    { parameter: "Spacing", integralPrimary: true, integralSecondary: false, standbyPrimary: true, standbySecondary: false },
+    { parameter: "Tx Power", integralPrimary: true, integralSecondary: false, standbyPrimary: true, standbySecondary: false },
+    { parameter: "ERP", integralPrimary: true, integralSecondary: false, standbyPrimary: false, standbySecondary: false },
+    { parameter: "Efficiency", integralPrimary: true, integralSecondary: false, standbyPrimary: true, standbySecondary: false },
+    { parameter: "PRF", integralPrimary: true, integralSecondary: false, standbyPrimary: true, standbySecondary: false },
+    { parameter: "Ident Status", integralPrimary: true, integralSecondary: false, standbyPrimary: true, standbySecondary: false },
+    { parameter: "Ident Code", integralPrimary: true, integralSecondary: false, standbyPrimary: true, standbySecondary: false },
+    { parameter: "Tx Frequency Error", integralPrimary: false, integralSecondary: true, standbyPrimary: false, standbySecondary: true },
+    { parameter: "Rx Frequency Error", integralPrimary: false, integralSecondary: true, standbyPrimary: false, standbySecondary: true },
   ],
   monitorCalibrationData: {
     monitor1: [

@@ -72,7 +72,10 @@ function alarmStateFor(
   const isLow = limit !== undefined && Number.isFinite(numeric) && numeric < limit.nominal;
   // The log's state vocabulary only carries a named Primary state for the
   // low side; every other alarm is recorded with the generic "Alarm" state.
-  if (classification?.primary && isLow) return "Primary Alarm Low";
+  // Classification is per monitor path (Stage 4 G12): Monitor 1 is the
+  // integral monitor, Monitor 2 the standby monitor.
+  const primaryClassified = monitor === 1 ? classification?.integralPrimary : classification?.standbyPrimary;
+  if (primaryClassified && isLow) return "Primary Alarm Low";
   return "Alarm";
 }
 
@@ -178,6 +181,13 @@ export function deriveDmeRuntimeTransitions(
     if (previous.bcpsCommFaults[bcps] !== next.bcpsCommFaults[bcps]) {
       maintenance("RMS Data", `BCPS ${bcps === "bcps1" ? "1" : "2"} Comm Fault`, next.bcpsCommFaults[bcps]);
     }
+  }
+  // Facility detectors (Stage 4 G22): the manual alert latch is the source
+  // flag behind the Smoke/Intrusion digital inputs, so a detector trip or
+  // a Reset Intrusion/Smoke (which clears the latch through the store) is
+  // recorded here as a maintenance transition.
+  if (previous.manualAlertOverride !== next.manualAlertOverride) {
+    maintenance("General", "Smoke/Intrusion Detector", next.manualAlertOverride);
   }
   // Automatic protection transfer / shutdown: the antenna relay moved (or
   // both transmitters dropped) while a monitor alarm was present.
