@@ -1,5 +1,7 @@
+export * from "./calibration";
 export * from "./channel-allocation";
 export * from "./config";
+export * from "./diagnostics";
 export * from "./derived-data";
 export * from "./measurement-snapshots";
 export * from "./runtime-logs";

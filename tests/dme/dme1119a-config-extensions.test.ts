@@ -7,7 +7,7 @@ import { legacyDme1119aConfig, preserveMissingDme1119aExtensions } from "@/lib/s
 import { getDefaultDme1119aConfig as legacyDefault, parseDme1119aConfig as legacyParse } from "../fixtures/dme-config-fa138e9/parser";
 
 const groups = ["rmsVoltageData", "rmsCurrentData", "rmsTemperatureData", "rmsAdData"] as const;
-const extensions = ["monitorOffsets", ...groups] as const;
+const extensions = ["monitorOffsets", ...groups, "monitorCalibrationSettings"] as const;
 const monitors = ["monitor1", "monitor2"] as const;
 const columns = ["integral", "standby"] as const;
 // Explicit contract, not a catalog-derived oracle: N/A and row identity must not drift.
@@ -25,7 +25,7 @@ const rows = [
 ];
 
 describe("DME 1119A optional configuration extensions", () => {
-  it("keeps the exact frozen legacy shape and adds only five optional keys without changing schema", () => {
+  it("keeps the exact frozen legacy shape and adds only six optional keys without changing schema", () => {
     const defaults = getDefaultDme1119aConfig();
     expect(legacyParse(legacyDefault())).toEqual(legacyDefault());
     expect(legacyParse(defaults)).toBeNull();

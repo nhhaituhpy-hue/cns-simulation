@@ -23,8 +23,12 @@ import {
   validateDme1119aScenarioDefinition,
   accumulateDmeOperationalSummary,
   capDmeFaultHistory,
+  computeDmeSelfCalibratedParameters,
   createEmptyDmeOperationalSummary,
+  deriveDmeDiagnosticOutcome,
   deriveDmeRuntimeTransitions,
+  DME_DIAGNOSTIC_DURATIONS_SECONDS,
+  DME_SELF_CALIBRATION_DURATION_SECONDS,
   getDmeParameterValue,
   isDme1119aScenarioStudentEditable,
   prependDmeLogEntries,
@@ -46,6 +50,8 @@ import type {
   DmeFaultHistorySnapshot,
   DmeFieldOverride,
   DmeIndicatorColor,
+  DmeMeasuredDecoderResults,
+  DmeMonitorCalibrationSettings,
   DmeMonitorTriggerSource,
   DmeOperationalSummaryState,
   DmeParameterStatus,
@@ -54,6 +60,7 @@ import type {
   DmeSecurityAccount,
   DmeSecurityLevel,
   DmeScreenId,
+  DmeSpecialTestParameters,
   DmeStudentAnswer,
   DmeTransmitterId,
   DmeTransmitterMode,
@@ -149,6 +156,17 @@ export interface DmePmdtStoreState {
   specialTestRunning: boolean;
   diagnosticsRunning: boolean;
   diagnosticsMode: "full" | "on-air" | null;
+  /** Stage 2 maintenance lifecycles (G03/G04/G05); session-only state. */
+  selfCalibrationRuns: Record<"monitor1" | "monitor2", { running: boolean; elapsedSeconds: number }>;
+  lastSelfCalibrationAt: Record<"monitor1" | "monitor2", string | null>;
+  savedCalibrationSnapshot: { monitor1: DmeMonitorCalibrationSettings; monitor2: DmeMonitorCalibrationSettings } | null;
+  specialTestParameters: { monitor1: DmeSpecialTestParameters; monitor2: DmeSpecialTestParameters };
+  specialTestSelection: "monitor1" | "monitor2" | "both";
+  specialTestRun: { targets: readonly (1 | 2)[]; elapsedSeconds: number } | null;
+  measuredDecoderResults: { monitor1: DmeMeasuredDecoderResults; monitor2: DmeMeasuredDecoderResults };
+  diagnosticsRunState: { mode: "full" | "on-air"; elapsedSeconds: number } | null;
+  diagnosticsOutcome: { mode: "full" | "on-air"; result: string; faultedSubsystems: string[]; completedAt: string } | null;
+  identShutdownLatched: boolean;
   loginDialogOpen: boolean;
   passwordDialogOpen: boolean;
   authenticatedUserId: string | null;
@@ -235,6 +253,15 @@ export interface DmePmdtStoreActions {
   resetLog: (kind: "alarms" | "maintenance") => boolean;
   resetOperationalSummary: () => void;
   setSpecialTestRunning: (running: boolean) => boolean;
+  startSelfCalibration: (monitor: 1 | 2) => boolean;
+  stopSelfCalibration: (monitor: 1 | 2) => void;
+  saveCalibrationSnapshot: () => void;
+  loadCalibrationSnapshot: () => boolean;
+  setSpecialTestSelection: (selection: "monitor1" | "monitor2" | "both") => void;
+  setSpecialTestParameter: (monitor: 1 | 2, key: keyof DmeSpecialTestParameters, value: number | boolean | string | null) => void;
+  resetSpecialTestParameters: () => void;
+  startSpecialTests: () => boolean;
+  stopSpecialTests: () => void;
   runDiagnostics: (mode: "full" | "on-air") => boolean;
   cancelDiagnostics: () => void;
   nextView: () => void;
@@ -342,6 +369,37 @@ function resolveMonitorTriggerCommand(commandId: string): {
   return null;
 }
 
+/** Special Tests run duration on the simulated clock (manual §3.6.8.3:
+ * decoder tests complete in under a minute instead of the 10+ minute
+ * certification cycle). */
+export const DME_SPECIAL_TEST_DURATION_SECONDS = 20;
+
+export function createDefaultDmeSpecialTestParameters(): DmeSpecialTestParameters {
+  return {
+    delayLevelDbm: -50.0,
+    efficiencyLevelDbm: -88.0,
+    prfTestEnabled: false,
+    prfPpps: 5400,
+    echoMode: null,
+    echoDelayUs: 0,
+    echoLevelDb: 0,
+    repeatEcho: false,
+    recoveryPulseEnabled: false,
+    recoveryPulseLevelDb: 0,
+    cwModeEnabled: false,
+    sensitivityTestEnabled: false,
+    cwFloorDb: -10.0,
+    decoderTestsEnabled: false,
+  };
+}
+
+function baselineMeasuredDecoderResults(data: DmePmdtData): DmePmdtStoreState["measuredDecoderResults"] {
+  return {
+    monitor1: { rows: structuredClone(data.decoderResults.monitor1), measuredAt: data.timestamp },
+    monitor2: { rows: structuredClone(data.decoderResults.monitor2), measuredAt: data.timestamp },
+  };
+}
+
 function initialState(): DmePmdtStoreState {
   const data = cloneDefaultDmePmdtData();
   data.rmsStatus.logonLevel = 0;
@@ -364,6 +422,22 @@ function initialState(): DmePmdtStoreState {
     specialTestRunning: false,
     diagnosticsRunning: false,
     diagnosticsMode: null,
+    selfCalibrationRuns: {
+      monitor1: { running: false, elapsedSeconds: 0 },
+      monitor2: { running: false, elapsedSeconds: 0 },
+    },
+    lastSelfCalibrationAt: { monitor1: null, monitor2: null },
+    savedCalibrationSnapshot: null,
+    specialTestParameters: {
+      monitor1: createDefaultDmeSpecialTestParameters(),
+      monitor2: createDefaultDmeSpecialTestParameters(),
+    },
+    specialTestSelection: "monitor1",
+    specialTestRun: null,
+    measuredDecoderResults: baselineMeasuredDecoderResults(data),
+    diagnosticsRunState: null,
+    diagnosticsOutcome: null,
+    identShutdownLatched: false,
     loginDialogOpen: true,
     passwordDialogOpen: false,
     authenticatedUserId: null,
@@ -716,6 +790,12 @@ export function createDmePmdtStore(
   const lastGoodRows: DmeLastGoodRows = {};
   let applyingRuntimeTransitions = false;
 
+  // Ident Shutdown on Loss latch (Stage 2 G17): remembers which transmitter
+  // the protection took off air so Restart when Signal Resumes can restore
+  // exactly that transmitter when the keyed signal returns.
+  let identLatchTx: DmeTransmitterId | null = null;
+  let applyingIdentLatch = false;
+
   const store = create<DmePmdtStore>()((set, get) => {
     let lastClockMs: number | null = null;
 
@@ -808,6 +888,105 @@ export function createDmePmdtStore(
       return [...state.attemptEvents, event];
     };
 
+    /**
+     * Stage 2 lifecycles (G03/G04/G05) advance on the same 1 s simulated
+     * clock as the Operational Summary. Returns the partial state to merge
+     * into the refreshClock set(), plus replaced data/configDraft when a
+     * self-calibration run completes into the applied configuration.
+     */
+    const advanceStage2Lifecycles = (
+      state: DmePmdtStoreState,
+      deltaSeconds: number,
+      timestamp: string,
+    ): {
+      partial: Partial<DmePmdtStoreState>;
+      data?: DmePmdtData;
+      configDraft?: DmePmdtData;
+    } | null => {
+      if (deltaSeconds <= 0) return null;
+      const partial: Partial<DmePmdtStoreState> = {};
+      let data: DmePmdtData | undefined;
+      let configDraft: DmePmdtData | undefined;
+
+      // G03: self-calibration runs complete into the applied settings.
+      const runs = { ...state.selfCalibrationRuns };
+      const lastCal = { ...state.lastSelfCalibrationAt };
+      let runsChanged = false;
+      (["monitor1", "monitor2"] as const).forEach((key) => {
+        const run = runs[key];
+        if (!run.running) return;
+        runsChanged = true;
+        const elapsed = run.elapsedSeconds + deltaSeconds;
+        if (elapsed < DME_SELF_CALIBRATION_DURATION_SECONDS) {
+          runs[key] = { running: true, elapsedSeconds: elapsed };
+          return;
+        }
+        data ??= structuredClone(state.data);
+        configDraft ??= structuredClone(state.configDraft);
+        const computed = computeDmeSelfCalibratedParameters(data.monitorCalibrationSettings[key]);
+        data.monitorCalibrationSettings[key].selfCalibrated = computed;
+        configDraft.monitorCalibrationSettings[key].selfCalibrated = structuredClone(computed);
+        lastCal[key] = timestamp;
+        runs[key] = { running: false, elapsedSeconds: 0 };
+      });
+      if (runsChanged) {
+        partial.selfCalibrationRuns = runs;
+        partial.lastSelfCalibrationAt = lastCal;
+      }
+
+      // G04: a completed Special Test run refreshes the measured Decoder
+      // Results snapshot for the tested monitor(s) from the live derivation.
+      if (state.specialTestRun) {
+        const elapsed = state.specialTestRun.elapsedSeconds + deltaSeconds;
+        if (elapsed >= DME_SPECIAL_TEST_DURATION_SECONDS) {
+          const measured = { ...state.measuredDecoderResults };
+          const source = data ?? state.data;
+          for (const target of state.specialTestRun.targets) {
+            const key = target === 1 ? "monitor1" : "monitor2";
+            measured[key] = { rows: structuredClone(source.decoderResults[key]), measuredAt: timestamp };
+          }
+          partial.measuredDecoderResults = measured;
+          partial.specialTestRun = null;
+          partial.specialTestRunning = false;
+          partial.lastCommand = "Monitor Special Tests Complete";
+        } else {
+          partial.specialTestRun = { ...state.specialTestRun, elapsedSeconds: elapsed };
+        }
+      }
+
+      // G05: free-run diagnostics. A Full run aborts if Local mode or the
+      // level-3 requirement is lost mid-run (manual §3.6.11).
+      if (state.diagnosticsRunState) {
+        const run = state.diagnosticsRunState;
+        if (run.mode === "full" && (!state.data.local || state.securityLevel < 3)) {
+          partial.diagnosticsRunState = null;
+          partial.diagnosticsRunning = false;
+          partial.diagnosticsMode = null;
+          partial.lastCommand = "Full Diagnostics Aborted";
+        } else {
+          const elapsed = run.elapsedSeconds + deltaSeconds;
+          if (elapsed >= DME_DIAGNOSTIC_DURATIONS_SECONDS[run.mode]) {
+            const outcome = deriveDmeDiagnosticOutcome(data ?? state.data);
+            partial.diagnosticsOutcome = {
+              mode: run.mode,
+              result: outcome.result,
+              faultedSubsystems: outcome.faultedSubsystems,
+              completedAt: timestamp,
+            };
+            partial.diagnosticsRunState = null;
+            partial.diagnosticsRunning = false;
+            partial.diagnosticsMode = null;
+            partial.lastCommand = run.mode === "full" ? "Full Diagnostics Complete" : "On Air Diagnostics Complete";
+          } else {
+            partial.diagnosticsRunState = { ...run, elapsedSeconds: elapsed };
+          }
+        }
+      }
+
+      if (Object.keys(partial).length === 0 && !data) return null;
+      return { partial, data, configDraft };
+    };
+
     const applyScenarioDefinition = (
       definitionInput: Dme1119aScenarioDefinition,
       mode?: DmePmdtMode,
@@ -851,6 +1030,9 @@ export function createDmePmdtStore(
         scenarioHardwareDispositionConfirmed: false,
         scenarioDiagnosticState: { run: null, completed: false, subsystem: null, result: null },
         scenarioParametersOpen: false,
+        measuredDecoderResults: baselineMeasuredDecoderResults(data),
+        diagnosticsRunState: null,
+        diagnosticsOutcome: null,
         lastCommand: `${mode === "student" ? "Review scenario started" : "Scenario Apply"}: ${definition.name}`,
       });
       return true;
@@ -860,6 +1042,7 @@ export function createDmePmdtStore(
       ...initialState(),
 
       initializeSession: (initialization) => {
+        identLatchTx = null;
         const fresh = initialState();
         set({
           ...fresh,
@@ -900,6 +1083,9 @@ export function createDmePmdtStore(
           configurationBackup: backupData,
           parameterChangeLogs: parameterChangeLogs ? [...parameterChangeLogs] : state.parameterChangeLogs,
           savedConfiguration: structuredClone(data),
+          measuredDecoderResults: baselineMeasuredDecoderResults(data),
+          diagnosticsRunState: null,
+          diagnosticsOutcome: null,
           lastCommand: "User configuration loaded",
         });
       },
@@ -992,6 +1178,9 @@ export function createDmePmdtStore(
           configDraft: structuredClone(data),
           configDirty: false,
           needBackup: false,
+          measuredDecoderResults: baselineMeasuredDecoderResults(data),
+          diagnosticsRunState: null,
+          diagnosticsOutcome: null,
           lastCommand: `Scenario Restore: ${state.scenario.definition.name}`,
         });
         return true;
@@ -1016,6 +1205,9 @@ export function createDmePmdtStore(
           scenarioHardwareDispositionConfirmed: false,
           scenarioDiagnosticState: { run: null, completed: false, subsystem: null, result: null },
           scenarioParametersOpen: false,
+          measuredDecoderResults: baselineMeasuredDecoderResults(data),
+          diagnosticsRunState: null,
+          diagnosticsOutcome: null,
           lastCommand: "Scenario End - Restore TST",
         });
         return true;
@@ -1266,15 +1458,26 @@ export function createDmePmdtStore(
           ? accumulateDmeOperationalSummary(state.operationalSummary, state.data, deltaSeconds)
           : state.operationalSummary;
         const timestamp = formatDmeTimestamp(now());
-        if (state.data.timestamp === timestamp && state.configDraft.timestamp === timestamp) {
-          if (operationalSummary !== state.operationalSummary) set({ operationalSummary });
+        // Stage 2 maintenance lifecycles advance on the same tick.
+        const lifecycle = advanceStage2Lifecycles(state, deltaSeconds, timestamp);
+        const baseData = lifecycle?.data ?? state.data;
+        const baseDraft = lifecycle?.configDraft ?? state.configDraft;
+        const partial = lifecycle?.partial ?? {};
+        if (baseData.timestamp === timestamp && baseDraft.timestamp === timestamp) {
+          if (operationalSummary !== state.operationalSummary) partial.operationalSummary = operationalSummary;
+          if (lifecycle || operationalSummary !== state.operationalSummary) {
+            set({
+              ...partial,
+              ...(lifecycle?.data ? { data: lifecycle.data, configDraft: lifecycle.configDraft } : {}),
+            });
+          }
           return;
         }
-        const data = structuredClone(state.data);
-        const configDraft = structuredClone(state.configDraft);
+        const data = structuredClone(baseData);
+        const configDraft = structuredClone(baseDraft);
         data.timestamp = timestamp;
         configDraft.timestamp = timestamp;
-        set({ data, configDraft, operationalSummary });
+        set({ data, configDraft, operationalSummary, ...partial });
       },
 
       setParameterValue: (fieldId, value) => {
@@ -1772,10 +1975,112 @@ export function createDmePmdtStore(
       },
 
       setSpecialTestRunning: (running) => {
+        // Compatibility shim for the monitor Maintenance Alerts tab: the
+        // boolean now mirrors the timed Special Test lifecycle (G04).
+        if (running) return get().startSpecialTests();
+        get().stopSpecialTests();
+        return true;
+      },
+
+      startSelfCalibration: (monitor) => {
         const state = get();
         if (state.securityLevel < 3 || state.loginDialogOpen || !state.data.local) return false;
-        set({ specialTestRunning: running, lastCommand: running ? "Monitor Special Tests Start" : "Monitor Special Tests Stop" });
+        const key = monitor === 1 ? "monitor1" : "monitor2";
+        if (state.selfCalibrationRuns[key].running) return false;
+        set({
+          selfCalibrationRuns: {
+            ...state.selfCalibrationRuns,
+            [key]: { running: true, elapsedSeconds: 0 },
+          },
+          lastCommand: `Monitor ${monitor} Run Self Calibration`,
+        });
         return true;
+      },
+
+      stopSelfCalibration: (monitor) => {
+        const state = get();
+        const key = monitor === 1 ? "monitor1" : "monitor2";
+        if (!state.selfCalibrationRuns[key].running) return;
+        set({
+          selfCalibrationRuns: {
+            ...state.selfCalibrationRuns,
+            [key]: { running: false, elapsedSeconds: 0 },
+          },
+          lastCommand: `Monitor ${monitor} Stop Self Calibration`,
+        });
+      },
+
+      saveCalibrationSnapshot: () => {
+        const state = get();
+        set({
+          savedCalibrationSnapshot: structuredClone(state.data.monitorCalibrationSettings),
+          lastCommand: "Monitor Calibration Save",
+        });
+      },
+
+      loadCalibrationSnapshot: () => {
+        const state = get();
+        if (!state.savedCalibrationSnapshot) return false;
+        if (state.securityLevel < 3 || state.loginDialogOpen || !state.data.local) return false;
+        const data = structuredClone(state.data);
+        data.monitorCalibrationSettings = structuredClone(state.savedCalibrationSnapshot);
+        const next = recomputeDmeDerivedData(data);
+        set({
+          data: next,
+          configDraft: structuredClone(next),
+          configDirty: false,
+          lastCommand: "Monitor Calibration Load",
+        });
+        return true;
+      },
+
+      setSpecialTestSelection: (selection) => set({ specialTestSelection: selection }),
+
+      setSpecialTestParameter: (monitor, key, value) => {
+        const state = get();
+        if (state.specialTestRun) return;
+        const monitorKey = monitor === 1 ? "monitor1" : "monitor2";
+        set({
+          specialTestParameters: {
+            ...state.specialTestParameters,
+            [monitorKey]: { ...state.specialTestParameters[monitorKey], [key]: value },
+          },
+        });
+      },
+
+      resetSpecialTestParameters: () => {
+        const state = get();
+        if (state.specialTestRun) return;
+        set({
+          specialTestParameters: {
+            monitor1: createDefaultDmeSpecialTestParameters(),
+            monitor2: createDefaultDmeSpecialTestParameters(),
+          },
+          lastCommand: "Monitor Special Tests Restore Defaults",
+        });
+      },
+
+      startSpecialTests: () => {
+        const state = get();
+        if (state.securityLevel < 3 || state.loginDialogOpen || !state.data.local) return false;
+        if (state.specialTestRun) return false;
+        const targets: readonly (1 | 2)[] = state.specialTestSelection === "both"
+          ? [1, 2]
+          : state.specialTestSelection === "monitor1"
+            ? [1]
+            : [2];
+        set({
+          specialTestRun: { targets, elapsedSeconds: 0 },
+          specialTestRunning: true,
+          lastCommand: "Monitor Special Tests Start",
+        });
+        return true;
+      },
+
+      stopSpecialTests: () => {
+        const state = get();
+        if (!state.specialTestRun && !state.specialTestRunning) return;
+        set({ specialTestRun: null, specialTestRunning: false, lastCommand: "Monitor Special Tests Stop" });
       },
 
       runDiagnostics: (mode) => {
@@ -1797,11 +2102,19 @@ export function createDmePmdtStore(
           recordAction({ kind: "control", controlId: `diagnostics-run-${mode}`, label: `Run ${mode} diagnostics`, accepted: true, input: { mode }, before });
           return true;
         }
-        set({ diagnosticsRunning: true, diagnosticsMode: mode, lastCommand: mode === "full" ? "Run Full Diagnostics" : "Run On Air Diagnostics" });
+        // Free run (G05): a timed lifecycle on the simulated clock; the
+        // outcome is derived when the run completes in refreshClock.
+        set({
+          diagnosticsRunning: true,
+          diagnosticsMode: mode,
+          diagnosticsRunState: { mode, elapsedSeconds: 0 },
+          diagnosticsOutcome: null,
+          lastCommand: mode === "full" ? "Run Full Diagnostics" : "Run On Air Diagnostics",
+        });
         return true;
       },
 
-      cancelDiagnostics: () => set({ diagnosticsRunning: false, diagnosticsMode: null, scenarioDiagnosticState: { run: null, completed: false, subsystem: null, result: null }, lastCommand: "Cancel Diagnostics" }),
+      cancelDiagnostics: () => set({ diagnosticsRunning: false, diagnosticsMode: null, diagnosticsRunState: null, scenarioDiagnosticState: { run: null, completed: false, subsystem: null, result: null }, lastCommand: "Cancel Diagnostics" }),
 
       nextView: () => {
         const state = get();
@@ -1998,7 +2311,10 @@ export function createDmePmdtStore(
       updateAnswer: (changes) =>
         set((state) => ({ answer: { ...state.answer, ...changes } })),
 
-      reset: () => set(initialState()),
+      reset: () => {
+        identLatchTx = null;
+        set(initialState());
+      },
     };
   });
 
@@ -2033,6 +2349,75 @@ export function createDmePmdtStore(
       });
     } finally {
       applyingRuntimeTransitions = false;
+    }
+  });
+
+  // Ident Shutdown on Loss (Stage 2 G17, manual Table 3-11): while the
+  // keyed signal is missing, a configured Shutdown on Loss takes the on-air
+  // transmitter off air. Self-Key on Loss supersedes the shutdown (the
+  // internal keyer keeps ident radiating), and Restart when Signal Resumes
+  // restores the transmitter when the signal returns; without Restart the
+  // transmitter stays off until the operator turns it on again.
+  store.subscribe((state) => {
+    if (applyingIdentLatch) return;
+    const data = state.data;
+    const ident = data.txConfigNominal.ident;
+    const missing = data.simulationFaults?.identSignal === "missing";
+    const antennaTx: DmeTransmitterId = data.monitorTransmitterStatus.antennaSelect === 2 ? "tx2" : "tx1";
+    let restoreTx: DmeTransmitterId | null = null;
+
+    if (!identLatchTx) {
+      if (!missing || !ident.shutdownOnLoss || ident.selfKeyOnLoss) {
+        if (state.identShutdownLatched) store.setState({ identShutdownLatched: false });
+        return;
+      }
+      if (!data.monitorTransmitterStatus.transmitterOn[antennaTx]) return;
+      identLatchTx = antennaTx;
+      applyingIdentLatch = true;
+      try {
+        const next = structuredClone(data);
+        next.monitorTransmitterStatus.transmitterOn[antennaTx] = false;
+        const applied = recomputeDmeDerivedData(next);
+        store.setState({
+          data: applied,
+          configDraft: structuredClone(applied),
+          configDirty: false,
+          identShutdownLatched: true,
+          lastCommand: "Ident Shutdown on Loss",
+        });
+      } finally {
+        applyingIdentLatch = false;
+      }
+      return;
+    }
+
+    const latchedTx = identLatchTx;
+    if (missing && ident.selfKeyOnLoss) {
+      restoreTx = latchedTx;
+    } else if (!missing && ident.restartWhenSignalResumes) {
+      restoreTx = latchedTx;
+    } else if (!missing && data.monitorTransmitterStatus.transmitterOn[latchedTx]) {
+      // The operator turned the transmitter back on manually.
+      identLatchTx = null;
+      if (state.identShutdownLatched) store.setState({ identShutdownLatched: false });
+      return;
+    }
+    if (!restoreTx) return;
+    identLatchTx = null;
+    applyingIdentLatch = true;
+    try {
+      const next = structuredClone(data);
+      next.monitorTransmitterStatus.transmitterOn[restoreTx] = true;
+      const applied = recomputeDmeDerivedData(next);
+      store.setState({
+        data: applied,
+        configDraft: structuredClone(applied),
+        configDirty: false,
+        identShutdownLatched: false,
+        lastCommand: "Ident Restart on Signal Resume",
+      });
+    } finally {
+      applyingIdentLatch = false;
     }
   });
 

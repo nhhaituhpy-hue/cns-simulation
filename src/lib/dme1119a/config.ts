@@ -301,6 +301,33 @@ const alarmLimitFields: readonly DmeParameterFieldDefinition[] = alarmLimitSpecs
   })),
 );
 
+const monitorCalibrationFields: readonly DmeParameterFieldDefinition[] = [1, 2].flatMap((monitorNumber) => [
+  {
+    id: `monitorCalibrationSettings.monitor${monitorNumber}.interrogatorNominalPowerDbm`,
+    label: `Monitor ${monitorNumber} interrogator nominal power`,
+    section: "Monitor calibration",
+    type: "number" as const,
+    unit: "dBm",
+    min: -30,
+    max: 0,
+    step: 0.1,
+    precision: 1,
+    description: `Mức công suất interrogation danh định nhập khi hiệu chuẩn Monitor ${monitorNumber} (HD-TTDMA §1).`,
+  },
+  {
+    id: `monitorCalibrationSettings.monitor${monitorNumber}.integralTxPowerOffsetDb`,
+    label: `Monitor ${monitorNumber} integral Tx power offset`,
+    section: "Monitor calibration",
+    type: "number" as const,
+    unit: "dB",
+    min: -10,
+    max: 10,
+    step: 0.1,
+    precision: 1,
+    description: `Offset công suất phát integral dùng trong tự hiệu chuẩn của Monitor ${monitorNumber}.`,
+  },
+]);
+
 const rawDmeParameterFieldCatalog: readonly DmeParameterFieldDefinition[] = [
   ...channelFields,
   ...stationFields,
@@ -316,6 +343,7 @@ const rawDmeParameterFieldCatalog: readonly DmeParameterFieldDefinition[] = [
   ...transmitterIdentFields,
   ...transmitterOffsetFields,
   ...monitorOffsetFields,
+  ...monitorCalibrationFields,
   ...alarmLimitFields,
   ...systemFields,
 ];
@@ -544,6 +572,14 @@ const dmeDerivationRules: readonly DmeDerivationRule[] = [
       affects: ["Monitor Integral/Standby rows", "Monitor calibration", "Sidebar", "Alarm status"],
       formula: "Per-monitor offsets/scales are applied independently to Delay, Spacing, Tx Power, Efficiency, PRF, frequency ppm, ERP and Return Loss; VSWR=max(1, conversion(Return Loss)).",
       alarmStatus: "Each monitor column is classified against the configured limits after calibration.",
+    },
+  },
+  {
+    matches: (id) => id.startsWith("monitorCalibrationSettings."),
+    metadata: {
+      affects: ["Monitor Calibration self-calibrated parameters", "Monitor interrogator level"],
+      formula: "HD-TTDMA §1: after entering the Interrogator Nominal Power, Run Self Calibration re-derives the amplifier/attenuator chain from that level and the Integral Tx Power Offset; the -13.2 dBm station baseline reproduces the Tuy Hòa capture values.",
+      alarmStatus: "Calibration inputs move only the self-calibrated chain values; monitor alarm classification is unchanged.",
     },
   },
   {

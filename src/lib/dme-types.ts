@@ -481,6 +481,65 @@ export interface DmeMonitorCalibrationRow {
   unit: string;
 }
 
+/**
+ * Self-calibrated interrogator chain values (Stage 2 G03). The first nine
+ * values are the station capture at the baseline nominal power; a completed
+ * self-calibration run re-derives them deterministically from the entered
+ * Interrogator Nominal Power and Integral Tx Power Offset
+ * (see lib/dme1119a/calibration.ts).
+ */
+export interface DmeMonitorSelfCalibratedParameters {
+  amplifier32Db: number;
+  attenuator32Db: number;
+  attenuator16Db: number;
+  attenuator8Db: number;
+  attenuator4Db: number;
+  attenuator2Db: number;
+  attenuator1Db: number;
+  signalGeneratorReferenceDb: number;
+  integralTxPowerScalePercent: number;
+}
+
+/** Operator-entered calibration inputs plus the last self-calibration output. */
+export interface DmeMonitorCalibrationSettings {
+  interrogatorNominalPowerDbm: number;
+  integralTxPowerOffsetDb: number;
+  selfCalibrated: DmeMonitorSelfCalibratedParameters;
+}
+
+/**
+ * Session parameters for Monitors >> Special Tests (manual §3.6.8.3,
+ * Table 3-5). These are test setups, not station configuration, so they
+ * live in the store rather than in the persisted PMDT configuration.
+ */
+export interface DmeSpecialTestParameters {
+  delayLevelDbm: number;
+  efficiencyLevelDbm: number;
+  prfTestEnabled: boolean;
+  prfPpps: number;
+  echoMode: "short" | "long" | null;
+  echoDelayUs: number;
+  echoLevelDb: number;
+  repeatEcho: boolean;
+  recoveryPulseEnabled: boolean;
+  recoveryPulseLevelDb: number;
+  cwModeEnabled: boolean;
+  sensitivityTestEnabled: boolean;
+  cwFloorDb: number;
+  decoderTestsEnabled: boolean;
+}
+
+/**
+ * Last measured Decoder Test Results snapshot (Stage 2 G04). The Decoder
+ * tab displays this snapshot, refreshed only when a Special Test run
+ * completes, so the HD-TTDMA §2.2 sensitivity workflow (read, adjust the
+ * Rx Sensitivity Offset, re-run, re-read) behaves like the real PMDT.
+ */
+export interface DmeMeasuredDecoderResults {
+  rows: DmeDecoderResultRow[];
+  measuredAt: string;
+}
+
 export interface DmePmdtData {
   connected: boolean;
   alert: boolean;
@@ -567,6 +626,7 @@ export interface DmePmdtData {
   securityAccounts: DmeSecurityAccount[];
   monitorConfigGeneral: DmeMonitorConfigGeneralRow[];
   monitorCalibrationData: { monitor1: DmeMonitorCalibrationRow[]; monitor2: DmeMonitorCalibrationRow[] };
+  monitorCalibrationSettings: { monitor1: DmeMonitorCalibrationSettings; monitor2: DmeMonitorCalibrationSettings };
   monitorDetailData: { monitor1: DmeDualValueRow[]; monitor2: DmeDualValueRow[] };
   digitalInputs: DmeDigitalInput[];
   digitalOutputs: DmeDigitalOutput[];

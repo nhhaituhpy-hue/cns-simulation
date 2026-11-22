@@ -110,28 +110,35 @@ function AlarmLimitResults({ monitorNumber }: { monitorNumber: 1 | 2 }) {
 }
 
 function DecoderResults({ monitorNumber }: { monitorNumber: 1 | 2 }) {
-  const rows = useDmePmdtStore((state) => state.data.decoderResults[monitorNumber === 1 ? "monitor1" : "monitor2"]);
+  // Stage 2 G04: the Decoder tab shows the last MEASURED snapshot, taken
+  // when a Special Test run completes (or at session start). Configuration
+  // changes alone do not move it — re-run Monitors >> Special Tests.
+  const measured = useDmePmdtStore((state) => state.measuredDecoderResults[monitorNumber === 1 ? "monitor1" : "monitor2"]);
+  const rows = measured.rows;
   const prefix = `decoderResults.monitor${monitorNumber}`;
   const formatDecoderValue = (value: DmeEditableValue): string => (
     typeof value === "number" ? value.toFixed(1) : value === null ? "" : String(value)
   );
   return (
-    <table className="dme-pmdt-decoder-result-table">
-      <caption className="sr-only">Monitor {monitorNumber} decoder test results</caption>
-      <thead><tr><th /><th>Low Limit</th><th>Data</th><th>High Limit</th><th /><th /></tr></thead>
-      <tbody>
-        {rows.map((row, index) => (
-          <tr key={row.parameter}>
-            <th scope="row">{row.parameter}</th>
-            <td>{formatDecoderValue(row.lowLimit)}</td>
-            <td><DmeValueCell fieldId={`${prefix}.${index}.data`} label={`${row.parameter} data`} value={row.data} formatValue={formatDecoderValue} /></td>
-            <td>{formatDecoderValue(row.highLimit)}</td>
-            <td>{row.unit}</td>
-            <td><DmeValueCell fieldId={`${prefix}.${index}.result`} label={`${row.parameter} result`} value={row.result} status={row.result === "Updated" ? "normal" : "gray"} /></td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <>
+      <table className="dme-pmdt-decoder-result-table">
+        <caption className="sr-only">Monitor {monitorNumber} decoder test results</caption>
+        <thead><tr><th /><th>Low Limit</th><th>Data</th><th>High Limit</th><th /><th /></tr></thead>
+        <tbody>
+          {rows.map((row, index) => (
+            <tr key={row.parameter}>
+              <th scope="row">{row.parameter}</th>
+              <td>{formatDecoderValue(row.lowLimit)}</td>
+              <td><DmeValueCell fieldId={`${prefix}.${index}.data`} label={`${row.parameter} data`} value={row.data} formatValue={formatDecoderValue} /></td>
+              <td>{formatDecoderValue(row.highLimit)}</td>
+              <td>{row.unit}</td>
+              <td><DmeValueCell fieldId={`${prefix}.${index}.result`} label={`${row.parameter} result`} value={row.result} status={row.result === "Updated" ? "normal" : "gray"} /></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="dme-pmdt-decoder-measured">Measured: {measured.measuredAt} (Monitors &gt;&gt; Special Tests)</p>
+    </>
   );
 }
 
