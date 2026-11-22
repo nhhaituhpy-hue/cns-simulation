@@ -135,9 +135,9 @@ export function TxConfigNominal() {
           <div className="dme-pmdt-keyer-source-label">Keyer Source :</div>
           <RadioField fieldId="txConfigNominal.ident.keyerSource" label="External Keying" value="External Keying" selected={keyerSource === "External Keying"} />
           <div className="dme-pmdt-key-loss-options">
-            <CheckField fieldId="txConfigNominal.ident.selfKeyOnLoss" label="Self-Key on Loss of Keyed Signal" disabled />
-            <CheckField fieldId="txConfigNominal.ident.shutdownOnLoss" label="Shutdown on Loss of Keyed Signal" disabled />
-            <CheckField fieldId="txConfigNominal.ident.restartWhenSignalResumes" label="Restart when Keyed Signal Resumes" disabled />
+            <CheckField fieldId="txConfigNominal.ident.selfKeyOnLoss" label="Self-Key on Loss of Keyed Signal" />
+            <CheckField fieldId="txConfigNominal.ident.shutdownOnLoss" label="Shutdown on Loss of Keyed Signal" />
+            <CheckField fieldId="txConfigNominal.ident.restartWhenSignalResumes" label="Restart when Keyed Signal Resumes" />
           </div>
           <RadioField fieldId="txConfigNominal.ident.keyerSource" label="Internal Keying" value="Internal Keying" selected={keyerSource === "Internal Keying"} />
           <div className="dme-pmdt-ident-codes">

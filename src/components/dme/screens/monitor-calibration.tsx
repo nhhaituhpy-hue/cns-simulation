@@ -1,39 +1,86 @@
 "use client";
 
-import { useState } from "react";
-
-import { resolveDmeField, useDmePmdtStore } from "@/stores/dme-pmdt-store";
+import { useEffect, useState } from "react";
+import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
+import {
+  canEditDmeScenarioField,
+  dmeParameterFieldCatalog,
+  DME_SELF_CALIBRATION_DURATION_SECONDS,
+  getDmeParameterValue,
+  parseDmeParameterInput,
+} from "@/lib/dme1119a";
 import { PmdtToolbar } from "../pmdt-toolbar";
-import { DmeIndicator, ScreenTabs, dmeFieldMetadata } from "./screen-primitives";
+import { DmeIndicator, ScreenTabs } from "./screen-primitives";
 
-const selfCalibratedParameters = [
-  ["+32 dB Amplifier", 34.2],
-  ["-32 dB Attenuator", -32.0],
-  ["-16 dB Attenuator", -16.0],
-  ["-8 dB Attenuator", -8.0],
-  ["-4 dB Attenuator", -4.0],
-  ["-2 dB Attenuator", -2.0],
-  ["-1 dB Attenuator", -1.0],
-  ["Signal Generator Reference", -28.4],
-  ["Integral Tx Power Scale", 114.0],
-] as const;
+/**
+ * Draft-bound numeric input for the calibration settings. Unlike the
+ * generic text-based config control this renders a real spinbutton, as
+ * the calibration screen always did; edits stage into configDraft and
+ * commit through the normal F7 Apply flow.
+ */
+function CalibrationDraftNumber({ fieldId, label }: { fieldId: string; label: string }) {
+  const configDraft = useDmePmdtStore((state) => state.configDraft);
+  const securityLevel = useDmePmdtStore((state) => state.securityLevel);
+  const local = useDmePmdtStore((state) => state.data.local);
+  const loginDialogOpen = useDmePmdtStore((state) => state.loginDialogOpen);
+  const scenario = useDmePmdtStore((state) => state.scenario);
+  const setParameterValue = useDmePmdtStore((state) => state.setParameterValue);
+  const field = dmeParameterFieldCatalog.find((item) => item.id === fieldId);
+  const value = getDmeParameterValue(configDraft, fieldId);
+  const [draftValue, setDraftValue] = useState(() => (typeof value === "number" ? value.toFixed(1) : ""));
+  const [isEditing, setIsEditing] = useState(false);
+  const canEdit = Boolean(field) && canEditDmeScenarioField({
+    active: scenario.active,
+    editableFieldIds: scenario.definition?.studentEditableFieldIds ?? [],
+    editPolicy: scenario.definition?.editPolicy,
+    fieldId,
+    readOnly: field?.readOnly,
+    securityLevel,
+    local,
+    loginDialogOpen,
+  });
 
-function CalibrationInput({ fieldId, label, value }: { fieldId: string; label: string; value: number }) {
-  const overrides = useDmePmdtStore((state) => state.overrides);
-  const resolved = resolveDmeField(value, fieldId, overrides);
-  const formattedValue = Number(resolved).toFixed(1);
+  useEffect(() => {
+    if (!isEditing) setDraftValue(typeof value === "number" ? value.toFixed(1) : "");
+  }, [value, isEditing]);
+
   return (
     <input
       id={`dme-calibration-${fieldId.replace(/[^A-Za-z0-9_-]/g, "-")}`}
       name={fieldId}
-      {...dmeFieldMetadata(fieldId, label, resolved, "gray")}
       type="number"
-      value={formattedValue}
-      readOnly
       aria-label={label}
+      data-dme-field-id={fieldId}
+      data-dme-config-field-id={fieldId}
+      step={field?.step ?? 0.1}
+      min={field?.min}
+      max={field?.max}
+      value={draftValue}
+      disabled={!canEdit}
+      readOnly={!canEdit}
+      onChange={(event) => {
+        setDraftValue(event.currentTarget.value);
+        if (!field) return;
+        const parsed = parseDmeParameterInput(field, event.currentTarget.value);
+        if (parsed !== null) setParameterValue(fieldId, parsed);
+      }}
+      onFocus={() => setIsEditing(true)}
+      onBlur={() => setIsEditing(false)}
     />
   );
 }
+
+const selfCalibratedRows = [
+  ["amplifier32Db", "+32 dB Amplifier", "dB"],
+  ["attenuator32Db", "-32 dB Attenuator", "dB"],
+  ["attenuator16Db", "-16 dB Attenuator", "dB"],
+  ["attenuator8Db", "-8 dB Attenuator", "dB"],
+  ["attenuator4Db", "-4 dB Attenuator", "dB"],
+  ["attenuator2Db", "-2 dB Attenuator", "dB"],
+  ["attenuator1Db", "-1 dB Attenuator", "dB"],
+  ["signalGeneratorReferenceDb", "Signal Generator Reference", "dB"],
+  ["integralTxPowerScalePercent", "Integral Tx Power Scale", "%"],
+] as const;
 
 export function MonitorCalibration({ monitorNumber }: { monitorNumber: 1 | 2 }) {
   const timestamp = useDmePmdtStore((state) => state.data.timestamp);
@@ -41,18 +88,30 @@ export function MonitorCalibration({ monitorNumber }: { monitorNumber: 1 | 2 }) 
   const securityLevel = useDmePmdtStore((state) => state.securityLevel);
   const loginDialogOpen = useDmePmdtStore((state) => state.loginDialogOpen);
   const local = useDmePmdtStore((state) => state.data.local);
-  const [selfCalibrationRunning, setSelfCalibrationRunning] = useState(false);
-  const [calibrationParametersEnabled, setCalibrationParametersEnabled] = useState(true);
-  const prefix = `monitorCalibrationData.monitor${monitorNumber}`;
+  const calibrationRows = useDmePmdtStore((state) => state.data.monitorCalibrationData[monitorNumber === 1 ? "monitor1" : "monitor2"]);
+  const settings = useDmePmdtStore((state) => state.data.monitorCalibrationSettings[monitorNumber === 1 ? "monitor1" : "monitor2"]);
+  const runState = useDmePmdtStore((state) => state.selfCalibrationRuns[monitorNumber === 1 ? "monitor1" : "monitor2"]);
+  const lastRunAt = useDmePmdtStore((state) => state.lastSelfCalibrationAt[monitorNumber === 1 ? "monitor1" : "monitor2"]);
+  const savedSnapshot = useDmePmdtStore((state) => state.savedCalibrationSnapshot);
+  const startSelfCalibration = useDmePmdtStore((state) => state.startSelfCalibration);
+  const stopSelfCalibration = useDmePmdtStore((state) => state.stopSelfCalibration);
+  const saveCalibrationSnapshot = useDmePmdtStore((state) => state.saveCalibrationSnapshot);
+  const loadCalibrationSnapshot = useDmePmdtStore((state) => state.loadCalibrationSnapshot);
+  const prefix = `monitorCalibrationSettings.monitor${monitorNumber}`;
   const canOperate = securityLevel >= 3 && !loginDialogOpen && local;
+  const progress = Math.min(100, Math.round((runState.elapsedSeconds / DME_SELF_CALIBRATION_DURATION_SECONDS) * 100));
 
   function saveCalibration() {
+    saveCalibrationSnapshot();
     if (typeof window === "undefined") return;
     const payload = {
       device: "DME 1119A",
       monitor: monitorNumber,
       timestamp,
-      calibrationParameters: selfCalibratedParameters.map(([label, value]) => ({ label, value })),
+      interrogatorNominalPowerDbm: settings.interrogatorNominalPowerDbm,
+      integralTxPowerOffsetDb: settings.integralTxPowerOffsetDb,
+      selfCalibrated: { ...settings.selfCalibrated },
+      calibrationData: calibrationRows,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -86,33 +145,74 @@ export function MonitorCalibration({ monitorNumber }: { monitorNumber: 1 | 2 }) 
           <div>
             <fieldset>
               <legend>Calibration</legend>
-              <label><span>Interrogator Nominal Power</span><CalibrationInput fieldId={`${prefix}.interrogatorNominalPower`} label="Interrogator Nominal Power" value={-13.2} /><small>dBm</small></label>
-              <label><span>Integral Tx Power Offset</span><CalibrationInput fieldId={`${prefix}.integralTxPowerOffset`} label="Integral Tx Power Offset" value={-3.0} /><small>dB</small></label>
+              <label>
+                <span>Interrogator Nominal Power</span>
+                <CalibrationDraftNumber fieldId={`${prefix}.interrogatorNominalPowerDbm`} label="Interrogator Nominal Power" />
+                <small>dBm</small>
+              </label>
+              <label>
+                <span>Integral Tx Power Offset</span>
+                <CalibrationDraftNumber fieldId={`${prefix}.integralTxPowerOffsetDb`} label="Integral Tx Power Offset" />
+                <small>dB</small>
+              </label>
+            </fieldset>
+            <fieldset className="dme-pmdt-calibration-data">
+              <legend>Calibration Data</legend>
+              <table className="dme-pmdt-calibration-table">
+                <thead><tr><th>Parameter</th><th>Baseline</th><th>Actual</th><th>Offset</th><th>Scale</th><th /></tr></thead>
+                <tbody>
+                  {calibrationRows.map((row) => (
+                    <tr key={row.parameter}>
+                      <th scope="row">{row.parameter}</th>
+                      <td>{row.baseline}</td>
+                      <td>{row.actual}</td>
+                      <td>{row.offset}</td>
+                      <td>{row.scale}</td>
+                      <td>{row.unit}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </fieldset>
             <fieldset className="dme-pmdt-self-calibration">
               <legend>Self-Calibrated Parameters</legend>
-              <button type="button" disabled={!canOperate} onClick={() => setSelfCalibrationRunning((running) => !running)}>
-                {selfCalibrationRunning ? "Stop Self Calibration" : "Run Self Calibration"}
+              <button
+                type="button"
+                disabled={!canOperate && !runState.running}
+                onClick={() => (runState.running ? stopSelfCalibration(monitorNumber) : startSelfCalibration(monitorNumber))}
+              >
+                {runState.running ? "Stop Self Calibration" : "Run Self Calibration"}
               </button>
-              {selfCalibratedParameters.map(([label, value], index) => (
-                <label key={label}>
+              {runState.running ? (
+                <p role="status">Self calibration running… {progress}%</p>
+              ) : lastRunAt ? (
+                <p role="status">Last self calibration: {lastRunAt}</p>
+              ) : null}
+              {selfCalibratedRows.map(([key, label, unit]) => (
+                <label key={key}>
                   <span>{label}</span>
-                  <CalibrationInput fieldId={`${prefix}.selfCalibrated.${index}`} label={label} value={value} />
-                  <small>{label === "Integral Tx Power Scale" ? "%" : "dB"}</small>
+                  <input
+                    id={`dme-calibration-self-${monitorNumber}-${key}`}
+                    name={`${prefix}.selfCalibrated.${key}`}
+                    type="number"
+                    value={settings.selfCalibrated[key].toFixed(1)}
+                    readOnly
+                    aria-label={label}
+                  />
+                  <small>{unit}</small>
                 </label>
               ))}
             </fieldset>
           </div>
           <fieldset className="dme-pmdt-calibration-status">
             <legend>Status</legend>
-            <DmeIndicator color={calibrationParametersEnabled ? "green" : "yellow"} />
-            <button type="button" disabled={!canOperate} onClick={() => setCalibrationParametersEnabled((enabled) => !enabled)}>
-              {calibrationParametersEnabled ? "Disable Calibration Parameters" : "Enable Calibration Parameters"}
-            </button>
+            <DmeIndicator color={runState.running ? "yellow" : "green"} />
+            <span>{runState.running ? "Self calibration in progress" : "Calibration parameters applied"}</span>
           </fieldset>
           <div className="dme-pmdt-calibration-file-actions">
-            <button type="button" disabled title="File loading is not available in the PMDT simulator">Load...</button>
+            <button type="button" disabled={!savedSnapshot || !canOperate} onClick={() => loadCalibrationSnapshot()}>Load...</button>
             <button type="button" onClick={saveCalibration}>Save...</button>
+            {!savedSnapshot ? <p>Chưa có bản lưu hiệu chuẩn trong phiên này — hãy bấm Save... trước khi Load...</p> : null}
           </div>
         </div>
       </div>

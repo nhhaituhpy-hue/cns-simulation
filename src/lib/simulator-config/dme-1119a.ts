@@ -11,7 +11,7 @@ import {
 
 export type { Dme1119aPersistedConfig } from "./types";
 
-export const DME1119A_CONFIG_EXTENSIONS = ["monitorOffsets", "rmsVoltageData", "rmsCurrentData", "rmsTemperatureData", "rmsAdData"] as const;
+export const DME1119A_CONFIG_EXTENSIONS = ["monitorOffsets", "monitorCalibrationSettings", "rmsVoltageData", "rmsCurrentData", "rmsTemperatureData", "rmsAdData"] as const;
 const rmsEnableGroups = ["rmsVoltageData", "rmsCurrentData", "rmsTemperatureData", "rmsAdData"] as const;
 
 export function extractDme1119aConfig(data: DmePmdtData): Dme1119aPersistedConfig {
@@ -28,6 +28,7 @@ export function extractDme1119aConfig(data: DmePmdtData): Dme1119aPersistedConfi
     txConfigNominal: structuredClone(data.txConfigNominal),
     txOffsets: structuredClone(data.txOffsets),
     monitorOffsets: structuredClone(data.monitorOffsets),
+    monitorCalibrationSettings: structuredClone(data.monitorCalibrationSettings),
     rmsVoltageData: data.rmsVoltageData.map(({ enabled }) => ({ enabled })),
     rmsCurrentData: data.rmsCurrentData.map(({ enabled }) => ({ enabled })),
     rmsTemperatureData: data.rmsTemperatureData.map(({ enabled }) => ({ enabled })),
@@ -79,6 +80,7 @@ export function hydrateDme1119aData(
   data.txConfigNominal = structuredClone(persistedConfig.txConfigNominal);
   data.txOffsets = structuredClone(persistedConfig.txOffsets);
   if (persistedConfig.monitorOffsets) data.monitorOffsets = structuredClone(persistedConfig.monitorOffsets);
+  if (persistedConfig.monitorCalibrationSettings) data.monitorCalibrationSettings = structuredClone(persistedConfig.monitorCalibrationSettings);
   for (const key of rmsEnableGroups) {
     const enabled = persistedConfig[key];
     if (enabled) data[key].forEach((row, index) => { row.enabled = enabled[index].enabled; });

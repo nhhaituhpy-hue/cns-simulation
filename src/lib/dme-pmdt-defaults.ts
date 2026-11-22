@@ -376,6 +376,42 @@ export const defaultDmePmdtData: DmePmdtData = {
       { parameter: "PRF", baseline: 800, actual: 800, offset: 0, scale: 1.000, unit: "Hz" },
     ],
   },
+  // Station baseline (owner ruling, audit §6/Q2): the Tuy Hòa calibration
+  // capture shows Interrogator Nominal Power -13.2 dBm and Integral Tx
+  // Power Offset -3.0 dB with the self-calibrated chain values below.
+  // Monitor 2 uses the same baseline until a station capture says otherwise.
+  monitorCalibrationSettings: {
+    monitor1: {
+      interrogatorNominalPowerDbm: -13.2,
+      integralTxPowerOffsetDb: -3.0,
+      selfCalibrated: {
+        amplifier32Db: 34.2,
+        attenuator32Db: -32.0,
+        attenuator16Db: -16.0,
+        attenuator8Db: -8.0,
+        attenuator4Db: -4.0,
+        attenuator2Db: -2.0,
+        attenuator1Db: -1.0,
+        signalGeneratorReferenceDb: -28.4,
+        integralTxPowerScalePercent: 114.0,
+      },
+    },
+    monitor2: {
+      interrogatorNominalPowerDbm: -13.2,
+      integralTxPowerOffsetDb: -3.0,
+      selfCalibrated: {
+        amplifier32Db: 34.2,
+        attenuator32Db: -32.0,
+        attenuator16Db: -16.0,
+        attenuator8Db: -8.0,
+        attenuator4Db: -4.0,
+        attenuator2Db: -2.0,
+        attenuator1Db: -1.0,
+        signalGeneratorReferenceDb: -28.4,
+        integralTxPowerScalePercent: 114.0,
+      },
+    },
+  },
   monitorDetailData: {
     monitor1: [
       { label: "Delay", mon1Value: "50.02", mon1Status: "normal", mon2Value: "50.01", mon2Status: "normal", unit: "us" },

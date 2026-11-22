@@ -1,6 +1,7 @@
 "use client";
 
 import { PmdtToolbar } from "../pmdt-toolbar";
+import { DME_DIAGNOSTIC_DURATIONS_SECONDS } from "@/lib/dme1119a";
 import { useDmePmdtStore } from "@/stores/dme-pmdt-store";
 
 type DiagnosticsView = "diagnostics-power-up" | "diagnostics-fault-isolation";
@@ -26,6 +27,7 @@ function PowerUpResults() {
   const connected = useDmePmdtStore((state) => state.data.connected);
   const scenario = useDmePmdtStore((state) => state.scenario);
   const diagnosticState = useDmePmdtStore((state) => state.scenarioDiagnosticState);
+  const diagnosticsOutcome = useDmePmdtStore((state) => state.diagnosticsOutcome);
   const failedSubsystem = scenario.definition?.diagnosis?.diagnosticSubsystem ?? null;
   const columnHealthy = (column: (typeof powerUpColumns)[number]) => {
     if (!diagnosticState.completed || !failedSubsystem) return connected;
@@ -38,6 +40,7 @@ function PowerUpResults() {
     <div className="pmdt-diagnostics-power-up">
       <time className="pmdt-monitor-date">{timestamp}</time>
       {diagnosticState.completed && diagnosticState.result ? <p className="pmdt-diagnostics-result-summary" role="status"><strong>{diagnosticState.subsystem}:</strong> {diagnosticState.result}</p> : null}
+      {!diagnosticState.completed && diagnosticsOutcome ? <p className="pmdt-diagnostics-result-summary" role="status"><strong>{diagnosticsOutcome.mode === "full" ? "Full Diagnostics" : "On Air Diagnostics"}:</strong> {diagnosticsOutcome.result}</p> : null}
       <table className="pmdt-diagnostics-power-table">
         <thead><tr><th scope="col" />{powerUpColumns.map((column) => <th key={column} scope="col">{column}</th>)}</tr></thead>
         <tbody>
@@ -62,7 +65,22 @@ function FaultIsolation() {
   const cancelDiagnostics = useDmePmdtStore((state) => state.cancelDiagnostics);
   const scenario = useDmePmdtStore((state) => state.scenario);
   const diagnosticState = useDmePmdtStore((state) => state.scenarioDiagnosticState);
+  const diagnosticsRunState = useDmePmdtStore((state) => state.diagnosticsRunState);
+  const diagnosticsOutcome = useDmePmdtStore((state) => state.diagnosticsOutcome);
   const diagnosis = scenario.definition?.diagnosis;
+  // Free-run (Stage 2 G05): subsystem rows complete in sequence on the
+  // simulated clock; the outcome is derived from the live equipment state
+  // when the run finishes.
+  const freeRunCompletedRows = diagnosticState.completed
+    ? faultIsolationRows.length
+    : diagnosticsOutcome
+      ? faultIsolationRows.length
+      : diagnosticsRunState
+        ? Math.min(faultIsolationRows.length, Math.floor((diagnosticsRunState.elapsedSeconds / DME_DIAGNOSTIC_DURATIONS_SECONDS[diagnosticsRunState.mode]) * faultIsolationRows.length))
+        : 0;
+  const rowComplete = (index: number) => diagnosticState.completed || index < freeRunCompletedRows;
+  const rowGood = (row: string) => (diagnosticState.completed ? row !== faultRow : diagnosticsOutcome ? !diagnosticsOutcome.faultedSubsystems.includes(row) : true);
+  const rowDecided = diagnosticState.completed || diagnosticsOutcome !== null;
   const faultRow = diagnosis?.diagnosticSubsystem === "Power Supplies"
     ? "Power Supplies"
     : diagnosis?.diagnosticSubsystem === "Monitor"
@@ -83,15 +101,16 @@ function FaultIsolation() {
       <table className="pmdt-diagnostics-fault-table">
         <thead><tr><th scope="col">Sub System</th><th scope="col">Progress</th><th scope="col">Results</th></tr></thead>
         <tbody>
-          {faultIsolationRows.map((row) => (
-            <tr key={row}><th scope="row">{row}</th><td><span className={`pmdt-diagnostics-progress ${diagnosticState.completed ? "pmdt-diagnostics-progress--complete" : ""}`} /></td><td>{diagnosticState.completed ? <DiagnosticMark good={row !== faultRow} /> : null}</td></tr>
+          {faultIsolationRows.map((row, index) => (
+            <tr key={row}><th scope="row">{row}</th><td><span className={`pmdt-diagnostics-progress ${rowComplete(index) ? "pmdt-diagnostics-progress--complete" : ""}`} /></td><td>{rowDecided ? <DiagnosticMark good={rowGood(row)} /> : null}</td></tr>
           ))}
         </tbody>
       </table>
       <div className="pmdt-diagnostics-fault-results">
         <span>Fault Isolation Results</span>
-        <div className="pmdt-diagnostics-results-box" role="status">{diagnosticState.completed ? diagnosticState.result ?? "NO FAULT FOUND" : "Run a diagnostic to populate the result."}</div>
+        <div className="pmdt-diagnostics-results-box" role="status">{diagnosticState.completed ? diagnosticState.result ?? "NO FAULT FOUND" : diagnosticsOutcome ? diagnosticsOutcome.result : diagnosticsRunState ? "Diagnostics running…" : "Run a diagnostic to populate the result."}</div>
       </div>
+      <p className="pmdt-diagnostics-model-note">Lưu ý: kết quả Diagnostics ở bản huấn luyện là mô hình mô phỏng suy ra từ trạng thái thiết bị hiện tại, không phải kết quả BITE thật của thiết bị.</p>
       {diagnosis?.diagnosticRun === "full" ? <p className="pmdt-diagnostics-notam-warning">Full Diagnostics changes the radiated signal. Issue a NOTAM before running this test.</p> : null}
       <div className="pmdt-diagnostics-fault-actions">
         <button type="button" disabled={!canFull || diagnosticsRunning} onClick={() => runDiagnostics("full")}>Run Full<br />Diagnostics</button>

@@ -336,7 +336,12 @@ function identStatusColor(data: DmePmdtData, kind: MeasurementKind, transmitterI
   const identSignal = data.simulationFaults?.identSignal ?? "normal";
   if (identSignal === "missing") {
     const ident = data.txConfigNominal.ident;
-    if (ident.keyerSource === "External Keying" && ident.selfKeyOnLoss) return "green";
+    // Self-Key on Loss (Table 3-11): when the keyed signal is lost, the
+    // internal keyer takes over and ident keeps radiating, whichever keyer
+    // source was selected. Shutdown on Loss is handled by the store-level
+    // latch, which takes the on-air transmitter off air while the loss
+    // persists (see dme-pmdt-store.ts).
+    if (ident.selfKeyOnLoss) return "green";
     return "red";
   }
   if (identSignal === "continuous") return "yellow";

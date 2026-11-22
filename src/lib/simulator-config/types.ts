@@ -39,6 +39,7 @@ export type Dme1119aPersistedConfig = {
   txOffsets: DmePmdtData["txOffsets"];
   /** Additive settings; legacy profiles omit them. Never persist RMS readings. */
   monitorOffsets?: DmePmdtData["monitorOffsets"];
+  monitorCalibrationSettings?: DmePmdtData["monitorCalibrationSettings"];
   rmsVoltageData?: Array<Pick<DmePmdtData["rmsVoltageData"][number], "enabled">>;
   rmsCurrentData?: Array<Pick<DmePmdtData["rmsCurrentData"][number], "enabled">>;
   rmsTemperatureData?: Array<Pick<DmePmdtData["rmsTemperatureData"][number], "enabled">>;
