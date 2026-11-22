@@ -1080,6 +1080,11 @@ export function createDmePmdtStore(
       initializeSession: (initialization) => {
         identLatchTx = null;
         latchedAlarms.clear();
+        // The fresh summary starts accumulating from the next tick; drop
+        // the clock baseline so the first post-init delta is not measured
+        // from a tick of the previous session (same pattern as
+        // resetOperationalSummary).
+        lastClockMs = null;
         const fresh = initialState();
         set({
           ...fresh,
@@ -1508,10 +1513,14 @@ export function createDmePmdtStore(
         lastClockMs = currentMs;
         // Operational Summary (manual §3.6.7.3.1) accumulates from the same
         // 1 s clock tick, using the state that held during the interval.
-        const operationalSummary = deltaSeconds > 0
-          ? accumulateDmeOperationalSummary(state.operationalSummary, state.data, deltaSeconds)
-          : state.operationalSummary;
+        // The summary period must latch THIS tick's clock time, not
+        // data.timestamp: a session init / config hydrate can swap in data
+        // whose timestamp is still the seeded default ("08/09/26 09:10:05"),
+        // which used to become the summary's Start Time verbatim.
         const timestamp = formatDmeTimestamp(now());
+        const operationalSummary = deltaSeconds > 0
+          ? accumulateDmeOperationalSummary(state.operationalSummary, { ...state.data, timestamp }, deltaSeconds)
+          : state.operationalSummary;
         // Stage 2 maintenance lifecycles advance on the same tick.
         const lifecycle = advanceStage2Lifecycles(state, deltaSeconds, timestamp);
         const baseData = lifecycle?.data ?? state.data;
@@ -2419,6 +2428,7 @@ export function createDmePmdtStore(
       reset: () => {
         identLatchTx = null;
         latchedAlarms.clear();
+        lastClockMs = null;
         set(initialState());
       },
     };

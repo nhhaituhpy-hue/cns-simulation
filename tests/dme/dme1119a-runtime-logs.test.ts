@@ -3,7 +3,7 @@ import {
   applyDme1119aScenarioFaults,
   type Dme1119aScenarioFault,
 } from "@/lib/dme1119a";
-import { createDmePmdtStore } from "@/stores/dme-pmdt-store";
+import { createDmePmdtStore, formatDmeTimestamp } from "@/stores/dme-pmdt-store";
 
 const powerLoss: Dme1119aScenarioFault = {
   id: "fault-power-loss",
@@ -92,6 +92,32 @@ describe("DME 1119A runtime logs (Stage 1 G01/G02/G10)", () => {
     expect(commands.length).toBeGreaterThan(0);
     expect(commands.some((entry) => entry.userName === "SEC3")).toBe(true);
     expect(commands[0].timeTag).toBe(store.getState().data.timestamp);
+  });
+
+  it("latches the summary start time from the live clock, not the seeded data timestamp", () => {
+    let current = new Date("2026-11-22T08:00:00Z");
+    const store = createDmePmdtStore({ now: () => new Date(current) });
+    // The PMDT clock ticks while the page sits open before the session
+    // is initialized.
+    store.getState().refreshClock();
+    current = new Date(current.getTime() + 300_000);
+    store.getState().refreshClock();
+    // Session init swaps in fresh default data whose timestamp is still
+    // the seeded "08/09/26 09:10:05"; the summary restarts from zero and
+    // must not inherit that seed as its Start Time (Stage 5 QA defect).
+    store.getState().initializeSession({ mode: "preview" });
+    expect(store.getState().data.timestamp).toBe("08/09/26 09:10:05");
+    expect(store.getState().operationalSummary.startedAt).toBeNull();
+    current = new Date(current.getTime() + 1000);
+    store.getState().refreshClock();
+    // The first tick after init only re-baselines the clock (delta 0).
+    expect(store.getState().operationalSummary.startedAt).toBeNull();
+    current = new Date(current.getTime() + 60_000);
+    store.getState().refreshClock();
+    const summary = store.getState().operationalSummary;
+    expect(summary.startedAt).toBe(formatDmeTimestamp(new Date(current)));
+    expect(summary.startedAt).not.toBe("08/09/26 09:10:05");
+    expect(summary.elapsedSeconds).toBeCloseTo(60, 3);
   });
 
   it("records a maintenance entry when AC power fails and restores", () => {

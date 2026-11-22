@@ -1,6 +1,6 @@
 "use client";
 
-import { getDmeParameterValue } from "@/lib/dme1119a";
+import { formatDmeNumericDisplay, getDmeParameterValue } from "@/lib/dme1119a";
 import { resolveDmeField, useDmePmdtStore } from "@/stores/dme-pmdt-store";
 
 function LimitValue({ fieldId, label, value, readOnly = false }: { fieldId: string; label: string; value: number | null; readOnly?: boolean }) {
@@ -22,7 +22,7 @@ function LimitValue({ fieldId, label, value, readOnly = false }: { fieldId: stri
       type="number"
       step="0.01"
       disabled={!canEdit}
-      value={resolved === null ? "" : String(resolved)}
+      value={resolved === null ? "" : typeof resolved === "number" ? formatDmeNumericDisplay(resolved, 0.01) : String(resolved)}
       onChange={(event) => {
         const raw = event.currentTarget.value;
         setParameterValue(fieldId, raw === "" ? null : Number(raw));
